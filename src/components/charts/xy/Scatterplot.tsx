@@ -75,6 +75,8 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   enableHover?: boolean
   /** Enable an xy brush overlay. Also enabled when `linkedBrush` is set. */
   brush?: boolean
+  /** Callback with `{ x, y }` extents, or null when the brush clears. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
   /** Show grid lines @default false */
   showGrid?: boolean
   /** Show legend @default true (when colorBy is specified) */
@@ -225,6 +227,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     linkedHover,
     linkedBrush,
     brush,
+    onBrush,
     onObservation,
     onClick,
     hoverHighlight,
@@ -326,6 +329,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
 
   const { brushStreamProps } = useXYBrush({
     brush,
+    onBrush,
     linkedBrush,
     xAccessor,
     yAccessor,

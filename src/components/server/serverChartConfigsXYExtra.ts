@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
 import { type ChartConfig } from "./serverChartConfigShared"
 
 const MA_UNITIZED = "__ma_unitized"
@@ -33,6 +34,10 @@ export const multiAxisLineChart: ChartConfig = {
       color?: string
       extent?: [number, number]
     }> : []
+    const palette = Array.isArray(colorScheme) ? colorScheme as string[] : [...DEFAULT_COLORS]
+    const seriesColorScheme = series.some((s) => typeof s.color === "string")
+      ? series.map((s, i) => s.color || palette[i % palette.length])
+      : colorScheme
     const isDual = series.length === 2
     const extents = series.map((s) => s.extent || multiAxisExtent(rows, s.yAccessor))
     const unitized: Datum[] = []
@@ -79,9 +84,13 @@ export const multiAxisLineChart: ChartConfig = {
       yAccessor: MA_UNITIZED,
       groupAccessor: MA_SERIES,
       colorAccessor: MA_SERIES,
-      colorScheme,
+      colorScheme: seriesColorScheme,
       ...(axes && { axes }),
+      ...(isDual && { yExtent: [0, 1] as [number, number] }),
       ...common,
+      // HOC defaults; `...common` last would otherwise drop them when omitted.
+      curve: rest.curve || common.curve || "monotoneX",
+      showLegend: common.showLegend ?? true,
     }
   },
 }
@@ -104,9 +113,6 @@ export const waterfallChart: ChartConfig = {
       data: plotData,
       xAccessor: needsIndex ? "__waterfallX" : xAcc,
       yAccessor: rest.yAccessor || "y",
-      ...(needsIndex && {
-        xFormat: (v: number) => String(rows[Number(v)] ? readX(rows[Number(v)]) : v),
-      }),
       waterfallStyle: {
         positiveColor: rest.positiveColor,
         negativeColor: rest.negativeColor,
@@ -118,6 +124,13 @@ export const waterfallChart: ChartConfig = {
         opacity: rest.opacity,
       },
       ...common,
+      ...(needsIndex && {
+        xFormat: (v: number) => {
+          const original = rows[Number(v)] ? readX(rows[Number(v)]) : v
+          const fmt = rest.xFormat ?? common.xFormat
+          return typeof fmt === "function" ? fmt(original) : String(original ?? v)
+        },
+      }),
     }
   },
 }

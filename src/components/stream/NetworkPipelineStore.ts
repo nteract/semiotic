@@ -1,5 +1,6 @@
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts/registry"
+import { warnIfLayoutPluginMissing } from "./layouts/missingPlugin"
 import type {
   NetworkLayoutResult,
   NetworkHtmlMark
@@ -569,7 +570,10 @@ export class NetworkPipelineStore implements UpdateResultStore {
       return
     }
     const plugin = getLayoutPlugin(this.config.chartType)
-    if (!plugin) return
+    if (!plugin) {
+      warnIfLayoutPluginMissing(this.config.chartType)
+      return
+    }
 
     let nodesArr = Array.from(this.nodes.values())
     const edgesArr = Array.from(this.edges.values())
@@ -888,6 +892,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) {
+      warnIfLayoutPluginMissing(this.config.chartType)
       this._sceneNodesRevision++
       return
     }

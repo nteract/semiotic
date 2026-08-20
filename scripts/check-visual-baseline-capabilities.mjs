@@ -105,10 +105,6 @@ for (const chart of ssrParityCharts) {
 // Known SSR-capable charts that still need chart-specific SSR/CSR parity
 // cases. Do not add to this map casually; the intended direction is down.
 const SSR_PARITY_BURN_DOWN = new Map([
-  ["RadarChart", "new named HOC; add a radial long-form SSR/CSR fixture once layout is visually reviewed"],
-  ["WaterfallChart", "new named HOC; add a signed-delta SSR/CSR fixture once bar geometry is visually reviewed"],
-  ["MultiAxisLineChart", "renderChart() now registered; dual-axis unitized SVG still needs a dedicated parity fixture"],
-  ["DistanceCartogram", "renderChart() now registered; cost-distorted geo still needs a dedicated parity fixture"],
   ["BigNumber", "native value SVG evidence is covered in unit/PNG tests; side-by-side parity with the DOM HOC still needs a dedicated fixture"],
   ["CollisionSwarmChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["EventDropChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],

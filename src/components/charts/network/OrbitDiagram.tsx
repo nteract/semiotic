@@ -2,7 +2,8 @@
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
-import "../../stream/layouts/orbitLayoutPlugin"
+import { orbitLayoutPlugin } from "../../stream/layouts/orbitLayoutPlugin"
+import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
@@ -17,6 +18,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+
+registerLayoutPlugin("orbit", orbitLayoutPlugin)
 
 // ── Orbit layout types (kept for API compatibility) ──────────────────
 

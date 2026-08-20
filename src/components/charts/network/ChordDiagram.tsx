@@ -3,7 +3,8 @@ import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
-import "../../stream/layouts/chordLayoutPlugin"
+import { chordLayoutPlugin } from "../../stream/layouts/chordLayoutPlugin"
+import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -20,6 +21,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+
+registerLayoutPlugin("chord", chordLayoutPlugin)
 
 /**
  * ChordDiagram component props

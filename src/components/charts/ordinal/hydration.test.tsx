@@ -28,6 +28,7 @@ import { GaugeChart } from "./GaugeChart"
 import { FunnelChart } from "./FunnelChart"
 import { SwimlaneChart } from "./SwimlaneChart"
 import { LikertChart } from "./LikertChart"
+import { RadarChart } from "./RadarChart"
 import { OrdinalCustomChart } from "../custom/OrdinalCustomChart"
 
 const categoryData = [
@@ -145,6 +146,24 @@ const cases: HydrationCase[] = [
       levels={["Disagree", "Neutral", "Agree"]}
       width={500}
       height={200}
+    />
+  ) },
+  { name: "RadarChart", render: () => (
+    <RadarChart
+      data={[
+        { name: "A", attribute: "speed", value: 80 },
+        { name: "A", attribute: "power", value: 40 },
+        { name: "A", attribute: "range", value: 60 },
+        { name: "B", attribute: "speed", value: 55 },
+        { name: "B", attribute: "power", value: 70 },
+        { name: "B", attribute: "range", value: 45 },
+      ]}
+      categoryAccessor="attribute"
+      valueAccessor="value"
+      seriesAccessor="name"
+      colorBy="name"
+      width={360}
+      height={360}
     />
   ) },
   { name: "OrdinalCustomChart", render: () => (

@@ -2,8 +2,10 @@ import * as React from "react"
 import { renderToString } from "react-dom/server"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { act, fireEvent, render } from "@testing-library/react"
-import "./layouts/registerBuiltIn"
+import { registerBuiltInNetworkLayouts } from "./layouts/registerBuiltIn"
 import StreamNetworkFrame from "./StreamNetworkFrame"
+
+registerBuiltInNetworkLayouts()
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
 import { createFrameScheduler } from "./test-utils/frameScheduler"

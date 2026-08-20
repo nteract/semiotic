@@ -1,6 +1,7 @@
 import { getLayoutPlugin, registerLayoutPlugin } from "./registry"
 import { sankeyLayoutPlugin } from "./sankeyLayoutPlugin"
 import { forceLayoutPlugin } from "./forceLayoutPlugin"
+import { registerBuiltInNetworkLayouts } from "./registerBuiltIn"
 
 describe("network layout registry", () => {
   it("registers sankey without requiring the force plugin module graph at the lookup site", () => {
@@ -11,5 +12,14 @@ describe("network layout registry", () => {
   it("keeps force as a separately registered plugin", () => {
     registerLayoutPlugin("force", forceLayoutPlugin)
     expect(getLayoutPlugin("force")).toBe(forceLayoutPlugin)
+  })
+
+  it("registerBuiltInNetworkLayouts installs every built-in plugin by value", () => {
+    registerBuiltInNetworkLayouts()
+    expect(getLayoutPlugin("sankey")).toBe(sankeyLayoutPlugin)
+    expect(getLayoutPlugin("force")).toBe(forceLayoutPlugin)
+    expect(getLayoutPlugin("chord")).toBeTruthy()
+    expect(getLayoutPlugin("tree")).toBeTruthy()
+    expect(getLayoutPlugin("orbit")).toBeTruthy()
   })
 })

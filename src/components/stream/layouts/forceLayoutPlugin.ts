@@ -25,7 +25,6 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
-import type { Datum } from "../../charts/shared/datumTypes"
 
 /**
  * Force-directed layout plugin — uses d3-force for physics-based node positioning.

@@ -98,7 +98,15 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     yNumeric &&
     xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD
   ) {
-    return buildStreamingHeatmapScene(ctx, data, layout)
+    // Streaming defaults to count. Auto-bin of a value grid must keep the
+    // value channel (mean) or a dense ramp collapses to near-uniform occupancy.
+    return buildStreamingHeatmapScene({
+      ...ctx,
+      config: {
+        ...ctx.config,
+        heatmapAggregation: ctx.config.valueAccessor ? "mean" as const : "count" as const,
+      },
+    }, data, layout)
   }
 
   if (xNumeric) {

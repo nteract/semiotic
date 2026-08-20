@@ -28,6 +28,7 @@ import {
 } from "./staticSVGChrome"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
 import { collectGeoAnnotationAnchors } from "../stream/geoAnnotationAnchors"
+import { DistanceCartogramOverlay } from "../charts/geo/cartogramOverlay"
 
 export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
@@ -197,6 +198,26 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   }
 
   const dataMarks = renderedScene.map(entry => entry.element)
+  const cartogramChrome = (props as StreamGeoFrameProps & {
+    cartogramChrome?: {
+      showRings?: boolean | number | number[]
+      showNorth?: boolean
+      showRingLabels?: boolean
+      costLabel?: string
+    }
+  }).cartogramChrome
+  const cartogramOverlay = store.cartogramLayout && cartogramChrome
+    ? (
+      <DistanceCartogramOverlay
+        layout={{ ...store.cartogramLayout, layout: store.cartogramLayout.layout ?? "radial" }}
+        ringValues={cartogramRingValues(store.cartogramLayout.maxCost, cartogramChrome.showRings)}
+        showRings={cartogramChrome.showRings ?? true}
+        showNorth={cartogramChrome.showNorth ?? true}
+        showRingLabels={cartogramChrome.showRingLabels ?? true}
+        costLabel={typeof cartogramChrome.costLabel === "string" ? cartogramChrome.costLabel : undefined}
+      />
+    )
+    : null
 
   // Geo annotations: `coordinates: [lon, lat]` flows through the resolved
   // projection from the store's scales; raw `x`/`y` numbers remain valid via
@@ -244,6 +265,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       {resolvedBackgroundGraphics}
       {dataMarks}
       {annotationNodes}
+      {cartogramOverlay}
       {resolvedForegroundGraphics}
       {store.customLayoutOverlays}
     </>
@@ -260,4 +282,19 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       idPrefix: props._idPrefix,
     })
   )
+}
+
+function cartogramRingValues(
+  maxCost: number,
+  showRings: boolean | number | number[] | undefined
+): number[] {
+  if (showRings === false || maxCost <= 0) return []
+  if (Array.isArray(showRings)) return showRings.filter((value) => value > 0 && value <= maxCost)
+  const count = typeof showRings === "number"
+    ? showRings
+    : Math.min(5, Math.max(2, Math.ceil(maxCost / 5)))
+  const step = maxCost / count
+  const values: number[] = []
+  for (let i = 1; i <= count; i++) values.push(Math.round(step * i * 10) / 10)
+  return values
 }

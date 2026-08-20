@@ -960,6 +960,19 @@ describe("LineChart", () => {
       )
       expect(lastXYFrameProps.brush).toEqual({ dimension: "x" })
     })
+
+    it("invokes onBrush with the selected extent", () => {
+      const onBrush = vi.fn()
+      render(
+        <TooltipProvider>
+          <LineChart data={sampleData} brush onBrush={onBrush} />
+        </TooltipProvider>
+      )
+      lastXYFrameProps.onBrush({ x: [1, 3], y: [10, 20] })
+      expect(onBrush).toHaveBeenCalledWith({ x: [1, 3], y: [10, 20] })
+      lastXYFrameProps.onBrush(null)
+      expect(onBrush).toHaveBeenCalledWith(null)
+    })
   })
 
   it("survives the loading→data transition without a hooks-count error", () => {

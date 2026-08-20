@@ -6,6 +6,7 @@
 import StreamNetworkFrame from "./stream/StreamNetworkFrame"
 
 export { StreamNetworkFrame }
+export { registerBuiltInNetworkLayouts } from "./stream/layouts/registerBuiltIn"
 
 export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
 export type {

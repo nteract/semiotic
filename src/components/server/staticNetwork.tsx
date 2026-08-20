@@ -10,7 +10,7 @@ import type {
   NetworkSceneNode,
   NetworkSceneEdge,
 } from "../stream/networkTypes"
-import "../stream/layouts/registerBuiltIn"
+import { registerBuiltInNetworkLayouts } from "../stream/layouts/registerBuiltIn"
 import { getLayoutPlugin } from "../stream/layouts/registry"
 import {
   resolveCustomLayoutPalette,
@@ -47,6 +47,8 @@ import {
 import { resolveFrameGraphics } from "../stream/frameGraphics"
 import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { collectNetworkAnnotationAnchors } from "../stream/networkAnnotationAnchors"
+
+registerBuiltInNetworkLayouts()
 
 export function resolveAccessor(
   accessor: string | ((d: Datum) => DatumValue) | undefined,

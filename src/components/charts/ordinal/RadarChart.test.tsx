@@ -64,6 +64,31 @@ describe("RadarChart", () => {
     expect(lastOrdinalFrameProps.connectorAccessor).toBe("name")
   })
 
+  it("connects a single series when no seriesAccessor or colorBy is set", () => {
+    render(
+      <TooltipProvider>
+        <RadarChart
+          data={sample.filter((d) => d.name === "A")}
+          categoryAccessor="attribute"
+          valueAccessor="value"
+          width={400}
+          height={400}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.connectorAccessor).toBe("__radar")
+  })
+
+  it("accepts a function colorBy as the connector identity", () => {
+    const colorBy = (d: { name: string }) => d.name
+    render(
+      <TooltipProvider>
+        <RadarChart data={sample} colorBy={colorBy} width={400} height={400} />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.connectorAccessor).toBe(colorBy)
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

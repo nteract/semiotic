@@ -60,6 +60,41 @@ describe("Wave 1 renderChart registry", () => {
     expect(svg).toContain("Start")
   })
 
+  it("honors MultiAxisLineChart per-series colors", () => {
+    const { svg } = renderChartWithEvidence("MultiAxisLineChart", {
+      data: [
+        { x: 0, temp: 20, humidity: 40 },
+        { x: 1, temp: 22, humidity: 55 },
+        { x: 2, temp: 18, humidity: 60 },
+      ],
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp", color: "#112233" },
+        { yAccessor: "humidity", label: "Humidity", color: "#445566" },
+      ],
+      width: 400,
+      height: 300,
+    })
+    expect(svg).toContain("#112233")
+    expect(svg).toContain("#445566")
+  })
+
+  it("connects a one-series RadarChart without seriesAccessor", () => {
+    const { evidence } = renderChartWithEvidence("RadarChart", {
+      data: [
+        { attribute: "speed", value: 80 },
+        { attribute: "power", value: 40 },
+        { attribute: "range", value: 60 },
+      ],
+      categoryAccessor: "attribute",
+      valueAccessor: "value",
+      width: 360,
+      height: 360,
+    })
+    expect(evidence.markCountByType.point).toBe(3)
+    expect(evidence.markCountByType.connector).toBeGreaterThanOrEqual(3)
+  })
+
   it("renders MultiAxisLineChart dual series", () => {
     const { svg, evidence } = renderChartWithEvidence("MultiAxisLineChart", {
       data: [
@@ -95,5 +130,15 @@ describe("Wave 1 renderChart registry", () => {
     expect(svg).toContain("<circle")
     expect(evidence.empty).toBe(false)
     expect(evidence.markCount).toBeGreaterThan(0)
+    const circles = [...svg.matchAll(/<circle[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"/g)]
+      .map((match) => [Number(match[1]), Number(match[2])] as const)
+    expect(circles.length).toBeGreaterThanOrEqual(3)
+    const midX = 400 / 2
+    const midY = 300 / 2
+    const nearestToCenter = Math.min(
+      ...circles.map(([x, y]) => Math.hypot(x - midX, y - midY)),
+    )
+    // Cost layout puts the named center on the plot origin, not its raw lon/lat.
+    expect(nearestToCenter).toBeLessThan(40)
   })
 })

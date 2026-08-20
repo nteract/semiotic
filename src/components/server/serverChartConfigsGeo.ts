@@ -225,13 +225,29 @@ export const distanceCartogram: ChartConfig = {
         fillOpacity: 0.85,
         strokeWidth: 1,
       })
-    const pointStyle = rest.styleRules
+    const nodeIdAccessor = rest.nodeIdAccessor || "id"
+    const ruledStyle = rest.styleRules
       ? composeStyleRules(
           basePointStyle,
           rest.styleRules,
           makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),
         )
       : basePointStyle
+    const pointStyle = (d: Datum) => {
+      const styled = typeof ruledStyle === "function" ? ruledStyle(d) : ruledStyle
+      const id = typeof nodeIdAccessor === "function"
+        ? (nodeIdAccessor as (row: Datum) => unknown)(d)
+        : d[nodeIdAccessor as string]
+      const isCenter = id != null && String(id) === String(rest.center)
+      const radius = typeof styled.r === "number" ? styled.r : 5
+      return {
+        ...styled,
+        fillOpacity: isCenter ? 1 : (styled.fillOpacity ?? 0.8),
+        stroke: isCenter ? "var(--semiotic-text, #222)" : (styled.stroke ?? "#fff"),
+        strokeWidth: isCenter ? 1.25 : (styled.strokeWidth ?? 1),
+        r: isCenter ? radius * 1.35 : radius,
+      }
+    }
     return {
       points,
       lines: rest.lines,
@@ -245,13 +261,19 @@ export const distanceCartogram: ChartConfig = {
       fitPadding: rest.fitPadding,
       projectionTransform: {
         center: rest.center,
-        centerAccessor: rest.nodeIdAccessor || "id",
+        centerAccessor: nodeIdAccessor,
         costAccessor: rest.costAccessor,
         strength: rest.strength ?? 1,
         lineMode: rest.lineMode || "straight",
         layout: rest.cartogramLayout || "radial",
       },
       ...common,
+      cartogramChrome: {
+        showRings: rest.showRings ?? true,
+        showNorth: rest.showNorth ?? true,
+        showRingLabels: rest.showRingLabels ?? true,
+        costLabel: rest.costLabel,
+      },
     }
   },
 }

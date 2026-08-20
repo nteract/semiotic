@@ -2,7 +2,8 @@
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
-import "../../stream/layouts/hierarchyLayoutPlugin"
+import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
+import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
@@ -17,6 +18,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+
+registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
 
 /**
  * CirclePack component props

@@ -3,7 +3,8 @@ import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
-import "../../stream/layouts/sankeyLayoutPlugin"
+import { sankeyLayoutPlugin } from "../../stream/layouts/sankeyLayoutPlugin"
+import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -21,6 +22,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+
+registerLayoutPlugin("sankey", sankeyLayoutPlugin)
 
 /**
  * SankeyDiagram component props

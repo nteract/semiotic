@@ -445,8 +445,8 @@ export const dotPlot: ChartConfig = {
 export const radarChart: ChartConfig = {
   frameType: "ordinal",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const seriesAccessor = rest.seriesAccessor || colorBy
-    const colorKey = colorBy || seriesAccessor
+    const seriesAccessor = rest.seriesAccessor || colorBy || "__radar"
+    const colorKey = colorBy || (seriesAccessor === "__radar" ? undefined : seriesAccessor)
     const pieceStyle = buildDotPlotPieceStyle(
       data,
       colorKey as ServerAccessor | undefined,
@@ -467,7 +467,7 @@ export const radarChart: ChartConfig = {
       rAccessor: rest.valueAccessor || "value",
       colorAccessor: colorKey,
       colorScheme,
-      ...(seriesAccessor && { connectorAccessor: seriesAccessor }),
+      connectorAccessor: seriesAccessor,
       connectorStyle,
       pieceStyle,
       rExtent: rest.valueExtent || [0],

@@ -35,8 +35,12 @@ import { renderChart } from "./renderToStaticSVG"
 import { LineChart } from "../charts/xy/LineChart"
 import { AreaChart } from "../charts/xy/AreaChart"
 import { BumpChart } from "../charts/xy/BumpChart"
+import { Heatmap } from "../charts/xy/Heatmap"
+import { MultiAxisLineChart } from "../charts/xy/MultiAxisLineChart"
+import { WaterfallChart } from "../charts/xy/WaterfallChart"
 import { BarChart } from "../charts/ordinal/BarChart"
 import { PieChart } from "../charts/ordinal/PieChart"
+import { RadarChart } from "../charts/ordinal/RadarChart"
 import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import { Treemap } from "../charts/network/Treemap"
 import { LIGHT_THEME, ThemeProvider } from "../ThemeProvider"
@@ -53,6 +57,45 @@ const categoryData = [
   { region: "AMER", value: 42 },
   { region: "EMEA", value: 33 },
   { region: "APAC", value: 51 },
+]
+
+const heatmapData = [
+  { xBin: "A", yBin: "Q1", value: 12 },
+  { xBin: "B", yBin: "Q1", value: 19 },
+  { xBin: "A", yBin: "Q2", value: 22 },
+  { xBin: "B", yBin: "Q2", value: 9 },
+]
+
+const denseHeatmapData = (() => {
+  const rows: Array<{ x: number; y: number; value: number }> = []
+  for (let x = 0; x < 70; x++) {
+    for (let y = 0; y < 70; y++) {
+      rows.push({ x, y, value: (x * 3 + y) % 17 })
+    }
+  }
+  return rows
+})()
+
+const radarData = [
+  { name: "A", attribute: "speed", value: 80 },
+  { name: "A", attribute: "power", value: 40 },
+  { name: "A", attribute: "range", value: 60 },
+  { name: "B", attribute: "speed", value: 55 },
+  { name: "B", attribute: "power", value: 70 },
+  { name: "B", attribute: "range", value: 45 },
+]
+
+const waterfallData = [
+  { step: "Start", value: 100 },
+  { step: "Sales", value: 40 },
+  { step: "Costs", value: -25 },
+  { step: "Tax", value: -10 },
+]
+
+const multiAxisData = [
+  { x: 0, temp: 20, humidity: 40 },
+  { x: 1, temp: 22, humidity: 55 },
+  { x: 2, temp: 18, humidity: 60 },
 ]
 
 const networkNodes = [{ id: "a" }, { id: "b" }, { id: "c" }]
@@ -79,6 +122,8 @@ const hierarchy: HierarchyNode = {
 
 interface ParityCase {
   name: string
+  /** Dominant SVG tag used as the data-mark primitive. */
+  dominant: "path" | "rect" | "circle"
   /** Render via `renderChart()` — the server-only API. */
   ssr: () => string
   /** Render via `renderToString(<Component />)` — the in-frame SSR branch. */
@@ -88,6 +133,7 @@ interface ParityCase {
 const cases: ParityCase[] = [
   {
     name: "LineChart",
+    dominant: "path",
     ssr: () => renderChart("LineChart", {
       data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200,
     }),
@@ -97,6 +143,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "AreaChart semantic line",
+    dominant: "path",
     ssr: () => renderChart("AreaChart", {
       data: xyData, xAccessor: "x", yAccessor: "y", width: 400, height: 200,
       yExtent: [0, 6],
@@ -118,6 +165,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "BumpChart",
+    dominant: "path",
     ssr: () => renderChart("BumpChart", {
       data: [
         { year: 2023, series: "A", value: 10 },
@@ -155,6 +203,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "BarChart",
+    dominant: "rect",
     ssr: () => renderChart("BarChart", {
       data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 400, height: 200,
     }),
@@ -164,6 +213,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "PieChart",
+    dominant: "path",
     ssr: () => renderChart("PieChart", {
       data: categoryData, categoryAccessor: "region", valueAccessor: "value", width: 300, height: 300,
     }),
@@ -173,6 +223,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "SankeyDiagram",
+    dominant: "path",
     ssr: () => renderChart("SankeyDiagram", {
       nodes: networkNodes, edges: networkEdges, valueAccessor: "value",
       nodeIdAccessor: "id", sourceAccessor: "source", targetAccessor: "target",
@@ -188,6 +239,7 @@ const cases: ParityCase[] = [
   },
   {
     name: "Treemap",
+    dominant: "rect",
     ssr: () => renderChart("Treemap", {
       data: hierarchy, childrenAccessor: "children", valueAccessor: "value",
       width: 500, height: 400,
@@ -199,6 +251,96 @@ const cases: ParityCase[] = [
         valueAccessor="value"
         width={500}
         height={400}
+      />,
+    ),
+  },
+  {
+    name: "Heatmap",
+    dominant: "rect",
+    ssr: () => renderChart("Heatmap", {
+      data: heatmapData, xAccessor: "xBin", yAccessor: "yBin", valueAccessor: "value",
+      width: 400, height: 240,
+    }),
+    inFrame: () => renderToString(
+      <Heatmap data={heatmapData} xAccessor="xBin" yAccessor="yBin" valueAccessor="value" width={400} height={240} />,
+    ),
+  },
+  {
+    name: "Heatmap auto-bin",
+    dominant: "rect",
+    ssr: () => renderChart("Heatmap", {
+      data: denseHeatmapData, xAccessor: "x", yAccessor: "y", valueAccessor: "value",
+      heatmapAggregation: "mean",
+      width: 400, height: 240,
+    }),
+    inFrame: () => renderToString(
+      <Heatmap
+        data={denseHeatmapData}
+        xAccessor="x"
+        yAccessor="y"
+        valueAccessor="value"
+        heatmapAggregation="mean"
+        width={400}
+        height={240}
+      />,
+    ),
+  },
+  {
+    name: "WaterfallChart",
+    dominant: "rect",
+    ssr: () => renderChart("WaterfallChart", {
+      data: waterfallData, xAccessor: "step", yAccessor: "value",
+      width: 400, height: 240,
+    }),
+    inFrame: () => renderToString(
+      <WaterfallChart data={waterfallData} xAccessor="step" yAccessor="value" width={400} height={240} />,
+    ),
+  },
+  {
+    name: "MultiAxisLineChart",
+    dominant: "path",
+    ssr: () => renderChart("MultiAxisLineChart", {
+      data: multiAxisData,
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp" },
+        { yAccessor: "humidity", label: "Humidity" },
+      ],
+      width: 400, height: 240,
+    }),
+    inFrame: () => renderToString(
+      <MultiAxisLineChart
+        data={multiAxisData}
+        xAccessor="x"
+        series={[
+          { yAccessor: "temp", label: "Temp" },
+          { yAccessor: "humidity", label: "Humidity" },
+        ]}
+        width={400}
+        height={240}
+      />,
+    ),
+  },
+  {
+    name: "RadarChart",
+    dominant: "circle",
+    ssr: () => renderChart("RadarChart", {
+      data: radarData,
+      categoryAccessor: "attribute",
+      valueAccessor: "value",
+      seriesAccessor: "name",
+      colorBy: "name",
+      width: 360, height: 360,
+    }),
+    inFrame: () => renderToString(
+      <RadarChart
+        data={radarData}
+        categoryAccessor="attribute"
+        valueAccessor="value"
+        seriesAccessor="name"
+        colorBy="name"
+        width={360}
+        height={360}
       />,
     ),
   },
@@ -241,13 +383,8 @@ describe("SSR vs CSR-first-render parity", () => {
         // What this test catches: a regression where one path produces
         // *zero* data marks while the other produces some, indicating
         // a scene-builder defect in one of the two pipelines.
-        const dominant = c.name === "LineChart" || c.name === "AreaChart semantic line" || c.name === "BumpChart" ? "path"
-          : c.name === "PieChart" ? "path"
-          : c.name === "Treemap" ? "rect"
-          : c.name === "SankeyDiagram" ? "path"
-          : "rect"
-        const ssrCount = countTag(ssrSvg, dominant)
-        const inFrameCount = countTag(inFrameSvg, dominant)
+        const ssrCount = countTag(ssrSvg, c.dominant)
+        const inFrameCount = countTag(inFrameSvg, c.dominant)
         expect(ssrCount).toBeGreaterThan(0)
         expect(inFrameCount).toBeGreaterThan(0)
       })
@@ -260,13 +397,8 @@ describe("SSR vs CSR-first-render parity", () => {
         // should match between the two paths. Sankey and pie need
         // ~3 data marks each (one per category/edge); a path emitting
         // 30 vs 3 is what we want to catch as divergence.
-        const dominant = c.name === "LineChart" || c.name === "AreaChart semantic line" || c.name === "BumpChart" ? "path"
-          : c.name === "PieChart" ? "path"
-          : c.name === "Treemap" ? "rect"
-          : c.name === "SankeyDiagram" ? "path"
-          : "rect"
-        const ssrCount = countTag(ssrSvg, dominant)
-        const inFrameCount = countTag(inFrameSvg, dominant)
+        const ssrCount = countTag(ssrSvg, c.dominant)
+        const inFrameCount = countTag(inFrameSvg, c.dominant)
         // Ratio check: the larger count should be at most 3× the
         // smaller. SVGOverlay can add up to ~4-5 extra path/rect
         // elements for axes/legend chrome on top of N data marks; on
@@ -279,6 +411,16 @@ describe("SSR vs CSR-first-render parity", () => {
       })
     })
   }
+
+  it("Heatmap auto-bin keeps both paths on the aggregated grid, not one cell per x×y", () => {
+    const chart = cases.find((c) => c.name === "Heatmap auto-bin")!
+    for (const svg of [chart.ssr(), chart.inFrame()]) {
+      // 70×70 = 4900 distinct cells; auto-bin default is 20×20 = 400.
+      // Axes/legend chrome may add a handful of extra rects.
+      expect(countTag(svg, "rect")).toBeLessThanOrEqual(420)
+      expect(countTag(svg, "rect")).toBeGreaterThan(0)
+    }
+  })
 
   it("preserves solid semantic area-line colors in both rendering paths", () => {
     const area = cases.find((c) => c.name === "AreaChart semantic line")!

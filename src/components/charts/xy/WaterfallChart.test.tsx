@@ -54,6 +54,52 @@ describe("WaterfallChart", () => {
     expect(lastXYFrameProps.xFormat?.(0)).toBe("Start")
   })
 
+  it("passes categorical x values through xFormat", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart
+          data={sample}
+          xAccessor="step"
+          yAccessor="value"
+          xFormat={(v) => `tick:${v}`}
+          width={400}
+          height={300}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.xFormat?.(0)).toBe("tick:Start")
+  })
+
+  it("maps pushed categorical x values to numeric step positions", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart xAccessor="step" yAccessor="value" width={400} height={300} />
+      </TooltipProvider>
+    )
+    const xAcc = lastXYFrameProps.xAccessor
+    expect(typeof xAcc).toBe("function")
+    const row = { step: "Sales", value: 40 }
+    expect((xAcc as (d: typeof row) => number)(row)).toBe(0)
+    expect((xAcc as (d: typeof row) => number)(row)).toBe(0)
+    expect((xAcc as (d: { step: string; value: number }) => number)({ step: "Costs", value: -25 })).toBe(1)
+  })
+
+  it("forwards pointIdAccessor", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart
+          data={sample}
+          xAccessor="step"
+          yAccessor="value"
+          pointIdAccessor="step"
+          width={400}
+          height={300}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.pointIdAccessor).toBe("step")
+  })
+
   it("keeps numeric x accessors without index coercion", () => {
     render(
       <TooltipProvider>

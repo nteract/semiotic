@@ -100,6 +100,49 @@ const heatmapData = [
   { xBin: "C", yBin: "Q3", value: 14 },
 ]
 
+function denseNumericHeatmapData(n = 70) {
+  const rows = []
+  for (let x = 0; x < n; x++) {
+    for (let y = 0; y < n; y++) {
+      rows.push({ x, y, value: (x * 3 + y) % 17 })
+    }
+  }
+  return rows
+}
+
+const radarData = [
+  { name: "Alpha", attribute: "speed", value: 80 },
+  { name: "Alpha", attribute: "power", value: 55 },
+  { name: "Alpha", attribute: "range", value: 40 },
+  { name: "Alpha", attribute: "armor", value: 30 },
+  { name: "Beta", attribute: "speed", value: 45 },
+  { name: "Beta", attribute: "power", value: 75 },
+  { name: "Beta", attribute: "range", value: 60 },
+  { name: "Beta", attribute: "armor", value: 70 },
+]
+
+const waterfallData = [
+  { step: "Opening", value: 120 },
+  { step: "New sales", value: 45 },
+  { step: "Returns", value: -18 },
+  { step: "Discounts", value: -12 },
+  { step: "Other", value: 8 },
+]
+
+const multiAxisData = [
+  { x: 0, temp: 20, humidity: 40 },
+  { x: 1, temp: 22, humidity: 55 },
+  { x: 2, temp: 18, humidity: 60 },
+  { x: 3, temp: 24, humidity: 48 },
+]
+
+const cartogramPoints = [
+  { id: "Alpha", lon: 0, lat: 45, cost: 0 },
+  { id: "Beta", lon: 20, lat: 55, cost: 60 },
+  { id: "Gamma", lon: -5, lat: 50, cost: 45 },
+  { id: "Delta", lon: 15, lat: 42, cost: 20 },
+]
+
 const quadrantData = [
   { x: 20, y: 80, segment: "risk" },
   { x: 70, y: 85, segment: "growth" },
@@ -2000,6 +2043,71 @@ function makeSsrParityCases(React) {
         legendPosition: "bottom",
         width: 500,
         height: 320,
+      },
+    },
+    {
+      id: "radar",
+      component: "RadarChart",
+      props: {
+        data: radarData,
+        categoryAccessor: "attribute",
+        valueAccessor: "value",
+        seriesAccessor: "name",
+        colorBy: "name",
+        showLegend: true,
+        width: 400,
+        height: 400,
+      },
+      visibleLegendLabel: "Alpha",
+    },
+    {
+      id: "waterfall",
+      component: "WaterfallChart",
+      props: {
+        data: waterfallData,
+        xAccessor: "step",
+        yAccessor: "value",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "heatmap-auto-bin",
+      component: "Heatmap",
+      props: {
+        data: denseNumericHeatmapData(),
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        heatmapAggregation: "mean",
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "multi-axis",
+      component: "MultiAxisLineChart",
+      props: {
+        data: multiAxisData,
+        xAccessor: "x",
+        series: [
+          { yAccessor: "temp", label: "Temp" },
+          { yAccessor: "humidity", label: "Humidity" },
+        ],
+        width: 420,
+        height: 240,
+      },
+    },
+    {
+      id: "distance-cartogram",
+      component: "DistanceCartogram",
+      package: "geo",
+      props: {
+        points: cartogramPoints,
+        center: "Alpha",
+        costAccessor: "cost",
+        width: 460,
+        height: 300,
       },
     },
   ]

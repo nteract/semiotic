@@ -156,6 +156,14 @@ describe("buildHeatmapScene (static mode)", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     expect(nodes.length).toBeLessThanOrEqual(20 * 20)
     expect(nodes.length).toBeGreaterThan(0)
+    expect(nodes.every((n) => (n.datum as { agg?: string }).agg === "mean")).toBe(true)
+    const values = nodes.map((n) => n.value ?? 0)
+    // Count occupancy of this complete grid is ~16 per bin. Mean of x+y
+    // spans tens to hundreds, so a small range would mean we dropped values.
+    expect(Math.max(...values)).toBeGreaterThan(50)
+    expect(Math.min(...values)).toBeLessThan(50)
+    const fills = new Set(nodes.map((n) => n.fill))
+    expect(fills.size).toBeGreaterThan(1)
   })
 
   it("empty data produces no nodes", () => {

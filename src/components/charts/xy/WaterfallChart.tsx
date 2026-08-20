@@ -23,6 +23,8 @@ export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseC
   data?: TDatum[]
   xAccessor?: ChartAccessor<TDatum, number | Date | string>
   yAccessor?: ChartAccessor<TDatum, number>
+  /** Stable ID for push-mode remove() and update(). */
+  pointIdAccessor?: ChartAccessor<TDatum, string>
   xScaleType?: "linear" | "log" | "time"
   positiveColor?: string
   negativeColor?: string
@@ -91,6 +93,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     yFormat,
     xAccessor = "x",
     yAccessor = "y",
+    pointIdAccessor,
     xScaleType,
     positiveColor,
     negativeColor,
@@ -117,30 +120,51 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
   const safeData = useMemo(() => filterSparseArray(data), [data])
-  const { plotData, plotXAccessor, plotXFormat } = useMemo(() => {
+  const pushXRef = useRef({ next: 0, indexOf: new WeakMap<object, number>(), labels: new Map<number, unknown>() })
+  const { plotData, plotXAccessor, plotXFormat, usesIndex } = useMemo(() => {
     const readX = typeof xAccessor === "function"
       ? xAccessor
       : (d: Datum) => d[xAccessor as string]
-    const needsIndex = safeData.some((d, i) => {
-      const raw = readX(d, i)
-      return !(typeof raw === "number" && Number.isFinite(raw)) && !(raw instanceof Date)
-    })
+    const isNumericOrDate = (raw: unknown): raw is number | Date =>
+      (typeof raw === "number" && Number.isFinite(raw)) || raw instanceof Date
+    const formatTick = (original: unknown, v: number | Date | string) => {
+      const value = (original ?? v) as number | Date | string
+      return xFormat ? xFormat(value) : String(value)
+    }
+    const needsIndex = data == null || safeData.some((d, i) => !isNumericOrDate(readX(d, i)))
     if (!needsIndex) {
-      return { plotData: safeData, plotXAccessor: xAccessor, plotXFormat: xFormat }
+      return { plotData: safeData, plotXAccessor: xAccessor, plotXFormat: xFormat, usesIndex: false }
     }
+    if (data != null) {
+      const labels = safeData.map((d, i) => readX(d, i))
+      return {
+        plotData: safeData.map((d, i) => ({ ...d, __waterfallX: i })),
+        plotXAccessor: "__waterfallX",
+        plotXFormat: (v: number | Date | string) => formatTick(labels[Number(v)], v),
+        usesIndex: true,
+      }
+    }
+    const state = pushXRef.current
     return {
-      plotData: safeData.map((d, i) => ({
-        ...d,
-        __waterfallX: i,
-        __waterfallTick: String(readX(d, i) ?? i),
-      })),
-      plotXAccessor: "__waterfallX",
-      plotXFormat: (v: number | Date | string) => {
-        const row = safeData[Number(v)]
-        return row ? String(readX(row, Number(v)) ?? v) : String(v)
+      plotData: safeData,
+      plotXAccessor: (d: Datum, i?: number) => {
+        const raw = readX(d, i)
+        if (isNumericOrDate(raw)) return raw
+        if (d && typeof d === "object" && state.indexOf.has(d)) {
+          const idx = state.indexOf.get(d)!
+          state.labels.set(idx, raw)
+          return idx
+        }
+        const idx = typeof i === "number" ? i : state.next
+        state.next = Math.max(state.next, idx + 1)
+        if (d && typeof d === "object") state.indexOf.set(d, idx)
+        state.labels.set(idx, raw)
+        return idx
       },
+      plotXFormat: (v: number | Date | string) => formatTick(state.labels.get(Number(v)), v),
+      usesIndex: true,
     }
-  }, [safeData, xAccessor, xFormat])
+  }, [data, safeData, xAccessor, xFormat])
 
   const setup = useChartSetup({
     data: plotData,
@@ -206,7 +230,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     ...(data != null && { data: plotData }),
     xAccessor: plotXAccessor,
     yAccessor,
-    xScaleType: plotXAccessor === "__waterfallX" ? "linear" : xScaleType,
+    xScaleType: data != null && usesIndex ? "linear" : xScaleType,
     waterfallStyle,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
@@ -243,6 +267,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
       customHoverBehavior: setup.customHoverBehavior,
       customClickBehavior: setup.customClickBehavior,
     }),
+    ...(pointIdAccessor && { pointIdAccessor }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),

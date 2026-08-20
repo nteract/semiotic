@@ -122,8 +122,11 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable } = resolved
   const safeData = useMemo(() => filterSparseArray(data), [data])
-  const seriesKey = seriesAccessor || (typeof colorBy === "string" ? colorBy : undefined)
-  const colorByResolved = colorBy || seriesKey
+  const seriesKey = seriesAccessor
+    || (typeof colorBy === "string" ? colorBy : undefined)
+    || (typeof colorBy === "function" ? colorBy : undefined)
+  const connectorAccessor = seriesKey ?? "__radar"
+  const colorByResolved = colorBy || (typeof seriesKey === "string" ? seriesKey : undefined)
 
   const setup = useChartSetup({
     data: safeData,
@@ -219,7 +222,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     ...(data != null && { data: safeData }),
     oAccessor: categoryAccessor,
     rAccessor: valueAccessor,
-    ...(seriesKey && { connectorAccessor: seriesKey }),
+    connectorAccessor,
     connectorStyle,
     pieceStyle,
     rExtent: valueExtent ?? [0],

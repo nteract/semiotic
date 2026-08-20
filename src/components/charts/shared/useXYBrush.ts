@@ -9,8 +9,11 @@ import { useBrushSelection } from "../../store/useSelection"
 import type { ChartAccessor, LinkedBrushProp } from "./types"
 import type { Datum } from "./datumTypes"
 
+export type XYBrushExtent = { x: [number, number]; y: [number, number] }
+
 export interface XYBrushInput<TDatum extends Datum = Datum> {
   brush?: boolean
+  onBrush?: (extent: XYBrushExtent | null) => void
   linkedBrush?: LinkedBrushProp
   xAccessor?: ChartAccessor<TDatum, unknown>
   yAccessor?: ChartAccessor<TDatum, unknown>
@@ -21,19 +24,20 @@ export interface XYBrushInput<TDatum extends Datum = Datum> {
 export interface XYBrushResult {
   brushStreamProps: {
     brush: { dimension: "x" | "y" | "xy" }
-    onBrush: (extent: { x: [number, number]; y: [number, number] } | null) => void
+    onBrush: (extent: XYBrushExtent | null) => void
   } | Record<string, never>
 }
 
 export function useXYBrush<TDatum extends Datum = Datum>({
   brush,
+  onBrush: onBrushProp,
   linkedBrush,
   xAccessor,
   yAccessor,
   defaultDimension = "xy",
 }: XYBrushInput<TDatum>): XYBrushResult {
   const brushConfig = normalizeLinkedBrush(linkedBrush)
-  const enabled = Boolean(brush) || Boolean(brushConfig)
+  const enabled = Boolean(brush) || Boolean(brushConfig) || Boolean(onBrushProp)
 
   const resolvedXField = brushConfig?.xField || (typeof xAccessor === "string" ? xAccessor : undefined)
   const resolvedYField = brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)
@@ -57,21 +61,25 @@ export function useXYBrush<TDatum extends Datum = Datum>({
   brushInteractionRef.current = brushHook.brushInteraction
 
   const onBrush = useCallback(
-    (extent: { x: [number, number]; y: [number, number] } | null) => {
+    (extent: XYBrushExtent | null) => {
       const bi = brushInteractionRef.current
       if (!extent) {
-        bi.end(null)
+        if (brushConfig) bi.end(null)
+        onBrushProp?.(null)
         return
       }
-      if (bi.brush === "xyBrush") {
-        bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
-      } else if (bi.brush === "xBrush") {
-        bi.end(extent.x)
-      } else {
-        bi.end(extent.y)
+      if (brushConfig) {
+        if (bi.brush === "xyBrush") {
+          bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
+        } else if (bi.brush === "xBrush") {
+          bi.end(extent.x)
+        } else {
+          bi.end(extent.y)
+        }
       }
+      onBrushProp?.(extent)
     },
-    []
+    [brushConfig, onBrushProp]
   )
 
   if (!enabled) return { brushStreamProps: {} }
