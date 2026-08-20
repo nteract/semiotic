@@ -893,7 +893,7 @@ function writeClientPassThroughFacades() {
     "semiotic-recipes-react.module.min.js":
       '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-shared.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";\n',
     "semiotic-utils.module.min.js":
-      '"use client";\nexport*from"./semiotic-utils-core.module.min.js";export*from"./semiotic-utils-react.module.min.js";\n',
+      '"use client";\nexport*from"./semiotic-utils-core.module.min.js";export{ThemeProvider,useTheme,useReducedMotion,useHighContrast,useResponsiveSize}from"./semiotic-utils-react.module.min.js";\n',
     "semiotic-recipes.module.min.js":
       '"use client";\nexport*from"./semiotic-recipes-core.module.min.js";export*from"./semiotic-recipes-react.module.min.js";\n',
     // Keep the unstable catch-all out of the stable client graph: its broad
