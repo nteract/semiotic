@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Verify that the currently public npm release has matching live MCP Registry
- * metadata before publishing another immutable npm version.
+ * Verify the stable hosted MCP identity before publishing another immutable npm
+ * version. The post-publish workflow is the authority that publishes and
+ * verifies the Registry entry for that new version.
  */
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
@@ -13,8 +14,6 @@ const root = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
 const server = JSON.parse(readFileSync(resolve(root, "server.json"), "utf8"))
 const registryBase = "https://registry.npmjs.org"
-const searchUrl =
-  `https://registry.modelcontextprotocol.io/v0.1/servers?search=${encodeURIComponent(server.name)}`
 const healthTimeoutMs = 45_000
 const healthRetryMs = 2_000
 const args = process.argv.slice(2)
@@ -113,39 +112,16 @@ if (publishedLatest === pkg.version) {
   process.exit(0)
 }
 
-const response = await fetch(searchUrl, {
-  headers: { accept: "application/json" },
-  signal: AbortSignal.timeout(15_000),
-})
-if (!response.ok) {
-  throw new Error(`MCP Registry search failed (${response.status} ${response.statusText})`)
-}
-const search = await response.json()
-const match = (search.servers ?? []).find(
-  ({ server: entry }) => entry?.name === server.name && entry?.version === publishedLatest,
-)
-if (!match) {
-  throw new Error(
-    `MCP Registry does not contain ${server.name} v${publishedLatest}, the current ${pkg.name}@latest`,
-  )
-}
-const official = match._meta?.["io.modelcontextprotocol.registry/official"]
-if (official?.status !== "active" || official?.isLatest !== true) {
-  throw new Error(
-    `MCP Registry ${server.name} v${publishedLatest} must be active/latest; received ` +
-      JSON.stringify(official ?? null),
-  )
-}
-
 if (health.stale) {
   console.log(
-    `✓ live MCP Registry is synchronized with current npm latest ` +
-      `(${server.name} v${publishedLatest}); stable /health is valid but awaits the ` +
-      `target deployment (attempts: ${health.attempts})`,
+    `✓ stable MCP /health is valid but awaits deployment of ${pkg.name}@${publishedLatest} ` +
+      `(attempts: ${health.attempts}); the post-publish workflow will publish and verify ` +
+      `${server.name} v${pkg.version}`,
   )
 } else {
   console.log(
-    `✓ live MCP Registry and stable /health are synchronized with current npm latest ` +
-      `(${server.name} v${publishedLatest}; health attempts: ${health.attempts})`,
+    `✓ stable MCP /health serves current npm latest ` +
+      `(${pkg.name}@${publishedLatest}; health attempts: ${health.attempts}); the ` +
+      `post-publish workflow will publish and verify ${server.name} v${pkg.version}`,
   )
 }

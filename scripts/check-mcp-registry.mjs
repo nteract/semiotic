@@ -46,13 +46,14 @@ const publisherWorkflowPath = join(
   "publish-mcp-registry.yml",
 )
 const releaseWorkflowPath = join(repoRoot, ".github", "workflows", "release.yml")
+const livePreflightPath = join(repoRoot, "scripts", "check-mcp-registry-live.mjs")
 
 if (!existsSync(serverPath)) {
   console.error("✗ server.json missing — required for MCP Registry publishes")
   process.exit(1)
 }
 
-let server, pkg, readme, publisherWorkflow, releaseWorkflow
+let server, pkg, readme, publisherWorkflow, releaseWorkflow, livePreflight
 try {
   server = JSON.parse(readFileSync(serverPath, "utf8"))
 } catch (e) {
@@ -81,6 +82,12 @@ try {
   releaseWorkflow = readFileSync(releaseWorkflowPath, "utf8")
 } catch (e) {
   console.error(`✗ release workflow not readable: ${e.message}`)
+  process.exit(1)
+}
+try {
+  livePreflight = readFileSync(livePreflightPath, "utf8")
+} catch (e) {
+  console.error(`✗ live MCP preflight not readable: ${e.message}`)
   process.exit(1)
 }
 
@@ -233,6 +240,15 @@ if (
 if (publisherWorkflow.includes("--allow-stale-remote")) {
   fail(
     "publish-mcp-registry.yml must never allow a stale hosted package version.",
+  )
+}
+if (
+  livePreflight.includes("registry.modelcontextprotocol.io") ||
+  livePreflight.includes("MCP Registry does not contain")
+) {
+  fail(
+    "check-mcp-registry-live.mjs must not require a previous Registry entry before npm publication; " +
+      "publish-mcp-registry.yml verifies and backfills the current release after deployment.",
   )
 }
 if (
