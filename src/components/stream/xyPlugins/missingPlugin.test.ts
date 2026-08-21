@@ -8,6 +8,10 @@ function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     chartType: "line",
     runtimeMode: "bounded",
+    windowSize: 100,
+    windowMode: "sliding",
+    arrowOfTime: "right",
+    extentPadding: 0,
     xAccessor: "x",
     yAccessor: "y",
     ...overrides,
