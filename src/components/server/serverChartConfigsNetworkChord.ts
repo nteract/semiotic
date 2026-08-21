@@ -52,7 +52,8 @@ export const chordDiagram: ChartConfig = {
         colorBy,
         edgeColorBy: rest.edgeColorBy,
         colorScheme,
-        ...common
+        ...common,
+        showLegend: (common.showLegend ?? Boolean(colorBy)) && Boolean(colorBy)
       }
     }
 
@@ -150,7 +151,8 @@ export const chordDiagram: ChartConfig = {
         primitiveStyleOverrides(rest)
       ),
       // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
-      ...common
+      ...common,
+      showLegend: (common.showLegend ?? Boolean(colorBy)) && Boolean(colorBy)
     }
   }
 }

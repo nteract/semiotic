@@ -85,6 +85,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Automatic network legends now match in static rendering** —
+  `renderChart()` and direct network SSR flatten hierarchy data when deriving
+  legend categories, so Tree, Treemap, CirclePack, and Orbit output reserves
+  and renders the same categorical legend as the browser. Force, Sankey, and
+  Chord static charts now follow the same `colorBy` auto-legend default.
 - **Network legend interactions now affect rendered marks** — highlight and
   isolate state is composed into node and connected-edge styling for chord,
   hierarchy, force, Sankey, and ProcessSankey charts instead of changing only

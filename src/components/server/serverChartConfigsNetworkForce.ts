@@ -81,7 +81,8 @@ export const forceDirectedGraph: ChartConfig = {
       // `...common` last, mirroring the HOC's trailing `{...frameProps}`: an
       // explicit frameProps nodeStyle/edgeStyle is the documented escape hatch
       // and outranks the primitive overlay on both paths.
-      ...common
+      ...common,
+      showLegend: (common.showLegend ?? Boolean(colorBy)) && Boolean(colorBy)
     }
   }
 }

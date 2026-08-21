@@ -66,6 +66,18 @@ const networkEdges = [
   { source: "Product", target: "Profit", value: 60 },
 ]
 
+const networkLegendNodes = [
+  { id: "a", group: "legend-alpha" },
+  { id: "b", group: "legend-beta" },
+]
+const hierarchyLegendData = {
+  id: "root",
+  children: [
+    { ...networkLegendNodes[0], value: 3 },
+    { ...networkLegendNodes[1], value: 2 },
+  ],
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // renderChart HOC-level API
 // ═══════════════════════════════════════════════════════════════════════
@@ -748,6 +760,37 @@ describe("renderChart", () => {
       height: 300,
     })
     expect(svg).toContain('stroke="var(--semiotic-cell-border, var(--semiotic-border, #fff))"')
+  })
+
+  it("uses automatic categorical legends across network chart families", () => {
+    const cases: Array<[RenderChartName, Record<string, unknown>]> = [
+      ["TreeDiagram", { data: hierarchyLegendData, childrenAccessor: "children", colorBy: "group" }],
+      ["Treemap", { data: hierarchyLegendData, childrenAccessor: "children", valueAccessor: "value", colorBy: "group" }],
+      ["CirclePack", { data: hierarchyLegendData, childrenAccessor: "children", valueAccessor: "value", colorBy: "group" }],
+      ["OrbitDiagram", { data: hierarchyLegendData, childrenAccessor: "children", nodeIdAccessor: "id", colorBy: "group" }],
+      ["ForceDirectedGraph", { nodes: networkLegendNodes, edges: [{ source: "a", target: "b" }], colorBy: "group" }],
+      ["SankeyDiagram", { nodes: networkLegendNodes, edges: [{ source: "a", target: "b", value: 2 }], colorBy: "group" }],
+      ["ChordDiagram", { nodes: networkLegendNodes, edges: [{ source: "a", target: "b", value: 2 }], colorBy: "group" }],
+    ]
+    for (const [component, props] of cases) {
+      const svg = renderChart(component, { ...props, width: 500, height: 300 })
+      expect(svg).toContain("semiotic-legend")
+      expect(svg).toContain("legend-alpha")
+      expect(svg).toContain("legend-beta")
+    }
+  })
+
+  it("suppresses hierarchy auto-legends for colorByDepth and showLegend:false", () => {
+    const props = {
+      data: hierarchyLegendData,
+      childrenAccessor: "children",
+      valueAccessor: "value",
+      colorBy: "group",
+      width: 500,
+      height: 300,
+    }
+    expect(renderChart("Treemap", { ...props, showLegend: false })).not.toContain("semiotic-legend")
+    expect(renderChart("Treemap", { ...props, colorByDepth: true, showLegend: true })).not.toContain("semiotic-legend")
   })
 
   it("uses XYCustomChart's automatic categorical legend", () => {

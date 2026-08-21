@@ -503,7 +503,8 @@ export const sankeyDiagram: ChartConfig = {
       ),
       colorScheme,
       // `...common` last, mirroring the HOC's trailing `{...frameProps}`.
-      ...common
+      ...common,
+      showLegend: (common.showLegend ?? Boolean(colorBy)) && Boolean(colorBy)
     }
   }
 }
@@ -589,6 +590,9 @@ export const treeDiagram: ChartConfig = {
         : undefined,
       colorScheme,
       ...common,
+      showLegend:
+        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
+        Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
         baseNodeStyle,
         userNodeStyle,
@@ -705,6 +709,9 @@ export const treemap: ChartConfig = {
       ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
       colorScheme,
       ...common,
+      showLegend:
+        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
+        Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
         baseNodeStyle,
         userNodeStyle,
