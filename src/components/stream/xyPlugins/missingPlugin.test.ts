@@ -19,16 +19,12 @@ describe("missing XY plugin", () => {
     resetXYPluginRegistry()
   })
 
-  it("builds an empty scene and warns when no plugin is registered", () => {
+  it("builds an empty scene until a plugin is registered", () => {
     resetXYPluginRegistry()
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(makeConfig())
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }], bounded: true })
     store.computeScene({ width: 200, height: 100 })
     expect(store.scene).toEqual([])
-    expect(warn).toHaveBeenCalled()
-    expect(String(warn.mock.calls[0]?.[0])).toMatch(/registerBuiltInXYPlugins/)
-    warn.mockRestore()
   })
 
   it("builds marks after the matching plugin is registered", () => {
@@ -41,7 +37,7 @@ describe("missing XY plugin", () => {
     expect(store.scene.length).toBeGreaterThan(0)
   })
 
-  it("does not warn when the plugin is present", () => {
+  it("does not warn on the client when the plugin is present", () => {
     registerXYPlugin(lineXYPlugin)
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     warnIfXYPluginMissing("line")

@@ -105,6 +105,11 @@ needs to communicate more than its encoding alone.
 | **Charts** | Common chart forms with chart-level props | `<LineChart data={d} xAccessor="x" yAccessor="y" />` |
 | **Frames** | Full control over rendering, interaction, and layout | `<StreamXYFrame chartType="line" lineStyle={...} />` |
 
+Chart HOCs register only the mark plugins they need. Direct `StreamXYFrame`
+loads the remaining built-ins on first client paint. Call
+`registerBuiltInXYPlugins()` from `semiotic/xy` or `semiotic/realtime/core`
+before the first render when SSR or the first frame must include marks.
+
 Every Chart component accepts a `frameProps` prop to access the underlying
 Frame API without leaving the simpler interface.
 

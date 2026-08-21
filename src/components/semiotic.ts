@@ -137,6 +137,8 @@ import { RealtimeSwarmChart } from "./charts/realtime/RealtimeSwarmChart"
 import { RealtimeWaterfallChart } from "./charts/realtime/RealtimeWaterfallChart"
 import { RealtimeHeatmap } from "./charts/realtime/RealtimeHeatmap"
 
+export { registerBuiltInXYPlugins } from "./stream/xyPlugins/registerBuiltIn"
+
 export {
   // Stream Frames
   StreamXYFrame,

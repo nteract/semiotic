@@ -51,7 +51,7 @@ import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotati
 import { makeDateTickFormatter } from "./xyDateTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
 import { getXYCanvasRenderers } from "./xyPlugins/registry"
-import { useEnsureCustomXYRenderers } from "./useEnsureCustomXYRenderers"
+import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
 import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
 import { DefaultTooltip } from "./xyDefaultTooltip"
@@ -497,7 +497,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onColorDomainChange(next)
     }, [])
 
-    useEnsureCustomXYRenderers(customLayout, scheduleRender)
+    useEnsureXYPlugins(chartType, customLayout, dirtyRef, scheduleRender)
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
     // Bridge the resolved custom-layout selection into the scene store +

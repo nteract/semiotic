@@ -1,60 +1,132 @@
-import { getXYPlugin, resetXYPluginRegistry } from "./registry"
-import { registerLineFamilyXYPlugins } from "./lineFamily"
-import { registerXYPlugin } from "./registry"
-import { scatterXYPlugin, bubbleXYPlugin } from "./pointPlugin"
-import { waterfallXYPlugin } from "./waterfallPlugin"
-import { heatmapXYPlugin } from "./heatmapPlugin"
-import { candlestickXYPlugin } from "./candlestickPlugin"
-import { stackedAreaXYPlugin } from "./stackedAreaPlugin"
-import { mixedXYPlugin } from "./mixedPlugin"
-import { areaXYPlugin } from "./areaPlugin"
-import { barXYPlugin } from "./barPlugin"
-import { swarmXYPlugin } from "./swarmPlugin"
-import { customXYPlugin } from "./customPlugin"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-/**
- * These tests start from an empty registry and re-run the same register
- * calls the HOCs make. Global setupTests does not pre-fill XY plugins.
- */
-describe("HOC plugin registration is chart-scoped", () => {
+type ChartType =
+  | "line"
+  | "area"
+  | "mixed"
+  | "stackedarea"
+  | "scatter"
+  | "bubble"
+  | "heatmap"
+  | "waterfall"
+  | "candlestick"
+  | "bar"
+  | "swarm"
+  | "custom"
+
+const cases: Array<{
+  name: string
+  load: () => Promise<unknown>
+  has: ChartType[]
+  missing: ChartType[]
+}> = [
+  {
+    name: "LineChart",
+    load: () => import("../../charts/xy/LineChart"),
+    has: ["line", "area", "mixed"],
+    missing: ["candlestick", "heatmap", "bar", "custom"],
+  },
+  {
+    name: "AreaChart",
+    load: () => import("../../charts/xy/AreaChart"),
+    has: ["area"],
+    missing: ["line", "candlestick"],
+  },
+  {
+    name: "StackedAreaChart",
+    load: () => import("../../charts/xy/StackedAreaChart"),
+    has: ["stackedarea"],
+    missing: ["line"],
+  },
+  {
+    name: "DifferenceChart",
+    load: () => import("../../charts/xy/DifferenceChart"),
+    has: ["mixed"],
+    missing: ["line"],
+  },
+  {
+    name: "Scatterplot",
+    load: () => import("../../charts/xy/Scatterplot"),
+    has: ["scatter"],
+    missing: ["line", "bubble"],
+  },
+  {
+    name: "BubbleChart",
+    load: () => import("../../charts/xy/BubbleChart"),
+    has: ["bubble"],
+    missing: ["scatter", "line"],
+  },
+  {
+    name: "Heatmap",
+    load: () => import("../../charts/xy/Heatmap"),
+    has: ["heatmap"],
+    missing: ["line"],
+  },
+  {
+    name: "WaterfallChart",
+    load: () => import("../../charts/xy/WaterfallChart"),
+    has: ["waterfall"],
+    missing: ["line"],
+  },
+  {
+    name: "CandlestickChart",
+    load: () => import("../../charts/xy/CandlestickChart"),
+    has: ["candlestick"],
+    missing: ["line"],
+  },
+  {
+    name: "MultiAxisLineChart",
+    load: () => import("../../charts/xy/MultiAxisLineChart"),
+    has: ["line"],
+    missing: ["candlestick", "heatmap"],
+  },
+  {
+    name: "MinimapChart",
+    load: () => import("../../charts/xy/MinimapChart"),
+    has: ["line", "area", "mixed"],
+    missing: ["candlestick"],
+  },
+  {
+    name: "XYCustomChart",
+    load: () => import("../../charts/custom/XYCustomChart"),
+    has: ["custom"],
+    missing: ["line"],
+  },
+  {
+    name: "RealtimeHistogram",
+    load: () => import("../../charts/realtime/RealtimeHistogram"),
+    has: ["bar"],
+    missing: ["line"],
+  },
+  {
+    name: "RealtimeSwarmChart",
+    load: () => import("../../charts/realtime/RealtimeSwarmChart"),
+    has: ["swarm"],
+    missing: ["line"],
+  },
+]
+
+describe("HOC module registration", () => {
   afterEach(() => {
-    resetXYPluginRegistry()
+    vi.resetModules()
+    vi.doUnmock("../StreamXYFrame")
   })
 
-  it("LineChart's line family does not retain candlestick/heatmap/custom", () => {
-    registerLineFamilyXYPlugins()
-    expect(getXYPlugin("line")).toBeTruthy()
-    expect(getXYPlugin("candlestick")).toBeUndefined()
-    expect(getXYPlugin("heatmap")).toBeUndefined()
-    expect(getXYPlugin("bar")).toBeUndefined()
-    expect(getXYPlugin("custom")).toBeUndefined()
-  })
-
-  it("Scatterplot registration is scatter-only", () => {
-    registerXYPlugin(scatterXYPlugin)
-    expect(getXYPlugin("scatter")).toBe(scatterXYPlugin)
-    expect(getXYPlugin("line")).toBeUndefined()
-    expect(getXYPlugin("bubble")).toBeUndefined()
-  })
-
-  it("each remaining HOC plugin stays on its own chartType", () => {
-    const pairs = [
-      ["area", () => registerXYPlugin(areaXYPlugin)],
-      ["stackedarea", () => registerXYPlugin(stackedAreaXYPlugin)],
-      ["mixed", () => registerXYPlugin(mixedXYPlugin)],
-      ["bubble", () => registerXYPlugin(bubbleXYPlugin)],
-      ["heatmap", () => registerXYPlugin(heatmapXYPlugin)],
-      ["waterfall", () => registerXYPlugin(waterfallXYPlugin)],
-      ["candlestick", () => registerXYPlugin(candlestickXYPlugin)],
-      ["bar", () => registerXYPlugin(barXYPlugin)],
-      ["swarm", () => registerXYPlugin(swarmXYPlugin)],
-      ["custom", () => registerXYPlugin(customXYPlugin)],
-    ] as const
-    for (const [chartType, register] of pairs) {
-      resetXYPluginRegistry()
-      register()
-      expect(getXYPlugin(chartType)).toBeTruthy()
-      expect(getXYPlugin("line")).toBeUndefined()
+  it.each(cases)("$name import registers only its plugins", async ({ load, has, missing }) => {
+    vi.resetModules()
+    vi.doMock("../StreamXYFrame", () => ({
+      __esModule: true,
+      default: () => null,
+    }))
+    const { getXYPlugin: before } = await import("./registry")
+    expect(before(has[0])).toBeUndefined()
+    await load()
+    const { getXYPlugin } = await import("./registry")
+    for (const chartType of has) {
+      expect(getXYPlugin(chartType), `${chartType} should be registered`).toBeTruthy()
+    }
+    for (const chartType of missing) {
+      expect(getXYPlugin(chartType), `${chartType} should stay unregistered`).toBeUndefined()
     }
   })
 })
