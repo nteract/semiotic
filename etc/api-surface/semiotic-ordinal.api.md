@@ -18,6 +18,7 @@ function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatu
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamOrdinalFrame(: React.RefAttributes<import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
@@ -81,6 +82,7 @@ interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
 interface OrdinalScales
 interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartProps
+interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface ResponsiveRule<TProps extends Record<string, unknown> = Record<string, unknown>>
 interface ResponsiveRuleCondition
 interface ResponsiveRuleContext
@@ -121,6 +123,7 @@ interface-member AnnotationLabelProps::property::y = required y: number
 interface-member BarChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member BarChartProps::property::barPadding = optional barPadding: number | undefined
 interface-member BarChartProps::property::baselinePadding = optional baselinePadding: boolean | undefined
+interface-member BarChartProps::property::brush = optional brush: boolean | undefined
 interface-member BarChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member BarChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
 interface-member BarChartProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -132,6 +135,7 @@ interface-member BarChartProps::property::frameProps = optional frameProps: Part
 interface-member BarChartProps::property::gradientFill = optional gradientFill: GradientInput | undefined
 interface-member BarChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member BarChartProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member BarChartProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member BarChartProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
 interface-member BarChartProps::property::regression = optional regression: RegressionProp | undefined
 interface-member BarChartProps::property::roundedTop = optional roundedTop: BarCornerRadius | undefined
@@ -406,6 +410,23 @@ interface-member PieChartProps::property::showLegend = optional showLegend: bool
 interface-member PieChartProps::property::startAngle = optional startAngle: number | undefined
 interface-member PieChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member PieChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RadarChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member RadarChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member RadarChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
+interface-member RadarChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member RadarChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member RadarChartProps::property::data = optional data: TDatum[] | undefined
+interface-member RadarChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member RadarChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamOrdinalFrameProps<Datum>, "data" | "size">> | undefined
+interface-member RadarChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member RadarChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member RadarChartProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member RadarChartProps::property::seriesAccessor = optional seriesAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member RadarChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member RadarChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member RadarChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member RadarChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RadarChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member ResponsiveRule::property::description = optional description: string | undefined
 interface-member ResponsiveRule::property::id = optional id: string | undefined
 interface-member ResponsiveRule::property::priority = optional priority: number | undefined
