@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { describe, it, expect } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"

@@ -48,22 +48,13 @@ import {
 } from "./pipelineTransitions"
 import type { XYSceneContext } from "./xySceneBuilders/types"
 import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
-import { buildLineScene } from "./xySceneBuilders/lineScene"
-import { buildAreaScene, buildStackedAreaScene } from "./xySceneBuilders/areaScene"
-import { buildMixedScene } from "./xySceneBuilders/mixedScene"
-import { buildPointScene } from "./xySceneBuilders/pointScene"
-import { buildHeatmapScene } from "./xySceneBuilders/heatmapScene"
-import { buildBarScene } from "./xySceneBuilders/barScene"
-import { buildSwarmScene } from "./xySceneBuilders/swarmScene"
-import { buildWaterfallScene } from "./xySceneBuilders/waterfallScene"
-import { buildCandlestickScene } from "./xySceneBuilders/candlestickScene"
+import { getXYSceneBuilder, unwrapXYScene } from "./xyPlugins/registry"
+import { warnIfXYPluginMissing } from "./xyPlugins/missingPlugin"
 import type { LayoutContext, LayoutResult } from "./customLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import { runCustomLayoutAttempt } from "./customLayoutAttempt"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import type { MarginType } from "../types/marginType"
 import { resolveRibbons } from "./pipelineRibbons"
 import {
@@ -825,30 +816,18 @@ export class PipelineStore implements UpdateResultStore {
         config: (config.layoutConfig ?? {}) as Record<string, unknown>,
         selection: config.layoutSelection ?? null,
       }
-      let result
-      try {
-        result = config.customLayout(layoutCtx)
-      } catch (err) {
-        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
-        const diagnostic = createCustomLayoutFailureDiagnostic(
-          "xy",
-          err,
-          preservedLastGoodScene,
-          this.version
-        )
-        this.lastCustomLayoutFailure = diagnostic
+      const outcome = runCustomLayoutAttempt({
+        family: "xy",
+        logLabel: "customLayout",
+        revision: this.version,
+        hasPreviousResult: this.lastCustomLayoutResult !== null,
+        onLayoutError: config.onLayoutError,
+        run: () => config.customLayout!(layoutCtx),
+      })
+      if (outcome.kind === "failure") {
+        this.lastCustomLayoutFailure = outcome.diagnostic
         this._customLayoutFailedThisBuild = true
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[semiotic] customLayout threw:", err)
-        }
-        try {
-          config.onLayoutError?.(diagnostic)
-        } catch (callbackError) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[semiotic] onLayoutError threw:", callbackError)
-          }
-        }
-        if (!preservedLastGoodScene) {
+        if (!outcome.preservedLastGoodScene) {
           this.customLayoutOverlays = null
           this.lastCustomLayoutResult = null
           this._customRestyle = undefined
@@ -858,6 +837,7 @@ export class PipelineStore implements UpdateResultStore {
         }
         return this.scene
       }
+      const result = outcome.result
       this.customLayoutOverlays = result.overlays ?? null
       this.lastCustomLayoutResult = result
       this.lastCustomLayoutFailure = null
@@ -917,35 +897,17 @@ export class PipelineStore implements UpdateResultStore {
       barCategoryCache: this._barCategoryCache,
     }
 
-    switch (config.chartType) {
-      case "line":
-        return buildLineScene(ctx, data)
-      case "area":
-        return buildAreaScene(ctx, data)
-      case "mixed":
-        return buildMixedScene(ctx, data)
-      case "stackedarea":
-        return buildStackedAreaScene(ctx, data)
-      case "scatter":
-      case "bubble":
-        return buildPointScene(ctx, data)
-      case "heatmap":
-        return buildHeatmapScene(ctx, data, layout)
-      case "bar": {
-        const barResult = buildBarScene(ctx, data)
-        this._barCategoryCache = ctx.barCategoryCache ?? null
-        this._binBoundaries = barResult.binBoundaries
-        return barResult.nodes
-      }
-      case "swarm":
-        return buildSwarmScene(ctx, data)
-      case "waterfall":
-        return buildWaterfallScene(ctx, data, layout)
-      case "candlestick":
-        return buildCandlestickScene(ctx, data, layout)
-      default:
-        return []
+    const buildScene = getXYSceneBuilder(config.chartType)
+    if (!buildScene) {
+      warnIfXYPluginMissing(config.chartType)
+      return []
     }
+    const built = unwrapXYScene(buildScene(ctx, data, layout))
+    if (config.chartType === "bar") {
+      this._barCategoryCache = ctx.barCategoryCache ?? null
+      this._binBoundaries = built.binBoundaries
+    }
+    return built.nodes
   }
 
   private resolveBoundsStyle(group: string, sampleDatum?: Datum): Style {

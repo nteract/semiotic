@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * TDD: LineChart with colorBy + directLabel
  *

@@ -1,6 +1,8 @@
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { swarmXYPlugin } from "../../stream/xyPlugins/swarmPlugin"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -58,6 +60,8 @@ import {
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
+
+registerXYPlugin(swarmXYPlugin)
 
 const EMPTY_LEGEND_DATA: Datum[] = []
 

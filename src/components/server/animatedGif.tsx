@@ -18,6 +18,9 @@ import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server.browser"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
+import { registerBuiltInXYPlugins } from "../stream/xyPlugins/registerBuiltIn"
+
+registerBuiltInXYPlugins()
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
 import { xySceneNodeToSVG } from "../stream/SceneToSVG"

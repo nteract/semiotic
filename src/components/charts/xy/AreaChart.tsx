@@ -5,6 +5,8 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { areaXYPlugin } from "../../stream/xyPlugins/areaPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
@@ -32,6 +34,8 @@ import {
   type SemanticGradientInput,
   type SemanticGradientStopInput,
 } from "../shared/gradient"
+
+registerXYPlugin(areaXYPlugin)
 
 export type SemanticGradientStop = SemanticGradientStopInput
 

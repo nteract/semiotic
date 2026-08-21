@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act, fireEvent, waitFor } from "@testing-library/react"

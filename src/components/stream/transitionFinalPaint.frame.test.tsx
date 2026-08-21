@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { act, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"

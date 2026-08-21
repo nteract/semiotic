@@ -39,6 +39,7 @@ const PieChartCapability: ChartCapability
 const ProcessSankeyCapability: ChartCapability
 const ProportionalSymbolMapCapability: ChartCapability
 const QuadrantChartCapability: ChartCapability
+const RadarChartCapability: ChartCapability
 const RidgelinePlotCapability: ChartCapability
 const SankeyDiagramCapability: ChartCapability
 const ScatterplotCapability: ChartCapability
@@ -49,6 +50,7 @@ const SwimlaneChartCapability: ChartCapability
 const TreeDiagramCapability: ChartCapability
 const TreemapCapability: ChartCapability
 const ViolinPlotCapability: ChartCapability
+const WaterfallChartCapability: ChartCapability
 const analystPersona: AudienceProfile
 const dataScientistPersona: AudienceProfile
 const executivePersona: AudienceProfile
@@ -102,6 +104,7 @@ function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & R
 function ProcessFlowChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -124,6 +127,7 @@ function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
 function UnitPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
 function annotationFreshnessFor<T>(annotation: Annotated<T>, nowMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function annotationStableId(annotation: Datum): string | undefined
@@ -175,7 +179,7 @@ function evaluateChart(component: string, props?: Datum | undefined, data?: read
 function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataProfile, audience?: AudienceProfile | undefined, options?: EvaluateVariantProposalOptions | undefined): VariantScore
 function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
 function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
-function filterAnnotationsByStatus<T>(annotations: readonly Annotated<T>[], options?: AnnotationStatusVisibility | undefined): Annotated<T>[]
+function filterAnnotationsByStatus<T extends StatusFilterable>(annotations: readonly T[], options?: AnnotationStatusVisibility | undefined): T[]
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string

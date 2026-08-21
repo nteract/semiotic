@@ -659,6 +659,12 @@ export interface BandConfig<T = Datum> {
 export interface StreamXYFrameProps<T = Datum>
   extends StreamSemanticInteractionProps<HoverData> {
   // ── Chart type ───────────────────────────────────
+  /**
+   * Built-in mark set. HOCs register the plugin they need. Direct
+   * StreamXYFrame loads other built-ins on first client paint. Call
+   * `registerBuiltInXYPlugins()` from `semiotic/xy` or
+   * `semiotic/realtime/core` for SSR / first-frame marks.
+   */
   chartType: StreamChartType
   runtimeMode?: RuntimeMode
 

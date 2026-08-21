@@ -80,6 +80,7 @@ function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed
 function markTooltipChrome<T>(component: T): T
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function parseWindowDuration(spec: number | string): null | number
+function registerBuiltInXYPlugins(): void
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function statValue(w: AggregatedWindow, stat: AggregateStat): number

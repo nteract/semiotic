@@ -15,6 +15,8 @@ import {
   useCallback
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { mixedXYPlugin } from "../../stream/xyPlugins/mixedPlugin"
 import type {
   StreamXYFrameProps,
   StreamXYFrameHandle
@@ -36,6 +38,8 @@ import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
 import type { SegmentRow } from "./differenceSegments"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
+
+registerXYPlugin(mixedXYPlugin)
 
 export { computeDifferenceSegments } from "./differenceSegments"
 

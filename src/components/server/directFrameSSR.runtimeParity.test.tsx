@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 // @vitest-environment node
 
 import * as React from "react"

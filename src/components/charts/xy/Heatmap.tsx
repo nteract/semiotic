@@ -8,6 +8,8 @@ import { useMemo, forwardRef, useRef } from "react"
 import { scaleSequential } from "d3-scale"
 import { getSequentialInterpolator } from "../shared/colorPalettes"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { heatmapXYPlugin } from "../../stream/xyPlugins/heatmapPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSelection, useChartLegendAndMargin, useChartMode, useLegendInteraction, useThemeSequential, getCrosshairProps } from "../shared/hooks"
@@ -23,6 +25,8 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+
+registerXYPlugin(heatmapXYPlugin)
 
 /**
  * Heatmap component props

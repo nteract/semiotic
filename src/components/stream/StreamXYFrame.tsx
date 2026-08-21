@@ -50,7 +50,8 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { makeDateTickFormatter } from "./xyDateTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
-import { XY_CANVAS_RENDERERS as RENDERERS } from "./xyCanvasRenderers"
+import { getXYCanvasRenderers } from "./xyPlugins/registry"
+import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
 import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
 import { DefaultTooltip } from "./xyDefaultTooltip"
@@ -496,6 +497,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onColorDomainChange(next)
     }, [])
 
+    useEnsureXYPlugins(chartType, customLayout, dirtyRef, scheduleRender)
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
     // Bridge the resolved custom-layout selection into the scene store +
@@ -1001,7 +1003,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           // Use the "custom" renderer set (every renderer, each self-filtering)
           // regardless of chartType so a layout that emits, e.g., rects on a
           // chartType="line" frame still draws.
-          const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType]
+          const renderers = getXYCanvasRenderers(chartType, Boolean(customLayout))
           paintSceneWithBackend({
             context: ctx,
             nodes: store.scene,

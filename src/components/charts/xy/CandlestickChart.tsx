@@ -6,6 +6,8 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { candlestickXYPlugin } from "../../stream/xyPlugins/candlestickPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CandlestickStyle } from "../../stream/types"
@@ -17,6 +19,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizePartialMargin } from "../../types/marginType"
+
+registerXYPlugin(candlestickXYPlugin)
 
 export interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]

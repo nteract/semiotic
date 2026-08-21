@@ -36,10 +36,8 @@ import {
   STREAMING_PALETTE
 } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import { runCustomLayoutAttempt } from "./customLayoutAttempt"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import {
   resolveProjection,
   makeGeoNumericAccessor as makeAccessor,
@@ -964,33 +962,18 @@ export class GeoPipelineStore implements UpdateResultStore {
         selection: config.layoutSelection ?? null
       }
 
-      let result: GeoLayoutResult
-      try {
-        result = config.customLayout(layoutContext)
-      } catch (err) {
-        // Do not blank a working custom chart just because its next layout
-        // attempt failed. A successful result is the proof that the current
-        // scene/overlays/restyle callback belong together and can be retained.
-        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
-        const diagnostic = createCustomLayoutFailureDiagnostic(
-          "geo",
-          err,
-          preservedLastGoodScene,
-          this.version
-        )
-        this.lastCustomLayoutFailure = diagnostic
+      const outcome = runCustomLayoutAttempt({
+        family: "geo",
+        logLabel: "geo customLayout",
+        revision: this.version,
+        hasPreviousResult: this.lastCustomLayoutResult !== null,
+        onLayoutError: config.onLayoutError,
+        run: () => config.customLayout!(layoutContext),
+      })
+      if (outcome.kind === "failure") {
+        this.lastCustomLayoutFailure = outcome.diagnostic
         this._customLayoutFailedThisBuild = true
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[semiotic] geo customLayout threw:", err)
-        }
-        try {
-          config.onLayoutError?.(diagnostic)
-        } catch (callbackError) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[semiotic] onLayoutError threw:", callbackError)
-          }
-        }
-        if (!preservedLastGoodScene) {
+        if (!outcome.preservedLastGoodScene) {
           this.customLayoutOverlays = null
           this.lastCustomLayoutResult = null
           this._customRestyle = undefined
@@ -1000,6 +983,7 @@ export class GeoPipelineStore implements UpdateResultStore {
         }
         return this.scene
       }
+      const result = outcome.result
 
       const nodes = result.nodes ?? []
       this.customLayoutOverlays = result.overlays ?? null

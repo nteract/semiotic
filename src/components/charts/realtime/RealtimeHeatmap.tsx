@@ -1,6 +1,8 @@
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { heatmapXYPlugin } from "../../stream/xyPlugins/heatmapPlugin"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -54,6 +56,8 @@ import {
   useRealtimeFrameHandle,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
+
+registerXYPlugin(heatmapXYPlugin)
 
 export interface RealtimeHeatmapProps<
   TDatum extends Datum = Datum

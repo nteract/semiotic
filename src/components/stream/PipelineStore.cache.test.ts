@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Cache invalidation tests for PipelineStore.

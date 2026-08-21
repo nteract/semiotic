@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {

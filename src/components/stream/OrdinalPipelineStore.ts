@@ -48,10 +48,8 @@ import type { OrdinalLayoutContext, OrdinalLayoutResult } from "./ordinalCustomL
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { resolveCustomLayoutPalette, buildResolveColor } from "./customLayoutPalette"
 import { warnCustomLayoutDiagnostics } from "./customLayoutDiagnostics"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import { runCustomLayoutAttempt } from "./customLayoutAttempt"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import type { MarginType } from "../types/marginType"
 import {
   compactTimestampBufferForRemoval,
@@ -632,30 +630,18 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     // because they consume `this.scene`.
     if (this.config.customLayout) {
       const layoutCtx = this.buildLayoutContext(data, layout)
-      let result
-      try {
-        result = this.config.customLayout(layoutCtx)
-      } catch (err) {
-        const preservedLastGoodScene = this.lastCustomLayoutResult !== null
-        const diagnostic = createCustomLayoutFailureDiagnostic(
-          "ordinal",
-          err,
-          preservedLastGoodScene,
-          this.version
-        )
-        this.lastCustomLayoutFailure = diagnostic
+      const outcome = runCustomLayoutAttempt({
+        family: "ordinal",
+        logLabel: "ordinal customLayout",
+        revision: this.version,
+        hasPreviousResult: this.lastCustomLayoutResult !== null,
+        onLayoutError: this.config.onLayoutError,
+        run: () => this.config.customLayout!(layoutCtx),
+      })
+      if (outcome.kind === "failure") {
+        this.lastCustomLayoutFailure = outcome.diagnostic
         this._customLayoutFailedThisBuild = true
-        if (process.env.NODE_ENV !== "production") {
-          console.error("[semiotic] ordinal customLayout threw:", err)
-        }
-        try {
-          this.config.onLayoutError?.(diagnostic)
-        } catch (callbackError) {
-          if (process.env.NODE_ENV !== "production") {
-            console.error("[semiotic] onLayoutError threw:", callbackError)
-          }
-        }
-        if (!preservedLastGoodScene) {
+        if (!outcome.preservedLastGoodScene) {
           this.customLayoutOverlays = null
           this.lastCustomLayoutResult = null
           this._customRestyle = undefined
@@ -665,6 +651,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
         }
         return this.scene
       }
+      const result = outcome.result
       this.customLayoutOverlays = result.overlays ?? null
       this.lastCustomLayoutResult = result
       this.lastCustomLayoutFailure = null

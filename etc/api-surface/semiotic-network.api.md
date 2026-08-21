@@ -37,6 +37,7 @@ function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLine
 function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkCurvedEdge | NetworkRibbonEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
 function networkHitTarget(props: NetworkHitTargetRectProps): NetworkRectNode
+function registerBuiltInNetworkLayouts(): void
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}

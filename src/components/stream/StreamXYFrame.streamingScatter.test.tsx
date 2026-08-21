@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Regression coverage for `runtimeMode="streaming"` with non-temporal
  * `xAccessor`/`yAccessor`.

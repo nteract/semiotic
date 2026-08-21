@@ -5,6 +5,8 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
@@ -31,6 +33,8 @@ import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
+
+registerXYPlugin(scatterXYPlugin)
 
 /**
  * Scatterplot component props

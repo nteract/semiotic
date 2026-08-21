@@ -9,6 +9,8 @@ import {
   useMemo
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { lineXYPlugin } from "../../stream/xyPlugins/linePlugin"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -77,6 +79,8 @@ import {
   buildRealtimeFrameChromeProps,
   useRealtimeChartMode
 } from "./realtimeChartRuntime"
+
+registerXYPlugin(lineXYPlugin)
 
 /** Read a numeric time/value off a datum via accessor, with a field-name fallback. */
 function readNum<TDatum extends Datum>(

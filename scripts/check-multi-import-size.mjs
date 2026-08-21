@@ -120,16 +120,33 @@ async function measureMultiImportGzip() {
       logLevel: "silent",
     })
 
+    // Count the initial import graph, rather than every output file. Dynamic
+    // imports are deliberately used for opt-in custom-layout painters and
+    // direct-StreamXYFrame plugin recovery; a consumer importing only these
+    // public HOCs does not download those chunks at startup. Summing the whole
+    // outdir would turn that deferred work into a false cold-load regression.
+    const files = new Set()
+    const collectStaticImports = (name) => {
+      if (files.has(name)) return
+      files.add(name)
+      const source = readFileSync(join(outDir, name), "utf8")
+      const staticImport = /(?:from|import)\s*["'](\.\/[^"']+\.js)["']/g
+      let match
+      while ((match = staticImport.exec(source))) {
+        collectStaticImports(match[1].slice(2))
+      }
+    }
+    collectStaticImports("entry.js")
+
     let totalGzip = 0
     let totalRaw = 0
-    const files = readdirSync(outDir).filter((name) => name.endsWith(".js"))
     for (const name of files) {
       const buf = readFileSync(join(outDir, name))
       totalRaw += buf.length
       totalGzip += gzipSync(buf, { level: zlibConstants.Z_BEST_COMPRESSION }).length
     }
 
-    return { totalGzip, totalRaw, fileCount: files.length }
+    return { totalGzip, totalRaw, fileCount: files.size }
   } finally {
     rmSync(packageRoot, { recursive: true, force: true })
     rmSync(consumerRoot, { recursive: true, force: true })

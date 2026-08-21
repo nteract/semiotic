@@ -3,6 +3,8 @@ import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
 import { getColor, resolveExplicitColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
@@ -29,6 +31,8 @@ import {
   SkipToTableLink,
 } from "../../stream/AccessibleDataTable"
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
+
+registerXYPlugin(scatterXYPlugin)
 
 // Internal field used to identify datums across cells
 const SPLOM_IDX = "__splomIdx"

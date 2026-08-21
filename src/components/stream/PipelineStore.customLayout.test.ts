@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { afterEach, describe, it, expect, vi } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 import type { LayoutContext } from "./customLayout"

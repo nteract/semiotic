@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 
 const palette = ["#112233", "#445566"]

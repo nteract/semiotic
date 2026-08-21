@@ -5,6 +5,8 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { stackedAreaXYPlugin } from "../../stream/xyPlugins/stackedAreaPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode } from "../shared/hooks"
@@ -19,6 +21,8 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+
+registerXYPlugin(stackedAreaXYPlugin)
 
 /**
  * StackedAreaChart component props

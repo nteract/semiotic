@@ -4,6 +4,8 @@ import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { lineXYPlugin } from "../../stream/xyPlugins/linePlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CurveType } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -24,6 +26,8 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
+
+registerXYPlugin(lineXYPlugin)
 
 // ── Internal field names ────────────────────────────────────────────────
 const UNITIZED_FIELD = "__ma_unitized"

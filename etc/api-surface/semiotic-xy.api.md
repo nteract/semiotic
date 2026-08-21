@@ -24,6 +24,7 @@ function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttribut
 function StreamXYFrame(: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
+function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function glyphExtent(def: GlyphDef, size: number): number
@@ -38,6 +39,7 @@ function makeXYRuleContext(xAccessor: ((d: Datum) => unknown) | string | undefin
 function markTooltipChrome<T>(component: T): T
 function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: StyleRuleContext): boolean
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
+function registerBuiltInXYPlugins(): void
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
@@ -98,6 +100,7 @@ interface StyleRuleThreshold
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps, AxisConfig
 interface-member AreaChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member AreaChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
@@ -326,6 +329,9 @@ interface-member HeatmapProps::property::customColorScale = optional customColor
 interface-member HeatmapProps::property::data = optional data: TDatum[] | undefined
 interface-member HeatmapProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member HeatmapProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member HeatmapProps::property::heatmapAggregation = optional heatmapAggregation: "count" | "mean" | "sum" | undefined
+interface-member HeatmapProps::property::heatmapXBins = optional heatmapXBins: number | undefined
+interface-member HeatmapProps::property::heatmapYBins = optional heatmapYBins: number | undefined
 interface-member HeatmapProps::property::legend = optional legend: Pick<GradientLegendValue, "legendDistance"> | undefined
 interface-member HeatmapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
@@ -386,6 +392,7 @@ interface-member LineChartProps::property::annotations = optional annotations: D
 interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
 interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member LineChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
+interface-member LineChartProps::property::brush = optional brush: boolean | undefined
 interface-member LineChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member LineChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -403,6 +410,7 @@ interface-member LineChartProps::property::lineBy = optional lineBy: ChartAccess
 interface-member LineChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
 interface-member LineChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
 interface-member LineChartProps::property::lineWidth = optional lineWidth: number | undefined
+interface-member LineChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member LineChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member LineChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -505,6 +513,7 @@ interface-member ResponsiveRuleResult::property::matches = required matches: Res
 interface-member ResponsiveRuleResult::property::props = required props: TProps
 interface-member ScatterplotProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member ScatterplotProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
+interface-member ScatterplotProps::property::brush = optional brush: boolean | undefined
 interface-member ScatterplotProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member ScatterplotProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member ScatterplotProps::property::data = optional data: TDatum[] | undefined
@@ -514,6 +523,7 @@ interface-member ScatterplotProps::property::frameProps = optional frameProps: P
 interface-member ScatterplotProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member ScatterplotProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
 interface-member ScatterplotProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
+interface-member ScatterplotProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member ScatterplotProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member ScatterplotProps::property::pointOpacity = optional pointOpacity: number | undefined
 interface-member ScatterplotProps::property::pointRadius = optional pointRadius: number | undefined
@@ -747,6 +757,26 @@ interface-member TooltipField::property::format = optional format: ((value: unkn
 interface-member TooltipField::property::key = optional key: Accessor | undefined
 interface-member TooltipField::property::label = optional label: string | undefined
 interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member WaterfallChartProps::property::annotations = optional annotations: Datum[] | undefined
+interface-member WaterfallChartProps::property::connectorStroke = optional connectorStroke: string | undefined
+interface-member WaterfallChartProps::property::connectorWidth = optional connectorWidth: number | undefined
+interface-member WaterfallChartProps::property::data = optional data: TDatum[] | undefined
+interface-member WaterfallChartProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member WaterfallChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
+interface-member WaterfallChartProps::property::gap = optional gap: number | undefined
+interface-member WaterfallChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
+interface-member WaterfallChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
+interface-member WaterfallChartProps::property::negativeColor = optional negativeColor: string | undefined
+interface-member WaterfallChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member WaterfallChartProps::property::positiveColor = optional positiveColor: string | undefined
+interface-member WaterfallChartProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member WaterfallChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member WaterfallChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member WaterfallChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
+interface-member WaterfallChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member WaterfallChartProps::property::xScaleType = optional xScaleType: "linear" | "log" | "time" | undefined
+interface-member WaterfallChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member WaterfallChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member XYCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member XYCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member XYCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined

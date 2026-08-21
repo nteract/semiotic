@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Push API edge case scenarios.
  *
