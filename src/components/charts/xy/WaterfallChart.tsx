@@ -67,6 +67,19 @@ export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseC
  *   yAccessor="value"
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // Numeric x values use their input order as the cumulative sequence.
+ * <WaterfallChart
+ *   data={[{ change: 12 }, { change: -4 }, { change: 9 }, { change: -7 }]}
+ *   yAccessor="change"
+ *   positiveColor="#15803d"
+ *   negativeColor="#b91c1c"
+ *   title="Quarterly operating changes"
+ *   description="Sequential gains and losses in millions of dollars."
+ * />
+ * ```
  */
 export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends Datum = Datum>(
   props: WaterfallChartProps<TDatum>,

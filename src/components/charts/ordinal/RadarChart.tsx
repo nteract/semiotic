@@ -69,6 +69,19 @@ export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChart
  *   colorBy="name"
  * />
  * ```
+ *
+ * @example
+ * ```tsx
+ * // A single profile with function accessors and an explicit description.
+ * <RadarChart
+ *   data={skills}
+ *   categoryAccessor={(skill) => skill.label}
+ *   valueAccessor={(skill) => skill.score}
+ *   title="Engineering skills profile"
+ *   description="Scores across six self-assessed engineering skills."
+ *   pieceStyle={{ fill: "#2563eb", stroke: "#1d4ed8" }}
+ * />
+ * ```
  */
 export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = Datum>(
   props: RadarChartProps<TDatum>,
