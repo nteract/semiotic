@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render } from "@testing-library/react"
 import StreamXYFrame from "./StreamXYFrame"

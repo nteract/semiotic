@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Coverage for the unified ribbon path through PipelineStore — both
  * public envelope APIs (`boundsAccessor` and `band`) compose into the

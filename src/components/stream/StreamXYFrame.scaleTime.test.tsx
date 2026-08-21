@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Integration test: verify PipelineStore + scaleTime produce correct Date ticks.
  * Note: Full StreamXYFrame rendering requires canvas (not available in jsdom),

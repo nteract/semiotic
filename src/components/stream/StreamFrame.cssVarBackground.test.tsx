@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Regression coverage for the `background="var(--token, fallback)"`
  * flashing-background bug.

@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Regression coverage for partial `yExtent` overrides on chart-type-
  * specific extent paths.

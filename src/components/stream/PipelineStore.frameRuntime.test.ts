@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { describe, expect, it } from "vitest"
 import { FrameRuntime } from "./FrameRuntime"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"

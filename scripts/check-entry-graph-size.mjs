@@ -58,7 +58,11 @@ const ENTRY_GRAPHS = [
   // Bumped 399→400: production gzip can vary by a few hundred bytes around
   // the rounded 399.0 KiB measurement; retain a full KiB of guard headroom.
   { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 400 },
-  { entry: "xy.module.min.js", label: "xy", limitKb: 150 },
+  // Bumped 150→154: custom-layout painter registration now loads on demand
+  // rather than retaining every painter in every chart HOC. The lightweight
+  // readiness bridge and fallback paint selection live in the shared XY
+  // runtime; the measured LineChart graph is 153.7 KiB gzip.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 154 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -71,8 +75,10 @@ const ENTRY_GRAPHS = [
   // actual frameProps legend side and keeps direct/static chart geometry in
   // parity. The shared client graph measures 149.8 KiB gzip; retain a
   // reviewable KiB of headroom instead of splitting common chrome at release.
-  { entry: "network.module.min.js", label: "network", limitKb: 153 },
-  { entry: "geo.module.min.js", label: "geo", limitKb: 110 },
+  // The custom-layout readiness bridge is shared by StreamXYFrame consumers.
+  // Current production graphs: network 153.9 KiB, geo 111.2 KiB gzip.
+  { entry: "network.module.min.js", label: "network", limitKb: 154 },
+  { entry: "geo.module.min.js", label: "geo", limitKb: 112 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
   // the drawable area. Production graph measures 160.2 KiB gzip.
@@ -91,7 +97,8 @@ const ENTRY_GRAPHS = [
   // Bumped 164→166 (3.9.0): title and legend chrome now shares the same
   // theme/placement contract across rendering families. The common client
   // graph measures 164.3 KiB gzip; retain a narrow release headroom.
-  { entry: "physics.module.min.js", label: "physics", limitKb: 166 },
+  // The shared StreamXYFrame custom-layout bridge measures 166.5 KiB here.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 167 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry. Production
   // graph measures 240.8 KiB gzip; retain measured one-KiB headroom.
@@ -131,7 +138,9 @@ const ENTRY_GRAPHS = [
   // Bumped 514→516 (3.9.0): the shared legend/axis/title hardening reaches
   // the canonical AI chart catalog through the client-primary graph. It
   // measures 514.5 KiB gzip; keep one KiB of explicit, reviewable headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 523 },
+  // Bumped 523→527: the canonical AI catalog reaches the same shared
+  // custom-layout readiness path. Current production graph: 525.6 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 527 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

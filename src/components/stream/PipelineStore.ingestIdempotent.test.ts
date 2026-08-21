@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 /**
  * Regression: `PipelineStore.ingest` with `bounded: true` must be a
  * no-op on the same `inserts` reference. Stream Frames call

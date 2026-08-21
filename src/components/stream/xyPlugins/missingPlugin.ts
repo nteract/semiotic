@@ -1,17 +1,18 @@
 import type { StreamChartType } from "../types"
 import { getXYPlugin } from "./registry"
 
-let warned = false
+const warned = new Set<string>()
 
 /**
- * Direct StreamXYFrame usage no longer loads every XY mark plugin. Warn once
- * in development when a chartType has no registered plugin so the empty
- * scene is not silent.
+ * Direct StreamXYFrame usage no longer loads every XY mark plugin. Warn
+ * once per chartType when a plugin is missing so the empty scene is not
+ * silent — including production, where sideEffects:false can drop unused
+ * HOC modules.
  */
 export function warnIfXYPluginMissing(chartType: StreamChartType): void {
   if (getXYPlugin(chartType)) return
-  if (process.env.NODE_ENV === "production" || warned) return
-  warned = true
+  if (warned.has(chartType)) return
+  warned.add(chartType)
   console.warn(
     `[semiotic] StreamXYFrame: no XY plugin registered for "${chartType}". ` +
       `Import the matching chart HOC (which registers its plugin), or call ` +

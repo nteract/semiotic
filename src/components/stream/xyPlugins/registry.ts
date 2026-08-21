@@ -33,6 +33,13 @@ export function registerXYPlugin(plugin: XYChartPlugin): void {
   registry[plugin.chartType] = plugin
 }
 
+/** Test-only: drop every plugin so HOC registration can be asserted in isolation. */
+export function resetXYPluginRegistry(): void {
+  for (const key of Object.keys(registry) as StreamChartType[]) {
+    delete registry[key]
+  }
+}
+
 export function getXYPlugin(
   chartType: StreamChartType,
 ): XYChartPlugin | undefined {
@@ -52,6 +59,19 @@ export function getXYCanvasRenderers(
   if (customLayout) {
     const custom = registry.custom?.canvasRenderers
     if (custom && custom.length > 0) return custom
+    // Until the custom-painter chunk loads, paint whatever plugins this
+    // chart already registered (e.g. LineChart's line/area/point set).
+    const seen = new Set<StreamRendererFn>()
+    const union: StreamRendererFn[] = []
+    for (const plugin of Object.values(registry)) {
+      if (!plugin) continue
+      for (const renderer of plugin.canvasRenderers) {
+        if (seen.has(renderer)) continue
+        seen.add(renderer)
+        union.push(renderer)
+      }
+    }
+    return union
   }
   return registry[chartType]?.canvasRenderers ?? []
 }

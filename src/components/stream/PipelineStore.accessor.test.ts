@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import type { Datum } from "../charts/shared/datumTypes"
 

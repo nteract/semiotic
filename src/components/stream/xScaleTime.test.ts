@@ -2,6 +2,7 @@
  * Integration test: verify that PipelineStore with xScaleType="time"
  * produces Date-instance ticks from scaleTime, NOT scaleLinear number ticks.
  */
+import "../../test-utils/registerBuiltInXYPlugins"
 import { describe, it, expect } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { buildPipelineScales } from "./pipelineDomainResolution"

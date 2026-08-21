@@ -4,6 +4,7 @@
  * When scalePadding=10, the X scale range becomes [10, width-10] instead of [0, width].
  * The domain stays the same — only the pixel mapping changes.
  */
+import "../../test-utils/registerBuiltInXYPlugins"
 import { describe, it, expect } from "vitest"
 import { PipelineStore } from "./PipelineStore"
 

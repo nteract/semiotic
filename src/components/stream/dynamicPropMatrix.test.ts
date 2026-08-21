@@ -1,3 +1,4 @@
+import "../../test-utils/registerBuiltInXYPlugins"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Datum } from "../charts/shared/datumTypes"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"

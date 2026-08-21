@@ -1,9 +1,9 @@
 /**
  * Register every built-in XY scene/renderer plugin.
  *
- * Call this from the server renderer and tests, where the chart type is
- * chosen at runtime. Client HOCs import and register only the plugin they
- * need so a LineChart consumer does not load candlestick / heatmap / bar.
+ * Call this from the server renderer, tests, and direct StreamXYFrame
+ * consumers. Client HOCs import and register only the plugin they need
+ * so a LineChart consumer does not load candlestick / heatmap / bar.
  *
  * Must be a live function call: `package.json` has `"sideEffects": false`,
  * so a side-effect-only import is dropped from the published bundles.
