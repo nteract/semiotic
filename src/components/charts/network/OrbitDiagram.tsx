@@ -7,7 +7,10 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
-import { flattenHierarchy } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
@@ -277,6 +280,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
     [baseNodeStyleFn, stroke, strokeWidth, opacity]
   )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   // Edge style — use semi-transparent grey that works in both light and dark mode
   // (canvas cannot resolve "currentColor")
@@ -326,7 +337,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         {...setup.legendBehaviorProps}
         nodeIDAccessor={nodeIdAccessor}
         childrenAccessor={childrenAccessor as string | ((d: Datum) => Datum[])}
-        nodeStyle={nodeStyleFn}
+        nodeStyle={nodeStyle}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}
         colorScheme={setup.effectivePalette}

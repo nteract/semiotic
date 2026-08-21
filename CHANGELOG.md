@@ -85,6 +85,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Network legend interactions now affect rendered marks** — highlight and
+  isolate state is composed into node and connected-edge styling for chord,
+  hierarchy, force, Sankey, and ProcessSankey charts instead of changing only
+  the legend swatches. Push-mode network frames now report their live node
+  category domain, so a `ChordDiagram` legend can appear and stay synchronized
+  after ref-based pushes; empty domains no longer produce an `"undefined"`
+  legend item.
 - **Waterfall selection and edge geometry** — static Waterfall bars now consume
   linked selections through their area style, and automatic x domains reserve
   half a step around the first/last centered bars so the final total is not

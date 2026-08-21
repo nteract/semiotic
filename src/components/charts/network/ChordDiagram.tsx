@@ -11,7 +11,11 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { createEdgeStyleFn } from "../shared/networkUtils"
+import {
+  createEdgeStyleFn,
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
@@ -199,11 +203,10 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
   const nodeIndexMap = useMemo(() => new Map<string, number>(), [])
 
-  // When data is empty (push API, no edges at mount), the HOC's colorScale
-  // is built from zero data points and returns "#999" for everything.
-  // In that case, skip passing nodeStyle/edgeStyle so the chord layout
-  // plugin's built-in nodeColorMap palette handles coloring per node index.
-  const hasColorData = setup.safeNodes.length > 0
+  // Before push-mode category feedback arrives, let the chord plugin use its
+  // built-in palette. Once the frame reports a live domain, setup can build a
+  // matching scale and selection-aware styles for the pushed nodes.
+  const hasColorData = setup.safeNodes.length > 0 || setup.allCategories.length > 0
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
@@ -238,7 +241,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) last.
   // Declarative style rules layer over the base node color; when there's no
   // color base but rules are set, they still apply (rules-only styling).
-  const nodeStyle = useMemo(
+  const nodeStyleWithoutSelection = useMemo(
     () => {
       if (!baseNodeStyle && !(styleRules && styleRules.length > 0)) return undefined
       return mergeShapeStyle(
@@ -247,6 +250,14 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       )
     },
     [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
+  )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Edge style function — d is a RealtimeEdge
@@ -262,9 +273,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     })
   }, [hasColorData, edgeColorBy, colorBy, setup.colorScale, nodeStyle, edgeOpacity, setup.themeCategorical, colorScheme, categoryIndexMap])
 
-  const edgeStyle = useMemo(
+  const edgeStyleWithoutSelection = useMemo(
     () => baseEdgeStyle ? mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }) : undefined,
     [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
+  const edgeStyle = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Node label accessor

@@ -22,7 +22,8 @@ import {
 import type { Datum } from "./datumTypes"
 
 /**
- * Distinct string-coerced `colorBy` values across `data`, in first-seen order.
+ * Distinct non-null, string-coerced `colorBy` values across `data`, in
+ * first-seen order.
  * Shared by chart setup hooks that need the category list for a color scale
  * or legend before any scale/legend object is built.
  */
@@ -34,6 +35,7 @@ export function distinctCategories(
   const vals = new Set<string>()
   for (const d of data) {
     const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy]
+    if (v == null) continue
     vals.add(String(v))
   }
   return Array.from(vals)

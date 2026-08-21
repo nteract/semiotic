@@ -12,7 +12,11 @@ import { getColor } from "../shared/colorUtils"
 
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { createEdgeStyleFn } from "../shared/networkUtils"
+import {
+  createEdgeStyleFn,
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
@@ -249,12 +253,20 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
   )
 
   // Overlay top-level primitive props onto nodeStyle.
-  const nodeStyle = useMemo(
+  const nodeStyleWithoutSelection = useMemo(
     () => mergeShapeStyle(
       composeStyleRules<number>(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
       { stroke, strokeWidth, opacity },
     ),
     [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
+  )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Edge style function
@@ -268,9 +280,17 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
     baseStyle: { stroke: "none", strokeWidth: 0 }
   }), [edgeColorBy, colorBy, setup.colorScale, nodeStyle, edgeOpacity])
 
-  const edgeStyle = useMemo(
+  const edgeStyleWithoutSelection = useMemo(
     () => mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }),
     [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
+  const edgeStyle = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Node label accessor

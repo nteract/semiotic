@@ -1,9 +1,10 @@
 import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
 import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { isLegendConfig } from "../../types/legendTypes"
 import { ChordDiagram } from "./ChordDiagram"
 import { CirclePack } from "./CirclePack"
 import { OrbitDiagram } from "./OrbitDiagram"
@@ -134,5 +135,73 @@ describe("hierarchy and chord legends", () => {
     renderLegendCase(testCase, false)
 
     expect(lastNetworkFrameProps.legend).toBeUndefined()
+  })
+
+  it.each(legendCases)("$name applies legend highlight state to its marks", (testCase) => {
+    renderLegendCase(testCase)
+
+    act(() => {
+      lastNetworkFrameProps.legendHoverBehavior({ label: "Core" })
+    })
+
+    const selected = lastNetworkFrameProps.nodeStyle({
+      id: "Alpha",
+      data: { id: "Alpha", name: "Alpha", group: "Core" },
+    })
+    const dimmed = lastNetworkFrameProps.nodeStyle({
+      id: "Beta",
+      data: { id: "Beta", name: "Beta", group: "Growth" },
+    })
+
+    expect(selected.opacity ?? 1).toBeGreaterThan(dimmed.opacity)
+    expect(dimmed.opacity).toBeLessThan(1)
+    expect(dimmed.fillOpacity).toBe(dimmed.opacity)
+  })
+
+  it("TreeDiagram applies the active legend category to connected edges", () => {
+    renderLegendCase(legendCases[0])
+
+    act(() => {
+      lastNetworkFrameProps.legendHoverBehavior({ label: "Core" })
+    })
+
+    const selected = lastNetworkFrameProps.edgeStyle({
+      source: { data: { group: "All" } },
+      target: { data: { group: "Core" } },
+    })
+    const dimmed = lastNetworkFrameProps.edgeStyle({
+      source: { data: { group: "All" } },
+      target: { data: { group: "Growth" } },
+    })
+
+    expect(selected.opacity ?? 1).toBeGreaterThan(dimmed.opacity)
+    expect(dimmed.opacity).toBeLessThan(1)
+  })
+
+  it("ChordDiagram builds its legend from categories discovered after push-mode mount", () => {
+    render(
+      <TooltipProvider>
+        <ChordDiagram colorBy="id" legendInteraction="highlight" />
+      </TooltipProvider>,
+    )
+
+    expect(lastNetworkFrameProps.legend).toBeUndefined()
+    expect(lastNetworkFrameProps.legendCategoryAccessor).toBe("id")
+
+    act(() => {
+      lastNetworkFrameProps.onCategoriesChange(["Alpha", "Beta"])
+    })
+
+    expect(lastNetworkFrameProps.legend).toBeDefined()
+    if (!isLegendConfig(lastNetworkFrameProps.legend))
+      throw new Error("Expected a categorical push-mode legend")
+    expect(
+      lastNetworkFrameProps.legend.legendGroups[0].items.map((item) => item.label),
+    ).toEqual(["Alpha", "Beta"])
+
+    act(() => {
+      lastNetworkFrameProps.legendHoverBehavior({ label: "Alpha" })
+    })
+    expect(lastNetworkFrameProps.nodeStyle({ id: "Beta" }).opacity).toBeLessThan(1)
   })
 })

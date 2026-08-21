@@ -181,6 +181,11 @@ describe("createColorScale", () => {
     expect(c0).not.toBe(c100)
   })
 
+  it("handles a zero-only numeric domain with a sequential scheme", () => {
+    const scale = createColorScale([{ score: 0 }], "score", "blues")
+    expect(scale("0")).toBe("#f7fbff")
+  })
+
   it("falls back to category10 for unknown scheme name", () => {
     const scale = createColorScale(categoricalData, "cat", "nonexistent")
     // Should still produce valid colors (using default palette)

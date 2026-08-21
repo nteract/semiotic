@@ -527,6 +527,7 @@ interface-member StreamNetworkFrameProps::property::layoutExecution = optional l
 interface-member StreamNetworkFrameProps::property::layoutLoadingContent = optional layoutLoadingContent: ReactNode
 interface-member StreamNetworkFrameProps::property::layoutSelection = optional layoutSelection: import("./networkCustomLayout").NetworkLayoutSelection | null | undefined
 interface-member StreamNetworkFrameProps::property::legend = optional legend: LegendValue
+interface-member StreamNetworkFrameProps::property::legendCategoryAccessor = optional legendCategoryAccessor: ((d: T) => string | number) | string | undefined
 interface-member StreamNetworkFrameProps::property::legendClickBehavior = optional legendClickBehavior: ((item: {label: string;}) => void) | undefined
 interface-member StreamNetworkFrameProps::property::legendHighlightedCategory = optional legendHighlightedCategory: null | string | undefined
 interface-member StreamNetworkFrameProps::property::legendHoverBehavior = optional legendHoverBehavior: ((item: {label: string;} | null) => void) | undefined
@@ -544,6 +545,7 @@ interface-member StreamNetworkFrameProps::property::nodeSizeRange = optional nod
 interface-member StreamNetworkFrameProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
 interface-member StreamNetworkFrameProps::property::nodeWidth = optional nodeWidth: number | undefined
 interface-member StreamNetworkFrameProps::property::nodes = optional nodes: T[] | undefined
+interface-member StreamNetworkFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamNetworkFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
 interface-member StreamNetworkFrameProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
 interface-member StreamNetworkFrameProps::property::orbitAnimated = optional orbitAnimated: boolean | undefined

@@ -25,7 +25,7 @@
  * Consumed by: all network HOCs.
  */
 "use client"
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import type { ReactNode, ReactElement } from "react"
 import type { Datum } from "./datumTypes"
 import type {
@@ -54,9 +54,15 @@ import type {
   LegendPosition,
   LegendInteractionState
 } from "./hooks"
-import { DEFAULT_COLORS, resolveCategoricalPalette } from "./colorUtils"
+import {
+  createColorScale,
+  DEFAULT_COLORS,
+  resolveCategoricalPalette,
+} from "./colorUtils"
 import { inferNodesFromEdges } from "./networkUtils"
 import { filterSparseArray } from "./sparseArray"
+import type { SelectionHookResult } from "./selectionUtils"
+import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
 
 export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge extends Datum = Datum> {
@@ -157,7 +163,7 @@ export interface NetworkChartSetupResult {
   effectivePalette: string[]
   themeCategorical: string[] | undefined
 
-  /** Distinct category values from `(safeNodes, colorBy)`, for legend interaction. */
+  /** Distinct category values from bounded data or the live push-mode frame. */
   allCategories: string[]
   legendState: LegendInteractionState
 
@@ -175,13 +181,16 @@ export interface NetworkChartSetupResult {
   /**
    * The full selection-hook output. Most network HOCs only need the
    * resolved hover/click behaviors above, but hierarchy charts
-   * (Treemap, CirclePack, TreeDiagram, OrbitDiagram) wrap node styles
-   * with selection state via `activeSelectionHook.isActive` /
-   * `.predicate`. Passed through verbatim so those charts don't need
-   * a parallel `useChartSelection` call.
+   * Custom network layouts can consume the underlying shared selection
+   * directly. Built-in charts normally use `effectiveSelectionHook`, which
+   * also includes hover and legend interaction.
    */
   activeSelectionHook: ReturnType<typeof useChartSelection>["activeSelectionHook"]
   hoverSelectionHook: ReturnType<typeof useChartSelection>["hoverSelectionHook"]
+  /** Hover, legend, or shared selection in precedence order. */
+  effectiveSelectionHook: SelectionHookResult | null
+  /** Selection styling with the active theme's default dim opacity. */
+  resolvedSelection: SelectionConfig | undefined
   crosshairSourceId: ReturnType<typeof useChartSelection>["crosshairSourceId"]
 
   // ── Render gates ─────────────────────────────────────────────────
@@ -265,6 +274,18 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   // is === to the input so downstream memo caches stay warm.
   const safeEdges = useMemo(() => filterSparseArray(edges), [edges])
   const safeInputNodes = useMemo(() => filterSparseArray(nodes), [nodes])
+  const isPushMode = nodes === undefined && edges === undefined
+  const [frameCategories, setFrameCategories] = useState<string[]>([])
+  const onCategoriesChange = useCallback((categories: string[]) => {
+    setFrameCategories((previous) => {
+      if (
+        previous.length === categories.length &&
+        previous.every((category, index) => category === categories[index])
+      )
+        return previous
+      return categories
+    })
+  }, [])
 
   // ── Loading / empty states ──────────────────────────────────────
   // Computed up front so the caller can early-return AFTER all hooks.
@@ -298,7 +319,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   }, [inferNodes, safeInputNodes, safeEdges, sourceAccessor, targetAccessor])
 
   // ── Color scale + theme ─────────────────────────────────────────
-  const colorScale = useColorScale(safeNodes, colorBy, colorScheme)
+  const boundedColorScale = useColorScale(safeNodes, colorBy, colorScheme)
   const themeCategorical = useThemeCategorical()
 
   const effectivePalette = useMemo<string[]>(() => {
@@ -311,10 +332,31 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   }, [colorScheme, themeCategorical])
 
   // ── Categories for legend interaction ───────────────────────────
-  const allCategories = useMemo<string[]>(
+  const boundedCategories = useMemo<string[]>(
     () => distinctCategories(safeNodes, colorBy),
     [safeNodes, colorBy]
   )
+
+  const allCategories = useMemo(
+    () => isPushMode && frameCategories.length > 0
+      ? frameCategories
+      : boundedCategories,
+    [isPushMode, frameCategories, boundedCategories],
+  )
+
+  // Push-mode nodes are discovered inside StreamNetworkFrame. Once their
+  // category domain comes back, synthesize the same ordinal scale used by the
+  // frame so both the legend swatches and HOC-authored mark styles agree.
+  const colorScale = useMemo<((value: string) => string) | undefined>(() => {
+    if (boundedColorScale) return boundedColorScale
+    if (!colorBy || allCategories.length === 0) return undefined
+    const syntheticField = "__streamNetworkCategory"
+    return createColorScale(
+      allCategories.map((category) => ({ [syntheticField]: category })),
+      syntheticField,
+      effectivePalette,
+    )
+  }, [boundedColorScale, colorBy, allCategories, effectivePalette])
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 
@@ -333,22 +375,25 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     frameLegend,
     hasTitle,
   })
-  const legendBehaviorProps = useMemo<Record<string, unknown>>(
-    () => legend && legendMarginReserved
-      ? { __legendMarginReservedFor: legend }
-      : {},
-    [legend, legendMarginReserved]
-  )
+  const legendBehaviorProps = useMemo<Record<string, unknown>>(() => {
+    const behavior: Record<string, unknown> = {}
+    if (legend && legendMarginReserved)
+      behavior.__legendMarginReservedFor = legend
+    if (isPushMode && colorBy) {
+      behavior.legendCategoryAccessor = colorBy
+      behavior.onCategoriesChange = onCategoriesChange
+    }
+    return behavior
+  }, [legend, legendMarginReserved, isPushMode, colorBy, onCategoriesChange])
   const resolvedMobileInteraction = useMemo(
     () => resolveMobileInteraction(mobileInteraction, { width, mobileSemantics }),
     [mobileInteraction, width, mobileSemantics],
   )
 
   // ── Selection / linked hover ────────────────────────────────────
-  // Pass the full selection result through; hierarchy charts read
-  // `activeSelectionHook` to wrap node styles with selected/dimmed
-  // overlays, which the `customHoverBehavior` shorthand alone doesn't
-  // expose.
+  // Pass the full selection result through so custom layouts can consume the
+  // raw shared selection while built-in charts use the effective
+  // hover/legend/shared selection assembled below.
   const selectionResult = useChartSelection({
     selection,
     linkedHover,
@@ -361,6 +406,12 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     chartId,
   })
   const { customHoverBehavior, customClickBehavior, activeSelectionHook, hoverSelectionHook, crosshairSourceId } = selectionResult
+  const effectiveSelectionHook = useMemo(() => {
+    if (hoverSelectionHook) return hoverSelectionHook
+    if (legendState.legendSelectionHook) return legendState.legendSelectionHook
+    return activeSelectionHook
+  }, [hoverSelectionHook, legendState.legendSelectionHook, activeSelectionHook])
+  const resolvedSelection = useResolvedSelection(selection)
 
   return {
     safeNodes,
@@ -379,6 +430,8 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     customClickBehavior,
     activeSelectionHook,
     hoverSelectionHook,
+    effectiveSelectionHook,
+    resolvedSelection,
     crosshairSourceId,
     loadingEl,
     emptyEl,

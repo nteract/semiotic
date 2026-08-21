@@ -68,6 +68,10 @@ function rgbInterpolator(stops: string[]): (t: number) => string {
   const rgbStops = stops.map(parseHex)
   const n = rgbStops.length - 1
   return (t: number) => {
+    // A degenerate numeric color domain can yield `NaN` upstream (for
+    // example, when every numeric category is 0). Keep the interpolator
+    // total rather than indexing the stop array with `NaN`.
+    if (Number.isNaN(t)) t = 0
     if (t <= 0) {
       const [r, g, b] = rgbStops[0]
       return toHex(r, g, b)

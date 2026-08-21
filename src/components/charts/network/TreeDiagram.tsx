@@ -7,7 +7,12 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
-import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  resolveHierarchySum,
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
@@ -196,6 +201,14 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
     [baseNodeStyleFn, stroke, strokeWidth, opacity]
   )
+  const selectedNodeStyleFn = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   const baseEdgeStyleFn = useMemo(() => {
     return () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
@@ -204,6 +217,14 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
   const edgeStyleFn = useMemo(
     () => mergeShapeStyle(baseEdgeStyleFn, { stroke, strokeWidth, opacity }),
     [baseEdgeStyleFn, stroke, strokeWidth, opacity]
+  )
+  const selectedEdgeStyleFn = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   const hierarchySumFn = useMemo(() => {
@@ -235,8 +256,8 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       hierarchySum={hierarchySumFn}
       treeOrientation={orientation}
       edgeType={edgeStyle}
-      nodeStyle={nodeStyleFn}
-      edgeStyle={edgeStyleFn}
+      nodeStyle={selectedNodeStyleFn}
+      edgeStyle={selectedEdgeStyleFn}
       colorBy={colorBy}
       colorScheme={setup.effectivePalette}
       colorByDepth={colorByDepth}

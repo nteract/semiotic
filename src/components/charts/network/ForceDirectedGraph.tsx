@@ -20,6 +20,10 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 
 registerLayoutPlugin("force", forceLayoutPlugin)
 
@@ -381,12 +385,20 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   // Overlay primitive props onto nodeStyle. Node-specific `nodeStroke` /
   // `nodeStrokeWidth` win over the generic `stroke` / `strokeWidth` for nodes,
   // so nodes and edges can be stroked independently; both still win over base.
-  const nodeStyle = useMemo(
+  const nodeStyleWithoutSelection = useMemo(
     () => mergeShapeStyle(
       composeStyleRules(baseNodeStyle, styleRules, nodeRuleContext, (d) => d.data || d),
       { stroke: nodeStroke ?? stroke, strokeWidth: nodeStrokeWidth ?? strokeWidth, opacity },
     ),
     [baseNodeStyle, styleRules, nodeRuleContext, nodeStroke, stroke, nodeStrokeWidth, strokeWidth, opacity]
+  )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Edge stroke resolves precedence in one place: an edge-specific prop wins
@@ -401,7 +413,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
   // d.data (mirrors baseNodeStyle's `d.data || d`). A field/function
   // accessor must resolve against the raw edge, not the wrapper, or the
   // weight is never read and edge width silently falls back to the default.
-  const edgeStyle = useMemo(() => {
+  const edgeStyleWithoutSelection = useMemo(() => {
     return (d: Datum) => {
       const edge = d.data || d
       let resolvedWidth: number
@@ -423,6 +435,14 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       }
     }
   }, [edgeWidth, resolvedEdgeColor, resolvedEdgeOpacity, fallbackEdgeWidth])
+  const edgeStyle = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   // Node label function
   const nodeLabelFn = useMemo(() => {

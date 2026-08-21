@@ -109,6 +109,7 @@ import {
   type NetworkCursorInventory
 } from "./networkFrameCursorInteraction"
 import { networkFrameDefaultMargin } from "./frameDefaultMargins"
+import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -192,6 +193,8 @@ const StreamNetworkFrame = memo(forwardRef<
     legendClickBehavior,
     legendHighlightedCategory,
     legendIsolatedCategories,
+    legendCategoryAccessor,
+    onCategoriesChange,
     title,
     foregroundGraphics,
     backgroundGraphics,
@@ -439,6 +442,14 @@ const StreamNetworkFrame = memo(forwardRef<
   if (!storeRef.current) {
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
+  const emitLegendCategories = useLegendCategoryEmission(
+    storeRef,
+    legendCategoryAccessor,
+    onCategoriesChange,
+    (store) => Array.from(store.nodes.values()).map((node) =>
+      node.data ? { id: node.id, ...node.data } : node as unknown as Datum,
+    ),
+  )
   const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamNetworkFrame")
   const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [sceneRevisionDiagnosticsRef])
 
@@ -509,6 +520,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
+      emitLegendCategories()
       syncColorMap(store)
       refreshNetworkCursorInventory(
         sceneCursorInventoryRef.current,
@@ -518,7 +530,7 @@ const StreamNetworkFrame = memo(forwardRef<
       dirtyRef.current = false
       store.markStylePaintPending()
     },
-    [buildSceneWithDiagnostics, syncColorMap]
+    [buildSceneWithDiagnostics, emitLegendCategories, syncColorMap]
   )
   const invalidateCanvasPaint = useCallback(() => {
     storeRef.current?.markStylePaintPending()
@@ -746,6 +758,7 @@ const StreamNetworkFrame = memo(forwardRef<
     // geometry for topology that was explicitly discarded.
     pendingLayoutRef.current = false
     storeRef.current?.clear()
+    emitLegendCategories()
     nodeColorMap.current.clear()
     colorIndexRef.current = 0
     // clear() bumps layoutVersion monotonically; sync React state to the new
@@ -756,7 +769,7 @@ const StreamNetworkFrame = memo(forwardRef<
     hoverRef.current = null
     dirtyRef.current = true
     scheduleRender()
-  }, [scheduleRender])
+  }, [emitLegendCategories, scheduleRender])
 
   const forceRelayout = useCallback(() => {
     const store = storeRef.current

@@ -1,4 +1,5 @@
 import type { Datum } from "./datumTypes"
+import type { NetworkMarkStyle } from "../../stream/networkTypes"
 /**
  * Shared utilities for network and hierarchy chart HOCs.
  *
@@ -6,6 +7,117 @@ import type { Datum } from "./datumTypes"
  */
 import { getColor } from "./colorUtils"
 import type { Accessor } from "./types"
+import type {
+  SelectionHookResult,
+  SelectionStyleConfig,
+} from "./selectionUtils"
+import { DEFAULT_SELECTION_OPACITY } from "./selectionUtils"
+
+function unwrapNetworkDatum(datum: Datum): Datum {
+  return datum.data && typeof datum.data === "object"
+    ? datum.data
+    : datum
+}
+
+function applyNetworkSelectionStyle(
+  style: NetworkMarkStyle,
+  matches: boolean,
+  config?: SelectionStyleConfig,
+): NetworkMarkStyle {
+  if (matches) {
+    if (config?.selectedStyle) Object.assign(style, config.selectedStyle)
+    return style
+  }
+
+  const dimOpacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
+  style.opacity = dimOpacity
+  style.fillOpacity = dimOpacity
+  style.strokeOpacity = dimOpacity
+  if (config?.unselectedStyle) Object.assign(style, config.unselectedStyle)
+  return style
+}
+
+/** Apply shared/legend selection to a network node's raw user datum. */
+export function wrapNetworkNodeStyleWithSelection(
+  baseStyle: undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): undefined
+export function wrapNetworkNodeStyleWithSelection(
+  baseStyle: (datum: Datum) => NetworkMarkStyle,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): (datum: Datum) => NetworkMarkStyle
+export function wrapNetworkNodeStyleWithSelection(
+  baseStyle: ((datum: Datum) => NetworkMarkStyle) | undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): ((datum: Datum) => NetworkMarkStyle) | undefined
+export function wrapNetworkNodeStyleWithSelection(
+  baseStyle: ((datum: Datum) => NetworkMarkStyle) | undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): ((datum: Datum) => NetworkMarkStyle) | undefined {
+  if (!baseStyle) return undefined
+  if (!selectionHook) return baseStyle
+
+  return (datum: Datum) => {
+    const style = { ...baseStyle(datum) }
+    if (!selectionHook.isActive) return style
+    return applyNetworkSelectionStyle(
+      style,
+      selectionHook.predicate(unwrapNetworkDatum(datum)),
+      config,
+    )
+  }
+}
+
+/**
+ * Apply shared/legend selection to a network edge. When endpoint nodes are
+ * available, either endpoint may keep the edge emphasized; otherwise the
+ * predicate falls back to the edge payload.
+ */
+export function wrapNetworkEdgeStyleWithSelection(
+  baseStyle: undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): undefined
+export function wrapNetworkEdgeStyleWithSelection(
+  baseStyle: (datum: Datum) => NetworkMarkStyle,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): (datum: Datum) => NetworkMarkStyle
+export function wrapNetworkEdgeStyleWithSelection(
+  baseStyle: ((datum: Datum) => NetworkMarkStyle) | undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): ((datum: Datum) => NetworkMarkStyle) | undefined
+export function wrapNetworkEdgeStyleWithSelection(
+  baseStyle: ((datum: Datum) => NetworkMarkStyle) | undefined,
+  selectionHook: SelectionHookResult | null,
+  config?: SelectionStyleConfig,
+): ((datum: Datum) => NetworkMarkStyle) | undefined {
+  if (!baseStyle) return undefined
+  if (!selectionHook) return baseStyle
+
+  return (datum: Datum) => {
+    const style = { ...baseStyle(datum) }
+    if (!selectionHook.isActive) return style
+
+    const edgeDatum = unwrapNetworkDatum(datum)
+    const source = typeof datum.source === "object"
+      ? unwrapNetworkDatum(datum.source)
+      : null
+    const target = typeof datum.target === "object"
+      ? unwrapNetworkDatum(datum.target)
+      : null
+    const matches = source || target
+      ? (source ? selectionHook.predicate(source) : false) ||
+        (target ? selectionHook.predicate(target) : false)
+      : selectionHook.predicate(edgeDatum)
+    return applyNetworkSelectionStyle(style, matches, config)
+  }
+}
 
 /**
  * Flatten a hierarchical data structure into an array of all nodes

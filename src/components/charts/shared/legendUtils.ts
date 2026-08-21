@@ -32,7 +32,7 @@ export function createLegend({
   categories?: string[]
 }) {
   // Get unique category values — prefer explicit categories (from push API tracking)
-  const uniqueValues = categories && categories.length > 0
+  const uniqueValues = categories !== undefined
     ? categories
     : Array.from(
       new Set(

@@ -7,7 +7,11 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
-import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  resolveHierarchySum,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
@@ -192,6 +196,14 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
     [baseNodeStyleFn, stroke, strokeWidth, opacity]
   )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)
@@ -219,7 +231,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       childrenAccessor={childrenAccessor}
       hierarchySum={hierarchySumFn}
       padding={paddingProp}
-      nodeStyle={nodeStyleFn}
+      nodeStyle={nodeStyle}
       colorBy={colorBy}
       colorScheme={setup.effectivePalette}
       colorByDepth={colorByDepth}

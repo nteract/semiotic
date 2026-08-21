@@ -767,6 +767,10 @@ export interface StreamNetworkFrameProps<T = Datum>
   legendClickBehavior?: (item: { label: string }) => void
   legendHighlightedCategory?: string | null
   legendIsolatedCategories?: Set<string>
+  /** Internal push-mode category discovery accessor used by chart HOCs. */
+  legendCategoryAccessor?: string | ((d: T) => string | number)
+  /** Receives the current pushed-node category domain. */
+  onCategoriesChange?: (categories: string[]) => void
   title?: string | ReactNode
   /** SVG above the canvas. Network layouts have no shared scale object, so callback `scales` is null. */
   foregroundGraphics?: FrameGraphicsProp<null>
