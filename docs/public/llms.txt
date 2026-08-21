@@ -25,6 +25,7 @@
 - [Heatmap](/charts/heatmap): Grid/matrix visualization with color-encoded cell values. _(act: relating)_
 - [QuadrantChart](/charts/quadrant-chart): Scatterplot divided into four labeled, colored quadrants by center lines. _(act: relating)_
 - [MultiAxisLineChart](/charts/multi-axis-line-chart): Dual Y-axis line chart for comparing two series with different scales on the same x axis. _(act: comparing)_
+- [WaterfallChart](/charts/waterfall-chart): Cumulative signed steps as floating bars. _(act: tracing)_
 - [CandlestickChart](/charts/candlestick-chart): OHLC candlestick bars, or a range chart when open/close are omitted. _(act: alerting)_
 - [ConnectedScatterplot](/charts/connected-scatterplot): Scatterplot where points are connected in order, showing trajectories through 2D space. _(act: tracking)_
 - [ScatterplotMatrix](/charts/scatterplot-matrix): Multi-panel scatterplot grid with crossfilter brushing. _(act: relating)_
@@ -43,6 +44,7 @@
 - [DonutChart](/charts/donut-chart): Pie chart with a hole in the center. _(act: apportioning)_
 - [GaugeChart](/charts/gauge-chart): Single-value gauge with threshold zones, needle indicator, and configurable sweep angle. _(act: comparing)_
 - [FunnelChart](/charts/funnel-chart): Funnel visualization with two orientations. _(act: tracing)_
+- [RadarChart](/charts/radar-chart): Radial multivariate comparison. _(act: comparing)_
 - [SwimlaneChart](/charts/swimlane-chart): Categorical lanes with sequentially stacked items colored by subcategory. _(act: comparing)_
 - [LikertChart](/charts/likert-chart): Visualize Likert scale survey responses. _(act: comparing)_
 

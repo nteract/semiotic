@@ -841,4 +841,28 @@ describe("BarChart", () => {
       expect(ann[1]).toBe(userAnn)
     })
   })
+
+  describe("brush support", () => {
+    it("forwards a value-axis brush overlay when brush is true", () => {
+      const onBrush = vi.fn()
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} brush onBrush={onBrush} />
+        </TooltipProvider>
+      )
+      expect(frameProps().brush).toEqual({ dimension: "r" })
+      expect(typeof frameProps().onBrush).toBe("function")
+      frameProps().onBrush({ r: [5, 15] })
+      expect(onBrush).toHaveBeenCalledWith({ r: [5, 15] })
+    })
+
+    it("enables brush when linkedBrush is set without an explicit brush prop", () => {
+      render(
+        <TooltipProvider>
+          <BarChart data={sampleData} linkedBrush="range" />
+        </TooltipProvider>
+      )
+      expect(frameProps().brush).toEqual({ dimension: "r" })
+    })
+  })
 })

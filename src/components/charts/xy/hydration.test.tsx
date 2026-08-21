@@ -28,6 +28,7 @@ import { MinimapChart } from "./MinimapChart"
 import { QuadrantChart } from "./QuadrantChart"
 import { MultiAxisLineChart } from "./MultiAxisLineChart"
 import { CandlestickChart } from "./CandlestickChart"
+import { WaterfallChart } from "./WaterfallChart"
 import { XYCustomChart } from "../custom/XYCustomChart"
 
 const xyTimeSeries = [
@@ -120,6 +121,20 @@ const cases: HydrationCase[] = [
       closeAccessor="close"
       width={400}
       height={300}
+    />
+  ) },
+  { name: "WaterfallChart", render: () => (
+    <WaterfallChart
+      data={[
+        { step: "Start", value: 100 },
+        { step: "Sales", value: 40 },
+        { step: "Costs", value: -25 },
+        { step: "Tax", value: -10 },
+      ]}
+      xAccessor="step"
+      yAccessor="value"
+      width={400}
+      height={240}
     />
   ) },
   { name: "MinimapChart", render: () => (

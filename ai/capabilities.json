@@ -118,7 +118,8 @@
         "series-features",
         "gap-handling",
         "direct-labels",
-        "endpoint-labels"
+        "endpoint-labels",
+        "brush"
       ]
     },
     "MinimapChart": {
@@ -143,12 +144,11 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "dual-axis",
-        "hoc-ssr-only"
+        "dual-axis"
       ]
     },
     "QuadrantChart": {
@@ -177,7 +177,8 @@
         "regression-overlay",
         "forecast",
         "anomaly",
-        "series-features"
+        "series-features",
+        "brush"
       ]
     },
     "ScatterplotMatrix": {
@@ -210,6 +211,19 @@
         "streamgraph"
       ]
     },
+    "WaterfallChart": {
+      "category": "xy",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "waterfall"
+      ]
+    },
     "BarChart": {
       "category": "ordinal",
       "supportsLegend": true,
@@ -220,7 +234,8 @@
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "regression-overlay"
+        "regression-overlay",
+        "brush"
       ]
     },
     "BoxPlot": {
@@ -306,7 +321,9 @@
       "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
-      "specialFeatures": []
+      "specialFeatures": [
+        "brush"
+      ]
     },
     "LikertChart": {
       "category": "ordinal",
@@ -329,6 +346,19 @@
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": []
+    },
+    "RadarChart": {
+      "category": "ordinal",
+      "supportsLegend": true,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": true,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "radial"
+      ]
     },
     "RidgelinePlot": {
       "category": "ordinal",
@@ -518,12 +548,11 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "distortion",
-        "hoc-ssr-only"
+        "distortion"
       ]
     },
     "FlowMap": {

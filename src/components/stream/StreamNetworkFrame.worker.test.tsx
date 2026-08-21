@@ -5,6 +5,15 @@ import { setupCanvasMock } from "../../test-utils/canvasMock"
 
 const runWorker = vi.fn()
 
+vi.mock("./layouts/forceLayoutWorkerPolicy", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("./layouts/forceLayoutWorkerPolicy")>()
+  return {
+    ...actual,
+    canUseForceWorker: () => true,
+  }
+})
+
 vi.mock("./layouts/forceLayoutWorkerClient", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("./layouts/forceLayoutWorkerClient")>()
@@ -53,6 +62,7 @@ describe("StreamNetworkFrame worker force layout", () => {
 
     await waitFor(() => {
       expect(container.querySelector('[aria-busy="true"]')).not.toBeNull()
+      expect(runWorker).toHaveBeenCalled()
     })
     expect(onState).toHaveBeenCalledWith("pending")
 

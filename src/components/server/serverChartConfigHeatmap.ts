@@ -38,6 +38,11 @@ export const heatmap: ChartConfig = {
       valueAccessor: rest.valueAccessor,
       showValues: rest.showValues,
       heatmapValueFormat: rest.valueFormat,
+      // Dense numeric grids auto-bin in the scene builder; explicit
+      // aggregation still has to reach that path on renderChart().
+      ...(rest.heatmapAggregation && { heatmapAggregation: rest.heatmapAggregation }),
+      ...(rest.heatmapXBins != null && { heatmapXBins: rest.heatmapXBins }),
+      ...(rest.heatmapYBins != null && { heatmapYBins: rest.heatmapYBins }),
       // `frameProps.areaStyle` remains the documented final escape hatch.
       areaStyle: cellStyle,
       ...common,

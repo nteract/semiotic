@@ -187,9 +187,48 @@ describe("pointCanvasRenderer", () => {
 
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
 
-    expect(ctx.beginPath).toHaveBeenCalledTimes(3)
+    expect(ctx.beginPath).toHaveBeenCalledTimes(1)
     expect(ctx.arc).toHaveBeenCalledTimes(3)
+    expect(ctx.fill).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not batch translucent points so overlapping fills accumulate", () => {
+    const ctx = createMockCanvasContext()
+    const nodes = [
+      makePointNode({ x: 10, y: 20, style: { fill: "#4e79a7", fillOpacity: 0.8 } }),
+      makePointNode({ x: 12, y: 22, style: { fill: "#4e79a7", fillOpacity: 0.8 } }),
+    ]
+    pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
+    expect(ctx.fill).toHaveBeenCalledTimes(2)
+  })
+
+  it("paints interleaved colors in data order rather than grouping by style", () => {
+    const ctx = createMockCanvasContext()
+    const fills: unknown[] = []
+    Object.defineProperty(ctx, "fillStyle", {
+      set: (v: unknown) => { fills.push(v) },
+      get: () => fills[fills.length - 1],
+    })
+    const nodes = [
+      makePointNode({ x: 10, style: { fill: "#f00" } }),
+      makePointNode({ x: 20, style: { fill: "#0f0" } }),
+      makePointNode({ x: 30, style: { fill: "#f00" } }),
+    ]
+    pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
+    expect(fills).toEqual(["#f00", "#0f0", "#f00"])
     expect(ctx.fill).toHaveBeenCalledTimes(3)
+  })
+
+  it("does not batch patterned fills with different object identity", () => {
+    const ctx = createMockCanvasContext()
+    const hatchA = { type: "hatch", stroke: "#111" }
+    const hatchB = { type: "hatch", stroke: "#eee" }
+    const nodes = [
+      makePointNode({ x: 10, style: { fill: hatchA as never } }),
+      makePointNode({ x: 20, style: { fill: hatchB as never } }),
+    ]
+    pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
+    expect(ctx.fill).toHaveBeenCalledTimes(2)
   })
 
   it("applies each node's alpha without clobbering between nodes (relies on save/restore)", () => {

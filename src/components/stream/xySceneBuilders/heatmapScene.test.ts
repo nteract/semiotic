@@ -137,6 +137,49 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(nodes).toHaveLength(3)
   })
 
+  it("auto-bins dense numeric grids instead of emitting one cell per distinct x×y", () => {
+    const data = []
+    for (let x = 0; x < 80; x++) {
+      for (let y = 0; y < 80; y++) {
+        data.push({ x, y, value: x + y })
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+      scales: {
+        x: Object.assign((v: number) => v, { domain: () => [0, 79], range: () => [0, 400] }),
+        y: Object.assign((v: number) => v, { domain: () => [0, 79], range: () => [0, 400] }),
+      } as unknown as XYSceneContext["scales"],
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes.length).toBeLessThanOrEqual(20 * 20)
+    expect(nodes.length).toBeGreaterThan(0)
+    expect(nodes.every((n) => (n.datum as { agg?: string }).agg === "mean")).toBe(true)
+    const values = nodes.map((n) => n.value ?? 0)
+    // Count occupancy of this complete grid is ~16 per bin. Mean of x+y
+    // spans tens to hundreds, so a small range would mean we dropped values.
+    expect(Math.max(...values)).toBeGreaterThan(50)
+    expect(Math.min(...values)).toBeLessThan(50)
+    const fills = new Set(nodes.map((n) => n.fill))
+    expect(fills.size).toBeGreaterThan(1)
+  })
+
+  it("does not auto-bin a sparse diagonal whose cartesian product exceeds the threshold", () => {
+    const data = []
+    for (let i = 0; i < 65; i++) data.push({ x: i, y: i, value: i })
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(65)
+    expect(nodes.every((n) => n.type === "heatcell")).toBe(true)
+    expect(nodes.some((n) => (n.datum as { agg?: string }).agg === "mean")).toBe(false)
+  })
+
   it("empty data produces no nodes", () => {
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, [], defaultLayout)

@@ -16,6 +16,7 @@ import type {
 } from "../networkTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
+import { registerLayoutPlugin } from "./registry"
 
 const DEFAULT_PALETTE = schemeCategory10 as readonly string[]
 
@@ -340,6 +341,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     return { sceneNodes, sceneEdges, labels }
   }
 }
+
+registerLayoutPlugin("chord", chordLayoutPlugin)
 
 function resolveValueAccessor(
   valueAccessor: string | ((d: Datum) => number) | undefined

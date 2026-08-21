@@ -255,6 +255,8 @@ export const lineChart: ChartConfig = {
   },
 }
 
+export { multiAxisLineChart, waterfallChart } from "./serverChartConfigsXYExtra"
+
 /** Static-data TemporalHistogram mapped onto the shared time-binned XY pipeline. */
 export const temporalHistogram: ChartConfig = {
   frameType: "xy",

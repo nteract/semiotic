@@ -160,6 +160,30 @@ import { Heatmap } from "semiotic/xy"
 
 Key props: `showLegend` enables gradient legend, `legendPosition` ("right"|"left"|"top"|"bottom")
 
+### WaterfallChart
+
+```jsx
+import { WaterfallChart } from "semiotic/xy"
+
+const data = [
+  { step: "Opening", value: 120 },
+  { step: "New sales", value: 45 },
+  { step: "Returns", value: -18 },
+  { step: "Discounts", value: -12 },
+  { step: "Other", value: 8 }
+]
+
+<WaterfallChart
+  data={data}
+  xAccessor="step"
+  yAccessor="value"
+  xLabel="Step"
+  yLabel="Change"
+/>
+```
+
+Key props: `yAccessor` is a **signed delta** per row, not a running total. Categorical `xAccessor` values are plotted by index. Use `RealtimeWaterfallChart` for a push-driven window.
+
 ### AreaChart
 
 ```jsx
@@ -502,7 +526,7 @@ const data = [
 />
 ```
 
-Key props: `bins` (default 25), `relative` (normalize per-category)
+Key props: `bins` (default 25), `relative` (normalize per-category), `brush`
 
 ### ViolinPlot
 
@@ -532,6 +556,32 @@ const data = [
 ```
 
 Key props: `bins`, `curve` (default "catmullRom"), `showIQR` (default true)
+
+### RadarChart
+
+```jsx
+import { RadarChart } from "semiotic/ordinal"
+
+const data = [
+  { name: "Alpha", attribute: "speed", value: 80 },
+  { name: "Alpha", attribute: "power", value: 55 },
+  { name: "Alpha", attribute: "range", value: 40 },
+  { name: "Beta", attribute: "speed", value: 45 },
+  { name: "Beta", attribute: "power", value: 75 },
+  { name: "Beta", attribute: "range", value: 60 }
+]
+
+<RadarChart
+  data={data}
+  categoryAccessor="attribute"
+  valueAccessor="value"
+  seriesAccessor="name"
+  colorBy="name"
+  showLegend
+/>
+```
+
+Key props: `categoryAccessor` (radial axes), `valueAccessor` (magnitude), `seriesAccessor` (polygon identity). Use only when the axes are comparable magnitudes.
 
 ---
 

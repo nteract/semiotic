@@ -14,7 +14,7 @@ import {
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
-import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {

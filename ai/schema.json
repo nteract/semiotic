@@ -566,6 +566,17 @@
             "yExtent": {
               "type": "array",
               "description": "Fixed y domain `[min, max]`; either bound may be omitted."
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable an x-axis brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, xField?, yField? }."
             }
           },
           "required": [
@@ -2388,6 +2399,17 @@
             "anomaly": {
               "type": "object",
               "description": "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig."
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable an xy brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, xField?, yField? }."
             }
           },
           "required": [
@@ -4728,6 +4750,25 @@
             "yExtent": {
               "type": "array",
               "description": "Fixed y domain `[min, max]`; either bound may be omitted."
+            },
+            "heatmapAggregation": {
+              "type": "string",
+              "enum": [
+                "count",
+                "sum",
+                "mean"
+              ],
+              "description": "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 occupied cells) auto-bin even when this is omitted."
+            },
+            "heatmapXBins": {
+              "type": "number",
+              "description": "Number of x bins when aggregating.",
+              "default": 20
+            },
+            "heatmapYBins": {
+              "type": "number",
+              "description": "Number of y bins when aggregating.",
+              "default": 20
             }
           },
           "required": [
@@ -5842,6 +5883,17 @@
               "type": "boolean",
               "description": "Reserve space around the zero baseline for signed bars.",
               "default": false
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable a value-axis brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, rField? }."
             },
             "regression": {
               "type": [
@@ -8487,6 +8539,17 @@
             "categoryPadding": {
               "type": "number",
               "default": 20
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable a value-axis brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, rField? }."
             }
           },
           "required": [
@@ -26363,6 +26426,775 @@
             "labelAccessor",
             "laneAccessor",
             "dependencyAccessor"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "RadarChart",
+        "description": "Radial multivariate comparison. Each category is an axis around the circle; each series is a connected polygon. Data is long-form: one row per (series, attribute).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": [
+                "number",
+                "object"
+              ],
+              "description": "Uniform numeric margin or an object margin. Numeric sides are minima when chart-owned chrome such as legends needs more room; \"auto\", null, and omitted sides start from chart-mode defaults."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "portalTarget"
+                  ],
+                  "properties": {
+                    "portalTarget": {
+                      "type": "string",
+                      "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                    }
+                  }
+                }
+              ]
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": "string",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array",
+                "object"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "object",
+                "string"
+              ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object",
+                "string"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": [
+                "boolean",
+                "string"
+              ],
+              "description": "Dim non-hovered series/categories (true or the series-level mode; requires colorBy)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "categoryLabel": {
+              "type": "string"
+            },
+            "valueLabel": {
+              "type": "string"
+            },
+            "showCategoryTicks": {
+              "type": "boolean",
+              "description": "Show category labels on the ordinal axis."
+            },
+            "dataIdAccessor": {
+              "type": "string",
+              "description": "Stable datum id used by push-mode remove() and update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "data": {
+              "type": "array",
+              "description": "Long-form rows: one observation per series × attribute."
+            },
+            "categoryAccessor": {
+              "type": "string",
+              "description": "Axis around the radar (the variables being compared).",
+              "default": "attribute",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "valueAccessor": {
+              "type": "string",
+              "description": "Magnitude along each axis.",
+              "default": "value",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "seriesAccessor": {
+              "type": "string",
+              "description": "Series identity; points with the same series are connected into a polygon. Defaults to colorBy.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "pointRadius": {
+              "type": "number",
+              "default": 4
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain; defaults to [0, data-max]."
+            }
+          },
+          "required": [
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "WaterfallChart",
+        "description": "Cumulative signed steps as floating bars. Each row is a delta; positive values step up from the previous cumulative total and negative values step down. Use RealtimeWaterfallChart for a push-driven window of the same geometry.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "context",
+                "sparkline",
+                "mobile"
+              ],
+              "description": "Display mode controlling default size, decoration, margins, labels, and interaction.",
+              "default": "primary"
+            },
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "margin": {
+              "type": [
+                "number",
+                "object"
+              ],
+              "description": "Uniform numeric margin or an object margin. Numeric sides are minima when chart-owned chrome such as legends needs more room; \"auto\", null, and omitted sides start from chart-mode defaults."
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "portalTarget"
+                  ],
+                  "properties": {
+                    "portalTarget": {
+                      "type": "string",
+                      "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                    }
+                  }
+                }
+              ]
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "showLegend": {
+              "type": "boolean"
+            },
+            "legendInteraction": {
+              "type": "string",
+              "enum": [
+                "highlight",
+                "isolate",
+                "none"
+              ],
+              "description": "Legend interaction mode: highlight on hover, isolate on click, or none.",
+              "default": "none"
+            },
+            "legendPosition": {
+              "type": "string",
+              "enum": [
+                "right",
+                "left",
+                "top",
+                "bottom"
+              ],
+              "description": "Position the legend beside or above/below the plot.",
+              "default": "right"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": false
+            },
+            "colorBy": {
+              "type": "string",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array",
+                "object"
+              ],
+              "default": "category10"
+            },
+            "tooltip": {
+              "type": [
+                "boolean",
+                "object",
+                "string"
+              ],
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x; custom multi content receives allSeries/xValue.",
+              "x-semiotic-runtime-types": [
+                "boolean",
+                "function",
+                "object",
+                "string"
+              ]
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "autoPlaceAnnotations": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+              "default": false
+            },
+            "responsiveRules": {
+              "type": "array",
+              "description": "Semantic responsive transforms applied before chart-mode defaults."
+            },
+            "mobileSemantics": {
+              "type": "object",
+              "description": "Phone/mobile contract consumed by audits, recipes, adapters, and agents."
+            },
+            "mobileInteraction": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Touch-first interaction policy for phone-sized chart slots."
+            },
+            "maxDevicePixelRatio": {
+              "type": "number",
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact"
+              ],
+              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "default": "nice"
+            },
+            "animate": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Enable mark transitions (boolean or {duration?, easing?, intro?})."
+            },
+            "loading": {
+              "type": "boolean",
+              "description": "Show loading skeleton / loadingContent."
+            },
+            "hoverHighlight": {
+              "type": [
+                "boolean",
+                "string"
+              ],
+              "description": "Dim non-hovered series/categories (true or the series-level mode; requires colorBy)."
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "emphasis": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "color": {
+              "type": "string",
+              "description": "Uniform mark fill (primitive styling)."
+            },
+            "stroke": {
+              "type": "string"
+            },
+            "strokeWidth": {
+              "type": "number"
+            },
+            "opacity": {
+              "type": "number"
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "xLabel": {
+              "type": "string"
+            },
+            "yLabel": {
+              "type": "string"
+            },
+            "xScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "time"
+              ],
+              "description": "x scale type. \"time\" builds a scaleTime (required for landmark ticks on timestamps)."
+            },
+            "yScaleType": {
+              "type": "string",
+              "enum": [
+                "linear",
+                "log",
+                "symlog"
+              ],
+              "description": "y scale type. \"symlog\" supports signed values while compressing large magnitudes."
+            },
+            "data": {
+              "type": "array",
+              "description": "Array of step/delta rows."
+            },
+            "xAccessor": {
+              "type": "string",
+              "default": "x",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "yAccessor": {
+              "type": "string",
+              "description": "Signed delta for this step.",
+              "default": "y",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "positiveColor": {
+              "type": "string",
+              "description": "Fill for positive deltas."
+            },
+            "negativeColor": {
+              "type": "string",
+              "description": "Fill for negative deltas."
+            },
+            "connectorStroke": {
+              "type": "string"
+            },
+            "connectorWidth": {
+              "type": "number"
+            },
+            "gap": {
+              "type": "number",
+              "description": "Pixel gap between adjacent bars."
+            },
+            "xExtent": {
+              "type": "array"
+            },
+            "yExtent": {
+              "type": "array"
+            },
+            "pointIdAccessor": {
+              "type": "string",
+              "description": "Stable ID for push-mode remove() and update().",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            }
+          },
+          "required": [
+            "data"
           ]
         }
       }

@@ -250,7 +250,11 @@ assertNoUnexpected("AI renderable metadata", metadataRenderable, expectedMCPRegi
 
 assertNoMissing("serverChartConfigs", serverConfigs, expectedServerConfigs)
 
-const allowedServerConfigs = new Set([...expectedServerConfigs, ...SERVER_ONLY])
+const allowedServerConfigs = new Set([
+  ...expectedServerConfigs,
+  ...SERVER_ONLY,
+  ...SERVER_CONFIG_EXCLUDED.keys(),
+])
 assertNoUnexpected("serverChartConfigs", serverConfigs, allowedServerConfigs)
 
 // Registry-independent sweep: anything users can import must be registered, or

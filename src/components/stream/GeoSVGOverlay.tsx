@@ -18,7 +18,7 @@ import {
   annotationLayout,
   type AutoPlaceAnnotations
 } from "../recipes/annotationLayout"
-import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { SVGChartTitle } from "./SVGChartTitle"
 

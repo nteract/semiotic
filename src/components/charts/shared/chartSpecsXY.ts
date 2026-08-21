@@ -39,6 +39,9 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       band: { type: ["object", "array"], description: "Asymmetric min/max envelope drawn under the line. `{ y0Accessor, y1Accessor, style?, perSeries?, interactive? }` or an array of those for percentile fans. Distinct from `forecast`/`anomaly` (computed) — band is pure data passthrough. Hovered datum is enriched with `band: { y0, y1 }` and `bands: [...]`." },
       xExtent: { type: "array", description: "Fixed x domain `[min, max]`; either bound may be omitted." },
       yExtent: { type: "array", description: "Fixed y domain `[min, max]`; either bound may be omitted." },
+      brush: { type: "boolean", description: "Enable an x-axis brush overlay for range selection." },
+      linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, xField?, yField? }." },
+      onBrush: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -48,7 +51,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       // `series-features` umbrella tag = uses the shared
       // `useSeriesFeatures` hook; the specific `forecast` / `anomaly`
       // tags describe individual capabilities for AI discovery.
-      specialFeatures: ["forecast", "anomaly", "band", "series-features", "gap-handling", "direct-labels", "endpoint-labels"],
+      specialFeatures: ["forecast", "anomaly", "band", "series-features", "gap-handling", "direct-labels", "endpoint-labels", "brush"],
     },
   },
 
@@ -255,13 +258,16 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       },
       forecast: { type: "object", description: "Forecast overlay config — tagged future points + optional envelope. See ForecastConfig." },
       anomaly: { type: "object", description: "Anomaly overlay config — ±σ band + anomaly dot annotations. See AnomalyConfig." },
+      brush: { type: "boolean", description: "Enable an xy brush overlay for range selection." },
+      linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, xField?, yField? }." },
+      onBrush: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features"],
+      specialFeatures: ["regression-overlay", "forecast", "anomaly", "series-features", "brush"],
     },
   },
 
@@ -333,6 +339,9 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       xExtent: { type: "array", description: "Fixed x domain `[min, max]`; either bound may be omitted." },
       yExtent: { type: "array", description: "Fixed y domain `[min, max]`; either bound may be omitted." },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM, default: "right", description: "Position of the gradient legend" },
+      heatmapAggregation: { type: "string", enum: ["count", "sum", "mean"] as const, description: "Bin continuous x/y into a grid. Dense numeric heatmaps (more than 4096 occupied cells) auto-bin even when this is omitted." },
+      heatmapXBins: { type: "number", default: 20, description: "Number of x bins when aggregating." },
+      heatmapYBins: { type: "number", default: 20, description: "Number of y bins when aggregating." },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -400,9 +409,39 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
-      supportsPush: true, supportsSSR: false,
+      supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["dual-axis", "hoc-ssr-only"],
+      specialFeatures: ["dual-axis"],
+    },
+  },
+
+  WaterfallChart: {
+    name: "WaterfallChart",
+    category: "xy",
+    description: "Cumulative signed steps as floating bars. Each row is a delta; positive values step up from the previous cumulative total and negative values step down. Use RealtimeWaterfallChart for a push-driven window of the same geometry.",
+    required: ["data"],
+    dataShape: "array",
+    dataAccessors: ["xAccessor", "yAccessor"],
+    propBags: ["common", "xyAxis"],
+    ownProps: {
+      data: { type: "array", description: "Array of step/delta rows." },
+      xAccessor: { type: ["string", "function"], default: "x" },
+      yAccessor: { type: ["string", "function"], default: "y", description: "Signed delta for this step." },
+      positiveColor: { type: "string", description: "Fill for positive deltas." },
+      negativeColor: { type: "string", description: "Fill for negative deltas." },
+      connectorStroke: { type: "string" },
+      connectorWidth: { type: "number" },
+      gap: { type: "number", description: "Pixel gap between adjacent bars." },
+      xExtent: { type: "array" },
+      yExtent: { type: "array" },
+      pointIdAccessor: { type: ["string", "function"], description: "Stable ID for push-mode remove() and update()." },
+    },
+    capabilities: {
+      renderModes: ["hybrid"],
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
+      supportsPush: true, supportsSSR: true,
+      colorModel: "categorical", layoutMode: "plugin",
+      specialFeatures: ["waterfall"],
     },
   },
 

@@ -3,8 +3,11 @@ import * as React from "react"
 import { useMemo } from "react"
 import { bin as d3Bin } from "d3-array"
 import type { ScaleLinear } from "d3-scale"
-import type { MarginalConfig, MarginalType } from "./types"
+import type { MarginalConfig } from "./types"
 import { getMax } from "../charts/shared/minMax"
+import { normalizeMarginalConfig } from "./marginalConfig"
+
+export { normalizeMarginalConfig }
 
 export type MarginalOrient = "top" | "bottom" | "left" | "right"
 
@@ -19,16 +22,6 @@ export interface MarginalGraphicsProps {
   size: number
   /** Chart width (top/bottom) or height (left/right) */
   length: number
-}
-
-/** Resolve a string shorthand or full config into a MarginalConfig */
-export function normalizeMarginalConfig(
-  input: MarginalConfig | MarginalType
-): MarginalConfig {
-  if (typeof input === "string") {
-    return { type: input }
-  }
-  return input
 }
 
 const DEFAULTS = {

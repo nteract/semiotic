@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-08-11 · 57 charts indexed.
+Last regen: 2026-08-20 · 59 charts indexed.
 
 **Column key**
 
@@ -27,28 +27,30 @@ Last regen: 2026-08-11 · 57 charts indexed.
 | **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
 | **DifferenceChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `crossover-segmentation` |
 | **Heatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
-| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` `gap-handling` `direct-labels` `endpoint-labels` |
+| **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` `gap-handling` `direct-labels` `endpoint-labels` `brush` |
 | **MinimapChart** | ✓ | — | — | — | — | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `hoc-ssr-only` |
-| **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `dual-axis` `hoc-ssr-only` |
+| **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `dual-axis` |
 | **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `quadrants` |
-| **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
+| **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` `brush` |
 | **ScatterplotMatrix** | ✓ | — | — | — | — | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `hoc-ssr-only` |
 | **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` |
+| **WaterfallChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `waterfall` |
 
 ## Ordinal
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **BarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` |
+| **BarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `brush` |
 | **BoxPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `statistical` |
 | **DonutChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **DotPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` |
 | **FunnelChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **GaugeChart** | — | — | — | — | ✓ | threshold | synthetic | `threshold-zones` `value-only` `controlled-prop-streaming` |
 | **GroupedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
-| **Histogram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
+| **Histogram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `brush` |
 | **LikertChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **PieChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
+| **RadarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `radial` |
 | **RidgelinePlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **StackedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` |
 | **SwarmPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
@@ -73,7 +75,7 @@ Last regen: 2026-08-11 · 57 charts indexed.
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **ChoroplethMap** | ✓ | ✓ | ✓ | — | ✓ | sequential | plugin | `controlled-prop-streaming` |
-| **DistanceCartogram** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `distortion` `hoc-ssr-only` |
+| **DistanceCartogram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `distortion` |
 | **FlowMap** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `particles` |
 | **ProportionalSymbolMap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
 
@@ -112,8 +114,8 @@ Last regen: 2026-08-11 · 57 charts indexed.
 
 ## Aggregate counts
 
-- 47/57 charts render a top-level legend.
-- 45/57 charts expose a push API.
-- 47/57 charts SSR via the `renderChart()` registry.
-- 2/57 charts use the customLayout escape hatch.
-- 11/57 charts use synthetic (no-layout) construction.
+- 49/59 charts render a top-level legend.
+- 47/59 charts expose a push API.
+- 51/59 charts SSR via the `renderChart()` registry.
+- 2/59 charts use the customLayout escape hatch.
+- 11/59 charts use synthetic (no-layout) construction.

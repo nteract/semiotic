@@ -169,9 +169,9 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       // Points are array-shaped — push appends to the displayed
       // points list. Cost-driven distortion re-runs on each push.
-      supportsPush: true, supportsSSR: false,
+      supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["distortion", "hoc-ssr-only"],
+      specialFeatures: ["distortion"],
     },
   },
 

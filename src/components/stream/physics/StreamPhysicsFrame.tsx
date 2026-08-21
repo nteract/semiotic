@@ -17,7 +17,7 @@ import {
   CanvasFrameBackground,
   useFrameCanvasHost
 } from "../useCanvasFrameHost"
-import { isServerEnvironment } from "../SceneToSVG"
+import { isServerEnvironment } from "../isServerEnvironment"
 import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import {

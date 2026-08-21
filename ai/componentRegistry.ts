@@ -19,6 +19,7 @@ import {
   QuadrantChart,
   MultiAxisLineChart,
   CandlestickChart,
+  WaterfallChart,
   BarChart,
   StackedBarChart,
   GroupedBarChart,
@@ -32,6 +33,7 @@ import {
   DonutChart,
   GaugeChart,
   FunnelChart,
+  RadarChart,
   LikertChart,
   SwimlaneChart,
   ForceDirectedGraph,
@@ -82,6 +84,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   QuadrantChart: { component: QuadrantChart, category: "xy" },
   MultiAxisLineChart: { component: MultiAxisLineChart, category: "xy" },
   CandlestickChart: { component: CandlestickChart, category: "xy" },
+  WaterfallChart: { component: WaterfallChart, category: "xy" },
   TemporalHistogram: { component: TemporalHistogram, category: "xy" },
 
   BarChart: { component: BarChart, category: "ordinal" },
@@ -97,6 +100,7 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   DonutChart: { component: DonutChart, category: "ordinal" },
   GaugeChart: { component: GaugeChart, category: "ordinal" },
   FunnelChart: { component: FunnelChart, category: "ordinal" },
+  RadarChart: { component: RadarChart, category: "ordinal" },
   LikertChart: { component: LikertChart, category: "ordinal" },
   SwimlaneChart: { component: SwimlaneChart, category: "ordinal" },
 

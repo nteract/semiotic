@@ -66,6 +66,8 @@ const GaugeChartPage = lazy(() => import("./pages/charts/GaugeChartPage"))
 const BigNumberPage = lazy(() => import("./pages/charts/BigNumberPage"))
 const GroupedBarChartPage = lazy(() => import("./pages/charts/GroupedBarChartPage"))
 const FunnelChartPage = lazy(() => import("./pages/charts/FunnelChartPage"))
+const RadarChartPage = lazy(() => import("./pages/charts/RadarChartPage"))
+const WaterfallChartPage = lazy(() => import("./pages/charts/WaterfallChartPage"))
 const SwimlaneChartPage = lazy(() => import("./pages/charts/SwimlaneChartPage"))
 const TreemapPage = lazy(() => import("./pages/charts/TreemapPage"))
 const CirclePackPage = lazy(() => import("./pages/charts/CirclePackPage"))
@@ -943,6 +945,7 @@ export default function DocsApp() {
                 <Route path="scatterplot-matrix" element={<ScatterplotMatrixPage />} />
                 <Route path="quadrant-chart" element={<QuadrantChartPage />} />
                 <Route path="multi-axis-line-chart" element={<MultiAxisLineChartPage />} />
+                <Route path="waterfall-chart" element={<WaterfallChartPage />} />
                 <Route path="candlestick-chart" element={<CandlestickChartPage />} />
                 <Route path="realtime-line-chart" element={<RealtimeLineChartPage />} />
                 <Route path="realtime-swarm-chart" element={<RealtimeSwarmChartPage />} />
@@ -977,6 +980,7 @@ export default function DocsApp() {
                 <Route path="gauge-chart" element={<GaugeChartPage />} />
                 <Route path="grouped-bar-chart" element={<GroupedBarChartPage />} />
                 <Route path="funnel-chart" element={<FunnelChartPage />} />
+                <Route path="radar-chart" element={<RadarChartPage />} />
                 <Route path="swimlane-chart" element={<SwimlaneChartPage />} />
                 <Route path="realtime-histogram" element={<RealtimeHistogramPage />} />
                 {/* Network Charts */}

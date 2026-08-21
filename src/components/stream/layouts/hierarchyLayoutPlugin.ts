@@ -28,6 +28,7 @@ import {
   buildCircleScene,
 } from "./hierarchySceneBuilders"
 import type { Datum } from "../../charts/shared/datumTypes"
+import { registerLayoutPlugin } from "./registry"
 
 type HierarchyLayoutType = "tree" | "cluster" | "treemap" | "circlepack" | "partition"
 
@@ -367,3 +368,9 @@ function setCirclePositions(
   // Store radius on the node for buildScene
   node.__radius = r
 }
+
+registerLayoutPlugin("tree", hierarchyLayoutPlugin)
+registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
+registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
+registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+registerLayoutPlugin("partition", hierarchyLayoutPlugin)

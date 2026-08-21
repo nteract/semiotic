@@ -456,6 +456,25 @@ describe("Scatterplot", () => {
       expect(lastXYFrameProps).toMatchObject({ chartType: "scatter", data: sampleData })
     })
 
+    it("forwards an xy brush overlay when brush is true", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} brush />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.brush).toEqual({ dimension: "xy" })
+      expect(typeof lastXYFrameProps.onBrush).toBe("function")
+    })
+
+    it("enables brush when linkedBrush is set without an explicit brush prop", () => {
+      render(
+        <TooltipProvider>
+          <Scatterplot data={sampleData} linkedBrush="range" />
+        </TooltipProvider>
+      )
+      expect(lastXYFrameProps.brush).toEqual({ dimension: "xy" })
+    })
+
     it("forwards data to the frame untouched when forecast/anomaly are unset", () => {
       render(
         <TooltipProvider>

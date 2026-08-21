@@ -384,14 +384,14 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const axesConfig = useMemo(() => {
     if (!isDualAxis || extents.length < 2) return undefined
 
-    const leftFmt = series[0].format || ((v: number) => {
-      const orig = invertUnitized(v, extents[0])
+    const formatAxisTick = (seriesIdx: number) => (v: number) => {
+      const orig = invertUnitized(v, extents[seriesIdx])
+      const fmt = series[seriesIdx]?.format
+      if (typeof fmt === "function") return fmt(orig)
       return Number.isInteger(orig) ? String(orig) : orig.toFixed(1)
-    })
-    const rightFmt = series[1].format || ((v: number) => {
-      const orig = invertUnitized(v, extents[1])
-      return Number.isInteger(orig) ? String(orig) : orig.toFixed(1)
-    })
+    }
+    const leftFmt = formatAxisTick(0)
+    const rightFmt = formatAxisTick(1)
 
     return [
       { orient: "left" as const, label: seriesLabels[0], tickFormat: leftFmt },

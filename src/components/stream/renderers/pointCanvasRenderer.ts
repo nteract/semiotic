@@ -1,6 +1,6 @@
 import type { PointSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
-import { renderCirclePulse } from "./renderPulse"
+import { hasPulse, renderCirclePulse } from "./renderPulse"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
 
 /**
@@ -8,6 +8,10 @@ import { resolveCanvasFill } from "./canvasRenderHelpers"
  * Renders PointSceneNode as circles. Used by Scatterplot, BubbleChart, SwarmChart,
  * and showPoints on LineChart, AreaChart, and StackedAreaChart.
  * Supports pulse glow effect via _pulseIntensity/_pulseColor fields.
+ *
+ * Opaque same-style points that are contiguous in data order share one path.
+ * Translucent points, hatches/patterns, and pulses stay per-mark so overlap
+ * compositing and z-order match the unbatched painter.
  */
 export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const pointNodes = nodes.filter((n): n is PointSceneNode => n.type === "point")
@@ -15,35 +19,76 @@ export const pointCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layo
 
   ctx.save()
   try {
-    // Preserve the incoming canvas alpha (e.g. a chart-wide staleness dim) and
-    // multiply each node's own opacity into it, rather than clobbering it to 1
-    // — otherwise only the first node honored the dim and the rest reset to
-    // full. `ctx.restore()` puts the base alpha back when we're done.
     const baseAlpha = ctx.globalAlpha
-    for (const node of pointNodes) {
+    let batch: PointSceneNode[] = []
+    let batchKey = ""
+
+    const paintOne = (node: PointSceneNode) => {
       ctx.beginPath()
       ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
-
       const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
       ctx.globalAlpha = baseAlpha * alpha
-
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
       ctx.fill()
-
-      // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
-      // "none"`, silently keeps the default black, and still strokes — drawing a
-      // black ring where SVG (stroke="none") paints nothing. Matches the
-      // `!== "none"` guard every other canvas renderer already uses.
       const strokeWidth = node.style.strokeWidth ?? 1
       if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
         ctx.strokeStyle = resolveCanvasFill(ctx, node.style.stroke, node.style.stroke)
         ctx.lineWidth = strokeWidth
         ctx.stroke()
       }
-
-      // Pulse glow ring
       renderCirclePulse(ctx, node)
     }
+
+    const flushBatch = () => {
+      if (batch.length === 0) return
+      if (batch.length === 1) {
+        paintOne(batch[0])
+        batch = []
+        batchKey = ""
+        return
+      }
+      const sample = batch[0]
+      const alpha = sample.style.opacity ?? sample.style.fillOpacity ?? 1
+      ctx.globalAlpha = baseAlpha * alpha
+      ctx.beginPath()
+      for (const node of batch) {
+        ctx.moveTo(node.x + node.r, node.y)
+        ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
+      }
+      ctx.fillStyle = resolveCanvasFill(ctx, sample.style.fill, "#4e79a7")
+      ctx.fill()
+      const strokeWidth = sample.style.strokeWidth ?? 1
+      if (sample.style.stroke && sample.style.stroke !== "none" && strokeWidth > 0) {
+        ctx.strokeStyle = resolveCanvasFill(ctx, sample.style.stroke, sample.style.stroke)
+        ctx.lineWidth = strokeWidth
+        ctx.stroke()
+      }
+      batch = []
+      batchKey = ""
+    }
+
+    for (const node of pointNodes) {
+      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      const rawFill = node.style.fill
+      const cannotBatch = hasPulse(node)
+        || (rawFill != null && typeof rawFill !== "string")
+        || alpha < 1
+      if (cannotBatch) {
+        flushBatch()
+        paintOne(node)
+        continue
+      }
+      const strokeWidth = node.style.strokeWidth ?? 1
+      const stroke = node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0
+        ? String(node.style.stroke)
+        : ""
+      const fill = rawFill ?? "#4e79a7"
+      const key = `${fill}\0${stroke}\0${strokeWidth}\0${node.r}\0${alpha}`
+      if (batch.length > 0 && key !== batchKey) flushBatch()
+      batchKey = key
+      batch.push(node)
+    }
+    flushBatch()
   } finally {
     ctx.restore()
   }

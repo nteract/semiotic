@@ -6,6 +6,10 @@ import * as React from "react"
 import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import { MarginalGraphics } from "../../stream/MarginalGraphics"
+import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
+
+provideMarginalGraphics(MarginalGraphics)
 import type { SymbolName } from "../../stream/symbolPath"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getSize } from "../shared/colorUtils"
@@ -17,8 +21,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedBrush } from "../shared/selectionUtils"
-import { useBrushSelection } from "../../store/useSelection"
+import { useXYBrush } from "../shared/useXYBrush"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -74,6 +77,10 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   pointOpacity?: number
   /** Enable hover annotations @default true */
   enableHover?: boolean
+  /** Enable an xy brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ x, y }` extents, or null when the brush clears. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
   /** Show grid lines @default false */
   showGrid?: boolean
   /** Show legend @default true (when colorBy is specified) */
@@ -223,6 +230,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     selection,
     linkedHover,
     linkedBrush,
+    brush,
+    onBrush,
     onObservation,
     onClick,
     hoverHighlight,
@@ -322,42 +331,14 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
-  // ── Brush (Scatterplot-specific) ───────────────────────────────────────
-  const brushConfig = normalizeLinkedBrush(linkedBrush)
-
-  const brushHook = useBrushSelection({
-    name: brushConfig?.name || "__unused_brush__",
-    xField: brushConfig?.xField || (typeof xAccessor === "string" ? xAccessor : undefined),
-    yField: brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)
+  const { brushStreamProps } = useXYBrush({
+    brush,
+    onBrush,
+    linkedBrush,
+    xAccessor,
+    yAccessor,
+    defaultDimension: "xy",
   })
-
-  // Translate StreamXYFrame onBrush format to useBrushSelection format
-  const brushDimension = brushConfig
-    ? (brushHook.brushInteraction.brush === "xyBrush" ? "xy" : brushHook.brushInteraction.brush === "xBrush" ? "x" : "y")
-    : undefined
-
-  // Stabilize with ref so the callback identity never changes —
-  // otherwise the BrushOverlay effect re-runs and clears the active brush
-  const brushInteractionRef = React.useRef(brushHook.brushInteraction)
-  brushInteractionRef.current = brushHook.brushInteraction
-
-  const onBrush = useCallback(
-    (extent: { x: [number, number]; y: [number, number] } | null) => {
-      const bi = brushInteractionRef.current
-      if (!extent) {
-        bi.end(null)
-        return
-      }
-      if (bi.brush === "xyBrush") {
-        bi.end([[extent.x[0], extent.y[0]], [extent.x[1], extent.y[1]]])
-      } else if (bi.brush === "xBrush") {
-        bi.end(extent.x)
-      } else {
-        bi.end(extent.y)
-      }
-    },
-    [] // stable — reads from ref
-  )
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
@@ -504,7 +485,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
-    ...(brushConfig && { brush: { dimension: brushDimension }, onBrush }),
+    ...brushStreamProps,
     ...setup.crosshairProps,
     ...frameProps
   }

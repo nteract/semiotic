@@ -202,6 +202,8 @@ for (const evidence of linkedHoverEvidence) {
 // interaction-state screenshots. Do not add to this map casually; the
 // intended direction is down.
 const LINKED_HOVER_BURN_DOWN = new Map([
+  ["RadarChart", "new named HOC; no chart-specific linked-hover interaction snapshot yet"],
+  ["WaterfallChart", "new named HOC; no chart-specific linked-hover interaction snapshot yet"],
   ["BubbleChart", "no chart-specific linked-hover interaction snapshot yet"],
   ["BumpChart", "new in 3.8.6: no chart-specific linked-hover interaction snapshot yet"],
   ["CandlestickChart", "no chart-specific linked-hover interaction snapshot yet"],

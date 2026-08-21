@@ -3,6 +3,8 @@ import type { Datum } from "../shared/datumTypes"
 import type { NetworkMarkStyle } from "../../stream/networkTypes"
 import * as React from "react"
 import { useMemo, useCallback } from "react"
+import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
+import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
@@ -19,6 +21,8 @@ import { validateObjectData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+
+registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
 
 /**
  * Treemap component props

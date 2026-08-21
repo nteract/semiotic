@@ -15,7 +15,7 @@ import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
-import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
 

@@ -1,4 +1,7 @@
+import { registerBuiltInNetworkLayouts } from "./layouts/registerBuiltIn"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+
+registerBuiltInNetworkLayouts()
 import type { NetworkPipelineConfig } from "./networkTypes"
 
 function makeConfig(overrides: Partial<NetworkPipelineConfig> = {}): NetworkPipelineConfig {

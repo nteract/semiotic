@@ -25,6 +25,7 @@ import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlay
 import { normalizeColorGradient, type ColorGradientInput } from "../shared/gradient"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import { useXYBrush } from "../shared/useXYBrush"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 
@@ -170,6 +171,13 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * @default true
    */
   enableHover?: boolean
+
+  /**
+   * Enable an x-axis brush overlay. Also enabled when `linkedBrush` is set.
+   */
+  brush?: boolean
+  /** Callback with `{ x, y }` extents, or null when the brush clears. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
 
   /**
    * Show grid lines
@@ -424,6 +432,9 @@ export const LineChart = forwardRef(
     frameProps = {},
     selection,
     linkedHover,
+    linkedBrush,
+    brush,
+    onBrush,
     onObservation,
     onClick,
     hoverHighlight,
@@ -1016,6 +1027,15 @@ export const LineChart = forwardRef(
   // Flatten line data into a single array for StreamXYFrame.
   // When gapStrategy is "break" or "interpolate", we always flatten from
   // gapProcessedLineData (which has segments split or gaps filtered).
+  const { brushStreamProps } = useXYBrush({
+    brush,
+    onBrush,
+    linkedBrush,
+    xAccessor,
+    yAccessor,
+    defaultDimension: "x",
+  })
+
   const flattenedData = useMemo(() => {
     const needsFlatten = isLineObjectFormat || frameGroupAccessor || hasGaps
 
@@ -1106,6 +1126,7 @@ export const LineChart = forwardRef(
       annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
     }),
     ...crosshairFrameProps,
+    ...brushStreamProps,
     ...framePropsWithoutLegend
   }
 

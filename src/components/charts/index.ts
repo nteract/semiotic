@@ -62,6 +62,9 @@ export type { MultiAxisLineChartProps, MultiAxisSeriesConfig } from "./xy/MultiA
 export { CandlestickChart } from "./xy/CandlestickChart"
 export type { CandlestickChartProps } from "./xy/CandlestickChart"
 
+export { WaterfallChart } from "./xy/WaterfallChart"
+export type { WaterfallChartProps } from "./xy/WaterfallChart"
+
 // ============================================================================
 // Custom Chart (escape hatch for bespoke layouts)
 // ============================================================================
@@ -105,6 +108,9 @@ export type { RidgelinePlotProps } from "./ordinal/RidgelinePlot"
 
 export { FunnelChart } from "./ordinal/FunnelChart"
 export type { FunnelChartProps } from "./ordinal/FunnelChart"
+
+export { RadarChart } from "./ordinal/RadarChart"
+export type { RadarChartProps } from "./ordinal/RadarChart"
 
 export { DotPlot } from "./ordinal/DotPlot"
 export type { DotPlotProps } from "./ordinal/DotPlot"

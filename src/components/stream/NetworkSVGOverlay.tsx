@@ -11,7 +11,7 @@ import {
   renderAnnotationPass,
 } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
-import { filterAnnotationsByStatus } from "../ai/annotationProvenance"
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AnnotationContext } from "../realtime/types"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {

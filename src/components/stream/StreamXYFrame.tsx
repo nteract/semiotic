@@ -24,7 +24,10 @@ import { useStalenessCheck } from "./useStalenessCheck"
 import { resolveStaleness } from "./stalenessBands"
 import { StalenessBadge } from "./StalenessBadge"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
-import { xySceneNodeToSVG, isServerEnvironment } from "./SceneToSVG"
+import { collectMarginalValues } from "./MarginalGraphicsLazy"
+import { useMarginalValues } from "./useMarginalValues"
+import { xySceneNodeToSVG } from "./SceneToSVG"
+import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
@@ -40,7 +43,6 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveFrameGraphics } from "./frameGraphics"
 
-// Canvas setup
 import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
@@ -65,7 +67,6 @@ import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
 import { xyFrameLegendOptions } from "./frameLegendOptions"
 
 // ── Defaults ───────────────────────────────────────────────────────────
-
 const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // Theme colors live in frameThemeColors.ts (shared across Stream Frames).
@@ -360,11 +361,6 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // Staleness state — initialized here, set by useStalenessCheck below
     const [isStale, setIsStale] = useState(false)
 
-    // Marginal data values
-    const [marginalXValues, setMarginalXValues] = useState<number[]>([])
-    const [marginalYValues, setMarginalYValues] = useState<number[]>([])
-
-
     // renderFnRef comes from useFrame (above).
 
     // ── Pipeline ─────────────────────────────────────────────────────────
@@ -598,6 +594,14 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       if (!data) return
       adapterRef.current?.setBoundedData(normalizeXYData(safeData, lineDataAccessor))
     }, [data, safeData, lineDataAccessor])
+
+    const { marginalXValues, marginalYValues, refreshMarginalValues } = useMarginalValues(
+      storeRef,
+      marginalGraphics,
+      safeData,
+      xAccessor,
+      yAccessor,
+    )
 
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       storeRef,
@@ -1109,17 +1113,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           setCurrentScales(store.scales)
         }
 
-        // Extract x/y values for marginal graphics
         if (marginalGraphics) {
-          const rawData = store.getData()
-          const getX = typeof xAccessor === "function"
-            ? xAccessor
-            : (d: Datum) => d[xAccessor || "x"]
-          const getY = typeof yAccessor === "function"
-            ? yAccessor
-            : (d: Datum) => d[yAccessor || "y"]
-          setMarginalXValues(rawData.map(d => getX(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
-          setMarginalYValues(rawData.map(d => getY(d)).filter((v): v is number => typeof v === "number" && isFinite(v)))
+          refreshMarginalValues(store.getData())
         }
       }
 
@@ -1262,6 +1257,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       })()
 
       const chartAriaLabel = description || (typeof title === "string" ? title : "XY chart")
+      const ssrMarginal = marginalGraphics && store
+        ? collectMarginalValues(store.getData(), xAccessor, yAccessor)
+        : { xValues: [] as number[], yValues: [] as number[] }
 
       return (
         <div
@@ -1334,8 +1332,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
           }
             marginalGraphics={marginalGraphics}
-            xValues={[]}
-            yValues={[]}
+            xValues={ssrMarginal.xValues}
+            yValues={ssrMarginal.yValues}
             annotations={annotations}
             onAnnotationActivate={onAnnotationActivate}
             onObservation={annotationObservationCallback ?? onObservation}

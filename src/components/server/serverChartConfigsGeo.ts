@@ -213,6 +213,75 @@ export const proportionalSymbolMap: ChartConfig = {
  * with coordinates) into the `lines` shape StreamGeoFrame expects, where
  * each line carries a `coordinates` array of two {x,y} endpoints.
  */
+export const distanceCartogram: ChartConfig = {
+  frameType: "geo",
+  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => {
+    const points = data || rest.points
+    const basePointStyle =
+      rest.pointStyle ??
+      buildGeoPointBaseStyle(points, colorBy as string | ((d: Datum) => unknown) | undefined, colorScheme, {
+        pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 5,
+        fillOpacity: 0.85,
+        strokeWidth: 1,
+      })
+    const nodeIdAccessor = rest.nodeIdAccessor || "id"
+    const cartogramLayout = rest.cartogramLayout
+      || (rest.mode === "sparkline" ? "strip" : "radial")
+    const isSparkline = rest.mode === "sparkline"
+    const isStrip = cartogramLayout === "strip"
+    const ruledStyle = rest.styleRules
+      ? composeStyleRules(
+          basePointStyle,
+          rest.styleRules,
+          makeNodeRuleContext(colorBy as string | ((d: Datum) => unknown) | undefined),
+        )
+      : basePointStyle
+    const pointStyle = (d: Datum) => {
+      const styled = typeof ruledStyle === "function" ? ruledStyle(d) : ruledStyle
+      const id = typeof nodeIdAccessor === "function"
+        ? (nodeIdAccessor as (row: Datum) => unknown)(d)
+        : d[nodeIdAccessor as string]
+      const isCenter = id != null && String(id) === String(rest.center)
+      const radius = typeof styled.r === "number" ? styled.r : 5
+      return {
+        ...styled,
+        fillOpacity: isCenter ? 1 : (styled.fillOpacity ?? 0.8),
+        stroke: isCenter ? "var(--semiotic-text, #222)" : (styled.stroke ?? "#fff"),
+        strokeWidth: isCenter ? 1.25 : (styled.strokeWidth ?? 1),
+        r: isCenter ? radius * 1.35 : radius,
+      }
+    }
+    return {
+      points,
+      lines: rest.lines,
+      xAccessor: rest.xAccessor || "lon",
+      yAccessor: rest.yAccessor || "lat",
+      pointStyle,
+      colorBy,
+      colorScheme,
+      projection: rest.projection || "mercator",
+      graticule: rest.graticule,
+      fitPadding: rest.fitPadding,
+      projectionTransform: {
+        center: rest.center,
+        centerAccessor: nodeIdAccessor,
+        costAccessor: rest.costAccessor,
+        strength: rest.strength ?? 1,
+        lineMode: rest.lineMode || "straight",
+        layout: cartogramLayout,
+      },
+      ...common,
+      cartogramChrome: {
+        showRings: rest.showRings ?? true,
+        showNorth: rest.showNorth ?? (isStrip ? false : !isSparkline),
+        showRingLabels: rest.showRingLabels ?? (isStrip ? false : true),
+        costLabel: rest.costLabel,
+      },
+    }
+  },
+}
+
 export const flowMap: ChartConfig = {
   frameType: "geo",
   layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },

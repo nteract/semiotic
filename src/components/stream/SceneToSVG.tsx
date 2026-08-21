@@ -496,5 +496,4 @@ function xySceneNodeToSVGMark(
  * Returns true when running in a true server/Node.js context where
  * window and document are not available.
  */
-export const isServerEnvironment: boolean =
-  typeof window === "undefined" || typeof document === "undefined"
+export { isServerEnvironment } from "./isServerEnvironment"

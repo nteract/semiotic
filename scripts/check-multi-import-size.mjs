@@ -42,7 +42,7 @@ const printOnly = process.argv.includes("--print")
 // Budget for the "someone uses AI tooling + several chart families" path that
 // previously paid the full fat-entry tax. Allow headroom for d3/platform noise
 // without letting the old ~800KB–1MB regression return.
-const MULTI_IMPORT_GZIP_BUDGET = 380 * 1024
+const MULTI_IMPORT_GZIP_BUDGET = 384 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

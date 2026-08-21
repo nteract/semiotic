@@ -365,6 +365,36 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     // Built-in callout still rendered (rule returned null for type:"callout").
     expect(svg).toContain("Delta")
   }
+  if (id === "radar") {
+    expect(evidence.frameType).toBe("ordinal")
+    expect(evidence.markCountByType.point).toBe(8)
+    expect(evidence.markCountByType.connector).toBeGreaterThanOrEqual(8)
+    expect(svg).toContain("<circle")
+    expect(svg).toMatch(/<(line|polygon)/)
+  }
+  if (id === "waterfall") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.rect).toBe(5)
+    expect(svg).toContain("Opening")
+    expect(svg).toContain("<rect")
+  }
+  if (id === "heatmap-auto-bin") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.heatcell).toBeGreaterThan(0)
+    expect(evidence.markCountByType.heatcell).toBeLessThanOrEqual(400)
+  }
+  if (id === "multi-axis") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCount).toBeGreaterThan(0)
+    expect(svg).toContain("<path")
+    expect(svg).toContain("Temp")
+    expect(svg).toContain("Humidity")
+  }
+  if (id === "distance-cartogram") {
+    expect(evidence.frameType).toBe("geo")
+    expect(evidence.markCount).toBeGreaterThan(0)
+    expect(svg).toContain("<circle")
+  }
 }
 
 /** Point count for the range-dumbbell fixture (kept in sync with the fixture). */

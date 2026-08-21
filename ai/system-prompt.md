@@ -28,6 +28,8 @@ request.
 
 - Flat observations: XY charts for trends/relationships; ordinal charts for
   categorical comparison, ranking, distribution, and part-to-whole.
+  Multivariate comparable magnitudes: `RadarChart`. Cumulative signed
+  steps: `WaterfallChart` (each row is a delta).
 - Trees: `TreeDiagram`, `Treemap`, `CirclePack`, or animated `OrbitDiagram`.
 - Nodes/edges: `ForceDirectedGraph`, `SankeyDiagram`, `ProcessSankey`, or
   `ChordDiagram`. Prefer these HOCs to `StreamNetworkFrame` unless the task

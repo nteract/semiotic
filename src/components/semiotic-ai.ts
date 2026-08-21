@@ -3,7 +3,6 @@
 // Semiotic AI — curated HOC-only surface for AI code generation
 // Import: import { LineChart, BarChart, ... } from "semiotic/ai"
 
-// XY Charts
 export { LineChart } from "./charts/xy/LineChart"
 export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
 export { AreaChart } from "./charts/xy/AreaChart"
@@ -18,8 +17,8 @@ export { MinimapChart } from "./charts/xy/MinimapChart"
 export { QuadrantChart } from "./charts/xy/QuadrantChart"
 export { MultiAxisLineChart } from "./charts/xy/MultiAxisLineChart"
 export { CandlestickChart } from "./charts/xy/CandlestickChart"
+export { WaterfallChart } from "./charts/xy/WaterfallChart"
 
-// Coordinated Views
 export { LinkedCharts } from "./LinkedCharts"
 export {
   useSelection,
@@ -31,7 +30,6 @@ export {
 } from "./LinkedCharts"
 export type { LinkedChartsProps, LegendInteractionMode } from "./LinkedCharts"
 
-// Ordinal Charts
 export { BarChart } from "./charts/ordinal/BarChart"
 export { StackedBarChart } from "./charts/ordinal/StackedBarChart"
 export { GroupedBarChart } from "./charts/ordinal/GroupedBarChart"
@@ -45,10 +43,10 @@ export { PieChart } from "./charts/ordinal/PieChart"
 export { DonutChart } from "./charts/ordinal/DonutChart"
 export { GaugeChart } from "./charts/ordinal/GaugeChart"
 export { FunnelChart } from "./charts/ordinal/FunnelChart"
+export { RadarChart } from "./charts/ordinal/RadarChart"
 export { LikertChart } from "./charts/ordinal/LikertChart"
 export { SwimlaneChart } from "./charts/ordinal/SwimlaneChart"
 
-// Network Charts
 export { ForceDirectedGraph } from "./charts/network/ForceDirectedGraph"
 export { ChordDiagram } from "./charts/network/ChordDiagram"
 export { SankeyDiagram } from "./charts/network/SankeyDiagram"
@@ -527,6 +525,7 @@ export {
   DifferenceChartCapability,
   CandlestickChartCapability,
   HeatmapCapability,
+  WaterfallChartCapability,
   // Ordinal
   BarChartCapability,
   GroupedBarChartCapability,
@@ -535,6 +534,7 @@ export {
   PieChartCapability,
   DonutChartCapability,
   FunnelChartCapability,
+  RadarChartCapability,
   GaugeChartCapability,
   LikertChartCapability,
   SwimlaneChartCapability,
