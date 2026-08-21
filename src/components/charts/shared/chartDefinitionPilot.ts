@@ -5,7 +5,8 @@
  * metadata but never React components, frame stores, server renderers, or
  * docs modules. The implementation, server, capability, and example links
  * are strings so hosts can decide what to load. Existing registries remain
- * authoritative while this seven-chart slice proves the boundary.
+ * authoritative while this seven-chart slice proves the boundary; the AI
+ * schema generator now consumes this pilot for its seven component entries.
  */
 import {
   CHART_SPECS,
@@ -244,9 +245,9 @@ function createChartDefinition<TChart extends ChartDefinitionPilotId>(
 }
 
 /**
- * One representative per chart family. No existing consumer reads this yet;
- * its purpose is to make parity and generation work executable before any
- * registry is migrated.
+ * One representative per chart family. The AI schema projection is the first
+ * migrated downstream registry; other consumers remain on their established
+ * registries until this boundary has enough evidence to expand.
  */
 export const CHART_DEFINITION_PILOT: Readonly<{
   [TChart in ChartDefinitionPilotId]: ChartDefinition<TChart>

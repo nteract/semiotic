@@ -36,6 +36,7 @@ import {
   type StaticAnnotationRenderResult,
 } from "./staticAnnotations"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { flattenHierarchy } from "../charts/shared/networkUtils"
 import { hasTextTitle, reserveTitleMargin } from "../stream/titleLayout"
 import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
@@ -145,6 +146,13 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     const propsNodes = filterSparseArray(props.nodes || [])
     if (propsNodes.length > 0) {
       return extractCategories(propsNodes, colorAccessor as CategoricalAccessor)
+    }
+    if (HIERARCHICAL_TYPES.has(chartType) && props.data) {
+      const hierarchyNodes = flattenHierarchy(
+        props.data as Datum,
+        (props.childrenAccessor || "children") as string | ((datum: Datum) => Datum[])
+      )
+      return extractCategories(hierarchyNodes, colorAccessor as CategoricalAccessor)
     }
     const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
     if (propsEdges.length === 0) return []

@@ -7,11 +7,16 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
-import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  resolveHierarchySum,
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -43,6 +48,10 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
   showLabels?: boolean
   nodeSize?: number
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -94,6 +103,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -129,12 +139,13 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     loading,
     loadingContent,
     legendInteraction,
+    legendPosition,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // Node style function
   const allNodes = useMemo(() => {
@@ -143,14 +154,15 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
 
   // Consolidated network setup — same hierarchy-shape pattern as
   // Treemap/CirclePack: flattened descendants flow into the hook,
-  // node inference off, no top-level legend.
+  // node inference off. `showLegend` auto-on when `colorBy` is set.
   const setup = useNetworkChartSetup({
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: frameProps,
     selection,
@@ -189,6 +201,14 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
     [baseNodeStyleFn, stroke, strokeWidth, opacity]
   )
+  const selectedNodeStyleFn = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   const baseEdgeStyleFn = useMemo(() => {
     return () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
@@ -197,6 +217,14 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
   const edgeStyleFn = useMemo(
     () => mergeShapeStyle(baseEdgeStyleFn, { stroke, strokeWidth, opacity }),
     [baseEdgeStyleFn, stroke, strokeWidth, opacity]
+  )
+  const selectedEdgeStyleFn = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   const hierarchySumFn = useMemo(() => {
@@ -228,8 +256,8 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       hierarchySum={hierarchySumFn}
       treeOrientation={orientation}
       edgeType={edgeStyle}
-      nodeStyle={nodeStyleFn}
-      edgeStyle={edgeStyleFn}
+      nodeStyle={selectedNodeStyleFn}
+      edgeStyle={selectedEdgeStyleFn}
       colorBy={colorBy}
       colorScheme={setup.effectivePalette}
       colorByDepth={colorByDepth}
@@ -248,6 +276,8 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

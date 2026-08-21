@@ -363,6 +363,27 @@ describe("SSR feature parity: legend", () => {
     expect(svg).toContain("semiotic-legend")
   })
 
+  it("network auto-constructs hierarchy legends from flattened data", () => {
+    const svg = renderNetworkToStaticSVG({
+      chartType: "treemap",
+      data: {
+        id: "root",
+        children: [
+          { id: "a", value: 3, group: "legend-alpha" },
+          { id: "b", value: 2, group: "legend-beta" },
+        ],
+      },
+      childrenAccessor: "children",
+      hierarchySum: "value",
+      colorBy: "group",
+      showLegend: true,
+      size: [400, 300],
+    } as StaticNetworkProps)
+    expect(svg).toContain("semiotic-legend")
+    expect(svg).toContain("legend-alpha")
+    expect(svg).toContain("legend-beta")
+  })
+
   it("network does not auto-construct a legend when colorBy is absent", () => {
     const svg = FRAME_RENDERERS.network({
       nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],

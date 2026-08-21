@@ -44,11 +44,11 @@ function uniqueFills(svg: string): Set<string> {
  * resolves its server theme independently. That chrome is not a Treemap mark
  * and must not participate in the categorical-fill parity assertion. */
 function uniqueDataFills(svg: string): Set<string> {
-  const withoutFrameBackdrop = svg.replace(
+  const withoutChrome = svg.replace(
     /<rect\b(?=[^>]*\bclass="stream-frame-background__backdrop")[^>]*>/g,
     ""
-  )
-  return uniqueFills(withoutFrameBackdrop)
+  ).replace(/<text\b[^>]*>[\s\S]*?<\/text>/g, "")
+  return uniqueFills(withoutChrome)
 }
 
 // ── ComposedChart analog: LineChart mixed line + area ─────────────────────

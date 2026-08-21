@@ -3,7 +3,8 @@ import { renderHook, act } from "@testing-library/react"
 import {
   useChartLegendAndMargin,
   useGradientLegendInteraction,
-  useLegendInteraction
+  useLegendInteraction,
+  distinctCategories,
 } from "./hooks"
 import { isLegendConfig, type CategoricalLegendConfig } from "../../types/legendTypes"
 import type { FrameLegendOverrides } from "./hooks"
@@ -16,6 +17,17 @@ import type { FrameLegendOverrides } from "./hooks"
  */
 
 // ── useChartLegendAndMargin ──────────────────────────────────────────────
+
+describe("distinctCategories", () => {
+  it("omits rows whose category is nullish", () => {
+    expect(distinctCategories([
+      { cat: "A" },
+      { cat: undefined },
+      { cat: null },
+      { cat: "B" },
+    ], "cat")).toEqual(["A", "B"])
+  })
+})
 
 describe("useChartLegendAndMargin", () => {
   const data = [
@@ -213,6 +225,20 @@ describe("useChartLegendAndMargin", () => {
         colorScale: undefined,
         showLegend: false,
         userMargin: undefined
+      })
+    )
+    expect(result.current.legend).toBeUndefined()
+  })
+
+  it("respects an explicitly empty live category domain", () => {
+    const { result } = renderHook(() =>
+      useChartLegendAndMargin({
+        data: [{ value: 1 }],
+        colorBy: "cat",
+        colorScale: () => "#ccc",
+        categories: [],
+        showLegend: true,
+        userMargin: undefined,
       })
     )
     expect(result.current.legend).toBeUndefined()

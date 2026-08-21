@@ -11,9 +11,13 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor, COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { createEdgeStyleFn } from "../shared/networkUtils"
+import {
+  createEdgeStyleFn,
+  wrapNetworkEdgeStyleWithSelection,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
@@ -50,6 +54,10 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
   tooltip?: TooltipProp
@@ -113,6 +121,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -151,19 +160,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     loading,
     loadingContent,
     emptyContent,
+    legendPosition,
     legendInteraction,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
-  // Consolidated network setup. ChordDiagram doesn't have a top-level
-  // `showLegend` prop — its legend is the `legendInteraction`-driven
-  // hover/isolate behavior — so pass `showLegend: false` to suppress
-  // the hook's auto-legend (and thus the legend-aware margin
-  // reservation), matching the pre-migration manual margin.
+  // Consolidated network setup. `showLegend` is auto-on when colorBy is set;
+  // legend interaction shares the same categories and color scale.
   const setup = useNetworkChartSetup({
     nodes,
     edges,
@@ -173,7 +180,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     targetAccessor,
     colorBy,
     colorScheme,
-    showLegend: false,
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: frameProps,
     selection,
@@ -195,11 +203,10 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
   const nodeIndexMap = useMemo(() => new Map<string, number>(), [])
 
-  // When data is empty (push API, no edges at mount), the HOC's colorScale
-  // is built from zero data points and returns "#999" for everything.
-  // In that case, skip passing nodeStyle/edgeStyle so the chord layout
-  // plugin's built-in nodeColorMap palette handles coloring per node index.
-  const hasColorData = setup.safeNodes.length > 0
+  // Before push-mode category feedback arrives, let the chord plugin use its
+  // built-in palette. Once the frame reports a live domain, setup can build a
+  // matching scale and selection-aware styles for the pushed nodes.
+  const hasColorData = setup.safeNodes.length > 0 || setup.allCategories.length > 0
 
   // Node style function — d is a RealtimeNode, user data on d.data
   const baseNodeStyle = useMemo(() => {
@@ -234,7 +241,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) last.
   // Declarative style rules layer over the base node color; when there's no
   // color base but rules are set, they still apply (rules-only styling).
-  const nodeStyle = useMemo(
+  const nodeStyleWithoutSelection = useMemo(
     () => {
       if (!baseNodeStyle && !(styleRules && styleRules.length > 0)) return undefined
       return mergeShapeStyle(
@@ -243,6 +250,14 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       )
     },
     [baseNodeStyle, styleRules, nodeRuleContext, stroke, strokeWidth, opacity]
+  )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Edge style function — d is a RealtimeEdge
@@ -258,9 +273,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     })
   }, [hasColorData, edgeColorBy, colorBy, setup.colorScale, nodeStyle, edgeOpacity, setup.themeCategorical, colorScheme, categoryIndexMap])
 
-  const edgeStyle = useMemo(
+  const edgeStyleWithoutSelection = useMemo(
     () => baseEdgeStyle ? mergeShapeStyle(baseEdgeStyle, { stroke, strokeWidth, opacity }) : undefined,
     [baseEdgeStyle, stroke, strokeWidth, opacity]
+  )
+  const edgeStyle = useMemo(
+    () => wrapNetworkEdgeStyleWithSelection(
+      edgeStyleWithoutSelection,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [edgeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   // Node label accessor
@@ -324,6 +347,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

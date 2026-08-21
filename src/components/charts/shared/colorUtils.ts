@@ -235,7 +235,9 @@ export function createColorScale(
     // Use sequential scale for numeric data
     let maxVal = -Infinity
     for (const v of uniqueValues) { const n = Number(v); if (n > maxVal) maxVal = n }
-    return (v: string) => colorScheme(Number(v) / maxVal)
+    // Avoid normalizing a zero-only domain by zero. This commonly occurs for
+    // initial streaming data, and previously passed NaN into interpolators.
+    return (v: string) => colorScheme(maxVal === 0 ? 0 : Number(v) / maxVal)
   } else {
     // Use ordinal scale for categorical data
     const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS

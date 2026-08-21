@@ -126,6 +126,10 @@ export const waterfallChart: ChartConfig = {
       },
       ...common,
       ...(needsIndex && {
+        axes: common.axes ?? [{
+          orient: "bottom" as const,
+          tickValues: plotData.map((_, index) => index),
+        }],
         xFormat: (v: number) => {
           const original = rows[Number(v)] ? readX(rows[Number(v)]) : v
           const fmt = rest.xFormat ?? common.xFormat

@@ -697,7 +697,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
         colorScheme={Array.isArray(colorScheme) ? colorScheme : undefined}
         // ProcessSankey emits a custom scene. Forward the resolved named
         // selection so its bands/ribbons can dim in place without a relayout.
-        layoutSelection={setup.activeSelectionHook}
+        layoutSelection={setup.effectiveSelectionHook}
         {...frameProps}
       />
     </div>

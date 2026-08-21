@@ -40,17 +40,19 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: 
     const delta = ctx.getY(d)
     const cumEnd = baseline + delta
 
-    let barWidthTime: number
-    if (i < arr.length - 1) {
-      barWidthTime = ctx.getX(arr[i + 1]) - t
-    } else if (i > 0) {
-      barWidthTime = t - ctx.getX(arr[i - 1])
-    } else {
-      barWidthTime = 0
-    }
-
-    const rawX0 = scales.x(t)
-    const rawX1 = barWidthTime !== 0 ? scales.x(t + barWidthTime) : rawX0 + layout.width / 10
+    const center = scales.x(t)
+    const previousCenter = i > 0 ? scales.x(ctx.getX(arr[i - 1])) : undefined
+    const nextCenter = i < arr.length - 1 ? scales.x(ctx.getX(arr[i + 1])) : undefined
+    const rawX0 = previousCenter != null
+      ? (previousCenter + center) / 2
+      : nextCenter != null
+        ? center - (nextCenter - center) / 2
+        : center - layout.width / 20
+    const rawX1 = nextCenter != null
+      ? (center + nextCenter) / 2
+      : previousCenter != null
+        ? center + (center - previousCenter) / 2
+        : center + layout.width / 20
     const x0 = Math.min(rawX0, rawX1) + gap / 2
     const x1 = Math.max(rawX0, rawX1) - gap / 2
     const barWidth = x1 - x0

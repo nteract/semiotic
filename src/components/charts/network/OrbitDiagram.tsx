@@ -7,10 +7,14 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
-import { flattenHierarchy } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
@@ -90,6 +94,11 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
   tooltip?: TooltipProp
   /** Enable hover @default true */
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
+  legendInteraction?: LegendInteractionMode
   /** Annotation objects */
   annotations?: Array<Datum>
   /** Additional SVG content */
@@ -148,6 +157,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -188,12 +198,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     linkedHover,
     loading,
     loadingContent,
+    legendPosition,
+    legendInteraction,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, title, description, summary, accessibleTable } = resolved
 
   // ── Flatten for color scale ──────────────────────────────────────────────
   const allNodes = useMemo(() => {
@@ -210,8 +222,9 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,             // no top-level legend
-    legendInteraction: undefined,
+    showLegend,
+    legendPosition,
+    legendInteraction,
     frameLegend: frameProps,
     selection,
     linkedHover,
@@ -267,6 +280,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
     [baseNodeStyleFn, stroke, strokeWidth, opacity]
   )
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFn,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   // Edge style — use semi-transparent grey that works in both light and dark mode
   // (canvas cannot resolve "currentColor")
@@ -316,7 +337,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         {...setup.legendBehaviorProps}
         nodeIDAccessor={nodeIdAccessor}
         childrenAccessor={childrenAccessor as string | ((d: Datum) => Datum[])}
-        nodeStyle={nodeStyleFn}
+        nodeStyle={nodeStyle}
         edgeStyle={edgeStyleFn}
         colorBy={colorBy}
         colorScheme={setup.effectivePalette}
@@ -335,6 +356,14 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
           customHoverBehavior: wrappedHoverBehavior,
           customClickBehavior: wrappedClickBehavior,
           linkedHoverInClickPredicate: false,
+        })}
+        legend={setup.legend}
+        legendPosition={setup.legendPosition}
+        {...(legendInteraction && legendInteraction !== "none" && {
+          legendHoverBehavior: setup.legendState.onLegendHover,
+          legendClickBehavior: setup.legendState.onLegendClick,
+          legendHighlightedCategory: setup.legendState.highlightedCategory,
+          legendIsolatedCategories: setup.legendState.isolatedCategories,
         })}
         foregroundGraphics={foregroundGraphics}
         annotations={annotations}

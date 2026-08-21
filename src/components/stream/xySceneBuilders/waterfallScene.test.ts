@@ -147,8 +147,8 @@ describe("buildWaterfallScene", () => {
 
   it("applies gap symmetrically, narrowing bars", () => {
     // Two bars at x=0 and x=10 with gap=4
-    // With identity scale: barWidthTime=10 for both bars
-    // rawX0=0, rawX1=10 → x0 = 0 + 2 = 2, x1 = 10 - 2 = 8, barWidth = 6
+    // Their centered cells are [-5, 5] and [5, 15]. A 4px gap narrows
+    // each side by 2px.
     const data = [
       { x: 0, y: 10 },
       { x: 10, y: 5 },
@@ -160,25 +160,19 @@ describe("buildWaterfallScene", () => {
     // Both bars have barWidth = 10 - 4 = 6
     expect(nodes[0].w).toBe(6)
     expect(nodes[1].w).toBe(6)
-    // First bar starts at gap/2 = 2
-    expect(nodes[0].x).toBe(2)
-    // Second bar starts at 10 + gap/2 = 12
-    expect(nodes[1].x).toBe(12)
+    expect(nodes[0].x).toBe(-3)
+    expect(nodes[1].x).toBe(7)
   })
 
   it("uses fallback bar width for single data point", () => {
-    // Single point: barWidthTime=0, so rawX1 = rawX0 + layout.width/10
-    // With layout.width=400: rawX1 = 5 + 40 = 45
-    // gap defaults to 1: x0 = 5 + 0.5 = 5.5, x1 = 45 - 0.5 = 44.5, barWidth = 39
+    // A single point uses a centered fallback cell of layout.width/10.
     const data = [{ x: 5, y: 10 }]
     const ctx = makeCtx({ config: { waterfallStyle: { gap: 1 } } })
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     expect(nodes).toHaveLength(1)
     const bar = nodes[0]
-    // rawX0 = 5, rawX1 = 5 + 400/10 = 45
-    // x0 = 5 + 0.5 = 5.5, x1 = 45 - 0.5 = 44.5
-    expect(bar.x).toBe(5.5)
+    expect(bar.x).toBe(-14.5)
     expect(bar.w).toBe(39)
   })
 
@@ -201,11 +195,11 @@ describe("buildWaterfallScene", () => {
   it("computes correct x, y, w, h coordinates on rect nodes", () => {
     // Two bars, gap=0, identity scale
     // Bar 1: x=0, delta=10 → baseline=0, cumEnd=10
-    //   barWidthTime=10, rawX0=0, rawX1=10, x0=0, x1=10, w=10
+    //   centered cell spans -5..5
     //   yBaseline=scale(0)=0, yTop=scale(10)=10
     //   rectY=min(0,10)=0, rectH=|0-10|=10
     // Bar 2: x=10, delta=-3 → baseline=10, cumEnd=7
-    //   barWidthTime=10, rawX0=10, rawX1=20, x0=10, x1=20, w=10
+    //   centered cell spans 5..15
     //   yBaseline=scale(10)=10, yTop=scale(7)=7
     //   rectY=min(10,7)=7, rectH=|10-7|=3
     const data = [
@@ -216,13 +210,13 @@ describe("buildWaterfallScene", () => {
     const nodes = buildWaterfallScene(ctx, data, defaultLayout)
 
     const bar1 = nodes[0]
-    expect(bar1.x).toBe(0)
+    expect(bar1.x).toBe(-5)
     expect(bar1.y).toBe(0)
     expect(bar1.w).toBe(10)
     expect(bar1.h).toBe(10)
 
     const bar2 = nodes[1]
-    expect(bar2.x).toBe(10)
+    expect(bar2.x).toBe(5)
     expect(bar2.y).toBe(7)
     expect(bar2.w).toBe(10)
     expect(bar2.h).toBe(3)
@@ -271,14 +265,7 @@ describe("buildWaterfallScene", () => {
   })
 
   it("skips bars with zero or negative width after gap is applied", () => {
-    // Three tightly-spaced points with a large gap relative to spacing
-    // Bar 0 (x=0): barWidthTime = arr[1].x - arr[0].x = 1
-    //   rawX0=0, rawX1=1, gap=4 → x0 = 0+2 = 2, x1 = 1-2 = -1, barWidth = -3 → SKIP
-    // Bar 1 (x=1): barWidthTime = arr[2].x - arr[1].x = 2 (middle bar uses next gap)
-    //   rawX0=1, rawX1=3, gap=4 → x0 = 1+2 = 3, x1 = 3-2 = 1, barWidth = -2 → SKIP
-    // Bar 2 (x=3): barWidthTime = arr[2].x - arr[1].x = 2 (last bar uses prev gap)
-    //   rawX0=3, rawX1=5, gap=4 → x0 = 3+2 = 5, x1 = 5-2 = 3, barWidth = -2 → SKIP
-    // All three bars skipped, but baselines still accumulate
+    // All centered cells are narrower than the requested 4px gap.
     const data = [
       { x: 0, y: 10 },
       { x: 1, y: 5 },

@@ -7,6 +7,8 @@ import { VALUE_RENDERERS } from "../../server/staticValue"
 import { CHART_SPECS, composeProps } from "./chartSpecs"
 import type { Datum } from "./datumTypes"
 import { validateProps } from "./validateProps"
+// @ts-expect-error — generator module is authored in JavaScript
+import { generateSchemaToolEntryFromChartDefinition } from "../../../../scripts/lib/chart-specs-generators.mjs"
 import {
   CHART_DEFINITION_PILOT,
   CHART_DEFINITION_PILOT_IDS,
@@ -24,7 +26,7 @@ const exampleDefinitions = readFileSync(
 )
 const appRoutes = readFileSync(resolve(root, "docs/src/App.jsx"), "utf8")
 const aiSchema = JSON.parse(readFileSync(resolve(root, "ai/schema.json"), "utf8")) as {
-  tools: Array<{ function: { name: string } }>
+  tools: Array<{ function: { name: string }; type: "function" }>
 }
 
 const scalarFixtures: Record<string, { valid: Record<string, unknown>; invalid: Record<string, unknown> }> = {
@@ -166,5 +168,15 @@ describe("ChartDefinition pilot registry", () => {
     expect(JSON.parse(JSON.stringify(artifacts))).toEqual(artifacts)
     expect(getChartDefinition("LineChart")).toBe(CHART_DEFINITION_PILOT.LineChart)
     expect(getChartDefinition("not-a-chart")).toBeUndefined()
+  })
+
+  it("generates the pilot entries in the canonical AI schema registry", () => {
+    for (const chart of CHART_DEFINITION_PILOT_IDS) {
+      const generated = generateSchemaToolEntryFromChartDefinition(
+        CHART_DEFINITION_PILOT[chart],
+      )
+      const canonical = aiSchema.tools.find((tool) => tool.function.name === chart)
+      expect(generated, chart).toEqual(canonical)
+    }
   })
 })

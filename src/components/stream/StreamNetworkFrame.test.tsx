@@ -451,6 +451,44 @@ describe("StreamNetworkFrame", () => {
   // Exercises the frame's imperative handle and the push→ingest→clear→reload
   // path — the frame-level boundary for the store's topology-diff clear() reset.
   describe("push API + clear→reload lifecycle", () => {
+    it("emits the live node category domain after push, remove, and clear", async () => {
+      const scheduler = createFrameScheduler(0)
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const onCategoriesChange = vi.fn()
+      render(
+        <StreamNetworkFrame
+          ref={ref}
+          chartType="chord"
+          frameScheduler={scheduler.scheduler}
+          legendCategoryAccessor="id"
+          onCategoriesChange={onCategoriesChange}
+        />,
+      )
+      await act(async () => { scheduler.flush() })
+
+      await act(async () => {
+        ref.current!.pushMany([
+          { source: "Alpha", target: "Beta", value: 2 },
+          { source: "Beta", target: "Gamma", value: 1 },
+        ])
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith([
+        "Alpha",
+        "Beta",
+        "Gamma",
+      ])
+
+      await act(async () => {
+        ref.current!.removeNode("Gamma")
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith(["Alpha", "Beta"])
+
+      await act(async () => {
+        ref.current!.clear()
+      })
+      expect(onCategoriesChange).toHaveBeenLastCalledWith([])
+    })
+
     it("coalesces rapid single-edge pushes into one layout at the next frame", async () => {
       const scheduler = createFrameScheduler(0)
       const ref = React.createRef<StreamNetworkFrameHandle>()

@@ -67,6 +67,7 @@ import {
   rescueDegenerateDomains,
   resolveBarBinYDomain,
   resolveStackedAreaYDomain,
+  resolveWaterfallXDomain,
   resolveWaterfallYDomain,
   type StackExtentCache,
   makePipelineScale
@@ -552,7 +553,15 @@ export class PipelineStore implements UpdateResultStore {
     // (chart-type rules + scale construction live in pipelineDomainResolution.ts)
     const dataXDomain = this.xExtent.extent
     const dataYDomain = this.yExtent.extent
-    let xDomain = mergePartialDomain(dataXDomain, config.xExtent)
+    let xDomain = config.chartType === "waterfall" && buffer.size > 0
+      ? resolveWaterfallXDomain(
+          bufferArray,
+          this.getX,
+          dataXDomain,
+          config.xExtent,
+          config.xScaleType
+        )
+      : mergePartialDomain(dataXDomain, config.xExtent)
     let yDomain = mergePartialDomain(dataYDomain, config.yExtent)
 
     const yFullySpecified = isFullySpecifiedExtent(config.yExtent)

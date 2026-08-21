@@ -27,6 +27,7 @@ import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDef
 // @ts-expect-error — generators emit `any`-typed schema fragments
 import {
   generateSchemaToolEntry,
+  generateSchemaToolEntryFromChartDefinition,
   generateChartClinicMetadata,
   generateChartClinicMetadataModule,
   generateKnownChartComponentsModule,
@@ -73,6 +74,14 @@ interface Schema {
 
 const existing: Schema = JSON.parse(readFileSync(schemaPath, "utf8"))
 
+function generateToolForSpec(name: string, spec: (typeof CHART_SPECS)[string]): SchemaTool {
+  const definition = CHART_DEFINITION_PILOT[name as keyof typeof CHART_DEFINITION_PILOT]
+  if (definition) {
+    return generateSchemaToolEntryFromChartDefinition(definition) as SchemaTool
+  }
+  return generateSchemaToolEntry(spec, composeProps(spec)) as SchemaTool
+}
+
 let regeneratedCount = 0
 let preservedCount = 0
 const seen = new Set<string>()
@@ -83,9 +92,8 @@ const nextTools: SchemaTool[] = existing.tools.map((tool) => {
     return tool
   }
   seen.add(tool.function.name)
-  const composed = composeProps(spec)
   regeneratedCount++
-  return generateSchemaToolEntry(spec, composed) as SchemaTool
+  return generateToolForSpec(tool.function.name, spec)
 })
 
 // Append registry entries that the existing schema doesn't have yet, in
@@ -94,8 +102,7 @@ const nextTools: SchemaTool[] = existing.tools.map((tool) => {
 let appendedCount = 0
 for (const [name, spec] of Object.entries(CHART_SPECS)) {
   if (seen.has(name)) continue
-  const composed = composeProps(spec)
-  nextTools.push(generateSchemaToolEntry(spec, composed) as SchemaTool)
+  nextTools.push(generateToolForSpec(name, spec))
   appendedCount++
 }
 

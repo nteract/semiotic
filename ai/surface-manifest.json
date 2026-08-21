@@ -854,14 +854,16 @@
       ],
       "activation": "semiotic-mcp --profile public or MCP_TOOL_PROFILE=public"
     },
-    "resourceCount": 8,
+    "resourceCount": 10,
     "resources": [
       "semiotic-behavior-contracts",
       "semiotic-build-info",
       "semiotic-chatgpt-chart-widget",
+      "semiotic-component-schema",
       "semiotic-components",
       "semiotic-examples",
       "semiotic-schema",
+      "semiotic-schema-index",
       "semiotic-surface-manifest",
       "semiotic-system-prompt"
     ],

@@ -464,6 +464,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "semiotic://components",
       "semiotic://examples",
       "semiotic://schema",
+      "semiotic://schema-index",
       "semiotic://surface-manifest",
       "semiotic://system-prompt",
       "ui://semiotic/chart-widget.html",
@@ -490,6 +491,53 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     // renderable wiring still fail visibly.
     expect(text).toContain('"name": "GaugeChart"')
     expect(text).toContain('"category": "ordinal"')
+  })
+
+  it("resources/templates/list exposes per-component schema discovery", async () => {
+    const result = await sendRequest(proc, "resources/templates/list", {}, "resource-templates-list")
+
+    expect(result.result).toBeDefined()
+    expect(result.result.resourceTemplates).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: "semiotic-component-schema",
+        uriTemplate: "semiotic://schema/{component}",
+        mimeType: "application/json",
+      }),
+    ]))
+  })
+
+  it("resources/read returns the compact schema discovery index", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://schema-index",
+    }, "resources-read-schema-index")
+
+    expect(result.result).toBeDefined()
+    const index = JSON.parse(result.result.contents[0].text)
+    expect(index.resourceTemplate).toBe("semiotic://schema/{component}")
+    expect(index.fullSchemaUri).toBe("semiotic://schema")
+    expect(index.components).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        name: "LineChart",
+        schemaResourceUri: "semiotic://schema/LineChart",
+      }),
+    ]))
+  })
+
+  it("resources/read returns one component schema without the full catalog", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://schema/LineChart",
+    }, "resources-read-line-schema")
+
+    expect(result.result).toBeDefined()
+    const component = JSON.parse(result.result.contents[0].text)
+    expect(component.component).toBe("LineChart")
+    expect(component.resourceUri).toBe("semiotic://schema/LineChart")
+    expect(component.metadata.importPath).toBe("semiotic/xy")
+    expect(component.schema.name).toBe("LineChart")
+    expect(component.schema.parameters.properties.xAccessor).toBeDefined()
+    expect(component.schema.parameters.properties.categoryAccessor).toBeUndefined()
+    expect(component.behaviorContracts).toEqual(expect.any(Array))
+    expect(component.tools).toBeUndefined()
   })
 
   it("resources/read returns behavior contracts", async () => {

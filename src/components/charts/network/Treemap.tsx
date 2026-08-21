@@ -8,18 +8,20 @@ import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
-import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
+import {
+  flattenHierarchy,
+  resolveHierarchySum,
+  wrapNetworkNodeStyleWithSelection,
+} from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
-import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
@@ -49,6 +51,10 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
    */
   nodeStyle?: (d: Datum) => NetworkMarkStyle
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -99,6 +105,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -135,13 +142,14 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     loading,
     loadingContent,
     legendInteraction,
+    legendPosition,
     stroke,
     strokeWidth,
     opacity,
   } = props
   const { nodeStyle: frameNodeStyle, ...framePropsRest } = frameProps
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // Flatten the hierarchy once so the consolidated setup hook can
   // build its color scale + categories off the same node array
@@ -162,7 +170,8 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,             // Treemap has no top-level legend prop
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: framePropsRest,
     selection,
@@ -183,7 +192,6 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     // separately by validateObjectData, not the array-empty path.
   })
 
-  const resolvedSelection = useResolvedSelection(selection)
   const baseHoverBehavior = setup.customHoverBehavior
 
   // Network frame hover: { type, data: sceneNode, x, y }
@@ -240,27 +248,17 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     [nodeStyleFnWithUser, stroke, strokeWidth, opacity]
   )
 
-  // Wrap node style with selection — unwrap hierarchy .data for predicate matching
-  const nodeStyle = useMemo(() => {
-    if (!setup.activeSelectionHook) return nodeStyleFnWithPrimitives
-    return (d: Datum) => {
-      const style = { ...nodeStyleFnWithPrimitives(d) }
-      if (setup.activeSelectionHook!.isActive) {
-        const datum = d.data || d
-        const matches = setup.activeSelectionHook!.predicate(datum)
-        if (matches) {
-          if (resolvedSelection?.selectedStyle) Object.assign(style, resolvedSelection.selectedStyle)
-        } else {
-          const dimOpacity = resolvedSelection?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
-          style.opacity = dimOpacity
-          style.fillOpacity = dimOpacity
-          style.strokeOpacity = dimOpacity
-          if (resolvedSelection?.unselectedStyle) Object.assign(style, resolvedSelection.unselectedStyle)
-        }
-      }
-      return style
-    }
-  }, [nodeStyleFnWithPrimitives, setup.activeSelectionHook, resolvedSelection])
+  // Network layout callbacks receive a wrapper whose `.data` is the original
+  // hierarchy datum. The shared wrapper unwraps it before legend/selection
+  // predicates run, so interactions visibly update the cells.
+  const nodeStyle = useMemo(
+    () => wrapNetworkNodeStyleWithSelection(
+      nodeStyleFnWithPrimitives,
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [nodeStyleFnWithPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   const hierarchySumFn = useMemo(() => {
     return resolveHierarchySum(valueAccessor)
@@ -311,6 +309,8 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

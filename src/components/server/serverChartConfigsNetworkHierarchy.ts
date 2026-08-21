@@ -102,6 +102,9 @@ export const circlePack: ChartConfig = {
       ...(rest.padding != null && { padding: rest.padding }),
       colorScheme,
       ...common,
+      showLegend:
+        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
+        Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
         baseNodeStyle,
         userNodeStyle,
@@ -195,7 +198,10 @@ export const orbitDiagram: ChartConfig = {
         strokeWidth: 0.5,
         opacity: 1
       }),
-      ...common
+      ...common,
+      showLegend:
+        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
+        Boolean(colorBy && !rest.colorByDepth)
     }
   }
 }

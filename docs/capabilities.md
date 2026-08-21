@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-08-20 · 59 charts indexed.
+Last regen: 2026-08-21 · 59 charts indexed.
 
 **Column key**
 
@@ -61,14 +61,14 @@ Last regen: 2026-08-20 · 59 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **ChordDiagram** | — | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
-| **CirclePack** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
+| **ChordDiagram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
+| **CirclePack** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
 | **ForceDirectedGraph** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `force-simulation` |
-| **OrbitDiagram** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` `animated` |
+| **OrbitDiagram** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` `animated` |
 | **ProcessSankey** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | custom | `temporal` `particles` `lane-reuse` `quality-metrics` `slack-aware-placement` `vertical-orientation` `style-rules` `worker-layout` |
 | **SankeyDiagram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
-| **TreeDiagram** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
-| **Treemap** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
+| **TreeDiagram** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
+| **Treemap** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
 
 ## Geo
 
@@ -114,7 +114,7 @@ Last regen: 2026-08-20 · 59 charts indexed.
 
 ## Aggregate counts
 
-- 49/59 charts render a top-level legend.
+- 54/59 charts render a top-level legend.
 - 47/59 charts expose a push API.
 - 51/59 charts SSR via the `renderChart()` registry.
 - 2/59 charts use the customLayout escape hatch.

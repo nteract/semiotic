@@ -47,6 +47,7 @@ import { KNOWN_CHART_COMPONENTS } from "../src/components/charts/shared/knownCha
 // @ts-expect-error — generators emit `any`-typed schema fragments
 import {
   generateSchemaToolEntry,
+  generateSchemaToolEntryFromChartDefinition,
   generateChartClinicMetadata,
   generateChartClinicMetadataModule,
   generateKnownChartComponentsModule,
@@ -250,46 +251,21 @@ const SPEC_ONLY_PROP_EXCEPTIONS: Record<
   },
   ChordDiagram: {
     ...specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid"]),
-    ...specOnly("server-only", STATIC_CHROME_PROP, [
-      "showLegend",
-      "legendPosition",
-      "annotations"
-    ])
+    ...specOnly("server-only", STATIC_CHROME_PROP, ["annotations"])
   },
   TreeDiagram: {
     ...specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid"]),
-    ...specOnly("server-only", STATIC_CHROME_PROP, [
-      "showLegend",
-      "legendPosition",
-      "annotations"
-    ])
+    ...specOnly("server-only", STATIC_CHROME_PROP, ["annotations"])
   },
   Treemap: {
     ...specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid"]),
-    ...specOnly("server-only", STATIC_CHROME_PROP, [
-      "showLegend",
-      "legendPosition",
-      "annotations"
-    ])
+    ...specOnly("server-only", STATIC_CHROME_PROP, ["annotations"])
   },
   CirclePack: {
     ...specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid"]),
-    ...specOnly("server-only", STATIC_CHROME_PROP, [
-      "showLegend",
-      "legendPosition",
-      "annotations"
-    ])
+    ...specOnly("server-only", STATIC_CHROME_PROP, ["annotations"])
   },
-  OrbitDiagram: {
-    ...specOnly("compatibility", SHARED_BAG_COMPAT, [
-      "legendInteraction",
-      "showGrid"
-    ]),
-    ...specOnly("server-only", STATIC_CHROME_PROP, [
-      "showLegend",
-      "legendPosition"
-    ])
-  },
+  OrbitDiagram: specOnly("compatibility", SHARED_BAG_COMPAT, ["showGrid"]),
   ChoroplethMap: specOnly("compatibility", SHARED_BAG_COMPAT, [
     "showGrid",
     "colorBy"
@@ -800,7 +776,10 @@ let checked = 0
 for (const [name, spec] of Object.entries(CHART_SPECS)) {
   const composed = composeProps(spec)
 
-  const generatedSchema = generateSchemaToolEntry(spec, composed)
+  const definition = CHART_DEFINITION_PILOT[name as keyof typeof CHART_DEFINITION_PILOT]
+  const generatedSchema = definition
+    ? generateSchemaToolEntryFromChartDefinition(definition)
+    : generateSchemaToolEntry(spec, composed)
   const canonicalSchema = schema.tools.find((t) => t.function.name === name)
   if (!canonicalSchema) {
     fail(
