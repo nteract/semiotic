@@ -20,11 +20,11 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CSSProperties, ReactNode } from "react"
 import {
-  distinctCategories,
   useChartLegendAndMargin,
   useChartSelection,
   useLegendInteraction
 } from "../shared/hooks"
+import { extractCategoryDomain } from "../../stream/categoryDomain"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
   ChartMode,
@@ -288,7 +288,9 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
     registerLinkedCategories: false
   })
   const controlledCategories = useMemo(
-    () => distinctCategories(data ?? [], categoryAccessor),
+    // Match the frame's push-mode category coercion, including literal
+    // "null" and "undefined" keys for nullish realtime categories.
+    () => extractCategoryDomain(data ?? [], categoryAccessor),
     [data, categoryAccessor]
   )
   const activeCategories =

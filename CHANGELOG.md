@@ -97,6 +97,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   category domain, so a `ChordDiagram` legend can appear and stay synchronized
   after ref-based pushes; empty domains no longer produce an `"undefined"`
   legend item.
+- **Realtime nullish category colors stay aligned** — controlled
+  `RealtimeHistogram` and `RealtimeSwarmChart` data now uses the same category
+  coercion as push mode, preserving literal `"null"` and `"undefined"` stack
+  keys across rendered marks and legends without weakening network legend
+  filtering.
 - **Waterfall selection and edge geometry** — static Waterfall bars now consume
   linked selections through their area style, and automatic x domains reserve
   half a step around the first/last centered bars so the final total is not

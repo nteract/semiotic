@@ -695,24 +695,33 @@ describe("realtime categorical mark and legend color parity", () => {
 
   it("coerces nullish categories consistently for marks and legends", () => {
     render(
-      <RealtimeHistogram
-        data={[
-          { time: 1, value: 4, category: null },
-          { time: 2, value: 8 }
-        ]}
-        binSize={10}
-        categoryAccessor="category"
-        showLegend
-      />
+      <>
+        <RealtimeSwarmChart
+          data={[
+            { time: 1, value: 4, category: null },
+            { time: 2, value: 8 }
+          ]}
+          categoryAccessor="category"
+          showLegend
+        />
+        <RealtimeHistogram
+          data={[
+            { time: 1, value: 4, category: null },
+            { time: 2, value: 8 }
+          ]}
+          binSize={10}
+          categoryAccessor="category"
+          showLegend
+        />
+      </>
     )
-    expect(Object.keys(latestFrame("bar").barColors ?? {})).toEqual([
-      "null",
-      "undefined"
-    ])
-    expect(Object.keys(legendColors(latestFrame("bar")))).toEqual([
-      "null",
-      "undefined"
-    ])
+    const categories = ["null", "undefined"]
+    expect(Object.keys(latestFrame("bar").barColors ?? {})).toEqual(categories)
+    for (const chartType of ["swarm", "bar"] as const) {
+      const frame = latestFrame(chartType)
+      expect(Object.keys(legendColors(frame))).toEqual(categories)
+      expect(markColors(frame, categories)).toEqual(legendColors(frame))
+    }
   })
 
   it("falls through partial explicit maps to the themed palette in both data modes", async () => {

@@ -20,11 +20,11 @@ import type {
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CSSProperties, ReactNode } from "react"
 import {
-  distinctCategories,
   useChartLegendAndMargin,
   useChartSelection,
   useLegendInteraction
 } from "../shared/hooks"
+import { extractCategoryDomain } from "../../stream/categoryDomain"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
   ChartMode,
@@ -332,7 +332,9 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     registerLinkedCategories: false
   })
   const controlledCategories = useMemo(
-    () => distinctCategories(data ?? [], categoryAccessor),
+    // Use the same coercion as push-mode frame emission. Realtime stack keys
+    // deliberately preserve nullish values as "null" and "undefined".
+    () => extractCategoryDomain(data ?? [], categoryAccessor),
     [data, categoryAccessor]
   )
   const activeCategories =
