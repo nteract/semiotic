@@ -4,6 +4,8 @@ import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, SVGPreRendererFn, StreamScales, StreamLayout, SceneNode } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getSize } from "../shared/colorUtils"
@@ -23,6 +25,8 @@ import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
+
+registerXYPlugin(scatterXYPlugin)
 
 /**
  * Quadrant label and color configuration

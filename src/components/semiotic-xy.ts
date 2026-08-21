@@ -6,6 +6,7 @@
 import StreamXYFrame from "./stream/StreamXYFrame"
 
 export { StreamXYFrame }
+export { registerBuiltInXYPlugins } from "./stream/xyPlugins/registerBuiltIn"
 
 // Shared tooltip utilities stay available from the family entry point so a
 // custom tooltip does not require pulling in the root bundle.

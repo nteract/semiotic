@@ -2,6 +2,8 @@
 import * as React from "react"
 import { forwardRef, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { customXYPlugin } from "../../stream/xyPlugins/customPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CustomLayout } from "../../stream/customLayout"
@@ -19,6 +21,8 @@ import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
+
+registerXYPlugin(customXYPlugin)
 
 export interface XYCustomChartProps<
   TDatum extends Datum = Datum,

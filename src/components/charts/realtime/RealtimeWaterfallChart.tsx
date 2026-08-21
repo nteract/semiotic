@@ -1,6 +1,8 @@
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { waterfallXYPlugin } from "../../stream/xyPlugins/waterfallPlugin"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -55,6 +57,8 @@ import {
   useRealtimeFrameHandle,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
+
+registerXYPlugin(waterfallXYPlugin)
 
 export interface RealtimeWaterfallChartProps<
   TDatum extends Datum = Datum

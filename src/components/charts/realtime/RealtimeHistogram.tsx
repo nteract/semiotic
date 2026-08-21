@@ -1,6 +1,8 @@
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { barXYPlugin } from "../../stream/xyPlugins/barPlugin"
 import type {
   ArrowOfTime,
   WindowMode,
@@ -62,6 +64,8 @@ import {
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
+
+registerXYPlugin(barXYPlugin)
 
 export type RealtimeHistogramDirection = "up" | "down"
 

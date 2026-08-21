@@ -7,10 +7,8 @@ import {
   resolveCustomLayoutPalette,
   buildResolveColor
 } from "./customLayoutPalette"
-import {
-  createCustomLayoutFailureDiagnostic,
-  type CustomLayoutFailureDiagnostic
-} from "./customLayoutFailure"
+import { runCustomLayoutAttempt } from "./customLayoutAttempt"
+import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import type {
   NetworkPipelineConfig,
   RealtimeEdge,
@@ -67,26 +65,12 @@ export function runNetworkCustomLayout({
     selection: config.layoutSelection ?? null
   }
 
-  try {
-    return { kind: "success", result: customLayout(context) }
-  } catch (error) {
-    const preservedLastGoodScene = previousResult !== null
-    const diagnostic = createCustomLayoutFailureDiagnostic(
-      "network",
-      error,
-      preservedLastGoodScene,
-      revision
-    )
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[semiotic] customNetworkLayout threw:", error)
-    }
-    try {
-      config.onLayoutError?.(diagnostic)
-    } catch (callbackError) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("[semiotic] onLayoutError threw:", callbackError)
-      }
-    }
-    return { kind: "failure", diagnostic, preservedLastGoodScene }
-  }
+  return runCustomLayoutAttempt({
+    family: "network",
+    logLabel: "customNetworkLayout",
+    revision,
+    hasPreviousResult: previousResult !== null,
+    onLayoutError: config.onLayoutError,
+    run: () => customLayout(context),
+  })
 }

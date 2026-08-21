@@ -5,6 +5,8 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { waterfallXYPlugin } from "../../stream/xyPlugins/waterfallPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, WaterfallStyle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -18,6 +20,8 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+
+registerXYPlugin(waterfallXYPlugin)
 
 export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]

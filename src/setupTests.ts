@@ -1,7 +1,9 @@
 import "@testing-library/jest-dom/vitest"
 import { registerBuiltInNetworkLayouts } from "./components/stream/layouts/registerBuiltIn"
+import { registerBuiltInXYPlugins } from "./components/stream/xyPlugins/registerBuiltIn"
 
 registerBuiltInNetworkLayouts()
+registerBuiltInXYPlugins()
 
 // jsdom doesn't implement ResizeObserver. Components that measure their
 // container (useResponsiveSize, LinkedLegend) need it to exist even if

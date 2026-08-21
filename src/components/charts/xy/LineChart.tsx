@@ -4,6 +4,7 @@ import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
 import { filterSparseArray } from "../shared/sparseArray"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getColor } from "../shared/colorUtils"
@@ -28,6 +29,8 @@ import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import { useXYBrush } from "../shared/useXYBrush"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
+
+registerLineFamilyXYPlugins()
 
 // Line-object input needs a group key after its coordinate arrays are
 // flattened for StreamXYFrame. Keep the field internal so parent metadata can

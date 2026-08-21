@@ -4,6 +4,7 @@ import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, StreamScales } from "../../stream/types"
 import { MinimapBrushOverlayLazy } from "./minimapBrushOverlayLazy"
 import { getColor } from "../shared/colorUtils"
@@ -17,6 +18,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+
+registerLineFamilyXYPlugins()
 
 // ── Types ──────────────────────────────────────────────────────────────
 
