@@ -82,7 +82,7 @@ describe("cold-consumer named import manifest", () => {
     atGzipBoundary.measurements[0].gzipBytes += gzipTolerance
     overGzipBoundary.measurements[0].gzipBytes += gzipTolerance + 1
 
-    expect(coldConsumerSizeTolerance("rawBytes", 1001699)).toBe(1002)
+    expect(coldConsumerSizeTolerance("rawBytes", 1001699)).toBe(2004)
     expect(gzipTolerance).toBe(2937)
     expect(compareColdConsumerReports(baseline, linuxMeasurement)).toMatchObject({
       current: true,

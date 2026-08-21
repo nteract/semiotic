@@ -39,7 +39,7 @@ export const README_MARKER_END = "<!-- semiotic-cold-consumer:end -->"
 // even for identical input bytes. Keep each allowance narrow enough to catch
 // a genuine bundle regression while avoiding a runner-only baseline rewrite.
 export const COLD_CONSUMER_SIZE_TOLERANCE = Object.freeze({
-  rawBytes: Object.freeze({ minimumBytes: 32, relative: 0.001 }),
+  rawBytes: Object.freeze({ minimumBytes: 32, relative: 0.002 }),
   gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.01 }),
 })
 

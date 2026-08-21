@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **First-class `RadarChart`** — the new ordinal HOC accepts long-form
+  series-by-attribute data and draws connected radial polygons with point
+  markers. It supports legends, selection, linked hover, push mode, typed
+  accessors, category formatting, SSR/static rendering, AI schema discovery,
+  and a dedicated documentation page.
+- **First-class static `WaterfallChart`** — cumulative signed deltas now have a
+  controlled-data and push-capable HOC alongside `RealtimeWaterfallChart`.
+  Numeric, date, and categorical steps are supported, with stable
+  `pointIdAccessor` updates, positive/negative styling, connectors, selection,
+  linked hover, SSR/static rendering, AI schema discovery, and a
+  dedicated documentation page.
+- **Chart-level brushing on common HOCs** — `LineChart` exposes an x-axis
+  brush, `Scatterplot` an xy brush, and `BarChart` a value-axis brush through
+  `brush`, `linkedBrush`, and `onBrush`. `Histogram`'s existing brush contract
+  is now schema-visible, so serialized and MCP-authored charts can request it.
+- **Dense static Heatmap aggregation** — `Heatmap` now accepts
+  `heatmapAggregation="count" | "sum" | "mean"`, `heatmapXBins`, and
+  `heatmapYBins`. Numeric heatmaps with more than 4,096 occupied cells
+  automatically aggregate into a bounded grid when no explicit aggregation is
+  supplied.
+- **Expanded `renderChart()` coverage** — `RadarChart`, `WaterfallChart`,
+  `MultiAxisLineChart`, and `DistanceCartogram` now participate in the static
+  chart registry, including dual-axis formatters/colors and cartogram chrome.
+- **Legends for chord and hierarchy charts** — `ChordDiagram`, `TreeDiagram`,
+  `Treemap`, `CirclePack`, and `OrbitDiagram` now expose `showLegend`,
+  `legendPosition`, and shared highlight/isolate legend interaction. Automatic
+  legends appear when `colorBy` is present and reserve the correct plot margin.
+- **Per-component MCP schema resources** — agents can discover the compact
+  component catalog at `semiotic://schema-index` and read only the needed
+  schema, metadata, accessibility guidance, and behavior contracts from
+  `semiotic://schema/{component}`. The full `semiotic://schema` resource remains
+  available for bulk tooling.
+- **Explicit Stream Frame plugin bootstrap APIs** — direct-frame and SSR hosts
+  can call `registerBuiltInXYPlugins()` from `semiotic/xy`, the root entry, or
+  `semiotic/realtime/core`, and `registerBuiltInNetworkLayouts()` from
+  `semiotic/network` when marks/layouts must be ready before first render.
+
+### Changed
+
+- **Chart HOCs load only their XY mark plugins** — scene builders and canvas
+  painters now resolve through a registry instead of one eager family map.
+  High-level HOCs register their own line/area/point/bar/heatmap/waterfall/etc.
+  plugins, while direct `StreamXYFrame` usage lazily restores missing built-ins
+  on first client paint and reports actionable SSR diagnostics.
+- **Network layouts and force workers are demand-loaded** — Sankey, force,
+  chord, hierarchy, and orbit register explicitly instead of sharing an eager
+  layout index. The force worker client is imported only when the worker policy
+  selects it, keeping unrelated network charts off that graph.
+- **Optional overlay code stays off default chart paths** — marginal graphics
+  and their binning dependency load only for HOCs/configurations that request
+  them; SSR detection and annotation-status filtering no longer import the
+  larger scene-serializer or AI graphs.
+- **ChartDefinition now produces a real downstream artifact** — the seven
+  pilot definitions generate their canonical AI-schema registry entries, with
+  equality coverage preventing the pilot and `ai/schema.json` from drifting.
+- **Faster same-style point painting** — contiguous opaque canvas points with
+  identical fill/stroke/radius share a path and paint operation. Pulses,
+  patterns, translucent marks, and other overlap-sensitive points retain
+  per-mark compositing.
+- **AI diagnostics provide concrete repairs** — validation diagnoses now
+  suggest how to remove unknown props, add required props, or correct component
+  names. `BigNumber` reports a dedicated error when chart-only
+  `accessibleTable` is supplied and directs authors to `label`, `description`,
+  and `summary`.
+- **True push mode is scored as an omit-`data` contract** — first-try AI evals
+  distinguish push proposals from `data={[]}`, materialize pushed rows only for
+  validation/render evidence, and can compare the packaged chart skill against
+  `llms.txt` under matching fixtures and budgets.
+- **Bundle and contributor gates measure the shipped product** — the MCP binary
+  is production-minified by default, bundle budgets use chunk-aware consumer
+  graphs instead of tiny re-export facades, documentation examples use family
+  subpath imports, and CONTRIBUTING now documents focused/fast/release check
+  tiers plus the complete new-chart checklist.
+
+### Fixed
+
+- **Waterfall selection and edge geometry** — static Waterfall bars now consume
+  linked selections through their area style, and automatic x domains reserve
+  half a step around the first/last centered bars so the final total is not
+  clipped. Categorical axes contain only real steps, while explicit partial or
+  complete x-extents remain authoritative. The shared scene/domain path also
+  covers `RealtimeWaterfallChart`.
+- **Waterfall categorical updates stay stable** — categorical step indexes are
+  retained across immutable `update()` calls and `pointIdAccessor` paths
+  instead of being reassigned as objects change identity.
+- **Radar formatting and series identity** — `categoryFormat` reaches radial
+  ticks, functional `seriesAccessor` values drive color correctly, and a
+  one-series chart closes its connector polygon instead of rendering isolated
+  points.
+- **Static/client parity for newly registered charts** — MultiAxis per-series
+  axis formatters and colors, DistanceCartogram sparkline/strip chrome,
+  Heatmap aggregation, Radar geometry, and Waterfall marks now agree across
+  browser HOCs and server rendering.
+- **Marginal graphics paint immediately and survive toggles** — Scatterplot and
+  BubbleChart provide the marginal painter for SSR/hydration, while retained
+  marginal values stay synchronized when graphics are enabled, disabled, or
+  recomputed after mount.
+- **Custom layouts recover consistently across families** — XY, ordinal,
+  network, and geo pipelines now share the same guarded layout attempt,
+  diagnostic, `onLayoutError`, and last-good-scene preservation contract. A
+  failed callback cannot erase a previously valid scene or leave overlays and
+  restyle state out of sync.
+- **Tree-shaken network layouts still register reliably** — layout plugins use
+  explicit registration rather than side-effect-only imports, preventing blank
+  Sankey, force, chord, hierarchy, or orbit output under
+  `"sideEffects": false` builds.
+
 ## [3.9.1] - 2026-08-19
 
 ### Fixed
