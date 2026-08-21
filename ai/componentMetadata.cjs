@@ -70,6 +70,10 @@ function importPathForCategory(category) {
   return category === "geo" ? "semiotic/geo" : `semiotic/${category}`
 }
 
+function schemaResourceUriForComponent(name) {
+  return `semiotic://schema/${encodeURIComponent(name)}`
+}
+
 function metadataForComponent(entryOrName) {
   const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name
   const category = categoryForComponent(name)
@@ -84,6 +88,7 @@ function metadataForComponent(entryOrName) {
     name,
     category,
     importPath: importPathForCategory(category),
+    schemaResourceUri: schemaResourceUriForComponent(name),
     renderable: !isPushOnly,
     requiresLiveData: isPushOnly,
     description: typeof entryOrName === "string" ? undefined : entryOrName.description,
@@ -134,5 +139,6 @@ module.exports = {
   findComponent,
   importPathForCategory,
   metadataForComponent,
+  schemaResourceUriForComponent,
   schemaEntries,
 }

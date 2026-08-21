@@ -24,6 +24,9 @@ const orbitDiagramProps = [
   { name: "animated", type: "boolean", default: "true", description: "Enable orbital animation" },
   { name: "colorBy", type: "string | function", description: "Field for node colors" },
   { name: "colorByDepth", type: "boolean", default: "false", description: "Color by hierarchy depth" },
+  { name: "showLegend", type: "boolean", default: "true (when colorBy set)", description: "Show a categorical legend for colorBy" },
+  { name: "legendPosition", type: '"right" | "left" | "top" | "bottom"', default: '"right"', description: "Position the legend around the plot" },
+  { name: "legendInteraction", type: '"highlight" | "isolate" | "none"', default: '"none"', description: "Highlight or isolate categories from the legend" },
   { name: "tooltip", type: "function", default: "default", description: "Custom tooltip (static mode only — disabled during animation)" },
 ]
 

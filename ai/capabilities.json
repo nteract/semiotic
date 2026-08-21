@@ -423,7 +423,7 @@
     },
     "ChordDiagram": {
       "category": "network",
-      "supportsLegend": false,
+      "supportsLegend": true,
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
@@ -434,7 +434,7 @@
     },
     "CirclePack": {
       "category": "network",
-      "supportsLegend": false,
+      "supportsLegend": true,
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": false,
@@ -460,7 +460,7 @@
     },
     "OrbitDiagram": {
       "category": "network",
-      "supportsLegend": false,
+      "supportsLegend": true,
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": false,
@@ -505,7 +505,7 @@
     },
     "TreeDiagram": {
       "category": "network",
-      "supportsLegend": false,
+      "supportsLegend": true,
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": false,
@@ -518,7 +518,7 @@
     },
     "Treemap": {
       "category": "network",
-      "supportsLegend": false,
+      "supportsLegend": true,
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": false,

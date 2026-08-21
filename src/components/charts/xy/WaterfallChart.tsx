@@ -18,6 +18,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 
@@ -134,6 +135,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     legendInteraction,
     legendPosition: legendPositionProp,
   } = props
+  const { areaStyle: frameAreaStyle, ...framePropsRest } = frameProps
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
   const safeData = useMemo(() => filterSparseArray(data), [data])
@@ -209,6 +211,14 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     }
   }, [data, safeData, xAccessor, xFormat, pointIdAccessor])
 
+  const categoricalAxes = useMemo<StreamXYFrameProps["axes"]>(() => {
+    if (!usesIndex || data == null) return undefined
+    return [{
+      orient: "bottom",
+      tickValues: plotData.map((_, index) => index),
+    }]
+  }, [data, plotData, usesIndex])
+
   const setup = useChartSetup({
     data: plotData,
     rawData: data,
@@ -237,7 +247,12 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     width,
     height,
     hasTitle: !!title,
-    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, {
+      showAxes: resolved.showAxes,
+      xLabel,
+      yLabel,
+      axes: frameProps.axes ?? categoricalAxes,
+    }),
   })
 
   const waterfallStyle = useMemo<WaterfallStyle>(() => ({
@@ -250,6 +265,15 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     strokeWidth: props.strokeWidth,
     opacity: props.opacity,
   }), [positiveColor, negativeColor, connectorStroke, connectorWidth, gap, props.stroke, props.strokeWidth, props.opacity])
+
+  const selectionAwareBarStyle = useMemo(
+    () => wrapStyleWithSelection(
+      frameAreaStyle ?? (() => ({})),
+      setup.effectiveSelectionHook,
+      setup.resolvedSelection,
+    ),
+    [frameAreaStyle, setup.effectiveSelectionHook, setup.resolvedSelection],
+  )
 
   const defaultTooltipContent = useMemo(
     () => buildDefaultTooltip([
@@ -275,6 +299,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     yAccessor,
     xScaleType: data != null && usesIndex ? "linear" : xScaleType,
     waterfallStyle,
+    areaStyle: selectionAwareBarStyle,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
@@ -286,6 +311,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     yFormat,
     enableHover,
     showGrid,
+    ...(categoricalAxes && { axes: categoricalAxes }),
     ...setup.legendBehaviorProps,
     ...buildBaseMetadataProps({
       title,
@@ -314,7 +340,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
-    ...frameProps,
+    ...framePropsRest,
   }
 
   return (

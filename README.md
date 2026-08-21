@@ -590,7 +590,9 @@ host-header allowlisting. For ChatGPT Apps domain verification, set
 | Resource | Description |
 |----------|-------------|
 | **`semiotic://schema`** | Full machine-readable component schema JSON. |
-| **`semiotic://components`** | Component index showing renderable/browser-only status and MCP categories. |
+| **`semiotic://schema-index`** | Compact discovery index with categories, renderability, import paths, and each component's schema resource URI. |
+| **`semiotic://schema/{component}`** | One component's schema, metadata, accessibility guidance, and behavior contracts (for example `semiotic://schema/LineChart`). |
+| **`semiotic://components`** | Backward-compatible component index showing renderable/browser-only status and MCP categories. |
 | **`semiotic://surface-manifest`** | Generated inventory of the current AI schema, exports, renderability, tools, resources, and prompts. |
 | **`semiotic://behavior-contracts`** | Agent-visible semantic rules for color precedence, required prop combinations, push refs, and renderability. |
 | **`semiotic://system-prompt`** | Compact AI instructions with import rules, chart props, SSR guidance, and pitfalls. |

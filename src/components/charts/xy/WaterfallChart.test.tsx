@@ -2,9 +2,10 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { WaterfallChart } from "./WaterfallChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { LinkedCharts, useSelection, type UseSelectionResult } from "../../LinkedCharts"
 
 let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
@@ -23,6 +24,18 @@ const sample = [
   { step: "Costs", value: -25 },
   { step: "Tax", value: -10 },
 ]
+
+type SelectionEmitterHandle = Pick<UseSelectionResult, "selectPoints">
+
+function SelectionEmitter({
+  emitRef,
+}: {
+  emitRef: React.MutableRefObject<SelectionEmitterHandle>
+}) {
+  const { selectPoints } = useSelection({ name: "waterfall-hover", fields: ["step"] })
+  emitRef.current = { selectPoints }
+  return null
+}
 
 describe("WaterfallChart", () => {
   beforeEach(() => {
@@ -51,6 +64,10 @@ describe("WaterfallChart", () => {
       expect.objectContaining({ step: "Tax", __waterfallX: 3 }),
     ])
     expect(lastXYFrameProps.xFormat?.(0)).toBe("Start")
+    expect(lastXYFrameProps.axes).toEqual([{
+      orient: "bottom",
+      tickValues: [0, 1, 2, 3],
+    }])
   })
 
   it("passes categorical x values through xFormat", () => {
@@ -132,6 +149,38 @@ describe("WaterfallChart", () => {
     )
     expect(lastXYFrameProps.xAccessor).toBe("x")
     expect(lastXYFrameProps.data).toEqual([{ x: 1, y: 10 }, { x: 2, y: -4 }])
+  })
+
+  it("dims unselected bars while preserving frame areaStyle", () => {
+    const emitRef = { current: null as unknown as SelectionEmitterHandle }
+    render(
+      <TooltipProvider>
+        <LinkedCharts showLegend={false}>
+          <SelectionEmitter emitRef={emitRef} />
+          <WaterfallChart
+            data={sample}
+            xAccessor="step"
+            yAccessor="value"
+            selection={{ name: "waterfall-hover" }}
+            frameProps={{ areaStyle: () => ({ stroke: "purple" }) }}
+          />
+        </LinkedCharts>
+      </TooltipProvider>,
+    )
+
+    act(() => {
+      emitRef.current.selectPoints({ step: ["Sales"] })
+    })
+
+    expect(lastXYFrameProps.areaStyle({ step: "Sales" })).toMatchObject({
+      stroke: "purple",
+    })
+    expect(lastXYFrameProps.areaStyle({ step: "Costs" })).toMatchObject({
+      stroke: "purple",
+      opacity: expect.any(Number),
+      fillOpacity: expect.any(Number),
+    })
+    expect(lastXYFrameProps.areaStyle({ step: "Costs" }).opacity).toBeLessThan(1)
   })
 
   it("handles empty data gracefully", () => {

@@ -326,4 +326,18 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       maxDiffPixels: 220,
     })
   })
+
+  test("linked-hover dims RadarChart and WaterfallChart targets", async ({ page }) => {
+    await waitForChartReady(page, "wave-one-hoc-linked-hover")
+    const testCase = page.locator('[data-testid="wave-one-hoc-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    const sourceCanvas = testCase.locator("canvas").first()
+    const box = await sourceCanvas.boundingBox()
+    if (!box) throw new Error("Wave 1 HOC linked-hover source canvas bounding box unavailable")
+    await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.29)
+    await waitForRafs(page, 4)
+    await expect(testCase).toHaveScreenshot("linked-hover-wave-one-hocs-state.png", {
+      maxDiffPixels: 260,
+    })
+  })
 })

@@ -178,7 +178,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: [],
@@ -208,7 +208,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["hierarchy"],
@@ -238,7 +238,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["hierarchy"],
@@ -266,7 +266,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["hierarchy"],
@@ -303,7 +303,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     },
     capabilities: {
       renderModes: ["hybrid"],
-      supportsLegend: false, supportsSelection: true, supportsLinkedHover: true,
+      supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["hierarchy", "animated"],

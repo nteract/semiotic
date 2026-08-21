@@ -13,7 +13,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { createEdgeStyleFn } from "../shared/networkUtils"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
@@ -50,6 +50,10 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   edgeOpacity?: number
   tooltip?: TooltipProp
@@ -113,6 +117,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -151,19 +156,17 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     loading,
     loadingContent,
     emptyContent,
+    legendPosition,
     legendInteraction,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
-  // Consolidated network setup. ChordDiagram doesn't have a top-level
-  // `showLegend` prop — its legend is the `legendInteraction`-driven
-  // hover/isolate behavior — so pass `showLegend: false` to suppress
-  // the hook's auto-legend (and thus the legend-aware margin
-  // reservation), matching the pre-migration manual margin.
+  // Consolidated network setup. `showLegend` is auto-on when colorBy is set;
+  // legend interaction shares the same categories and color scale.
   const setup = useNetworkChartSetup({
     nodes,
     edges,
@@ -173,7 +176,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
     targetAccessor,
     colorBy,
     colorScheme,
-    showLegend: false,
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: frameProps,
     selection,
@@ -324,6 +328,8 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

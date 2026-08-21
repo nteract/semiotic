@@ -235,6 +235,43 @@ export function resolveWaterfallYDomain(
   ]
 }
 
+/**
+ * Waterfall x values identify bar centers, so the automatic domain needs half
+ * of the neighboring interval beyond each edge datum. User-specified bounds
+ * remain authoritative, including partial extents.
+ */
+export function resolveWaterfallXDomain(
+  data: Datum[],
+  getX: (d: Datum) => number,
+  dataDomain: [number, number],
+  userExtent: [number | undefined, number | undefined] | [number] | undefined,
+  xScaleType: PipelineConfig["xScaleType"]
+): [number, number] {
+  const values = Array.from(new Set(
+    data
+      .map(getX)
+      .filter((value) => Number.isFinite(value))
+  )).sort((a, b) => a - b)
+
+  if (values.length < 2) return mergePartialDomain(dataDomain, userExtent)
+
+  const first = values[0]
+  const second = values[1]
+  const last = values[values.length - 1]
+  const penultimate = values[values.length - 2]
+  const autoDomain: [number, number] = xScaleType === "log" && first > 0
+    ? [
+        first / Math.sqrt(second / first),
+        last * Math.sqrt(last / penultimate)
+      ]
+    : [
+        first - (second - first) / 2,
+        last + (last - penultimate) / 2
+      ]
+
+  return mergePartialDomain(autoDomain, userExtent)
+}
+
 export function expandYDomainWithRibbons(
   yDomain: [number, number],
   bufferArray: Datum[],

@@ -104,6 +104,24 @@ export function generateSchemaToolEntry(spec, composedProps) {
 }
 
 /**
+ * Project a ChartDefinition into the existing AI tool-schema registry shape.
+ * The pilot definition remains additive, but its charts now reach a real
+ * downstream artifact through this boundary instead of being parity-only
+ * metadata. Runtime prop metadata is retained so mixed string/function props
+ * keep their `x-semiotic-runtime-types` guidance on the React-facing schema.
+ */
+export function generateSchemaToolEntryFromChartDefinition(definition) {
+  return generateSchemaToolEntry(
+    {
+      name: definition.chartKind,
+      description: definition.metadata.description,
+      required: definition.wire.schema.required,
+    },
+    definition.runtime.propMetadata,
+  )
+}
+
+/**
  * Generate the VALIDATION_MAP entry for one chart. Result mirrors the
  * `ComponentSpec` shape consumed by validateProps.ts: keeps the full
  * runtime type set (including "function") and drops schema-only fields

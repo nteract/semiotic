@@ -1,7 +1,7 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes nineteen tools, eight resources, and two prompts:
+ * Exposes nineteen tools, nine fixed resources, one resource template, and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -39,7 +39,7 @@
  *   npx semiotic-mcp --http --host 0.0.0.0 --port 3001
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { z } from "zod"
@@ -173,6 +173,7 @@ import behaviorContractsModule from "./behaviorContracts.cjs"
 const {
   componentIndexFromSchema,
   metadataForComponent,
+  schemaResourceUriForComponent,
 } = componentMetadataModule as {
   componentIndexFromSchema: (schema: any) => {
     version?: string
@@ -185,6 +186,7 @@ const {
       name: string
       category: string
       importPath: string
+      schemaResourceUri: string
       renderable: boolean
       requiresLiveData: boolean
       description?: string
@@ -194,10 +196,12 @@ const {
     name: string
     category: string
     importPath: string
+    schemaResourceUri: string
     renderable: boolean
     requiresLiveData: boolean
     description?: string
   }
+  schemaResourceUriForComponent: (name: string) => string
 }
 const {
   formatSuggestionReport,
@@ -402,6 +406,34 @@ function readAIFile(fileName: string): string {
 
 function componentIndexJSON(): string {
   return JSON.stringify(componentIndexFromSchema(schema), null, 2)
+}
+
+function schemaDiscoveryIndexJSON(): string {
+  return JSON.stringify({
+    ...componentIndexFromSchema(schema),
+    resourceTemplate: "semiotic://schema/{component}",
+    fullSchemaUri: "semiotic://schema",
+  }, null, 2)
+}
+
+function canonicalComponentName(requested: string): string | undefined {
+  const exact = schemaByComponent[requested]
+  if (exact) return requested
+  const lower = requested.toLowerCase()
+  return allComponentNames.find((name) => name.toLowerCase() === lower)
+}
+
+function componentSchemaResource(component: string) {
+  const entry = schemaByComponent[component]
+  return {
+    version: schema.version,
+    component,
+    resourceUri: schemaResourceUriForComponent(component),
+    metadata: metadataForComponent(entry),
+    schema: entry,
+    accessibility: schemaAccessibilityGuidance(entry),
+    behaviorContracts: behaviorContractsFor({ component, props: {} }),
+  }
 }
 
 function textResource(uri: URL, mimeType: string, text: string) {
@@ -1129,6 +1161,7 @@ async function getSchemaHandler(args: {
 
   const availableComponents = allComponentNames.map(name => ({
     name,
+    schemaResourceUri: schemaResourceUriForComponent(name),
     renderable: metadataForComponent(name).renderable,
     requiresLiveData: metadataForComponent(name).requiresLiveData,
   }))
@@ -1192,6 +1225,7 @@ async function getSchemaHandler(args: {
     structuredContent: profileResult({
       status: "component-schema",
       component,
+      resourceUri: schemaResourceUriForComponent(component),
       renderable,
       requiresLiveData,
       schema: entry,
@@ -2436,6 +2470,48 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
       mimeType: "application/json",
     },
     (uri) => textResource(uri, "application/json", JSON.stringify(schema, null, 2))
+  )
+
+  srv.registerResource(
+    "semiotic-schema-index",
+    "semiotic://schema-index",
+    {
+      title: "Semiotic Schema Discovery Index",
+      description: "Compact component catalog with one-resource-per-component schema URIs.",
+      mimeType: "application/json",
+    },
+    (uri) => textResource(uri, "application/json", schemaDiscoveryIndexJSON())
+  )
+
+  srv.registerResource(
+    "semiotic-component-schema",
+    new ResourceTemplate("semiotic://schema/{component}", {
+      list: undefined,
+      complete: {
+        component: (value) => allComponentNames.filter((name) =>
+          name.toLowerCase().startsWith(value.toLowerCase())
+        ),
+      },
+    }),
+    {
+      title: "Semiotic Component Schema",
+      description: "One component's prop schema, metadata, accessibility guidance, and behavior contracts.",
+      mimeType: "application/json",
+    },
+    (uri, variables) => {
+      const requested = Array.isArray(variables.component)
+        ? variables.component[0]
+        : variables.component
+      const component = canonicalComponentName(String(requested ?? ""))
+      if (!component) {
+        throw new Error(`Unknown Semiotic component schema: ${String(requested ?? "")}`)
+      }
+      return textResource(
+        uri,
+        "application/json",
+        JSON.stringify(componentSchemaResource(component), null, 2),
+      )
+    }
   )
 
   srv.registerResource(

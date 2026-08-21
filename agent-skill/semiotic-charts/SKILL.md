@@ -16,11 +16,12 @@ validated and diagnosed; when a renderer is available, proven to paint. Otherwis
 
 ## Context discipline
 
-Start with the task and the exact component schema. Use the MCP `getSchema` tool
-or `npx semiotic-ai --schema <Component>`, then read one nearby example if
-needed. Do not load the full reference, schema, or example catalog by default;
-retrieve broader context only when validation or diagnosis shows that it is
-necessary.
+Start with the task and the exact component schema. Use the MCP `getSchema` tool,
+read `semiotic://schema/{component}`, or run
+`npx semiotic-ai --schema <Component>`, then read one nearby example if needed.
+Use `semiotic://schema-index` when the component is not known. Do not load the
+full reference, schema, or example catalog by default; retrieve broader context
+only when validation or diagnosis shows that it is necessary.
 
 ## The trust loop — generate → validate → diagnose → repair → prove
 

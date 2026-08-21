@@ -11,7 +11,7 @@ import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -37,6 +37,10 @@ export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartP
   circleOpacity?: number
   padding?: number
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -88,6 +92,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -121,12 +126,13 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     loading,
     loadingContent,
     legendInteraction,
+    legendPosition,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   const allNodes = useMemo(() => {
     return flattenHierarchy(data ?? null, childrenAccessor as string | ((d: Datum) => Datum[]))
@@ -142,7 +148,8 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: frameProps,
     selection,
@@ -230,6 +237,8 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

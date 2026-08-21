@@ -11,7 +11,7 @@ import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -43,6 +43,10 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
   showLabels?: boolean
   nodeSize?: number
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -94,6 +98,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -129,12 +134,13 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     loading,
     loadingContent,
     legendInteraction,
+    legendPosition,
     stroke,
     strokeWidth,
     opacity,
   } = props
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // Node style function
   const allNodes = useMemo(() => {
@@ -143,14 +149,15 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
 
   // Consolidated network setup — same hierarchy-shape pattern as
   // Treemap/CirclePack: flattened descendants flow into the hook,
-  // node inference off, no top-level legend.
+  // node inference off. `showLegend` auto-on when `colorBy` is set.
   const setup = useNetworkChartSetup({
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: frameProps,
     selection,
@@ -248,6 +255,8 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

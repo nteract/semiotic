@@ -22,6 +22,8 @@ const {
   RidgelinePlot,
   SwarmPlot,
   ViolinPlot,
+  RadarChart,
+  WaterfallChart,
 } = Semiotic
 
 const TestCase = ({ title, children, testId, key }) =>
@@ -111,6 +113,27 @@ const crosshairSecondaryData = [
   { month: 3, value: 96 },
   { month: 4, value: 112 },
   { month: 5, value: 88 },
+]
+
+const waveOneHoverSourceData = [
+  { metric: "Speed", x: 20, y: 80 },
+  { metric: "Quality", x: 50, y: 55 },
+  { metric: "Reach", x: 80, y: 30 },
+]
+
+const waveOneRadarData = [
+  { series: "Current", metric: "Speed", score: 78 },
+  { series: "Current", metric: "Quality", score: 62 },
+  { series: "Current", metric: "Reach", score: 48 },
+  { series: "Target", metric: "Speed", score: 90 },
+  { series: "Target", metric: "Quality", score: 82 },
+  { series: "Target", metric: "Reach", score: 72 },
+]
+
+const waveOneWaterfallData = [
+  { metric: "Speed", change: 24 },
+  { metric: "Quality", change: -8 },
+  { metric: "Reach", change: 15 },
 ]
 
 // ── Test cases ──────────────────────────────────────────────────────────
@@ -527,6 +550,56 @@ const examples = [
           linkedHover: { name: "lockhl", mode: "x-position", xField: "month" },
           showLegend: false,
           frameProps: { background: "#111827" },
+        })
+      )
+    ),
+  }),
+
+  // 9. Wave 1 named HOCs: RadarChart + static WaterfallChart
+  TestCase({
+    title: "Linked Hover: Radar and Waterfall targets",
+    testId: "wave-one-hoc-linked-hover",
+    children: React.createElement(
+      LinkedCharts,
+      { showLegend: false },
+      React.createElement(
+        ChartGrid,
+        { columns: 3 },
+        React.createElement(Scatterplot, {
+          data: waveOneHoverSourceData,
+          xAccessor: "x",
+          yAccessor: "y",
+          colorBy: "metric",
+          width: 240,
+          height: 210,
+          margin: 30,
+          xExtent: [0, 100],
+          yExtent: [0, 100],
+          pointRadius: 7,
+          hoverRadius: 28,
+          linkedHover: { name: "wave-one-hocs", fields: ["metric"] },
+          selection: { name: "wave-one-hocs" },
+          showLegend: false,
+        }),
+        React.createElement(RadarChart, {
+          data: waveOneRadarData,
+          categoryAccessor: "metric",
+          valueAccessor: "score",
+          seriesAccessor: "series",
+          colorBy: "series",
+          width: 240,
+          height: 210,
+          selection: { name: "wave-one-hocs" },
+          showLegend: false,
+        }),
+        React.createElement(WaterfallChart, {
+          data: waveOneWaterfallData,
+          xAccessor: "metric",
+          yAccessor: "change",
+          width: 240,
+          height: 210,
+          selection: { name: "wave-one-hocs" },
+          showLegend: false,
         })
       )
     ),

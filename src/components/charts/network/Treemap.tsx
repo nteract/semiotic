@@ -12,7 +12,7 @@ import { flattenHierarchy, resolveHierarchySum } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { useChartMode, resolveDefaultFill } from "../shared/hooks"
-import type { LegendInteractionMode } from "../shared/hooks"
+import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
@@ -49,6 +49,10 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
    */
   nodeStyle?: (d: Datum) => NetworkMarkStyle
   enableHover?: boolean
+  /** Show a swatch + label legend. Defaults to `true` when `colorBy` is set. */
+  showLegend?: boolean
+  /** Legend position. Default `"right"`. */
+  legendPosition?: LegendPosition
   legendInteraction?: LegendInteractionMode
   tooltip?: TooltipProp
   frameProps?: Partial<Omit<StreamNetworkFrameProps, "edges" | "size">>
@@ -99,6 +103,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     width: props.width,
     height: props.height,
     enableHover: props.enableHover,
+    showLegend: props.showLegend,
     showLabels: props.showLabels,
     title: props.title,
     description: props.description,
@@ -135,13 +140,14 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     loading,
     loadingContent,
     legendInteraction,
+    legendPosition,
     stroke,
     strokeWidth,
     opacity,
   } = props
   const { nodeStyle: frameNodeStyle, ...framePropsRest } = frameProps
 
-  const { width, height, enableHover, showLabels = true, title, description, summary, accessibleTable } = resolved
+  const { width, height, enableHover, showLegend, showLabels = true, title, description, summary, accessibleTable } = resolved
 
   // Flatten the hierarchy once so the consolidated setup hook can
   // build its color scale + categories off the same node array
@@ -162,7 +168,8 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     inferNodes: false,
     colorBy: colorByDepth ? undefined : (colorBy as string | ((d: Datum) => string) | undefined),
     colorScheme,
-    showLegend: false,             // Treemap has no top-level legend prop
+    showLegend,
+    legendPosition,
     legendInteraction,
     frameLegend: framePropsRest,
     selection,
@@ -311,6 +318,8 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
         customClickBehavior: setup.customClickBehavior,
         linkedHoverInClickPredicate: false,
       })}
+      legend={setup.legend}
+      legendPosition={setup.legendPosition}
       {...(legendInteraction && legendInteraction !== "none" && {
         legendHoverBehavior: setup.legendState.onLegendHover,
         legendClickBehavior: setup.legendState.onLegendClick,

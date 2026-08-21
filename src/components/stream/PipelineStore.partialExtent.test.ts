@@ -74,7 +74,10 @@ describe("PipelineStore — partial yExtent override on chart-type-specific path
   })
 
   describe("waterfall (signed-bar auto-extent)", () => {
-    function buildStore(yExtent: [number | undefined, number | undefined] | undefined) {
+    function buildStore(
+      yExtent: [number | undefined, number | undefined] | undefined,
+      xExtent?: [number | undefined, number | undefined]
+    ) {
       const store = new PipelineStore({
         chartType: "waterfall",
         runtimeMode: "bounded",
@@ -85,6 +88,7 @@ describe("PipelineStore — partial yExtent override on chart-type-specific path
         xAccessor: "x",
         yAccessor: "y",
         ...(yExtent && { yExtent }),
+        ...(xExtent && { xExtent }),
       })
       // Cumulative path: 0 → 10 → 25 → 15 → 5
       store.ingest({
@@ -111,6 +115,27 @@ describe("PipelineStore — partial yExtent override on chart-type-specific path
       // here the cumulative path stays positive so lo==0 from auto.
       expect(lo).toBe(0)
       expect(hi).toBe(100) // user-pinned, no longer 25
+    })
+
+    it("pads the automatic x-domain by half a step so edge bars remain visible", () => {
+      const store = buildStore(undefined)
+      expect(store.scales!.x.domain()).toEqual([-0.5, 3.5])
+      const first = store.scene[0]
+      const last = store.scene[store.scene.length - 1]
+      expect(first.type).toBe("rect")
+      expect(last.type).toBe("rect")
+      if (first.type !== "rect" || last.type !== "rect") {
+        throw new Error("Expected Waterfall scene to contain rectangular bars")
+      }
+      expect(first.x).toBe(0.5)
+      expect(last.x + last.w).toBe(399.5)
+    })
+
+    it("keeps partial user x-extents authoritative", () => {
+      const lower = buildStore(undefined, [-2, undefined])
+      expect(lower.scales!.x.domain()).toEqual([-2, 3.5])
+      const upper = buildStore(undefined, [undefined, 8])
+      expect(upper.scales!.x.domain()).toEqual([-0.5, 8])
     })
   })
 
