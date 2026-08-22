@@ -148,6 +148,10 @@ const ENTRY_GRAPHS = [
   // measures 514.5 KiB gzip; keep one KiB of explicit, reviewable headroom.
   // Bumped 523→527: the canonical AI catalog reaches the same shared
   // custom-layout readiness path. Current production graph: 526.4 KiB gzip.
+  // Bumped 527→532 (semiotic/line): moving LineChart into the primary client
+  // identity graph shares ThemeProvider/LinkedCharts store instances with the
+  // micro entry. This adds ~4.1 KiB to AI's shared graph; measured 530.5 KiB,
+  // leaving 1.5 KiB headroom.
   { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 532 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },

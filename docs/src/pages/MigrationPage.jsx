@@ -111,7 +111,7 @@ const networkStyleAfter = `<StreamNetworkFrame
 />`
 
 const subpathDiff = `- import { LineChart } from "semiotic"             // full bundle (~165KB gz)
-+ import { LineChart } from "semiotic/xy"           // XY only (~77KB gz)
++ import { LineChart } from "semiotic/line"         // LineChart only (~108KB gz current)
 
 - import { BarChart } from "semiotic"               // full bundle
 + import { BarChart } from "semiotic/ordinal"       // ordinal only (~64KB gz)
@@ -486,14 +486,16 @@ export default function MigrationPage() {
       <h3 id="step-5">5. Switch to sub-path imports</h3>
 
       <p>
-        v3 ships entry points per chart family. If you only render XY charts, importing from{" "}
-        <code>semiotic/xy</code> drops the ordinal and network bundles entirely.
+        v3 ships entry points per chart family and selected micro boundaries. If{" "}
+        <code>LineChart</code> is a route's only XY chart, use <code>semiotic/line</code>. For any
+        other XY chart or mixed XY catalog, use <code>semiotic/xy</code>; both drop ordinal and
+        network bundles entirely.
       </p>
 
       <CodeBlock code={subpathDiff} language="diff" />
 
       <p>
-        Available entry points: <code>semiotic/xy</code>, <code>semiotic/ordinal</code>,{" "}
+        Available entry points: <code>semiotic/line</code>, <code>semiotic/xy</code>, <code>semiotic/ordinal</code>,{" "}
         <code>semiotic/network</code>, <code>semiotic/geo</code>, <code>semiotic/realtime</code>,{" "}
         <code>semiotic/server</code>, <code>semiotic/recipes</code>, <code>semiotic/utils</code>,{" "}
         <code>semiotic/themes</code>, <code>semiotic/data</code>.

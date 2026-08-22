@@ -253,7 +253,7 @@ export const CHART_DEFINITION_PILOT: Readonly<{
   [TChart in ChartDefinitionPilotId]: ChartDefinition<TChart>
 }> = {
   LineChart: createChartDefinition("LineChart", {
-    implementation: { module: "semiotic/xy", exportName: "LineChart" },
+    implementation: { module: "semiotic/line", exportName: "LineChart" },
     capabilityModule: "src/components/charts/xy/LineChart.capability.ts",
     propDocs: {
       componentName: "LineChart",
