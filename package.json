@@ -27,6 +27,12 @@
       "require": "./dist/xy.min.js",
       "default": "./dist/xy.module.min.js"
     },
+    "./line": {
+      "types": "./dist/semiotic-line.d.ts",
+      "import": "./dist/semiotic-line.module.min.js",
+      "require": "./dist/semiotic-line.min.js",
+      "default": "./dist/semiotic-line.module.min.js"
+    },
     "./ordinal": {
       "types": "./dist/semiotic-ordinal.d.ts",
       "import": "./dist/ordinal.module.min.js",

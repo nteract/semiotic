@@ -1,6 +1,7 @@
 # Semiotic — React Data Visualization
 
-Use family subpath imports such as `semiotic/xy`, `semiotic/ordinal`,
+Use family subpath imports such as `semiotic/line` for LineChart-only routes and
+`semiotic/xy`, `semiotic/ordinal`,
 `semiotic/network`, `semiotic/geo`, or `semiotic/realtime` in production code.
 Use `semiotic/ai` or `semiotic/ai/core` for generation helpers. Current bundle
 measurements live in the README and the complete AI reference.
@@ -18,7 +19,9 @@ request.
 2. Use `suggestCharts` when the component is not already determined, then verify
    the selected component's exact schema instead of guessing props.
 3. Produce a serializable `{ component, props }` proposal before translating it
-   to JSX; import chart components from their family subpath in production code.
+   to JSX; import chart components from the smallest applicable public subpath
+   in production code. For a route whose only XY chart is `LineChart`, use
+   `semiotic/line`; otherwise use its family subpath.
 4. Validate with `prepareChart`, `diagnoseConfig`, or `evaluateChart`, or
    `npx semiotic-ai --doctor`; repair reported contract failures.
 5. When a renderer is available, require non-empty render evidence and run the

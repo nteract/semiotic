@@ -63,7 +63,14 @@ const ENTRY_GRAPHS = [
   // readiness bridge and fallback paint selection live in the shared XY
   // runtime; the measured LineChart graph is 154.6 KiB gzip. Leave a full
   // KiB guard band for changes to that shared runtime.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 156 },
+  // LineChart moved into the primary identity graph so providers from
+  // `semiotic/themes/react` and `LinkedCharts` share store instances with it.
+  // This costs the family ~3 KiB but removes a split-instance correctness bug.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 159 },
+  // One-chart micro boundary: LineChart registers only its line/area/mixed
+  // renderer family. Keep the budget narrow so unrelated HOCs or direct
+  // StreamXYFrame consumers cannot quietly rejoin this graph.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -141,7 +148,11 @@ const ENTRY_GRAPHS = [
   // measures 514.5 KiB gzip; keep one KiB of explicit, reviewable headroom.
   // Bumped 523→527: the canonical AI catalog reaches the same shared
   // custom-layout readiness path. Current production graph: 526.4 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 528 },
+  // Bumped 527→532 (semiotic/line): moving LineChart into the primary client
+  // identity graph shares ThemeProvider/LinkedCharts store instances with the
+  // micro entry. This adds ~4.1 KiB to AI's shared graph; measured 530.5 KiB,
+  // leaving 1.5 KiB headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 532 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

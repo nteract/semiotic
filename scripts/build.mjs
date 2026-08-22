@@ -323,6 +323,7 @@ async function createCjsBundlesWithConcurrency(bundles, concurrency) {
 const clientCjsNamespaces = {
   semiotic: "semiotic",
   xy: "xy",
+  "semiotic-line": "line",
   ordinal: "ordinal",
   network: "network",
   realtime: "realtime",
@@ -419,6 +420,14 @@ module.exports=out;
 
 const generatedBundleMetadata = {
   semiotic: {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+  loading: "eager"
+  },
+  "semiotic-line": {
     platform: "browser",
     rsc: false,
     edge: false,
@@ -980,6 +989,13 @@ async function build() {
       analyze: false,
       minify,
       clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-line.ts",
+      name: "semiotic-line",
+      analyze: false,
+      minify,
+      clientOnly: true,
     },
     {
       input: "src/components/semiotic-ordinal.ts",

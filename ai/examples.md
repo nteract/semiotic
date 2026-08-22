@@ -12,7 +12,7 @@ the schema is authoritative when prose drifts.
 ### LineChart (single line)
 
 ```jsx
-import { LineChart } from "semiotic/xy"
+import { LineChart } from "semiotic/line"
 
 const data = [
   { month: "Jan", revenue: 4200 },
@@ -37,7 +37,7 @@ Key props: `xAccessor`, `yAccessor`, `curve`, `showPoints`, `fillArea`
 ### LineChart (multi-line)
 
 ```jsx
-import { LineChart } from "semiotic/xy"
+import { LineChart } from "semiotic/line"
 
 const data = [
   { quarter: 1, sales: 120, region: "East" },
@@ -67,7 +67,7 @@ instead of forcing the value through a single field name. This is especially
 useful for multi-line data with a different metric per series.
 
 ```jsx
-import { LineChart } from "semiotic/xy"
+import { LineChart } from "semiotic/line"
 
 const data = [
   { timestamp: 1, metricLabel: "valueA", valueA: 12, valueB: 60 },
@@ -1272,7 +1272,7 @@ Key props: `onClick` receives the original datum and pixel coordinates. Works on
 ### Synced crosshair across time-series charts
 
 ```jsx
-import { LineChart } from "semiotic/xy"
+import { LineChart } from "semiotic/line"
 import { LinkedCharts } from "semiotic/ai"
 
 <LinkedCharts>
@@ -1799,7 +1799,7 @@ Key props: `value` (the focal number), `label` (the visible heading), `descripti
 
 ```jsx
 import { BigNumber } from "semiotic/value"
-import { LineChart } from "semiotic/xy"
+import { LineChart } from "semiotic/line"
 
 <BigNumber
   value={1284900}

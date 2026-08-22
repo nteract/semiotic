@@ -55,7 +55,7 @@ describe("Chart Clinic read-only inspection", () => {
     })
 
     expect(report.bundle).toMatchObject({
-      recommendedImport: "semiotic/xy",
+      recommendedImport: "semiotic/line",
       serverImport: "semiotic/server",
       docsRoute: "/charts/line-chart",
     })

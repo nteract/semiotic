@@ -550,7 +550,7 @@ export default function GettingStartedPage() {
       <h2 id="bundle-size">Bundle Size</h2>
 
       <p>
-        Semiotic ships <strong>11 entry points</strong> so you only load the chart types you use.
+        Semiotic ships <strong>30 stable JavaScript entry points</strong> so you only load the chart types you use.
         Don't import from <code>"semiotic"</code> unless you need everything — use the sub-path
         that matches your chart category:
       </p>
@@ -558,16 +558,19 @@ export default function GettingStartedPage() {
       <CodeBlock code={`// Instead of this (278 KB gzip — full library):
 import { LineChart } from "semiotic"
 
-// Do this (143 KB gzip — XY charts only):
+// Do this (108 KB gzip — LineChart only):
+import { LineChart } from "semiotic/line"
+
+// Or this (158 KB gzip — all XY charts):
 import { LineChart } from "semiotic/xy"
 
 // Or this (109 KB gzip — categorical charts only):
 import { BarChart } from "semiotic/ordinal"
 
-// Mixing is fine — each sub-path is independent:
-import { LineChart } from "semiotic/xy"
+// Mixing is fine — shared runtime is deduplicated:
+import { LineChart } from "semiotic/line"
 import { BarChart } from "semiotic/ordinal"
-// Total: ~252 KB gzip (less than the full bundle)`} language="js" />
+// Total: ~239 KB first-party gzip (less than either family alone)`} language="js" />
 
       <table style={{ ...styles.table, marginTop: "16px" }}>
         <thead>
@@ -578,7 +581,8 @@ import { BarChart } from "semiotic/ordinal"
           </tr>
         </thead>
         <tbody>
-          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/xy</td><td style={styles.td}>143 KB</td><td style={styles.td}>LineChart, AreaChart, Scatterplot, Heatmap, + 7 more</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/line</td><td style={styles.td}>108 KB</td><td style={styles.td}>LineChart only</td></tr>
+          <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/xy</td><td style={styles.td}>158 KB</td><td style={styles.td}>LineChart, AreaChart, Scatterplot, Heatmap, + 11 more</td></tr>
           <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/ordinal</td><td style={styles.td}>109 KB</td><td style={styles.td}>BarChart, PieChart, BoxPlot, Histogram, + 11 more</td></tr>
           <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/network</td><td style={styles.td}>98 KB</td><td style={styles.td}>ForceDirectedGraph, SankeyDiagram, Treemap, + 4 more</td></tr>
           <tr><td style={{ ...styles.td, fontFamily: "monospace", fontSize: "13px" }}>semiotic/geo</td><td style={styles.td}>93 KB</td><td style={styles.td}>ChoroplethMap, FlowMap, DistanceCartogram, + 1 more</td></tr>

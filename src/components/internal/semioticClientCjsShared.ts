@@ -7,6 +7,7 @@
  */
 export * as semiotic from "../semiotic"
 export * as xy from "../semiotic-xy"
+export * as line from "../semiotic-line"
 export * as ordinal from "../semiotic-ordinal"
 export * as network from "../semiotic-network"
 export * as realtime from "../semiotic-realtime"

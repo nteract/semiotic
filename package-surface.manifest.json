@@ -272,6 +272,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./line",
+      "path": "dist/semiotic-line.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-line.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-line.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-line.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-line.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-line.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./network",
       "path": "dist/network.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1118,6 +1149,13 @@
         "path": "dist/semiotic-geo.d.ts",
         "exports": [
           "./geo"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-line.d.ts",
+        "exports": [
+          "./line"
         ],
         "reason": "Public type entry from `exports` map"
       },
