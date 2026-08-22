@@ -64,6 +64,10 @@ const ENTRY_GRAPHS = [
   // runtime; the measured LineChart graph is 154.6 KiB gzip. Leave a full
   // KiB guard band for changes to that shared runtime.
   { entry: "xy.module.min.js", label: "xy", limitKb: 156 },
+  // One-chart micro boundary: LineChart registers only its line/area/mixed
+  // renderer family. Keep the budget narrow so unrelated HOCs or direct
+  // StreamXYFrame consumers cannot quietly rejoin this graph.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 97 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.

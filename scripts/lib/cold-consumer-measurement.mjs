@@ -77,6 +77,7 @@ export const EXTERNAL_RUNTIME_PACKAGES = Object.freeze([
 export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: ".", symbol: "LineChart", platform: "browser" },
   { exportKey: "./xy", symbol: "LineChart", platform: "browser" },
+  { exportKey: "./line", symbol: "LineChart", platform: "browser" },
   { exportKey: "./ordinal", symbol: "BarChart", platform: "browser" },
   { exportKey: "./network", symbol: "SankeyDiagram", platform: "browser" },
   { exportKey: "./realtime", symbol: "RealtimeLineChart", platform: "browser" },

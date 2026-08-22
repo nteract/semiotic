@@ -100,7 +100,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "How a Hit Travels",
     eyebrow: "Data journalism · global streaming",
     description:
-      "Follow Netflix’s weekly Top 10 across overlapping country-chart neighborhoods, from simultaneous arrivals to durable regional favorites.",
+      "Compare 266 weeks of Netflix Top 10 rankings across 24 countries to see simultaneous arrivals become durable regional hits in linked country-chart neighborhoods.",
     contract: {
       publicImports: ["semiotic/ai", "semiotic/network", "semiotic/recipes", "semiotic/xy"],
       data: {
@@ -175,7 +175,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Living Ledger",
     eyebrow: "Evidence lineage · ecosystem services",
     description:
-      "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
+      "Trace three ecosystem claims—coral threshold, forest disturbance, and modeled pollination gap—through deterministic replay from source evidence to affected people.",
     contract: {
       publicImports: [
         "semiotic/controls",
@@ -266,7 +266,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Last Scarcity",
     eyebrow: "Interactive essay · AI abundance",
     description:
-      "When intelligence gets cheap, scarcity moves. An interactive essay with a before/after competition Sankey, a three-beat court of desire, and a companion promise-vs-data DifferenceChart.",
+      "When intelligence gets cheap, scarcity moves. An interactive essay comparing competition before and after with a Sankey and a promise-versus-data DifferenceChart.",
     contract: {
       publicImports: [
         "semiotic",
@@ -354,7 +354,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Hellhole Changed Addresses",
     eyebrow: "First the city · then the suburb",
     description:
-      "Watch American dread abandon downtown for the cul-de-sac, then move a birth-year observer through the handoff while real conditions, preferences, and Census flows heckle the story.",
+      "Move a birth-year observer through metropolitan migration while Census flows, local conditions, and preference data show how concern shifted from city to suburb.",
     contract: {
       publicImports: [
         "semiotic/geo",
@@ -434,7 +434,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Parataxis Machine",
     eyebrow: "How implied connections work",
     description:
-      "See how writers leave relationships between clauses unstated, why readers infer those links, and why the pattern appears so often in AI-generated prose.",
+      "Inspect six clause pairs to compare stated syntax with reader-inferred links and see why parataxis recurs in AI-generated prose.",
     contract: {
       publicImports: [
         "semiotic/network",
@@ -513,7 +513,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Equal Places Atlas",
     eyebrow: "Gridified geography · sampled land",
     description:
-      "Sample U.S. and world land onto dense projected dot lattices, then compare the silhouette-preserving result with equal-place tile cartograms.",
+      "Resample U.S. and world land into projected dot fields, then compare each equal-place lattice with conventional geography and tile cartograms.",
     contract: {
       publicImports: ["semiotic/geo"],
       data: {
@@ -579,7 +579,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Analyst Adventure: The Case of the Vanishing Visionary",
     eyebrow: "Five Stream Frames · analytical adventure",
     description:
-      "Investigate a missing CEO across temporal, categorical, geographic, network, and physics rooms where reading each chart determines the story.",
+      "Solve one deterministic case by reading five chart rooms: timeline, categorical ledger, map, suspect network, and physics-driven sequence.",
     contract: {
       publicImports: [
         "semiotic",
@@ -650,7 +650,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Sentence Is Not the Words",
     eyebrow: "Linked linguistic views · natural-language controls",
     description:
-      "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
+      "Select words once and follow them through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relations, and textual variants in linked linguistic views.",
     contract: {
       publicImports: ["semiotic/controls", "semiotic/network", "semiotic/xy", "semiotic/utils"],
       data: {
@@ -710,7 +710,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Rhetorical Crucible",
     eyebrow: "Word Trails × physics · three debate assays",
     description:
-      "Follow the same word as it leaves each candidate retort unalloyed or in different temporal company—without mistaking rhetoric for motive.",
+      "Track one word through three debate assays to compare its isolated use, temporal context, and physical trajectory without inferring motive.",
     contract: {
       publicImports: ["semiotic/ordinal", "semiotic/physics", "semiotic/recipes", "semiotic/utils"],
       data: {
@@ -775,7 +775,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Latent Crucible",
     eyebrow: "LDA Topic Modeling × Word Trails",
     description:
-      "Watch a seeded Gibbs sampler repeatedly reassign word tokens until anonymous topic distributions begin to congeal—without pretending the model has interpreted the corpus.",
+      "Run a seeded Gibbs sampler over an inspectable corpus and watch anonymous topics stabilize as word tokens are reassigned step by step.",
     contract: {
       publicImports: ["semiotic/ordinal", "semiotic/physics", "semiotic/recipes", "semiotic/utils"],
       data: {
@@ -840,7 +840,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Release Machine",
     eyebrow: "Which blocker is really costing you?",
     description:
-      "Two blockers are both 90% done and both late. A swimlane says when and who; a dependency machine says which one keeps nine unfinished tasks from even becoming possible.",
+      "Compare two equally late 90% blockers: the swimlane shows schedule and ownership, while the dependency machine shows which one prevents nine tasks from starting.",
     contract: {
       publicImports: ["semiotic", "semiotic/ordinal", "semiotic/physics", "semiotic/recipes"],
       data: {
@@ -899,7 +899,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Watermarks, Made Physical",
     eyebrow: "Late events, closing windows",
     description:
-      "Events arrive out of order. A watermark decides when a window can close; late arrivals roll into a visible gutter.",
+      "Push out-of-order events through closing windows and watch the watermark separate accepted history from visibly quarantined late arrivals.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -954,7 +954,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Stakeholder Journey",
     eyebrow: "From first use to real contribution",
     description:
-      "Same people, two community setups: after habit forms, invitation either opens a path to commitment or leaves usage private.",
+      "Replay the same people through two community designs and compare whether invitation after habit formation creates a path to contribution or private usage.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -1009,7 +1009,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Merge Pressure",
     eyebrow: "Review queues under AI throughput",
     description:
-      "Pull requests share finite human review, recirculate through CI, and only merged work counts toward shipping the feature.",
+      "Route AI-era pull requests through finite review capacity and repeated CI passes to expose queue pressure that completion percentage hides.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -1064,7 +1064,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Ukraine: Four Clocks of a Long War",
     eyebrow: "FlowMap · TemporalHistogram · history",
     description:
-      "Compare yearly military, civilian, and unspecified-use aid flows with documented equipment losses, economic shocks, and coalition change.",
+      "Cross-filter yearly military, civilian, and unspecified-use aid against documented equipment losses, economic shocks, and coalition change on linked maps and timelines.",
     contract: {
       publicImports: [
         "semiotic",
@@ -1134,7 +1134,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Benchmark Is a Chart, Too",
     eyebrow: "Model evaluation · scorer audit",
     description:
-      "Read the compatibility baseline and repeated post-merge trial as evidence: separate answers from abstentions, inspect repaired contracts and residual failures, and audit the scorer before trusting the total.",
+      "Audit one model-compatibility run by separating answers from abstentions, inspecting repaired contracts and residual failures, and checking the scorer before trusting its total.",
     contract: {
       publicImports: ["semiotic/ordinal"],
       data: {
@@ -1194,7 +1194,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The Third Seat: Apollo’s Lunar Choreography",
     eyebrow: "ProcessSankey · NASA mission chronology",
     description:
-      "Align nine lunar voyages at launch to see 27 crew-seats separate, wait, reunite, divert through a lifeboat, and all return home.",
+      "Align nine lunar voyages at launch and trace 27 crew-seats through separation, waiting, reunion, lifeboat diversion, and verified return.",
     contract: {
       publicImports: ["semiotic", "semiotic/recipes", "semiotic/utils"],
       data: {
@@ -1260,7 +1260,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The 7,197-Vote Corridor",
     eyebrow: "ProcessSankey · certified ranked-choice transfers",
     description:
-      "Audit how three elimination pools erased 96,725 votes of a six-figure lead in New York City’s 2021 Democratic mayoral primary.",
+      "Audit certified ranked-choice transfers to show how three elimination pools moved 96,725 votes and erased a six-figure primary lead.",
     contract: {
       publicImports: ["semiotic", "semiotic/recipes"],
       data: {
@@ -1322,7 +1322,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Germany, Still Becoming",
     eyebrow: "Vertical ProcessSankey · a constitutional history river",
     description:
-      "Read downward through twelve historical openings as twenty-six contributions to present-day Germany split, merge, disappear into larger states, and return as Länder.",
+      "Read twelve German constitutional stages downward while twenty-six territorial contributions split, merge, disappear into larger states, and return as Länder.",
     contract: {
       publicImports: ["semiotic", "semiotic/recipes"],
       data: {
@@ -1385,7 +1385,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "From The Good Earth to Lying Flat",
     eyebrow: "ProcessSankey · a causal model of security and withdrawal",
     description:
-      "Trace how housing, credentials, work, and consumption become mechanisms of risk, involution, precaution, delayed adulthood, and multiple forms of retreat.",
+      "Trace an explicitly interpretive causal Sankey from inherited insecurity through housing, credentials, work, and consumption to involution and forms of retreat.",
     contract: {
       publicImports: ["semiotic", "semiotic/recipes"],
       data: {
@@ -1450,7 +1450,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "The United States, Drawn Together",
     eyebrow: "Vertical ProcessSankey · an institutional history river",
     description:
-      "Follow jurisdiction routes through three persistent institutions as acquisitions accumulate, territories become states, Civil War routes leave and return, and colonial administrations fade away.",
+      "Follow U.S. jurisdiction routes across acquisitions, statehood, Civil War rupture and restoration, and lifecycle exits while three institutions persist.",
     contract: {
       publicImports: ["semiotic", "semiotic/recipes"],
       data: {
@@ -1514,7 +1514,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Thunderdome Has Rounded Corners",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A 2011 digital-humanities argument revisited with DHQ data: Media Studies recedes, tools become method, and AI tests what decolonial making really requires.",
+      "Scroll eight DHQ-data scenes to compare a 2011 digital-humanities argument with current publication patterns, method claims, and AI-era questions.",
     contract: {
       publicImports: ["semiotic", "semiotic/utils", "semiotic/xy"],
       data: {
@@ -1586,7 +1586,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-09T23:01:36-07:00",
     eyebrow: "Data journalism · global streaming",
     description:
-      "Follow Netflix’s weekly Top 10 across overlapping country-chart neighborhoods, from simultaneous arrivals to durable regional favorites.",
+      "Compare 266 weeks of Netflix Top 10 rankings across 24 countries to see simultaneous arrivals become durable regional hits in linked country-chart neighborhoods.",
     preview: "how-a-hit-travels",
     badges: ["266 weeks", "24-country settled view", "Evidence ledger", "Accessible explorer"],
     frames: ["network", "custom"],
@@ -1598,7 +1598,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-15T22:04:41-07:00",
     eyebrow: "Evidence lineage · ecosystem services",
     description:
-      "Trace a coral threshold, a forest disturbance, and a modeled pollination gap backward to evidence and forward to people.",
+      "Trace three ecosystem claims—coral threshold, forest disturbance, and modeled pollination gap—through deterministic replay from source evidence to affected people.",
     preview: "living-ledger",
     badges: ["Deterministic replay", "Evidence lineage", "SentenceFilter", "Physics pipeline"],
     frames: ["xy", "ordinal", "network", "geo", "stream-physics", "custom"],
@@ -1610,9 +1610,9 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-05T20:22:58-07:00",
     eyebrow: "Interactive essay · AI abundance",
     description:
-      "When intelligence gets cheap, scarcity moves. An interactive essay with a before/after competition Sankey, a three-beat court of desire, and a companion promise-vs-data DifferenceChart.",
+      "Compare an AI-abundance scenario before and after cheap intelligence using a competition Sankey and a promise-versus-data DifferenceChart in one interactive essay.",
     preview: "last-scarcity",
-    badges: ["Before/after Sankey", "Court story beats", "DifferenceChart", "Evidence ledger"],
+    badges: ["Before/after Sankey", "Competition model", "DifferenceChart", "Evidence ledger"],
     frames: ["xy", "ordinal", "network", "custom"],
     topics: [
       "ai",
@@ -1631,7 +1631,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-09T19:00:55-07:00",
     eyebrow: "First the city · then the suburb",
     description:
-      "Watch American dread abandon downtown for the cul-de-sac, then move a birth-year observer through the handoff while real conditions, preferences, and Census flows heckle the story.",
+      "Move a birth-year observer through metropolitan migration while Census flows, local conditions, and preference data show concern shifting from city to suburb.",
     preview: "hellhole-changed-addresses",
     badges: ["Three evidence lanes", "Paired FlowMaps", "Cohort cuts", "Source registry"],
     frames: ["geo", "xy", "network", "ordinal", "custom"],
@@ -1643,7 +1643,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-09T19:00:55-07:00",
     eyebrow: "How implied connections work",
     description:
-      "See how writers leave relationships between clauses unstated, why readers infer those links, and why the pattern appears so often in AI-generated prose.",
+      "Inspect six clause pairs to compare stated syntax with reader-inferred links and see why parataxis recurs in AI-generated prose.",
     preview: "parataxis-machine",
     badges: ["Clause constellation", "Ambiguity field", "Aphorism debt", "Sentence machine"],
     frames: ["xy", "ordinal", "network", "custom"],
@@ -1655,7 +1655,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "FlowMap · TemporalHistogram · history",
     description:
-      "Compare yearly military, civilian, and unspecified-use aid flows with documented equipment losses, economic shocks, and coalition change.",
+      "Cross-filter yearly military, civilian, and unspecified-use aid against documented equipment losses, economic shocks, and coalition change on linked maps and timelines.",
     preview: "ukraine-war-history",
     badges: ["FlowMap", "TemporalHistogram", "Oryx rollups", "Evidence boundaries"],
     frames: ["geo", "xy", "ordinal"],
@@ -1679,7 +1679,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-14T10:53:40-07:00",
     eyebrow: "Five Stream Frames · analytical adventure",
     description:
-      "Investigate a missing CEO across temporal, categorical, geographic, network, and physics rooms where reading each chart determines the story.",
+      "Solve one deterministic case by reading five chart rooms: timeline, categorical ledger, map, suspect network, and physics-driven sequence.",
     preview: "analyst-adventure",
     badges: ["Deterministic story", "Keyboard playable", "Agent-readable"],
     frames: ["xy", "ordinal", "geo", "network", "stream-physics"],
@@ -1691,7 +1691,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-14T10:53:40-07:00",
     eyebrow: "Linked linguistic views · natural-language controls",
     description:
-      "Follow one sentence through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relationships, and textual variants without losing the words you selected.",
+      "Select words once and follow them through grammar, ambiguity, meaning, rhetoric, corpus paths, phrase relations, and textual variants in linked linguistic views.",
     preview: "sentence-structure",
     badges: ["SentenceFilter", "Shared selection", "Authored fixtures", "Accessible structure"],
     frames: ["xy", "network", "custom"],
@@ -1703,7 +1703,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "Word Trails × physics · three debate assays",
     description:
-      "Follow the same word as it leaves each candidate retort unalloyed or in different temporal company—without mistaking rhetoric for motive.",
+      "Track one word through three debate assays to compare its isolated use, temporal context, and physical trajectory without inferring motive.",
     preview: "rhetorical-crucible",
     badges: ["Word Trails", "StreamPhysicsFrame", "Deterministic assay", "Audited lineage"],
     frames: ["ordinal", "stream-physics", "custom"],
@@ -1715,7 +1715,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-21T21:03:16-07:00",
     eyebrow: "LDA Topic Modeling × Word Trails",
     description:
-      "See anonymous topics congeal as a real seeded Gibbs sampler reassigns word tokens across a small, fully inspectable corpus.",
+      "Run a seeded Gibbs sampler over an inspectable corpus and watch anonymous topics stabilize as word tokens are reassigned step by step.",
     preview: "latent-crucible",
     badges: ["Word Trails", "Collapsed Gibbs", "CrucibleChart", "Audited assumptions"],
     frames: ["ordinal", "stream-physics", "custom"],
@@ -1727,7 +1727,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-12T09:00:38-07:00",
     eyebrow: "Which blocker is really costing you?",
     description:
-      "Two blockers are both 90% done and both late. A swimlane says when and who; a dependency machine says which one keeps nine unfinished tasks from even becoming possible.",
+      "Compare two equally late 90% blockers: the swimlane shows schedule and ownership, while the dependency machine shows which one prevents nine tasks from starting.",
     preview: "chain-reaction",
     badges: ["ChainReactionChart", "intervalLanesLayout", "Blocker amplification"],
     frames: ["ordinal", "stream-physics", "custom"],
@@ -1739,7 +1739,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-07T18:19:32-07:00",
     eyebrow: "Late events, closing windows",
     description:
-      "Events arrive out of order. A watermark decides when a window can close; late arrivals roll into a visible gutter.",
+      "Push out-of-order events through closing windows and watch the watermark separate accepted history from visibly quarantined late arrivals.",
     preview: "watermarks",
     badges: ["EventDropChart", "Physics", "Agent-readable"],
     frames: ["stream-physics", "xy"],
@@ -1751,7 +1751,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "From first use to real contribution",
     description:
-      "Same people, two community setups: after habit forms, invitation either opens a path to commitment or leaves usage private.",
+      "Replay the same people through two community designs and compare whether invitation after habit formation creates a path to contribution or private usage.",
     preview: "stakeholder-journey",
     badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
     frames: ["stream-physics"],
@@ -1763,7 +1763,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "Review queues under AI throughput",
     description:
-      "Pull requests share finite human review, recirculate through CI, and only merged work counts toward shipping the feature.",
+      "Route AI-era pull requests through finite review capacity and repeated CI passes to expose queue pressure that completion percentage hides.",
     preview: "merge-pressure",
     badges: ["GauntletChart", "Shared capacity", "Weighted groups"],
     frames: ["gauntlet"],
@@ -1775,7 +1775,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "Housing plan vs cumulative drag",
     description:
-      "A housing approval simulator: a plan enters with lift and drag, loses features at civic gates, gains burden, and may get approved without becoming housing.",
+      "Simulate one housing plan through civic gates as it loses features and gains drag, showing how approval can coexist with no new homes.",
     preview: "nimby",
     badges: ["GauntletChart", "bodyForces", "Compound glyphs"],
     frames: ["gauntlet"],
@@ -1799,7 +1799,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-03T13:48:30-07:00",
     eyebrow: "Four custom frames · ISOTYPE",
     description:
-      "A lake-level and weather dashboard rebuilt with repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
+      "Rebuild a lake-level and weather dashboard as repeated pictograms across streaming XY, ordinal, network, and geographic custom layouts.",
     preview: "lake-isotype",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["xy", "ordinal", "network", "geo", "custom"],
@@ -1811,7 +1811,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-06T14:27:10-07:00",
     eyebrow: "TemporalHistogram · ISOTYPE · source audit",
     description:
-      "Compare annual winners, count totals in repeated units, inspect rule changes, and separate eating pace from contest duration.",
+      "Compare annual winners in repeated units while inspecting rule changes and separating eating pace from total contest duration.",
     preview: "hotdog-variations",
     badges: ["TemporalHistogram", "ISOTYPE", "Source-audited"],
     frames: ["xy", "ordinal", "custom"],
@@ -1823,7 +1823,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-03T13:48:30-07:00",
     eyebrow: "Altitude sections · evidence ledger",
     description:
-      "Count the physical scale of AI infrastructure through relief maps and repeated units for power, water, capacity, and compute. Every claim keeps its denominator and source.",
+      "Count AI infrastructure’s power, water, capacity, and compute in repeated physical units, with every claim carrying its denominator and source.",
     preview: "data-centers-isotype",
     badges: ["Custom chart", "Local", "Agent-readable"],
     frames: ["geo", "custom"],
@@ -1835,7 +1835,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-17T20:46:46-07:00",
     eyebrow: "Fuel mix · demand vs forecast · spare capacity",
     description:
-      "What is generating, whether demand beat the forecast, and how little spare capacity is left—for the grid regions under AI data centers. Twin of The Buildings Behind AI.",
+      "Compare fuel mix, demand against forecast, and remaining spare capacity for grid regions serving AI data centers; pairs with The Buildings Behind AI.",
     preview: "the-grid",
     badges: ["DifferenceChart", "styleRules", "BigNumber", "Agent-readable"],
     frames: ["xy", "ordinal"],
@@ -1847,7 +1847,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-06T11:42:28-07:00",
     eyebrow: "Isometric creative-industry terrain",
     description:
-      "Metro creative industries become contour shelves on a stacked isometric United States: screen, sound, games, design, and research as height—not topography.",
+      "Stack metro creative industries—screen, sound, games, design, and research—as isometric contour shelves over the United States rather than as topography.",
     preview: "creative-contours",
     badges: ["GeoCustomChart", "Contours", "Isometric", "Custom layout"],
     frames: ["geo", "custom"],
@@ -1859,7 +1859,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-05T13:34:05-07:00",
     eyebrow: "TokenLayer · task-aware ISOTYPE",
     description:
-      "Estimate a bus-waiting probability, reveal the count, and compare how density curves, quantile dots, hypothetical outcomes, and commuter icons support different tasks.",
+      "Estimate a bus-waiting probability, reveal the exact count, and compare density curves, quantile dots, hypothetical outcomes, and commuter icons by reader task.",
     preview: "discrete",
     badges: ["TokenLayer", "Quantile dotplot", "HOPs", "Design critic"],
     frames: ["xy", "ordinal", "custom"],
@@ -1871,7 +1871,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-12T16:30:00-07:00",
     eyebrow: "Explorable MAUP laboratory",
     description:
-      "Move one border across an unchanged field, then watch the aggregate answer move through a 1D transect, a constructed city, and a 2D-plus-time reporting stack.",
+      "Move one boundary across an unchanged field and compare aggregate answers through a 1D transect, constructed city, and 2D-plus-time reporting stack.",
     preview: "maup",
     badges: ["Direct manipulation", "Continuous field", "Sensitivity analysis"],
     frames: ["xy", "geo", "custom"],
@@ -1883,7 +1883,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom ordinal timeline",
     description:
-      "A layered timeline of conflicts, geopolitical spheres, historical periods, concurrency, and the comparatively rare years of peace.",
+      "Inspect a layered timeline of U.S. conflicts by geopolitical sphere, historical period, concurrency, and the comparatively rare years of peace.",
     preview: "wars",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["ordinal", "custom"],
@@ -1895,7 +1895,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Automatic chronological network",
     description:
-      "A constraint-laid influence graph styled after Alfred H. Barr Jr.'s iconic 1936 Cubism and Abstract Art cover.",
+      "Generate a chronologically constrained influence graph styled after Alfred H. Barr Jr.'s 1936 Cubism and Abstract Art cover.",
     preview: "art",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["network", "custom"],
@@ -1907,7 +1907,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom isometric GeoFrame",
     description:
-      "Five-by-five strategy-game views of Paris, Austin, San Francisco, and Tokyo, populated from DBpedia landmarks with resilient local snapshots.",
+      "Explore five-by-five strategy-game views of Paris, Austin, San Francisco, and Tokyo, populated from DBpedia landmarks and resilient local snapshots.",
     preview: "isometric",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["geo", "custom"],
@@ -1919,7 +1919,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom radial network",
     description:
-      "A medieval uroscopy diagnostic redrawn as a node-link diagram in a ring — twenty named urine colors, each spoked to the stage of digestion it signifies.",
+      "Inspect a medieval uroscopy wheel redrawn as a radial node-link diagram: twenty named colors connect to the digestion stages they were thought to signify.",
     preview: "urine",
     badges: ["Custom recipe", "Local", "Intent-aware", "Accessible navigation", "Agent-readable"],
     frames: ["network", "custom"],
@@ -1931,7 +1931,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Custom botanical hierarchy",
     description:
-      "McCallum and Henshaw's landmark 1855 organization diagram rebuilt as computed railroad trunks, workforce boughs, and navigable roles.",
+      "Rebuild McCallum and Henshaw’s 1855 railroad diagram as computed trunks, workforce branches, and keyboard-navigable organizational roles.",
     preview: "erie",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["network", "custom"],
@@ -1943,7 +1943,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Five coordinated realtime swarms",
     description:
-      "A live, filterable view of English Wikipedia edits with actor classification, signed change encodings, aggregation, and revision-level drilldown.",
+      "Filter live English Wikipedia edits across five coordinated swarms, with actor classification, signed-change encoding, aggregation, and revision-level drilldown.",
     preview: "wikipedia",
     badges: ["Custom chart", "Local", "Intent-aware"],
     frames: ["xy", "network", "custom"],
@@ -1955,7 +1955,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T21:13:03-07:00",
     eyebrow: "ZIP-driven civic data + networks",
     description:
-      "Resolve any postal place into its county's federal disaster record and spending, live 311 service requests, LOCUS municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
+      "Resolve a postal place to its county’s disaster record and spending, live 311 requests, municipal law, and a network of bodies, sponsors, meetings, and active legislation.",
     preview: "local-government",
     frames: ["network", "geo", "custom"],
     topics: ["civic", "geography", "realtime"],
@@ -1966,7 +1966,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Real chokepoint data, four-frame replay",
     description:
-      "Replay three periods of IMF PortWatch traffic: a quiet spring, the Ever Given blockage, and the Red Sea detour. Four linked views show where routes and transit times diverged.",
+      "Replay quiet spring, Ever Given blockage, and Red Sea detour traffic from IMF PortWatch across four linked views of routes and transit-time divergence.",
     preview: "port-replay",
     frames: ["xy", "ordinal", "geo", "custom"],
     topics: ["realtime", "geography", "history", "process"],
@@ -1977,7 +1977,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "ProcessSankey · NASA mission chronology",
     description:
-      "Align nine lunar voyages at launch to see 27 crew-seats separate, wait, reunite, divert through a lifeboat, and all return home.",
+      "Align nine lunar voyages at launch and trace 27 crew-seats through separation, waiting, reunion, lifeboat diversion, and verified return.",
     preview: "apollo-third-seat",
     badges: ["ProcessSankey", "NASA GET", "Source-audited", "Accessible"],
     frames: ["network"],
@@ -1989,7 +1989,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "ProcessSankey · certified ranked-choice transfers",
     description:
-      "Audit how three elimination pools erased 96,725 votes of a six-figure lead in New York City’s 2021 Democratic mayoral primary.",
+      "Audit certified ranked-choice transfers to show how three elimination pools moved 96,725 votes and erased a six-figure primary lead.",
     preview: "ballot-transfer-ledger",
     badges: ["ProcessSankey", "NYC BOE", "Conserved flows", "Accessible"],
     frames: ["network"],
@@ -2001,7 +2001,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Vertical ProcessSankey · a constitutional history river",
     description:
-      "Read downward through twelve historical openings as twenty-six contributions to present-day Germany split, merge, disappear into larger states, and return as Länder.",
+      "Read twelve German constitutional stages downward while twenty-six territorial contributions split, merge, disappear into larger states, and return as Länder.",
     preview: "germany-still-becoming",
     badges: ["Vertical ProcessSankey", "12 stages", "Conserved widths", "Accessible"],
     frames: ["network"],
@@ -2013,7 +2013,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T23:13:28-07:00",
     eyebrow: "ProcessSankey · a causal model of security and withdrawal",
     description:
-      "Follow an interpretive argument from inherited insecurity through housing, credentials, and overwork to involution, defensive stability, lying flat, and private retreat.",
+      "Trace an explicitly interpretive causal Sankey from inherited insecurity through housing, credentials, work, and consumption to involution and forms of retreat.",
     preview: "good-earth-lying-flat",
     badges: ["ProcessSankey", "6 authored stages", "Claim lens", "Accessible"],
     frames: ["network"],
@@ -2025,7 +2025,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Vertical ProcessSankey · an institutional history river",
     description:
-      "Follow jurisdiction routes through persistent States, Territories, and Colonies as acquisitions accumulate, statehood transfers stock, Civil War tears and restores it, and administrations fade away.",
+      "Follow U.S. jurisdiction routes across acquisitions, statehood, Civil War rupture and restoration, and lifecycle exits while three institutions persist.",
     preview: "united-states-drawn-together",
     badges: ["Vertical ProcessSankey", "Persistent inventory", "Lifecycle exits", "Accessible"],
     frames: ["network"],
@@ -2037,7 +2037,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Realtime reader telemetry",
     description:
-      "Read a short history of data journalism while the page plots your scroll position, velocity, and dwell time alongside the essay.",
+      "Read a short history of data journalism while linked charts plot your own scroll position, velocity, and dwell time beside the essay.",
     preview: "scroll-tell",
     badges: ["Custom chart", "Local", "Intent-aware"],
     frames: ["xy", "custom"],
@@ -2049,7 +2049,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-08-03T14:11:10-07:00",
     eyebrow: "Scrollytelling · AI-age digital humanities",
     description:
-      "A 2011 digital-humanities argument revisited with DHQ data: Media Studies recedes, tools become method, and AI tests what decolonial making really requires.",
+      "Scroll eight DHQ-data scenes to compare a 2011 digital-humanities argument with current publication patterns, method claims, and AI-era questions.",
     preview: "thunderdome",
     badges: ["Eight charts", "Scrollytelling", "DHQ repository"],
     frames: ["xy", "ordinal", "network", "custom"],
@@ -2061,7 +2061,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Twelve personas · twelve chart grammars",
     description:
-      "An expanded remake of the Nightingale essay: Excel brute forcers, Tableau zen masters, Accurat-style studios, news orgs, scientists, industry oracles, fun freelancers, procedural artists, finance annotators, DevOps terminal wizards, workshop nomads, and academic dissectors each get a chart body.",
+      "Compare twelve visualization personas through twelve chart grammars, from spreadsheet brute force and BI dashboards to studios, science, journalism, operations, and procedural art.",
     preview: "dataviz-people",
     badges: ["Custom chart", "Sankey", "Candlestick", "Local"],
     frames: ["xy", "ordinal", "network", "custom"],
@@ -2073,7 +2073,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Distant reading · literary signals",
     description:
-      "A rich remake of the Nightingale essay as an interactive distant-reading room: chapter signal fields, phase summaries, corpus fingerprints, and narrative-flow Sankeys for four public-domain novels.",
+      "Compare four public-domain novels through chapter signal fields, phase summaries, corpus fingerprints, and narrative-flow Sankeys in one distant-reading room.",
     preview: "distant-reading",
     badges: ["LineChart", "BarChart", "Sankey", "Local"],
     frames: ["xy", "ordinal", "network"],
@@ -2085,7 +2085,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Funnel analysis · Pop Art flows",
     description:
-      "An interactive remake of the funnel essay: classic conversion funnels, A/B testing, branching Sankey paths, and temporal path motifs argue through precision and accuracy.",
+      "Compare classic conversion funnels with A/B testing, branching Sankey paths, and temporal path motifs to separate precision from accuracy in funnel analysis.",
     preview: "funnels",
     badges: ["FunnelChart", "Sankey", "ProcessSankey"],
     frames: ["ordinal", "network", "custom"],
@@ -2097,7 +2097,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "The intelligence layer, end to end",
     description:
-      "Watch Semiotic read real World Bank data with no model call: profile it, rank chart capabilities, then describe, audit, and lay out a navigable structure for the chart it chooses.",
+      "Profile real World Bank data without a model call, then inspect ranked chart capabilities and Semiotic’s description, audit, navigation tree, and chosen chart.",
     preview: "machine",
     badges: [
       "Custom recipe",
@@ -2116,7 +2116,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-26T22:11:36-07:00",
     eyebrow: "Answer vs abstain · scorer audit",
     description:
-      "Read the completed compatibility run as evidence: split answers from abstentions, inspect first-attempt failures, and audit the scorer before trusting the total.",
+      "Audit one model-compatibility run by separating answers from abstentions, inspecting first-attempt failures, and checking the scorer before trusting its total.",
     preview: "model-evaluation",
     badges: ["Grouped scorecard", "Scorer audit", "Agent-readable"],
     frames: ["ordinal"],
@@ -2128,7 +2128,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T12:43:52-07:00",
     eyebrow: "Interactive architecture map",
     description:
-      "Trace each example from its visible charts and settings through the four frame models, data inputs, and the rhizomatic implementation beneath them.",
+      "Trace any example from its visible charts and controls to the four frame models, data inputs, and shared implementation that produces them.",
     preview: "architecture",
     frames: ["network", "custom"],
     topics: ["design", "process", "accessibility"],
@@ -2139,7 +2139,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-04T17:45:51-07:00",
     eyebrow: "Network + GeoCustomChart metaphor",
     description:
-      "A history of the octopus as an information-visualization metaphor: moral networks, imperial octopus maps, and a final Semiotic-as-octopus frame diagram.",
+      "Compare moral networks, imperial octopus maps, and a final Semiotic-as-octopus diagram while tracing the octopus metaphor across visualization history.",
     preview: "octopus",
     badges: ["Custom chart", "GeoCustomChart", "NetworkCustomChart"],
     frames: ["network", "geo", "custom"],
@@ -2151,7 +2151,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-27T19:24:36-07:00",
     eyebrow: "Difference chart + uncertainty band",
     description:
-      "A polished climate readout comparing this year's daily temperature with an adjusted historical mean and the 5th-95th percentile range.",
+      "Compare this year's daily temperature against an adjusted historical mean and its 5th–95th percentile range in one uncertainty-banded DifferenceChart.",
     preview: "climate",
     frames: ["xy"],
     topics: ["climate", "uncertainty"],
@@ -2162,7 +2162,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Five chapters · perception → Semiotic",
     description:
-      "A chapterized remake of the 2015 Gestalt Principles essays — similarity, common fate, proximity, figure/ground, continuity — each demonstrated on a live Semiotic chart, in a Bauhaus 'perception lab' look.",
+      "Move through five perception chapters—similarity, common fate, proximity, figure/ground, and continuity—each demonstrated on a live Semiotic chart.",
     preview: "gestalt",
     frames: ["xy", "ordinal", "custom"],
     topics: ["design", "accessibility"],
@@ -2173,7 +2173,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-19T13:55:31-07:00",
     eyebrow: "16 charts · context → sparkline",
     description:
-      "An Alien-inspired field standard for when to deploy 16 Semiotic charts across XY, ordinal, network, geographic, and physics frames—then redeploy the same charts as sparklines.",
+      "Switch between context and sparkline modes to decide when 16 chart types fit XY, ordinal, network, geographic, or physics tasks—and when they should compress.",
     preview: "semiotic-standard",
     badges: ["Context mode", "Sparkline mode", "Real World Bank data"],
     frames: ["xy", "ordinal", "network", "geo", "stream-physics"],
@@ -2185,7 +2185,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-22T11:15:56-07:00",
     eyebrow: "Chart families · data and task taxonomy",
     description:
-      "Scout chart families like a sports roster: organize them by data or task, then learn ranking, comparison, change, distribution, relationship, flow, and hierarchy through one fictional season.",
+      "Organize chart families by data and task, then use one fictional season to choose forms for ranking, comparison, change, distribution, relationship, flow, and hierarchy.",
     preview: "data-viz-for-dummies",
     badges: ["Scrollytelling", "Dual taxonomy", "Accessible charts", "Semiotic-only"],
     frames: ["xy", "ordinal", "network"],
@@ -2197,7 +2197,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Composition, spread, attrition, and networks",
     description:
-      "Call in chart specialists for composition, volume, spread, two-dimensional patterns, attrition, reciprocal exchange, and network topology—all through one fictional arena.",
+      "Match composition, volume, spread, two-dimensional patterns, attrition, reciprocal exchange, and network topology to specialist charts through one fictional arena.",
     preview: "data-viz-for-dummies-2",
     badges: ["Scrollytelling", "Chart selection", "Accessible charts", "Semiotic-only"],
     frames: ["xy", "ordinal", "network"],
@@ -2209,7 +2209,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Chart substitutions · tradeoff lab",
     description:
-      "Study when to substitute dot, violin, ridgeline, difference, connected scatter, tree, and circle-pack charts for familiar starters—and name the tradeoff each switch accepts.",
+      "Substitute dot, violin, ridgeline, difference, connected scatter, tree, and circle-pack charts for familiar starters while naming each switch’s accepted tradeoff.",
     preview: "data-viz-for-dummies-3",
     badges: ["Scrollytelling", "Chart comparison", "Accessible charts", "Semiotic-only"],
     frames: ["xy", "ordinal", "network"],
@@ -2221,7 +2221,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Specialist charts · decision-led rotation",
     description:
-      "Complete the core Semiotic roster by matching pie, donut, gauge, Likert, swarm, bubble, multivariate, layered-time, navigation, orbit, and temporal-flow charts to the specific questions that earn them a place.",
+      "Match specialist charts—pie, donut, gauge, Likert, swarm, bubble, multivariate, layered-time, navigation, orbit, and temporal flow—to the questions that justify their extra ink.",
     preview: "data-viz-for-dummies-4",
     badges: ["Scrollytelling", "Complete chart roster", "Accessible charts", "Semiotic-only"],
     frames: ["xy", "ordinal", "network"],
@@ -2233,7 +2233,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Geographic charts · location earns its ink",
     description:
-      "Take the fictional Rookie City season on the road and learn when regional color, located magnitude, geographic flow, experienced distance, tiled context, and custom projected geometry make a map necessary.",
+      "Take Rookie City on the road and test when regional color, located magnitude, geographic flow, experienced distance, tiled context, or projected geometry earns map ink.",
     preview: "data-viz-for-dummies-5",
     badges: ["Scrollytelling", "Geo charts", "Accessible maps", "Semiotic-only"],
     frames: ["geo"],
@@ -2245,7 +2245,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-23T07:55:44-07:00",
     eyebrow: "Physics instruments · mechanisms earn their motion",
     description:
-      "Enter the basement laboratory for a rigorous, lightly unhinged guide to settling, arrival, capacity, compound bodies, transformation, dependency, and custom physics charts.",
+      "Use seven physics instruments to compare settling, arrival, capacity, compound bodies, transformation, dependency, and custom mechanisms under bounded simulation.",
     preview: "data-viz-for-dummies-6",
     badges: ["Scrollytelling", "Physics charts", "Accessible simulation", "Semiotic-only"],
     frames: ["stream-physics"],
@@ -2257,7 +2257,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-05T10:36:35-07:00",
     eyebrow: "Mobile-first review · Semiotic demos",
     description:
-      "A research-backed field guide for phone-sized visualization: density budgets, small multiples, touch-first controls, constraint breakpoints, and source-led design choices built as live Semiotic demos.",
+      "Apply mobile research through live Semiotic demos: density budgets, small multiples, touch-first controls, constraint breakpoints, and source-led design choices.",
     preview: "mobilevis",
     badges: ["Responsive", "Research-backed", "Touch-first"],
     frames: ["xy", "ordinal", "custom"],
@@ -2269,7 +2269,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Network forms + an interactive toy",
     description:
-      "Compare arc diagrams, matrices, communities, Sankey, and chord, then use the playground for pathfinding, centrality, and ego-network inspection.",
+      "Compare arc diagrams, matrices, community layouts, Sankeys, and chords, then use one playground for pathfinding, centrality, and ego-network inspection.",
     preview: "networkviz",
     frames: ["network", "xy", "ordinal", "custom"],
     topics: ["design", "accessibility"],
@@ -2280,7 +2280,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-06-30T18:44:51-07:00",
     eyebrow: "Retro cartography · real geography",
     description:
-      "The 1985 Oregon Trail end-game map over real Washington/Oregon/Idaho geography—gray land, CGA-blue rivers, caret mountains, forts, and a wagon from START to FINISH.",
+      "Recreate the 1985 Oregon Trail end-game map on real Washington, Oregon, and Idaho geography with period-limited colors, landmarks, and an animated START-to-FINISH wagon.",
     preview: "oregontrail",
     badges: ["Custom chart", "Local", "Accessible navigation"],
     frames: ["geo", "custom"],
@@ -2292,7 +2292,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-24T17:15:42-07:00",
     eyebrow: "Gridified geography · sampled land",
     description:
-      "Sample U.S. and world land onto dense projected dot lattices, then compare the silhouette-preserving result with equal-place tile cartograms.",
+      "Resample U.S. and world land into projected dot fields, then compare each equal-place lattice with conventional geography and tile cartograms.",
     preview: "equal-places-atlas",
     badges: ["GeoCustomChart", "Dot fields", "Grid cartograms"],
     frames: ["geo", "custom"],
@@ -2304,7 +2304,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-17T11:16:36-07:00",
     eyebrow: "Spin the globe to filter · M6+ 2021–2025",
     description:
-      "An orthographic ProportionalSymbolMap drives a small dashboard: drag-rotate the globe and the KPI tiles, magnitude bars, regional ranks, and quarterly line recount only the events facing you.",
+      "Drag-rotate an orthographic globe to filter M6+ earthquakes while linked KPI tiles, magnitude bars, regional ranks, and quarterly lines recount only visible events.",
     preview: "earthquakes",
     badges: ["ProportionalSymbolMap", "dragRotate", "Linked summary"],
     frames: ["geo", "xy"],
@@ -2316,7 +2316,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-17T11:16:36-07:00",
     eyebrow: "Rough hachure · Ausfeld 1840",
     description:
-      "A hand-tinted remake of Karl von Ausfeld's living-languages plate of Europe. Exact Natural Earth geoareas keep hit testing and accessibility; createRoughRenderMode paints only the ink.",
+      "Rebuild Ausfeld’s 1840 language plate over exact Natural Earth areas: rough rendering supplies historical ink while geometry preserves hit testing and accessibility.",
     preview: "europa-languages",
     badges: ["semiotic/rough", "StreamGeoFrame", "Historical plate"],
     frames: ["geo"],
