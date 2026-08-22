@@ -50,44 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The evidence tooling graph measures about **47 KB gzip** with a 180 KB budget;
   it stays off production chart-family graphs.
 
-### Added
-- **First-class `RadarChart`** — the new ordinal HOC accepts long-form
-  series-by-attribute data and draws connected radial polygons with point
-  markers. It supports legends, selection, linked hover, push mode, typed
-  accessors, category formatting, SSR/static rendering, AI schema discovery,
-  and a dedicated documentation page.
-- **First-class static `WaterfallChart`** — cumulative signed deltas now have a
-  controlled-data and push-capable HOC alongside `RealtimeWaterfallChart`.
-  Numeric, date, and categorical steps are supported, with stable
-  `pointIdAccessor` updates, positive/negative styling, connectors, selection,
-  linked hover, SSR/static rendering, AI schema discovery, and a
-  dedicated documentation page.
-- **Chart-level brushing on common HOCs** — `LineChart` exposes an x-axis
-  brush, `Scatterplot` an xy brush, and `BarChart` a value-axis brush through
-  `brush`, `linkedBrush`, and `onBrush`. `Histogram`'s existing brush contract
-  is now schema-visible, so serialized and MCP-authored charts can request it.
-- **Dense static Heatmap aggregation** — `Heatmap` now accepts
-  `heatmapAggregation="count" | "sum" | "mean"`, `heatmapXBins`, and
-  `heatmapYBins`. Numeric heatmaps with more than 4,096 occupied cells
-  automatically aggregate into a bounded grid when no explicit aggregation is
-  supplied.
-- **Expanded `renderChart()` coverage** — `RadarChart`, `WaterfallChart`,
-  `MultiAxisLineChart`, and `DistanceCartogram` now participate in the static
-  chart registry, including dual-axis formatters/colors and cartogram chrome.
-- **Legends for chord and hierarchy charts** — `ChordDiagram`, `TreeDiagram`,
-  `Treemap`, `CirclePack`, and `OrbitDiagram` now expose `showLegend`,
-  `legendPosition`, and shared highlight/isolate legend interaction. Automatic
-  legends appear when `colorBy` is present and reserve the correct plot margin.
-- **Per-component MCP schema resources** — agents can discover the compact
-  component catalog at `semiotic://schema-index` and read only the needed
-  schema, metadata, accessibility guidance, and behavior contracts from
-  `semiotic://schema/{component}`. The full `semiotic://schema` resource remains
-  available for bulk tooling.
-- **Explicit Stream Frame plugin bootstrap APIs** — direct-frame and SSR hosts
-  can call `registerBuiltInXYPlugins()` from `semiotic/xy`, the root entry, or
-  `semiotic/realtime/core`, and `registerBuiltInNetworkLayouts()` from
-  `semiotic/network` when marks/layouts must be ready before first render.
-
 ### Changed
 - **`LineChart` guidance and executable contracts now prefer `semiotic/line`**
   when it is a route's only XY chart; `semiotic/xy` remains the family entry for

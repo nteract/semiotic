@@ -158,7 +158,7 @@ function stableStringify(value: unknown): string {
   if (typeof value === "object") {
     const entries = Object.entries(value as Record<string, unknown>)
       .filter(([, nested]) => nested !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`)
     return `{${entries.join(",")}}`
   }
@@ -261,9 +261,6 @@ function inferRenderParity(input: {
   observed?: number
   evidence?: RenderEvidence
 }): "match" | "mismatch" | "unknown" {
-  if (input.evidence?.status === "ok" && (input.observed ?? 0) > 0) {
-    return "match"
-  }
   if (
     typeof input.intended !== "number" ||
     typeof input.observed !== "number"
@@ -273,6 +270,27 @@ function inferRenderParity(input: {
   if (input.observed === 0 && input.intended > 0) return "mismatch"
   if (input.evidence?.status === "empty" && input.intended > 0) return "mismatch"
   return input.observed === input.intended ? "match" : "unknown"
+}
+
+/**
+ * Remove raw row/network/hierarchy/geo payloads from a data profile before
+ * placing it in a portable envelope. Shape and aggregate evidence remain;
+ * caller-owned source records do not.
+ */
+function redactProfileForEnvelope(profile: unknown): unknown {
+  if (!profile || typeof profile !== "object") return profile
+  const source = profile as Record<string, unknown>
+  const output: Record<string, unknown> = { ...source }
+  for (const key of [
+    "data",
+    "rawInput",
+    "network",
+    "hierarchy",
+    "geo",
+  ]) {
+    delete output[key]
+  }
+  return output
 }
 
 /** Assemble a versioned evidence envelope from existing Semiotic payloads. */
@@ -287,6 +305,7 @@ export function toEvidenceEnvelope(
   const profile = profileData(rows as ReadonlyArray<Datum>, {
     rawInput: props,
   })
+  const portableProfile = redactProfileForEnvelope(profile)
   const grounding = buildReaderGrounding(component, props as Datum)
   const access =
     options.accessContract ??
@@ -297,6 +316,7 @@ export function toEvidenceEnvelope(
         inChartContainer: options.inChartContainer === true,
         streamStatus: options.streamStatus,
         streamHistoryLimit: options.streamHistoryLimit,
+        ssrEvidence: options.ssrEvidence,
       },
     })
   const intendedMarks = countIntendedMarks(props)
@@ -306,7 +326,10 @@ export function toEvidenceEnvelope(
     observed: observedMarks,
     evidence: options.ssrEvidence,
   })
-  const inputHash = stableEvidenceHash({ rowCount: rows.length, profile })
+  const inputHash = stableEvidenceHash({
+    rowCount: rows.length,
+    profile: portableProfile,
+  })
   const modalityChecks = options.modalityChecks ?? {}
   const vision = modalityChecks.vision ?? { observations: [] }
   const tandem = modalityChecks.tandem ?? {
@@ -325,7 +348,7 @@ export function toEvidenceEnvelope(
     input: {
       ...(options.sourceId ? { source: options.sourceId } : {}),
       rowCount: rows.length,
-      profile,
+      profile: portableProfile,
       hash: inputHash,
     },
     transform: {
@@ -352,7 +375,10 @@ export function toEvidenceEnvelope(
       ...(options.claims ? { claims: options.claims } : {}),
     },
     modalityChecks: {
-      structured: { observations: [], model: null },
+      structured: {
+        observations: modalityChecks.structured?.observations ?? [],
+        model: null,
+      },
       vision: {
         observations: vision.observations ?? [],
         ...(vision.model ? { model: vision.model } : {}),
@@ -401,6 +427,69 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   }
   if (envelope.access?.schemaVersion !== CHART_ACCESS_CONTRACT_VERSION) {
     throw new TypeError("Evidence envelope has an incompatible access contract")
+  }
+  const access = envelope.access as ChartAccessContract
+  for (const section of ["text", "keyboard", "navigation", "table", "mediaPreferences", "streamStatus", "ssr", "evidence"] as const) {
+    if (!access[section] || typeof access[section] !== "object") {
+      throw new TypeError(`Evidence envelope access section is missing: ${section}`)
+    }
+  }
+  if (typeof access.table.enabled !== "boolean") {
+    throw new TypeError("Evidence envelope access table state must be boolean")
+  }
+  const meaning = envelope.meaning as ChartEvidenceEnvelope["meaning"]
+  if (!meaning.grounding || typeof meaning.grounding !== "object") {
+    throw new TypeError("Evidence envelope meaning requires reader grounding")
+  }
+  const modality = envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
+  for (const section of ["structured", "vision", "tandem"] as const) {
+    if (!modality[section] || typeof modality[section] !== "object") {
+      throw new TypeError(`Evidence envelope modalityChecks is missing: ${section}`)
+    }
+  }
+  for (const section of ["structured", "vision"] as const) {
+    if (!Array.isArray(modality[section].observations)) {
+      throw new TypeError(`Evidence envelope ${section} observations must be an array`)
+    }
+  }
+  if (
+    !Array.isArray(modality.tandem.agreements) ||
+    !Array.isArray(modality.tandem.conflicts)
+  ) {
+    throw new TypeError("Evidence envelope tandem agreements and conflicts must be arrays")
+  }
+  for (const conflict of modality.tandem.conflicts) {
+    if (
+      !conflict ||
+      typeof conflict !== "object" ||
+      typeof conflict.id !== "string" ||
+      conflict.id.length === 0
+    ) {
+      throw new TypeError("Evidence envelope tandem conflict requires a non-empty id")
+    }
+  }
+  const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
+  const input = envelope.input as ChartEvidenceEnvelope["input"]
+  const render = envelope.render as ChartEvidenceEnvelope["render"]
+  if (
+    !Array.isArray(limits.knownGaps) ||
+    !Array.isArray(limits.unsupportedClaims) ||
+    !limits.privacyScope ||
+    typeof limits.privacyScope !== "object"
+  ) {
+    throw new TypeError("Evidence envelope limits require arrays and privacy scope")
+  }
+  if (
+    input.rowCount !== 0 &&
+    (!Number.isSafeInteger(input.rowCount) || input.rowCount < 0)
+  ) {
+    throw new TypeError("Evidence envelope rowCount must be a non-negative safe integer")
+  }
+  if (
+    render.marksObserved !== undefined &&
+    (!Number.isSafeInteger(render.marksObserved) || render.marksObserved < 0)
+  ) {
+    throw new TypeError("Evidence envelope marksObserved must be a non-negative safe integer")
   }
   return value as ChartEvidenceEnvelope
 }

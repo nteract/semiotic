@@ -179,7 +179,7 @@ export function createChartAccessContract({
       focusRing: "built-in",
     },
     navigation: {
-      supported: true,
+      supported: navigationSupported,
       composition: "chart-container",
       ...(tree ? { tree } : undefined),
       ...(!tree

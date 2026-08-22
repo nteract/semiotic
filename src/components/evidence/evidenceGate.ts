@@ -42,8 +42,7 @@ export function evaluateEvidenceGate(
 ): EvidenceGateResult {
   const findings: EvidenceGateFinding[] = []
   const requireRenderEvidence = options.requireRenderEvidence !== false
-  const requireAccessTable =
-    options.requireAccessTable ?? envelope.access.table.enabled !== false
+  const requireAccessTable = options.requireAccessTable !== false
   const failOnConflicts = options.failOnCrossModalConflicts !== false
 
   if (requireRenderEvidence && !envelope.render.evidence) {
@@ -65,6 +64,19 @@ export function evaluateEvidenceGate(
         "render.parity-mismatch",
         "error",
         "Intended data did not produce matching observed marks."
+      )
+    )
+  }
+
+  if (
+    envelope.render.evidence?.semanticStatus === "degenerate" ||
+    envelope.render.evidence?.semanticStatus === "degraded"
+  ) {
+    findings.push(
+      finding(
+        "render.semantic-viability",
+        "error",
+        `Render evidence marks the encoding ${envelope.render.evidence.semanticStatus}.`
       )
     )
   }

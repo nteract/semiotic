@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 /**
  * Print the Week 1 ChartAccessContract baseline for LineChart, BarChart, and
- * RealtimeLineChart. Human AT/browser-agent task results are recorded in
- * docs/strategy/infrastructure-value-goals-2026-08.md; this command provides
- * the reproducible machine-readable half of that baseline.
+ * RealtimeLineChart using the built public access entry. Human AT results are
+ * recorded in the strategy document; this command is the reproducible
+ * machine-readable half.
  */
-import { execFileSync } from "node:child_process"
+import { spawnSync } from "node:child_process"
 
 const code = `
 import {
   BAR_CHART_ACCESS_CONTRACT,
   LINE_CHART_ACCESS_CONTRACT,
   REALTIME_LINE_CHART_ACCESS_CONTRACT,
-} from "./src/components/access/chartAccessContracts.generated"
-import { renderChartWithEvidence } from "./src/components/server/renderToStaticSVG"
+} from "semiotic/access"
 
 console.log(JSON.stringify({
   version: 1,
@@ -25,6 +24,7 @@ console.log(JSON.stringify({
 }, null, 2))
 `
 
-execFileSync(process.execPath, ["--experimental-strip-types", "--input-type=module", "-e", code], {
+const result = spawnSync(process.execPath, ["--input-type=module", "-e", code], {
   stdio: "inherit",
 })
+process.exit(result.status ?? 1)

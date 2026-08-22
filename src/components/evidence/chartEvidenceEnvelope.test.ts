@@ -43,8 +43,9 @@ describe("ChartEvidenceEnvelope@1", () => {
     })
     expect(envelope.input.rowCount).toBe(3)
     expect(envelope.input.hash).toMatch(/^[a-f0-9]{64}$/)
-    expect(envelope.render.parity).toBe("match")
+    expect(envelope.render.parity).toBe("unknown")
     expect(envelope.render.marksObserved).toBeGreaterThan(0)
+    expect(envelope.render.evidence?.status).toBe("ok")
     expect(envelope.access.component).toBe("LineChart")
     expect(envelope.access.navigation.composition).toBe("chart-container")
     expect(envelope.access.text.description).toBe(
@@ -54,7 +55,10 @@ describe("ChartEvidenceEnvelope@1", () => {
       "line chart"
     )
     expect(envelope.meaning.grounding.text).toContain("value ranges from 12")
-    expect(envelope.audit.accessibility.ok).toBe(true)
+    const accessibilityAudit = envelope.audit.accessibility as
+      | { ok?: boolean }
+      | undefined
+    expect(accessibilityAudit?.ok).toBe(true)
   })
 
   it("round-trips through fromEvidenceEnvelope and rejects malformed input", () => {

@@ -763,7 +763,7 @@ export {
   deriveMotionVector
 } from "./charts/shared/motionEncoding"
 
-// ── Access contracts (Week 1 baseline) ────────────────────────────────
+// Runtime-neutral motion encoding types shared by realtime and physics adapters.
 export type {
   MotionEncodingConstant,
   MotionEncodingAccessor,

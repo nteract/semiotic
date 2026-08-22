@@ -2357,6 +2357,26 @@ async function createChartHandler(
   const gate = evaluateEvidenceGate(evidenceEnvelope, {
     requireRenderEvidence: true,
   })
+  if (!gate.ok) {
+    return {
+      content: [{
+        type: "text",
+        text: `Selected ${selected.component}, rendered, but the evidence publication gate blocked it: ${gate.findings.map((finding) => finding.id).join(", ")}.`,
+      }],
+      isError: true,
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+        render: output,
+        evidenceEnvelope,
+        evidenceGate: gate,
+      }),
+    }
+  }
   return {
     ...rendered,
     structuredContent: profileResult({
