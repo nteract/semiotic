@@ -85,6 +85,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Docs routes recover from interrupted lazy-module loads** — failed Vite
+  preloads now trigger one guarded refresh, and repeated failures show a usable
+  reload action instead of leaving examples or other documentation routes on a
+  blank page in Safari.
 - **Automatic network legends now match in static rendering** —
   `renderChart()` and direct network SSR flatten hierarchy data when deriving
   legend categories, so Tree, Treemap, CirclePack, and Orbit output reserves
