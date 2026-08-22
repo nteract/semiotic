@@ -443,9 +443,13 @@ function checkCjsClientContextIdentity(proj, failures) {
     const { renderToStaticMarkup } = require("react-dom/server")
     const themes = require("semiotic/themes/react")
     const utils = require("semiotic/utils")
+    const line = require("semiotic/line")
     const { LineChart } = require("semiotic/xy")
     if (themes.ThemeProvider !== utils.ThemeProvider) {
       throw new Error("mixed CommonJS facades expose different ThemeProvider instances")
+    }
+    if (line.LineChart !== LineChart) {
+      throw new Error("line and xy CommonJS facades expose different LineChart instances")
     }
     const color = "#010203"
     const data = [
@@ -456,7 +460,7 @@ function checkCjsClientContextIdentity(proj, failures) {
       React.createElement(
         themes.ThemeProvider,
         { theme: { mode: "dark", colors: { categorical: [color] } } },
-        React.createElement(LineChart, {
+        React.createElement(line.LineChart, {
           data,
           xAccessor: "x",
           yAccessor: "y",
@@ -466,7 +470,7 @@ function checkCjsClientContextIdentity(proj, failures) {
       ),
     )
     if (!/<path[^>]*stroke="#010203"/.test(html)) {
-      throw new Error("themes/react provider did not reach the xy CommonJS chart")
+      throw new Error("themes/react provider did not reach the line/xy CommonJS chart")
     }
     console.log("shared provider identity and themed family render")
   `
