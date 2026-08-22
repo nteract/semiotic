@@ -550,7 +550,7 @@ export default function GettingStartedPage() {
       <h2 id="bundle-size">Bundle Size</h2>
 
       <p>
-        Semiotic ships <strong>18 stable JavaScript entry points</strong> so you only load the chart types you use.
+        Semiotic ships <strong>30 stable JavaScript entry points</strong> so you only load the chart types you use.
         Don't import from <code>"semiotic"</code> unless you need everything — use the sub-path
         that matches your chart category:
       </p>

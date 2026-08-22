@@ -212,6 +212,8 @@ try {
       "scripts/generate-api-surface.mjs",
       "--dist-dir",
       join(previousPackageRoot, "dist"),
+      "--package-json",
+      join(previousPackageRoot, "package.json"),
       "--out-dir",
       previousSnapshots
     ],
@@ -240,6 +242,13 @@ try {
       `semiotic@${previousVersion} produced no public API snapshots`
     )
   }
+  const currentFiles = readdirSync(currentSnapshots)
+    .filter((path) => path.endsWith(".api.md"))
+    .sort()
+  const currentFileSet = new Set(currentFiles)
+  const addedEntries = currentFiles.filter((file) => {
+    return !previousFiles.includes(file)
+  })
 
   const allowlist = loadAllowlist()
   const allowed = new Map(allowlist.map((change) => [changeId(change), change]))
@@ -316,15 +325,38 @@ try {
     )
     process.exitCode = 1
   } else {
-    console.log(
-      `✅ public API is backward-compatible with ${against} ` +
-        `(${previousFiles.length} released entry-point snapshots; ` +
-        `${semanticallyCompatible.length} assignability-proven changes; ${used.size} reviewed ` +
-        `${used.size === 1 ? "change" : "changes"})`
-    )
-    if (verbose && semanticallyCompatible.length > 0) {
-      console.log("Assignability-proven changes:")
-      for (const change of semanticallyCompatible) console.log(`  - ${change}`)
+    if (verbose && addedEntries.length > 0) {
+      console.log("Additive stable entry points:")
+      for (const file of addedEntries) {
+        console.log(`  - ${file.replace(/\.api\.md$/, "")}`)
+      }
+    }
+    for (const file of addedEntries) {
+      const entry = file.replace(/\.api\.md$/, "")
+      const declarations = readFileSync(
+        join(currentSnapshots, file),
+        "utf8"
+      ).trim()
+      if (!declarations) {
+        failures.push(`${entry}: newly released entry point has an empty API snapshot`)
+      }
+    }
+    if (failures.length > 0) {
+      console.error(`\n✗ public API compatibility failed against ${against}:\n`)
+      for (const failure of failures) console.error(`  - ${failure}`)
+      process.exitCode = 1
+    } else {
+      console.log(
+        `✅ public API is backward-compatible with ${against} ` +
+          `(${previousFiles.length} released entry-point snapshots; ` +
+          `${addedEntries.length} additive entries; ` +
+          `${semanticallyCompatible.length} assignability-proven changes; ` +
+          `${used.size} reviewed ${used.size === 1 ? "change" : "changes"})`
+      )
+      if (verbose && semanticallyCompatible.length > 0) {
+        console.log("Assignability-proven changes:")
+        for (const change of semanticallyCompatible) console.log(`  - ${change}`)
+      }
     }
   }
 } finally {

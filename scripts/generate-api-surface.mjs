@@ -15,7 +15,7 @@
  * To intentionally change the surface: run `npm run docs:api-surface` and
  * commit the resulting `etc/api-surface/*.api.md` files.
  */
-import { writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs"
+import { writeFileSync, mkdirSync, readdirSync, existsSync, readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import ts from "typescript"
@@ -35,12 +35,16 @@ function argumentValue(name, fallback) {
   return value
 }
 
-// `package.json#exports` is the publishing authority. Derive every stable
-// declaration snapshot from the same inventory that Vite aliases and build
-// parity use; the experimental preview subpaths remain intentionally outside
-// the compatibility contract.
+// `package.json#exports` is the publishing authority. Compatibility scans can
+// point at a previous release's package.json so the snapshot uses that
+// release's own inventory rather than demanding artifacts added later.
+const packageJsonPath = argumentValue(
+  "--package-json",
+  join(repoRoot, "package.json")
+)
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"))
 const ENTRIES = Object.fromEntries(
-  stableApiEntrypoints().map((entry) => [entry.apiSnapshotName, entry.declarationPath])
+  stableApiEntrypoints(packageJson).map((entry) => [entry.apiSnapshotName, entry.declarationPath])
 )
 
 // CI passes a temporary directory so surface verification never modifies
