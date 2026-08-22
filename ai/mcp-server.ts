@@ -78,6 +78,10 @@ import { renderHOCToSVG } from "./renderHOCToSVG"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { renderChartWithEvidence } from "semiotic/server"
 import {
+  toEvidenceEnvelope,
+  evaluateEvidenceGate,
+} from "semiotic/evidence"
+import {
   diagnoseConfig,
   auditAccessibility,
   formatAccessibilityAudit,
@@ -2337,6 +2341,22 @@ async function createChartHandler(
     }
   }
   const output = rendered.structuredContent ?? {}
+  const renderEvidence = (output as { evidence?: unknown }).evidence
+  const chartId = (props as { chartId?: unknown }).chartId
+  const evidenceEnvelope = toEvidenceEnvelope(selected.component, props, {
+    chartId: typeof chartId === "string" ? chartId : undefined,
+    sourceId: "mcp-create-chart",
+    ssrEvidence: renderEvidence as never,
+    privacyScope: {
+      mcpResponse: [
+        "public chart config without source rows",
+        "render evidence and mark counts",
+      ],
+    },
+  })
+  const gate = evaluateEvidenceGate(evidenceEnvelope, {
+    requireRenderEvidence: true,
+  })
   return {
     ...rendered,
     structuredContent: profileResult({
@@ -2347,6 +2367,8 @@ async function createChartHandler(
       suggestion: publicSuggestion,
       diagnostics: diagnosis.diagnoses,
       render: output,
+      evidenceEnvelope,
+      evidenceGate: gate,
     }),
   }
 }
@@ -2374,6 +2396,10 @@ async function improveChartHandler(args: {
   })
   const { proposals: variants } = rankVariantProposals(args.component, profile, { intent })
   const accessibility = accessibilityRecommendation(args.component, args.props, data)
+  const evidenceFragment = toEvidenceEnvelope(args.component, args.props, {
+    surfaceVersion: "mcp-improve-chart",
+    knownGaps: ["Static analysis only; no render evidence was requested."],
+  })
   return {
     content: [{ type: "text", text: `Improvement analysis for ${args.component}: ${diagnosis.diagnoses.length} diagnosis item(s), repair status ${repair.status}, ${variants.length} variant proposal(s).` }],
     structuredContent: profileResult({
@@ -2383,16 +2409,25 @@ async function improveChartHandler(args: {
       repair,
       variants,
       ...(accessibility ? { accessibilityRecommendation: accessibility } : {}),
+      evidenceFragment,
     }),
   }
 }
 
 async function explainChartHandler(args: { component: string; props: Record<string, unknown> }): Promise<ToolResult> {
   const grounded = await groundChartHandler(args)
+  const envelope = toEvidenceEnvelope(args.component, args.props, {
+    surfaceVersion: "mcp-explain-chart",
+    knownGaps: ["No render or audit evidence requested by explain-only call."],
+  })
   return {
     ...grounded,
     structuredContent: grounded.structuredContent
-      ? profileResult({ status: "grounded", grounding: grounded.structuredContent })
+      ? profileResult({
+          status: "grounded",
+          grounding: grounded.structuredContent,
+          evidenceFragment: envelope,
+        })
       : undefined,
   }
 }
@@ -2409,11 +2444,29 @@ async function auditChartHandler(args: {
   // developer audit tool's explicit options.
   const accessibility = auditAccessibility(args.component, args.props)
   const mobile = auditMobileVisualization(args.component, args.props, { viewportWidth: args.viewportWidth })
+  const envelope = toEvidenceEnvelope(args.component, args.props, {
+    surfaceVersion: "mcp-audit-chart",
+    audits: {
+      design: mobile,
+    },
+    knownGaps: ["Audit-only call does not prove non-empty rendered marks."],
+  })
+  const gate = evaluateEvidenceGate(envelope, {
+    requireRenderEvidence: false,
+  })
   const blocking = diagnosis.diagnoses.some((item: any) => item.severity === "error") || !accessibility.ok || !mobile.ok
   return {
     content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
     isError: blocking,
-    structuredContent: profileResult({ status: blocking ? "findings" : "passed", component: args.component, diagnostics: diagnosis.diagnoses, accessibility, mobile }),
+    structuredContent: profileResult({
+      status: blocking ? "findings" : "passed",
+      component: args.component,
+      diagnostics: diagnosis.diagnoses,
+      accessibility,
+      mobile,
+      evidenceEnvelope: envelope,
+      evidenceGate: gate,
+    }),
   }
 }
 

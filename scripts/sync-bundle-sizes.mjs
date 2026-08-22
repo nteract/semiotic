@@ -60,6 +60,8 @@ const IGNORED_EXPORTS = new Set([
 // each bundle ships, not implementation detail.
 const BLURBS = {
   ".":          "Everything below (full bundle)",
+  "./access":   "Chart Access Contract factory and first-wave baseline contracts",
+  "./evidence": "Chart Evidence Envelope, deterministic hashing, and publication gate",
   "./line":     "LineChart only — one-chart micro boundary",
   "./xy":       "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts",
   "./ordinal":  "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
@@ -96,7 +98,7 @@ const BLURBS = {
 // (XY, ordinal, network, geo, realtime, server) so the "pick the
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
-  "./line", "./xy", "./ordinal", "./network", "./geo", "./realtime", "./realtime/core", "./realtime/react", "./server",
+  "./access", "./evidence", "./line", "./xy", "./ordinal", "./network", "./geo", "./realtime", "./realtime/core", "./realtime/react", "./server",
   "./server/node", "./server/edge",
   "./utils", "./utils/core", "./utils/react", "./recipes", "./recipes/core", "./recipes/react", "./themes", "./themes/core", "./themes/react",
   "./data", "./value", "./physics",

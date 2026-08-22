@@ -71,6 +71,12 @@ const ENTRY_GRAPHS = [
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
   { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
+  // Access contracts compose AI grounding/audit systems; keep them off chart
+  // production graphs while retaining a narrow tooling budget.
+  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 35 },
+  // Evidence envelopes include data profiles and grounding; this is tooling,
+  // not a chart runtime dependency.
+  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 180 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.

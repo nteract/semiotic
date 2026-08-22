@@ -109,6 +109,18 @@
       "require": "./dist/semiotic-ai.min.js",
       "default": "./dist/semiotic-ai.module.min.js"
     },
+    "./access": {
+      "types": "./dist/semiotic-access.d.ts",
+      "import": "./dist/semiotic-access.module.min.js",
+      "require": "./dist/semiotic-access.min.js",
+      "default": "./dist/semiotic-access.module.min.js"
+    },
+    "./evidence": {
+      "types": "./dist/semiotic-evidence.d.ts",
+      "import": "./dist/semiotic-evidence.module.min.js",
+      "require": "./dist/semiotic-evidence.min.js",
+      "default": "./dist/semiotic-evidence.module.min.js"
+    },
     "./ai/core": {
       "types": "./dist/semiotic-ai-core.d.ts",
       "import": "./dist/semiotic-ai-core.module.min.js",
@@ -358,6 +370,7 @@
     "scorecard": "node scripts/run-capability-scorecard.mjs",
     "docs:capabilities": "node scripts/generate-capabilities-md.mjs && node scripts/generate-capabilities-json.mjs",
     "check:chart-specs": "npx tsx scripts/check-chart-specs.ts",
+    "check:evidence-gate": "node scripts/check-evidence-gate.mjs",
     "check:cloud-run-manifest": "node scripts/check-cloud-run-manifest.mjs",
     "check:cloud-run-nightly": "node scripts/check-cloud-run-nightly.mjs",
     "check:cloud-run-lock": "node scripts/check-cloud-run-manifest.mjs --require-lockfile",

@@ -331,6 +331,7 @@ const clientCjsNamespaces = {
   "semiotic-realtime-react": "realtimeReact",
   physics: "physics",
   "semiotic-ai": "ai",
+  "semiotic-access": "access",
   controls: "controls",
   "semiotic-themes-react": "themesReact",
   "semiotic-utils": "utils",
@@ -431,6 +432,22 @@ const generatedBundleMetadata = {
     platform: "browser",
     rsc: false,
     edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager"
+  },
+  "semiotic-access": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager"
+  },
+  "semiotic-evidence": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
     native: false,
     stability: "stable",
     loading: "eager"
@@ -998,6 +1015,13 @@ async function build() {
       clientOnly: true,
     },
     {
+      input: "src/components/semiotic-access.ts",
+      name: "semiotic-access",
+      analyze: false,
+      minify,
+      clientOnly: true,
+    },
+    {
       input: "src/components/semiotic-ordinal.ts",
       name: "ordinal",
       analyze: false,
@@ -1205,6 +1229,12 @@ async function build() {
       analyze: false,
       minify,
       clientOnly: true
+    },
+    {
+      input: "src/components/semiotic-evidence.ts",
+      name: "semiotic-evidence",
+      analyze: false,
+      minify
     }
   ]
 
@@ -1244,6 +1274,7 @@ async function build() {
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
     "controls",
+    "semiotic-access",
     "semiotic-realtime-react",
     "semiotic-value"
   ])

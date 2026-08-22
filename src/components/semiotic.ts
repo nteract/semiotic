@@ -762,6 +762,8 @@ export {
   resolveMotionVector,
   deriveMotionVector
 } from "./charts/shared/motionEncoding"
+
+// ── Access contracts (Week 1 baseline) ────────────────────────────────
 export type {
   MotionEncodingConstant,
   MotionEncodingAccessor,

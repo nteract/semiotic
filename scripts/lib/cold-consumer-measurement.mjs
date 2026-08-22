@@ -91,6 +91,8 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: "./server/node", symbol: "renderToImage", platform: "node" },
   { exportKey: "./ai", symbol: "suggestCharts", platform: "browser" },
   { exportKey: "./ai/core", symbol: "suggestCharts", platform: "browser" },
+  { exportKey: "./access", symbol: "createChartAccessContract", platform: "browser" },
+  { exportKey: "./evidence", symbol: "toEvidenceEnvelope", platform: "browser" },
   { exportKey: "./data", symbol: "bin", platform: "browser" },
   { exportKey: "./geo", symbol: "ChoroplethMap", platform: "browser" },
   { exportKey: "./rough", symbol: "createRoughRenderMode", platform: "browser" },
