@@ -1,4 +1,12 @@
 import React from "react"
+import { useLocation } from "react-router-dom"
+
+export function LocationAwareRouteLoadErrorBoundary({ children }) {
+  const location = useLocation()
+  const resetKey = `${location.pathname}${location.search}${location.hash}`
+
+  return <RouteLoadErrorBoundary resetKey={resetKey}>{children}</RouteLoadErrorBoundary>
+}
 
 export default class RouteLoadErrorBoundary extends React.Component {
   state = { error: null }

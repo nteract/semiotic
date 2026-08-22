@@ -1,4 +1,4 @@
-import { installVitePreloadRecovery } from "../src/preloadRecovery"
+import { installVitePreloadRecovery, renderEntryLoadFallback } from "../src/preloadRecovery"
 
 installVitePreloadRecovery()
-import("../src/index.jsx")
+import("../src/index.jsx").catch(() => renderEntryLoadFallback())
