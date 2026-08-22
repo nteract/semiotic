@@ -1244,7 +1244,6 @@ async function build() {
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
     "controls",
-    "semiotic-line",
     "semiotic-realtime-react",
     "semiotic-value"
   ])
