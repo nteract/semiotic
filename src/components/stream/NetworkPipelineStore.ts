@@ -89,6 +89,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
   sceneNodes: NetworkSceneNode[] = []
   sceneEdges: NetworkSceneEdge[] = []
   labels: NetworkLabel[] = []
+  /** Backgrounds returned from customNetworkLayout (consumed by StreamNetworkFrame). */
+  customLayoutBackgrounds: import("react").ReactNode = null
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   /** Most recent custom layout result for host readback (`getCustomLayout()`).
@@ -836,6 +838,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
           this.sceneNodes = []
           this.sceneEdges = []
           this.labels = []
+          this.customLayoutBackgrounds = null
           this.customLayoutOverlays = null
           this.customLayoutHtmlMarks = []
           this.lastCustomLayoutResult = null
@@ -851,6 +854,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
+      this.customLayoutBackgrounds = result.backgrounds ?? null
       this.customLayoutOverlays = result.overlays ?? null
       this.customLayoutHtmlMarks = result.htmlMarks ?? []
       this.lastCustomLayoutResult = result
@@ -883,8 +887,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
 
-    // Built-in chart types: clear stale overlays / HTML marks from a prior
+    // Built-in chart types: clear stale backgrounds / overlays / HTML marks from a prior
     // customLayout run.
+    this.customLayoutBackgrounds = null
     this.customLayoutOverlays = null
     this.customLayoutHtmlMarks = []
     this.lastCustomLayoutResult = null
@@ -1524,6 +1529,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.sceneNodes = []
     this.sceneEdges = []
     this.labels = []
+    this.customLayoutBackgrounds = null
     this.customLayoutOverlays = null
     this.customLayoutHtmlMarks = []
     this.lastCustomLayoutResult = null

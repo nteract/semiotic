@@ -349,9 +349,9 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   let sceneNodes: NetworkSceneNode[] = []
   let sceneEdges: NetworkSceneEdge[] = []
   let labels: import("../stream/networkTypes").NetworkLabel[] = []
-  // Overlays returned from a custom layout (drawn above the data layer
-  // by NetworkSVGOverlay on CSR; threaded into `content` below on SSR
-  // so screenshot baselines include them).
+  // Backgrounds/overlays returned from a custom layout are threaded into
+  // `content` below so SSR uses the same below/above scene ordering as CSR.
+  let customLayoutBackgrounds: import("react").ReactNode = null
   let customLayoutOverlays: import("react").ReactNode = null
   if (config.customNetworkLayout) {
     // Reuse the same palette + resolver helpers NetworkPipelineStore
@@ -400,6 +400,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     sceneNodes = result.sceneNodes ?? []
     sceneEdges = result.sceneEdges ?? []
     labels = result.labels ?? []
+    customLayoutBackgrounds = result.backgrounds ?? null
     customLayoutOverlays = result.overlays ?? null
   } else if (plugin) {
     plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
@@ -473,6 +474,9 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   const content = (
     <>
       {resolvedBackgroundGraphics}
+      {/* Layout-derived backgrounds share fitted plot coordinates with the
+          scene, but paint first so static SVG matches the live canvas stack. */}
+      {customLayoutBackgrounds}
       {edgeElements}
       {nodeElements}
       {labelElements}

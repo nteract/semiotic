@@ -1,6 +1,7 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import * as SemioticGeo from "../../dist/geo.module.min.js"
 import * as SemioticPhysics from "../../dist/physics.module.min.js"
+import * as SemioticRecipes from "../../dist/semiotic-recipes.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
 import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
@@ -17,7 +18,7 @@ const TestCase = ({ title, testId, children }) =>
   )
 
 const requestedCase = new URLSearchParams(window.location.search).get("case")
-const parityCases = makeSsrParityCases(React)
+const parityCases = makeSsrParityCases(React, SemioticRecipes)
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)
   : parityCases

@@ -169,12 +169,14 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneNodes[0]._pulseGlowRadius).toBeUndefined()
   })
 
-  it("captures overlays returned by customLayout", () => {
+  it("captures backgrounds and overlays returned by customLayout", () => {
+    const background = { _sentinel: "background" } as unknown as React.ReactNode
     const overlay = { _sentinel: true } as unknown as React.ReactNode
     const layout = () => ({
       sceneNodes: [],
       sceneEdges: [],
       labels: [],
+      backgrounds: background,
       overlays: overlay,
     })
     const store = new NetworkPipelineStore(baseConfig({
@@ -183,6 +185,7 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     store.ingestBounded([{ id: "a" }], [], [100, 100])
     store.buildScene([100, 100])
 
+    expect(store.customLayoutBackgrounds).toBe(background)
     expect(store.customLayoutOverlays).toBe(overlay)
   })
 
@@ -204,11 +207,12 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("returned overlays but no data-bearing scene nodes"))
   })
 
-  it("clears overlays when customLayout is removed", () => {
+  it("clears backgrounds and overlays when customLayout is removed", () => {
     const layout = () => ({
       sceneNodes: [],
       sceneEdges: [],
       labels: [],
+      backgrounds: { _sentinel: "background" } as unknown as React.ReactNode,
       overlays: { _sentinel: true } as unknown as React.ReactNode,
     })
     const store = new NetworkPipelineStore(baseConfig({
@@ -216,11 +220,13 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     }))
     store.ingestBounded([{ id: "a" }], [], [100, 100])
     store.buildScene([100, 100])
+    expect(store.customLayoutBackgrounds).not.toBeNull()
     expect(store.customLayoutOverlays).not.toBeNull()
 
     // Reconfigure to a built-in chart type without customLayout
     store.updateConfig({ ...baseConfig(), customNetworkLayout: undefined })
     store.buildScene([100, 100])
+    expect(store.customLayoutBackgrounds).toBeNull()
     expect(store.customLayoutOverlays).toBeNull()
   })
 
@@ -269,7 +275,8 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.customLayoutHtmlMarks).toEqual([])
   })
 
-  it("preserves the last good custom scene/result/overlays when a re-layout throws", () => {
+  it("preserves the last good custom scene/result/backgrounds/overlays when a re-layout throws", () => {
+    const background = { _sentinel: "last-good-background" } as unknown as React.ReactNode
     const overlay = { _sentinel: "last-good" } as unknown as React.ReactNode
     let shouldThrow = false
     let result: NetworkLayoutResult | null = null
@@ -286,6 +293,7 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
           datum: node,
           id: node.id,
         })),
+        backgrounds: background,
         overlays: overlay,
         htmlMarks: [{ id: "a", x: 1, y: 2, width: 20, height: 10, content: null }],
         restyle: () => ({ opacity: 0.5 }),
@@ -307,6 +315,7 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
 
     expect(store.sceneNodes).toBe(lastGoodNodes)
     expect(store.sceneEdges).toBe(lastGoodEdges)
+    expect(store.customLayoutBackgrounds).toBe(background)
     expect(store.customLayoutOverlays).toBe(overlay)
     expect(store.customLayoutHtmlMarks).toEqual([{ id: "a", x: 1, y: 2, width: 20, height: 10, content: null }])
     expect(store.lastCustomLayoutResult).toBe(result)
@@ -342,6 +351,7 @@ describe("NetworkPipelineStore customNetworkLayout", () => {
     expect(store.sceneNodes).toEqual([])
     expect(store.sceneEdges).toEqual([])
     expect(store.labels).toEqual([])
+    expect(store.customLayoutBackgrounds).toBeNull()
     expect(store.customLayoutHtmlMarks).toEqual([])
     expect(store.lastCustomLayoutResult).toBeNull()
     expect(store.lastCustomLayoutFailure).toMatchObject({

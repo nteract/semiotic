@@ -674,8 +674,11 @@ const edges = g.edges().map(e => {
           steals a hover). It collapses through full → compact → icon → dot as the graph gets
           denser, renders <code>isBackEdge</code> cycles as distinct dashed loops, and dims to a
           host-supplied reachable set. Because it only <em>reads</em> pre-computed layer/row
-          coordinates, output is deterministic. See the full interactive build — main view, synced
-          minimap, and a snapshot morph — in <Link to="/recipes/kstreams">Kafka Streams</Link>.
+          coordinates, output is deterministic. Set <code>hullGroupAccessor</code> to enclose nodes
+          that share a group value in padded, rounded convex hulls. Those hulls use the layout's
+          fitted pixel geometry and render in the background layer in both the browser and static
+          SVG output. See the full interactive build — main view, synced minimap, and a snapshot
+          morph — in <Link to="/recipes/kstreams">Kafka Streams</Link>.
         </p>
         <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
 import { lineageDagLayout } from "semiotic/recipes"
@@ -685,7 +688,9 @@ import { lineageDagLayout } from "semiotic/recipes"
   edges={edges}   // each { source, target, edgeType, isBackEdge }
   layout={lineageDagLayout}
   layoutConfig={{ layerCount, maxLayerSize, reachableIds, selectedId,
-                  renderIcon, partitionColors }}
+                  renderIcon, partitionColors,
+                  hullGroupAccessor: "subtopologyId",
+                  hullColors, hullPadding: 16, hullRadius: 12 }}
   selection={{ name: "lineage" }}   // LinkedCharts → ctx.selection highlights across views
 />`}</CodeBlock>
       </section>
@@ -1053,18 +1058,20 @@ ref.current.update("planning", (d) => ({
           escape hatch for semantic diagrams with nodes, edges, and stable identity: state machines,
           dependency diagrams, lineage diagrams, Python Tutor memory diagrams, process maps, and
           other object-reference systems. Use scene rects/circles for the semantic objects and
-          network edges for relationships; reserve overlays for labels, dividers, arrows, and other
-          detail that should not intercept interaction.
+          network edges for relationships; use <code>backgrounds</code> for layout-derived regions
+          and enclosures below the scene, and reserve <code>overlays</code> for labels, dividers,
+          arrows, and other detail above it. Both SVG layers are included in static rendering and
+          do not participate in canvas hit-testing.
         </p>
       </section>
 
       <section>
         <h2>HTML marks (rich DOM nodes)</h2>
         <p>
-          A network layout can return <code>htmlMarks</code> alongside <code>sceneNodes</code> /{" "}
-          <code>sceneEdges</code> / <code>overlays</code>: positioned HTML/React nodes that Semiotic
+          A network layout can return <code>htmlMarks</code> alongside <code>backgrounds</code> /{" "}
+          <code>sceneNodes</code> / <code>sceneEdges</code> / <code>overlays</code>: positioned HTML/React nodes that Semiotic
           renders into one real-DOM layer <strong>above the canvas and SVG overlays</strong> (stack
-          order: canvas → <code>overlays</code> → <code>htmlMarks</code>). Each mark is{" "}
+          order: <code>backgrounds</code> → canvas → <code>overlays</code> → <code>htmlMarks</code>). Each mark is{" "}
           <code>{"{ id, x, y, width, height, content }"}</code> in the <em>same plot space</em> as{" "}
           <code>sceneNodes</code> — the framework owns the margin (and any future zoom/pan)
           transform, so a mark at <code>(x, y)</code> lands exactly where a scene node at{" "}

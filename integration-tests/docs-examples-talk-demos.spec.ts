@@ -194,6 +194,16 @@ test.describe("talk demos stay browser-local and deterministic", () => {
     ]) {
       await page.goto(route, { waitUntil: "domcontentloaded" })
       await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible()
+      if (route === "/recipes/kstreams") {
+        const hullToggle = page.getByRole("checkbox", { name: "Sub-topology hulls" })
+        const hulls = page.locator("[data-lineage-hull]")
+        await expect(hullToggle).toBeChecked()
+        await expect.poll(() => hulls.count()).toBeGreaterThan(0)
+        await hullToggle.uncheck()
+        await expect(hulls).toHaveCount(0)
+        await hullToggle.check()
+        await expect.poll(() => hulls.count()).toBeGreaterThan(0)
+      }
     }
 
     // The docs shell still advertises an optional Google Fonts stylesheet.

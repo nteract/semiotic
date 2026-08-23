@@ -6,14 +6,6 @@
 // fixtures can create React nodes without coupling this file to either the
 // browser bundle or Playwright's Node runtime.
 
-const {
-  isotypeInk: GLYPH_INK,
-  isotypePaper: GLYPH_PAPER,
-  isotypeGhost: GLYPH_GHOST,
-  isotypeServerGlyph: SERVER_GLYPH,
-  isotypeNetworkGlyphs: NETWORK_GLYPHS,
-} = require("../dist/semiotic-recipes.min.js")
-
 const xyData = [
   { x: 0, y: 1 },
   { x: 1, y: 4 },
@@ -379,6 +371,25 @@ const customNetworkEdges = [
   { source: "fallback", target: "reader", value: 2, label: "supports" },
 ]
 
+const lineageHullNodes = [
+  { id: "orders", label: "Orders", x: 0, y: -0.75, partition: "topic-source", semantic: "source", subtopologyId: "ingest" },
+  { id: "validate", label: "Validate", x: 1, y: -0.75, partition: "processor", semantic: "filter", subtopologyId: "ingest" },
+  { id: "customers", label: "Customers", x: 0, y: 0.75, partition: "topic-source", semantic: "source", subtopologyId: "enrich" },
+  { id: "join", label: "Join customer", x: 1, y: 0.75, partition: "processor", semantic: "join-this", subtopologyId: "enrich" },
+  { id: "aggregate", label: "Aggregate", x: 2, y: 0.45, partition: "processor", semantic: "aggregate", subtopologyId: "enrich" },
+  { id: "publish", label: "Publish", x: 2, y: -0.75, partition: "processor", semantic: "sink", subtopologyId: "output" },
+  { id: "warehouse", label: "Warehouse", x: 3, y: -0.75, partition: "topic-sink", semantic: "sink", subtopologyId: "output" },
+]
+
+const lineageHullEdges = [
+  { source: "orders", target: "validate", edgeType: "internal" },
+  { source: "customers", target: "join", edgeType: "internal" },
+  { source: "validate", target: "aggregate", edgeType: "cross-subtopology" },
+  { source: "join", target: "aggregate", edgeType: "internal" },
+  { source: "aggregate", target: "publish", edgeType: "cross-subtopology" },
+  { source: "publish", target: "warehouse", edgeType: "internal" },
+]
+
 const customGeoPoints = [
   { city: "Seattle", lon: -122.3321, lat: 47.6062, group: "north", powerMW: 260 },
   { city: "Denver", lon: -104.9903, lat: 39.7392, group: "central", powerMW: 145 },
@@ -467,8 +478,14 @@ function makeWaffleLayout(React) {
   }
 }
 
-function makeIsotypeColumnLayout(React) {
+function makeIsotypeColumnLayout(React, recipes) {
   const h = React.createElement
+  const {
+    isotypeInk: GLYPH_INK,
+    isotypePaper: GLYPH_PAPER,
+    isotypeGhost: GLYPH_GHOST,
+    isotypeServerGlyph: SERVER_GLYPH,
+  } = recipes
   return (ctx) => {
     const signSize = 16
     const rowGap = 4
@@ -535,8 +552,13 @@ function edgeEndpointId(endpoint) {
   return null
 }
 
-function makeGlyphNetworkLayout(React) {
+function makeGlyphNetworkLayout(React, recipes) {
   const h = React.createElement
+  const {
+    isotypePaper: GLYPH_PAPER,
+    isotypeServerGlyph: SERVER_GLYPH,
+    isotypeNetworkGlyphs: NETWORK_GLYPHS,
+  } = recipes
   return (ctx) => {
     const positions = new Map()
     ctx.nodes.forEach((node) => {
@@ -624,8 +646,13 @@ function makeGlyphNetworkLayout(React) {
   }
 }
 
-function makeGeoIsotypeLayout(React) {
+function makeGeoIsotypeLayout(React, recipes) {
   const h = React.createElement
+  const {
+    isotypePaper: GLYPH_PAPER,
+    isotypeGhost: GLYPH_GHOST,
+    isotypeServerGlyph: SERVER_GLYPH,
+  } = recipes
   return (ctx) => {
     const nodes = ctx.points.flatMap((point) => {
       const [x, y] = ctx.scales.projectedPoint(point.lon, point.lat)
@@ -829,7 +856,7 @@ const crucibleEvents = [
   },
 ]
 
-function makeSsrParityCases(React) {
+function makeSsrParityCases(React, recipes = {}) {
   return [
     {
       id: "line",
@@ -1229,7 +1256,7 @@ function makeSsrParityCases(React) {
       component: "OrdinalCustomChart",
       props: {
         data: customIsotypeRows,
-        layout: makeIsotypeColumnLayout(React),
+        layout: makeIsotypeColumnLayout(React, recipes),
         categoryAccessor: "region",
         valueAccessor: "share",
         rExtent: [0, 40],
@@ -1245,7 +1272,7 @@ function makeSsrParityCases(React) {
       props: {
         nodes: customNetworkNodes,
         edges: customNetworkEdges,
-        layout: makeGlyphNetworkLayout(React),
+        layout: makeGlyphNetworkLayout(React, recipes),
         nodeIDAccessor: "id",
         sourceAccessor: "source",
         targetAccessor: "target",
@@ -1256,12 +1283,46 @@ function makeSsrParityCases(React) {
       },
     },
     {
+      id: "network-custom-lineage-hulls",
+      component: "NetworkCustomChart",
+      props: {
+        nodes: lineageHullNodes,
+        edges: lineageHullEdges,
+        layout: recipes.lineageDagLayout,
+        layoutConfig: {
+          layerCount: 4,
+          maxLayerSize: 3,
+          nodeWidth: 96,
+          nodeHeight: 42,
+          lod: "compact",
+          hullGroupAccessor: "subtopologyId",
+          hullColors: {
+            ingest: "#0f766e",
+            enrich: "#7c3aed",
+            output: "#c2410c",
+          },
+          hullPadding: 12,
+          hullRadius: 10,
+          hullFillOpacity: 0.14,
+          hullStrokeOpacity: 0.75,
+          hullLabel: (groupValue) => `Sub-topology ${groupValue}`,
+        },
+        nodeIDAccessor: "id",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        width: 520,
+        height: 320,
+        margin: { top: 28, right: 28, bottom: 28, left: 28 },
+        title: "SSR lineage sub-topology hulls",
+      },
+    },
+    {
       id: "geo-custom-isotype-glyphs",
       component: "GeoCustomChart",
       package: "geo",
       props: {
         points: customGeoPoints,
-        layout: makeGeoIsotypeLayout(React),
+        layout: makeGeoIsotypeLayout(React, recipes),
         xAccessor: "lon",
         yAccessor: "lat",
         colorBy: "group",
