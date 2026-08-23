@@ -2325,6 +2325,26 @@ async function createChartHandler(
       }),
     }
   }
+  const renderedStatic = await renderChartHandler({
+    component: selected.component,
+    props,
+    format: "svg",
+  }, context)
+  if (renderedStatic.isError) {
+    return {
+      ...renderedStatic,
+      structuredContent: profileResult({
+        status: "blocked",
+        component: selected.component,
+        props: publicProps,
+        dataRowCount: args.data.length,
+        suggestion: publicSuggestion,
+        diagnostics: diagnosis.diagnoses,
+        render: renderedStatic.structuredContent ?? null,
+      }),
+    }
+  }
+  const completeRenderEvidence = parseRenderEvidence(renderedStatic)
   const rendered = await renderInteractiveChartHandler({ component: selected.component, props, theme: args.theme }, context)
   if (rendered.isError) {
     return {
@@ -2341,12 +2361,11 @@ async function createChartHandler(
     }
   }
   const output = rendered.structuredContent ?? {}
-  const renderEvidence = (output as { evidence?: unknown }).evidence
   const chartId = (props as { chartId?: unknown }).chartId
   const evidenceEnvelope = toEvidenceEnvelope(selected.component, props, {
     chartId: typeof chartId === "string" ? chartId : undefined,
     sourceId: "mcp-create-chart",
-    ssrEvidence: renderEvidence as never,
+    ssrEvidence: completeRenderEvidence as never,
     privacyScope: {
       mcpResponse: [
         "public chart config without source rows",
@@ -2743,7 +2762,13 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
         props: z.record(z.string(), z.unknown()).optional().describe("Optional props to merge over the selected chart recipe."),
         theme: z.record(z.string(), z.string()).optional(),
       },
-      outputSchema: { status: z.enum(["render-proven", "blocked", "no-suggestion"]), component: z.string().optional(), surfaceVersion: z.string() },
+      outputSchema: {
+        status: z.enum(["render-proven", "blocked", "no-suggestion"]),
+        component: z.string().optional(),
+        evidenceEnvelope: z.record(z.string(), z.unknown()).optional(),
+        evidenceGate: z.record(z.string(), z.unknown()).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
       _meta: { ui: { resourceUri: SEMIOTIC_CHART_WIDGET_URI }, "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI },
     }, (args) => createChartHandler(args, serverRenderContext))
@@ -2768,6 +2793,7 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
           props: z.record(z.string(), z.string()),
           chartContainer: z.record(z.string(), z.unknown()),
         }).optional(),
+        evidenceFragment: z.record(z.string(), z.unknown()).optional(),
         surfaceVersion: z.string(),
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
@@ -2776,14 +2802,25 @@ function createServer(profile: ToolProfile = "developer", options: McpServerOpti
       title: "Explain a chart without pixels",
       description: "Return reader grounding: chart description, communicative intent, and navigable data structure.",
       inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()) },
-      outputSchema: { status: z.literal("grounded"), grounding: z.record(z.string(), z.unknown()), surfaceVersion: z.string() },
+      outputSchema: {
+        status: z.literal("grounded"),
+        grounding: z.record(z.string(), z.unknown()),
+        evidenceFragment: z.record(z.string(), z.unknown()).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
     }, explainChartHandler)
     srv.registerTool("auditChart", {
       title: "Audit chart quality and accessibility",
       description: "Run design diagnostics plus accessibility and mobile audits, returning prioritized structured findings.",
       inputSchema: { component: z.string(), props: z.record(z.string(), z.unknown()), viewportWidth: z.number().int().min(240).max(1600).optional() },
-      outputSchema: { status: z.enum(["passed", "findings"]), component: z.string(), surfaceVersion: z.string() },
+      outputSchema: {
+        status: z.enum(["passed", "findings"]),
+        component: z.string(),
+        evidenceEnvelope: z.record(z.string(), z.unknown()).optional(),
+        evidenceGate: z.record(z.string(), z.unknown()).optional(),
+        surfaceVersion: z.string(),
+      },
       annotations: READ_ONLY_TOOL_ANNOTATIONS,
     }, auditChartHandler)
     srv.registerTool("getChartSchema", {

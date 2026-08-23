@@ -155,6 +155,7 @@ function stableStringify(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map(stableStringify).join(",")}]`
   }
+  if (value instanceof Date) return JSON.stringify(value)
   if (typeof value === "object") {
     const entries = Object.entries(value as Record<string, unknown>)
       .filter(([, nested]) => nested !== undefined)
@@ -281,14 +282,11 @@ function redactProfileForEnvelope(profile: unknown): unknown {
   if (!profile || typeof profile !== "object") return profile
   const source = profile as Record<string, unknown>
   const output: Record<string, unknown> = { ...source }
-  for (const key of [
-    "data",
-    "rawInput",
-    "network",
-    "hierarchy",
-    "geo",
-  ]) {
+  for (const key of ["data", "rawInput", "network", "hierarchy", "geo", "numericFields"]) {
     delete output[key]
+  }
+  if (output.candidates && typeof output.candidates === "object") {
+    output.candidates = redactProfileForEnvelope(output.candidates)
   }
   return output
 }
@@ -438,8 +436,30 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     throw new TypeError("Evidence envelope access table state must be boolean")
   }
   const meaning = envelope.meaning as ChartEvidenceEnvelope["meaning"]
+  const chart = envelope.chart as ChartEvidenceEnvelope["chart"]
+  const input = envelope.input as ChartEvidenceEnvelope["input"]
+  const transform = envelope.transform as ChartEvidenceEnvelope["transform"]
+  const render = envelope.render as ChartEvidenceEnvelope["render"]
   if (!meaning.grounding || typeof meaning.grounding !== "object") {
     throw new TypeError("Evidence envelope meaning requires reader grounding")
+  }
+  if (
+    !chart.component ||
+    typeof chart.component !== "string"
+  ) {
+    throw new TypeError("Evidence envelope chart requires a component string")
+  }
+  if (
+    !Number.isSafeInteger(input.rowCount) ||
+    input.rowCount < 0
+  ) {
+    throw new TypeError("Evidence envelope input requires non-negative rowCount")
+  }
+  if (!Array.isArray(transform.operations)) {
+    throw new TypeError("Evidence envelope transform requires operations array")
+  }
+  if (!render.mode) {
+    throw new TypeError("Evidence envelope render requires mode")
   }
   const modality = envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
   for (const section of ["structured", "vision", "tandem"] as const) {
@@ -469,8 +489,6 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     }
   }
   const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
-  const input = envelope.input as ChartEvidenceEnvelope["input"]
-  const render = envelope.render as ChartEvidenceEnvelope["render"]
   if (
     !Array.isArray(limits.knownGaps) ||
     !Array.isArray(limits.unsupportedClaims) ||
@@ -480,16 +498,16 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     throw new TypeError("Evidence envelope limits require arrays and privacy scope")
   }
   if (
-    input.rowCount !== 0 &&
-    (!Number.isSafeInteger(input.rowCount) || input.rowCount < 0)
-  ) {
-    throw new TypeError("Evidence envelope rowCount must be a non-negative safe integer")
-  }
-  if (
     render.marksObserved !== undefined &&
     (!Number.isSafeInteger(render.marksObserved) || render.marksObserved < 0)
   ) {
     throw new TypeError("Evidence envelope marksObserved must be a non-negative safe integer")
+  }
+  if (
+    render.marksIntended !== undefined &&
+    (!Number.isSafeInteger(render.marksIntended) || render.marksIntended < 0)
+  ) {
+    throw new TypeError("Evidence envelope marksIntended must be a non-negative safe integer")
   }
   return value as ChartEvidenceEnvelope
 }

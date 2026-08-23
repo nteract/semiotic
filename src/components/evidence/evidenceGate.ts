@@ -133,27 +133,22 @@ export function evaluateEvidenceGate(
   }
 
   for (const claim of envelope.meaning.claims ?? []) {
-    if (claim.supported === false || claim.confidence === 0) {
-      envelope.limits.unsupportedClaims.push(claim.claim)
-    }
-    if (claim.supported === false) {
-      findings.push(
-        finding(
-          "claim.unsupported",
-          "error",
-          `Claim is explicitly unsupported: ${claim.claim}`
-        )
-      )
-    }
-    if (
-      claim.supported === true &&
+    const unsupported =
+      claim.supported === false ||
+      claim.confidence === 0 ||
       !(claim.evidenceIds?.length)
-    ) {
+
+    if (unsupported) {
+      if (!envelope.limits.unsupportedClaims.includes(claim.claim)) {
+        envelope.limits.unsupportedClaims.push(claim.claim)
+      }
       findings.push(
         finding(
           "claim.unsupported",
           "error",
-          `Claim lacks evidence links: ${claim.claim}`
+          claim.supported === false
+            ? `Claim is explicitly unsupported: ${claim.claim}`
+            : `Claim lacks evidence links: ${claim.claim}`
         )
       )
     }
