@@ -450,8 +450,8 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { renderToImage } from "semiotic/server/node"` | node | **251.9 KiB** |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **244.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **38.6 KiB** |
-| `import { createChartAccessContract } from "semiotic/access"` | browser | **28.9 KiB** |
-| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **37.3 KiB** |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **29.0 KiB** |
+| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **37.8 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **114.7 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** |

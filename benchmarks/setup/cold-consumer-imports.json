@@ -188,8 +188,8 @@
       "importPath": "semiotic/access",
       "symbol": "createChartAccessContract",
       "platform": "browser",
-      "rawBytes": 93855,
-      "gzipBytes": 29568,
+      "rawBytes": 94415,
+      "gzipBytes": 29703,
       "packedPackageInputFiles": 4
     },
     {
@@ -197,8 +197,8 @@
       "importPath": "semiotic/evidence",
       "symbol": "toEvidenceEnvelope",
       "platform": "browser",
-      "rawBytes": 116059,
-      "gzipBytes": 38157,
+      "rawBytes": 117879,
+      "gzipBytes": 38671,
       "packedPackageInputFiles": 6
     },
     {
