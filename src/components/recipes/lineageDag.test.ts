@@ -204,6 +204,28 @@ describe("lineageDagLayout", () => {
     expect(markup).not.toMatch(/data-lineage-hull="reachable" opacity=/)
   })
 
+  it("dims a hull when its whole group is excluded by shared selection", () => {
+    const groupedNodes = nodes.map((node, index) => ({
+      ...node,
+      data: {
+        ...(node.data as Record<string, unknown>),
+        subtopologyId: index < 2 ? "focus" : "outside",
+      },
+    })) as RealtimeNode[]
+    const result = lineageDagLayout(makeCtx({
+      ...baseConfig,
+      hullGroupAccessor: "subtopologyId",
+      dimOpacity: 0.1,
+    }, groupedNodes, edges, {
+      isActive: true,
+      predicate: (datum) => (datum as { id?: string }).id === "agg",
+    }))
+    const markup = renderToStaticMarkup(result.backgrounds)
+
+    expect(markup).toMatch(/data-lineage-hull="outside" opacity="0\.1"/)
+    expect(markup).not.toMatch(/data-lineage-hull="focus" opacity=/)
+  })
+
   it("auto-computes layerCount/maxLayerSize from node coords when omitted", () => {
     const r = lineageDagLayout(makeCtx({}, nodes, edges))
     expect(r.sceneNodes).toHaveLength(4)

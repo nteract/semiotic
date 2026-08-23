@@ -446,7 +446,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
         strokeOpacity: hullOpacity(cfg.hullStrokeOpacity, 0.4),
         label: cfg.hullLabel,
         resolveColor: ctx.resolveColor,
-        reachSet,
+        dimById,
         selectedId: selId,
         dimOpacity,
       })
