@@ -10,7 +10,6 @@ function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope
 function stableEvidenceHash(value: unknown): string
 function toEvidenceEnvelope(component: string, props: Record<string, unknown>, options?: EvidenceEnvelopeOptions | undefined): ChartEvidenceEnvelope
 interface ChartEvidenceEnvelope
-interface EnvelopeAccessSection extends ChartAccessContract
 interface EnvelopeAuditSection
 interface EnvelopeChartSection
 interface EnvelopeInputSection
@@ -27,7 +26,7 @@ interface EvidenceGateOptions
 interface EvidenceGateResult
 interface ModalityConflict
 interface ModalityObservation
-interface-member ChartEvidenceEnvelope::property::access = required access: EnvelopeAccessSection
+interface-member ChartEvidenceEnvelope::property::access = required access: ChartAccessContract
 interface-member ChartEvidenceEnvelope::property::audit = required audit: EnvelopeAuditSection
 interface-member ChartEvidenceEnvelope::property::chart = required chart: EnvelopeChartSection
 interface-member ChartEvidenceEnvelope::property::input = required input: EnvelopeInputSection
@@ -94,6 +93,7 @@ interface-member EvidenceEnvelopeOptions::property::unsupportedClaims = optional
 interface-member EvidenceGateFinding::property::id = required id: string
 interface-member EvidenceGateFinding::property::message = required message: string
 interface-member EvidenceGateFinding::property::severity = required severity: "error" | "warning"
+interface-member EvidenceGateOptions::property::allowAccessibilityWarnings = optional allowAccessibilityWarnings: boolean | undefined
 interface-member EvidenceGateOptions::property::failOnCrossModalConflicts = optional failOnCrossModalConflicts: boolean | undefined
 interface-member EvidenceGateOptions::property::requireAccessTable = optional requireAccessTable: boolean | undefined
 interface-member EvidenceGateOptions::property::requireNavigation = optional requireNavigation: boolean | undefined
@@ -113,5 +113,6 @@ interface-member ModalityObservation::property::finding = required finding: stri
 interface-member ModalityObservation::property::id = required id: string
 interface-member ModalityObservation::property::model = optional model: string | undefined
 interface-member ModalityObservation::property::severity = optional severity: "error" | "info" | "warning" | undefined
+type EnvelopeAccessSection = ChartAccessContract
 type EvidenceGateStatus = "fail" | "pass"
 ```

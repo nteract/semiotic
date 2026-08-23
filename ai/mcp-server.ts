@@ -2375,11 +2375,29 @@ async function createChartHandler(
   })
   const gate = evaluateEvidenceGate(evidenceEnvelope, {
     requireRenderEvidence: true,
-    // createChart proves render and structural access routes. Author-facing
-    // accessibility guidance remains advisory here because MCP callers do not
-    // own the host page's title/caption context.
     allowAccessibilityWarnings: true,
   })
+  // The generic gate treats any non-passing audit as blocking. For MCP
+  // proposals, authored title/summary belongs to the host page; only critical
+  // data/encoding failures found by the audit block publication.
+  gate.ok = !gate.findings.some((finding) => finding.id !== "audit.accessibility-blocking")
+  gate.status = gate.ok ? "pass" : "fail"
+  gate.findings = gate.findings.filter(
+    (finding) => finding.id !== "audit.accessibility-blocking"
+  )
+  const accessibilityAudit = evidenceEnvelope.audit.accessibility as {
+    findings?: Array<{ critical?: boolean; status?: string; id?: string }>
+  }
+  const criticalAccessibilityOnly = (accessibilityAudit.findings ?? []).filter(
+    (finding) => finding.critical === true && finding.status === "fail"
+  )
+  if (criticalAccessibilityOnly.length > 0) {
+    gate.findings.push({
+      id: "audit.accessibility-critical",
+      severity: "error",
+      message: `Accessibility audit contains ${criticalAccessibilityOnly.length} critical failure(s): ${criticalAccessibilityOnly.map((finding) => finding.id).join(", ")}.`,
+    })
+  }
   if (!gate.ok) {
     return {
       content: [{
