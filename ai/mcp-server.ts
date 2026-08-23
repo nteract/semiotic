@@ -2495,8 +2495,13 @@ async function auditChartHandler(args: {
   })
   const gate = evaluateEvidenceGate(envelope, {
     requireRenderEvidence: false,
+    requireAccessTable: args.component !== "BigNumber",
   })
-  const blocking = diagnosis.diagnoses.some((item: any) => item.severity === "error") || !accessibility.ok || !mobile.ok
+  const blocking =
+    diagnosis.diagnoses.some((item: any) => item.severity === "error") ||
+    !accessibility.ok ||
+    !mobile.ok ||
+    !gate.ok
   return {
     content: [{ type: "text", text: `Audit for ${args.component}: ${blocking ? "blocking findings need attention" : "no blocking findings"}.` }],
     isError: blocking,

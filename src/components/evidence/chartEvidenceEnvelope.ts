@@ -339,11 +339,10 @@ function normalizeSourceRecords(
         : []
   }
   if (component === "FlowMap") {
-    return Array.isArray(props.flows)
-      ? props.flows
-      : Array.isArray(props.points)
-        ? props.points
-        : []
+    return [
+      ...(Array.isArray(props.nodes) ? props.nodes : []),
+      ...(Array.isArray(props.flows) ? props.flows : []),
+    ]
   }
   if (
     component === "TreeDiagram" ||
@@ -353,6 +352,13 @@ function normalizeSourceRecords(
     return props.hierarchy && typeof props.hierarchy === "object"
       ? [props.hierarchy]
       : []
+  }
+  if (
+    component === "BigNumber" ||
+    component === "GaugeChart"
+  ) {
+    const value = props.value
+    return value === undefined ? [] : [{ value }]
   }
   return []
 }
@@ -391,6 +397,9 @@ export function toEvidenceEnvelope(
         ssrEvidence: options.ssrEvidence,
       },
     })
+  if (access.navigation.tree) {
+    access.navigation.tree = redactNavigationTree(access.navigation.tree) as never
+  }
   const intendedMarks = countIntendedMarks(props)
   const observedMarks = observedMarkCount(options.ssrEvidence)
   const parity = inferRenderParity({
@@ -505,11 +514,11 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (typeof access.table.enabled !== "boolean") {
     throw new TypeError("Evidence envelope access table state must be boolean")
   }
-  const meaning = envelope.meaning as ChartEvidenceEnvelope["meaning"]
   const chart = envelope.chart as ChartEvidenceEnvelope["chart"]
   const input = envelope.input as ChartEvidenceEnvelope["input"]
   const transform = envelope.transform as ChartEvidenceEnvelope["transform"]
   const render = envelope.render as ChartEvidenceEnvelope["render"]
+  const meaning = envelope.meaning as ChartEvidenceEnvelope["meaning"]
   if (!meaning.grounding || typeof meaning.grounding !== "object") {
     throw new TypeError("Evidence envelope meaning requires reader grounding")
   }
@@ -542,6 +551,13 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       throw new TypeError(`Evidence envelope ${section} observations must be an array`)
     }
   }
+  for (const section of ["structured", "vision"] as const) {
+    for (const observation of modality[section].observations) {
+      if (!observation || typeof observation !== "object" || typeof observation.id !== "string" || typeof observation.finding !== "string") {
+        throw new TypeError(`Evidence envelope ${section} observations require string id and finding`)
+      }
+    }
+  }
   if (
     !Array.isArray(modality.tandem.agreements) ||
     !Array.isArray(modality.tandem.conflicts)
@@ -558,6 +574,14 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       throw new TypeError("Evidence envelope tandem conflict requires a non-empty id")
     }
   }
+  if (!Array.isArray(modality.tandem.agreements)) {
+    throw new TypeError("Evidence envelope tandem agreements must be an array")
+  }
+  for (const agreement of modality.tandem.agreements) {
+    if (!agreement || typeof agreement !== "object" || typeof agreement.id !== "string" || typeof agreement.finding !== "string") {
+      throw new TypeError("Evidence envelope tandem agreements require string id and finding")
+    }
+  }
   const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
   if (
     !Array.isArray(limits.knownGaps) ||
@@ -572,6 +596,25 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     (!Number.isSafeInteger(render.marksObserved) || render.marksObserved < 0)
   ) {
     throw new TypeError("Evidence envelope marksObserved must be a non-negative safe integer")
+  }
+  if (meaning.claims !== undefined) {
+    if (!Array.isArray(meaning.claims)) {
+      throw new TypeError("Evidence envelope claims must be an array")
+    }
+    for (const claim of meaning.claims) {
+      if (!claim || typeof claim !== "object" || typeof claim.claim !== "string") {
+        throw new TypeError("Evidence envelope claims require a claim string")
+      }
+      if (
+        claim.confidence !== undefined &&
+        (typeof claim.confidence !== "number" || !Number.isFinite(claim.confidence))
+      ) {
+        throw new TypeError("Evidence envelope claim confidence must be finite")
+      }
+    }
+  }
+  if (transform.operations.some((operation) => !operation || typeof operation.operation !== "string")) {
+    throw new TypeError("Evidence envelope transform operations require operation strings")
   }
   if (
     render.marksIntended !== undefined &&

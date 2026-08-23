@@ -104,7 +104,22 @@ export interface ChartAccessContract {
   evidence: ChartAccessContractEvidence
 }
 
-const NAVIGATION_SUPPORTED = new Set(["LineChart", "BarChart"])
+/**
+ * Components for which `buildNavigationTree()` constructs a structured tree.
+ * Mirrors the family sets dispatched by the navigation builder so capability
+ * reporting cannot drift from the actual implementation.
+ */
+const NAVIGATION_SUPPORTED = new Set([
+  "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
+  "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram",
+  "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",
+  "LineChart", "AreaChart", "StackedAreaChart", "DifferenceChart",
+  "Scatterplot", "BubbleChart", "ConnectedScatterplot", "QuadrantChart",
+  "MultiAxisLineChart", "MinimapChart",
+  "BarChart", "StackedBarChart", "GroupedBarChart", "DotPlot",
+  "PieChart", "DonutChart", "FunnelChart",
+  "Histogram", "BoxPlot", "ViolinPlot", "RidgelinePlot", "SwarmPlot",
+])
 const TABLE_UNSUPPORTED = new Set(["BigNumber"])
 
 function supportsAccessibleTable(component: string, props: Record<string, unknown>): boolean {
@@ -175,7 +190,7 @@ export function createChartAccessContract({
       ...(hasText(props.title) ? { title: props.title } : {}),
       ...(hasText(props.description) ? { description: props.description } : {}),
       ...(hasText(props.summary) ? { summary: props.summary } : {}),
-      accessibleTable: props.accessibleTable !== false,
+      accessibleTable: supportsAccessibleTable(component, props),
     },
     keyboard: {
       markNavigation: "built-in",

@@ -25,4 +25,4 @@ export {
   BAR_CHART_ACCESS_CONTRACT,
   LINE_CHART_ACCESS_CONTRACT,
   REALTIME_LINE_CHART_ACCESS_CONTRACT,
-} from "./access/chartAccessContracts.generated"
+} from "./access/chartAccessContractFixtures"

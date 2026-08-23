@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { renderChartWithEvidence } from "../server/renderToStaticSVG"
+import { createChartAccessContract } from "../access/chartAccessContract"
 import {
   CHART_EVIDENCE_ENVELOPE_VERSION,
   fromEvidenceEnvelope,
@@ -100,6 +101,35 @@ describe("ChartEvidenceEnvelope@1", () => {
       edges: [{ source: "a", target: "b" }],
     })
     expect(envelope.input.rowCount).toBe(3)
+  })
+
+  it("redacts raw datum from caller-supplied access contracts", () => {
+    const access = createChartAccessContract({
+      component: "LineChart",
+      props: lineProps,
+      options: { navigable: true },
+    })
+    const envelope = toEvidenceEnvelope("LineChart", lineProps, {
+      accessContract: access,
+    })
+
+    expect(JSON.stringify(envelope.access.navigation.tree ?? {})).not.toContain(
+      '"datum":'
+    )
+  })
+
+  it("distinguishes value-component inputs and rejects invalid modes", () => {
+    const left = toEvidenceEnvelope("BigNumber", { value: 10 })
+    const right = toEvidenceEnvelope("BigNumber", { value: 20 })
+    expect(left.input.hash).not.toBe(right.input.hash)
+
+    const malformed = toEvidenceEnvelope("LineChart", lineProps)
+    expect(() =>
+      fromEvidenceEnvelope({
+        ...malformed,
+        render: { ...malformed.render, mode: "html" },
+      })
+    ).toThrow(TypeError)
   })
 
   it("round-trips through fromEvidenceEnvelope and rejects malformed input", () => {

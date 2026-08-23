@@ -4,7 +4,7 @@ import {
   BAR_CHART_ACCESS_CONTRACT,
   LINE_CHART_ACCESS_CONTRACT,
   REALTIME_LINE_CHART_ACCESS_CONTRACT,
-} from "./chartAccessContracts.generated"
+} from "./chartAccessContractFixtures"
 import {
   CHART_ACCESS_CONTRACT_VERSION,
   createChartAccessContract,
@@ -31,6 +31,16 @@ describe("ChartAccessContract@1", () => {
     )
     expect(LINE_CHART_ACCESS_CONTRACT.ssr.supported).toBe(true)
     expect(LINE_CHART_ACCESS_CONTRACT.streamStatus.supported).toBe(false)
+  })
+
+  it("does not claim table support for BigNumber", () => {
+    const contract = createChartAccessContract({
+      component: "BigNumber",
+      props: { value: 42 },
+    })
+
+    expect(contract.text.accessibleTable).toBe(false)
+    expect(contract.table.enabled).toBe(false)
   })
 
   it("preserves category/value semantics for BarChart navigation", () => {

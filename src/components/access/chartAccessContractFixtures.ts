@@ -1,9 +1,9 @@
 /**
  * Baseline access contracts for the first three covered charts.
  *
- * These are generated from representative configurations so consumers can see
- * the shipped contract without constructing chart props. Regeneration and
- * richer fixtures are part of the Week 1 follow-up.
+ * These are explicitly maintained representative fixtures, not generated
+ * artifacts. They are reviewed with the access contract and may be expanded as
+ * coverage grows.
  */
 import {
   createChartAccessContract,
