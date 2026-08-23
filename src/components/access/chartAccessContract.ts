@@ -105,6 +105,12 @@ export interface ChartAccessContract {
 }
 
 const NAVIGATION_SUPPORTED = new Set(["LineChart", "BarChart"])
+const TABLE_UNSUPPORTED = new Set(["BigNumber"])
+
+function supportsAccessibleTable(component: string, props: Record<string, unknown>): boolean {
+  if (TABLE_UNSUPPORTED.has(component)) return false
+  return props.accessibleTable !== false
+}
 const DEFAULT_STREAM_HISTORY_LIMIT = 5
 
 function hasText(value: unknown): value is string {
@@ -146,7 +152,7 @@ export function createChartAccessContract({
     ...(options.locale ? { locale: options.locale } : {}),
   })
   const navigationSupported = NAVIGATION_SUPPORTED.has(component)
-  const tree = navigationSupported
+  const tree = navigationSupported && options.navigable !== false
     ? buildNavigationTree(component, props as never, {
         ...(options.locale ? { locale: options.locale } : {}),
       })
@@ -190,7 +196,7 @@ export function createChartAccessContract({
         : {}),
     },
     table: {
-      enabled: props.accessibleTable !== false,
+      enabled: supportsAccessibleTable(component, props),
       source: "scene",
       pagination: "built-in",
     },

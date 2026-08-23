@@ -2435,7 +2435,10 @@ async function improveChartHandler(args: {
   })
   const { proposals: variants } = rankVariantProposals(args.component, profile, { intent })
   const accessibility = accessibilityRecommendation(args.component, args.props, data)
-  const evidenceFragment = toEvidenceEnvelope(args.component, args.props, {
+  const evidenceProps = Array.isArray(args.data)
+    ? { ...args.props, data }
+    : args.props
+  const evidenceFragment = toEvidenceEnvelope(args.component, evidenceProps, {
     surfaceVersion: "mcp-improve-chart",
     knownGaps: ["Static analysis only; no render evidence was requested."],
   })

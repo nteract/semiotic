@@ -282,7 +282,15 @@ function redactProfileForEnvelope(profile: unknown): unknown {
   if (!profile || typeof profile !== "object") return profile
   const source = profile as Record<string, unknown>
   const output: Record<string, unknown> = { ...source }
-  for (const key of ["data", "rawInput", "network", "hierarchy", "geo", "numericFields"]) {
+  for (const key of [
+    "data",
+    "rawInput",
+    "sample",
+    "numericFields",
+    "network",
+    "hierarchy",
+    "geo",
+  ]) {
     delete output[key]
   }
   if (output.candidates && typeof output.candidates === "object") {
@@ -291,26 +299,92 @@ function redactProfileForEnvelope(profile: unknown): unknown {
   return output
 }
 
+/** Recursively remove raw source records from a navigation tree. */
+function redactNavigationTree(tree: unknown): unknown {
+  if (Array.isArray(tree)) return tree.map(redactNavigationTree)
+  if (!tree || typeof tree !== "object") return tree
+  const output = { ...(tree as Record<string, unknown>) }
+  delete output.datum
+  if (Array.isArray(output.children)) {
+    output.children = output.children.map(redactNavigationTree)
+  }
+  return output
+}
+
+/**
+ * Normalize the chart's primary source records across supported data shapes.
+ * Used for count and integrity hashing only; records are never stored.
+ */
+function normalizeSourceRecords(
+  component: string,
+  props: Record<string, unknown>
+): ReadonlyArray<unknown> {
+  if (Array.isArray(props.data)) return props.data
+  if (
+    component === "ForceDirectedGraph" ||
+    component === "SankeyDiagram" ||
+    component === "ProcessSankey" ||
+    component === "ChordDiagram"
+  ) {
+    return [
+      ...(Array.isArray(props.nodes) ? props.nodes : []),
+      ...(Array.isArray(props.edges) ? props.edges : []),
+    ]
+  }
+  if (component === "ChoroplethMap" || component === "ProportionalSymbolMap") {
+    return Array.isArray(props.features)
+      ? props.features
+      : Array.isArray(props.points)
+        ? props.points
+        : []
+  }
+  if (component === "FlowMap") {
+    return Array.isArray(props.flows)
+      ? props.flows
+      : Array.isArray(props.points)
+        ? props.points
+        : []
+  }
+  if (
+    component === "TreeDiagram" ||
+    component === "Treemap" ||
+    component === "CirclePack"
+  ) {
+    return props.hierarchy && typeof props.hierarchy === "object"
+      ? [props.hierarchy]
+      : []
+  }
+  return []
+}
+
 /** Assemble a versioned evidence envelope from existing Semiotic payloads. */
 export function toEvidenceEnvelope(
   component: string,
   props: Record<string, unknown>,
   options: EvidenceEnvelopeOptions = {}
 ): ChartEvidenceEnvelope {
-  const rows = Array.isArray(props.data)
-    ? (props.data as unknown[])
-    : []
+  const rows = normalizeSourceRecords(component, props)
   const profile = profileData(rows as ReadonlyArray<Datum>, {
     rawInput: props,
   })
+  const inputHash = stableEvidenceHash({
+    component,
+    rowCount: rows.length,
+    records: rows,
+  })
   const portableProfile = redactProfileForEnvelope(profile)
   const grounding = buildReaderGrounding(component, props as Datum)
+  if (grounding.structure) {
+    const redacted = redactNavigationTree(grounding.structure) as ChartReaderGrounding["structure"]
+    grounding.structure = redacted
+  }
   const access =
     options.accessContract ??
     createChartAccessContract({
       component,
       props,
       options: {
+        navigable: false,
         inChartContainer: options.inChartContainer === true,
         streamStatus: options.streamStatus,
         streamHistoryLimit: options.streamHistoryLimit,
@@ -323,10 +397,6 @@ export function toEvidenceEnvelope(
     intended: intendedMarks,
     observed: observedMarks,
     evidence: options.ssrEvidence,
-  })
-  const inputHash = stableEvidenceHash({
-    rowCount: rows.length,
-    profile: portableProfile,
   })
   const modalityChecks = options.modalityChecks ?? {}
   const vision = modalityChecks.vision ?? { observations: [] }
@@ -458,7 +528,7 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!Array.isArray(transform.operations)) {
     throw new TypeError("Evidence envelope transform requires operations array")
   }
-  if (!render.mode) {
+  if (!["svg", "canvas", "png", "not-rendered"].includes(render.mode)) {
     throw new TypeError("Evidence envelope render requires mode")
   }
   const modality = envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]

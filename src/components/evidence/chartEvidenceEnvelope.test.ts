@@ -61,6 +61,47 @@ describe("ChartEvidenceEnvelope@1", () => {
     expect(accessibilityAudit?.ok).toBe(true)
   })
 
+  it("redacts raw records from profile samples and navigation trees", () => {
+    const envelope = toEvidenceEnvelope("LineChart", {
+      ...lineProps,
+      title: "Secret dataset",
+    })
+    const serialized = JSON.stringify(envelope)
+
+    expect(serialized).not.toContain('"secret"')
+    expect(JSON.stringify(envelope.input.profile)).not.toContain(
+      '"sample":'
+    )
+    expect(JSON.stringify(envelope.access.navigation.tree ?? {})).not.toContain(
+      '"datum":'
+    )
+    expect(JSON.stringify(envelope.access.navigation.tree ?? {})).not.toContain(
+      '"datum":'
+    )
+  })
+
+  it("hashes normalized source records before discarding them", () => {
+    const left = toEvidenceEnvelope("LineChart", {
+      ...lineProps,
+      data: [...lineData, { date: "2026-04-01", value: 99 }],
+    })
+    const right = toEvidenceEnvelope("LineChart", {
+      ...lineProps,
+      data: [...lineData, { date: "2026-04-01", value: 100 }],
+    })
+
+    expect(left.input.hash).not.toBe(right.input.hash)
+    expect(JSON.stringify(left.input.profile)).not.toContain('"sample":')
+  })
+
+  it("counts network records rather than reporting zero rows", () => {
+    const envelope = toEvidenceEnvelope("ForceDirectedGraph", {
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ source: "a", target: "b" }],
+    })
+    expect(envelope.input.rowCount).toBe(3)
+  })
+
   it("round-trips through fromEvidenceEnvelope and rejects malformed input", () => {
     const { evidence } = renderChartWithEvidence("LineChart", {
       ...lineProps,
