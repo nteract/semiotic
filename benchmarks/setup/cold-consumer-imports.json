@@ -184,6 +184,24 @@
       "packedPackageInputFiles": 2
     },
     {
+      "exportKey": "./access",
+      "importPath": "semiotic/access",
+      "symbol": "createChartAccessContract",
+      "platform": "browser",
+      "rawBytes": 94415,
+      "gzipBytes": 29703,
+      "packedPackageInputFiles": 4
+    },
+    {
+      "exportKey": "./evidence",
+      "importPath": "semiotic/evidence",
+      "symbol": "toEvidenceEnvelope",
+      "platform": "browser",
+      "rawBytes": 117879,
+      "gzipBytes": 38671,
+      "packedPackageInputFiles": 6
+    },
+    {
       "exportKey": "./data",
       "importPath": "semiotic/data",
       "symbol": "bin",
@@ -242,18 +260,18 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 34621,
-      "gzipBytes": 9354,
-      "packedPackageInputFiles": 17
+      "rawBytes": 34620,
+      "gzipBytes": 9350,
+      "packedPackageInputFiles": 21
     },
     {
       "exportKey": "./utils/core",
       "importPath": "semiotic/utils/core",
       "symbol": "smartTickFormat",
       "platform": "browser",
-      "rawBytes": 27788,
-      "gzipBytes": 7005,
-      "packedPackageInputFiles": 11
+      "rawBytes": 27792,
+      "gzipBytes": 6999,
+      "packedPackageInputFiles": 15
     },
     {
       "exportKey": "./utils/react",
@@ -271,7 +289,7 @@
       "platform": "browser",
       "rawBytes": 4038,
       "gzipBytes": 1742,
-      "packedPackageInputFiles": 12
+      "packedPackageInputFiles": 13
     },
     {
       "exportKey": "./recipes/core",
@@ -280,7 +298,7 @@
       "platform": "browser",
       "rawBytes": 4038,
       "gzipBytes": 1742,
-      "packedPackageInputFiles": 5
+      "packedPackageInputFiles": 6
     },
     {
       "exportKey": "./recipes/react",

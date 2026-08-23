@@ -21,7 +21,7 @@
     "*.spec.ts"
   ],
   "rules": [
-    "entry:/line,/xy,/ordinal,/network,/geo,/realtime/core,/realtime/react,/physics/rapier,/physics/matter,/server/node,/server/edge,/utils/core,/utils/react,/themes/core,/themes/react,/data,/ai/core,/recipes/core,/recipes/react,/value,/spec,/controls,/rough",
+    "entry:/line,/access,/evidence,/xy,/ordinal,/network,/geo,/realtime/core,/realtime/react,/physics/rapier,/physics/matter,/server/node,/server/edge,/utils/core|react,/themes/core|react,/data,/ai/core,/recipes/core|react,/value,/spec,/controls,/rough",
     "Use /line only when LineChart is the route's sole XY chart; use /xy for any other XY chart or mixed XY catalog.",
     "Default to HOC charts (LineChart, BarChart, Scatterplot, ForceDirectedGraph) over Stream Frames unless the HOC doesn't expose what you need. Stream Frames pass `RealtimeNode`/`RealtimeEdge` wrappers in callbacks, not raw data.",
     "Push-mode charts: omit the `data` prop entirely. Never pass `data={[]}` — that is static empty data and clears the frame on every render. Use a ref and call `ref.current.push(datum)` / `pushMany(rows)` / `clear()`.",

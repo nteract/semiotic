@@ -6,48 +6,66 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
-
-- **First-class `RadarChart`** — the new ordinal HOC accepts long-form
-  series-by-attribute data and draws connected radial polygons with point
-  markers. It supports legends, selection, linked hover, push mode, typed
-  accessors, category formatting, SSR/static rendering, AI schema discovery,
-  and a dedicated documentation page.
-- **First-class static `WaterfallChart`** — cumulative signed deltas now have a
-  controlled-data and push-capable HOC alongside `RealtimeWaterfallChart`.
-  Numeric, date, and categorical steps are supported, with stable
-  `pointIdAccessor` updates, positive/negative styling, connectors, selection,
-  linked hover, SSR/static rendering, AI schema discovery, and a
-  dedicated documentation page.
-- **Chart-level brushing on common HOCs** — `LineChart` exposes an x-axis
-  brush, `Scatterplot` an xy brush, and `BarChart` a value-axis brush through
-  `brush`, `linkedBrush`, and `onBrush`. `Histogram`'s existing brush contract
-  is now schema-visible, so serialized and MCP-authored charts can request it.
-- **Dense static Heatmap aggregation** — `Heatmap` now accepts
-  `heatmapAggregation="count" | "sum" | "mean"`, `heatmapXBins`, and
-  `heatmapYBins`. Numeric heatmaps with more than 4,096 occupied cells
-  automatically aggregate into a bounded grid when no explicit aggregation is
-  supplied.
-- **Expanded `renderChart()` coverage** — `RadarChart`, `WaterfallChart`,
-  `MultiAxisLineChart`, and `DistanceCartogram` now participate in the static
-  chart registry, including dual-axis formatters/colors and cartogram chrome.
-- **Legends for chord and hierarchy charts** — `ChordDiagram`, `TreeDiagram`,
-  `Treemap`, `CirclePack`, and `OrbitDiagram` now expose `showLegend`,
-  `legendPosition`, and shared highlight/isolate legend interaction. Automatic
-  legends appear when `colorBy` is present and reserve the correct plot margin.
-- **Per-component MCP schema resources** — agents can discover the compact
-  component catalog at `semiotic://schema-index` and read only the needed
-  schema, metadata, accessibility guidance, and behavior contracts from
-  `semiotic://schema/{component}`. The full `semiotic://schema` resource remains
-  available for bulk tooling.
-- **Explicit Stream Frame plugin bootstrap APIs** — direct-frame and SSR hosts
-  can call `registerBuiltInXYPlugins()` from `semiotic/xy`, the root entry, or
-  `semiotic/realtime/core`, and `registerBuiltInNetworkLayouts()` from
-  `semiotic/network` when marks/layouts must be ready before first render.
+- **`semiotic/line` one-chart boundary** — `LineChart` can now be imported from
+  a dedicated micro entry that excludes the rest of the XY catalog and direct
+  Stream Frames. The first-party graph measures about **120 KB gzip** and the
+  packed cold-consumer browser bundle about **139 KiB**, versus roughly 158 KB
+  and 167 KiB for `semiotic/xy`. The boundary has a strict 121 KB graph budget,
+  package/API snapshots, cold-consumer coverage, agent guidance, and mixed-facade
+  smoke coverage proving `semiotic/themes/react` and `semiotic/line` share the
+  CommonJS provider runtime.
+- **`ChartAccessContract@1`** — a stable inventory of authored title,
+  description, summary, exact-value table state, keyboard/focus support,
+  navigation composition, reduced-motion behavior, forced-colors behavior,
+  realtime status, SSR evidence capability, generated description, navigation
+  tree, and Chartability audit output.
+- **First-wave access baselines** — representative contracts are exposed for
+  `LineChart`, `BarChart`, and `RealtimeLineChart`. Navigation is explicitly
+  composed through `ChartContainer`; realtime status supports a bounded history
+  of five records plus a non-visible accessible description suitable for screen
+  readers or agents. Chrome is recorded as the authoritative human/browser-agent
+  baseline.
+- **`semiotic/access` public entrypoint** — stable ESM/CJS/types exports expose
+  the contract factory, types, schema version, and first-wave baseline contracts.
+  The access tooling graph measures about **33 KB gzip** with a 35 KB budget.
+- **`ChartEvidenceEnvelope@1`** — portable provenance ledger composing data
+  profile, deterministic input/transform hashes, render evidence, Chart Access
+  Contract, reader grounding, communicative act, claims, modality observations,
+  audits, limits, and privacy scope. Strict round-trip parsing rejects malformed
+  or version-incompatible envelopes.
+- **Evidence publication gate** — deterministic checks fail on missing render
+  evidence, empty/mismatched render parity, disabled required tables, blocking
+  accessibility findings, unsupported claims, and unresolved structured/vision
+  conflicts. Seeded fixtures prove healthy charts pass while empty, inaccessible,
+  and conflicted fixtures fail.
+- **Dependency-free evidence hashing** — SHA-256 over key-sorted JSON works in
+  browser, edge, Node, and RSC-compatible contexts without adding a crypto
+  dependency or retaining source rows by default.
+- **MCP evidence fragments** — `createChart`, `explainChart`, `improveChart`,
+  and `auditChart` now return compatible envelope or fragment sections alongside
+  existing diagnostics, grounding, render, accessibility, and repair payloads.
+- **`semiotic/evidence` public entrypoint** — stable exports for envelope
+  construction/parsing, stable hashing, publication gates, and associated types.
+  The evidence tooling graph measures about **47 KB gzip** with a 180 KB budget;
+  it stays off production chart-family graphs.
 
 ### Changed
-
+- **`LineChart` guidance and executable contracts now prefer `semiotic/line`**
+  when it is a route's only XY chart; `semiotic/xy` remains the family entry for
+  mixed XY catalogs. Chart Clinic, AI examples, Context7, Getting Started,
+  Migration docs, and the packed smoke probe were aligned. Moving LineChart into
+  the primary client identity graph costs the shared graph a few KB but prevents
+  split ThemeProvider, category-color, selection-store, and LinkedCharts context
+  instances.
+- **Additive public entries are compatibility-safe** — API compatibility now
+  generates previous-release snapshots using that release's own export inventory
+  and explicitly recognizes newly added stable entry points instead of expecting
+  their declarations in an older published tarball.
+- **Example overview language is mechanism-first** — all 61 example descriptions
+  now lead with what the reader manipulates or compares while preserving each
+  delivery format: dashboards, scrollytelling, maps, simulators, ISOTYPE,
+  physics instruments, linked views, and interactive essays.
 - **Chart HOCs load only their XY mark plugins** — scene builders and canvas
   painters now resolve through a registry instead of one eager family map.
   High-level HOCs register their own line/area/point/bar/heatmap/waterfall/etc.
@@ -84,7 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tiers plus the complete new-chart checklist.
 
 ### Fixed
-
 - **Docs routes recover from interrupted lazy-module loads** — failed Vite
   preloads now trigger one guarded refresh, and repeated failures show a usable
   reload action instead of leaving examples or other documentation routes on a

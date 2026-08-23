@@ -45,6 +45,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./access",
+      "path": "dist/semiotic-access.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-access.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-access.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-access.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-access.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-access.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./ai",
       "path": "dist/semiotic-ai.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -166,6 +197,37 @@
       "esm": true,
       "cjs": true,
       "types": "dist/semiotic-data.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./evidence",
+      "path": "dist/semiotic-evidence.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-evidence.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-evidence.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-evidence.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-evidence.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-evidence.d.ts"
     },
     {
       "kind": "javascript-module",
@@ -1104,6 +1166,13 @@
   "declarationRollup": {
     "pathToExports": [
       {
+        "path": "dist/semiotic-access.d.ts",
+        "exports": [
+          "./access"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
         "path": "dist/semiotic-ai-core.d.ts",
         "exports": [
           "./ai/core"
@@ -1128,6 +1197,13 @@
         "path": "dist/semiotic-data.d.ts",
         "exports": [
           "./data"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-evidence.d.ts",
+        "exports": [
+          "./evidence"
         ],
         "reason": "Public type entry from `exports` map"
       },

@@ -762,6 +762,8 @@ export {
   resolveMotionVector,
   deriveMotionVector
 } from "./charts/shared/motionEncoding"
+
+// Runtime-neutral motion encoding types shared by realtime and physics adapters.
 export type {
   MotionEncodingConstant,
   MotionEncodingAccessor,

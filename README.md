@@ -373,7 +373,7 @@ loadConversationArc(sink.load(), { enabled: false })
 
 ## Bundle Sizes
 
-Semiotic ships 30 stable JavaScript entry points (29 subpaths plus the root). **Don't import from `"semiotic"` unless you need everything** — use the smallest sub-path that matches your charts.
+Semiotic ships 32 stable JavaScript entry points (31 subpaths plus the root). **Don't import from `"semiotic"` unless you need everything** — use the smallest sub-path that matches your charts or tooling.
 
 The numbers below are **first-party artifact cost**: the gzip size of Semiotic's own code for each sub-path. They exclude React and other runtime dependencies, so they are not a prediction of a cold application bundle. Do not add artifact rows to estimate an app: dependency resolution and cross-import deduplication happen in the consumer bundler and are measured separately below.
 
@@ -382,6 +382,8 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
+| `semiotic/access` | **33 KB** | Chart Access Contract factory and first-wave baseline contracts |
+| `semiotic/evidence` | **46 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
 | `semiotic/line` | **135 KB** | LineChart only — one-chart micro boundary |
 | `semiotic/xy` | **165 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **129 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
@@ -393,11 +395,11 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/server` | **205 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **205 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/edge` | **209 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
-| `semiotic/utils` | **94 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
-| `semiotic/utils/core` | **87 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
+| `semiotic/utils` | **96 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
+| `semiotic/utils/core` | **89 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
 | `semiotic/recipes` | **90 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **82 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **83 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/react` | **7 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **7 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **7 KB** | Theme presets and token helpers |
@@ -448,6 +450,8 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { renderToImage } from "semiotic/server/node"` | node | **251.9 KiB** |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **244.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **38.6 KiB** |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **29.0 KiB** |
+| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **37.8 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **114.7 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** |
