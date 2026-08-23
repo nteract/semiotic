@@ -25,6 +25,8 @@ export interface EvidenceGateOptions {
   requireAccessTable?: boolean
   requireNavigation?: boolean
   failOnCrossModalConflicts?: boolean
+  /** Treat accessibility audit warnings as advisory rather than blocking. */
+  allowAccessibilityWarnings?: boolean
 }
 
 function finding(
@@ -101,19 +103,27 @@ export function evaluateEvidenceGate(
     )
   }
 
-  if (
-    envelope.audit.accessibility &&
-    typeof envelope.audit.accessibility === "object" &&
-    "ok" in envelope.audit.accessibility &&
-    envelope.audit.accessibility.ok === false
-  ) {
-    findings.push(
-      finding(
-        "audit.accessibility-blocking",
-        "error",
-        "Accessibility audit contains blocking failures."
+  const audit = envelope.audit.accessibility as
+    | { ok?: boolean; findings?: Array<{ critical?: boolean; status?: string }> }
+    | undefined
+  if (audit && typeof audit === "object") {
+    const blockingAccessibility =
+      audit.ok === false &&
+      (options.allowAccessibilityWarnings !== true ||
+        (audit.findings ?? []).some(
+          (item) => item.critical === true && item.status === "fail"
+        ))
+    if (blockingAccessibility) {
+      findings.push(
+        finding(
+          "audit.accessibility-blocking",
+          "error",
+          options.allowAccessibilityWarnings === true
+            ? "Accessibility audit contains critical failures."
+            : "Accessibility audit is not passing."
+        )
       )
-    )
+    }
   }
 
   if (failOnConflicts && envelope.modalityChecks.tandem.conflicts.length > 0) {

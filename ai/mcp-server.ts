@@ -2375,6 +2375,10 @@ async function createChartHandler(
   })
   const gate = evaluateEvidenceGate(evidenceEnvelope, {
     requireRenderEvidence: true,
+    // createChart proves render and structural access routes. Author-facing
+    // accessibility guidance remains advisory here because MCP callers do not
+    // own the host page's title/caption context.
+    allowAccessibilityWarnings: true,
   })
   if (!gate.ok) {
     return {
