@@ -43,6 +43,7 @@ import {
 import {
   DEFAULT_WIDTH,
   DEFAULT_HEIGHT,
+  EMPTY_GAUNTLET_PROPERTIES,
   CORE_KIND,
   buildLayout,
   buildProjectSpawns,
@@ -53,8 +54,7 @@ import {
   resolvePlacement,
   type GauntletBodyDatum,
   type GauntletEffect,
-  type GauntletProjectState,
-  type GauntletPropertyDefinition
+  type GauntletProjectState
 } from "./gauntletPhysics"
 import {
   buildGauntletCapacityControllers,
@@ -80,8 +80,6 @@ import type { GauntletChartProps } from "./gauntletChartProps"
 
 export * from "./gauntletPublic"
 
-const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
-
 /**
  * Physics-backed gauntlet: project core + property satellites through timed or
  * capacity-gated process events.
@@ -103,7 +101,6 @@ const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] = []
  *   events={[{ id: "done", gateId: "review", time: 2, effects: [{ popNegative: ["risk"] }] }]}
  *   showProjection />
  * ```
- *
  * Compose timed gates, capacity controls, staggered starts, and projections through the corresponding props.
  */
 export const GauntletChart = forwardRef(function GauntletChart<
@@ -369,7 +366,13 @@ export const GauntletChart = forwardRef(function GauntletChart<
     }),
     [frameProps.config?.colliders, frameProps.config?.kernel, layout, seed]
   )
-  const rerun = usePhysicsRerun(physicsConfig, rerunMS, paused, resetRunState)
+  const rerun = usePhysicsRerun(
+    physicsConfig,
+    rerunMS,
+    paused,
+    resetRunState,
+    props.onSimulationStateChange
+  )
   // Capacity controllers own queue state, so a replay must construct fresh
   // controllers along with the new physics store.
   const capacityControllers = useMemo(
@@ -792,9 +795,6 @@ export const GauntletChart = forwardRef(function GauntletChart<
 }
 ;(GauntletChart as { displayName?: string }).displayName = "GauntletChart"
 
-/**
- * @deprecated Typo alias of {@link GauntletChart}. Use `GauntletChart` instead.
- * Removed in the next major version.
- */
+/** @deprecated Typo alias. Use {@link GauntletChart}; removed next major. */
 export const GuantletChart = GauntletChart
 export default GauntletChart

@@ -1,6 +1,6 @@
 "use client"
 
-// Semiotic AI — curated HOC-only surface for AI code generation
+// Semiotic AI — curated chart and portable-recipe surface for AI code generation
 // Import: import { LineChart, BarChart, ... } from "semiotic/ai"
 
 export { LineChart } from "./charts/xy/LineChart"
@@ -625,8 +625,7 @@ export {
   unregisterRecipeLayout,
   getRecipeLayout
 } from "./ai/chartRecipeRegistry"
-export { ChartRecipe } from "./ai/ChartRecipe"
-export type { ChartRecipeProps } from "./ai/ChartRecipe"
+export * from "./ai/builtInChartRecipePublic"
 export {
   recipeToChartCapability,
   resolveRecipeRoleField

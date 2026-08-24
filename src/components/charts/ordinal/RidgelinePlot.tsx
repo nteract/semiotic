@@ -19,6 +19,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -33,6 +34,8 @@ export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseCh
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered summary styling; fieldless thresholds use each category's median. Statistical fields include `n`, `min`, `q1`, `median`, `q3`, `max`, and `mean`. */
+  styleRules?: StyleRule[]
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
@@ -110,7 +113,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", bins = 20, amplitude = 1.5,
     valueFormat,
-    colorBy, colorScheme, categoryPadding = 5,
+    colorBy, colorScheme, styleRules, categoryPadding = 5,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -166,6 +169,10 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown))
+    return (d: Datum) => typeof d.median === "number" ? d.median : readValue(d)
+  }, [valueAccessor])
 
   // Consolidated summary-style — same recipe as BoxPlot/ViolinPlot/
   // Histogram. Lower fillOpacity (0.5) since ridges stack and
@@ -180,6 +187,8 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { fillOpacity: 0.5 },
     linkStrokeToFill: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])

@@ -1,7 +1,11 @@
-
 import { pointCanvasRenderer } from "./pointCanvasRenderer"
 import { scaleLinear } from "d3-scale"
-import type { PointSceneNode, SceneNode, StreamScales, StreamLayout } from "../types"
+import type {
+  PointSceneNode,
+  SceneNode,
+  StreamScales,
+  StreamLayout
+} from "../types"
 import { createMockCanvasContext as _createCtx } from "../../../test-utils/canvasMock"
 
 function createMockCanvasContext() {
@@ -19,7 +23,9 @@ function makeLayout(): StreamLayout {
   return { width: 500, height: 300 }
 }
 
-function makePointNode(overrides: Partial<PointSceneNode> = {}): PointSceneNode {
+function makePointNode(
+  overrides: Partial<PointSceneNode> = {}
+): PointSceneNode {
   return {
     type: "point",
     x: 100,
@@ -91,7 +97,13 @@ describe("pointCanvasRenderer", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []
     let _alpha = 1
-    Object.defineProperty(ctx, "globalAlpha", { get: () => _alpha, set: (v: number) => { _alpha = v; alphaValues.push(v) } })
+    Object.defineProperty(ctx, "globalAlpha", {
+      get: () => _alpha,
+      set: (v: number) => {
+        _alpha = v
+        alphaValues.push(v)
+      }
+    })
     const node = makePointNode({ style: { fill: "#4e79a7", opacity: 0.5 } })
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
@@ -103,7 +115,13 @@ describe("pointCanvasRenderer", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []
     let _alpha = 1
-    Object.defineProperty(ctx, "globalAlpha", { get: () => _alpha, set: (v: number) => { _alpha = v; alphaValues.push(v) } })
+    Object.defineProperty(ctx, "globalAlpha", {
+      get: () => _alpha,
+      set: (v: number) => {
+        _alpha = v
+        alphaValues.push(v)
+      }
+    })
     const node = makePointNode({ style: { fill: "#4e79a7", fillOpacity: 0.3 } })
 
     pointCanvasRenderer(ctx, [node], makeScales(), makeLayout())
@@ -166,7 +184,10 @@ describe("pointCanvasRenderer", () => {
     const ctx = createMockCanvasContext()
     const rectNode: SceneNode = {
       type: "rect",
-      x: 0, y: 0, w: 10, h: 10,
+      x: 0,
+      y: 0,
+      w: 10,
+      h: 10,
       style: { fill: "#ccc" },
       datum: {}
     }
@@ -192,11 +213,31 @@ describe("pointCanvasRenderer", () => {
     expect(ctx.fill).toHaveBeenCalledTimes(1)
   })
 
+  it("bounds opaque same-style paths for dense point clouds", () => {
+    const ctx = createMockCanvasContext()
+    const nodes = Array.from({ length: 2_049 }, (_, index) =>
+      makePointNode({ x: index % 640, y: Math.floor(index / 640) })
+    )
+
+    pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
+
+    expect(ctx.arc).toHaveBeenCalledTimes(2_049)
+    expect(ctx.fill).toHaveBeenCalledTimes(2)
+  })
+
   it("does not batch translucent points so overlapping fills accumulate", () => {
     const ctx = createMockCanvasContext()
     const nodes = [
-      makePointNode({ x: 10, y: 20, style: { fill: "#4e79a7", fillOpacity: 0.8 } }),
-      makePointNode({ x: 12, y: 22, style: { fill: "#4e79a7", fillOpacity: 0.8 } }),
+      makePointNode({
+        x: 10,
+        y: 20,
+        style: { fill: "#4e79a7", fillOpacity: 0.8 }
+      }),
+      makePointNode({
+        x: 12,
+        y: 22,
+        style: { fill: "#4e79a7", fillOpacity: 0.8 }
+      })
     ]
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
     expect(ctx.fill).toHaveBeenCalledTimes(2)
@@ -206,13 +247,15 @@ describe("pointCanvasRenderer", () => {
     const ctx = createMockCanvasContext()
     const fills: unknown[] = []
     Object.defineProperty(ctx, "fillStyle", {
-      set: (v: unknown) => { fills.push(v) },
-      get: () => fills[fills.length - 1],
+      set: (v: unknown) => {
+        fills.push(v)
+      },
+      get: () => fills[fills.length - 1]
     })
     const nodes = [
       makePointNode({ x: 10, style: { fill: "#f00" } }),
       makePointNode({ x: 20, style: { fill: "#0f0" } }),
-      makePointNode({ x: 30, style: { fill: "#f00" } }),
+      makePointNode({ x: 30, style: { fill: "#f00" } })
     ]
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
     expect(fills).toEqual(["#f00", "#0f0", "#f00"])
@@ -225,7 +268,7 @@ describe("pointCanvasRenderer", () => {
     const hatchB = { type: "hatch", stroke: "#eee" }
     const nodes = [
       makePointNode({ x: 10, style: { fill: hatchA as never } }),
-      makePointNode({ x: 20, style: { fill: hatchB as never } }),
+      makePointNode({ x: 20, style: { fill: hatchB as never } })
     ]
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
     expect(ctx.fill).toHaveBeenCalledTimes(2)
@@ -270,7 +313,10 @@ describe("pointCanvasRenderer", () => {
       }
     })
 
-    const nodes = [makePointNode({ style: { fill: "#f00" } }), makePointNode({ style: { fill: "#0f0" } })]
+    const nodes = [
+      makePointNode({ style: { fill: "#f00" } }),
+      makePointNode({ style: { fill: "#0f0" } })
+    ]
     pointCanvasRenderer(ctx, nodes, makeScales(), makeLayout())
 
     // Every node honors the 0.5 base — not just the first (the bug was the

@@ -57,6 +57,11 @@ import {
   useRealtimeFrameHandle,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
+import {
+  composeStyleRules,
+  makeXYRuleContext,
+  type StyleRule,
+} from "../shared/styleRules"
 
 registerXYPlugin(waterfallXYPlugin)
 
@@ -129,6 +134,8 @@ export interface RealtimeWaterfallChartProps<
   opacity?: number
   /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
   cursor?: CSSProperties["cursor"]
+  /** Ordered data-aware bar styling. Rule `value`/`y` is the displayed delta. */
+  styleRules?: StyleRule[]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -212,7 +219,7 @@ export interface RealtimeWaterfallChartProps<
 export const RealtimeWaterfallChart = forwardRef(
   function RealtimeWaterfallChart<TDatum extends Datum = Datum>(
     props: RealtimeWaterfallChartProps<TDatum>,
-    ref: React.Ref<RealtimeFrameHandle>
+    ref: React.Ref<RealtimeFrameHandle<TDatum>>
   ) {
     const resolved = useRealtimeChartMode(props)
 
@@ -242,6 +249,7 @@ export const RealtimeWaterfallChart = forwardRef(
       strokeWidth,
       opacity,
       cursor,
+      styleRules,
       background,
       tooltipContent,
       tooltip,
@@ -391,8 +399,29 @@ export const RealtimeWaterfallChart = forwardRef(
       hoverSelectionHook ||
       legendState.legendSelectionHook ||
       activeSelectionHook
+    const waterfallRuleContext = useMemo(
+      () => makeXYRuleContext(
+        (timeAccessor ?? "time") as string | ((d: Datum) => unknown),
+        (valueAccessor ?? "value") as string | ((d: Datum) => unknown),
+      ),
+      [timeAccessor, valueAccessor],
+    )
+    const ruledBarStyle = useMemo(
+      () => composeStyleRules(undefined, styleRules, waterfallRuleContext),
+      [styleRules, waterfallRuleContext],
+    )
+    const resolvedBarStyle = useMemo(
+      () => (datum: Datum) => ({
+        ...ruledBarStyle(datum),
+        ...(stroke != null && { stroke }),
+        ...(strokeWidth != null && { strokeWidth }),
+        ...(opacity != null && { opacity }),
+        ...(cursor != null && { cursor }),
+      }),
+      [ruledBarStyle, stroke, strokeWidth, opacity, cursor],
+    )
     const interactiveBarStyle = useRealtimeSelectionStyle(
-      undefined,
+      resolvedBarStyle,
       [effectiveSelectionHook],
       selection
     )
@@ -463,9 +492,15 @@ export const RealtimeWaterfallChart = forwardRef(
     )
   }
 ) as unknown as {
+  /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeWaterfallChartProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
+  /** Typed refs retain the authored row through mutation and readback. */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeWaterfallChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }

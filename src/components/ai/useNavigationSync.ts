@@ -26,7 +26,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 export interface UseNavigationSyncOptions {
   /** The navigation tree (from `buildNavigationTree`). */
   tree: NavTreeNode
-  /** `chartId` set on the chart, so its hover/click can be matched back to a leaf. */
+  /** `chartId` set on the chart, so its hover/click can be matched back to a semantic node. */
   chartId?: string
   /**
    * Fields that identify a datum for highlighting + matching. Defaults to the
@@ -68,35 +68,43 @@ export interface UseNavigationSyncResult {
   onObservation: (observation: ChartObservation) => void
   /** Alias of `onObservation` for composing an externally supplied handler. */
   handleObservation: (observation: ChartObservation) => void
-  /** Nav-tree leaf ids that an annotation anchors to — mark these as "has a note". */
+  /** Nav-tree datum-node ids that an annotation anchors to — mark these as "has a note". */
   annotatedIds: Set<string>
   /**
    * Move the tree (and canvas highlight) to an annotation's anchored node.
    * Accepts an annotation object or its index in `annotations`. Returns `true`
-   * if the anchor resolved to a leaf. The reader lands on the anchored datum.
+   * if the anchor resolved to a datum node. The reader lands on the anchor.
    */
   focusAnnotation: (annotation: Datum | number) => boolean
 }
 
 const KEY_SEP = "\u0001"
 type NavigationObservationType = "hover" | "click" | "focus" | "activate"
-type NavigationObservation = Extract<ChartObservation, { type: NavigationObservationType }>
+type NavigationObservation = Extract<
+  ChartObservation,
+  { type: NavigationObservationType }
+>
 
 const DEFAULT_OBSERVE: ReadonlyArray<NavigationObservationType> = [
   "hover",
   "click",
   "focus",
-  "activate",
+  "activate"
 ]
 
 function isPrimitive(v: unknown): boolean {
-  return v == null || typeof v === "string" || typeof v === "number" || typeof v === "boolean"
+  return (
+    v == null ||
+    typeof v === "string" ||
+    typeof v === "number" ||
+    typeof v === "boolean"
+  )
 }
 
-function firstLeafDatum(node: NavTreeNode): Datum | null {
-  if (node.role === "datum" && node.datum) return node.datum
+function firstNavigationDatum(node: NavTreeNode): Datum | null {
+  if (node.datum) return node.datum
   for (const c of node.children ?? []) {
-    const d = firstLeafDatum(c)
+    const d = firstNavigationDatum(c)
     if (d) return d
   }
   return null
@@ -104,7 +112,9 @@ function firstLeafDatum(node: NavTreeNode): Datum | null {
 
 function matchKey(datum: Datum | null | undefined, fields: string[]): string {
   if (!datum) return ""
-  return fields.map((f) => String((datum as Record<string, unknown>)[f])).join(KEY_SEP)
+  return fields
+    .map((f) => String((datum as Record<string, unknown>)[f]))
+    .join(KEY_SEP)
 }
 
 function findTreeNode(node: NavTreeNode, id: string): NavTreeNode | null {
@@ -117,7 +127,7 @@ function findTreeNode(node: NavTreeNode, id: string): NavTreeNode | null {
 }
 
 function isNavigationObservation(
-  observation: ChartObservation,
+  observation: ChartObservation
 ): observation is NavigationObservation {
   return (
     observation.type === "hover" ||
@@ -145,7 +155,7 @@ function unwrapNavigationDatum(datum: Datum): Datum {
     "y1",
     "width",
     "height",
-    "value",
+    "value"
   ])
   const isNetworkEdge =
     hasNumericFields(["y0", "y1", "sankeyWidth", "value"]) &&
@@ -154,28 +164,57 @@ function unwrapNavigationDatum(datum: Datum): Datum {
   return isNetworkNode || isNetworkEdge ? (raw as Datum) : datum
 }
 
-export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigationSyncResult {
+/**
+ * Geo StreamFrames expose feature properties at the interactive mark level,
+ * while the authored navigation datum remains a GeoJSON Feature. Normalize
+ * both shapes to the same direct-field record so default matching and the
+ * chart selection predicate agree without making authors spell nested paths.
+ */
+function normalizeNavigationDatum(datum: Datum): Datum {
+  const unwrapped = unwrapNavigationDatum(datum)
+  const properties = unwrapped.properties
+  if (
+    !properties ||
+    typeof properties !== "object" ||
+    Array.isArray(properties)
+  ) {
+    return unwrapped
+  }
+  return { ...(properties as Datum), ...unwrapped }
+}
+
+export function useNavigationSync(
+  options: UseNavigationSyncOptions
+): UseNavigationSyncResult {
   const { tree, chartId, observe = DEFAULT_OBSERVE } = options
   // Default the selection name per-chart so multiple synced charts on one page
   // don't share a selection bus (which would cross-highlight). Explicit
   // `selectionName` still wins for intentional cross-chart linking.
   const selectionName =
-    options.selectionName ?? `__semiotic-nav-sync${chartId ? `:${chartId}` : ""}`
+    options.selectionName ??
+    `__semiotic-nav-sync${chartId ? `:${chartId}` : ""}`
 
-  // Match fields: explicit, or the primitive keys of the first leaf datum.
+  // Match fields: explicit, or the primitive keys of the first semantic datum.
+  // GeoJSON properties are flattened to match StreamGeoFrame's hover/style
+  // shape; hierarchy branches may own datums as well as terminal leaves.
   const matchFields = useMemo(() => {
     if (options.matchFields) return options.matchFields
-    const d = firstLeafDatum(tree)
+    const first = firstNavigationDatum(tree)
+    const d = first ? normalizeNavigationDatum(first) : null
     if (!d) return []
-    return Object.keys(d).filter((k) => !k.startsWith("_") && isPrimitive((d as Record<string, unknown>)[k]))
+    return Object.keys(d).filter(
+      (k) =>
+        !k.startsWith("_") && isPrimitive((d as Record<string, unknown>)[k])
+    )
   }, [options.matchFields, tree])
 
-  // matchKey → leaf id, so a hovered datum maps back to its tree node.
-  const leafByKey = useMemo(() => {
+  // matchKey → semantic node id, so a hovered mark maps back to its authored
+  // hierarchy branch or geographic region rather than only terminal leaves.
+  const nodeByKey = useMemo(() => {
     const map = new Map<string, string>()
     const walk = (node: NavTreeNode) => {
-      if (node.role === "datum" && node.datum) {
-        const k = matchKey(node.datum, matchFields)
+      if (node.datum) {
+        const k = matchKey(normalizeNavigationDatum(node.datum), matchFields)
         if (!map.has(k)) map.set(k, node.id)
       }
       for (const c of node.children ?? []) walk(c)
@@ -184,12 +223,19 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     return map
   }, [tree, matchFields])
 
-  const { selectPoints, clear } = useSelection({ name: selectionName, fields: matchFields })
+  const { selectPoints, clear } = useSelection({
+    name: selectionName,
+    fields: matchFields
+  })
   const observedTypes = useMemo<ChartObservation["type"][]>(
     () => [...observe, "hover-end"],
-    [observe],
+    [observe]
   )
-  const { latest } = useChartObserver({ chartId, types: observedTypes, limit: 1 })
+  const { latest } = useChartObserver({
+    chartId,
+    types: observedTypes,
+    limit: 1
+  })
 
   const [activeId, setActiveId] = useState<string>(tree.id)
   const activeIdRef = useRef(activeId)
@@ -207,85 +253,99 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     const previousNode = findTreeNode(previousTree, activeIdRef.current)
     const nextNode = findTreeNode(tree, activeIdRef.current)
     const keepsDatum =
-      previousNode?.role === "datum" &&
-      nextNode?.role === "datum" &&
-      previousNode.datum &&
-      nextNode.datum &&
+      previousNode?.datum &&
+      nextNode?.datum &&
       matchFields.length > 0 &&
-      matchKey(previousNode.datum, matchFields) ===
-        matchKey(nextNode.datum, matchFields)
+      matchKey(normalizeNavigationDatum(previousNode.datum), matchFields) ===
+        matchKey(normalizeNavigationDatum(nextNode.datum), matchFields)
     const keepsStructuralNode =
-      previousNode && nextNode && previousNode.role !== "datum" && nextNode.role !== "datum"
+      previousNode && nextNode && !previousNode.datum && !nextNode.datum
     if (keepsDatum || keepsStructuralNode) return
     setActiveId(tree.id)
     clear()
   }, [tree, clear, matchFields])
 
-  // tree → canvas: a datum node highlights its mark; a structural node clears it.
-  const onActiveChange = useCallback((node: NavTreeNode) => {
-    setActiveId(node.id)
-    if (node.role === "datum" && node.datum && matchFields.length > 0) {
-      const fieldValues: Record<string, unknown[]> = {}
-      for (const f of matchFields) fieldValues[f] = [(node.datum as Record<string, unknown>)[f]]
-      selectPoints(fieldValues)
-    } else {
-      clear()
-    }
-  }, [matchFields, selectPoints, clear])
+  // tree → canvas: any node carrying a datum highlights its mark. This includes
+  // hierarchy parents as well as terminal leaves; purely structural summaries
+  // clear the selection.
+  const onActiveChange = useCallback(
+    (node: NavTreeNode) => {
+      setActiveId(node.id)
+      if (node.datum && matchFields.length > 0) {
+        const datum = normalizeNavigationDatum(node.datum)
+        const fieldValues: Record<string, unknown[]> = {}
+        for (const f of matchFields) fieldValues[f] = [datum[f]]
+        selectPoints(fieldValues)
+      } else {
+        clear()
+      }
+    },
+    [matchFields, selectPoints, clear]
+  )
 
   // Annotation anchors → nav nodes. An anchored annotation carries the datum's
-  // matchFields, so it keys into `leafByKey` exactly like a hovered datum.
+  // matchFields, so it keys into `nodeByKey` exactly like a hovered datum.
   const annotations = options.annotations
   const annotatedIds = useMemo(() => {
     const ids = new Set<string>()
     if (matchFields.length === 0 || !annotations) return ids
     for (const a of annotations) {
-      const id = leafByKey.get(matchKey(a, matchFields))
+      const id = nodeByKey.get(
+        matchKey(normalizeNavigationDatum(a), matchFields)
+      )
       if (id) ids.add(id)
     }
     return ids
-  }, [annotations, leafByKey, matchFields])
+  }, [annotations, nodeByKey, matchFields])
 
-  // Jump the tree (and canvas highlight) to an annotation's anchored leaf — the
-  // reader "reaches" the anchor. Accepts the annotation or its index.
-  const focusAnnotation = useCallback((target: Datum | number): boolean => {
-    const annotation = typeof target === "number" ? annotations?.[target] : target
-    if (!annotation || matchFields.length === 0) return false
-    const id = leafByKey.get(matchKey(annotation, matchFields))
-    if (!id) return false
-    setActiveId(id)
-    const fieldValues: Record<string, unknown[]> = {}
-    for (const f of matchFields) fieldValues[f] = [(annotation as Record<string, unknown>)[f]]
-    selectPoints(fieldValues)
-    return true
-  }, [annotations, leafByKey, matchFields, selectPoints])
+  // Jump the tree (and canvas highlight) to an annotation's anchored datum —
+  // the reader "reaches" the anchor. Accepts the annotation or its index.
+  const focusAnnotation = useCallback(
+    (target: Datum | number): boolean => {
+      const annotation =
+        typeof target === "number" ? annotations?.[target] : target
+      if (!annotation || matchFields.length === 0) return false
+      const normalized = normalizeNavigationDatum(annotation)
+      const id = nodeByKey.get(matchKey(normalized, matchFields))
+      if (!id) return false
+      setActiveId(id)
+      const fieldValues: Record<string, unknown[]> = {}
+      for (const f of matchFields) fieldValues[f] = [normalized[f]]
+      selectPoints(fieldValues)
+      return true
+    },
+    [annotations, nodeByKey, matchFields, selectPoints]
+  )
 
   // canvas → tree: accept either an observation from the global store (the
   // default HOC path) or a raw frame's `onObservation` callback. The HOCs do
   // both with the same object, so remember it to avoid processing it twice.
   // hover-end remains sticky: leave the tree where the last datum placed it.
   const lastObsRef = useRef<ChartObservation | null>(null)
-  const onObservation = useCallback((observation: ChartObservation) => {
-    // Match useChartObserver's filter for callers that feed raw observations
-    // directly into the hook.
-    if (chartId && observation.chartId !== chartId) return
-    if (observation.type === "hover-end") {
+  const onObservation = useCallback(
+    (observation: ChartObservation) => {
+      // Match useChartObserver's filter for callers that feed raw observations
+      // directly into the hook.
+      if (chartId && observation.chartId !== chartId) return
+      if (observation.type === "hover-end") {
+        if (observation === lastObsRef.current) return
+        lastObsRef.current = observation
+        return
+      }
+      if (!isNavigationObservation(observation)) return
+      if (!observe.includes(observation.type)) return
       if (observation === lastObsRef.current) return
       lastObsRef.current = observation
-      return
-    }
-    if (!isNavigationObservation(observation)) return
-    if (!observe.includes(observation.type)) return
-    if (observation === lastObsRef.current) return
-    lastObsRef.current = observation
 
-    // No match fields → matchKey() is "" for every datum and leafByKey collapses
-    // to the first leaf; skip rather than jump to the wrong node.
-    if (matchFields.length === 0) return
-    const datum = unwrapNavigationDatum(observation.datum)
-    const id = leafByKey.get(matchKey(datum, matchFields))
-    if (id) setActiveId((currentId) => currentId === id ? currentId : id)
-  }, [chartId, observe, leafByKey, matchFields])
+      // No match fields → matchKey() is "" for every datum and nodeByKey collapses
+      // to the first node; skip rather than jump to the wrong one.
+      if (matchFields.length === 0) return
+      const datum = normalizeNavigationDatum(observation.datum)
+      const id = nodeByKey.get(matchKey(datum, matchFields))
+      if (id) setActiveId((currentId) => (currentId === id ? currentId : id))
+    },
+    [chartId, observe, nodeByKey, matchFields]
+  )
 
   // `onObservation` can legitimately be recreated when callers provide an
   // inline match-field list. Track store delivery separately from the shared
@@ -305,6 +365,6 @@ export function useNavigationSync(options: UseNavigationSyncOptions): UseNavigat
     onObservation,
     handleObservation: onObservation,
     annotatedIds,
-    focusAnnotation,
+    focusAnnotation
   }
 }

@@ -1,5 +1,61 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, type Locator } from "@playwright/test"
 import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
+
+async function readCanvasState(locator: Locator): Promise<string[]> {
+  return locator
+    .locator('canvas[aria-label], canvas[aria-hidden="true"]')
+    .evaluateAll((canvases) =>
+    canvases.map((node) => {
+      const canvas = node as HTMLCanvasElement
+      const context = canvas.getContext("2d")
+      if (!context) return `${canvas.width}x${canvas.height}:no-context`
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+      let hash = 2166136261
+      for (let i = 0; i < pixels.length; i++) {
+        hash ^= pixels[i]
+        hash = Math.imul(hash, 16777619)
+      }
+      return `${canvas.width}x${canvas.height}:${hash >>> 0}`
+    })
+    )
+}
+
+async function hoverEvidenceSource(page: Parameters<typeof waitForRafs>[0], source: Locator) {
+  const canvas = source.locator("canvas").first()
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error("linked-hover evidence source canvas bounding box unavailable")
+  await page.mouse.move(box.x + box.width * 0.27, box.y + box.height * 0.27)
+  await waitForRafs(page, 4)
+}
+
+async function proveLinkedHoverTargetsChanged(
+  page: Parameters<typeof waitForRafs>[0],
+  testCase: Locator,
+  sourceId: string,
+  targetIds: string[]
+) {
+  const before = new Map<string, string[]>()
+  for (const targetId of targetIds) {
+    const target = testCase.locator(`[data-linked-hover-chart="${targetId}"]`)
+    const state = await readCanvasState(target)
+    expect(state.length, `${targetId} must render a data canvas`).toBeGreaterThan(0)
+    before.set(targetId, state)
+  }
+
+  await hoverEvidenceSource(
+    page,
+    testCase.locator(`[data-linked-hover-chart="${sourceId}"]`)
+  )
+
+  for (const targetId of targetIds) {
+    const target = testCase.locator(`[data-linked-hover-chart="${targetId}"]`)
+    const after = await readCanvasState(target)
+    expect(
+      after,
+      `${targetId} must redraw when its linked-hover selection becomes active`
+    ).not.toEqual(before.get(targetId))
+  }
+}
 
 test.describe("Brush & Selection - Coordinated hover", () => {
   test.beforeEach(async ({ page }) => {
@@ -339,5 +395,202 @@ test.describe("Brush & Selection - Visual snapshots", () => {
     await expect(testCase).toHaveScreenshot("linked-hover-wave-one-hocs-state.png", {
       maxDiffPixels: 260,
     })
+  })
+
+  test("linked-hover changes every deterministic XY target", async ({ page }) => {
+    await waitForChartReady(page, "deterministic-xy-linked-hover")
+    const testCase = page.locator('[data-testid="deterministic-xy-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 8)
+
+    await proveLinkedHoverTargetsChanged(page, testCase, "cohort-source", [
+      "BubbleChart",
+      "BumpChart",
+      "CandlestickChart",
+      "ConnectedScatterplot",
+      "Heatmap",
+      "QuadrantChart",
+    ])
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-xy-cohort-state.png",
+      { maxDiffPixels: 600 }
+    )
+
+    await page.mouse.move(0, 0)
+    await waitForRafs(page, 3)
+    await proveLinkedHoverTargetsChanged(page, testCase, "multi-axis-source", [
+      "MultiAxisLineChart",
+    ])
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-xy-multi-axis-state.png",
+      { maxDiffPixels: 600 }
+    )
+
+    await page.mouse.move(0, 0)
+    await waitForRafs(page, 3)
+    await proveLinkedHoverTargetsChanged(page, testCase, "difference-source", [
+      "DifferenceChart",
+    ])
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-xy-difference-state.png",
+      { maxDiffPixels: 600 }
+    )
+  })
+
+  test("linked-hover changes every deterministic network target", async ({ page }) => {
+    await waitForChartReady(page, "deterministic-network-linked-hover")
+    const testCase = page.locator(
+      '[data-testid="deterministic-network-linked-hover"]'
+    )
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 8)
+
+    await proveLinkedHoverTargetsChanged(
+      page,
+      testCase,
+      "network-cohort-source",
+      [
+        "ChordDiagram",
+        "CirclePack",
+        "ForceDirectedGraph",
+        "OrbitDiagram",
+        "ProcessSankey",
+        "SankeyDiagram",
+        "TreeDiagram",
+        "Treemap",
+      ]
+    )
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-network-cohort-state.png",
+      { maxDiffPixels: 700 }
+    )
+  })
+
+  test("linked-hover changes every deterministic geo target", async ({ page }) => {
+    await waitForChartReady(page, "deterministic-geo-linked-hover")
+    const testCase = page.locator('[data-testid="deterministic-geo-linked-hover"]')
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 8)
+
+    await proveLinkedHoverTargetsChanged(page, testCase, "geo-cohort-source", [
+      "ChoroplethMap",
+      "DistanceCartogram",
+      "FlowMap",
+      "ProportionalSymbolMap",
+    ])
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-geo-cohort-state.png",
+      { maxDiffPixels: 600 }
+    )
+  })
+
+  test("linked-hover changes every remaining static ordinal target", async ({ page }) => {
+    await waitForChartReady(page, "deterministic-static-ordinal-linked-hover")
+    const testCase = page.locator(
+      '[data-testid="deterministic-static-ordinal-linked-hover"]'
+    )
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 8)
+
+    await proveLinkedHoverTargetsChanged(
+      page,
+      testCase,
+      "static-ordinal-source",
+      ["LikertChart", "SwimlaneChart"]
+    )
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-static-ordinal-state.png",
+      { maxDiffPixels: 500 }
+    )
+  })
+
+  test("linked-hover changes every realtime-family target after public ingestion", async ({ page }) => {
+    await waitForChartReady(page, "deterministic-realtime-linked-hover")
+    const testCase = page.locator(
+      '[data-testid="deterministic-realtime-linked-hover"]'
+    )
+    await expect(
+      testCase.locator('[data-realtime-cohort-ready="true"]')
+    ).toBeVisible()
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 10)
+
+    await proveLinkedHoverTargetsChanged(
+      page,
+      testCase,
+      "realtime-cohort-source",
+      [
+        "RealtimeHeatmap",
+        "RealtimeHistogram",
+        "RealtimeLineChart",
+        "RealtimeSwarmChart",
+        "RealtimeWaterfallChart",
+        "TemporalHistogram",
+      ]
+    )
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-realtime-cohort-state.png",
+      { maxDiffPixels: 700 }
+    )
+  })
+
+  test("linked-hover changes every settled-physics target after public readiness", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.reload()
+    await waitForChartReady(page, "deterministic-settled-physics-linked-hover")
+    const testCase = page.locator(
+      '[data-testid="deterministic-settled-physics-linked-hover"]'
+    )
+    await expect(
+      testCase.locator('[data-physics-settled-ready="true"]')
+    ).toBeVisible()
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 6)
+
+    await proveLinkedHoverTargetsChanged(
+      page,
+      testCase,
+      "physics-settled-source",
+      [
+        "CollisionSwarmChart",
+        "EventDropChart",
+        "GaltonBoardChart",
+        "UnitPileChart",
+      ]
+    )
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-settled-physics-state.png",
+      { maxDiffPixels: 800 }
+    )
+  })
+
+  test("linked-hover changes every authored-physics target after terminal readiness", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.reload()
+    await waitForChartReady(page, "deterministic-authored-physics-linked-hover")
+    const testCase = page.locator(
+      '[data-testid="deterministic-authored-physics-linked-hover"]'
+    )
+    await expect(
+      testCase.locator("[data-physics-authored-ready]")
+    ).toHaveAttribute("data-physics-authored-ready", "true")
+    await testCase.scrollIntoViewIfNeeded()
+    await waitForRafs(page, 6)
+
+    await proveLinkedHoverTargetsChanged(
+      page,
+      testCase,
+      "physics-authored-source",
+      [
+        "CrucibleChart",
+        "GauntletChart",
+        "PacketFlowChart",
+        "ProcessFlowChart",
+      ]
+    )
+    await expect(testCase).toHaveScreenshot(
+      "linked-hover-deterministic-authored-physics-state.png",
+      { maxDiffPixels: 900 }
+    )
   })
 })

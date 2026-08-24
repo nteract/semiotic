@@ -463,7 +463,8 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     physicsConfig,
     rerunMS,
     framePaused,
-    resetRunState
+    resetRunState,
+    props.onSimulationStateChange
   )
   const reportSettledRun = useCallback(() => {
     if (
@@ -801,7 +802,8 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     chartId: props.chartId,
     onObservation: props.onObservation,
     onClick: props.onClick,
-    onBodyHover: frameProps?.onBodyHover
+    onBodyHover: frameProps?.onBodyHover,
+    unwrapSourceDatum: true
   })
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     { ...props, onClick: undefined },

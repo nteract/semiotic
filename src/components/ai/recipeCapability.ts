@@ -102,8 +102,14 @@ export function resolveRecipeRoleField(
     case "temporal":
       return profile.primary.time ?? profile.primary.x
     case "nominal":
-    case "ordinal":
-      return profile.primary.category ?? profile.primary.series
+    case "ordinal": {
+      const identifiers = new Set(profile.identifiers ?? [])
+      return profile.candidates.category.find(
+        (candidate) =>
+          !identifiers.has(candidate.field) &&
+          !/(^id$|[_-]id$|id$|^key$)/i.test(candidate.field),
+      )?.field ?? profile.primary.series
+    }
     case "identifier": {
       const rows = rowsForSource(profile, role.source)
       const candidate = ["id", "key", "name"].find((field) =>
@@ -118,9 +124,44 @@ export function resolveRecipeRoleField(
   }
 }
 
+function resolveRecipeRoleFields(
+  recipe: ChartRecipe,
+  role: DataRoleDefinition,
+  profile: ChartDataProfile,
+): string[] {
+  if (!role.multiple) {
+    const field = resolveRecipeRoleField(recipe, role, profile)
+    return field ? [field] : []
+  }
+
+  const semanticType = role.semanticType
+  const identifiers = new Set(profile.identifiers ?? [])
+  const matching = Object.entries(profile.fields)
+    .filter(
+      ([field, summary]) =>
+        !identifiers.has(field) &&
+        !/(^id$|[_-]id$|id$|^key$)/i.test(field) &&
+        (semanticType === "quantitative"
+          ? summary.type === "numeric"
+          : semanticType === "temporal"
+            ? summary.type === "date"
+            : summary.type === "categorical"),
+    )
+    .map(([field]) => field)
+  return matching.slice(0, role.maximum ?? matching.length)
+}
+
 function recipeFit(recipe: ChartRecipe, profile: ChartDataProfile): string | null {
   for (const role of recipe.dataRoles) {
     if (role.required === false) continue
+    if (role.multiple) {
+      const fields = resolveRecipeRoleFields(recipe, role, profile)
+      const minimum = role.minimum ?? 1
+      if (fields.length < minimum) {
+        return `needs at least ${minimum} data fields for role "${role.role}" (${role.semanticType})`
+      }
+      continue
+    }
     const field = resolveRecipeRoleField(recipe, role, profile)
     if (!field) return `needs data role "${role.role}" (${role.semanticType})`
   }
@@ -141,6 +182,11 @@ function recipeProps(
 ): Record<string, unknown> {
   const layoutConfig: Record<string, unknown> = {}
   for (const role of recipe.dataRoles) {
+    if (role.multiple && role.accessor) {
+      const fields = resolveRecipeRoleFields(recipe, role, profile)
+      if (fields.length > 0) layoutConfig[role.accessor] = fields
+      continue
+    }
     const field = resolveRecipeRoleField(recipe, role, profile)
     if (field && role.accessor) layoutConfig[role.accessor] = field
   }
@@ -215,6 +261,12 @@ export function recipeToChartCapability(recipe: ChartRecipe): ChartCapability {
         : undefined
     ),
     recipe,
+    suggestionPropContract: {
+      componentKind: "chart-recipe",
+      commonChartProps: "supported",
+      headingProp: "title",
+      modeValues: ["primary", "context", "sparkline", "mobile"],
+    },
     positiveRationale,
     whyCustom: {
       defaultAlternative: recipe.designContract.defaultAlternative,

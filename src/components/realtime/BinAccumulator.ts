@@ -4,6 +4,10 @@ export interface Bin {
   end: number
   total: number
   categories: Map<string, number>
+  /** Raw rows retained only when a scene needs aggregate selection provenance. */
+  rows?: Datum[]
+  /** Per-category raw rows for stacked aggregate marks. */
+  categoryRows?: Map<string, Datum[]>
 }
 
 export function computeBins(
@@ -11,7 +15,8 @@ export function computeBins(
   getTime: (d: Datum) => number,
   getValue: (d: Datum) => number,
   binSize: number,
-  getCategory?: (d: Datum) => string
+  getCategory?: (d: Datum) => string,
+  trackRows = false
 ): Map<number, Bin> {
   const bins = new Map<number, Bin>()
 
@@ -25,15 +30,30 @@ export function computeBins(
 
     let bin = bins.get(binStart)
     if (!bin) {
-      bin = { start: binStart, end: binStart + binSize, total: 0, categories: new Map() }
+      bin = {
+        start: binStart,
+        end: binStart + binSize,
+        total: 0,
+        categories: new Map(),
+        ...(trackRows ? { rows: [], categoryRows: new Map() } : {})
+      }
       bins.set(binStart, bin)
     }
 
     bin.total += v
+    bin.rows?.push(d)
 
     if (getCategory) {
       const cat = getCategory(d)
       bin.categories.set(cat, (bin.categories.get(cat) || 0) + v)
+      if (bin.categoryRows) {
+        let rows = bin.categoryRows.get(cat)
+        if (!rows) {
+          rows = []
+          bin.categoryRows.set(cat, rows)
+        }
+        rows.push(d)
+      }
     }
   }
 

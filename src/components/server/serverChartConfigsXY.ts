@@ -4,7 +4,7 @@ import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { createColorScale, DEFAULT_COLOR, getColor } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
-import { makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
+import { composeStyleRules, makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
@@ -27,6 +27,7 @@ import { resolveTheme } from "./themeResolver"
 import { resolveDownwardHistogramExtent } from "../charts/realtime/temporalHistogramConfig"
 import { prepareLineSeriesForSsr } from "../charts/shared/lineSeriesSsr"
 import type { AnomalyConfig, ForecastConfig } from "../charts/shared/statisticalOverlays"
+import { makeHistogramRuleContext } from "../charts/realtime/realtimeStyleRules"
 import { buildScatterPointStyle } from "./serverChartConfigsXYScatter"
 
 export { bubbleChart } from "./serverChartConfigsXYBubble"
@@ -284,6 +285,19 @@ export const temporalHistogram: ChartConfig = {
       ...(rest.cursor !== undefined && { cursor: rest.cursor }),
       ...(rest.gap !== undefined && { gap: rest.gap }),
     }
+    const ruledBarStyle = composeStyleRules(
+      undefined,
+      rest.styleRules as StyleRule[] | undefined,
+      makeHistogramRuleContext(),
+    )
+    const resolvedAreaStyle = (datum: Datum) => ({
+      ...ruledBarStyle(datum),
+      ...(!categoryAccessor && rest.fill !== undefined && { fill: rest.fill }),
+      ...(rest.stroke !== undefined && { stroke: rest.stroke }),
+      ...(rest.strokeWidth !== undefined && { strokeWidth: rest.strokeWidth }),
+      ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+      ...(rest.cursor !== undefined && { cursor: rest.cursor }),
+    })
     return {
       chartType: "bar",
       data: rows,
@@ -302,6 +316,7 @@ export const temporalHistogram: ChartConfig = {
       barColors: rest.colors || common.barColors,
       colorScheme: rest.colors || common.colorScheme,
       barStyle: common.barStyle || barStyle,
+      areaStyle: common.areaStyle || resolvedAreaStyle,
       showLegend: common.showLegend ?? Boolean(categoryAccessor),
     }
   },

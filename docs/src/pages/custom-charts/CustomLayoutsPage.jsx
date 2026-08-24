@@ -3,18 +3,26 @@ import { XYCustomChart } from "../../../../src/components/charts/custom/XYCustom
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
 import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
 import { StackedAreaChart } from "../../../../src/components/charts/xy/StackedAreaChart"
+import { ChartRecipe } from "../../../../src/components/ai/ChartRecipe"
+import { registerBuiltInChartRecipeLayouts } from "../../../../src/components/ai/builtInChartRecipeLayouts"
+import {
+  CALENDAR_HEATMAP_RECIPE_ID,
+  PARALLEL_COORDINATES_RECIPE_ID,
+  registerBuiltInChartRecipeManifests,
+} from "../../../../src/components/ai/builtInChartRecipes"
 import { waffleLayout } from "../../../../src/components/recipes/waffle"
-import { calendarLayout } from "../../../../src/components/recipes/calendar"
 import { flextreeLayout } from "../../../../src/components/recipes/flextree"
 import { marimekkoLayout } from "../../../../src/components/recipes/marimekko"
 import { bulletLayout } from "../../../../src/components/recipes/bullet"
-import { parallelCoordinatesLayout } from "../../../../src/components/recipes/parallelCoordinates"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 import { waffleRecipeManifest } from "./waffleRecipeManifest"
 import { IntentMark } from "../../../../src/components/ai/IntentMark"
 import { intentManifestFromRecipe } from "../../../../src/components/ai/intentManifest"
+
+registerBuiltInChartRecipeManifests()
+registerBuiltInChartRecipeLayouts()
 
 // ── Demo data ────────────────────────────────────────────────────────────
 
@@ -199,9 +207,9 @@ function ParallelCoordinatesDemo() {
 
   return (
     <>
-      <OrdinalCustomChart
+      <ChartRecipe
+        recipeId={PARALLEL_COORDINATES_RECIPE_ID}
         data={parallelCarsData}
-        layout={parallelCoordinatesLayout}
         layoutConfig={{
           fields: ["mpg", "hp", "weight", "accel", "year"],
           colorBy: "name",
@@ -517,9 +525,9 @@ import { waffleLayout } from "semiotic/recipes"
             border: "1px solid var(--border-color, #e0e0e0)",
           }}
         >
-          <XYCustomChart
+          <ChartRecipe
+            recipeId={CALENDAR_HEATMAP_RECIPE_ID}
             data={calendarData}
-            layout={calendarLayout}
             layoutConfig={{
               dateAccessor: "date",
               valueAccessor: "count",
@@ -531,6 +539,22 @@ import { waffleLayout } from "semiotic/recipes"
             margin={10}
           />
         </div>
+        <p>
+          This built-in portable recipe is also a first-class serialized component. Use the same
+          name with MCP or <code>renderChart</code>, while React renders it through the generic
+          <code>ChartRecipe</code> host:
+        </p>
+        <CodeBlock language="jsx">{`import { ChartRecipe } from "semiotic/ai"
+
+<ChartRecipe
+  recipeId="CalendarHeatmapRecipe"
+  data={dailyEvents}
+  layoutConfig={{ dateAccessor: "date", valueAccessor: "count", year: 2025 }}
+  title="Daily activity"
+  description="Daily activity by calendar week and weekday."
+  summary="Activity peaks in the final week of March."
+  accessibleTable
+/>`}</CodeBlock>
         <CodeBlock language="jsx">{`import { calendarLayout } from "semiotic/recipes"
 
 <XYCustomChart
@@ -877,6 +901,27 @@ import { marimekkoLayout } from "semiotic/recipes"
         >
           <ParallelCoordinatesDemo />
         </div>
+        <p>
+          <code>ParallelCoordinatesRecipe</code> is discoverable through the schema and chart
+          recommender. Its portable configuration requires at least two numeric fields; the lower
+          level layout remains available when a React-only callback such as <code>highlightFn</code>
+          is needed.
+        </p>
+        <CodeBlock language="jsx">{`import { ChartRecipe } from "semiotic/ai"
+
+<ChartRecipe
+  recipeId="ParallelCoordinatesRecipe"
+  data={cars}
+  layoutConfig={{
+    fields: ["mpg", "hp", "weight", "accel", "year"],
+    colorBy: "origin",
+    showPoints: true,
+  }}
+  title="Vehicle profiles"
+  description="Vehicle profiles compared across five independently scaled measures."
+  summary="Efficient vehicles generally trade horsepower for lower weight."
+  accessibleTable
+/>`}</CodeBlock>
         <CodeBlock language="jsx">{`import { parallelCoordinatesLayout } from "semiotic/recipes"
 
 function ParallelCoords({ cars }) {

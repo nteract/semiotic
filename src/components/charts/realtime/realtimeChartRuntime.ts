@@ -12,7 +12,23 @@ import {
   wrapStyleWithSelection,
   type SelectionHookResult
 } from "../shared/selectionUtils"
-import type { ChartMode, SelectionConfig } from "../shared/types"
+import type { ChartAccessor, ChartMode, SelectionConfig } from "../shared/types"
+
+/** Read a numeric time/value off a datum via accessor, with a field fallback. */
+export function readRealtimeNumber<TDatum extends Datum>(
+  datum: Datum,
+  accessor: ChartAccessor<TDatum, number> | undefined,
+  fallback: string
+): number | null {
+  const raw: unknown =
+    typeof accessor === "function"
+      ? accessor(datum)
+      : datum[String(accessor ?? fallback)]
+  if (raw == null) return null
+  if (raw instanceof Date) return raw.getTime()
+  const number = Number(raw)
+  return Number.isFinite(number) ? number : null
+}
 
 interface RealtimeModeProps extends Omit<ChartModeInput, "enableHover"> {
   mode?: ChartMode
@@ -40,8 +56,8 @@ export function useRealtimeChartMode(
   })
 }
 
-export function useRealtimeFrameHandle(
-  ref: React.Ref<RealtimeFrameHandle>,
+export function useRealtimeFrameHandle<TDatum extends Datum = Datum>(
+  ref: React.Ref<RealtimeFrameHandle<TDatum>>,
   frameRef: React.RefObject<StreamXYFrameHandle | null>
 ): void {
   React.useImperativeHandle(
@@ -49,10 +65,12 @@ export function useRealtimeFrameHandle(
     () => ({
       push: (point) => frameRef.current?.push(point),
       pushMany: (points) => frameRef.current?.pushMany(points),
-      remove: (id) => frameRef.current?.remove(id) ?? [],
-      update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
+      remove: (id) => (frameRef.current?.remove(id) ?? []) as TDatum[],
+      update: (id, updater) =>
+        (frameRef.current?.update(id, (datum) => updater(datum as TDatum)) ??
+          []) as TDatum[],
       clear: () => frameRef.current?.clear(),
-      getData: () => frameRef.current?.getData() ?? [],
+      getData: () => (frameRef.current?.getData() ?? []) as TDatum[],
       getScales: () => frameRef.current?.getScales() ?? null
     }),
     [frameRef]

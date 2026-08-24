@@ -40,7 +40,11 @@ export function renderHOCToSVG(
   }
 
   // Disable hover (not useful in static SVG)
-  const renderProps = { ...props, enableHover: false }
+  const renderProps = {
+    ...props,
+    ...(entry.recipeId && { recipeId: entry.recipeId }),
+    enableHover: false
+  }
 
   try {
     const element = React.createElement(entry.component, renderProps)

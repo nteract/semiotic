@@ -37,18 +37,30 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { parseCapabilityMatrix } from "./lib/capabilityMatrix.mjs"
+import { renderAccessCapabilitiesModule } from "./lib/accessCapabilities.mjs"
 import {
   PUSH_HANDLE_CALLEES,
-  sourceWiresPushHandle,
+  sourceWiresPushHandle
 } from "./lib/capabilitySourceChecks.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const ROOT = path.resolve(__dirname, "..")
 
-const SERVER_CONFIGS_PATH = path.join(ROOT, "src/components/server/serverChartConfigs.ts")
-const VALUE_RENDERERS_PATH = path.join(ROOT, "src/components/server/staticValue.tsx")
+const SERVER_CONFIGS_PATH = path.join(
+  ROOT,
+  "src/components/server/serverChartConfigs.ts"
+)
+const VALUE_RENDERERS_PATH = path.join(
+  ROOT,
+  "src/components/server/staticValue.tsx"
+)
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
+const ACCESS_CAPABILITIES_PATH = path.join(
+  ROOT,
+  "src/components/access/chartAccessCapabilities.generated.ts"
+)
+const AI_SCHEMA_PATH = path.join(ROOT, "ai/schema.json")
 
 // Parse via the shared helper so this script, the markdown
 // generator, and the JSON generator all read chartSpecs the same
@@ -70,11 +82,13 @@ const specEntries = matrix.map((e) => ({
   supportsSelection: e.selection,
   colorModel: e.colorModel,
   layoutMode: e.layoutMode,
-  specialFeatures: e.features,
+  specialFeatures: e.features
 }))
 
 if (specEntries.length === 0) {
-  console.error("✗ check-capabilities: no chart entries parsed from chartSpecs.ts")
+  console.error(
+    "✗ check-capabilities: no chart entries parsed from chartSpecs.ts"
+  )
   process.exit(1)
 }
 
@@ -82,16 +96,22 @@ if (specEntries.length === 0) {
 const configsSource = fs.readFileSync(SERVER_CONFIGS_PATH, "utf8")
 const ssrRegistered = new Set()
 const registryStart = configsSource.indexOf("export const CHART_CONFIGS")
-const registrySource = registryStart >= 0 ? configsSource.slice(registryStart) : configsSource
+const registrySource =
+  registryStart >= 0 ? configsSource.slice(registryStart) : configsSource
 for (const match of registrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
   ssrRegistered.add(match[1])
 }
 const valueRenderersSource = fs.readFileSync(VALUE_RENDERERS_PATH, "utf8")
-const valueRegistryStart = valueRenderersSource.indexOf("export const VALUE_RENDERERS")
-const valueRegistrySource = valueRegistryStart >= 0
-  ? valueRenderersSource.slice(valueRegistryStart)
-  : valueRenderersSource
-for (const match of valueRegistrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
+const valueRegistryStart = valueRenderersSource.indexOf(
+  "export const VALUE_RENDERERS"
+)
+const valueRegistrySource =
+  valueRegistryStart >= 0
+    ? valueRenderersSource.slice(valueRegistryStart)
+    : valueRenderersSource
+for (const match of valueRegistrySource.matchAll(
+  /^ {2}([A-Z][A-Za-z]+):\s/gm
+)) {
   ssrRegistered.add(match[1])
 }
 
@@ -101,28 +121,28 @@ for (const match of valueRegistrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) 
 const SERVER_CONFIG_ONLY = new Map([
   [
     "Sparkline",
-    "compact server-rendered line used by renderChart(); not a HOC chartSpecs entry",
+    "compact server-rendered line used by renderChart(); not a HOC chartSpecs entry"
   ],
   [
     "XYCustomChart",
-    "custom-layout escape hatch; named recipes register capability entries instead",
+    "custom-layout escape hatch; named recipes register capability entries instead"
   ],
   [
     "OrdinalCustomChart",
-    "custom-layout escape hatch; named recipes register capability entries instead",
+    "custom-layout escape hatch; named recipes register capability entries instead"
   ],
   [
     "NetworkCustomChart",
-    "custom-layout escape hatch; named recipes register capability entries instead",
+    "custom-layout escape hatch; named recipes register capability entries instead"
   ],
   [
     "GeoCustomChart",
-    "custom-layout escape hatch; named recipes register capability entries instead",
+    "custom-layout escape hatch; named recipes register capability entries instead"
   ],
   [
     "PhysicsCustomChart",
-    "custom-layout escape hatch; named recipes register capability entries instead",
-  ],
+    "custom-layout escape hatch; named recipes register capability entries instead"
+  ]
 ])
 
 // ── Index HOC source files for the push-API gate ───────────────────
@@ -148,11 +168,20 @@ for (const dir of HOC_DIRS) {
 const errors = []
 
 const specNames = new Set(specEntries.map((entry) => entry.name))
+const recipeNames = new Set(
+  JSON.parse(fs.readFileSync(AI_SCHEMA_PATH, "utf8")).tools
+    .filter((tool) => tool.function?.["x-semiotic-kind"] === "recipe")
+    .map((tool) => tool.function.name)
+)
 for (const chart of [...ssrRegistered].sort()) {
-  if (!specNames.has(chart) && !SERVER_CONFIG_ONLY.has(chart)) {
+  if (
+    !specNames.has(chart) &&
+    !recipeNames.has(chart) &&
+    !SERVER_CONFIG_ONLY.has(chart)
+  ) {
     errors.push(
       `✗ ${chart}: registered in serverChartConfigs.ts but absent from chartSpecs.ts. ` +
-      `Either add it to chartSpecs with capabilities.supportsSSR=true, or document it in SERVER_CONFIG_ONLY.`,
+        `Either add it to chartSpecs with capabilities.supportsSSR=true, or document it in SERVER_CONFIG_ONLY.`
     )
   }
 }
@@ -160,12 +189,12 @@ for (const chart of SERVER_CONFIG_ONLY.keys()) {
   if (specNames.has(chart)) {
     errors.push(
       `✗ ${chart}: appears in SERVER_CONFIG_ONLY but now exists in chartSpecs.ts. ` +
-      `Remove the server-only exception and let the SSR lock cover it.`,
+        `Remove the server-only exception and let the SSR lock cover it.`
     )
   }
   if (!ssrRegistered.has(chart)) {
     errors.push(
-      `✗ ${chart}: SERVER_CONFIG_ONLY entry is stale because CHART_CONFIGS no longer registers it.`,
+      `✗ ${chart}: SERVER_CONFIG_ONLY entry is stale because CHART_CONFIGS no longer registers it.`
     )
   }
 }
@@ -176,13 +205,13 @@ for (const e of specEntries) {
   if (e.supportsSSR && !inServerConfigs) {
     errors.push(
       `✗ ${e.name}: capabilities.supportsSSR=true but not in serverChartConfigs.ts CHART_CONFIGS. ` +
-      `Either add a server config entry, or set supportsSSR=false (and consider adding "hoc-ssr-only" to specialFeatures).`,
+        `Either add a server config entry, or set supportsSSR=false with a documented reason.`
     )
   }
   if (!e.supportsSSR && inServerConfigs) {
     errors.push(
       `✗ ${e.name}: registered in serverChartConfigs.ts but capabilities.supportsSSR=false. ` +
-      `Either set supportsSSR=true or remove the server config entry.`,
+        `Either set supportsSSR=true or remove the server config entry.`
     )
   }
 
@@ -220,8 +249,8 @@ for (const e of specEntries) {
     if (e.supportsSelection !== wiresPhysicsSelection) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsSelection=${e.supportsSelection} but ` +
-        `direct usePhysicsSelection wiring=${wiresPhysicsSelection}. ` +
-        `Physics HOCs must claim selection exactly when they call the shared physics selection bridge.`,
+          `direct usePhysicsSelection wiring=${wiresPhysicsSelection}. ` +
+          `Physics HOCs must claim selection exactly when they call the shared physics selection bridge.`
       )
     }
   }
@@ -234,8 +263,8 @@ for (const e of specEntries) {
     if (!sourceWiresPushHandle(source)) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsPush=true but does not wire a push handle ` +
-        `(${PUSH_HANDLE_CALLEES.join(", ")}). ` +
-        `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`,
+          `(${PUSH_HANDLE_CALLEES.join(", ")}). ` +
+          `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`
       )
     }
   }
@@ -260,8 +289,8 @@ for (const e of specEntries) {
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
-        `Either import useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, or set ` +
-        `supportsLinkedHover=false.`,
+          `Either import useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, or set ` +
+          `supportsLinkedHover=false.`
       )
     }
   }
@@ -278,13 +307,15 @@ for (const e of specEntries) {
       // A HOC can dispatch a custom layout by rendering a *CustomChart
       // wrapper and handing it a `layout` function — the wrapper's `layout`
       // prop IS the escape hatch. (e.g. BumpChart → <XYCustomChart layout={…}>.)
-      (/\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(source) &&
+      (/\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(
+        source
+      ) &&
         /\blayout=\{/.test(source))
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.layoutMode="custom" but does not reference any customLayout ` +
-        `escape hatch. Either wire customNetworkLayout/customXYLayout/customOrdinalLayout, or ` +
-        `set layoutMode="plugin".`,
+          `escape hatch. Either wire customNetworkLayout/customXYLayout/customOrdinalLayout, or ` +
+          `set layoutMode="plugin".`
       )
     }
   }
@@ -317,11 +348,19 @@ if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
       supportsSSR: e.supportsSSR,
       colorModel: e.colorModel,
       layoutMode: e.layoutMode,
-      specialFeatures: e.specialFeatures,
+      specialFeatures: e.specialFeatures
     }
   }
   // Sort keys to match the generator's output (category-then-name).
-  const ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
+  const ORDER = [
+    "xy",
+    "ordinal",
+    "network",
+    "geo",
+    "realtime",
+    "physics",
+    "value"
+  ]
   const sortedNames = Object.keys(expected).sort((a, b) => {
     const ai = ORDER.indexOf(expected[a].category)
     const bi = ORDER.indexOf(expected[b].category)
@@ -335,24 +374,52 @@ if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
   const actualCharts = actual?.charts ?? {}
   if (JSON.stringify(actualCharts) !== JSON.stringify(expectedSorted)) {
     errors.push(
-      "ai/capabilities.json drifted from chartSpecs. Regenerate with `npm run docs:capabilities`.",
+      "ai/capabilities.json drifted from chartSpecs. Regenerate with `npm run docs:capabilities`."
     )
   }
 } else {
   errors.push(
-    "ai/capabilities.json missing. Generate with `npm run docs:capabilities`.",
+    "ai/capabilities.json missing. Generate with `npm run docs:capabilities`."
+  )
+}
+
+// The public access/evidence entries use a compact generated map instead of
+// importing the full schema registry. Lock it to the same parsed source so
+// public claims cannot drift while the tooling bundle stays narrow.
+const expectedAccessCapabilities = renderAccessCapabilitiesModule(matrix)
+if (!fs.existsSync(ACCESS_CAPABILITIES_PATH)) {
+  errors.push(
+    "chartAccessCapabilities.generated.ts missing. Generate with `npm run docs:capabilities`."
+  )
+} else if (
+  fs.readFileSync(ACCESS_CAPABILITIES_PATH, "utf8") !==
+  expectedAccessCapabilities
+) {
+  errors.push(
+    "chartAccessCapabilities.generated.ts drifted from chartSpecs. Regenerate with `npm run docs:capabilities`."
   )
 }
 
 if (errors.length > 0) {
-  console.error(`✗ Capability claims drifted from runtime behavior (${errors.length} issue(s)):\n`)
+  console.error(
+    `✗ Capability claims drifted from runtime behavior (${errors.length} issue(s)):\n`
+  )
   for (const e of errors) console.error("  " + e)
-  console.error("\nFix: edit chartSpecs.ts capability tags or wire up the missing runtime support.")
+  console.error(
+    "\nFix: edit chartSpecs.ts capability tags or wire up the missing runtime support."
+  )
   process.exit(1)
 }
 
-console.log(`✓ Capability matrix locked — ${specEntries.length} chart spec(s) match runtime behavior.`)
+console.log(
+  `✓ Capability matrix locked — ${specEntries.length} chart spec(s) match runtime behavior.`
+)
 console.log(`  ${[...ssrRegistered].length} SSR-registered charts`)
-console.log(`  ${specEntries.filter((e) => e.supportsPush).length} charts claim push support`)
-console.log(`  ${specEntries.filter((e) => e.layoutMode === "custom").length} charts use custom layouts`)
+console.log(
+  `  ${specEntries.filter((e) => e.supportsPush).length} charts claim push support`
+)
+console.log(
+  `  ${specEntries.filter((e) => e.layoutMode === "custom").length} charts use custom layouts`
+)
 console.log(`  ai/capabilities.json in sync`)
+console.log(`  chartAccessCapabilities.generated.ts in sync`)

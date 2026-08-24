@@ -110,14 +110,14 @@ const networkStyleAfter = `<StreamNetworkFrame
   nodeStyle={d => ({ fill: d.data.cluster === "core" ? "#3b82f6" : "#94a3b8" })}
 />`
 
-const subpathDiff = `- import { LineChart } from "semiotic"             // full bundle (~165KB gz)
-+ import { LineChart } from "semiotic/line"         // LineChart only (~108KB gz current)
+const subpathDiff = `- import { LineChart } from "semiotic"             // full public facade
++ import { LineChart } from "semiotic/line"         // dedicated LineChart boundary
 
-- import { BarChart } from "semiotic"               // full bundle
-+ import { BarChart } from "semiotic/ordinal"       // ordinal only (~64KB gz)
+- import { BarChart } from "semiotic"               // full public facade
++ import { BarChart } from "semiotic/ordinal"       // ordinal chart family
 
-- import { SankeyDiagram } from "semiotic"          // full bundle
-+ import { SankeyDiagram } from "semiotic/network"  // network only (~51KB gz)`
+- import { SankeyDiagram } from "semiotic"          // full public facade
++ import { SankeyDiagram } from "semiotic/network"  // network chart family`
 
 const streamingSnippet = `import { useRef, useEffect } from "react"
 import { RealtimeLineChart } from "semiotic/realtime"
@@ -242,8 +242,8 @@ export default function MigrationPage() {
         3. The legacy frame names (<code>XYFrame</code>, <code>OrdinalFrame</code>,{" "}
         <code>NetworkFrame</code>) are <strong>not</strong> exported in v3 — start with a mechanical
         rename to the <code>Stream*</code> names. Past that, the work is incremental: pick up the
-        chart HOCs as you touch each chart, switch to sub-path imports for smaller bundles, and adopt
-        streaming or SSR features when you need them.
+        chart HOCs as you touch each chart, switch to sub-path imports for smaller bundles, and
+        adopt streaming or SSR features when you need them.
       </p>
 
       <Tip>
@@ -495,10 +495,10 @@ export default function MigrationPage() {
       <CodeBlock code={subpathDiff} language="diff" />
 
       <p>
-        Available entry points: <code>semiotic/line</code>, <code>semiotic/xy</code>, <code>semiotic/ordinal</code>,{" "}
-        <code>semiotic/network</code>, <code>semiotic/geo</code>, <code>semiotic/realtime</code>,{" "}
-        <code>semiotic/server</code>, <code>semiotic/recipes</code>, <code>semiotic/utils</code>,{" "}
-        <code>semiotic/themes</code>, <code>semiotic/data</code>.
+        Available entry points: <code>semiotic/line</code>, <code>semiotic/xy</code>,{" "}
+        <code>semiotic/ordinal</code>, <code>semiotic/network</code>, <code>semiotic/geo</code>,{" "}
+        <code>semiotic/realtime</code>, <code>semiotic/server</code>, <code>semiotic/recipes</code>,{" "}
+        <code>semiotic/utils</code>, <code>semiotic/themes</code>, <code>semiotic/data</code>.
       </p>
 
       {/* ---------------------------------------------------------------- */}
@@ -607,8 +607,8 @@ npx prettier --write ./src`}
       </h3>
 
       <p>
-        Direct rename. The <code>RealtimeNetworkFrame</code> export no longer exists in v3, so update
-        the import to <code>StreamNetworkFrame</code>.
+        Direct rename. The <code>RealtimeNetworkFrame</code> export no longer exists in v3, so
+        update the import to <code>StreamNetworkFrame</code>.
       </p>
 
       <h3 id="facet-controller">
@@ -707,8 +707,9 @@ npx prettier --write ./src`}
       <p>
         <code>ResponsiveXYFrame</code>, <code>ResponsiveOrdinalFrame</code>, and{" "}
         <code>ResponsiveNetworkFrame</code> are removed (not aliased). Pass{" "}
-        <code>responsiveWidth</code> / <code>responsiveHeight</code> on a base <code>Stream*Frame</code>,
-        or omit dimensions on an HOC — both measure the container automatically.
+        <code>responsiveWidth</code> / <code>responsiveHeight</code> on a base{" "}
+        <code>Stream*Frame</code>, or omit dimensions on an HOC — both measure the container
+        automatically.
       </p>
 
       {/* ---------------------------------------------------------------- */}
@@ -752,10 +753,9 @@ npx prettier --write ./src`}
 
       <p>
         v3 charts include a <code>"use client"</code> directive at their package boundary, so a
-        Server Component can import and render a non-streaming HOC directly while Next.js keeps
-        the page itself on the server. Add a thin app-owned client wrapper only for hooks,
-        callbacks, browser state, or push-driven streaming; props crossing the boundary must be
-        serializable:
+        Server Component can import and render a non-streaming HOC directly while Next.js keeps the
+        page itself on the server. Add a thin app-owned client wrapper only for hooks, callbacks,
+        browser state, or push-driven streaming; props crossing the boundary must be serializable:
       </p>
 
       <CodeBlock code={ssrSnippet} language="tsx" />
@@ -778,17 +778,18 @@ npx prettier --write ./src`}
 
       <p>
         Yes. <code>XYFrame</code>, <code>OrdinalFrame</code>, <code>NetworkFrame</code>, and the
-        responsive variants are <strong>not</strong> exported in v3, so those imports fail to resolve
-        until you rename them to the <code>Stream*</code> names — a mechanical find-and-replace. Once
-        renamed, prop names largely keep working and accessors still resolve. Past that, switch to the
-        chart HOCs as you touch each chart rather than doing a big-bang rewrite.
+        responsive variants are <strong>not</strong> exported in v3, so those imports fail to
+        resolve until you rename them to the <code>Stream*</code> names — a mechanical
+        find-and-replace. Once renamed, prop names largely keep working and accessors still resolve.
+        Past that, switch to the chart HOCs as you touch each chart rather than doing a big-bang
+        rewrite.
       </p>
 
       <h3 id="faq-mix">Can I mix Stream Frames and v3 HOCs?</h3>
 
       <p>
-        Yes. The HOCs wrap Stream Frames internally, and Stream Frames can live alongside HOCs on the
-        same page. There's no runtime conflict.
+        Yes. The HOCs wrap Stream Frames internally, and Stream Frames can live alongside HOCs on
+        the same page. There's no runtime conflict.
       </p>
 
       <h3 id="faq-v2">What happened to v2?</h3>

@@ -17,6 +17,7 @@ import { normalizeColorGradient } from "../shared/gradient"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,8 @@ export interface GaugeChartProps extends BaseChartProps {
   fillZones?: boolean
   /** Enable tooltip on arc segments */
   tooltip?: TooltipProp
+  /** Ordered styling for rendered gauge segments. Rules see the synthetic segment fields (`category`, `value`, `_zone`, `_isFill`). */
+  styleRules?: StyleRule[]
   /** Annotations — supports threshold markers via standard annotation system */
   annotations?: Datum[]
   /** Enable hover interaction (default true) */
@@ -192,6 +195,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     sweep = 240,
     fillZones = true,
     tooltip,
+    styleRules,
     annotations,
     frameProps = {},
     className,
@@ -224,11 +228,19 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     gradientFill: resolvedGradientFill,
   }), [value, min, max, thresholds, fillColor, backgroundColor, showScaleLabels, fillZones, resolvedGradientFill])
 
+  const ruledPieceStyle = useMemo(
+    () => composeStyleRules(pieceStyle, styleRules, (d, category) => ({
+      value: typeof d.value === "number" ? d.value : undefined,
+      category: category ?? (d.category == null ? undefined : String(d.category)),
+    })),
+    [pieceStyle, styleRules],
+  )
+
   // Overlay top-level primitive props (stroke/strokeWidth/opacity) so each
   // zone arc respects them without the user needing a per-zone pieceStyle.
   const pieceStyleWithPrimitives = useMemo(
-    () => mergeShapeStyle(pieceStyle, { stroke, strokeWidth, opacity }),
-    [pieceStyle, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(ruledPieceStyle, { stroke, strokeWidth, opacity }),
+    [ruledPieceStyle, stroke, strokeWidth, opacity]
   )
   const {
     activeSelectionHook,

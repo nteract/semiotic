@@ -23,6 +23,11 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  composeStyleRules,
+  makeNodeRuleContext,
+  type StyleRule,
+} from "../shared/styleRules"
 
 registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
 
@@ -37,6 +42,8 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
   colorBy?: ChartAccessor<TNode, string | number>
   colorScheme?: string | string[] | Record<string, string>
   colorByDepth?: boolean
+  /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
+  styleRules?: StyleRule[]
   showLabels?: boolean
   labelMode?: "leaf" | "parent" | "all"
   nodeLabel?: ChartAccessor<TNode, string>
@@ -127,6 +134,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     colorBy,
     colorScheme,
     colorByDepth = false,
+    styleRules,
     labelMode = "leaf",
     nodeLabel,
     padding: paddingProp = 4,
@@ -227,19 +235,36 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
     }
   }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+      valueAccessor as string | ((d: Datum) => unknown) | undefined,
+    ),
+    [colorBy, valueAccessor],
+  )
+  const ruledNodeStyleFn = useMemo(
+    () => composeStyleRules(
+      nodeStyleFn,
+      styleRules,
+      nodeRuleContext,
+      (d) => d.data || d,
+    ),
+    [nodeStyleFn, styleRules, nodeRuleContext],
+  )
+
   // Compose frame and user nodeStyle overlays with the HOC's built-in style
   // so callers can hide the root or customize borders without losing
   // colorBy/colorByDepth/default fill resolution. Public top-level
   // `nodeStyle` wins over `frameProps.nodeStyle` on overlapping keys, matching
   // the primitive-style precedence used elsewhere in the codebase.
   const nodeStyleFnWithUser = useMemo(() => {
-    if (!userNodeStyle && !frameNodeStyle) return nodeStyleFn
+    if (!userNodeStyle && !frameNodeStyle) return ruledNodeStyleFn
     return (d: Datum) => ({
-      ...nodeStyleFn(d),
+      ...ruledNodeStyleFn(d),
       ...(frameNodeStyle ? frameNodeStyle(d) ?? {} : {}),
       ...(userNodeStyle ? userNodeStyle(d) ?? {} : {}),
     })
-  }, [nodeStyleFn, userNodeStyle, frameNodeStyle])
+  }, [ruledNodeStyleFn, userNodeStyle, frameNodeStyle])
 
   // Overlay top-level primitive props after user nodeStyle, before selection
   // wrapping, so explicit primitive props land on every node.

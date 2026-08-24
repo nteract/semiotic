@@ -20,6 +20,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { buildStatsTooltip } from "../shared/statsTooltip"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -34,6 +35,8 @@ export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChart
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered summary styling; fieldless thresholds use each category's median. Statistical fields include `n`, `min`, `q1`, `median`, `q3`, `max`, and `mean`. */
+  styleRules?: StyleRule[]
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
@@ -116,7 +119,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", bins = 25, curve: _curve = "catmullRom", showIQR = true,
     valueFormat,
-    colorBy, colorScheme, categoryPadding = 20,
+    colorBy, colorScheme, styleRules, categoryPadding = 20,
     tooltip, annotations,
     valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
@@ -177,6 +180,10 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown))
+    return (d: Datum) => typeof d.median === "number" ? d.median : readValue(d)
+  }, [valueAccessor])
 
   // Consolidated summary-style — same recipe as BoxPlot/Histogram/
   // RidgelinePlot. fillOpacity slightly lower than BoxPlot since the
@@ -191,6 +198,8 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { fillOpacity: 0.6 },
     linkStrokeToFill: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip({ valueAccessor }), [valueAccessor])

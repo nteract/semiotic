@@ -742,7 +742,8 @@ export default function StyleRulesPage() {
       <h2 id="families">Across every chart family</h2>
       <p>
         <code>styleRules</code> uses the <strong>same API</strong> on every family — only the{" "}
-        <code>ctx</code> channels differ. Bars expose <code>value</code>; XY marks expose{" "}
+        <code>ctx</code> channels differ. Ordinal marks expose <code>value</code> and{" "}
+        <code>category</code>; XY marks expose{" "}
         <code>value</code> (= y), <code>x</code>, and <code>y</code> (target either axis with{" "}
         <code>{'{ axis: "x" }'}</code>); network nodes, geo features, and physics particles expose{" "}
         <code>value</code> plus <code>category</code> (the <code>colorBy</code> group).
@@ -813,10 +814,17 @@ export default function StyleRulesPage() {
 />`}
       />
       <p className="callout">
-        Coverage notes: line/area rules resolve per-series (against the series' first point), not
-        per-vertex. Network hierarchy charts (Tree, Treemap, CirclePack, Orbit) are not wired —
-        their <code>colorByDepth</code> owns the fill. MultiAxisLineChart, MinimapChart, and
-        CandlestickChart are also not wired.
+        Coverage notes: every ordinal HOC is wired. Box, violin, and ridgeline rules receive the
+        rendered category summary and use its median by default; histogram rules receive each
+        rendered bin and use its count. Pie and donut use absolute wedge magnitude, Likert uses the
+        displayed signed percentage, and Gauge exposes its synthetic zone-segment fields. Heatmap
+        and RealtimeHeatmap rules receive displayed cells, including aggregate <code>count</code>,{" "}
+        <code>sum</code>, and <code>agg</code> fields. Tree, Treemap, CirclePack, and Orbit rules see
+        the authored raw node and layer over <code>colorByDepth</code>. All six realtime forms use
+        their displayed line, bin, point, delta, or cell value. Line/area rules still resolve
+        per-series (against the series&apos; first point), not per-vertex; MultiAxisLineChart,
+        MinimapChart, CandlestickChart, DifferenceChart, WaterfallChart, and ScatterplotMatrix are
+        not wired.
       </p>
 
       <h2 id="ai">For agents & server rendering</h2>
@@ -858,7 +866,7 @@ const svg = renderChart("StackedBarChart", {
       </p>
 
       <h2 id="precedence">Precedence</h2>
-      <p>For bar marks, fill resolution runs base → rules → user override, with primitives last:</p>
+      <p>For retained marks, fill resolution runs base → rules → user override, with primitives last:</p>
       <CodeBlock
         language="text"
         code={`top-level stroke / strokeWidth / opacity   (always win)

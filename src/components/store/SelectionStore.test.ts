@@ -1,4 +1,8 @@
 import { buildPredicate, type Selection, type SelectionClause } from "./SelectionStore"
+import {
+  attachSelectionProvenance,
+  getSelectionProvenance
+} from "./selectionProvenance"
 
 function makeSelection(
   resolution: "union" | "intersect" | "crossfilter",
@@ -35,6 +39,19 @@ describe("SelectionStore — buildPredicate", () => {
       const pred = buildPredicate(sel)
       expect(pred({ category: "C" })).toBe(false)
       expect(pred({ category: undefined })).toBe(false)
+    })
+
+    it("matches a derived mark through its non-enumerable raw-row provenance", () => {
+      const sel = makeSelection("union", [clause])
+      const pred = buildPredicate(sel)
+      const aggregate = attachSelectionProvenance(
+        { binStart: 0, total: 12 },
+        [{ category: "A", value: 5 }, { category: "C", value: 7 }]
+      )
+
+      expect(pred(aggregate)).toBe(true)
+      expect(getSelectionProvenance(aggregate)).toHaveLength(2)
+      expect(Object.keys(aggregate)).toEqual(["binStart", "total"])
     })
   })
 

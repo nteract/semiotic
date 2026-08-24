@@ -185,7 +185,13 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       unitValue
     ]
   )
-  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
+  const rerun = usePhysicsRerun(
+    layout.config,
+    rerunMS,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  )
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {

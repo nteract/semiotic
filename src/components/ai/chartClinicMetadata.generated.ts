@@ -43,8 +43,8 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "WaterfallChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "CandlestickChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "ConnectedScatterplot": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
-  "ScatterplotMatrix": {"category":"xy","recommendedImport":"semiotic/xy"},
-  "MinimapChart": {"category":"xy","recommendedImport":"semiotic/xy"},
+  "ScatterplotMatrix": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
+  "MinimapChart": {"category":"xy","recommendedImport":"semiotic/xy","serverImport":"semiotic/server"},
   "ForceDirectedGraph": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server","docsRoute":"/charts/force-directed-graph","pilot":true},
   "SankeyDiagram": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
   "ProcessSankey": {"category":"network","recommendedImport":"semiotic/network","serverImport":"semiotic/server"},
@@ -71,6 +71,6 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "CrucibleChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "ProcessFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "PacketFlowChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
-  "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics"},
+  "ChainReactionChart": {"category":"physics","recommendedImport":"semiotic/physics","serverImport":"semiotic/server"},
   "BigNumber": {"category":"value","recommendedImport":"semiotic/value","serverImport":"semiotic/server","docsRoute":"/charts/big-number","pilot":true}
 }

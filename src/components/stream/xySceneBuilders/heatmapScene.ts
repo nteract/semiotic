@@ -14,6 +14,7 @@ import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
+import { attachSelectionProvenance } from "../../store/selectionProvenance"
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
 // Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
@@ -234,6 +235,9 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
 
   const counts = new Int32Array(totalCells)
   const sums = new Float64Array(totalCells)
+  const cellRows = ctx.config.areaStyle
+    ? new Map<number, Datum[]>()
+    : undefined
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
@@ -248,6 +252,14 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
     counts[idx]++
     const val = getVal(d)
     sums[idx] += isFinite(val) ? val : 0
+    if (cellRows) {
+      let rows = cellRows.get(idx)
+      if (!rows) {
+        rows = []
+        cellRows.set(idx, rows)
+      }
+      rows.push(d)
+    }
   }
 
   // Compute aggregated values for color scale min/max without overwriting sums
@@ -306,16 +318,19 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
       // which doesn't tell the user *where* in their data the cell sits.
       const xCenter = xMin + (xi + 0.5) * xBinSize
       const yCenter = yMin + (yi + 0.5) * yBinSize
-      const datum = {
-        xi,
-        yi,
-        value: val,
-        count: counts[idx],
-        sum: sums[idx],
-        xCenter,
-        yCenter,
-        agg,
-      }
+      const datum = attachSelectionProvenance(
+        {
+          xi,
+          yi,
+          value: val,
+          count: counts[idx],
+          sum: sums[idx],
+          xCenter,
+          yCenter,
+          agg
+        },
+        cellRows?.get(idx)
+      )
       nodes.push(applyHeatcellStyle(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,

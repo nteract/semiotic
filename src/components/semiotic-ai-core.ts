@@ -7,6 +7,10 @@
  * backwards-compatible HOC catalog for code generation.
  */
 
+import { registerBuiltInChartRecipeManifests } from "./ai/builtInChartRecipes"
+
+registerBuiltInChartRecipeManifests()
+
 export { validateProps } from "./charts/shared/validateProps"
 export type { ValidationResult } from "./charts/shared/validateProps"
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
@@ -111,6 +115,41 @@ export type {
   RejectedCapability,
   ExplainCapabilityFitResult,
 } from "./ai/suggestCharts"
+export {
+  BUILT_IN_CHART_RECIPES,
+  CALENDAR_HEATMAP_CONFIG_SCHEMA,
+  CALENDAR_HEATMAP_LAYOUT_ID,
+  CALENDAR_HEATMAP_RECIPE_ID,
+  PARALLEL_COORDINATES_CONFIG_SCHEMA,
+  PARALLEL_COORDINATES_LAYOUT_ID,
+  PARALLEL_COORDINATES_RECIPE_ID,
+  calendarHeatmapRecipe,
+  parallelCoordinatesRecipe,
+  registerBuiltInChartRecipeManifests
+} from "./ai/builtInChartRecipes"
+export {
+  defineChartRecipe,
+  isJsonSafe,
+  isRegisteredRecipeLayout,
+  validateChartRecipe
+} from "./ai/chartRecipes"
+export type {
+  ChartRecipe,
+  ChartRecipeFrameFamily,
+  ChartRecipePortability,
+  DataRoleDefinition,
+  EncodingDefinition,
+  SerializableSchema
+} from "./ai/chartRecipes"
+export {
+  getChartRecipe,
+  getRegisteredRecipeCapabilities,
+  hasRegisteredRecipeCapabilities,
+  listChartRecipes,
+  registerChartRecipe,
+  resolveChartRecipe,
+  unregisterChartRecipe
+} from "./ai/chartRecipeRegistry"
 export { suggestDashboard } from "./ai/suggestDashboard"
 export type { DashboardPanel, DashboardSuggestion, SuggestDashboardOptions } from "./ai/suggestDashboard"
 export { suggestStreamCharts } from "./ai/suggestStreamCharts"

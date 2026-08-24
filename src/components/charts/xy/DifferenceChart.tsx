@@ -38,6 +38,7 @@ import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
 import type { SegmentRow } from "./differenceSegments"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 registerXYPlugin(mixedXYPlugin)
 
@@ -149,6 +150,8 @@ interface LineRow {
   __y: number
   /** Either `"line-A"` or `"line-B"`. Acts as the line group key. */
   __diffSegment: string
+  /** Retained on line vertices so selection can match area and line marks. */
+  __diffWinner: "A" | "B"
 }
 
 /**
@@ -177,9 +180,9 @@ function buildOverlayLineRows<TDatum extends Datum>(
       a = getA(d),
       b = getB(d)
     if (Number.isFinite(a))
-      out.push({ __x: x, __y: a, __diffSegment: "line-A" })
+      out.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A" })
     if (Number.isFinite(b))
-      out.push({ __x: x, __y: b, __diffSegment: "line-B" })
+      out.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B" })
   }
   return out
 }
@@ -550,6 +553,21 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
     [seriesAColor, seriesBColor, pointRadius]
   )
 
+  // DifferenceChart renders synthesized area and line rows, so the generic
+  // behavior props can publish linked hover but cannot dim these marks on
+  // their own. Keep the derived `__diffWinner` field on every mark type and
+  // apply the same selection wrapper used by the rest of the XY family.
+  const [selectedAreaStyle, selectedLineStyle, selectedPointStyle] = useMemo(
+    () => [areaStyle, lineStyle, pointStyle].map((style) =>
+      wrapStyleWithSelection(
+        style,
+        setup.effectiveSelectionHook,
+        setup.resolvedSelection
+      )
+    ),
+    [areaStyle, lineStyle, pointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
+  )
+
   // ── Tooltip ─────────────────────────────────────────────────────────
   const defaultTooltipContent = useCallback(
     (hover: HoverData) => {
@@ -707,9 +725,9 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
     groupAccessor: "__diffSegment",
     areaGroups,
     curve,
-    areaStyle,
-    lineStyle,
-    ...(showPoints && { pointStyle }),
+    areaStyle: selectedAreaStyle,
+    lineStyle: selectedLineStyle,
+    ...(showPoints && { pointStyle: selectedPointStyle }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,

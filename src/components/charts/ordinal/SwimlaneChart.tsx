@@ -21,6 +21,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Data array. Omit for push API mode. */
@@ -43,6 +44,8 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
   colorBy?: ChartAccessor<TDatum, string>
   /** Color scheme for subcategories */
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware piece styling; fieldless thresholds use `valueAccessor`. */
+  styleRules?: StyleRule[]
   /** Padding between lanes in pixels */
   barPadding?: number
   /** Enable hover annotations */
@@ -161,6 +164,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     valueFormat,
     colorBy,
     colorScheme,
+    styleRules,
     barPadding: userBarPadding,
     tooltip, annotations,
     brush: brushProp,
@@ -255,6 +259,10 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
 
   // Consolidated piece-style. SwimlaneChart uses per-category color
   // cycling so each lane gets its own scheme color when colorBy
@@ -268,6 +276,8 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
     cycleByCategory: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

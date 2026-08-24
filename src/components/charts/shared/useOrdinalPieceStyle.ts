@@ -121,7 +121,7 @@ export interface OrdinalPieceStyleOptions {
    * (typically the chart's `valueAccessor` output). Lets `{ when: { gt: 10 } }`
    * work with no `field` on the threshold.
    */
-  resolveRuleValue?: (d: Datum) => number | undefined
+  resolveRuleValue?: (d: Datum, category?: string) => number | undefined
 }
 
 /**
@@ -210,7 +210,7 @@ export function useOrdinalPieceStyle(
       // imperative escape hatch that overrides rule output.
       if (styleRules && styleRules.length > 0) {
         const ruled = resolveStyleRules(d, styleRules, {
-          value: resolveRuleValue ? resolveRuleValue(d) : undefined,
+          value: resolveRuleValue ? resolveRuleValue(d, category) : undefined,
           category,
         })
         Object.assign(baseStyle, ruled)

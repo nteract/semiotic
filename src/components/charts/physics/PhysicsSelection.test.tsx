@@ -220,6 +220,40 @@ describe("physics HOCs and the shared selection store", () => {
     expect(hoveredSelection!.predicate({ category: "North" })).toBe(true)
   })
 
+  it("matches Crucible bodies through their authored sourceDatum", () => {
+    render(
+      <LinkedCharts selections={{ "physics-link": {} }}>
+        <SelectNorth />
+        <CrucibleChart
+          data={[{ id: "a", label: "A", category: "North", amount: 1 }]}
+          phases={[{ id: "mix", label: "Mix", duration: 1, motion: "mix" }]}
+          idAccessor="id"
+          labelAccessor="label"
+          categoryAccessor="category"
+          amountAccessor="amount"
+          colorBy="category"
+          playback="snapshot"
+          size={[240, 160]}
+          selection={{ name: "physics-link" }}
+        />
+      </LinkedCharts>
+    )
+
+    const predicate = lastProps!.selection!.predicate!
+    expect(
+      predicate!({
+        id: "north-material",
+        datum: { sourceDatum: { category: "North" } }
+      } as never)
+    ).toBe(true)
+    expect(
+      predicate!({
+        id: "south-material",
+        datum: { sourceDatum: { category: "South" } }
+      } as never)
+    ).toBe(false)
+  })
+
   it("cross-highlights a sibling physics frame from produced body hover", () => {
     render(
       <LinkedCharts selections={{ "physics-hover": {} }}>

@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createStore } from "./createStore"
+import { getSelectionProvenance } from "./selectionProvenance"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -55,8 +56,16 @@ function buildClausePredicate(clause: SelectionClause): (d: Datum) => boolean {
     }
   }
 
-  // All fields in a clause must match (AND within clause)
-  return (d) => fieldTests.every((fn) => fn(d))
+  // All fields in a clause must match (AND within clause). Aggregate marks
+  // such as histogram bins and heatmap cells represent raw rows rather than
+  // carrying every public field themselves, so match when any represented row
+  // satisfies the complete clause. This keeps linked selection semantic after
+  // a chart-specific aggregation step.
+  return (d) => {
+    if (fieldTests.every((fn) => fn(d))) return true
+    const provenance = getSelectionProvenance(d)
+    return provenance?.some((row) => fieldTests.every((fn) => fn(row))) ?? false
+  }
 }
 
 export function buildPredicate(

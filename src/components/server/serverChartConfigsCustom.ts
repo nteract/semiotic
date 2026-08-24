@@ -1,4 +1,6 @@
 import { type ChartConfig } from "./serverChartConfigShared"
+import { calendarLayout } from "../recipes/calendar"
+import { parallelCoordinatesLayout } from "../recipes/parallelCoordinates"
 
 // ── Custom Chart HOCs ──────────────────────────────────────────────────
 
@@ -73,5 +75,28 @@ export const geoCustomChart: ChartConfig = {
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
     ...common,
+  }),
+}
+
+export const parallelCoordinatesRecipe: ChartConfig = {
+  frameType: "ordinal",
+  layout: { primarySize: { width: 800, height: 420 } },
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    ...ordinalCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
+    customLayout: parallelCoordinatesLayout,
+    showAxes: false,
+  }),
+}
+
+export const calendarHeatmapRecipe: ChartConfig = {
+  frameType: "xy",
+  layout: {
+    primarySize: { width: 900, height: 160 },
+    margin: { top: 12, right: 12, bottom: 12, left: 12 },
+  },
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    ...xyCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
+    customLayout: calendarLayout,
+    showAxes: false,
   }),
 }

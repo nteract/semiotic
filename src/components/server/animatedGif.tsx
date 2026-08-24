@@ -16,7 +16,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  */
 
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.browser"
+import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { registerBuiltInXYPlugins } from "../stream/xyPlugins/registerBuiltIn"
 

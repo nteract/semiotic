@@ -9,9 +9,9 @@
   ],
   "version": "3.9.1",
   "components": {
-    "schema": 59,
+    "schema": 61,
     "aiChartExports": 56,
-    "mcpRenderable": 54,
+    "mcpRenderable": 56,
     "browserOnly": 5,
     "requiresLiveData": [
       "RealtimeHeatmap",
@@ -94,6 +94,10 @@
       ],
       "value": [
         "BigNumber"
+      ],
+      "recipe": [
+        "CalendarHeatmapRecipe",
+        "ParallelCoordinatesRecipe"
       ]
     },
     "suggestionPropContracts": {
@@ -162,6 +166,12 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "CalendarHeatmapRecipe": {
+        "componentKind": "chart-recipe",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
       },
       "CandlestickChart": {
         "componentKind": "chart-hoc",
@@ -471,6 +481,12 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "ParallelCoordinatesRecipe": {
+        "componentKind": "chart-recipe",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
       },
       "PieChart": {
         "componentKind": "chart-hoc",

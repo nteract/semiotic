@@ -35,7 +35,17 @@ export interface NormalizedLinkedBrush {
  * - `{ name: "hl", fields: ["category"] }` → as-is
  */
 export function normalizeLinkedHover(
-  prop: boolean | string | { name?: string; fields?: string[]; mode?: "field" | "x-position" | "series"; xField?: string; seriesField?: string } | undefined,
+  prop:
+    | boolean
+    | string
+    | {
+        name?: string
+        fields?: string[]
+        mode?: "field" | "x-position" | "series"
+        xField?: string
+        seriesField?: string
+      }
+    | undefined,
   fallbackFields?: string[]
 ): NormalizedLinkedHover | null {
   if (!prop) return null
@@ -50,7 +60,7 @@ export function normalizeLinkedHover(
     fields: prop.fields || fallbackFields || [],
     mode: prop.mode,
     xField: prop.xField,
-    seriesField: prop.seriesField,
+    seriesField: prop.seriesField
   }
 }
 
@@ -107,11 +117,14 @@ export const DEFAULT_SELECTION_OPACITY = 0.5
  * or group-dependent styling (`fillArea: string[]`, `resolveStroke(d,
  * group)` in `useXYLineStyle`'s MultiAxisLineChart path) silently
  * drops to its no-group branch whenever a selection is active.
+ * `selectionDatum` adapts authored wrappers such as GeoJSON Features to the
+ * direct-field shape published by their interactive marks.
  */
 export function wrapStyleWithSelection<TArgs extends unknown[]>(
   baseStyleFn: (d: Datum, ...args: TArgs) => Datum,
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
+  selectionDatum?: (datum: Datum) => Datum
 ): (d: Datum, ...args: TArgs) => Datum {
   if (!selectionHook) return baseStyleFn
 
@@ -119,14 +132,15 @@ export function wrapStyleWithSelection<TArgs extends unknown[]>(
     const style = { ...baseStyleFn(d, ...args) }
 
     if (selectionHook.isActive) {
-      if (selectionHook.predicate(d)) {
+      if (selectionHook.predicate(selectionDatum ? selectionDatum(d) : d)) {
         // Selected: apply selectedStyle overrides if any
         if (config?.selectedStyle) {
           Object.assign(style, config.selectedStyle)
         }
       } else {
         // Unselected: dim the element
-        const dimOpacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
+        const dimOpacity =
+          config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
         style.opacity = dimOpacity
         style.fillOpacity = dimOpacity
         style.strokeOpacity = dimOpacity

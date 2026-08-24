@@ -1,4 +1,5 @@
 import type { ChartSpec } from "./chartSpecCore"
+import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
   RealtimeLineChart: {
@@ -11,6 +12,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       stroke: { type: "string" },
       strokeWidth: { type: "number" },
       strokeDasharray: { type: "string" },
@@ -53,6 +55,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       binSize: {
         type: "number",
         description: "Time bin size in milliseconds (required)"
@@ -131,6 +134,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["timeAccessor", "valueAccessor", "categoryAccessor"],
     propBags: ["realtimeStatic"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of temporal observations" },
       binSize: {
         type: "number",
@@ -260,6 +264,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       categoryAccessor: { type: ["string", "function"] },
       colors: {
         type: "object",
@@ -314,6 +319,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       positiveColor: { type: "string" },
       negativeColor: { type: "string" },
       connectorStroke: { type: "string" },
@@ -349,6 +355,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       heatmapXBins: { type: "number" },
       heatmapYBins: { type: "number" },
       aggregation: { type: "string", enum: ["count", "sum", "mean"] as const },
