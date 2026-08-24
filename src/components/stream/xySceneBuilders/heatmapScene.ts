@@ -14,7 +14,10 @@ import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
-import { attachSelectionProvenance } from "../../store/selectionProvenance"
+import {
+  attachSelectionProvenance,
+  requiresSelectionProvenance
+} from "../../store/selectionProvenance"
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
 // Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
@@ -235,7 +238,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
 
   const counts = new Int32Array(totalCells)
   const sums = new Float64Array(totalCells)
-  const cellRows = ctx.config.areaStyle
+  const cellRows = requiresSelectionProvenance(ctx.config.areaStyle)
     ? new Map<number, Datum[]>()
     : undefined
 

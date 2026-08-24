@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { renderChart, renderChartWithEvidence } from "./renderToStaticSVG"
+import {
+  renderChart,
+  renderChartWithEvidence,
+  renderDashboard
+} from "./renderToStaticSVG"
 
 const series = [
   { x: 0, y: 2, group: "Alpha" },
@@ -154,5 +158,72 @@ describe("renderChart composite server implementations", () => {
 
     expect(svg).toContain("scatterplot-matrix")
     expect(svg).not.toMatch(/\b(?:x|y|cx|cy|width|height)="-?\d+\.\d+"/)
+  })
+
+  it("uses dashboard prefixes for composite accessible-name ids", () => {
+    const svg = renderDashboard(
+      [
+        {
+          component: "MinimapChart",
+          props: {
+            data: series,
+            xAccessor: "x",
+            yAccessor: "y",
+            title: "Minimap"
+          }
+        },
+        {
+          component: "MinimapChart",
+          props: {
+            data: series,
+            xAccessor: "x",
+            yAccessor: "y",
+            title: "Minimap"
+          }
+        },
+        {
+          component: "ScatterplotMatrix",
+          props: { data: matrix, fields: ["speed", "power"], title: "Matrix" }
+        },
+        {
+          component: "ScatterplotMatrix",
+          props: { data: matrix, fields: ["speed", "power"], title: "Matrix" }
+        },
+        {
+          component: "ChainReactionChart",
+          props: {
+            data: tasks,
+            taskIDAccessor: "id",
+            labelAccessor: "label",
+            laneAccessor: "lane",
+            dependencyAccessor: "dependencies",
+            title: "Dependencies"
+          }
+        },
+        {
+          component: "ChainReactionChart",
+          props: {
+            data: tasks,
+            taskIDAccessor: "id",
+            labelAccessor: "label",
+            laneAccessor: "lane",
+            dependencyAccessor: "dependencies",
+            title: "Dependencies"
+          }
+        }
+      ],
+      { width: 900, layout: { columns: 2 } }
+    )
+
+    for (let index = 0; index < 6; index++) {
+      expect(svg).toContain(`id="chart-${index}-title"`)
+      expect(svg).toContain(`id="chart-${index}-description"`)
+      expect(svg).toContain(
+        `aria-labelledby="chart-${index}-title chart-${index}-description"`
+      )
+    }
+    expect(
+      new Set(svg.match(/id="chart-\d+-(?:title|description)"/g)).size
+    ).toBe(12)
   })
 })

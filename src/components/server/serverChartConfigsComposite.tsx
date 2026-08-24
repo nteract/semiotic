@@ -21,6 +21,7 @@ import {
 } from "./serverChartConfigShared"
 import { lineChart } from "./serverChartConfigsXY"
 import { renderChainReaction } from "./serverCompositeChainReaction"
+import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
 
 const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
@@ -208,8 +209,9 @@ function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
     typeof common.description === "string"
       ? common.description
       : title || "Chart with overview minimap"
-  const titleId = title ? "minimap-title" : undefined
-  const descriptionId = "minimap-description"
+  const idPrefix = chartUID(common)
+  const titleId = title ? `${idPrefix}-title` : undefined
+  const descriptionId = `${idPrefix}-description`
   const brushDirection = minimap.brushDirection === "y" ? "y" : "x"
   const controlledBrush =
     Array.isArray(rest.brushExtent) && rest.brushExtent.length >= 2
@@ -577,8 +579,9 @@ function renderScatterplotMatrix(
     })
   })
 
-  const titleId = title ? "splom-title" : undefined
-  const descriptionId = "splom-description"
+  const idPrefix = chartUID(common)
+  const titleId = title ? `${idPrefix}-title` : undefined
+  const descriptionId = `${idPrefix}-description`
   const svg = ReactDOMServer.renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"

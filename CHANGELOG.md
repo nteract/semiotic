@@ -231,11 +231,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   depending on undocumented `__likert*` keys.
 - **Realtime selection survives chart-owned aggregation** — histogram bins and
   streaming heatmap cells retain non-enumerable references to the raw rows they
-  represent, and selection predicates match a derived mark when any represented
-  row satisfies the complete clause. The bookkeeping stays out of tooltips,
-  accessible tables, and serialization. `RealtimeLineChart` now also applies
-  its published `selection` contract to the rendered line style instead of
-  subscribing without a visible repaint.
+  represent only when a selection-aware style requires them; ordinary borders,
+  colors, and style rules stay on the allocation-free aggregate path. Selection
+  predicates match a derived mark when any represented row satisfies the
+  complete clause, while the bookkeeping stays out of tooltips, accessible
+  tables, and serialization. `RealtimeLineChart` now also applies its published
+  `selection` contract to the rendered line style instead of subscribing without
+  a visible repaint.
+- **Composite dashboard charts keep accessible names instance-local** — static
+  Minimap, ScatterplotMatrix, and ChainReaction renderers derive title and
+  description IDs from `renderDashboard`'s sanitized panel prefix, preventing
+  duplicate `aria-labelledby` targets when a dashboard repeats a chart type.
 - **Crucible linked selection reads the authored material** — generated
   Crucible bodies keep chart metadata around the caller's row, so the shared
   physics selection bridge now unwraps `sourceDatum` before evaluating named

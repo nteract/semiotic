@@ -6,6 +6,7 @@ import {
   wrapStyleWithSelection,
   type SelectionHookResult
 } from "./selectionUtils"
+import { requiresSelectionProvenance } from "../../store/selectionProvenance"
 import type { Datum } from "./datumTypes"
 
 // ── normalizeLinkedHover ──────────────────────────────────────────────────
@@ -93,6 +94,7 @@ describe("wrapStyleWithSelection", () => {
   it("returns the base style function when selectionHook is null (no selection)", () => {
     const wrapped = wrapStyleWithSelection(baseStyleFn, null)
     expect(wrapped).toBe(baseStyleFn)
+    expect(requiresSelectionProvenance(wrapped)).toBe(false)
   })
 
   it("returns base styles when selection is not active", () => {
@@ -101,6 +103,7 @@ describe("wrapStyleWithSelection", () => {
       predicate: () => false
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
+    expect(requiresSelectionProvenance(wrapped)).toBe(true)
     const style = wrapped({ color: "red" })
     expect(style).toEqual({ fill: "red", stroke: "black" })
   })

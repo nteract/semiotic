@@ -14,6 +14,7 @@ import {
 import { themeToCSSVariables } from "../store/themeCSSVariables"
 import { buildCompositeEvidence, type EvidenceSink } from "./renderEvidence"
 import type { ServerChartData } from "./serverChartConfigShared"
+import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
 
 interface ChainReactionPayload {
@@ -89,8 +90,9 @@ export function renderChainReaction(
   })
   const theme = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0])
   const styles = themeStyles(theme)
-  const titleId = "chain-reaction-title"
-  const descriptionId = "chain-reaction-description"
+  const idPrefix = chartUID(common)
+  const titleId = `${idPrefix}-title`
+  const descriptionId = `${idPrefix}-description`
 
   if (!machine.valid) {
     const description = machine.diagnostics

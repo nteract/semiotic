@@ -3,7 +3,10 @@ import { buildHeatmapScene } from "./heatmapScene"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import { getSelectionProvenance } from "../../store/selectionProvenance"
+import {
+  getSelectionProvenance,
+  markSelectionProvenanceRequired
+} from "../../store/selectionProvenance"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -388,7 +391,7 @@ describe("buildStreamingHeatmapScene", () => {
     expect(datum!.value).toBe(2)
   })
 
-  it("retains raw selection provenance when aggregate styling is active", () => {
+  it("retains raw provenance only for selection-aware aggregate styling", () => {
     const data = [
       { x: 5, y: 5, value: 100, cohort: "Alpha" },
       { x: 15, y: 15, value: 200, cohort: "Beta" }
@@ -399,7 +402,7 @@ describe("buildStreamingHeatmapScene", () => {
         heatmapXBins: 5,
         heatmapYBins: 5,
         valueAccessor: "value",
-        areaStyle: () => ({})
+        areaStyle: markSelectionProvenanceRequired(() => ({}))
       }
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
@@ -408,6 +411,21 @@ describe("buildStreamingHeatmapScene", () => {
     expect(Object.keys(nodes[0]!.datum!)).not.toContain(
       "__semioticSelectionData"
     )
+
+    const styledOnly = buildHeatmapScene(
+      makeStreamCtx({
+        config: {
+          heatmapAggregation: "count",
+          heatmapXBins: 5,
+          heatmapYBins: 5,
+          valueAccessor: "value",
+          areaStyle: () => ({ stroke: "black" })
+        }
+      }),
+      data,
+      defaultLayout
+    )
+    expect(getSelectionProvenance(styledOnly[0]!.datum!)).toBeUndefined()
   })
 
   it("sum aggregation sums values per bin", () => {

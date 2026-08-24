@@ -14,7 +14,10 @@ import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { resolveExplicitColor } from "../../charts/shared/colorUtils"
-import { attachSelectionProvenance } from "../../store/selectionProvenance"
+import {
+  attachSelectionProvenance,
+  requiresSelectionProvenance
+} from "../../store/selectionProvenance"
 
 export interface BarSceneResult {
   nodes: RectSceneNode[]
@@ -34,7 +37,7 @@ export function buildBarScene(
     ctx.getY,
     ctx.config.binSize,
     ctx.getCategory,
-    ctx.config.areaStyle != null
+    requiresSelectionProvenance(ctx.config.areaStyle)
   )
   if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 

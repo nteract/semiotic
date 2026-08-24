@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest"
 import { buildBarScene } from "./barScene"
 import type { XYSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import { getSelectionProvenance } from "../../store/selectionProvenance"
+import {
+  getSelectionProvenance,
+  markSelectionProvenanceRequired
+} from "../../store/selectionProvenance"
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -79,13 +82,16 @@ describe("buildBarScene", () => {
     expect(node.datum!.binEnd).toBe(20)
   })
 
-  it("retains raw selection provenance when aggregate styling is active", () => {
+  it("retains raw provenance only for selection-aware aggregate styling", () => {
     const data = [
       { x: 10, y: 1, cohort: "Alpha" },
       { x: 15, y: 2, cohort: "Beta" }
     ]
     const ctx = makeCtx({
-      config: { binSize: 10, areaStyle: () => ({}) }
+      config: {
+        binSize: 10,
+        areaStyle: markSelectionProvenanceRequired(() => ({}))
+      }
     })
     const result = buildBarScene(ctx, data)
 
@@ -93,6 +99,17 @@ describe("buildBarScene", () => {
     expect(Object.keys(result.nodes[0]!.datum!)).not.toContain(
       "__semioticSelectionData"
     )
+
+    const styledOnly = buildBarScene(
+      makeCtx({
+        config: {
+          binSize: 10,
+          areaStyle: () => ({ stroke: "black" })
+        }
+      }),
+      data
+    )
+    expect(getSelectionProvenance(styledOnly.nodes[0]!.datum!)).toBeUndefined()
   })
 
   it("bars outside X domain are clamped — bins beyond domain produce no nodes", () => {
