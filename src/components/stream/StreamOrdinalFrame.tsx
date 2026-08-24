@@ -41,6 +41,7 @@ import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
+import { subscribeToCanvasFontInvalidation } from "./renderers/canvasRenderHelpers"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
@@ -253,6 +254,11 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       tableId,
       rafRef, renderFnRef, scheduleRender, frameRuntime,
     } = frame
+
+    useEffect(() => subscribeToCanvasFontInvalidation(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }), [scheduleRender])
 
     // ── Hydration boundary ───────────────────────────────────────────────
     // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the

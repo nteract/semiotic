@@ -25,7 +25,7 @@ import {
   physicsCanvasColorWithAlpha,
   physicsCanvasThemeCSSValue
 } from "./PhysicsCanvasTheme"
-import { resolveCanvasPaint } from "../renderers/canvasRenderHelpers"
+import { resolveCanvasPaint, subscribeToCanvasFontInvalidation } from "../renderers/canvasRenderHelpers"
 import {
   PhysicsSVGOverlay,
   bodiesToAnnotationAnchors,
@@ -451,6 +451,12 @@ export const StreamPhysicsFrame = memo(
         size,
         frameRuntime
       } = frame
+
+      useEffect(() => subscribeToCanvasFontInvalidation(() => {
+        dirtyRef.current = true
+        scheduleRender()
+      }), [scheduleRender])
+
       const frameWidth = size[0]
       const frameHeight = size[1]
       const plotWidth = Math.max(1, frameWidth - margin.left - margin.right)

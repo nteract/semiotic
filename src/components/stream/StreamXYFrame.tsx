@@ -31,6 +31,7 @@ import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
+import { subscribeToCanvasFontInvalidation } from "./renderers/canvasRenderHelpers"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
@@ -302,6 +303,11 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender,
       frameRuntime,
     } = frame
+
+    useEffect(() => subscribeToCanvasFontInvalidation(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }), [scheduleRender])
 
     // XY post-expands margin to at least 60px on any side that has a
     // configured marginal graphic. Copy the hook's margin before mutating
