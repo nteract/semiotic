@@ -18,14 +18,14 @@ import {
   useFrameCanvasHost
 } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../isServerEnvironment"
-import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
+import { getDevicePixelRatio, prepareCanvas, subscribeToCanvasFontInvalidation } from "../canvasSetup"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import {
   createPhysicsCanvasThemeCache,
   physicsCanvasColorWithAlpha,
   physicsCanvasThemeCSSValue
 } from "./PhysicsCanvasTheme"
-import { resolveCanvasPaint, subscribeToCanvasFontInvalidation } from "../renderers/canvasRenderHelpers"
+import { resolveCanvasPaint } from "../renderers/canvasRenderHelpers"
 import {
   PhysicsSVGOverlay,
   bodiesToAnnotationAnchors,

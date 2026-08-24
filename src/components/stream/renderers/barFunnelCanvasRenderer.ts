@@ -3,7 +3,6 @@ import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { isHatchFill } from "../../charts/shared/hatchFill"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
-import { resolveCanvasFontFamily } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
@@ -116,7 +115,7 @@ export const barFunnelLabelRenderer = (
   const padV = 3
   const lineGap = 2
   const cornerRadius = 4
-  const fontFamily = resolveCanvasFontFamily(ctx)
+  const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
 
   // Minimum bar width (px) before label is suppressed entirely
   const MIN_LABEL_BAR_WIDTH = 25

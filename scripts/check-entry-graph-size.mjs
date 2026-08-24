@@ -97,7 +97,10 @@ const ENTRY_GRAPHS = [
   // reviewable KiB of headroom instead of splitting common chrome at release.
   // The custom-layout readiness bridge is shared by StreamXYFrame consumers.
   // Current production graphs: network 154.3 KiB, geo 111.6 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 156 },
+  // Bumped 156→157: visualization text now inherits the theme font family,
+  // including network labels in live and SSR frames. Linux CI measures the
+  // resulting network graph at 156.2 KiB; retain less than 1 KiB headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 157 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase

@@ -17,37 +17,6 @@ import {
 } from "d3-shape"
 import type { CurveFactory } from "d3-shape"
 
-/** Resolve the inherited chart font token for canvas, which has no CSS cascade. */
-export function resolveCanvasFontFamily(
-  ctx: CanvasRenderingContext2D
-): string {
-  return resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
-}
-
-const fontInvalidationSubscribers = new Set<() => void>()
-let fontLoadHandler: (() => void) | null = null
-
-/** Repaint canvas text after an asynchronously loaded web font becomes usable. */
-export function subscribeToCanvasFontInvalidation(
-  listener: () => void
-): () => void {
-  if (typeof document === "undefined" || !document.fonts) return () => {}
-  fontInvalidationSubscribers.add(listener)
-  if (!fontLoadHandler) {
-    fontLoadHandler = () => {
-      for (const subscriber of fontInvalidationSubscribers) subscriber()
-    }
-    document.fonts.addEventListener("loadingdone", fontLoadHandler)
-  }
-  return () => {
-    fontInvalidationSubscribers.delete(listener)
-    if (fontInvalidationSubscribers.size === 0 && fontLoadHandler) {
-      document.fonts.removeEventListener("loadingdone", fontLoadHandler)
-      fontLoadHandler = null
-    }
-  }
-}
-
 /**
  * Map a `CurveType` string to a d3-shape curve factory. Returns `null`
  * for `"linear"` and `undefined` so callers can branch on a single

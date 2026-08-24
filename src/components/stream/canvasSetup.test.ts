@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   getDevicePixelRatio,
+  subscribeToCanvasFontInvalidation,
   subscribeToDevicePixelRatioChange,
 } from "./canvasSetup"
 
@@ -10,6 +11,43 @@ afterEach(() => {
 })
 
 describe("canvas device pixel ratio", () => {
+  it("notifies canvas subscribers when web fonts finish loading and cleans up", () => {
+    const listeners = new Set<EventListenerOrEventListenerObject>()
+    const fontSet = {
+      addEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === "loadingdone") listeners.add(listener)
+      }),
+      removeEventListener: vi.fn((type: string, listener: EventListenerOrEventListenerObject) => {
+        if (type === "loadingdone") listeners.delete(listener)
+      })
+    }
+    const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts")
+    Object.defineProperty(document, "fonts", { configurable: true, value: fontSet })
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCanvasFontInvalidation(listener)
+
+    try {
+      for (const registered of listeners) {
+        if (typeof registered === "function") registered(new Event("loadingdone"))
+        else registered.handleEvent(new Event("loadingdone"))
+      }
+      expect(listener).toHaveBeenCalledTimes(1)
+      unsubscribe()
+      expect(listeners.size).toBe(0)
+      expect(fontSet.removeEventListener).toHaveBeenCalledWith(
+        "loadingdone",
+        expect.any(Function)
+      )
+    } finally {
+      unsubscribe()
+      Object.defineProperty(
+        document,
+        "fonts",
+        originalFonts || { configurable: true, value: undefined }
+      )
+    }
+  })
+
   it("keeps the default desktop cap but accepts a consumer override", () => {
     Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 4 })
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 })

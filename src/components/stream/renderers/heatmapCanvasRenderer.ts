@@ -2,7 +2,7 @@ import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasFontFamily, resolveCanvasPaint } from "./canvasRenderHelpers"
+import { resolveCanvasPaint } from "./canvasRenderHelpers"
 import { parseCanvasColor } from "./colorUtils"
 
 /**
@@ -35,7 +35,7 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
 
   ctx.save()
   try {
-    const fontFamily = resolveCanvasFontFamily(ctx)
+    const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
     for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
     const nodeStyle = node.style

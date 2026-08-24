@@ -1,6 +1,6 @@
 import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { coerceCanvasFill, resolveCanvasFontFamily } from "./canvasRenderHelpers"
+import { coerceCanvasFill } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.
@@ -76,7 +76,7 @@ export const funnelLabelRenderer = (
 
   const stepFontSize = 14
   const valueFontSize = 13
-  const fontFamily = resolveCanvasFontFamily(ctx)
+  const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
   ctx.textBaseline = "top"
   ctx.lineJoin = "round"
 
