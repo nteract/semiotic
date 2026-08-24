@@ -259,7 +259,7 @@
     "test": "vitest run",
     "pretest:coverage": "npm run dist:prod",
     "test:coverage": "vitest run --coverage && node scripts/check-risk-weighted-coverage.mjs",
-    "test:coverage:shard": "vitest run --coverage --reporter=blob --bail=1",
+    "test:coverage:shard": "vitest run --coverage --reporter=default --reporter=blob --bail=1",
     "test:coverage:merge": "vitest --merge-reports=vitest-reports --coverage && node scripts/check-risk-weighted-coverage.mjs",
     "check:coverage-risk": "node scripts/check-risk-weighted-coverage.mjs",
     "test:coverage-risk": "node --test scripts/risk-weighted-coverage.test.mjs",
