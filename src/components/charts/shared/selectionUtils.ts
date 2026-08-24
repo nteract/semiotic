@@ -1,6 +1,6 @@
 "use client"
 import type { Datum } from "./datumTypes"
-import { markSelectionProvenanceRequired } from "../../store/selectionProvenance"
+import { attachSelectionProvenance } from "../../store/selectionProvenance"
 
 /**
  * Selection integration utilities for HOC charts.
@@ -129,7 +129,7 @@ export function wrapStyleWithSelection<TArgs extends unknown[]>(
 ): (d: Datum, ...args: TArgs) => Datum {
   if (!selectionHook) return baseStyleFn
 
-  return markSelectionProvenanceRequired((d: Datum, ...args: TArgs) => {
+  const wrappedStyle = (d: Datum, ...args: TArgs) => {
     const style = { ...baseStyleFn(d, ...args) }
 
     if (selectionHook.isActive) {
@@ -152,5 +152,9 @@ export function wrapStyleWithSelection<TArgs extends unknown[]>(
     }
 
     return style
-  })
+  }
+  return attachSelectionProvenance(
+    wrappedStyle,
+    [wrappedStyle as unknown as Datum]
+  )
 }

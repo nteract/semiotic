@@ -3,10 +3,7 @@
  * scripts/generate-capabilities-json.mjs. Do not edit by hand.
  */
 export type GeneratedMarkNavigation =
-  | "built-in"
-  | "delegated"
-  | "not-applicable"
-  | "unsupported"
+  "built-in" | "delegated" | "not-applicable" | "unsupported"
 
 export interface GeneratedChartAccessCapabilities {
   readonly supportsSSR: boolean
@@ -17,436 +14,92 @@ export interface GeneratedChartAccessCapabilities {
   readonly markNavigation: GeneratedMarkNavigation
 }
 
+type GeneratedChartAccessCapabilityRow = readonly [
+  name: string,
+  flags: number,
+  markNavigation?: GeneratedMarkNavigation
+]
+
+// Boolean capabilities are packed into flags so this public tooling registry
+// does not repeat the same property names for every chart in consumer bundles.
+const CAPABILITY_ROWS: readonly GeneratedChartAccessCapabilityRow[] = [
+  ["AreaChart", 13],
+  ["BubbleChart", 13],
+  ["BumpChart", 13],
+  ["CandlestickChart", 13],
+  ["ConnectedScatterplot", 13],
+  ["DifferenceChart", 13],
+  ["Heatmap", 13],
+  ["LineChart", 13],
+  ["MinimapChart", 13, "delegated"],
+  ["MultiAxisLineChart", 13],
+  ["QuadrantChart", 13],
+  ["Scatterplot", 13],
+  ["ScatterplotMatrix", 13, "delegated"],
+  ["StackedAreaChart", 13],
+  ["WaterfallChart", 13],
+  ["BarChart", 13],
+  ["BoxPlot", 13],
+  ["DonutChart", 13],
+  ["DotPlot", 13],
+  ["FunnelChart", 13],
+  ["GaugeChart", 5],
+  ["GroupedBarChart", 13],
+  ["Histogram", 13],
+  ["LikertChart", 13],
+  ["PieChart", 13],
+  ["RadarChart", 13],
+  ["RidgelinePlot", 13],
+  ["StackedBarChart", 13],
+  ["SwarmPlot", 13],
+  ["SwimlaneChart", 13],
+  ["ViolinPlot", 13],
+  ["ChordDiagram", 13],
+  ["CirclePack", 13],
+  ["ForceDirectedGraph", 13],
+  ["OrbitDiagram", 13],
+  ["ProcessSankey", 13],
+  ["SankeyDiagram", 13],
+  ["TreeDiagram", 13],
+  ["Treemap", 13],
+  ["ChoroplethMap", 13],
+  ["DistanceCartogram", 13],
+  ["FlowMap", 13],
+  ["ProportionalSymbolMap", 13],
+  ["RealtimeHeatmap", 14],
+  ["RealtimeHistogram", 14],
+  ["RealtimeLineChart", 14],
+  ["RealtimeSwarmChart", 14],
+  ["RealtimeWaterfallChart", 14],
+  ["TemporalHistogram", 13],
+  ["ChainReactionChart", 5],
+  ["CollisionSwarmChart", 13],
+  ["CrucibleChart", 5],
+  ["EventDropChart", 13],
+  ["GaltonBoardChart", 13],
+  ["GauntletChart", 5],
+  ["PacketFlowChart", 13],
+  ["ProcessFlowChart", 13],
+  ["UnitPileChart", 13],
+  ["BigNumber", 1, "not-applicable"],
+  ["ParallelCoordinatesRecipe", 21],
+  ["CalendarHeatmapRecipe", 21]
+]
+
 export const CHART_ACCESS_CAPABILITIES: Readonly<
   Record<string, GeneratedChartAccessCapabilities>
-> = Object.freeze({
-  "AreaChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "BubbleChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "BumpChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "CandlestickChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ConnectedScatterplot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "DifferenceChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "Heatmap": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "LineChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "MinimapChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "delegated"
-  },
-  "MultiAxisLineChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "QuadrantChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "Scatterplot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ScatterplotMatrix": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "delegated"
-  },
-  "StackedAreaChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "WaterfallChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "BarChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "BoxPlot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "DonutChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "DotPlot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "FunnelChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "GaugeChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "markNavigation": "unsupported"
-  },
-  "GroupedBarChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "Histogram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "LikertChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "PieChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RadarChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RidgelinePlot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "StackedBarChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "SwarmPlot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "SwimlaneChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ViolinPlot": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ChordDiagram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "CirclePack": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ForceDirectedGraph": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "OrbitDiagram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ProcessSankey": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "SankeyDiagram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "TreeDiagram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "Treemap": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ChoroplethMap": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "DistanceCartogram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "FlowMap": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ProportionalSymbolMap": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RealtimeHeatmap": {
-    "supportsSSR": false,
-    "realtime": true,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RealtimeHistogram": {
-    "supportsSSR": false,
-    "realtime": true,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RealtimeLineChart": {
-    "supportsSSR": false,
-    "realtime": true,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RealtimeSwarmChart": {
-    "supportsSSR": false,
-    "realtime": true,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "RealtimeWaterfallChart": {
-    "supportsSSR": false,
-    "realtime": true,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "TemporalHistogram": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ChainReactionChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "markNavigation": "unsupported"
-  },
-  "CollisionSwarmChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "CrucibleChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "markNavigation": "unsupported"
-  },
-  "EventDropChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "GaltonBoardChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "GauntletChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "markNavigation": "unsupported"
-  },
-  "PacketFlowChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "ProcessFlowChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "UnitPileChart": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": true,
-    "markNavigation": "unsupported"
-  },
-  "BigNumber": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": false,
-    "supportsLegend": false,
-    "markNavigation": "not-applicable"
-  },
-  "ParallelCoordinatesRecipe": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "recipeNavigation": true,
-    "markNavigation": "unsupported"
-  },
-  "CalendarHeatmapRecipe": {
-    "supportsSSR": true,
-    "realtime": false,
-    "supportsAccessibleTable": true,
-    "supportsLegend": false,
-    "recipeNavigation": true,
-    "markNavigation": "unsupported"
-  }
-})
+> = Object.freeze(
+  Object.fromEntries(
+    CAPABILITY_ROWS.map(([name, flags, markNavigation = "unsupported"]) => [
+      name,
+      {
+        supportsSSR: Boolean(flags & 1),
+        realtime: Boolean(flags & 2),
+        supportsAccessibleTable: Boolean(flags & 4),
+        supportsLegend: Boolean(flags & 8),
+        ...(flags & 16 ? { recipeNavigation: true as const } : {}),
+        markNavigation
+      }
+    ])
+  )
+)

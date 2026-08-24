@@ -3,10 +3,15 @@ import { buildHeatmapScene } from "./heatmapScene"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import {
-  getSelectionProvenance,
-  markSelectionProvenanceRequired
-} from "../../store/selectionProvenance"
+import { getSelectionProvenance } from "../../store/selectionProvenance"
+import { wrapStyleWithSelection } from "../../charts/shared/selectionUtils"
+
+function selectionAwareStyle(): (datum: Datum) => Datum {
+  return wrapStyleWithSelection(() => ({}), {
+    isActive: false,
+    predicate: () => true
+  })
+}
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -402,7 +407,7 @@ describe("buildStreamingHeatmapScene", () => {
         heatmapXBins: 5,
         heatmapYBins: 5,
         valueAccessor: "value",
-        areaStyle: markSelectionProvenanceRequired(() => ({}))
+        areaStyle: selectionAwareStyle()
       }
     })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)

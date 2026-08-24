@@ -2,10 +2,15 @@ import { describe, it, expect } from "vitest"
 import { buildBarScene } from "./barScene"
 import type { XYSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import {
-  getSelectionProvenance,
-  markSelectionProvenanceRequired
-} from "../../store/selectionProvenance"
+import { getSelectionProvenance } from "../../store/selectionProvenance"
+import { wrapStyleWithSelection } from "../../charts/shared/selectionUtils"
+
+function selectionAwareStyle(): (datum: Datum) => Datum {
+  return wrapStyleWithSelection(() => ({}), {
+    isActive: false,
+    predicate: () => true
+  })
+}
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -90,7 +95,7 @@ describe("buildBarScene", () => {
     const ctx = makeCtx({
       config: {
         binSize: 10,
-        areaStyle: markSelectionProvenanceRequired(() => ({}))
+        areaStyle: selectionAwareStyle()
       }
     })
     const result = buildBarScene(ctx, data)

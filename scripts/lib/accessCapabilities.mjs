@@ -58,15 +58,26 @@ export function renderAccessCapabilitiesModule(entries) {
     ...entries,
     ...BUILT_IN_RECIPE_ACCESS_ENTRIES
   ])
+  const rows = Object.entries(capabilities).map(([name, capability]) => {
+    const flags =
+      (capability.supportsSSR ? 1 : 0) |
+      (capability.realtime ? 2 : 0) |
+      (capability.supportsAccessibleTable ? 4 : 0) |
+      (capability.supportsLegend ? 8 : 0) |
+      (capability.recipeNavigation ? 16 : 0)
+    return capability.markNavigation === "unsupported"
+      ? [name, flags]
+      : [name, flags, capability.markNavigation]
+  })
+  const renderedRows = rows
+    .map((row) => `  [${row.map((value) => JSON.stringify(value)).join(", ")}]`)
+    .join(",\n")
   return `/**
  * Generated from chartSpecs capability metadata by
  * scripts/generate-capabilities-json.mjs. Do not edit by hand.
  */
 export type GeneratedMarkNavigation =
-  | "built-in"
-  | "delegated"
-  | "not-applicable"
-  | "unsupported"
+  "built-in" | "delegated" | "not-applicable" | "unsupported"
 
 export interface GeneratedChartAccessCapabilities {
   readonly supportsSSR: boolean
@@ -77,8 +88,34 @@ export interface GeneratedChartAccessCapabilities {
   readonly markNavigation: GeneratedMarkNavigation
 }
 
+type GeneratedChartAccessCapabilityRow = readonly [
+  name: string,
+  flags: number,
+  markNavigation?: GeneratedMarkNavigation
+]
+
+// Boolean capabilities are packed into flags so this public tooling registry
+// does not repeat the same property names for every chart in consumer bundles.
+const CAPABILITY_ROWS: readonly GeneratedChartAccessCapabilityRow[] = [
+${renderedRows}
+]
+
 export const CHART_ACCESS_CAPABILITIES: Readonly<
   Record<string, GeneratedChartAccessCapabilities>
-> = Object.freeze(${JSON.stringify(capabilities, null, 2)})
+> = Object.freeze(
+  Object.fromEntries(
+    CAPABILITY_ROWS.map(([name, flags, markNavigation = "unsupported"]) => [
+      name,
+      {
+        supportsSSR: Boolean(flags & 1),
+        realtime: Boolean(flags & 2),
+        supportsAccessibleTable: Boolean(flags & 4),
+        supportsLegend: Boolean(flags & 8),
+        ...(flags & 16 ? { recipeNavigation: true as const } : {}),
+        markNavigation
+      }
+    ])
+  )
+)
 `
 }

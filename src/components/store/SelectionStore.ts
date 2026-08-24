@@ -61,14 +61,6 @@ function buildRowClausePredicate(
   return (d) => fieldTests.every((fn) => fn(d))
 }
 
-function matchDatumOrProvenance(
-  datum: Datum,
-  predicate: (row: Datum) => boolean
-): boolean {
-  if (predicate(datum)) return true
-  return getSelectionProvenance(datum)?.some(predicate) ?? false
-}
-
 export function buildPredicate(
   selection: Selection,
   requestingClientId?: string
@@ -87,22 +79,18 @@ export function buildPredicate(
 
   if (rowClausePredicates.length === 0) return () => true
 
-  if (selection.resolution === "intersect") {
-    // An aggregate represents a set of source rows. Every intersected clause
-    // must match the same represented row; satisfying each clause from a
-    // different row would manufacture a combination that never existed.
-    return (datum) =>
-      matchDatumOrProvenance(datum, (row) =>
-        rowClausePredicates.every((predicate) => predicate(row))
-      )
-  }
+  // An aggregate represents a set of source rows. Intersected clauses must
+  // all match the same row; union/crossfilter need any clause on any row.
+  const matchesRow =
+    selection.resolution === "intersect"
+      ? (row: Datum) =>
+          rowClausePredicates.every((predicate) => predicate(row))
+      : (row: Datum) =>
+          rowClausePredicates.some((predicate) => predicate(row))
 
-  // Union and crossfilter keep independent clause semantics: an aggregate
-  // matches when any clause is satisfied by any represented row.
   return (datum) =>
-    rowClausePredicates.some((predicate) =>
-      matchDatumOrProvenance(datum, predicate)
-    )
+    matchesRow(datum) ||
+    (getSelectionProvenance(datum)?.some(matchesRow) ?? false)
 }
 
 // ── Store factory ──────────────────────────────────────────────────────────
