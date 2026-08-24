@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { renderChartWithEvidence } from "../server/renderToStaticSVG"
 import { createChartAccessContract } from "../access/chartAccessContract"
+import { registerBuiltInChartRecipeManifests } from "../ai/builtInChartRecipes"
 import {
   CHART_EVIDENCE_ENVELOPE_VERSION,
   fromEvidenceEnvelope,
@@ -237,20 +238,58 @@ describe("ChartEvidenceEnvelope@1", () => {
       width: 200,
       height: 120
     })
-    const envelope = toEvidenceEnvelope(
-      "MinimapChart",
-      {
-        ...lineProps,
-        brushExtent: ["2026-01-01", "2026-03-01"]
-      },
-      { ssrEvidence: evidence }
-    )
+    const envelope = toEvidenceEnvelope("RealtimeLineChart", lineProps, {
+      ssrEvidence: evidence
+    })
     const gate = evaluateEvidenceGate(envelope)
 
     expect(envelope.access.ssr.supported).toBe(false)
     expect(gate.findings.map((item) => item.id)).toContain(
       "access.ssr-unsupported"
     )
+  })
+
+  it("publishes server evidence for a schema-visible built-in recipe", () => {
+    registerBuiltInChartRecipeManifests()
+    const props = {
+      data: [
+        { id: "a", first: 1, second: 2 },
+        { id: "b", first: 2, second: 1 }
+      ],
+      layoutConfig: { fields: ["first", "second"] },
+      title: "Two profiles",
+      description: "Two records compared across two quantitative fields.",
+      summary: "The profiles cross.",
+      accessibleTable: true
+    }
+    const { evidence } = renderChartWithEvidence(
+      "ParallelCoordinatesRecipe",
+      props
+    )
+    const accessContract = createChartAccessContract({
+      component: "ParallelCoordinatesRecipe",
+      props,
+      options: {
+        describe: true,
+        inChartContainer: true,
+        navigable: true,
+        ssrEvidence: evidence
+      }
+    })
+    const envelope = toEvidenceEnvelope("ParallelCoordinatesRecipe", props, {
+      accessContract,
+      inChartContainer: true,
+      ssrEvidence: evidence
+    })
+    const gate = evaluateEvidenceGate(envelope, {
+      allowAccessibilityWarnings: true
+    })
+
+    expect(envelope.access.ssr.supported).toBe(true)
+    expect(gate.findings.map((item) => item.id)).not.toContain(
+      "access.ssr-unsupported"
+    )
+    expect(gate.ok).toBe(true)
   })
 
   it("fails unsupported claims and unresolved cross-modal conflicts", () => {

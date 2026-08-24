@@ -114,6 +114,27 @@ describe("built-in chart recipes", () => {
     })
   })
 
+  it("does not mistake ordinary fields ending in lowercase id for identifiers", () => {
+    registerBuiltInChartRecipeManifests()
+    const [suggestion] = suggestCharts(
+      [
+        { userId: "a", paid: 12, valid: 8, hybrid: "alpha" },
+        { userId: "b", paid: 18, valid: 5, hybrid: "beta" },
+        { userId: "c", paid: 15, valid: 9, hybrid: "alpha" }
+      ],
+      {
+        intent: "correlation",
+        allow: [PARALLEL_COORDINATES_RECIPE_ID],
+        includeVariants: false
+      }
+    )
+
+    expect(suggestion.props.layoutConfig).toMatchObject({
+      fields: ["paid", "valid"],
+      colorBy: "hybrid"
+    })
+  })
+
   it("derives calendar date/value accessors in suggestions", () => {
     registerBuiltInChartRecipeManifests()
     const [suggestion] = suggestCharts(dailyData, {

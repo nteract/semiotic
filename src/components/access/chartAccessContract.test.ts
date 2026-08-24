@@ -112,6 +112,51 @@ describe("ChartAccessContract@1", () => {
     expect(contract.ssr.supported).toBe(true)
   })
 
+  it("does not advertise datum navigation where no navigation builder exists", () => {
+    for (const component of [
+      "GaugeChart",
+      "RealtimeLineChart",
+      "PhysicsCustomChart"
+    ]) {
+      const contract = createChartAccessContract({ component, props: {} })
+      expect(contract.navigation.supported).toBe(false)
+      expect(contract.keyboard.markNavigation).toBe("unsupported")
+      expect(contract.keyboard.focusRing).toBe("unsupported")
+    }
+  })
+
+  it.each(["ParallelCoordinatesRecipe", "CalendarHeatmapRecipe"])(
+    "registers built-in recipe access and SSR support for %s",
+    (component) => {
+      const { evidence } = renderChartWithEvidence(component, {
+        data:
+          component === "ParallelCoordinatesRecipe"
+            ? [
+                { id: "a", first: 1, second: 2 },
+                { id: "b", first: 2, second: 1 }
+              ]
+            : [
+                { date: "2026-01-01", value: 1 },
+                { date: "2026-01-02", value: 2 }
+              ],
+        layoutConfig:
+          component === "ParallelCoordinatesRecipe"
+            ? { fields: ["first", "second"] }
+            : { dateAccessor: "date", valueAccessor: "value", year: 2026 }
+      })
+      const contract = createChartAccessContract({
+        component,
+        props: {},
+        options: { ssrEvidence: evidence }
+      })
+
+      expect(contract.ssr.supported).toBe(true)
+      expect(contract.ssr.evidence?.markCount).toBeGreaterThan(0)
+      expect(contract.navigation.supported).toBe(true)
+      expect(contract.keyboard.markNavigation).toBe("built-in")
+    }
+  )
+
   it.each(["MinimapChart", "ScatterplotMatrix", "ChainReactionChart"])(
     "reports the registered composite server implementation for %s",
     (component) => {

@@ -6,10 +6,12 @@ import type {
   DependencyAccessor,
   DependencyTaskStatus
 } from "./dependencyMachine"
+import type { PhysicsSimulationStateChange } from "./physicsHocUtils"
 
 export type ChainReactionMode = "snapshot" | "replay" | "mechanical"
 export type ChainReactionInsight = "none" | "blocker-amplification"
-export type ChainReactionControl = "play" | "pause" | "step" | "reset" | "settle"
+export type ChainReactionControl =
+  "play" | "pause" | "step" | "reset" | "settle"
 
 export type ChainReactionObservation<TDatum extends Datum = Datum> =
   | { type: "task-completed"; taskID: string; datum: TDatum }
@@ -21,7 +23,11 @@ export type ChainReactionObservation<TDatum extends Datum = Datum> =
       downstreamTaskCount: number
       affectedLaneCount: number
     }
-  | { type: "blocker-previewed"; blockerID: string; downstreamTaskIDs: string[] }
+  | {
+      type: "blocker-previewed"
+      blockerID: string
+      downstreamTaskIDs: string[]
+    }
   | { type: "machine-settled" }
 
 export interface ChainReactionTaskState {
@@ -85,6 +91,8 @@ export interface ChainReactionChartProps<TDatum extends Datum = Datum> {
   selectedTaskIDs?: readonly string[]
   onSelectionChange?: (ids: string[]) => void
   onObservation?: (event: ChainReactionObservation<TDatum>) => void
+  /** Observe the underlying physics pipeline entering running/settled states. */
+  onSimulationStateChange?: PhysicsSimulationStateChange
   reducedMotion?: "settle"
   seed?: number
   width?: number

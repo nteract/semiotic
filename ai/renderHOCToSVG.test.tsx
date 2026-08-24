@@ -32,9 +32,11 @@ describe("MCP recipe rendering", () => {
 
     expect(parallel.error).toBeNull()
     expect(parallel.svg).toContain("<svg")
+    expect(parallel.svg).toContain('width="600" height="400"')
     expect(parallel.svg).toContain("Vehicle profiles")
     expect(calendar.error).toBeNull()
     expect(calendar.svg).toContain("<svg")
+    expect(calendar.svg).toContain('width="600" height="400"')
     expect(calendar.svg).toContain("Daily activity")
   })
 })

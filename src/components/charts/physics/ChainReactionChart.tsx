@@ -113,6 +113,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
     selectedTaskIDs: controlledSelection,
     onSelectionChange,
     onObservation,
+    onSimulationStateChange,
     reducedMotion,
     seed = 31,
     width: widthProp = 920,
@@ -764,7 +765,8 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
               sleepAfter: 0.8
             },
             observation: {
-              chartType: "ChainReactionChart"
+              chartType: "ChainReactionChart",
+              onSimulationStateChange
             }
           }}
         />

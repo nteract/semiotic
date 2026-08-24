@@ -178,6 +178,20 @@ function legendInteraction(
     : "not-enabled"
 }
 
+function markNavigation(
+  capabilities: GeneratedChartAccessCapabilities | undefined,
+  navigationSupported: boolean
+): ChartAccessContractKeyboard["markNavigation"] {
+  if (!capabilities) return "unsupported"
+  if (
+    capabilities.markNavigation === "delegated" ||
+    capabilities.markNavigation === "not-applicable"
+  ) {
+    return capabilities.markNavigation
+  }
+  return navigationSupported ? "built-in" : "unsupported"
+}
+
 /** Build a stable access inventory for a chart configuration. */
 export function createChartAccessContract({
   component,
@@ -191,12 +205,14 @@ export function createChartAccessContract({
   const description = describeChart(component, props as never, {
     ...(options.locale ? { locale: options.locale } : {})
   })
-  const navigationSupported = supportsStructuredNavigation(
+  const runtimeNavigationSupported = supportsStructuredNavigation(
     component,
     props as never
   )
+  const navigationSupported =
+    runtimeNavigationSupported || capabilities?.recipeNavigation === true
   const tree =
-    navigationSupported && options.navigable !== false
+    runtimeNavigationSupported && options.navigable !== false
       ? buildNavigationTree(component, props as never, {
           ...(options.locale ? { locale: options.locale } : {})
         })
@@ -207,6 +223,10 @@ export function createChartAccessContract({
     navigable: options.navigable !== false && navigationSupported
   })
   const history = realtime ? normalizeStatusHistory(options) : []
+  const resolvedMarkNavigation = markNavigation(
+    capabilities,
+    navigationSupported
+  )
 
   return {
     schemaVersion: CHART_ACCESS_CONTRACT_VERSION,
@@ -218,9 +238,9 @@ export function createChartAccessContract({
       accessibleTable: supportsAccessibleTable(capabilities, props)
     },
     keyboard: {
-      markNavigation: capabilities?.markNavigation ?? "unsupported",
+      markNavigation: resolvedMarkNavigation,
       legendInteraction: legendInteraction(capabilities, props),
-      focusRing: capabilities?.markNavigation ?? "unsupported"
+      focusRing: resolvedMarkNavigation
     },
     navigation: {
       supported: navigationSupported,
@@ -229,7 +249,9 @@ export function createChartAccessContract({
       ...(!tree
         ? {
             note: navigationSupported
-              ? "Structured datum navigation is available through ChartContainer; enable its navigable option to materialize the tree."
+              ? runtimeNavigationSupported
+                ? "Structured datum navigation is available through ChartContainer; enable its navigable option to materialize the tree."
+                : "Structured datum navigation is declared for this built-in recipe; load its recipe manifest through semiotic/ai before materializing the tree."
               : "No datum-level structured navigation is registered for this chart. Exact-value table access may still be available."
           }
         : {})

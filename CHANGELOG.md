@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`semiotic/access` public entrypoint** — stable ESM/CJS/types exports expose
   the contract factory, types, schema version, and first-wave baseline contracts.
   After the semantic hierarchy/choropleth navigation tranche, the access tooling
-  graph measures **35.2 KiB gzip** with a narrow 36 KiB budget.
+  graph measures **35.4 KiB gzip** with a narrow 36 KiB budget.
 - **`ChartEvidenceEnvelope@1`** — portable provenance ledger composing data
   profile, deterministic input/transform hashes, render evidence, Chart Access
   Contract, reader grounding, communicative act, claims, modality observations,
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   existing diagnostics, grounding, render, accessibility, and repair payloads.
 - **`semiotic/evidence` public entrypoint** — stable exports for envelope
   construction/parsing, stable hashing, publication gates, and associated types.
-  The evidence tooling graph measures about **49 KB gzip** with a 50 KB budget;
+  The evidence tooling graph measures **49.8 KiB gzip** with a 50 KiB budget;
   it stays off production chart-family graphs.
 - **Controlled dense-browser baseline** — seven fresh Chromium contexts now
   measure visible Scatterplot paint and pointer-to-quadtree-hit-to-visible-
@@ -196,6 +196,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the authored input shape.
 
 ### Fixed
+- **Linked-selection intersections preserve row identity through aggregates** —
+  intersected clauses must now be satisfied by the same represented source row;
+  separate rows in one bin or cell can no longer manufacture a combination that
+  did not exist. Union and crossfilter retain their independent-clause behavior.
+- **Access contracts no longer overclaim keyboard navigation or reject built-in
+  recipes** — mark navigation is resolved from the authoritative structured-
+  navigation builder, while both schema-visible recipes now carry generated
+  access and SSR records. Recipe evidence can pass publication gates, and
+  realtime, gauge, and unsupported ordinal/physics surfaces report honestly.
+- **Recipe and physics surfaces agree across renderers** — server/MCP recipe
+  defaults now match the React/schema 600×400 contract and primary margins;
+  lowercase words ending in `id` (such as `paid`, `valid`, and `hybrid`) remain
+  eligible data roles; and `PhysicsCustomChart` plus `ChainReactionChart` now
+  forward the shared `onSimulationStateChange` callback they advertise.
 - **Node server rendering exits cleanly** — shared static renderers now import
   React's condition-aware server entry so Node selects its Node renderer while
   browser/edge builds retain their compatible implementation. One-shot export

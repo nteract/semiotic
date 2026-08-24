@@ -43,6 +43,7 @@ import {
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
   usePhysicsChartMode,
+  usePhysicsRerun,
   usePhysicsSelection,
   type PhysicsHocFrameProps,
   type PhysicsSharedChartProps,
@@ -313,6 +314,13 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       yExtent
     ]
   )
+  const observedConfig = usePhysicsRerun(
+    resolved.config,
+    undefined,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  ).config
 
   if (
     topologyKeyRef.current !== topologyKey ||
@@ -466,7 +474,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
       bodyStyle={
         resolved.result.bodyStyle ?? frameProps.bodyStyle ?? fallbackBodyStyle
       }
-      config={resolved.config}
+      config={observedConfig}
       controllers={controllers}
       foregroundGraphics={composePhysicsFrameGraphics(
         frameProps.foregroundGraphics,

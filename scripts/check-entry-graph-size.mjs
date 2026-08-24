@@ -75,12 +75,12 @@ const ENTRY_GRAPHS = [
   // production graphs while retaining a narrow tooling budget.
   // Bumped 35→36: authored hierarchy rollups and choropleth coverage/range/
   // rank branches replace the former flat mark dump. Production measures
-  // 35.2 KiB gzip; these are the public navigation semantics, not a runtime
+  // 35.4 KiB gzip; these are the public navigation semantics, not a runtime
   // dependency leak.
   { entry: "semiotic-access.module.min.js", label: "access", limitKb: 36 },
   // Evidence envelopes include data profiles and grounding; this is tooling,
-  // not a chart runtime dependency. The production graph is 47.8 KiB, so
-  // retain roughly 2 KiB of explicit headroom rather than the inherited
+  // not a chart runtime dependency. The production graph is 49.8 KiB, so
+  // retain a narrow explicit guard band rather than the inherited
   // 180 KiB ceiling that could not detect accidental runtime coupling.
   { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 50 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },

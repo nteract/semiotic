@@ -20,8 +20,8 @@ export const xyCustomChart: ChartConfig = {
     // useCustomChartSetup delegates the default legend decision to
     // useChartSetup; categorical custom layouts therefore gain a legend when
     // colorBy is supplied unless callers explicitly disable it.
-    showLegend: common.showLegend ?? Boolean(colorBy),
-  }),
+    showLegend: common.showLegend ?? Boolean(colorBy)
+  })
 }
 
 export const ordinalCustomChart: ChartConfig = {
@@ -37,8 +37,8 @@ export const ordinalCustomChart: ChartConfig = {
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
     ...common,
-    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false,
-  }),
+    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false
+  })
 }
 
 export const networkCustomChart: ChartConfig = {
@@ -56,8 +56,8 @@ export const networkCustomChart: ChartConfig = {
     colorScheme,
     customNetworkLayout: rest.layout || rest.customNetworkLayout,
     layoutConfig: rest.layoutConfig,
-    ...common,
-  }),
+    ...common
+  })
 }
 
 export const geoCustomChart: ChartConfig = {
@@ -74,29 +74,24 @@ export const geoCustomChart: ChartConfig = {
     colorScheme,
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
-    ...common,
-  }),
+    ...common
+  })
 }
 
 export const parallelCoordinatesRecipe: ChartConfig = {
   frameType: "ordinal",
-  layout: { primarySize: { width: 800, height: 420 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     ...ordinalCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
     customLayout: parallelCoordinatesLayout,
-    showAxes: false,
-  }),
+    showAxes: false
+  })
 }
 
 export const calendarHeatmapRecipe: ChartConfig = {
   frameType: "xy",
-  layout: {
-    primarySize: { width: 900, height: 160 },
-    margin: { top: 12, right: 12, bottom: 12, left: 12 },
-  },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     ...xyCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
     customLayout: calendarLayout,
-    showAxes: false,
-  }),
+    showAxes: false
+  })
 }
