@@ -79,6 +79,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cover Chromium, Firefox, and WebKit on macOS and pinned Linux.
 
 ### Changed
+- **Built-in recipe layouts load with the recipe renderer** — the browser AI
+  entry still registers portable manifests for discovery, while
+  `ParallelCoordinatesRecipe` and `CalendarHeatmapRecipe` layout implementations
+  are registered only when `ChartRecipe` renders. Suggestion and description
+  consumers no longer retain unused rendering code, restoring multi-subpath
+  bundle runway without weakening its budget.
 - **`LineChart` guidance and executable contracts now prefer `semiotic/line`**
   when it is a route's only XY chart; `semiotic/xy` remains the family entry for
   mixed XY catalogs. Chart Clinic, AI examples, Context7, Getting Started,

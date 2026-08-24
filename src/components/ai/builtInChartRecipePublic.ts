@@ -1,8 +1,6 @@
-import { registerBuiltInChartRecipeLayouts } from "./builtInChartRecipeLayouts"
 import { registerBuiltInChartRecipeManifests } from "./builtInChartRecipes"
 
 registerBuiltInChartRecipeManifests()
-registerBuiltInChartRecipeLayouts()
 
 export { ChartRecipe } from "./ChartRecipe"
 export type { ChartRecipeProps } from "./ChartRecipe"

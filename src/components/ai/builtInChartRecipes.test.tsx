@@ -3,15 +3,19 @@ import { renderToStaticMarkup } from "react-dom/server"
 import Ajv2020 from "ajv/dist/2020.js"
 import { describe, expect, it } from "vitest"
 import { ChartRecipe } from "./ChartRecipe"
-import { registerBuiltInChartRecipeLayouts } from "./builtInChartRecipeLayouts"
 import {
   BUILT_IN_CHART_RECIPES,
+  CALENDAR_HEATMAP_LAYOUT_ID,
   CALENDAR_HEATMAP_RECIPE_ID,
+  PARALLEL_COORDINATES_LAYOUT_ID,
   PARALLEL_COORDINATES_RECIPE_ID,
   generateBuiltInRecipeSchemaTools,
   registerBuiltInChartRecipeManifests
 } from "./builtInChartRecipes"
-import { listChartRecipes } from "./chartRecipeRegistry"
+import {
+  listChartRecipes,
+  unregisterRecipeLayout
+} from "./chartRecipeRegistry"
 import { suggestCharts } from "./suggestCharts"
 
 const vehicleData = [
@@ -157,7 +161,8 @@ describe("built-in chart recipes", () => {
 
   it("renders both portable manifests through the generic ChartRecipe component", () => {
     registerBuiltInChartRecipeManifests()
-    registerBuiltInChartRecipeLayouts()
+    unregisterRecipeLayout(PARALLEL_COORDINATES_LAYOUT_ID)
+    unregisterRecipeLayout(CALENDAR_HEATMAP_LAYOUT_ID)
 
     const parallel = renderToStaticMarkup(
       <ChartRecipe

@@ -448,7 +448,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { renderChart } from "semiotic/server"` | node | **262.0 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **118.2 KiB** |
 | `import { renderToImage } from "semiotic/server/node"` | node | **262.6 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **253.9 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **251.8 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **44.5 KiB** |
 | `import { createChartAccessContract } from "semiotic/access"` | browser | **30.9 KiB** |
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **39.8 KiB** |

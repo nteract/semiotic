@@ -6,6 +6,13 @@ import {
   PARALLEL_COORDINATES_LAYOUT_ID
 } from "./builtInChartRecipes"
 
+export function isBuiltInChartRecipeLayoutId(layoutId: string): boolean {
+  return (
+    layoutId === PARALLEL_COORDINATES_LAYOUT_ID ||
+    layoutId === CALENDAR_HEATMAP_LAYOUT_ID
+  )
+}
+
 export function registerBuiltInChartRecipeLayouts(): void {
   registerRecipeLayout(
     PARALLEL_COORDINATES_LAYOUT_ID,
