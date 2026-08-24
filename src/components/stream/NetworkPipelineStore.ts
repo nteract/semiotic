@@ -48,6 +48,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
 import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
+import { applyNetworkCustomLayoutOutput, clearNetworkCustomLayoutOutput } from "./networkCustomLayoutOutput"
 import {
   restyleNetworkCustomScene,
   snapshotNetworkCustomStyles
@@ -838,10 +839,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
           this.sceneNodes = []
           this.sceneEdges = []
           this.labels = []
-          this.customLayoutBackgrounds = null
-          this.customLayoutOverlays = null
-          this.customLayoutHtmlMarks = []
-          this.lastCustomLayoutResult = null
+          clearNetworkCustomLayoutOutput(this)
           this._customRestyle = undefined
           this._customRestyleEdge = undefined
           this.hasCustomRestyle = false
@@ -854,10 +852,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
-      this.customLayoutBackgrounds = result.backgrounds ?? null
-      this.customLayoutOverlays = result.overlays ?? null
-      this.customLayoutHtmlMarks = result.htmlMarks ?? []
-      this.lastCustomLayoutResult = result
+      applyNetworkCustomLayoutOutput(this, result)
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
       // quadtree. A recovered failure deliberately does not.
@@ -889,10 +884,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
     // Built-in chart types: clear stale backgrounds / overlays / HTML marks from a prior
     // customLayout run.
-    this.customLayoutBackgrounds = null
-    this.customLayoutOverlays = null
-    this.customLayoutHtmlMarks = []
-    this.lastCustomLayoutResult = null
+    clearNetworkCustomLayoutOutput(this)
     this.lastCustomLayoutFailure = null
 
     const plugin = getLayoutPlugin(this.config.chartType)
@@ -1529,10 +1521,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.sceneNodes = []
     this.sceneEdges = []
     this.labels = []
-    this.customLayoutBackgrounds = null
-    this.customLayoutOverlays = null
-    this.customLayoutHtmlMarks = []
-    this.lastCustomLayoutResult = null
+    clearNetworkCustomLayoutOutput(this)
     this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this._customRestyleEdge = undefined
