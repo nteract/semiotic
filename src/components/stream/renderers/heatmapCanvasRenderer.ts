@@ -2,9 +2,8 @@ import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasPaint } from "./canvasRenderHelpers"
+import { resolveCanvasFontFamily, resolveCanvasPaint } from "./canvasRenderHelpers"
 import { parseCanvasColor } from "./colorUtils"
-import { resolveCanvasFontFamily } from "./canvasTypography"
 
 /**
  * Returns a contrasting text color (black or white) based on the

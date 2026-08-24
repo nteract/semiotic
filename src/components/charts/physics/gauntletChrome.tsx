@@ -12,8 +12,7 @@ import type {
   PhysicsCanvasPaintContext,
   PhysicsSemanticItem
 } from "../../stream/physics/StreamPhysicsTypes"
-import { resolveCanvasPaint } from "../../stream/renderers/canvasRenderHelpers"
-import { resolveCanvasFontFamily } from "../../stream/renderers/canvasTypography"
+import { resolveCanvasFontFamily, resolveCanvasPaint } from "../../stream/renderers/canvasRenderHelpers"
 import {
   CORE_KIND,
   NEGATIVE_KIND,

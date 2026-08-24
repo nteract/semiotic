@@ -17,6 +17,13 @@ import {
 } from "d3-shape"
 import type { CurveFactory } from "d3-shape"
 
+/** Resolve the inherited chart font token for canvas, which has no CSS cascade. */
+export function resolveCanvasFontFamily(
+  ctx: CanvasRenderingContext2D
+): string {
+  return resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
+}
+
 /**
  * Map a `CurveType` string to a d3-shape curve factory. Returns `null`
  * for `"linear"` and `undefined` so callers can branch on a single

@@ -25,7 +25,7 @@ import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
-import { resolveCanvasFontFamily } from "../../stream/renderers/canvasTypography"
+import { resolveCanvasFontFamily } from "../../stream/renderers/canvasRenderHelpers"
 
 registerXYPlugin(scatterXYPlugin)
 

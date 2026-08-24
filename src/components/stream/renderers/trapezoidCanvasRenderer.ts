@@ -1,7 +1,6 @@
 import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasFontFamily } from "./canvasTypography"
-import { coerceCanvasFill } from "./canvasRenderHelpers"
+import { coerceCanvasFill, resolveCanvasFontFamily } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.

@@ -3,7 +3,7 @@ import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { isHatchFill } from "../../charts/shared/hatchFill"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
-import { resolveCanvasFontFamily } from "./canvasTypography"
+import { resolveCanvasFontFamily } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
