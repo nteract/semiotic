@@ -29,7 +29,7 @@ import {
   writeFileSync
 } from "node:fs"
 import { tmpdir } from "node:os"
-import { basename, dirname, join, relative, resolve } from "node:path"
+import { dirname, join, relative, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath } from "node:url"
 import { gzipSync } from "node:zlib"
