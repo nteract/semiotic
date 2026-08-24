@@ -222,6 +222,18 @@ npm run check:file-size -- --json          # machine-readable report
 npm run check:file-size -- --update-allowlist
 ```
 
+### Cold-consumer bundle ratchet
+
+`npm run check:cold-consumer` keeps package exports and the measurement method exact, so structural
+contract drift still fails immediately. Byte measurements use two levels: changes inside the
+supported runner variance pass silently; changes outside that variance warn without failing until
+positive growth exceeds four times the metric's runner tolerance. Size improvements warn for a
+baseline refresh but never fail solely for making a consumer bundle smaller.
+
+**Take cold-consumer warnings seriously.** Inspect the affected named import and its reachable graph
+before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
+intentional, acceptable part of that public import—not simply to make CI quiet.
+
 ## Before Opening a PR
 
 Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.

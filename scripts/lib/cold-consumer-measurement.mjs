@@ -43,6 +43,13 @@ export const COLD_CONSUMER_SIZE_TOLERANCE = Object.freeze({
   gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.01 }),
 })
 
+// Size drift first becomes an actionable warning after leaving the supported
+// runner-variance band. Positive growth becomes blocking only after consuming
+// this multiple of that same, metric-aware tolerance. Improvements remain
+// warnings so CI never rejects a smaller bundle merely because the committed
+// measurement has not been refreshed yet.
+export const COLD_CONSUMER_SIZE_FAILURE_MULTIPLIER = 4
+
 // Experimental subpaths are intentionally unpublished as stable contracts.
 // Package metadata and the schema-resource wildcard are public exports but
 // cannot each be represented by one JavaScript named import; smoke-pack
@@ -235,6 +242,15 @@ export function coldConsumerSizeTolerance(metric, baselineBytes) {
   return Math.max(policy.minimumBytes, Math.ceil(baselineBytes * policy.relative))
 }
 
+export function classifyColdConsumerSizeDelta(metric, baselineBytes, delta) {
+  const tolerance = coldConsumerSizeTolerance(metric, baselineBytes)
+  const failureThreshold = tolerance * COLD_CONSUMER_SIZE_FAILURE_MULTIPLIER
+  const severity =
+    Math.abs(delta) <= tolerance ? "none" : delta > failureThreshold ? "failure" : "warning"
+
+  return { severity, tolerance, failureThreshold }
+}
+
 /**
  * Compare a committed measurement baseline with a fresh one.
  *
@@ -248,9 +264,18 @@ export function compareColdConsumerReports(baseline, current) {
     ...validateColdConsumerReport(current, "current measurement"),
   ]
   const sizeDeltas = []
+  const sizeWarnings = []
+  const sizeFailures = []
 
   if (structuralErrors.length > 0) {
-    return { current: false, structuralErrors, sizeDeltas }
+    return {
+      current: false,
+      blocking: true,
+      structuralErrors,
+      sizeDeltas,
+      sizeWarnings,
+      sizeFailures,
+    }
   }
 
   if (baseline.schemaVersion !== current.schemaVersion) {
@@ -282,9 +307,9 @@ export function compareColdConsumerReports(baseline, current) {
 
     for (const metric of ["rawBytes", "gzipBytes"]) {
       const delta = actual[metric] - expected[metric]
-      const tolerance = coldConsumerSizeTolerance(metric, expected[metric])
-      if (Math.abs(delta) > tolerance) {
-        sizeDeltas.push({
+      const classification = classifyColdConsumerSizeDelta(metric, expected[metric], delta)
+      if (classification.severity !== "none") {
+        const sizeDelta = {
           exportKey: expected.exportKey,
           importPath: expected.importPath,
           symbol: expected.symbol,
@@ -292,16 +317,27 @@ export function compareColdConsumerReports(baseline, current) {
           baselineBytes: expected[metric],
           currentBytes: actual[metric],
           delta,
-          tolerance,
-        })
+          tolerance: classification.tolerance,
+          failureThreshold: classification.failureThreshold,
+          severity: classification.severity,
+        }
+        sizeDeltas.push(sizeDelta)
+        if (classification.severity === "failure") {
+          sizeFailures.push(sizeDelta)
+        } else {
+          sizeWarnings.push(sizeDelta)
+        }
       }
     }
   }
 
   return {
     current: structuralErrors.length === 0 && sizeDeltas.length === 0,
+    blocking: structuralErrors.length > 0 || sizeFailures.length > 0,
     structuralErrors,
     sizeDeltas,
+    sizeWarnings,
+    sizeFailures,
   }
 }
 

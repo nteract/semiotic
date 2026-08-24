@@ -6,6 +6,7 @@ import {
   NAMED_IMPORT_CASES,
   README_MARKER_END,
   README_MARKER_START,
+  classifyColdConsumerSizeDelta,
   coldConsumerSizeTolerance,
   compareColdConsumerReports,
   importPathFor,
@@ -114,7 +115,36 @@ describe("cold-consumer named import manifest", () => {
         currentBytes: 512 + tolerance + 1,
         delta: tolerance + 1,
         tolerance,
+        severity: "warning",
       }),
+    ])
+    expect(result.blocking).toBe(false)
+    expect(result.sizeWarnings).toHaveLength(1)
+    expect(result.sizeFailures).toEqual([])
+  })
+
+  it("warns on small growth before blocking a material cold-consumer regression", () => {
+    const tolerance = coldConsumerSizeTolerance("rawBytes", 4038)
+
+    expect(tolerance).toBe(32)
+    expect(classifyColdConsumerSizeDelta("rawBytes", 4038, 52)).toEqual({
+      severity: "warning",
+      tolerance: 32,
+      failureThreshold: 128,
+    })
+    expect(classifyColdConsumerSizeDelta("rawBytes", 4038, 128).severity).toBe("warning")
+    expect(classifyColdConsumerSizeDelta("rawBytes", 4038, 129).severity).toBe("failure")
+
+    const baseline = sampleReport()
+    baseline.measurements[0].rawBytes = 4038
+    const current = copy(baseline)
+    current.measurements[0].rawBytes += 129
+    const comparison = compareColdConsumerReports(baseline, current)
+
+    expect(comparison.blocking).toBe(true)
+    expect(comparison.sizeWarnings).toEqual([])
+    expect(comparison.sizeFailures).toEqual([
+      expect.objectContaining({ metric: "rawBytes", delta: 129, severity: "failure" }),
     ])
   })
 
@@ -130,8 +160,17 @@ describe("cold-consumer named import manifest", () => {
         metric: "rawBytes",
         delta: -(tolerance + 1),
         tolerance,
+        severity: "warning",
       }),
     ])
+  })
+
+  it("keeps bundle improvements advisory even beyond the positive-growth failure threshold", () => {
+    expect(classifyColdConsumerSizeDelta("rawBytes", 4038, -1000)).toEqual({
+      severity: "warning",
+      tolerance: 32,
+      failureThreshold: 128,
+    })
   })
 
   it("keeps measurement identity and package graph shape exact", () => {
