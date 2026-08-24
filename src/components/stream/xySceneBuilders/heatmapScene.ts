@@ -24,6 +24,18 @@ import {
 const COLOR_LUT_SIZE = 256
 const colorLutCache = new Map<string, string[]>()
 
+function colorLutIndex(value: number, minValue: number, maxValue: number): number {
+  if (minValue === maxValue) return Math.floor(COLOR_LUT_SIZE / 2)
+  return Math.min(
+    Math.floor(
+      ((value - minValue) * (COLOR_LUT_SIZE - 1)) /
+        (maxValue - minValue) +
+        0.5
+    ),
+    COLOR_LUT_SIZE - 1
+  )
+}
+
 function getColorLut(schemeName: string): string[] {
   const cacheKey = Object.prototype.hasOwnProperty.call(
     SEQUENTIAL_INTERPOLATORS,
@@ -183,8 +195,6 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     : ctx.config.themeSequential || "blues"
   const customColorScale = ctx.config.heatmapColorScale
   const lut = customColorScale ? undefined : getColorLut(schemeName)
-  const valRange = maxVal - minVal || 1
-  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
 
   const cellW = layout.width / xCount
   const cellH = layout.height / yCount
@@ -199,7 +209,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     const xi = key % xCount
     const yi = (key - xi) / xCount
 
-    const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+    const lutIdx = colorLutIndex(val, minVal, maxVal)
     const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
     const labelOpts = showValues
       ? { value: val, showValues: true as const, valueFormat }
@@ -283,13 +293,11 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   }
   if (!isFinite(minVal)) return []
 
-  const valRange = maxVal - minVal || 1
   const customColorScale = ctx.config.heatmapColorScale
   const schemeName = typeof ctx.config.colorScheme === "string"
     ? ctx.config.colorScheme
     : ctx.config.themeSequential || "blues"
   const lut = customColorScale ? undefined : getColorLut(schemeName)
-  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
   const cellW = layout.width / xBins
   const cellH = layout.height / yBins
   const showValues = ctx.config.showValues
@@ -310,7 +318,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
         default: val = counts[idx]; break
       }
 
-      const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+      const lutIdx = colorLutIndex(val, minVal, maxVal)
       const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
 
       const labelOpts = showValues

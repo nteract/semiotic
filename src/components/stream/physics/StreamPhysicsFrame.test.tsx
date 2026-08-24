@@ -664,6 +664,32 @@ describe("StreamPhysicsFrame", () => {
     expect(screen.getByText(/all 7 semantic items/i)).toBeInTheDocument()
   })
 
+  it("gives unnamed data-summary landmarks instance-local names", () => {
+    const semanticItems = [
+      { id: "route", label: "Route", x: 40, y: 60 }
+    ]
+    render(
+      <>
+        <StreamPhysicsFrame
+          size={[200, 120]}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+          semanticItems={semanticItems}
+        />
+        <StreamPhysicsFrame
+          size={[200, 120]}
+          config={{ fixedDt: 0.1, kernel: quietKernel }}
+          semanticItems={semanticItems}
+        />
+      </>
+    )
+
+    const names = screen
+      .getAllByRole("region")
+      .map((region) => region.getAttribute("aria-label"))
+    expect(names).toHaveLength(2)
+    expect(new Set(names).size).toBe(2)
+  })
+
   it("opens the semantic data table from the shared data-summary context", () => {
     render(
       <DataSummaryProvider>

@@ -329,8 +329,10 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     const fills = new Set(nodes.map((n) => n.fill))
-    // When min === max, all cells get the same color
+    // A collapsed sequential domain resolves to its midpoint: the cells stay
+    // uniform without becoming the palette's near-white minimum.
     expect(fills.size).toBe(1)
+    expect(nodes[0].fill).not.toBe("rgb(247, 251, 255)")
   })
 })
 
@@ -660,6 +662,17 @@ describe("buildStreamingHeatmapScene", () => {
     expect(nodes).toHaveLength(2)
     const fills = nodes.map((n) => n.fill)
     expect(fills[0]).not.toBe(fills[1])
+  })
+
+  it("keeps constant aggregate cells visibly inside the sequential palette", () => {
+    const data = [
+      { x: 5, y: 5, value: 1 },
+      { x: 95, y: 95, value: 1 },
+    ]
+    const nodes = buildHeatmapScene(makeStreamCtx(), data, defaultLayout)
+
+    expect(new Set(nodes.map((node) => node.fill)).size).toBe(1)
+    expect(nodes[0].fill).not.toBe("rgb(247, 251, 255)")
   })
 
   it("large bin grid (100x100) with sparse data produces only occupied cells", () => {

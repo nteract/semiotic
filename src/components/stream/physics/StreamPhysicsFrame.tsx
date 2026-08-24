@@ -1453,7 +1453,9 @@ export const StreamPhysicsFrame = memo(
             <AccessibleTablePortal accessibleTable={accessibleTable}>
               <SkipToTableLink tableId={tableId} />
               <PhysicsSemanticDataTable
-                chartTitle={typeof title === "string" ? title : ariaLabel}
+                chartTitle={
+                  typeof title === "string" ? title : description
+                }
                 items={allSemanticItems}
                 tableId={tableId}
               />

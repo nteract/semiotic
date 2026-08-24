@@ -202,6 +202,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the authored input shape.
 
 ### Fixed
+- **Constant-value heatmaps remain visible across renderers** — static,
+  realtime, canvas, and server heatmaps resolve collapsed sequential domains
+  at the palette midpoint instead of mapping every occupied cell to the
+  near-white minimum. Coordinated readiness tests and all six browser/platform
+  linked-hover sheets now prove the streaming cells contain visible ink.
+- **Repeated unnamed physics charts expose unique summary landmarks** —
+  accessible data-table regions fall back to their instance-local table ID,
+  preventing duplicate landmark names in coordinated dashboards while keeping
+  authored titles and descriptions as the preferred label.
+- **Ridgeline visual baselines match the repaired SSR style contract** — all
+  six browser/platform parity sheets now record the fill-linked outline shared
+  by server SVG and client canvas rather than the stale black server outline.
 - **Linked-selection intersections preserve row identity through aggregates** —
   intersected clauses must now be satisfied by the same represented source row;
   separate rows in one bin or cell can no longer manufacture a combination that
