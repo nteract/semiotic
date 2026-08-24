@@ -1,4 +1,6 @@
 import { type ChartConfig } from "./serverChartConfigShared"
+import { calendarLayout } from "../recipes/calendar"
+import { parallelCoordinatesLayout } from "../recipes/parallelCoordinates"
 
 // ── Custom Chart HOCs ──────────────────────────────────────────────────
 
@@ -18,8 +20,8 @@ export const xyCustomChart: ChartConfig = {
     // useCustomChartSetup delegates the default legend decision to
     // useChartSetup; categorical custom layouts therefore gain a legend when
     // colorBy is supplied unless callers explicitly disable it.
-    showLegend: common.showLegend ?? Boolean(colorBy),
-  }),
+    showLegend: common.showLegend ?? Boolean(colorBy)
+  })
 }
 
 export const ordinalCustomChart: ChartConfig = {
@@ -35,8 +37,8 @@ export const ordinalCustomChart: ChartConfig = {
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
     ...common,
-    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false,
-  }),
+    showAxes: rest.frameProps?.showAxes ?? rest.showAxes ?? false
+  })
 }
 
 export const networkCustomChart: ChartConfig = {
@@ -54,8 +56,8 @@ export const networkCustomChart: ChartConfig = {
     colorScheme,
     customNetworkLayout: rest.layout || rest.customNetworkLayout,
     layoutConfig: rest.layoutConfig,
-    ...common,
-  }),
+    ...common
+  })
 }
 
 export const geoCustomChart: ChartConfig = {
@@ -72,6 +74,24 @@ export const geoCustomChart: ChartConfig = {
     colorScheme,
     customLayout: rest.layout || rest.customLayout,
     layoutConfig: rest.layoutConfig,
-    ...common,
-  }),
+    ...common
+  })
+}
+
+export const parallelCoordinatesRecipe: ChartConfig = {
+  frameType: "ordinal",
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    ...ordinalCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
+    customLayout: parallelCoordinatesLayout,
+    showAxes: false
+  })
+}
+
+export const calendarHeatmapRecipe: ChartConfig = {
+  frameType: "xy",
+  buildProps: (data, colorBy, colorScheme, common, rest) => ({
+    ...xyCustomChart.buildProps(data, colorBy, colorScheme, common, rest),
+    customLayout: calendarLayout,
+    showAxes: false
+  })
 }

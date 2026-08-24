@@ -14,6 +14,10 @@ import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { resolveExplicitColor } from "../../charts/shared/colorUtils"
+import {
+  attachSelectionProvenance,
+  getSelectionProvenance
+} from "../../store/selectionProvenance"
 
 export interface BarSceneResult {
   nodes: RectSceneNode[]
@@ -32,7 +36,8 @@ export function buildBarScene(
     ctx.getX,
     ctx.getY,
     ctx.config.binSize,
-    ctx.getCategory
+    ctx.getCategory,
+    getSelectionProvenance(ctx.config.areaStyle)?.[0] === ctx.config.areaStyle
   )
   if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 
@@ -121,13 +126,16 @@ export function buildBarScene(
           barStyle?.fill ??
           themePrimary ??
           "#4e79a7"
-        const datum = {
-          binStart: bin.start,
-          binEnd: bin.end,
-          total: bin.total,
-          category: cat,
-          categoryValue: catVal
-        }
+        const datum = attachSelectionProvenance(
+          {
+            binStart: bin.start,
+            binEnd: bin.end,
+            total: bin.total,
+            category: cat,
+            categoryValue: catVal
+          },
+          bin.categoryRows?.get(cat)
+        )
         const datumStyle = ctx.config.areaStyle?.(datum) ?? {}
         nodes.push(
           buildRectNode(
@@ -149,7 +157,10 @@ export function buildBarScene(
       const rectH = Math.abs(yZero - yTop)
 
       const fill = barStyle?.fill || themePrimary || "#007bff"
-      const datum = { binStart: bin.start, binEnd: bin.end, total: bin.total }
+      const datum = attachSelectionProvenance(
+        { binStart: bin.start, binEnd: bin.end, total: bin.total },
+        bin.rows
+      )
       const datumStyle = ctx.config.areaStyle?.(datum) ?? {}
       nodes.push(
         buildRectNode(

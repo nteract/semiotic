@@ -1,4 +1,12 @@
-import { buildPredicate, type Selection, type SelectionClause } from "./SelectionStore"
+import {
+  buildPredicate,
+  type Selection,
+  type SelectionClause
+} from "./SelectionStore"
+import {
+  attachSelectionProvenance,
+  getSelectionProvenance
+} from "./selectionProvenance"
 
 function makeSelection(
   resolution: "union" | "intersect" | "crossfilter",
@@ -35,6 +43,19 @@ describe("SelectionStore — buildPredicate", () => {
       const pred = buildPredicate(sel)
       expect(pred({ category: "C" })).toBe(false)
       expect(pred({ category: undefined })).toBe(false)
+    })
+
+    it("matches a derived mark through its non-enumerable raw-row provenance", () => {
+      const sel = makeSelection("union", [clause])
+      const pred = buildPredicate(sel)
+      const aggregate = attachSelectionProvenance({ binStart: 0, total: 12 }, [
+        { category: "A", value: 5 },
+        { category: "C", value: 7 }
+      ])
+
+      expect(pred(aggregate)).toBe(true)
+      expect(getSelectionProvenance(aggregate)).toHaveLength(2)
+      expect(Object.keys(aggregate)).toEqual(["binStart", "total"])
     })
   })
 
@@ -109,6 +130,36 @@ describe("SelectionStore — buildPredicate", () => {
       expect(pred({ x: 25, y: 20 })).toBe(true) // both match
       expect(pred({ x: 25, y: 50 })).toBe(false) // y out
       expect(pred({ x: 75, y: 20 })).toBe(false) // x out
+    })
+
+    it("requires every clause to match the same provenance row", () => {
+      const xClause: SelectionClause = {
+        clientId: "x-chart",
+        type: "interval",
+        fields: { x: { type: "interval", range: [0, 10] } }
+      }
+      const yClause: SelectionClause = {
+        clientId: "y-chart",
+        type: "interval",
+        fields: { y: { type: "interval", range: [0, 10] } }
+      }
+      const pred = buildPredicate(
+        makeSelection("intersect", [xClause, yClause])
+      )
+      const splitMatch = attachSelectionProvenance({ binStart: 0, total: 2 }, [
+        { x: 1, y: 100 },
+        { x: 100, y: 1 }
+      ])
+      const sameRowMatch = attachSelectionProvenance(
+        { binStart: 0, total: 2 },
+        [
+          { x: 1, y: 1 },
+          { x: 100, y: 100 }
+        ]
+      )
+
+      expect(pred(splitMatch)).toBe(false)
+      expect(pred(sameRowMatch)).toBe(true)
     })
   })
 

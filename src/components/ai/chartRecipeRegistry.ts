@@ -1,12 +1,15 @@
 import type { ChartCapability } from "./chartCapabilityTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 import type { ChartRecipe, CustomLayoutFunction } from "./chartRecipes"
 import { validateChartRecipe } from "./chartRecipes"
 import { recipeToChartCapability } from "./recipeCapability"
 
+type StoredCustomLayoutFunction = (...args: never[]) => unknown
+
 interface ChartRecipeRegistryStore {
   recipes: Map<string, ChartRecipe>
   capabilities: Map<string, ChartCapability>
-  layouts: Map<string, CustomLayoutFunction>
+  layouts: Map<string, StoredCustomLayoutFunction>
 }
 
 const REGISTRY_KEY = Symbol.for("semiotic.chartRecipeRegistry")
@@ -54,15 +57,18 @@ export function hasRegisteredRecipeCapabilities(): boolean {
 }
 
 /** Register a known runtime implementation used by portable recipe manifests. */
-export function registerRecipeLayout(
+export function registerRecipeLayout<
+  TDatum extends Datum = Datum,
+  TConfig extends object = Record<string, unknown>,
+>(
   layoutId: string,
-  layout: CustomLayoutFunction,
+  layout: CustomLayoutFunction<TDatum, TConfig>,
 ): void {
   if (!layoutId) throw new Error("Recipe layout requires a non-empty id.")
   if (typeof layout !== "function") {
     throw new Error(`Recipe layout "${layoutId}" must be a function.`)
   }
-  store().layouts.set(layoutId, layout)
+  store().layouts.set(layoutId, layout as StoredCustomLayoutFunction)
 }
 
 export function unregisterRecipeLayout(layoutId: string): void {
@@ -72,7 +78,7 @@ export function unregisterRecipeLayout(layoutId: string): void {
 export function getRecipeLayout(
   layoutId: string,
 ): CustomLayoutFunction | undefined {
-  return store().layouts.get(layoutId)
+  return store().layouts.get(layoutId) as CustomLayoutFunction | undefined
 }
 
 export function resolveChartRecipe(

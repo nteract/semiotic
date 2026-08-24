@@ -421,4 +421,63 @@ describe("styleRules across families (server / renderChart)", () => {
     })
     expect(svg).toContain("#d7263d")
   })
+
+  it("Network hierarchy charts — style authored nodes through renderChart", () => {
+    const data = {
+      name: "Portfolio",
+      value: 1,
+      status: "normal",
+      children: [
+        { name: "Alpha", value: 20, status: "alert" },
+        { name: "Beta", value: 5, status: "normal" }
+      ]
+    }
+    for (const component of [
+      "TreeDiagram",
+      "Treemap",
+      "CirclePack",
+      "OrbitDiagram"
+    ] as const) {
+      const svg = renderChart(component, {
+        data,
+        valueAccessor: "value",
+        styleRules: [{
+          when: { field: "status", eq: "alert" },
+          style: { fill: "#ff00aa" }
+        }]
+      })
+      expect(svg, component).toContain("#ff00aa")
+    }
+  })
+
+  it("Heatmap and TemporalHistogram — style displayed aggregate cells and bins", () => {
+    const heatmap = renderChart("Heatmap", {
+      data: [
+        { x: 1, y: 1, value: 10 },
+        { x: 1.1, y: 1.1, value: 20 },
+        { x: 1.2, y: 1.2, value: 30 }
+      ],
+      heatmapAggregation: "mean",
+      heatmapXBins: 1,
+      heatmapYBins: 1,
+      styleRules: [{
+        when: { field: "count", gte: 3 },
+        style: { fill: "#aabbcc" }
+      }]
+    })
+    const histogram = renderChart("TemporalHistogram", {
+      data: [
+        { time: 1, value: 8 },
+        { time: 2, value: 7 }
+      ],
+      binSize: 10,
+      styleRules: [{
+        when: { gt: 10 },
+        style: { fill: "#bbccdd" }
+      }]
+    })
+
+    expect(heatmap).toContain("#aabbcc")
+    expect(histogram).toContain("#bbccdd")
+  })
 })

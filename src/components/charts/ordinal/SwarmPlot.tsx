@@ -23,6 +23,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { getMinMax } from "../shared/minMax"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -34,6 +35,8 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware point styling; fieldless thresholds use `valueAccessor`. */
+  styleRules?: StyleRule[]
   sizeBy?: ChartAccessor<TDatum, number>
   sizeRange?: [number, number]
   /** Field name or function → glyph **shape**: each point renders as a d3-shape
@@ -129,7 +132,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme,
+    colorBy, colorScheme, styleRules,
     sizeBy, sizeRange = [3, 8], symbolBy, symbolMap, pointRadius = 4, pointOpacity = 0.7,
     categoryPadding = 20, tooltip, annotations, valueExtent,
     brush: brushProp, onBrush: onBrushProp, linkedBrush,
@@ -196,6 +199,10 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
 
   // Consolidated piece-style. The size encoding (`r` from sizeBy)
   // is per-datum, so it flows through `baseStyleExtras` as a
@@ -212,6 +219,8 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
       fillOpacity: pointOpacity,
       r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius,
     }),
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

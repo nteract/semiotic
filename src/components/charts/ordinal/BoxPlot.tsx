@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildStatsTooltip } from "../shared/statsTooltip"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -30,6 +31,8 @@ export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered summary styling; fieldless thresholds use each category's median. Statistical fields include `n`, `min`, `q1`, `median`, `q3`, `max`, and `mean`. */
+  styleRules?: StyleRule[]
   showOutliers?: boolean
   outlierRadius?: number
   categoryPadding?: number
@@ -106,7 +109,7 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", valueFormat,
-    colorBy, colorScheme,
+    colorBy, colorScheme, styleRules,
     showOutliers = true, outlierRadius: _outlierRadius = 3, categoryPadding = 20,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -163,6 +166,10 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown))
+    return (d: Datum) => typeof d.median === "number" ? d.median : readValue(d)
+  }, [valueAccessor])
 
   // Link stroke to fill so the box outline matches the box body.
   const summaryStyle = useOrdinalPieceStyle({
@@ -175,6 +182,8 @@ export const BoxPlot = forwardRef(function BoxPlot<TDatum extends Datum = Datum>
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { fillOpacity: 0.8 },
     linkStrokeToFill: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])

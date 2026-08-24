@@ -23,6 +23,11 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  composeStyleRules,
+  makeNodeRuleContext,
+  type StyleRule,
+} from "../shared/styleRules"
 
 registerLayoutPlugin("tree", hierarchyLayoutPlugin)
 registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
@@ -43,6 +48,8 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
   colorBy?: ChartAccessor<TNode, string | number>
   colorScheme?: string | string[] | Record<string, string>
   colorByDepth?: boolean
+  /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
+  styleRules?: StyleRule[]
   edgeStyle?: "line" | "curve"
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
@@ -126,6 +133,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     colorBy,
     colorScheme,
     colorByDepth = false,
+    styleRules,
     edgeStyle = "curve",
     nodeLabel,
     nodeSize = 5,
@@ -197,9 +205,26 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     }
   }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
 
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+      valueAccessor as string | ((d: Datum) => unknown) | undefined,
+    ),
+    [colorBy, valueAccessor],
+  )
+  const ruledNodeStyleFn = useMemo(
+    () => composeStyleRules(
+      baseNodeStyleFn,
+      styleRules,
+      nodeRuleContext,
+      (d) => d.data || d,
+    ),
+    [baseNodeStyleFn, styleRules, nodeRuleContext],
+  )
+
   const nodeStyleFn = useMemo(
-    () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
-    [baseNodeStyleFn, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(ruledNodeStyleFn, { stroke, strokeWidth, opacity }),
+    [ruledNodeStyleFn, stroke, strokeWidth, opacity]
   )
   const selectedNodeStyleFn = useMemo(
     () => wrapNetworkNodeStyleWithSelection(

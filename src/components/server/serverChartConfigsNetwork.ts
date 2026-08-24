@@ -23,7 +23,12 @@ import {
   primitiveStyleOverrides
 } from "./serverChartConfigShared"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
-import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
+import {
+  composeStyleRules,
+  makeNodeRuleContext,
+  styleRulesToNodeStyle,
+  type StyleRule,
+} from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
 import { composeHierarchyNodeStyle } from "./serverChartConfigNetworkStyles"
 import * as React from "react"
@@ -577,6 +582,15 @@ export const treeDiagram: ChartConfig = {
       | ((d: Datum) => Record<string, unknown> | undefined | null)
       | Record<string, unknown>
       | undefined
+    const ruledNodeStyle = composeStyleRules(
+      baseNodeStyle,
+      rest.styleRules as StyleRule[] | undefined,
+      makeNodeRuleContext(
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      ),
+      (d) => (d?.data as Datum) || d,
+    )
     return {
       chartType: rest.layout === "cluster" ? "cluster" : "tree",
       data,
@@ -594,7 +608,7 @@ export const treeDiagram: ChartConfig = {
         (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
         Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
-        baseNodeStyle,
+        ruledNodeStyle,
         userNodeStyle,
         primitiveStyleOverrides(rest)
       )
@@ -693,6 +707,15 @@ export const treemap: ChartConfig = {
       | ((d: Datum) => Record<string, unknown> | undefined | null)
       | Record<string, unknown>
       | undefined
+    const ruledNodeStyle = composeStyleRules(
+      baseNodeStyle,
+      rest.styleRules as StyleRule[] | undefined,
+      makeNodeRuleContext(
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      ),
+      (d) => (d?.data as Datum) || d,
+    )
     return {
       chartType: "treemap",
       data,
@@ -713,7 +736,7 @@ export const treemap: ChartConfig = {
         (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
         Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
-        baseNodeStyle,
+        ruledNodeStyle,
         userNodeStyle,
         primitiveStyleOverrides(rest)
       )

@@ -18,7 +18,7 @@ import {
   rmSync,
   statSync,
   symlinkSync,
-  writeFileSync,
+  writeFileSync
 } from "node:fs"
 import os from "node:os"
 import { basename, dirname, extname, join, relative, resolve } from "node:path"
@@ -28,7 +28,10 @@ import { gzipSync } from "node:zlib"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = resolve(__dirname, "../..")
 export const MACHINE_BASELINE_SCHEMA_VERSION = 1
-export const MACHINE_BASELINE_PATH = join(REPO_ROOT, "benchmarks/setup/machine-baseline.json")
+export const MACHINE_BASELINE_PATH = join(
+  REPO_ROOT,
+  "benchmarks/setup/machine-baseline.json"
+)
 
 const RUNNER_PATH = join(REPO_ROOT, "scripts/machine-baseline-runner.mjs")
 const TIMING_SAMPLE_COUNT = 7
@@ -41,25 +44,26 @@ const MAX_COMMAND_OUTPUT = 8 * 1024 * 1024
 const PARSE_TARGETS = [
   { id: "xy", path: "dist/xy.module.min.js" },
   { id: "server-edge", path: "dist/semiotic-server-edge.module.min.js" },
-  { id: "ai-core", path: "dist/semiotic-ai-core.module.min.js" },
+  { id: "ai-core", path: "dist/semiotic-ai-core.module.min.js" }
 ]
 
 const EVALUATION_TARGETS = [
   { id: "xy", specifier: "semiotic/xy" },
   { id: "server-edge", specifier: "semiotic/server/edge" },
-  { id: "ai-core", specifier: "semiotic/ai/core" },
+  { id: "ai-core", specifier: "semiotic/ai/core" }
 ]
 
 const WORKER_TARGETS = [
   { id: "force-layout", path: "dist/forceLayoutWorker.js" },
-  { id: "physics", path: "dist/physicsWorker.js" },
+  { id: "physics", path: "dist/physicsWorker.js" }
 ]
 
 export const DEFAULT_VARIANCE_POLICY = {
   staticArtifacts: {
     comparison: "exact",
     allowedVariance: 0,
-    explanation: "Packed inventory, artifact bytes, deterministic SSR output, docs payload totals, and MCP public tool count must match exactly.",
+    explanation:
+      "Packed inventory, artifact bytes, deterministic SSR output, docs payload totals, and MCP public tool count must match exactly."
   },
   timing: {
     statistic: "p50 elapsed milliseconds",
@@ -70,24 +74,32 @@ export const DEFAULT_VARIANCE_POLICY = {
       ssrWarmupRenders: SSR_WARMUP_COUNT,
       ssrTimedRenders: SSR_SAMPLE_COUNT,
       workerStarts: TIMING_SAMPLE_COUNT,
-      mcpStdioStarts: MCP_SAMPLE_COUNT,
+      mcpStdioStarts: MCP_SAMPLE_COUNT
     },
     maxRegression: {
       absoluteMs: 25,
-      relativePercent: 50,
+      relativePercent: 50
     },
-    environmentRule: "Timing is enforced only when platform, architecture, Node major.minor, CPU model, and logical CPU count match the recorded reference environment. Other hosts report timings but do not fail this local check.",
-    tailPolicy: "p95 and p99 are recorded for diagnosis and are not independent pass/fail thresholds until a controlled runner is selected.",
-  },
+    environmentRule:
+      "Timing is enforced only when platform, architecture, Node major.minor, CPU model, and logical CPU count match the recorded reference environment. Other hosts report timings but do not fail this local check.",
+    tailPolicy:
+      "p95 and p99 are recorded for diagnosis and are not independent pass/fail thresholds until a controlled runner is selected."
+  }
 }
 
 function commandFailure(command, args, result) {
-  const output = [result.stdout, result.stderr, result.error && result.error.message]
+  const output = [
+    result.stdout,
+    result.stderr,
+    result.error && result.error.message
+  ]
     .filter(Boolean)
     .map((value) => String(value).trim())
     .filter(Boolean)
     .join("\n")
-  return new Error(command + " " + args.join(" ") + " failed" + (output ? ":\n" + output : ""))
+  return new Error(
+    command + " " + args.join(" ") + " failed" + (output ? ":\n" + output : "")
+  )
 }
 
 function run(command, args, options = {}) {
@@ -95,9 +107,10 @@ function run(command, args, options = {}) {
     cwd: options.cwd || REPO_ROOT,
     encoding: "utf8",
     env: { ...process.env, ...(options.env || {}) },
-    maxBuffer: MAX_COMMAND_OUTPUT,
+    maxBuffer: MAX_COMMAND_OUTPUT
   })
-  if (result.error || result.status !== 0) throw commandFailure(command, args, result)
+  if (result.error || result.status !== 0)
+    throw commandFailure(command, args, result)
   return String(result.stdout || "")
 }
 
@@ -118,8 +131,9 @@ function normalizedPath(path) {
 }
 
 function walkFiles(root, current = root, files = []) {
-  const entries = readdirSync(current, { withFileTypes: true })
-    .sort((left, right) => left.name.localeCompare(right.name))
+  const entries = readdirSync(current, { withFileTypes: true }).sort(
+    (left, right) => left.name.localeCompare(right.name)
+  )
 
   for (const entry of entries) {
     const absolutePath = join(current, entry.name)
@@ -131,14 +145,14 @@ function walkFiles(root, current = root, files = []) {
       files.push({
         path: relativePath,
         size: details.size,
-        mode: details.mode & 0o777,
+        mode: details.mode & 0o777
       })
     } else if (details.isSymbolicLink()) {
       files.push({
         path: relativePath,
         type: "symlink",
         target: readlinkSync(absolutePath),
-        mode: details.mode & 0o777,
+        mode: details.mode & 0o777
       })
     } else {
       throw new Error("Unsupported archive entry type at " + absolutePath)
@@ -147,7 +161,11 @@ function walkFiles(root, current = root, files = []) {
   return files
 }
 
-function latestModification(root, filter = () => true, latest = { mtimeMs: -Infinity, path: "" }) {
+function latestModification(
+  root,
+  filter = () => true,
+  latest = { mtimeMs: -Infinity, path: "" }
+) {
   if (!existsSync(root)) return latest
   const details = lstatSync(root)
   if (details.isDirectory()) {
@@ -171,15 +189,28 @@ function isSourceFile(path) {
 function assertFreshOutput(outputRoot, inputRoots, label, buildCommand) {
   const output = latestModification(outputRoot)
   if (!Number.isFinite(output.mtimeMs)) {
-    throw new Error("Missing " + label + " output at " + outputRoot + ". Run " + buildCommand + " before recording/checking this baseline.")
+    throw new Error(
+      "Missing " +
+        label +
+        " output at " +
+        outputRoot +
+        ". Run " +
+        buildCommand +
+        " before recording/checking this baseline."
+    )
   }
 
   const input = { mtimeMs: -Infinity, path: "" }
   for (const root of inputRoots) latestModification(root, isSourceFile, input)
   if (input.mtimeMs > output.mtimeMs) {
     throw new Error(
-      label + " output is older than its source input (" + input.path + "). " +
-      "Run " + buildCommand + " before recording/checking this baseline; stale generated output is not accepted.",
+      label +
+        " output is older than its source input (" +
+        input.path +
+        "). " +
+        "Run " +
+        buildCommand +
+        " before recording/checking this baseline; stale generated output is not accepted."
     )
   }
 }
@@ -190,19 +221,16 @@ function assertCheckoutArtifactsFresh(repoRoot) {
     [
       join(repoRoot, "src"),
       join(repoRoot, "scripts/build.mjs"),
-      join(repoRoot, "vite.shared.mjs"),
+      join(repoRoot, "vite.shared.mjs")
     ],
     "dist",
-    "npm run dist",
+    "npm run dist"
   )
   assertFreshOutput(
     join(repoRoot, "ai/dist"),
-    [
-      join(repoRoot, "ai"),
-      join(repoRoot, "scripts/build-mcp.mjs"),
-    ],
+    [join(repoRoot, "ai"), join(repoRoot, "scripts/build-mcp.mjs")],
     "MCP bundle",
-    "npm run build:mcp",
+    "npm run build:mcp"
   )
 }
 
@@ -211,17 +239,21 @@ function createCheckoutTarball(repoRoot, tempRoot) {
   const npmCache = join(tempRoot, "npm-cache")
   mkdirSync(packDirectory, { recursive: true })
   mkdirSync(npmCache, { recursive: true })
-  run(npmCommand(), [
-    "pack",
-    "--json",
-    "--silent",
-    "--ignore-scripts",
-    "--pack-destination",
-    packDirectory,
-  ], {
-    cwd: repoRoot,
-    env: { NPM_CONFIG_CACHE: npmCache },
-  })
+  run(
+    npmCommand(),
+    [
+      "pack",
+      "--json",
+      "--silent",
+      "--ignore-scripts",
+      "--pack-destination",
+      packDirectory
+    ],
+    {
+      cwd: repoRoot,
+      env: { NPM_CONFIG_CACHE: npmCache }
+    }
+  )
   const archiveName = readdirSync(packDirectory)
     .filter((name) => name.endsWith(".tgz"))
     .sort()[0]
@@ -235,14 +267,20 @@ function inspectTarball(tarballPath, tempRoot) {
   run("tar", ["-xzf", tarballPath, "-C", extractionRoot])
 
   const packageRoot = join(extractionRoot, "package")
-  assertFile(packageRoot, "package root after extracting " + basename(tarballPath))
+  assertFile(
+    packageRoot,
+    "package root after extracting " + basename(tarballPath)
+  )
   const packageJsonPath = join(packageRoot, "package.json")
   assertFile(packageJsonPath, "packed package.json")
 
   const files = walkFiles(packageRoot)
   const archiveStats = statSync(tarballPath)
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"))
-  const unpackedBytes = files.reduce((total, file) => total + (file.size || 0), 0)
+  const unpackedBytes = files.reduce(
+    (total, file) => total + (file.size || 0),
+    0
+  )
 
   return {
     packageRoot,
@@ -251,20 +289,20 @@ function inspectTarball(tarballPath, tempRoot) {
       method: "npm pack --ignore-scripts followed by tar -xzf inspection",
       package: {
         name: packageJson.name,
-        version: packageJson.version,
+        version: packageJson.version
       },
       archive: {
         fileName: basename(tarballPath),
         bytes: archiveStats.size,
         sha1: hashFile(tarballPath, "sha1", "hex"),
-        integrity: "sha512-" + hashFile(tarballPath, "sha512", "base64"),
+        integrity: "sha512-" + hashFile(tarballPath, "sha512", "base64")
       },
       unpacked: {
         bytes: unpackedBytes,
-        fileCount: files.length,
+        fileCount: files.length
       },
-      files,
-    },
+      files
+    }
   }
 }
 
@@ -308,7 +346,9 @@ function parseRunnerOutput(output, label) {
       // an incidental runtime warning never corrupts an otherwise valid run.
     }
   }
-  throw new Error(label + " did not emit a JSON result: " + String(output).slice(-1000))
+  throw new Error(
+    label + " did not emit a JSON result: " + String(output).slice(-1000)
+  )
 }
 
 function runRunner(mode, options) {
@@ -318,13 +358,14 @@ function runRunner(mode, options) {
   nodeArgs.push(RUNNER_PATH, mode)
   const output = run(process.execPath, nodeArgs, {
     cwd: options.cwd,
-    env: options.env,
+    env: options.env
   })
   return parseRunnerOutput(output, "machine baseline " + mode + " runner")
 }
 
 function finiteNumber(value, label) {
-  if (!Number.isFinite(value)) throw new Error(label + " must be a finite number")
+  if (!Number.isFinite(value))
+    throw new Error(label + " must be a finite number")
   return value
 }
 
@@ -345,7 +386,9 @@ export function summarizeTimingSamples(samples) {
   if (!Array.isArray(samples) || samples.length === 0) {
     throw new Error("Timing samples must be a non-empty array")
   }
-  const raw = samples.map((sample, index) => finiteNumber(sample, "timing sample " + index))
+  const raw = samples.map((sample, index) =>
+    finiteNumber(sample, "timing sample " + index)
+  )
   const sorted = [...raw].sort((left, right) => left - right)
   const mean = raw.reduce((total, value) => total + value, 0) / raw.length
   return {
@@ -355,7 +398,7 @@ export function summarizeTimingSamples(samples) {
     p95Ms: roundMilliseconds(percentile(sorted, 0.95)),
     p99Ms: roundMilliseconds(percentile(sorted, 0.99)),
     maxMs: roundMilliseconds(sorted[sorted.length - 1]),
-    meanMs: roundMilliseconds(mean),
+    meanMs: roundMilliseconds(mean)
   }
 }
 
@@ -376,14 +419,14 @@ function collectParserMetrics(packageRoot, consumerRoot) {
       experimentalVmModules: true,
       env: {
         SEMIOTIC_MACHINE_BASELINE_TARGET: sourcePath,
-        SEMIOTIC_MACHINE_BASELINE_SAMPLES: String(PARSE_SAMPLE_COUNT),
-      },
+        SEMIOTIC_MACHINE_BASELINE_SAMPLES: String(PARSE_SAMPLE_COUNT)
+      }
     })
     return {
       id: target.id,
       path: target.path,
       sourceBytes: result.sourceBytes,
-      timing: summarizeTimingSamples(result.samplesMs),
+      timing: summarizeTimingSamples(result.samplesMs)
     }
   })
 }
@@ -392,18 +435,23 @@ function collectEvaluationMetrics(consumerRoot) {
   return EVALUATION_TARGETS.map((target) => {
     const results = []
     for (let index = 0; index < TIMING_SAMPLE_COUNT; index += 1) {
-      results.push(runRunner("evaluate", {
-        cwd: consumerRoot,
-        env: {
-          SEMIOTIC_MACHINE_BASELINE_SPECIFIER: target.specifier,
-        },
-      }))
+      results.push(
+        runRunner("evaluate", {
+          cwd: consumerRoot,
+          env: {
+            SEMIOTIC_MACHINE_BASELINE_SPECIFIER: target.specifier
+          }
+        })
+      )
     }
     return {
       id: target.id,
       specifier: target.specifier,
-      exportCount: allEqual(results.map((result) => result.exportCount), target.specifier + " export count"),
-      timing: summarizeTimingSamples(results.map((result) => result.elapsedMs)),
+      exportCount: allEqual(
+        results.map((result) => result.exportCount),
+        target.specifier + " export count"
+      ),
+      timing: summarizeTimingSamples(results.map((result) => result.elapsedMs))
     }
   })
 }
@@ -413,19 +461,19 @@ function collectSsrMetric(consumerRoot) {
     cwd: consumerRoot,
     env: {
       SEMIOTIC_MACHINE_BASELINE_SAMPLES: String(SSR_SAMPLE_COUNT),
-      SEMIOTIC_MACHINE_BASELINE_WARMUPS: String(SSR_WARMUP_COUNT),
-    },
+      SEMIOTIC_MACHINE_BASELINE_WARMUPS: String(SSR_WARMUP_COUNT)
+    }
   })
   return {
     fixture: {
       component: "LineChart",
       rows: 500,
       dimensions: [640, 360],
-      renderer: "semiotic/server/edge renderChart",
+      renderer: "semiotic/server/edge renderChart"
     },
     svgBytes: result.svgBytes,
     svgSha256: result.svgSha256,
-    timing: summarizeTimingSamples(result.samplesMs),
+    timing: summarizeTimingSamples(result.samplesMs)
   }
 }
 
@@ -437,7 +485,7 @@ function writeWorkerWrapper(tempRoot) {
     "globalThis.postMessage = () => {}",
     "await import(workerData.target)",
     'parentPort.postMessage({ type: "ready" })',
-    "",
+    ""
   ].join("\n")
   // This file is inside the command's temporary directory. It emulates only
   // the two browser-worker globals used during module initialization.
@@ -455,14 +503,14 @@ function collectWorkerMetrics(packageRoot, consumerRoot, tempRoot) {
       env: {
         SEMIOTIC_MACHINE_BASELINE_TARGET: pathToFileURL(workerPath).href,
         SEMIOTIC_MACHINE_BASELINE_WORKER_WRAPPER: wrapperPath,
-        SEMIOTIC_MACHINE_BASELINE_SAMPLES: String(TIMING_SAMPLE_COUNT),
-      },
+        SEMIOTIC_MACHINE_BASELINE_SAMPLES: String(TIMING_SAMPLE_COUNT)
+      }
     })
     return {
       id: target.id,
       path: target.path,
       sourceBytes: statSync(workerPath).size,
-      timing: summarizeTimingSamples(result.samplesMs),
+      timing: summarizeTimingSamples(result.samplesMs)
     }
   })
 }
@@ -479,8 +527,17 @@ function payloadGroup(path) {
   return "other"
 }
 
-function collectDocsPayload(repoRoot) {
+export function assertPrerenderedDocsBuild(repoRoot = REPO_ROOT) {
   const docsBuildRoot = join(repoRoot, "docs/build")
+  const routeManifest = join(docsBuildRoot, "llms-routes.json")
+  if (!existsSync(routeManifest)) {
+    throw new Error(
+      "Missing prerendered docs route manifest at " +
+        routeManifest +
+        ". Run npm run website:build before recording/checking this baseline; " +
+        "a Vite-only SPA build is not the emitted documentation surface."
+    )
+  }
   assertFreshOutput(
     docsBuildRoot,
     [
@@ -488,16 +545,21 @@ function collectDocsPayload(repoRoot) {
       join(repoRoot, "docs/public"),
       join(repoRoot, "src"),
       join(repoRoot, "vite.docs.config.mjs"),
-      join(repoRoot, "vite.shared.mjs"),
+      join(repoRoot, "vite.shared.mjs")
     ],
     "docs/build",
-    "npm run build",
+    "npm run website:build"
   )
+  return docsBuildRoot
+}
+
+function collectDocsPayload(repoRoot) {
+  const docsBuildRoot = assertPrerenderedDocsBuild(repoRoot)
   const groups = {
     javascript: emptyPayloadGroup(),
     stylesheet: emptyPayloadGroup(),
     html: emptyPayloadGroup(),
-    other: emptyPayloadGroup(),
+    other: emptyPayloadGroup()
   }
   const files = walkFiles(docsBuildRoot)
   for (const file of files) {
@@ -511,12 +573,15 @@ function collectDocsPayload(repoRoot) {
   return {
     root: "docs/build",
     compression: "gzip level 9 applied independently to each emitted file",
-    total: Object.values(groups).reduce((total, group) => ({
-      fileCount: total.fileCount + group.fileCount,
-      rawBytes: total.rawBytes + group.rawBytes,
-      gzipBytes: total.gzipBytes + group.gzipBytes,
-    }), emptyPayloadGroup()),
-    groups,
+    total: Object.values(groups).reduce(
+      (total, group) => ({
+        fileCount: total.fileCount + group.fileCount,
+        rawBytes: total.rawBytes + group.rawBytes,
+        gzipBytes: total.gzipBytes + group.gzipBytes
+      }),
+      emptyPayloadGroup()
+    ),
+    groups
   }
 }
 
@@ -525,36 +590,48 @@ function collectMcpMetrics(packageRoot, consumerRoot) {
   assertFile(mcpServerPath, "packed MCP server")
   const results = []
   for (let index = 0; index < MCP_SAMPLE_COUNT; index += 1) {
-    results.push(runRunner("mcp", {
-      cwd: consumerRoot,
-      env: {
-        SEMIOTIC_MACHINE_BASELINE_MCP_SERVER: mcpServerPath,
-        SEMIOTIC_MACHINE_BASELINE_MCP_CWD: packageRoot,
-        SEMIOTIC_MACHINE_BASELINE_TIMEOUT_MS: "10000",
-      },
-    }))
+    results.push(
+      runRunner("mcp", {
+        cwd: consumerRoot,
+        env: {
+          SEMIOTIC_MACHINE_BASELINE_MCP_SERVER: mcpServerPath,
+          SEMIOTIC_MACHINE_BASELINE_MCP_CWD: packageRoot,
+          SEMIOTIC_MACHINE_BASELINE_TIMEOUT_MS: "10000"
+        }
+      })
+    )
   }
   return {
     entry: {
       path: "ai/dist/mcp-server.js",
-      sourceBytes: statSync(mcpServerPath).size,
+      sourceBytes: statSync(mcpServerPath).size
     },
     profile: "public",
-    protocolVersion: allEqual(results.map((result) => String(result.protocolVersion)), "MCP protocol version"),
-    toolCount: allEqual(results.map((result) => result.toolCount), "MCP public tool count"),
+    protocolVersion: allEqual(
+      results.map((result) => String(result.protocolVersion)),
+      "MCP protocol version"
+    ),
+    toolCount: allEqual(
+      results.map((result) => result.toolCount),
+      "MCP public tool count"
+    ),
     initialize: {
-      timing: summarizeTimingSamples(results.map((result) => result.initializeMs)),
+      timing: summarizeTimingSamples(
+        results.map((result) => result.initializeMs)
+      )
     },
     toolsList: {
-      timing: summarizeTimingSamples(results.map((result) => result.toolsListMs)),
-    },
+      timing: summarizeTimingSamples(
+        results.map((result) => result.toolsListMs)
+      )
+    }
   }
 }
 
 function gitCommit(repoRoot) {
   const result = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
     cwd: repoRoot,
-    encoding: "utf8",
+    encoding: "utf8"
   })
   return result.status === 0 ? String(result.stdout).trim() : "unknown"
 }
@@ -562,23 +639,22 @@ function gitCommit(repoRoot) {
 function worktreeState(repoRoot) {
   const result = spawnSync("git", ["status", "--porcelain"], {
     cwd: repoRoot,
-    encoding: "utf8",
+    encoding: "utf8"
   })
   if (result.status !== 0) return { state: "unknown", changedPathCount: null }
   const changedPathCount = String(result.stdout)
     .split(/\r?\n/)
-    .filter(Boolean)
-    .length
+    .filter(Boolean).length
   return {
     state: changedPathCount === 0 ? "clean" : "dirty",
-    changedPathCount,
+    changedPathCount
   }
 }
 
 function npmVersion(repoRoot) {
   const result = spawnSync(npmCommand(), ["--version"], {
     cwd: repoRoot,
-    encoding: "utf8",
+    encoding: "utf8"
   })
   return result.status === 0 ? String(result.stdout).trim() : "unknown"
 }
@@ -591,7 +667,7 @@ export function captureReferenceEnvironment(repoRoot = REPO_ROOT) {
       node: process.version,
       nodeMajorMinor: process.versions.node.split(".").slice(0, 2).join("."),
       v8: process.versions.v8,
-      npm: npmVersion(repoRoot),
+      npm: npmVersion(repoRoot)
     },
     host: {
       platform: process.platform,
@@ -599,15 +675,15 @@ export function captureReferenceEnvironment(repoRoot = REPO_ROOT) {
       osRelease: os.release(),
       cpuModel,
       logicalCpuCount: cpus.length,
-      totalMemoryBytes: os.totalmem(),
+      totalMemoryBytes: os.totalmem()
     },
     timingFingerprint: {
       platform: process.platform,
       arch: process.arch,
       nodeMajorMinor: process.versions.node.split(".").slice(0, 2).join("."),
       cpuModel,
-      logicalCpuCount: cpus.length,
-    },
+      logicalCpuCount: cpus.length
+    }
   }
 }
 
@@ -615,12 +691,19 @@ export async function collectMachineBaseline(options = {}) {
   const repoRoot = resolve(options.repoRoot || REPO_ROOT)
   const tempRoot = mkdtempSync(join(os.tmpdir(), "semiotic-machine-baseline-"))
   try {
-    const suppliedTarball = options.tarball ? resolve(repoRoot, options.tarball) : null
+    const suppliedTarball = options.tarball
+      ? resolve(repoRoot, options.tarball)
+      : null
     if (suppliedTarball) assertFile(suppliedTarball, "supplied tarball")
     if (!suppliedTarball) assertCheckoutArtifactsFresh(repoRoot)
-    const tarballPath = suppliedTarball || createCheckoutTarball(repoRoot, tempRoot)
+    const tarballPath =
+      suppliedTarball || createCheckoutTarball(repoRoot, tempRoot)
     const inspected = inspectTarball(tarballPath, tempRoot)
-    const consumerRoot = createPackedConsumer(repoRoot, tempRoot, inspected.packageRoot)
+    const consumerRoot = createPackedConsumer(
+      repoRoot,
+      tempRoot,
+      inspected.packageRoot
+    )
     const referenceEnvironment = captureReferenceEnvironment(repoRoot)
 
     return {
@@ -629,8 +712,10 @@ export async function collectMachineBaseline(options = {}) {
       capturedAt: new Date().toISOString(),
       source: {
         gitCommit: gitCommit(repoRoot),
-        artifact: suppliedTarball ? "supplied tarball" : "checkout npm pack --ignore-scripts",
-        worktree: worktreeState(repoRoot),
+        artifact: suppliedTarball
+          ? "supplied tarball"
+          : "checkout npm pack --ignore-scripts",
+        worktree: worktreeState(repoRoot)
       },
       referenceEnvironment,
       variancePolicy: DEFAULT_VARIANCE_POLICY,
@@ -642,7 +727,7 @@ export async function collectMachineBaseline(options = {}) {
           "deterministic edge SSR LineChart fixture timing and SVG hash",
           "packed force-layout and physics worker module startup under a documented Node shim",
           "aggregate emitted docs/build payload inventory and per-file gzip totals",
-          "local public-profile MCP stdio initialize and tools/list round trips",
+          "local public-profile MCP stdio initialize and tools/list round trips"
         ],
         externalOrDeferred: [
           "Browser canvas/SVG interaction, hydration, paint, frame-budget, and real browser Worker/OffscreenCanvas timing",
@@ -650,27 +735,35 @@ export async function collectMachineBaseline(options = {}) {
           "Route-level docs transfer waterfalls, Core Web Vitals, Lighthouse, and a real browser cache profile",
           "MCP HTTP transport, authentication/CORS/proxy behavior, deployed cold starts, concurrency, and hosted latency",
           "Registry publication, provenance/attestation verification, deployment image size, and Cloud Run lockfile evidence",
-          "Cross-bundler parse/evaluation (Vite/Rollup, webpack/Next), shared-dependency incremental imports, and non-reference hardware",
-        ],
+          "Cross-bundler parse/evaluation (Vite/Rollup, webpack/Next), shared-dependency incremental imports, and non-reference hardware"
+        ]
       },
       methods: {
-        tarballInventory: "Pack without lifecycle scripts, inspect the resulting archive, and record every packed path/size/mode plus archive hashes.",
-        parser: "V8 vm.SourceTextModule parse-only timing for three packed ESM entry files; dependency linking/evaluation is intentionally excluded.",
-        evaluation: "Fresh Node processes import packed public ESM entry points through a temporary consumer whose runtime dependencies are linked from the lockfile-installed workspace.",
+        tarballInventory:
+          "Pack without lifecycle scripts, inspect the resulting archive, and record every packed path/size/mode plus archive hashes.",
+        parser:
+          "V8 vm.SourceTextModule parse-only timing for three packed ESM entry files; dependency linking/evaluation is intentionally excluded.",
+        evaluation:
+          "Fresh Node processes import packed public ESM entry points through a temporary consumer whose runtime dependencies are linked from the lockfile-installed workspace.",
         ssr: "Warm repeated edge-safe renderChart LineChart fixture, measured after module import; SVG byte length and SHA-256 prove deterministic output.",
-        workers: "Fresh Node worker_threads startup of packed browser workers after a minimal self/postMessage shim; this measures module startup, not browser Worker or OffscreenCanvas behavior.",
+        workers:
+          "Fresh Node worker_threads startup of packed browser workers after a minimal self/postMessage shim; this measures module startup, not browser Worker or OffscreenCanvas behavior.",
         docs: "Read-only aggregate emitted docs/build payload inventory; gzip is calculated per emitted file and is not a route-level browser transfer waterfall.",
-        mcp: "Fresh local stdio public-profile initialize and tools/list round trips; no HTTP listener, deployment, authentication, or external service is involved.",
+        mcp: "Fresh local stdio public-profile initialize and tools/list round trips; no HTTP listener, deployment, authentication, or external service is involved."
       },
       metrics: {
         tarball: inspected.inventory,
         parser: collectParserMetrics(inspected.packageRoot, consumerRoot),
         evaluation: collectEvaluationMetrics(consumerRoot),
         ssr: collectSsrMetric(consumerRoot),
-        workers: collectWorkerMetrics(inspected.packageRoot, consumerRoot, tempRoot),
+        workers: collectWorkerMetrics(
+          inspected.packageRoot,
+          consumerRoot,
+          tempRoot
+        ),
         docs: collectDocsPayload(repoRoot),
-        mcp: collectMcpMetrics(inspected.packageRoot, consumerRoot),
-      },
+        mcp: collectMcpMetrics(inspected.packageRoot, consumerRoot)
+      }
     }
   } finally {
     rmSync(tempRoot, { recursive: true, force: true })
@@ -683,31 +776,69 @@ function isObject(value) {
 
 function compactValue(value) {
   const serialized = JSON.stringify(value)
-  return serialized && serialized.length > 180 ? serialized.slice(0, 177) + "..." : serialized
+  return serialized && serialized.length > 180
+    ? serialized.slice(0, 177) + "..."
+    : serialized
 }
 
-export function findDifferences(expected, actual, path = "", differences = [], limit = 30) {
+export function findDifferences(
+  expected,
+  actual,
+  path = "",
+  differences = [],
+  limit = 30
+) {
   if (differences.length >= limit) return differences
   if (Array.isArray(expected) || Array.isArray(actual)) {
     if (!Array.isArray(expected) || !Array.isArray(actual)) {
-      differences.push(path + ": expected " + compactValue(expected) + ", received " + compactValue(actual))
+      differences.push(
+        path +
+          ": expected " +
+          compactValue(expected) +
+          ", received " +
+          compactValue(actual)
+      )
       return differences
     }
     if (expected.length !== actual.length) {
-      differences.push(path + ".length: expected " + expected.length + ", received " + actual.length)
+      differences.push(
+        path +
+          ".length: expected " +
+          expected.length +
+          ", received " +
+          actual.length
+      )
     }
     const count = Math.min(expected.length, actual.length)
-    for (let index = 0; index < count && differences.length < limit; index += 1) {
-      findDifferences(expected[index], actual[index], path + "[" + index + "]", differences, limit)
+    for (
+      let index = 0;
+      index < count && differences.length < limit;
+      index += 1
+    ) {
+      findDifferences(
+        expected[index],
+        actual[index],
+        path + "[" + index + "]",
+        differences,
+        limit
+      )
     }
     return differences
   }
   if (isObject(expected) || isObject(actual)) {
     if (!isObject(expected) || !isObject(actual)) {
-      differences.push(path + ": expected " + compactValue(expected) + ", received " + compactValue(actual))
+      differences.push(
+        path +
+          ": expected " +
+          compactValue(expected) +
+          ", received " +
+          compactValue(actual)
+      )
       return differences
     }
-    const keys = [...new Set([...Object.keys(expected), ...Object.keys(actual)])].sort()
+    const keys = [
+      ...new Set([...Object.keys(expected), ...Object.keys(actual)])
+    ].sort()
     for (const key of keys) {
       if (differences.length >= limit) break
       const childPath = path ? path + "." + key : key
@@ -716,7 +847,13 @@ export function findDifferences(expected, actual, path = "", differences = [], l
     return differences
   }
   if (!Object.is(expected, actual)) {
-    differences.push(path + ": expected " + compactValue(expected) + ", received " + compactValue(actual))
+    differences.push(
+      path +
+        ": expected " +
+        compactValue(expected) +
+        ", received " +
+        compactValue(actual)
+    )
   }
   return differences
 }
@@ -735,7 +872,7 @@ function staticProjection(manifest) {
     ssr: {
       fixture: metrics.ssr.fixture,
       svgBytes: metrics.ssr.svgBytes,
-      svgSha256: metrics.ssr.svgSha256,
+      svgSha256: metrics.ssr.svgSha256
     },
     workers: metrics.workers.map(({ timing, ...metric }) => metric),
     docs: metrics.docs,
@@ -743,19 +880,28 @@ function staticProjection(manifest) {
       entry: metrics.mcp.entry,
       profile: metrics.mcp.profile,
       protocolVersion: metrics.mcp.protocolVersion,
-      toolCount: metrics.mcp.toolCount,
-    },
+      toolCount: metrics.mcp.toolCount
+    }
   }
 }
 
 function timingRows(metrics) {
   return [
-    ...metrics.parser.map((metric) => ({ id: "parser:" + metric.id, timing: metric.timing })),
-    ...metrics.evaluation.map((metric) => ({ id: "evaluation:" + metric.id, timing: metric.timing })),
+    ...metrics.parser.map((metric) => ({
+      id: "parser:" + metric.id,
+      timing: metric.timing
+    })),
+    ...metrics.evaluation.map((metric) => ({
+      id: "evaluation:" + metric.id,
+      timing: metric.timing
+    })),
     { id: "ssr:line-chart", timing: metrics.ssr.timing },
-    ...metrics.workers.map((metric) => ({ id: "worker:" + metric.id, timing: metric.timing })),
+    ...metrics.workers.map((metric) => ({
+      id: "worker:" + metric.id,
+      timing: metric.timing
+    })),
     { id: "mcp:initialize", timing: metrics.mcp.initialize.timing },
-    { id: "mcp:tools-list", timing: metrics.mcp.toolsList.timing },
+    { id: "mcp:tools-list", timing: metrics.mcp.toolsList.timing }
   ]
 }
 
@@ -765,10 +911,18 @@ export function timingEnvironmentMatch(reference, current) {
   if (!expected || !actual) {
     return { compatible: false, reasons: ["missing timing fingerprint"] }
   }
-  const keys = ["platform", "arch", "nodeMajorMinor", "cpuModel", "logicalCpuCount"]
+  const keys = [
+    "platform",
+    "arch",
+    "nodeMajorMinor",
+    "cpuModel",
+    "logicalCpuCount"
+  ]
   const reasons = keys
     .filter((key) => expected[key] !== actual[key])
-    .map((key) => key + " expected " + expected[key] + ", received " + actual[key])
+    .map(
+      (key) => key + " expected " + expected[key] + ", received " + actual[key]
+    )
   return { compatible: reasons.length === 0, reasons }
 }
 
@@ -781,10 +935,16 @@ export function validateMachineBaseline(manifest) {
   if (manifest.baselineKind !== "semiotic-machine-baseline") {
     errors.push("baselineKind must equal semiotic-machine-baseline")
   }
-  if (!isObject(manifest.referenceEnvironment) || !isObject(manifest.referenceEnvironment.timingFingerprint)) {
+  if (
+    !isObject(manifest.referenceEnvironment) ||
+    !isObject(manifest.referenceEnvironment.timingFingerprint)
+  ) {
     errors.push("referenceEnvironment.timingFingerprint is required")
   }
-  if (!isObject(manifest.variancePolicy) || !isObject(manifest.variancePolicy.timing)) {
+  if (
+    !isObject(manifest.variancePolicy) ||
+    !isObject(manifest.variancePolicy.timing)
+  ) {
     errors.push("variancePolicy.timing is required")
   }
   const metrics = manifest.metrics
@@ -792,7 +952,11 @@ export function validateMachineBaseline(manifest) {
     errors.push("metrics is required")
     return errors
   }
-  if (!isObject(metrics.tarball) || !Array.isArray(metrics.tarball.files) || metrics.tarball.files.length === 0) {
+  if (
+    !isObject(metrics.tarball) ||
+    !Array.isArray(metrics.tarball.files) ||
+    metrics.tarball.files.length === 0
+  ) {
     errors.push("metrics.tarball.files must be a non-empty array")
   }
   for (const key of ["parser", "evaluation", "workers"]) {
@@ -800,9 +964,15 @@ export function validateMachineBaseline(manifest) {
       errors.push("metrics." + key + " must be a non-empty array")
     }
   }
-  if (!isObject(metrics.ssr) || !isObject(metrics.ssr.timing)) errors.push("metrics.ssr.timing is required")
-  if (!isObject(metrics.docs) || !isObject(metrics.docs.total)) errors.push("metrics.docs.total is required")
-  if (!isObject(metrics.mcp) || !isObject(metrics.mcp.initialize) || !isObject(metrics.mcp.toolsList)) {
+  if (!isObject(metrics.ssr) || !isObject(metrics.ssr.timing))
+    errors.push("metrics.ssr.timing is required")
+  if (!isObject(metrics.docs) || !isObject(metrics.docs.total))
+    errors.push("metrics.docs.total is required")
+  if (
+    !isObject(metrics.mcp) ||
+    !isObject(metrics.mcp.initialize) ||
+    !isObject(metrics.mcp.toolsList)
+  ) {
     errors.push("metrics.mcp initialize/toolsList measurements are required")
   }
 
@@ -815,12 +985,17 @@ export function validateMachineBaseline(manifest) {
     return errors
   }
   for (const row of rows) {
-    if (!isObject(row.timing) || !Array.isArray(row.timing.samplesMs) || row.timing.samplesMs.length === 0) {
+    if (
+      !isObject(row.timing) ||
+      !Array.isArray(row.timing.samplesMs) ||
+      row.timing.samplesMs.length === 0
+    ) {
       errors.push(row.id + " has no timing samples")
       continue
     }
     for (const key of ["minMs", "p50Ms", "p95Ms", "p99Ms", "maxMs", "meanMs"]) {
-      if (!Number.isFinite(row.timing[key])) errors.push(row.id + " has non-finite " + key)
+      if (!Number.isFinite(row.timing[key]))
+        errors.push(row.id + " has non-finite " + key)
     }
   }
   return errors
@@ -832,14 +1007,22 @@ export function compareMachineBaselines(baseline, current, options = {}) {
   const currentErrors = validateMachineBaseline(current)
   const validationDifferences = [
     ...baselineErrors.map((error) => "baseline: " + error),
-    ...currentErrors.map((error) => "current: " + error),
+    ...currentErrors.map((error) => "current: " + error)
   ]
   const snapshotDifferences = []
   if (baselineErrors.length === 0 && currentErrors.length === 0) {
-    findDifferences(staticProjection(baseline), staticProjection(current), "baseline", snapshotDifferences)
+    findDifferences(
+      staticProjection(baseline),
+      staticProjection(current),
+      "baseline",
+      snapshotDifferences
+    )
   }
 
-  const environment = timingEnvironmentMatch(baseline.referenceEnvironment, current.referenceEnvironment)
+  const environment = timingEnvironmentMatch(
+    baseline.referenceEnvironment,
+    current.referenceEnvironment
+  )
   // Packed archive hashes and aggregate docs payloads are host-produced
   // artifacts. Keep exact static enforcement for the recorded environment,
   // while allowing other hosts to report their measurements without turning
@@ -849,32 +1032,45 @@ export function compareMachineBaselines(baseline, current, options = {}) {
   const timingWarnings = []
   const contractDifferences = []
   if (baselineErrors.length === 0 && currentErrors.length === 0) {
-    const baselineRows = new Map(timingRows(baseline.metrics).map((row) => [row.id, row.timing]))
-    const currentRows = new Map(timingRows(current.metrics).map((row) => [row.id, row.timing]))
-    const membership = findDifferences([...baselineRows.keys()].sort(), [...currentRows.keys()].sort(), "timing rows")
+    const baselineRows = new Map(
+      timingRows(baseline.metrics).map((row) => [row.id, row.timing])
+    )
+    const currentRows = new Map(
+      timingRows(current.metrics).map((row) => [row.id, row.timing])
+    )
+    const membership = findDifferences(
+      [...baselineRows.keys()].sort(),
+      [...currentRows.keys()].sort(),
+      "timing rows"
+    )
     contractDifferences.push(...membership)
     if (environment.compatible) {
-      const maximum = baseline.variancePolicy.timing.maxRegression || DEFAULT_VARIANCE_POLICY.timing.maxRegression
+      const maximum =
+        baseline.variancePolicy.timing.maxRegression ||
+        DEFAULT_VARIANCE_POLICY.timing.maxRegression
       const absoluteMs = Number(maximum.absoluteMs)
       const relativePercent = Number(maximum.relativePercent)
       for (const [id, baselineTiming] of baselineRows) {
         const currentTiming = currentRows.get(id)
         if (!currentTiming) continue
-        const allowance = Math.max(absoluteMs, baselineTiming.p50Ms * (relativePercent / 100))
+        const allowance = Math.max(
+          absoluteMs,
+          baselineTiming.p50Ms * (relativePercent / 100)
+        )
         const limit = baselineTiming.p50Ms + allowance
         if (currentTiming.p50Ms > limit) {
           timingRegressions.push({
             id,
             baselineP50Ms: baselineTiming.p50Ms,
             currentP50Ms: currentTiming.p50Ms,
-            limitMs: roundMilliseconds(limit),
+            limitMs: roundMilliseconds(limit)
           })
         }
         if (currentTiming.p95Ms > baselineTiming.p95Ms + allowance) {
           timingWarnings.push({
             id,
             baselineP95Ms: baselineTiming.p95Ms,
-            currentP95Ms: currentTiming.p95Ms,
+            currentP95Ms: currentTiming.p95Ms
           })
         }
       }
@@ -883,13 +1079,16 @@ export function compareMachineBaselines(baseline, current, options = {}) {
   const structuralDifferences = [
     ...validationDifferences,
     ...contractDifferences,
-    ...snapshotDifferences,
+    ...snapshotDifferences
   ]
   return {
     structuralDifferences,
     snapshotDifferences,
     staticComparisonEnforced: enforceStaticForEnvironment,
-    blockingStructuralDifferences: [...validationDifferences, ...contractDifferences],
+    blockingStructuralDifferences: [
+      ...validationDifferences,
+      ...contractDifferences
+    ],
     timingEnvironment: environment,
     timingRegressions,
     timingWarnings,
@@ -897,6 +1096,6 @@ export function compareMachineBaselines(baseline, current, options = {}) {
       validationDifferences.length === 0 &&
       contractDifferences.length === 0 &&
       (!enforceStaticForEnvironment || snapshotDifferences.length === 0) &&
-      timingRegressions.length === 0,
+      timingRegressions.length === 0
   }
 }

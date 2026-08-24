@@ -554,7 +554,13 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
     () => withPhysicalFlowObservation(layout.config, chartId, onObservation),
     [chartId, layout.config, onObservation]
   )
-  const rerun = usePhysicsRerun(observedConfig, rerunMS, paused)
+  const rerun = usePhysicsRerun(
+    observedConfig,
+    rerunMS,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  )
   const userOnTickRef = useRef(frameProps?.onTick)
   userOnTickRef.current = frameProps?.onTick
   const flowOnTick = useCallback<

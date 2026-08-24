@@ -1,6 +1,6 @@
 "use strict"
 
-const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
+const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value", "recipe"]
 
 const COMPONENTS_BY_CATEGORY = {
   xy: [
@@ -31,6 +31,9 @@ const COMPONENTS_BY_CATEGORY = {
   ],
   value: [
     "BigNumber",
+  ],
+  recipe: [
+    "ParallelCoordinatesRecipe", "CalendarHeatmapRecipe",
   ],
 }
 
@@ -67,6 +70,7 @@ function categoryForAIExport(name) {
 
 function importPathForCategory(category) {
   if (category === "physics") return "semiotic/physics"
+  if (category === "recipe") return "semiotic/ai"
   return category === "geo" ? "semiotic/geo" : `semiotic/${category}`
 }
 

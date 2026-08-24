@@ -15,8 +15,9 @@
  *   <!-- semiotic-bundle-sizes:end -->
  *
  * Targets:
- *   - README.md                  full table view
- *   - ai/reference.md            compact bullet list
+ *   - README.md                            full table view
+ *   - ai/reference.md                      compact bullet list
+ *   - docs/src/pages/GettingStartedPage.jsx generated runtime rows
  *
  * Sub-path "what's inside" blurbs for the README table are kept in a
  * static map below. They are short by design (one HOC name + count)
@@ -43,6 +44,8 @@ const printOnly = args.has("--print")
 
 const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
 const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
+const JS_MARKER_START = "// semiotic-bundle-sizes-js:start"
+const JS_MARKER_END = "// semiotic-bundle-sizes-js:end"
 // Exports with no measurable JS bundle are intentionally omitted from the
 // consumer-facing bundle-size table and CI drift gate:
 //   - `./experimental` and `./experimental/vacp` are unstable preview bundles
@@ -52,45 +55,62 @@ const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
 const IGNORED_EXPORTS = new Set([
   "./experimental",
   "./experimental/vacp",
-  "./spec/*",
+  "./spec/*"
 ])
 
 // Subpath → short "what's inside" blurb shown in the README table.
 // Keep these short and stable; they describe *which charts/utilities*
 // each bundle ships, not implementation detail.
 const BLURBS = {
-  ".":          "Everything below (full bundle)",
-  "./access":   "Chart Access Contract factory and first-wave baseline contracts",
-  "./evidence": "Chart Evidence Envelope, deterministic hashing, and publication gate",
-  "./line":     "LineChart only — one-chart micro boundary",
-  "./xy":       "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts",
-  "./ordinal":  "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
-  "./network":  "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
-  "./geo":      "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
+  ".": "Everything below (full bundle)",
+  "./access": "Chart Access Contract factory and first-wave baseline contracts",
+  "./evidence":
+    "Chart Evidence Envelope, deterministic hashing, and publication gate",
+  "./line": "LineChart only — one-chart micro boundary",
+  "./xy": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts",
+  "./ordinal":
+    "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
+  "./network":
+    "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
+  "./geo": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
   "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
-  "./server":   "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
-  "./utils":    "ThemeProvider, numeric/accessibility audits, serialization — no chart components",
-  "./utils/core": "Pure theme helpers, numeric/accessibility audits, and serialization",
-  "./utils/react": "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus",
-  "./recipes":  "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
-  "./recipes/core": "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
+  "./server":
+    "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
+  "./utils":
+    "ThemeProvider, numeric/accessibility audits, serialization — no chart components",
+  "./utils/core":
+    "Pure theme helpers, numeric/accessibility audits, and serialization",
+  "./utils/react":
+    "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus",
+  "./recipes": "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
+  "./recipes/core":
+    "Pure layout functions (waffle, marimekko, flextree, dagre, …)",
   "./recipes/react": "Glyph and React layout-selection helpers",
-  "./themes":   "Theme presets only (tufte, carbon, etc.)",
+  "./themes": "Theme presets only (tufte, carbon, etc.)",
   "./themes/core": "Theme presets and token helpers",
   "./themes/react": "ThemeProvider/useTheme and hooks",
   "./realtime/core": "Streaming chart types, HOCs, and buffer helpers",
   "./realtime/react": "Stream status and synced push hooks",
-  "./server/node": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
-  "./server/edge": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard",
-  "./data":     "bin, rollup, groupBy, pivot, fromVegaLite",
-  "./value":    "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
-  "./physics":  "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart",
-  "./physics/matter": "Matter.js migration helpers + optional peer guard (no chart components)",
-  "./physics/rapier": "Rapier peer guard + adapter decision metadata (no chart components)",
-  "./ai":       "All schema-backed charts + validation — optimized for LLM code generation",
-  "./ai/core":  "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components",
-  "./controls": "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
-  "./rough":    "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative",
+  "./server/node":
+    "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
+  "./server/edge":
+    "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard",
+  "./data": "bin, rollup, groupBy, pivot, fromVegaLite",
+  "./value": "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)",
+  "./physics":
+    "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart",
+  "./physics/matter":
+    "Matter.js migration helpers + optional peer guard (no chart components)",
+  "./physics/rapier":
+    "Rapier peer guard + adapter decision metadata (no chart components)",
+  "./ai":
+    "All schema-backed charts + validation — optimized for LLM code generation",
+  "./ai/core":
+    "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components",
+  "./controls":
+    "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
+  "./rough":
+    "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative"
 }
 
 // Display order — independent of `package.json` key order so the
@@ -98,11 +118,38 @@ const BLURBS = {
 // (XY, ordinal, network, geo, realtime, server) so the "pick the
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
-  "./access", "./evidence", "./line", "./xy", "./ordinal", "./network", "./geo", "./realtime", "./realtime/core", "./realtime/react", "./server",
-  "./server/node", "./server/edge",
-  "./utils", "./utils/core", "./utils/react", "./recipes", "./recipes/core", "./recipes/react", "./themes", "./themes/core", "./themes/react",
-  "./data", "./value", "./physics",
-  "./physics/matter", "./physics/rapier", "./ai", "./ai/core", "./controls", "./rough", ".",
+  "./access",
+  "./evidence",
+  "./line",
+  "./xy",
+  "./ordinal",
+  "./network",
+  "./geo",
+  "./realtime",
+  "./realtime/core",
+  "./realtime/react",
+  "./server",
+  "./server/node",
+  "./server/edge",
+  "./utils",
+  "./utils/core",
+  "./utils/react",
+  "./recipes",
+  "./recipes/core",
+  "./recipes/react",
+  "./themes",
+  "./themes/core",
+  "./themes/react",
+  "./data",
+  "./value",
+  "./physics",
+  "./physics/matter",
+  "./physics/rapier",
+  "./ai",
+  "./ai/core",
+  "./controls",
+  "./rough",
+  "."
 ]
 
 // `./` → "semiotic", "./xy" → "semiotic/xy", "." → "semiotic".
@@ -115,7 +162,9 @@ function subpathToImportPath(subpath) {
 function resolveBundleFile(exportValue) {
   if (typeof exportValue === "string") return exportValue
   if (exportValue && typeof exportValue === "object") {
-    return exportValue.import ?? exportValue.module ?? exportValue.default ?? null
+    return (
+      exportValue.import ?? exportValue.module ?? exportValue.default ?? null
+    )
   }
   return null
 }
@@ -133,7 +182,9 @@ function gzipSize(absolutePath) {
 function assertProductionBundle(absolutePath, bundleRel, errors) {
   const text = readFileSync(absolutePath, "utf8")
   if (text.includes("sourceMappingURL=")) {
-    errors.push(`${bundleRel} contains a sourceMappingURL comment, so it was built without production minification. Run \`npm run dist:prod\`.`)
+    errors.push(
+      `${bundleRel} contains a sourceMappingURL comment, so it was built without production minification. Run \`npm run dist:prod\`.`
+    )
   }
 }
 
@@ -146,7 +197,7 @@ function localModuleSpecifiers(text) {
   const patterns = [
     /\b(?:import|export)\s*[^"'()]*?\s*from\s*["'](\.\/[^"']+)["']/g,
     /\bimport\s*["'](\.\/[^"']+)["']/g,
-    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g,
+    /\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g
   ]
   for (const re of patterns) {
     let match
@@ -164,7 +215,9 @@ function resolveBundleFiles(entryAbs, errors) {
     if (seen.has(absolutePath)) return
     seen.add(absolutePath)
     if (!existsSync(absolutePath)) {
-      errors.push(`Referenced bundle chunk missing: ${relFromRoot(absolutePath)} (run \`npm run dist:prod\`)`)
+      errors.push(
+        `Referenced bundle chunk missing: ${relFromRoot(absolutePath)} (run \`npm run dist:prod\`)`
+      )
       return
     }
     const text = readFileSync(absolutePath, "utf8")
@@ -180,7 +233,10 @@ function resolveBundleFiles(entryAbs, errors) {
 function gzipBundleSize(absolutePaths) {
   // Code-split chunks are separate network transfers, so sum each file's gzip
   // size instead of gzipping their concatenation as one artificial blob.
-  return absolutePaths.reduce((sum, absolutePath) => sum + gzipSize(absolutePath), 0)
+  return absolutePaths.reduce(
+    (sum, absolutePath) => sum + gzipSize(absolutePath),
+    0
+  )
 }
 
 function kbRound(bytes) {
@@ -188,7 +244,9 @@ function kbRound(bytes) {
 }
 
 function measure() {
-  const pkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8"))
+  const pkg = JSON.parse(
+    readFileSync(resolve(repoRoot, "package.json"), "utf8")
+  )
   const exports = pkg.exports ?? {}
   const rows = []
   const errors = []
@@ -199,7 +257,9 @@ function measure() {
       continue
     }
     if (!Object.prototype.hasOwnProperty.call(BLURBS, subpath)) {
-      errors.push(`Missing blurb for ${subpath} in sync-bundle-sizes.mjs (update BLURBS)`)
+      errors.push(
+        `Missing blurb for ${subpath} in sync-bundle-sizes.mjs (update BLURBS)`
+      )
       continue
     }
     const bundleRel = resolveBundleFile(exports[subpath])
@@ -209,7 +269,9 @@ function measure() {
     }
     const bundleAbs = resolve(repoRoot, bundleRel)
     if (!existsSync(bundleAbs)) {
-      errors.push(`Bundle file missing: ${bundleRel} (run \`npm run dist:prod\`)`)
+      errors.push(
+        `Bundle file missing: ${bundleRel} (run \`npm run dist:prod\`)`
+      )
       continue
     }
     statSync(bundleAbs) // throws if unreadable
@@ -222,7 +284,7 @@ function measure() {
       importPath: subpathToImportPath(subpath),
       bundle: bundleRel,
       kb: kbRound(gzipBundleSize(bundleFiles)),
-      blurb: BLURBS[subpath],
+      blurb: BLURBS[subpath]
     })
   }
 
@@ -233,7 +295,9 @@ function measure() {
   for (const subpath of Object.keys(exports)) {
     if (subpath === "./package.json" || IGNORED_EXPORTS.has(subpath)) continue
     if (!ORDER.includes(subpath)) {
-      errors.push(`Export ${subpath} is not listed in ORDER (sync-bundle-sizes.mjs)`)
+      errors.push(
+        `Export ${subpath} is not listed in ORDER (sync-bundle-sizes.mjs)`
+      )
     }
   }
 
@@ -251,10 +315,7 @@ function measure() {
 function renderTable(rows) {
   // Two-bold formatting on the KB column matches the prior hand-
   // maintained table's emphasis.
-  const lines = [
-    "| Entry Point | gzip | What's inside |",
-    "|---|---|---|",
-  ]
+  const lines = ["| Entry Point | gzip | What's inside |", "|---|---|---|"]
   for (const row of rows) {
     lines.push(`| \`${row.importPath}\` | **${row.kb} KB** | ${row.blurb} |`)
   }
@@ -265,11 +326,13 @@ function renderCompact(rows) {
   // Compact one-line summary for ai/reference.md.
   // Lists every subpath inline; full-bundle entry appears last so the
   // "if you import everything" anchor reads naturally.
-  const pieces = rows.map((row) => {
-    if (row.subpath === ".") return null
-    const unit = "KB"
-    return `\`${row.importPath}\` (${row.kb}${unit} gz)`
-  }).filter(Boolean)
+  const pieces = rows
+    .map((row) => {
+      if (row.subpath === ".") return null
+      const unit = "KB"
+      return `\`${row.importPath}\` (${row.kb}${unit} gz)`
+    })
+    .filter(Boolean)
   const full = rows.find((r) => r.subpath === ".")
   const trailer = full ? ` Full \`semiotic\` is ${full.kb}KB gz.` : ""
   return pieces.join(", ") + "." + trailer
@@ -282,7 +345,7 @@ function generatedTableBlock(rows) {
     "",
     renderTable(rows),
     "",
-    MARKER_END,
+    MARKER_END
   ].join("\n")
 }
 
@@ -295,32 +358,53 @@ function generatedCompactBlock(rows, { listItem = false } = {}) {
     MARKER_START,
     "<!-- Auto-generated by scripts/sync-bundle-sizes.mjs — do not edit by hand. -->",
     `${prefix}**Use sub-path imports** — ${renderCompact(rows)}`,
-    MARKER_END,
+    MARKER_END
+  ].join("\n")
+}
+
+function generatedJavaScriptBlock(rows) {
+  const data = rows.map(({ importPath, kb, blurb }) => ({
+    importPath,
+    kb,
+    blurb
+  }))
+  return [
+    JS_MARKER_START,
+    "// Auto-generated by scripts/sync-bundle-sizes.mjs. Do not edit by hand.",
+    `const bundleSizeRows = Object.freeze(${JSON.stringify(data, null, 2)})`,
+    JS_MARKER_END
   ].join("\n")
 }
 
 // ── Upsert ─────────────────────────────────────────────────────────────
 
-function upsertMarkerBlock(content, block) {
-  const start = content.indexOf(MARKER_START)
+function upsertMarkerBlock(
+  content,
+  block,
+  markerStart = MARKER_START,
+  markerEnd = MARKER_END
+) {
+  const start = content.indexOf(markerStart)
   if (start === -1) return null // caller decides whether to error or no-op
   // Constrain the end-marker search to AFTER the start marker so an
   // earlier occurrence of `MARKER_END` (in an unrelated example, a
   // duplicated block, or quoted prose) doesn't cause a false miss.
-  const end = content.indexOf(MARKER_END, start + MARKER_START.length)
+  const end = content.indexOf(markerEnd, start + markerStart.length)
   if (end === -1) return null
-  const replaceEnd = end + MARKER_END.length
+  const replaceEnd = end + markerEnd.length
   return content.slice(0, start) + block + content.slice(replaceEnd)
 }
 
-/** Pull every "<number> KB" pair out of a marker block. Both the table
- *  and the compact bullet form share this pattern. */
+/** Pull each generated size out of a marker block. Markdown targets use
+ *  "<number> KB" while the documentation module stores numeric `kb` fields. */
 function extractKbValues(block) {
-  const out = []
-  const re = /(\d+)\s*KB/gi
-  let m
-  while ((m = re.exec(block)) !== null) out.push(Number(m[1]))
-  return out
+  const displayValues = [...block.matchAll(/(\d+)\s*KB/gi)].map((match) =>
+    Number(match[1])
+  )
+  if (displayValues.length > 0) return displayValues
+  return [...block.matchAll(/["']?kb["']?\s*:\s*(\d+)/g)].map((match) =>
+    Number(match[1])
+  )
 }
 
 /** Per-bundle tolerance in KB. Even production-minified terser
@@ -346,8 +430,23 @@ function blocksWithinTolerance(rendered, existing) {
 }
 
 const TARGETS = [
-  { path: "README.md",           render: (rows) => generatedTableBlock(rows),                       required: true },
-  { path: "ai/reference.md",      render: (rows) => generatedCompactBlock(rows, { listItem: true }), required: true },
+  {
+    path: "README.md",
+    render: (rows) => generatedTableBlock(rows),
+    required: true
+  },
+  {
+    path: "ai/reference.md",
+    render: (rows) => generatedCompactBlock(rows, { listItem: true }),
+    required: true
+  },
+  {
+    path: "docs/src/pages/GettingStartedPage.jsx",
+    render: (rows) => generatedJavaScriptBlock(rows),
+    required: true,
+    markerStart: JS_MARKER_START,
+    markerEnd: JS_MARKER_END
+  }
 ]
 
 function main() {
@@ -356,7 +455,9 @@ function main() {
   if (printOnly) {
     console.log("Bundle sizes (gzip, KB):\n")
     for (const row of rows) {
-      console.log(`  ${row.importPath.padEnd(20)}  ${String(row.kb).padStart(4)} KB`)
+      console.log(
+        `  ${row.importPath.padEnd(20)}  ${String(row.kb).padStart(4)} KB`
+      )
     }
     return
   }
@@ -366,10 +467,14 @@ function main() {
     const filePath = resolve(repoRoot, target.path)
     const original = readFileSync(filePath, "utf8")
     const block = target.render(rows)
-    const next = upsertMarkerBlock(original, block)
+    const markerStart = target.markerStart ?? MARKER_START
+    const markerEnd = target.markerEnd ?? MARKER_END
+    const next = upsertMarkerBlock(original, block, markerStart, markerEnd)
     if (next == null) {
       if (target.required) {
-        console.error(`✗ ${target.path}: missing marker block ${MARKER_START} / ${MARKER_END}`)
+        console.error(
+          `✗ ${target.path}: missing marker block ${markerStart} / ${markerEnd}`
+        )
         process.exit(1)
       }
       continue
@@ -380,8 +485,9 @@ function main() {
       // per bundle aren't real drift. The committed doc shows the
       // last `docs:bundle-sizes` write; only flag when reality has
       // diverged enough that the user-facing numbers would mislead.
-      const existingBlock = extractMarkerBlock(original)
-      if (existingBlock != null && blocksWithinTolerance(block, existingBlock)) continue
+      const existingBlock = extractMarkerBlock(original, markerStart, markerEnd)
+      if (existingBlock != null && blocksWithinTolerance(block, existingBlock))
+        continue
       stale.push(target.path)
     } else {
       writeFileSync(filePath, next)
@@ -390,7 +496,9 @@ function main() {
   }
 
   if (checkOnly && stale.length > 0) {
-    console.error(`\n✗ bundle-size docs drifted beyond ±${KB_TOLERANCE} KB tolerance from current \`dist/\` output:`)
+    console.error(
+      `\n✗ bundle-size docs drifted beyond ±${KB_TOLERANCE} KB tolerance from current \`dist/\` output:`
+    )
     for (const path of stale) console.error(`  - ${path}`)
     console.error("\nRebuild + regenerate with:")
     console.error("  npm run dist:prod && npm run docs:bundle-sizes")
@@ -398,16 +506,22 @@ function main() {
   }
 
   if (checkOnly) {
-    console.log(`✓ bundle-size docs within ±${KB_TOLERANCE} KB of dist/*.module.min.js`)
+    console.log(
+      `✓ bundle-size docs within ±${KB_TOLERANCE} KB of dist/*.module.min.js`
+    )
   }
 }
 
-function extractMarkerBlock(content) {
-  const start = content.indexOf(MARKER_START)
+function extractMarkerBlock(
+  content,
+  markerStart = MARKER_START,
+  markerEnd = MARKER_END
+) {
+  const start = content.indexOf(markerStart)
   if (start === -1) return null
-  const end = content.indexOf(MARKER_END, start + MARKER_START.length)
+  const end = content.indexOf(markerEnd, start + markerStart.length)
   if (end === -1) return null
-  return content.slice(start, end + MARKER_END.length)
+  return content.slice(start, end + markerEnd.length)
 }
 
 main()

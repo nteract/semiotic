@@ -9,6 +9,7 @@ import {
   renderXYToStaticSVG,
 } from "./renderToStaticSVG"
 import { buildRealtimeEdges } from "./staticNetwork"
+import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
 
 Object.assign(globalThis, { TextEncoder, TextDecoder })
 
@@ -65,6 +66,9 @@ describe("static/runtime parity regressions", () => {
       size: [240, 180],
     })
     expect(svg).toContain(">4</text>")
+    expect(svg).toContain(
+      `fill="${getSequentialInterpolator("blues")(128 / 255)}"`
+    )
   })
 
   it("forwards FlowMap flowStyle to the static geo pipeline", () => {

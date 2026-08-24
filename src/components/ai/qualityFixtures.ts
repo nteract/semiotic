@@ -1,5 +1,11 @@
 import type { ScorecardFixture } from "./qualityScorecard"
 
+function deterministicUnit(index: number, seed: number): number {
+  let value = Math.imul(index + 1, 1664525) + seed + 1013904223
+  value = Math.imul(value ^ (value >>> 16), 2246822519)
+  return (value >>> 0) / 4294967296
+}
+
 /**
  * Canonical scorecard fixtures — the test set that descriptor tuning is
  * measured against. Curated by hand. Each entry pairs a dataset with the
@@ -43,17 +49,20 @@ const surveySatisfaction = Array.from({ length: 150 }, (_, i) => ({
   respondent_id: i + 1,
   satisfaction: Math.max(
     1,
-    Math.min(10, 6 + Math.sin(i / 7) * 2 + Math.random() * 3 - 1)
+    Math.min(10, 6 + Math.sin(i / 7) * 2 + deterministicUnit(i, 11) * 3 - 1)
   ),
   cohort: ["Beta", "GA", "Enterprise"][i % 3]
 }))
 
 const studyHoursVsGrade = Array.from({ length: 80 }, (_, i) => {
-  const hours = Math.max(0, Math.random() * 40)
+  const hours = deterministicUnit(i, 23) * 40
   return {
     student_id: `s${i + 1}`,
     hours,
-    grade: Math.min(100, hours * 1.8 + 30 + (Math.random() - 0.5) * 20)
+    grade: Math.min(
+      100,
+      hours * 1.8 + 30 + (deterministicUnit(i, 29) - 0.5) * 20
+    )
   }
 })
 
@@ -159,7 +168,7 @@ const usGeoFeatures = {
 }
 
 const flatSingleColumn = Array.from({ length: 50 }, (_, i) => ({
-  observation: 50 + Math.sin(i / 4) * 12 + Math.random() * 6
+  observation: 50 + Math.sin(i / 4) * 12 + deterministicUnit(i, 41) * 6
 }))
 
 // Three-numeric scatter — fixture for BubbleChart
@@ -267,10 +276,10 @@ const revenueVsExpensesTwoSeries = [
 // OHLC time series for CandlestickChart
 const stockPrices = Array.from({ length: 30 }, (_, i) => {
   const base = 100 + i * 1.2 + Math.sin(i / 4) * 8
-  const open = base + (Math.random() - 0.5) * 4
-  const close = base + (Math.random() - 0.5) * 4
-  const high = Math.max(open, close) + Math.random() * 3
-  const low = Math.min(open, close) - Math.random() * 3
+  const open = base + (deterministicUnit(i, 53) - 0.5) * 4
+  const close = base + (deterministicUnit(i, 59) - 0.5) * 4
+  const high = Math.max(open, close) + deterministicUnit(i, 61) * 3
+  const low = Math.min(open, close) - deterministicUnit(i, 67) * 3
   return { day: i + 1, open, high, low, close }
 })
 
@@ -376,8 +385,14 @@ const transitionEvents = [
 // honest expert answer over grouped bars.
 const incidentsByServiceAndDay = (() => {
   const services = [
-    "auth", "billing", "search", "ingest",
-    "notify", "reports", "exports", "webhooks"
+    "auth",
+    "billing",
+    "search",
+    "ingest",
+    "notify",
+    "reports",
+    "exports",
+    "webhooks"
   ]
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   return services.flatMap((service, si) =>
@@ -469,6 +484,14 @@ const travelTimesFromHQ = {
   ]
 }
 
+/**
+ * Semiotic's internal deterministic recommendation benchmark corpus.
+ *
+ * @deprecated This test corpus remains exported from `semiotic/ai` for 3.x
+ * compatibility, but application and evaluation code should own its
+ * `ScorecardFixture` inputs. It is intentionally absent from
+ * `semiotic/ai/core` and is planned for removal from the public API in 4.0.
+ */
 export const CANONICAL_FIXTURES: ReadonlyArray<ScorecardFixture> = [
   // Time-series family
   {

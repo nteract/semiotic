@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createStore } from "./createStore"
+import { getSelectionProvenance } from "./selectionProvenance"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,9 @@ export interface SelectionStoreState {
 
 // ── Predicate builders ─────────────────────────────────────────────────────
 
-function buildClausePredicate(clause: SelectionClause): (d: Datum) => boolean {
+function buildRowClausePredicate(
+  clause: SelectionClause
+): (d: Datum) => boolean {
   const fieldTests: Array<(d: Datum) => boolean> = []
 
   for (const [field, constraint] of Object.entries(clause.fields)) {
@@ -55,7 +58,6 @@ function buildClausePredicate(clause: SelectionClause): (d: Datum) => boolean {
     }
   }
 
-  // All fields in a clause must match (AND within clause)
   return (d) => fieldTests.every((fn) => fn(d))
 }
 
@@ -63,19 +65,32 @@ export function buildPredicate(
   selection: Selection,
   requestingClientId?: string
 ): (d: Datum) => boolean {
-  const clausePredicates: Array<(d: Datum) => boolean> = []
+  const rowClausePredicates: Array<(d: Datum) => boolean> = []
 
   for (const [clientId, clause] of selection.clauses) {
     // In crossfilter mode, exclude the requesting client's own clause
-    if (selection.resolution === "crossfilter" && clientId === requestingClientId) continue
-    clausePredicates.push(buildClausePredicate(clause))
+    if (
+      selection.resolution === "crossfilter" &&
+      clientId === requestingClientId
+    )
+      continue
+    rowClausePredicates.push(buildRowClausePredicate(clause))
   }
 
-  if (clausePredicates.length === 0) return () => true
+  if (rowClausePredicates.length === 0) return () => true
 
-  return selection.resolution === "intersect"
-    ? (d) => clausePredicates.every((fn) => fn(d))
-    : (d) => clausePredicates.some((fn) => fn(d))
+  // An aggregate represents a set of source rows. Intersected clauses must
+  // all match the same row; union/crossfilter need any clause on any row.
+  const matchesRow =
+    selection.resolution === "intersect"
+      ? (row: Datum) =>
+          rowClausePredicates.every((predicate) => predicate(row))
+      : (row: Datum) =>
+          rowClausePredicates.some((predicate) => predicate(row))
+
+  return (datum) =>
+    matchesRow(datum) ||
+    (getSelectionProvenance(datum)?.some(matchesRow) ?? false)
 }
 
 // ── Store factory ──────────────────────────────────────────────────────────
@@ -92,7 +107,10 @@ function ensureSelection(
   return sel
 }
 
-function fieldSelectionsAreEqual(a: FieldSelection, b: FieldSelection): boolean {
+function fieldSelectionsAreEqual(
+  a: FieldSelection,
+  b: FieldSelection
+): boolean {
   if (a.type !== b.type) return false
   if (a.type === "interval" && b.type === "interval") {
     return a.range[0] === b.range[0] && a.range[1] === b.range[1]
@@ -113,7 +131,10 @@ function clausesAreEqual(a: SelectionClause, b: SelectionClause): boolean {
   if (aFields.length !== countObjectKeys(b.fields)) return false
   for (const [field, selection] of aFields) {
     const otherSelection = b.fields[field]
-    if (!otherSelection || !fieldSelectionsAreEqual(selection, otherSelection)) {
+    if (
+      !otherSelection ||
+      !fieldSelectionsAreEqual(selection, otherSelection)
+    ) {
       return false
     }
   }
@@ -128,8 +149,8 @@ function countObjectKeys(value: object): number {
   return count
 }
 
-export const [SelectionProvider, useSelectionSelector] = createStore<SelectionStoreState>(
-  (set) => ({
+export const [SelectionProvider, useSelectionSelector] =
+  createStore<SelectionStoreState>((set) => ({
     selections: new Map<string, Selection>(),
 
     setClause(selectionName: string, clause: SelectionClause) {
@@ -178,5 +199,4 @@ export const [SelectionProvider, useSelectionSelector] = createStore<SelectionSt
         return { selections }
       })
     }
-  })
-)
+  }))

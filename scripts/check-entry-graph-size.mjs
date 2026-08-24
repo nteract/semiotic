@@ -73,10 +73,16 @@ const ENTRY_GRAPHS = [
   { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
   // Access contracts compose AI grounding/audit systems; keep them off chart
   // production graphs while retaining a narrow tooling budget.
-  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 35 },
+  // Bumped 35→36: authored hierarchy rollups and choropleth coverage/range/
+  // rank branches replace the former flat mark dump. Production measures
+  // 35.4 KiB gzip; these are the public navigation semantics, not a runtime
+  // dependency leak.
+  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 36 },
   // Evidence envelopes include data profiles and grounding; this is tooling,
-  // not a chart runtime dependency.
-  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 180 },
+  // not a chart runtime dependency. The production graph is 49.8 KiB, so
+  // retain a narrow explicit guard band rather than the inherited
+  // 180 KiB ceiling that could not detect accidental runtime coupling.
+  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 50 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -158,7 +164,15 @@ const ENTRY_GRAPHS = [
   // identity graph shares ThemeProvider/LinkedCharts store instances with the
   // micro entry. This adds ~4.1 KiB to AI's shared graph; measured 530.5 KiB,
   // leaving 1.5 KiB headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 532 },
+  // Bumped 532→538: the two built-in portable recipe pilots add their
+  // manifests plus calendar/parallel runtime layouts to the generic
+  // ChartRecipe host. Production measures 536.0 KiB gzip; the raw layouts
+  // remain shared with semiotic/recipes rather than duplicated HOCs.
+  // Bumped 538→540 after completing the recipe and semantic-navigation
+  // tranches: production measures 538.6 KiB gzip. Keep less than 1.5 KiB of
+  // runway around the canonical catalog rather than dropping accepted schema
+  // or reader behavior to preserve a stale round number.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 540 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }

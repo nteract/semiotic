@@ -19,6 +19,7 @@
 import { createRequire } from "node:module"
 import { describe, expect, it } from "vitest"
 import { CHART_SPECS, composeProps } from "../../components/charts/shared/chartSpecs"
+import { generateBuiltInRecipeSchemaTools } from "../../components/ai/builtInChartRecipes"
 import {
   generateSchemaToolEntry,
   generateValidationMapEntry,
@@ -33,6 +34,7 @@ const schema = require("../../../ai/schema.json") as {
     function: {
       name: string
       description: string
+      "x-semiotic-kind"?: "recipe"
       parameters: {
         type: "object"
         properties: Record<string, { type: unknown; enum?: unknown[]; default?: unknown }>
@@ -125,16 +127,40 @@ describe("Chart Spec Registry round-trip", () => {
   // directly to validationMap.ts (or removed from it) without
   // `check:chart-specs` failing — leaving us back in the pre-registry
   // hand-curation regime for new charts.
-  it("CHART_SPECS keys match every canonical source exactly", () => {
+  it("chart and recipe registries match their canonical sources exactly", () => {
     const registryNames = new Set(Object.keys(CHART_SPECS))
-    const schemaNames = new Set(schema.tools.map((t) => t.function.name))
+    const schemaNames = new Set(
+      schema.tools
+        .filter((tool) => tool.function["x-semiotic-kind"] !== "recipe")
+        .map((tool) => tool.function.name),
+    )
     const validationNames = new Set(Object.keys(VALIDATION_MAP))
     const metadataNames = new Set(
-      Object.values(componentMetadata.COMPONENTS_BY_CATEGORY).flat(),
+      Object.entries(componentMetadata.COMPONENTS_BY_CATEGORY)
+        .filter(([category]) => category !== "recipe")
+        .flatMap(([, names]) => names),
     )
     expect(schemaNames, "ai/schema.json names").toEqual(registryNames)
     expect(validationNames, "VALIDATION_MAP names").toEqual(registryNames)
     expect(metadataNames, "componentMetadata.cjs names").toEqual(registryNames)
+
+    const generatedRecipeTools = generateBuiltInRecipeSchemaTools()
+    const schemaRecipeTools = schema.tools.filter(
+      (tool) => tool.function["x-semiotic-kind"] === "recipe",
+    )
+    const recipeNames = new Set(
+      generatedRecipeTools.map((tool) => tool.function.name),
+    )
+    const metadataRecipeNames = new Set(
+      componentMetadata.COMPONENTS_BY_CATEGORY.recipe ?? [],
+    )
+
+    expect(schemaRecipeTools, "ai/schema.json recipe entries").toEqual(
+      generatedRecipeTools,
+    )
+    expect(metadataRecipeNames, "componentMetadata.cjs recipe names").toEqual(
+      recipeNames,
+    )
   })
 
   it("keeps mutable validation descriptors independent between charts", () => {

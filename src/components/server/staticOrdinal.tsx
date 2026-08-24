@@ -2,7 +2,7 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
 import { ticksForMode } from "../charts/shared/axisExtent"
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.browser"
+import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type {
   OrdinalSceneNode,

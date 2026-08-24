@@ -12,6 +12,42 @@
         "type ChartAccessor<TDatum, T> = (keyof TDatum & string) | ChartAccessorFunction<TDatum, T>"
       ],
       "reason": "Backward-compatible type correction: the callback now respects TDatum; callbacks accepting the former broader Datum remain assignable while typed callbacks gain safe field inference."
+    },
+    {
+      "against": "v3.9.1",
+      "entry": "semiotic",
+      "symbol": "RealtimeLineChartHandle",
+      "previous": [
+        "interface RealtimeLineChartHandle extends RealtimeFrameHandle"
+      ],
+      "current": [
+        "interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>"
+      ],
+      "reason": "Backward-compatible generic precision: both parameters default to the released Datum handle, while typed realtime line refs can preserve authored rows and distinguish aggregate readback rows."
+    },
+    {
+      "against": "v3.9.1",
+      "entry": "semiotic-realtime",
+      "symbol": "RealtimeLineChartHandle",
+      "previous": [
+        "interface RealtimeLineChartHandle extends RealtimeFrameHandle"
+      ],
+      "current": [
+        "interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>"
+      ],
+      "reason": "Backward-compatible generic precision: both parameters default to the released Datum handle, while typed realtime line refs can preserve authored rows and distinguish aggregate readback rows."
+    },
+    {
+      "against": "v3.9.1",
+      "entry": "semiotic-realtime-core",
+      "symbol": "RealtimeLineChartHandle",
+      "previous": [
+        "interface RealtimeLineChartHandle extends RealtimeFrameHandle"
+      ],
+      "current": [
+        "interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>"
+      ],
+      "reason": "Backward-compatible generic precision: both parameters default to the released Datum handle, while typed realtime line refs can preserve authored rows and distinguish aggregate readback rows."
     }
   ]
 }

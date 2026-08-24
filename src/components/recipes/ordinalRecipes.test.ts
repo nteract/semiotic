@@ -481,6 +481,21 @@ describe("parallelCoordinatesLayout", () => {
     }
   })
 
+  it("centers constant dimensions inside the plot", () => {
+    const result = parallelCoordinatesLayout(makeCtx({
+      fields: ["constant", "value"],
+      showAxes: false,
+    }, [
+      { constant: 50, value: 1 },
+      { constant: 50, value: 2 },
+    ]))
+    const segments = result.nodes as ConnectorSceneNode[]
+
+    expect(segments).toHaveLength(2)
+    expect(segments[0].y1).toBeCloseTo(150)
+    expect(segments[1].y1).toBeCloseTo(150)
+  })
+
   it("returns empty when fewer than 2 fields configured", () => {
     const result = parallelCoordinatesLayout(makeCtx({
       fields: ["mpg"],

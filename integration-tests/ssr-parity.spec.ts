@@ -38,7 +38,7 @@ interface ParityCase {
 }
 
 interface RenderEvidence {
-  frameType: "xy" | "ordinal" | "network" | "geo"
+  frameType: "xy" | "ordinal" | "network" | "geo" | "physics"
   status: "ok" | "empty"
   empty: boolean
   markCount: number
@@ -416,6 +416,31 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(evidence.markCount).toBeGreaterThan(0)
     expect(svg).toContain("<circle")
   }
+  if (id === "minimap-composite") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.line).toBe(2)
+    expect(evidence.empty).toBe(false)
+    expect(svg).toContain('data-semiotic-composite-part="detail"')
+    expect(svg).toContain('data-semiotic-composite-part="overview"')
+    expect((svg.match(/<svg\b/g) ?? []).length).toBe(3)
+  }
+  if (id === "scatterplot-matrix-composite") {
+    expect(evidence.frameType).toBe("xy")
+    expect(evidence.markCountByType.point).toBe(24)
+    expect(evidence.markCountByType.histogram).toBeGreaterThan(0)
+    expect(svg).toContain('data-semiotic-composite-part="diagonal-speed"')
+    expect((svg.match(/<svg\b/g) ?? []).length).toBe(10)
+  }
+  if (id === "chain-reaction-static-projection") {
+    expect(evidence.frameType).toBe("physics")
+    expect(evidence.markCountByType.task).toBe(4)
+    expect(evidence.markCountByType.dependency).toBe(3)
+    expect(evidence.nodeCount).toBe(4)
+    expect(evidence.edgeCount).toBe(3)
+    expect(svg).toContain("Privacy review")
+    expect(svg).toContain("blocked")
+    expect(svg).toContain("affects 2 unfinished tasks across 1 lanes")
+  }
 }
 
 /** Point count for the range-dumbbell fixture (kept in sync with the fixture). */
@@ -554,7 +579,19 @@ test.describe("SSR / CSR parity", () => {
       // every screenshot multiplies browser startup work by 52 and makes
       // visual-review runs needlessly slow.
       await page.goto(`/ssr-parity-examples/?case=${encodeURIComponent(c.id)}`)
-      await waitForChartReady(page, `csr-${c.id}`)
+      if (c.id === "chain-reaction-static-projection") {
+        // ChainReaction's settled reading is authored SVG chrome over an
+        // intentionally empty physics body canvas. Waiting for non-blank
+        // canvas pixels would reject the very server contract this fixture
+        // proves, so wait for a semantic task mark instead.
+        await expect(
+          page
+            .locator(`[data-testid="csr-${c.id}"]`)
+            .getByText("Privacy review", { exact: true })
+        ).toBeVisible()
+      } else {
+        await waitForChartReady(page, `csr-${c.id}`)
+      }
 
       // Keep the live CSR chart exactly as it rendered in the browser, then
       // place the standalone server SVG beside it. Moving the CSR fixture

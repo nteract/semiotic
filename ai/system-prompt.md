@@ -32,7 +32,10 @@ request.
 - Flat observations: XY charts for trends/relationships; ordinal charts for
   categorical comparison, ranking, distribution, and part-to-whole.
   Multivariate comparable magnitudes: `RadarChart`. Cumulative signed
-  steps: `WaterfallChart` (each row is a delta).
+  steps: `WaterfallChart` (each row is a delta). For multivariate profile
+  comparison across independently scaled fields, consider the schema-backed
+  `ParallelCoordinatesRecipe`; for single-year daily seasonality, consider
+  `CalendarHeatmapRecipe`.
 - Trees: `TreeDiagram`, `Treemap`, `CirclePack`, or animated `OrbitDiagram`.
 - Nodes/edges: `ForceDirectedGraph`, `SankeyDiagram`, `ProcessSankey`, or
   `ChordDiagram`. Prefer these HOCs to `StreamNetworkFrame` unless the task
@@ -54,6 +57,11 @@ identity, not quantitative measures or unique-value categories.
 
 - Static JSX, SSR, MCP rendering, and serialized configurations keep the
   initial data snapshot in the component's real data prop.
+- Built-in portable recipes are serialized under their recipe component name
+  and rendered in React with `<ChartRecipe recipeId="..." />` from
+  `semiotic/ai`. Their `layoutConfig` is JSON-safe and schema-validated; use
+  the lower-level layout from `semiotic/recipes` only when React callbacks or
+  bespoke layout control are required.
 - React push mode omits `data` entirely and mutates through a ref. Do not pass
   `data={[]}`. Supply the schema's stable ID accessor before using `remove` or
   `update`.

@@ -1004,9 +1004,10 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: false,
       supportsLinkedHover: false,
       supportsPush: false,
-      // The chart SSRs safely as a React HOC, but its overlay-led settled
-      // reading does not route through the Stream Frame server config.
-      supportsSSR: false,
+      // The server path renders the authored current-time task/dependency
+      // projection directly. It intentionally omits arbitrary in-flight ball
+      // positions, which are animation state rather than the chart's ledger.
+      supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "synthetic",
       specialFeatures: [
@@ -1015,7 +1016,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         "blocker-amplification",
         "settled-projection",
         "deterministic-snapshot",
-        "hoc-ssr-only"
+        "authored-static-projection"
       ]
     }
   }

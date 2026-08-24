@@ -36,6 +36,7 @@ const path = require("path")
 const ROOT = path.resolve(__dirname, "..")
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
 const SSR_CONFIGS = path.join(ROOT, "src/components/server/serverChartConfigs.ts")
+const AI_SCHEMA = path.join(ROOT, "ai/schema.json")
 const CHART_SPECS_INDEX = path.join(ROOT, "src/components/charts/shared/chartSpecs.ts")
 const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
@@ -85,6 +86,14 @@ while ((match = configRegex.exec(ssrSource))) {
   }
 }
 
+// Portable recipes are schema-visible server-renderable layouts hosted by
+// ChartRecipe rather than one-file-per-chart HOCs under src/components/charts.
+const recipeNames = new Set(
+  JSON.parse(fs.readFileSync(AI_SCHEMA, "utf8")).tools
+    .filter((tool) => tool.function["x-semiotic-kind"] === "recipe")
+    .map((tool) => tool.function.name)
+)
+
 // ── 3. Extract validation map chart names ──────────────────────────────
 //
 // VALIDATION_MAP is generated from CHART_SPECS. Walk the family source
@@ -114,23 +123,9 @@ for (const candidate of namedHocCandidates) {
 // ── 4. Charts that are intentionally SSR-excluded ──────────────────────
 
 const SSR_EXCLUDED = new Set([
-  // Composite/wrapper charts — not standalone renderable via CHART_CONFIGS
-  // (HOC React SSR may still work). Note: QuadrantChart and FlowMap *are*
-  // registered in CHART_CONFIGS and must NOT be listed here.
-  "ScatterplotMatrix", "MinimapChart", "MultiAxisLineChart",
   // Realtime-only charts — no static representation (TemporalHistogram is static)
   "RealtimeLineChart", "RealtimeHistogram", "RealtimeSwarmChart",
   "RealtimeWaterfallChart", "RealtimeHeatmap",
-  // Animated hierarchy — no static representation
-  "OrbitDiagram",
-  // Stateful geo — no CHART_CONFIGS entry (MCP HOC path is the snapshot route)
-  "DistanceCartogram",
-  // Interactive dependency-enactment chart — its static visual lives entirely
-  // in a foregroundGraphics overlay (task cards + dependency tracks) that the
-  // physics settled-scene SSR renderer cannot emit (it renders only settled
-  // bodies), and its dependency balls are transient with empty initialSpawns,
-  // so a settled render would be blank. Catalog/SSR integration is pending.
-  "ChainReactionChart",
 ])
 
 const VALIDATION_EXCLUDED = new Set([
@@ -140,10 +135,6 @@ const VALIDATION_EXCLUDED = new Set([
   // statically describable by the chart-spec registry.
   "XYCustomChart", "OrdinalCustomChart", "NetworkCustomChart", "GeoCustomChart",
   "PhysicsCustomChart",
-  // ChainReactionChart is a new physics chart whose chart-spec / capability /
-  // AI-surface integration is still pending; it is not yet in CHART_SPECS, so
-  // validateProps does not describe it. Remove once it is catalog-registered.
-  "ChainReactionChart",
 ])
 
 // ── 5. Check alignment ────────────────────────────────────────────────
@@ -160,7 +151,7 @@ for (const hoc of hocsOnDisk) {
 
 // SSR configs referencing non-existent HOCs
 for (const name of ssrNames) {
-  if (!hocsOnDisk.has(name) && name !== "Sparkline") {
+  if (!hocsOnDisk.has(name) && !recipeNames.has(name) && name !== "Sparkline") {
     // Sparkline is SSR-only, not an HOC
     errors.push(`SSR config "${name}" has no matching HOC in src/components/charts/`)
   }
@@ -444,6 +435,6 @@ if (errors.length > 0) {
 } else {
   console.log("\n✅ SSR alignment check passed")
   console.log(`   ${hocsOnDisk.size} HOC charts on disk`)
-  console.log(`   ${ssrNames.size} SSR configs (+ ${SSR_EXCLUDED.size} intentionally excluded)`)
+  console.log(`   ${ssrNames.size} SSR configs, including ${recipeNames.size} schema-visible recipe(s) (+ ${SSR_EXCLUDED.size} intentionally excluded)`)
   console.log(`   ${validationNames.size} validation map entries`)
 }

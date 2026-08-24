@@ -18,6 +18,8 @@ import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { buildRecipeNavigationTree } from "./recipeNavigation"
 import { resolveRecipeForChart } from "./recipeSemantics"
+import { buildHierarchyNavigationTree } from "./hierarchyNavigation"
+import { buildGeoNavigationTree } from "./geoNavigation"
 /**
  * buildNavigationTree — turn a chart config into a structured, labeled
  * navigation tree (chart → axes/series → data points), following the Olli /
@@ -47,7 +49,7 @@ export interface NavTreeNode {
   level: number
   /** Measure value, for datum leaves. */
   value?: number
-  /** Raw datum, for datum leaves. */
+  /** Raw authored datum for any actionable mark node, including hierarchy parents. */
   datum?: Datum | null
   children?: NavTreeNode[]
 }
@@ -78,6 +80,27 @@ const GEO_FAMILY = new Set([
   "FlowMap",
   "DistanceCartogram"
 ])
+/**
+ * Whether the runtime navigation builder owns a datum-level structure for the
+ * supplied chart. This is the authoritative capability check used by
+ * ChartAccessContract; callers should not maintain a parallel chart-name set.
+ */
+export function supportsStructuredNavigation(
+  component: string,
+  props: Datum = {},
+  options: Pick<BuildNavigationTreeOptions, "recipe"> = {}
+): boolean {
+  if (resolveRecipeForChart(component, props, options.recipe)) return true
+  return (
+    NETWORK_FAMILY.has(component) ||
+    HIERARCHY_FAMILY.has(component) ||
+    GEO_FAMILY.has(component) ||
+    XY_FAMILY.has(component) ||
+    BAR_FAMILY.has(component) ||
+    PART_TO_WHOLE.has(component) ||
+    DISTRIBUTION.has(component)
+  )
+}
 
 function readProp(datum: Datum, accessor: unknown, fallback: string): unknown {
   if (typeof accessor === "function") return accessor(datum)
@@ -95,6 +118,7 @@ function stringValue(value: unknown, fallback = "—"): string {
 }
 
 function finiteValue(value: unknown): number | undefined {
+  if (value == null || value === "") return undefined
   const number = typeof value === "number" ? value : Number(value)
   return Number.isFinite(number) ? number : undefined
 }
@@ -197,54 +221,58 @@ function buildNetworkNavigationTree(
     if (bucket) bucket.push(node)
     else nodeGroups.set(group, [node])
   }
-  const nodeBranches = [...nodeGroups].map(([group, groupNodes], groupIndex) => {
-    const children: NavTreeNode[] = []
-    for (const [nodeIndex, node] of groupNodes.entries()) {
-      if (emitted >= maxLeaves) break
-      emitted += 1
-      const id = nodeId(node)
-      const stats = degrees.get(id) ?? { links: 0, value: 0 }
-      const valueLabel =
-        stats.value > 0 ? `, ${fmtNum(stats.value)} total flow` : ""
-      children.push({
-        id: `node-${groupIndex}-${nodeIndex}-${slug(id)}`,
-        role: "datum",
-        level: 3,
-        label: `${id}: ${stats.links} ${stats.links === 1 ? "link" : "links"}${valueLabel}.`,
-        value: stats.value > 0 ? stats.value : undefined,
-        datum: node
-      })
+  const nodeBranches = [...nodeGroups].map(
+    ([group, groupNodes], groupIndex) => {
+      const children: NavTreeNode[] = []
+      for (const [nodeIndex, node] of groupNodes.entries()) {
+        if (emitted >= maxLeaves) break
+        emitted += 1
+        const id = nodeId(node)
+        const stats = degrees.get(id) ?? { links: 0, value: 0 }
+        const valueLabel =
+          stats.value > 0 ? `, ${fmtNum(stats.value)} total flow` : ""
+        children.push({
+          id: `node-${groupIndex}-${nodeIndex}-${slug(id)}`,
+          role: "datum",
+          level: 3,
+          label: `${id}: ${stats.links} ${stats.links === 1 ? "link" : "links"}${valueLabel}.`,
+          value: stats.value > 0 ? stats.value : undefined,
+          datum: node
+        })
+      }
+      return {
+        id: `nodes-${groupIndex}-${slug(group)}`,
+        role: "series" as const,
+        level: 2,
+        label: `${group}: ${groupNodes.length} ${groupNodes.length === 1 ? "node" : "nodes"}.`,
+        children
+      }
     }
-    return {
-      id: `nodes-${groupIndex}-${slug(group)}`,
-      role: "series" as const,
-      level: 2,
-      label: `${group}: ${groupNodes.length} ${groupNodes.length === 1 ? "node" : "nodes"}.`,
-      children
-    }
-  })
+  )
   if (nodeBranches.length > 0) root.children?.push(...nodeBranches)
 
-  const edgeChildren: NavTreeNode[] = edges.slice(0, maxLeaves).map((edge, index) => {
-    const source = endpoint(edge, sourceAccessor)
-    const target = endpoint(edge, targetAccessor)
-    const value = finiteValue(readProp(edge, valueAccessor, "value"))
-    return {
-      id: `link-${slug(source)}-${slug(target)}-${index}`,
-      role: "datum" as const,
-      level: 3,
-      label: `${source} to ${target}${value == null ? "" : `: ${fmtNum(value)}`}.`,
-      value,
-      datum: edge
-    }
-  })
+  const edgeChildren: NavTreeNode[] = edges
+    .slice(0, maxLeaves)
+    .map((edge, index) => {
+      const source = endpoint(edge, sourceAccessor)
+      const target = endpoint(edge, targetAccessor)
+      const value = finiteValue(readProp(edge, valueAccessor, "value"))
+      return {
+        id: `link-${slug(source)}-${slug(target)}-${index}`,
+        role: "datum" as const,
+        level: 3,
+        label: `${source} to ${target}${value == null ? "" : `: ${fmtNum(value)}`}.`,
+        value,
+        datum: edge
+      }
+    })
   if (edges.length > maxLeaves) {
     edgeChildren.push({
       id: "links-more",
       role: "datum",
       level: 3,
       label: `…and ${edges.length - maxLeaves} more links.`,
-      value: undefined,
+      value: undefined
     })
   }
   if (edgeChildren.length > 0) {
@@ -254,242 +282,6 @@ function buildNetworkNavigationTree(
       level: 2,
       label: `Links: ${edges.length} ${edges.length === 1 ? "connection" : "connections"}.`,
       children: edgeChildren
-    })
-  }
-  return root
-}
-
-function hierarchyChildren(datum: Datum, accessor: unknown): Datum[] {
-  const children = readProp(datum, accessor, "children")
-  return Array.isArray(children) ? (children as Datum[]) : []
-}
-
-function buildHierarchyNavigationTree(
-  component: string,
-  props: Datum,
-  maxLeaves: number,
-  fmtNum: (n: number) => string
-): NavTreeNode {
-  const data =
-    props.data && typeof props.data === "object" ? (props.data as Datum) : null
-  const childrenAccessor = props.childrenAccessor ?? "children"
-  const valueAccessor = props.valueAccessor ?? "value"
-  const labelAccessor = props.nodeLabel ?? props.nodeIdAccessor
-  let leafCount = 0
-  const summaryCache = new WeakMap<
-    Datum,
-    { leaves: number; value: number; depth: number }
-  >()
-
-  const summarize = (
-    node: Datum
-  ): { leaves: number; value: number; depth: number } => {
-    const cached = summaryCache.get(node)
-    if (cached) return cached
-    const children = hierarchyChildren(node, childrenAccessor)
-    const result =
-      children.length === 0
-        ? {
-            leaves: 1,
-            value: finiteValue(readProp(node, valueAccessor, "value")) ?? 0,
-            depth: 1
-          }
-        : children.reduce<{ leaves: number; value: number; depth: number }>(
-            (total, child) => {
-              const childSummary = summarize(child)
-              return {
-                leaves: total.leaves + childSummary.leaves,
-                value: total.value + childSummary.value,
-                depth: Math.max(total.depth, childSummary.depth + 1)
-              }
-            },
-            { leaves: 0, value: 0, depth: 1 }
-          )
-    summaryCache.set(node, result)
-    return result
-  }
-  const buildNode = (
-    node: Datum,
-    level: number,
-    path: string
-  ): NavTreeNode | null => {
-    const children = hierarchyChildren(node, childrenAccessor)
-    const label = stringValue(
-      readProp(node, labelAccessor, "name"),
-      `item ${path}`
-    )
-    const summary = summarize(node)
-    const value = summary.value
-    if (children.length === 0) {
-      if (leafCount >= maxLeaves) return null
-      leafCount += 1
-      return {
-        id: `hierarchy-${slug(path)}-${slug(label)}`,
-        role: "datum",
-        level,
-        label: `${label}${value > 0 ? `: ${fmtNum(value)}` : ""}.`,
-        value: value > 0 ? value : undefined,
-        datum: node
-      }
-    }
-    const childNodes = children
-      .map((child, index) => buildNode(child, level + 1, `${path}-${index}`))
-      .filter((child): child is NavTreeNode => child !== null)
-    if (childNodes.length === 0 && leafCount >= maxLeaves) {
-      childNodes.push({
-        id: `hierarchy-${slug(path)}-more`,
-        role: "datum",
-        level: level + 1,
-        label: "More hierarchy items are not shown."
-      })
-    }
-    return {
-      id: `hierarchy-${slug(path)}-${slug(label)}`,
-      role: "series",
-      level,
-      label: `${label}: ${summary.leaves} ${summary.leaves === 1 ? "descendant" : "descendants"}${value > 0 ? `, total ${fmtNum(value)}` : ""}.`,
-      children: childNodes
-    }
-  }
-
-  const summary = data ? summarize(data) : null
-  const rootLabel = data
-    ? `A ${component === "TreeDiagram" ? "tree" : component === "Treemap" ? "treemap" : component === "CirclePack" ? "circle-packing" : "orbit"} chart with ${summary!.leaves} leaves across ${summary!.depth} hierarchy levels.`
-    : "A hierarchy chart with no hierarchy data loaded."
-  const root: NavTreeNode = {
-    id: "root",
-    role: "chart",
-    label: rootLabel,
-    level: 1,
-    children: []
-  }
-  if (data) {
-    const branch = buildNode(data, 2, "root")
-    if (branch) {
-      if (
-        branch.role === "series" &&
-        stringValue(readProp(data, labelAccessor, "name"), "") === ""
-      ) {
-        root.children = branch.children
-      } else {
-        root.children = [branch]
-      }
-    }
-  }
-  return root
-}
-
-function geoFeatures(value: unknown): Datum[] {
-  if (Array.isArray(value)) return value as Datum[]
-  if (!value || typeof value !== "object") return []
-  const object = value as Datum
-  if (Array.isArray(object.features)) return object.features as Datum[]
-  return object.type === "Feature" ? [object] : []
-}
-
-function geoValue(datum: Datum, accessor: unknown, fallback: string): unknown {
-  const direct = readProp(datum, accessor, fallback)
-  if (direct !== undefined) return direct
-  const properties = datum.properties
-  return properties && typeof properties === "object"
-    ? readProp(properties as Datum, accessor, fallback)
-    : undefined
-}
-
-function buildGeoNavigationTree(
-  component: string,
-  props: Datum,
-  maxLeaves: number,
-  fmtNum: (n: number) => string
-): NavTreeNode {
-  const areaData = geoFeatures(props.areas)
-  const points =
-    component === "FlowMap" && Array.isArray(props.nodes)
-      ? (props.nodes as Datum[])
-      : Array.isArray(props.points)
-        ? (props.points as Datum[])
-        : []
-  const flows = Array.isArray(props.flows) ? (props.flows as Datum[]) : []
-  const lines = Array.isArray(props.lines) ? (props.lines as Datum[]) : []
-  const valueAccessor =
-    props.valueAccessor ?? props.sizeBy ?? props.costAccessor ?? "value"
-  const pointId = props.pointIdAccessor ?? props.nodeIdAccessor ?? "id"
-  const title =
-    component === "ChoroplethMap"
-      ? `A choropleth map with ${areaData.length} regions.`
-      : component === "FlowMap"
-        ? `A flow map with ${flows.length} flows and ${points.length} locations.`
-        : component === "DistanceCartogram"
-          ? `A distance cartogram with ${points.length} locations and ${lines.length} routes.`
-          : `A proportional-symbol map with ${points.length} locations.`
-  const root: NavTreeNode = {
-    id: "root",
-    role: "chart",
-    level: 1,
-    label: `${title}${interactionCue(props, "geo")}`,
-    children: []
-  }
-  const marks: NavTreeNode[] = []
-  const rows = component === "ChoroplethMap" ? areaData : points
-  rows.slice(0, maxLeaves).forEach((datum, index) => {
-    const label = stringValue(
-      geoValue(
-        datum,
-        component === "ChoroplethMap" ? props.idAccessor : pointId,
-        "id"
-      ) ??
-        geoValue(datum, "name", "name") ??
-        geoValue(datum, "label", "label"),
-      `${component === "ChoroplethMap" ? "region" : "location"} ${index + 1}`
-    )
-    const value = finiteValue(geoValue(datum, valueAccessor, "value"))
-    marks.push({
-      id: `geo-${slug(label)}-${index}`,
-      role: "datum",
-      level: 2,
-      label: `${label}${value == null ? "" : `: ${fmtNum(value)}`}.`,
-      value,
-      datum
-    })
-  })
-  if (rows.length > maxLeaves) {
-    marks.push({
-      id: "geo-more",
-      role: "datum",
-      level: 2,
-      label: `…and ${rows.length - maxLeaves} more locations.`
-    })
-  }
-  if (marks.length > 0) {
-    root.children?.push({
-      id: component === "ChoroplethMap" ? "regions" : "locations",
-      role: "series",
-      level: 2,
-      label: `${component === "ChoroplethMap" ? "Regions" : "Locations"}: ${rows.length} marks.`,
-      children: marks.map((mark) => ({ ...mark, level: 3 }))
-    })
-  }
-  const routeData = component === "FlowMap" ? flows : lines
-  if (routeData.length > 0) {
-    const routeChildren = routeData.slice(0, maxLeaves).map((route, index) => {
-      const source = stringValue(route.source, "unknown")
-      const target = stringValue(route.target, "unknown")
-      const value = finiteValue(readProp(route, valueAccessor, "value"))
-      return {
-        id: `route-${slug(source)}-${slug(target)}-${index}`,
-        role: "datum" as const,
-        level: 3,
-        label: `${source} to ${target}${value == null ? "" : `: ${fmtNum(value)}`}.`,
-        value,
-        datum: route
-      }
-    })
-    root.children?.push({
-      id: "routes",
-      role: "series",
-      level: 2,
-      label: `Routes: ${routeData.length} ${routeData.length === 1 ? "route" : "routes"}.`,
-      children: routeChildren
     })
   }
   return root
@@ -613,11 +405,7 @@ export function buildNavigationTree(
   }
 
   const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
-  const statsFamily =
-    XY_FAMILY.has(component) ||
-    BAR_FAMILY.has(component) ||
-    PART_TO_WHOLE.has(component) ||
-    DISTRIBUTION.has(component)
+  const statsFamily = supportsStructuredNavigation(component, props, options)
   if (!data || data.length === 0 || !statsFamily) {
     if (annotationBranch) root.children = [annotationBranch]
     return root

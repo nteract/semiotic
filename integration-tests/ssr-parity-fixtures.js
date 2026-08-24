@@ -80,6 +80,20 @@ const differenceData = [
   { x: 4, actual: 23, target: 20 },
 ]
 
+const scatterplotMatrixData = [
+  { speed: 8, power: 4, range: 6, kind: "Alpha" },
+  { speed: 5, power: 7, range: 4, kind: "Beta" },
+  { speed: 9, power: 6, range: 8, kind: "Alpha" },
+  { speed: 3, power: 8, range: 2, kind: "Beta" },
+]
+
+const chainReactionTasks = [
+  { id: "brief", label: "Brief", lane: "Product", dependencies: [], status: "done", completed: 1, progress: 1 },
+  { id: "privacy", label: "Privacy review", lane: "Product", dependencies: ["brief"], status: "blocked", blocker: "Legal", progress: 0.8 },
+  { id: "schema", label: "Schema", lane: "Data", dependencies: ["privacy"], status: "waiting", progress: 0.25 },
+  { id: "ingest", label: "Ingest", lane: "Data", dependencies: ["schema"], status: "waiting", progress: 0 },
+]
+
 const heatmapData = [
   { xBin: "A", yBin: "Q1", value: 12 },
   { xBin: "B", yBin: "Q1", value: 19 },
@@ -2169,6 +2183,58 @@ function makeSsrParityCases(React, recipes = {}) {
         costAccessor: "cost",
         width: 460,
         height: 300,
+      },
+    },
+    {
+      id: "minimap-composite",
+      component: "MinimapChart",
+      props: {
+        data: xyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        brushExtent: [1, 3],
+        minimap: { height: 50 },
+        showLegend: false,
+        description: "Selected interval with the full series below.",
+        width: 400,
+        height: 200,
+      },
+    },
+    {
+      id: "scatterplot-matrix-composite",
+      component: "ScatterplotMatrix",
+      props: {
+        data: scatterplotMatrixData,
+        fields: ["speed", "power", "range"],
+        colorBy: "kind",
+        showLegend: false,
+        cellSize: 90,
+        cellGap: 4,
+        histogramBins: 5,
+        accessibleTable: false,
+        description: "Pairwise vehicle traits with marginal distributions.",
+      },
+    },
+    {
+      id: "chain-reaction-static-projection",
+      component: "ChainReactionChart",
+      props: {
+        data: chainReactionTasks,
+        taskIDAccessor: "id",
+        labelAccessor: "label",
+        laneAccessor: "lane",
+        dependencyAccessor: "dependencies",
+        statusAccessor: "status",
+        completionTimeAccessor: "completed",
+        progressAccessor: "progress",
+        blockerAccessor: "blocker",
+        currentTime: 10,
+        mode: "snapshot",
+        selectedTaskIDs: ["privacy"],
+        accessibleTable: false,
+        title: "Release dependencies",
+        width: 600,
+        height: 400,
       },
     },
   ]

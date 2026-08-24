@@ -14,6 +14,11 @@ import {
 } from "./serverChartConfigShared"
 import { composeHierarchyNodeStyle } from "./serverChartConfigNetworkStyles"
 import { resolveTheme } from "./themeResolver"
+import {
+  composeStyleRules,
+  makeNodeRuleContext,
+  type StyleRule,
+} from "../charts/shared/styleRules"
 
 export const circlePack: ChartConfig = {
   frameType: "network",
@@ -88,6 +93,15 @@ export const circlePack: ChartConfig = {
       | ((d: Datum) => Record<string, unknown> | undefined | null)
       | Record<string, unknown>
       | undefined
+    const ruledNodeStyle = composeStyleRules(
+      baseNodeStyle,
+      rest.styleRules as StyleRule[] | undefined,
+      makeNodeRuleContext(
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      ),
+      (d) => (d?.data as Datum) || d,
+    )
     return {
       chartType: "circlepack",
       data,
@@ -106,7 +120,7 @@ export const circlePack: ChartConfig = {
         (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
         Boolean(colorBy && !rest.colorByDepth),
       nodeStyle: composeHierarchyNodeStyle(
-        baseNodeStyle,
+        ruledNodeStyle,
         userNodeStyle,
         primitiveStyleOverrides(rest)
       )
@@ -171,6 +185,15 @@ export const orbitDiagram: ChartConfig = {
         opacity: depth === 0 ? 1 : 0.85
       }
     }
+    const ruledNodeStyle = composeStyleRules(
+      baseNodeStyle,
+      rest.styleRules as StyleRule[] | undefined,
+      makeNodeRuleContext(
+        colorBy as string | ((d: Datum) => unknown) | undefined,
+        "value",
+      ),
+      (d) => (d?.data as Datum) || d,
+    )
 
     return {
       chartType: "orbit",
@@ -192,7 +215,7 @@ export const orbitDiagram: ChartConfig = {
       orbitShowRings: rest.showRings ?? true,
       // Static rendering captures the deterministic initial orbit layout.
       orbitAnimated: false,
-      nodeStyle: mergeShapeStyle(baseNodeStyle, primitiveStyleOverrides(rest)),
+      nodeStyle: mergeShapeStyle(ruledNodeStyle, primitiveStyleOverrides(rest)),
       edgeStyle: () => ({
         stroke: "rgba(128,128,128,0.35)",
         strokeWidth: 0.5,

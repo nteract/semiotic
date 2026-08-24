@@ -615,6 +615,7 @@ interface-member ChainReactionChartProps::property::milestoneAccessor = optional
 interface-member ChainReactionChartProps::property::mode = optional mode: ChainReactionMode | undefined
 interface-member ChainReactionChartProps::property::onObservation = optional onObservation: ((event: ChainReactionObservation<TDatum>) => void) | undefined
 interface-member ChainReactionChartProps::property::onSelectionChange = optional onSelectionChange: ((ids: string[]) => void) | undefined
+interface-member ChainReactionChartProps::property::onSimulationStateChange = optional onSimulationStateChange: ((state: import("../../semiotic-experimental").UnstablePhysicsSimulationState, previousState: import("../../semiotic-experimental").UnstablePhysicsSimulationState) => void) | undefined
 interface-member ChainReactionChartProps::property::orientation = optional orientation: "vertical" | undefined
 interface-member ChainReactionChartProps::property::progressAccessor = optional progressAccessor: DependencyAccessor<TDatum, number | undefined> | undefined
 interface-member ChainReactionChartProps::property::reducedMotion = optional reducedMotion: "settle" | undefined

@@ -6,11 +6,11 @@ _Edit dist/semiotic-geo.d.ts's sources, then re-run `npm run docs:api-surface` t
 ```
 const DEFAULT_HIT_RADIUS: 8
 function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<TDatum>): React.JSX.Element
-function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamGeoFrame(: React.RefAttributes<import("semiotic-internal/semiotic-geo").StreamGeoFrameHandle> & import("semiotic-internal/semiotic-geo").StreamGeoFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element

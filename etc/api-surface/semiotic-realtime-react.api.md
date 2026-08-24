@@ -5,7 +5,7 @@ _Edit dist/semiotic-realtime-react.d.ts's sources, then re-run `npm run docs:api
 
 ```
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
-function useStreamStatus<THandle extends RealtimeFrameHandle = RealtimeFrameHandle>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>
+function useStreamStatus<THandle extends RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum> = RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum>>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>
 function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
 interface StreamStatusOptions
 interface StreamStatusResult<THandle extends RealtimeFrameHandle = RealtimeFrameHandle>

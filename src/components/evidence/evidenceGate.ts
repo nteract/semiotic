@@ -57,6 +57,16 @@ export function evaluateEvidenceGate(
     )
   }
 
+  if (requireRenderEvidence && !envelope.access.ssr.supported) {
+    findings.push(
+      finding(
+        "access.ssr-unsupported",
+        "error",
+        "Publication requires a chart surface registered for server rendering; supplied evidence cannot promote an unsupported capability claim."
+      )
+    )
+  }
+
   if (
     envelope.render.parity === "mismatch" ||
     envelope.render.evidence?.status === "empty"
@@ -93,7 +103,10 @@ export function evaluateEvidenceGate(
     )
   }
 
-  if (!envelope.access.navigation.supported && options.requireNavigation === true) {
+  if (
+    !envelope.access.navigation.supported &&
+    options.requireNavigation === true
+  ) {
     findings.push(
       finding(
         "access.navigation-missing",
@@ -104,7 +117,10 @@ export function evaluateEvidenceGate(
   }
 
   const audit = envelope.audit.accessibility as
-    | { ok?: boolean; findings?: Array<{ critical?: boolean; status?: string }> }
+    | {
+        ok?: boolean
+        findings?: Array<{ critical?: boolean; status?: string }>
+      }
     | undefined
   if (audit && typeof audit === "object") {
     const blockingAccessibility =
@@ -128,8 +144,7 @@ export function evaluateEvidenceGate(
 
   if (failOnConflicts && envelope.modalityChecks.tandem.conflicts.length > 0) {
     const unresolved = envelope.modalityChecks.tandem.conflicts.filter(
-      (conflict) =>
-        !conflict.resolution || conflict.resolution === "unresolved"
+      (conflict) => !conflict.resolution || conflict.resolution === "unresolved"
     )
     if (unresolved.length > 0) {
       findings.push(
@@ -146,7 +161,7 @@ export function evaluateEvidenceGate(
     const unsupported =
       claim.supported === false ||
       claim.confidence === 0 ||
-      !(claim.evidenceIds?.length)
+      !claim.evidenceIds?.length
 
     if (unsupported) {
       if (!envelope.limits.unsupportedClaims.includes(claim.claim)) {
@@ -169,6 +184,6 @@ export function evaluateEvidenceGate(
       ? "fail"
       : "pass",
     ok: !findings.some((item) => item.severity === "error"),
-    findings,
+    findings
   }
 }

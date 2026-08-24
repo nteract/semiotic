@@ -5,14 +5,14 @@ _Edit dist/semiotic-network.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 const DEFAULT_HIT_RADIUS: 8
-function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
-function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
-function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamNetworkFrame(: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
@@ -142,6 +142,7 @@ interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: Char
 interface-member CirclePackProps::property::padding = optional padding: number | undefined
 interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member CirclePackProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member CirclePackProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member CirclePackProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member CirclePackProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
@@ -362,6 +363,7 @@ interface-member OrbitDiagramProps::property::showLabels = optional showLabels: 
 interface-member OrbitDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member OrbitDiagramProps::property::showRings = optional showRings: boolean | undefined
 interface-member OrbitDiagramProps::property::speed = optional speed: number | undefined
+interface-member OrbitDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member OrbitDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member ProcessSankeyIssue::property::endpoint = optional endpoint: string | undefined
 interface-member ProcessSankeyIssue::property::id = optional id: string | undefined
@@ -658,6 +660,7 @@ interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: numbe
 interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreeDiagramProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member TreeDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member TreeDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member TreeDiagramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member TreemapProps::property::childrenAccessor = optional childrenAccessor: ChartAccessor<TNode, TNode[]> | undefined
@@ -677,6 +680,7 @@ interface-member TreemapProps::property::padding = optional padding: number | un
 interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
 interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreemapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member TreemapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member TreemapProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member TreemapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member UseForceLayoutResult::property::error = required error: Error | null

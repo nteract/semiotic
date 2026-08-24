@@ -1339,6 +1339,59 @@ Key props: `y-threshold` works on vertical ordinal charts. `category-highlight` 
 
 ## Recipe Layouts — Explicit Semantics Without Bespoke Geometry
 
+### ParallelCoordinatesRecipe (schema-backed portable recipe)
+
+```jsx
+import { ChartRecipe } from "semiotic/ai"
+
+const vehicles = [
+  { id: "compact", mpg: 32, power: 88, weight: 2100, origin: "EU" },
+  { id: "sedan", mpg: 25, power: 132, weight: 2900, origin: "US" },
+  { id: "sport", mpg: 18, power: 280, weight: 2600, origin: "JP" },
+]
+
+<ChartRecipe
+  recipeId="ParallelCoordinatesRecipe"
+  data={vehicles}
+  layoutConfig={{
+    fields: ["mpg", "power", "weight"],
+    colorBy: "origin",
+    showPoints: true,
+  }}
+  title="Vehicle profiles"
+  description="Vehicle profiles compared across independently scaled measures."
+  summary="Power increases as fuel economy falls in this sample."
+  accessibleTable
+/>
+```
+
+The serialized/MCP/server component name is `ParallelCoordinatesRecipe` with
+the same props. The schema requires two to twelve unique numeric field names.
+
+### CalendarHeatmapRecipe (schema-backed portable recipe)
+
+```jsx
+import { ChartRecipe } from "semiotic/ai"
+
+<ChartRecipe
+  recipeId="CalendarHeatmapRecipe"
+  data={[
+    { date: "2026-01-01", count: 4 },
+    { date: "2026-01-02", count: 9 },
+    { date: "2026-01-03", count: 2 },
+  ]}
+  layoutConfig={{ dateAccessor: "date", valueAccessor: "count", year: 2026 }}
+  title="Daily activity"
+  description="Daily activity positioned by calendar week and weekday."
+  summary="January 2 has the highest value in this sample."
+  accessibleTable
+/>
+```
+
+The serialized/MCP/server component name is `CalendarHeatmapRecipe`. Keep one
+calendar year per chart; use the raw layouts from `semiotic/recipes` when a
+local React callback or custom frame behavior is necessary.
+
 ### Word Trails (source-aware color + progressive reveal)
 
 ```jsx

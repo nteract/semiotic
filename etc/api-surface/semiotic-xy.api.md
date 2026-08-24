@@ -5,27 +5,27 @@ _Edit dist/semiotic-xy.d.ts's sources, then re-run `npm run docs:api-surface` to
 
 ```
 const DEFAULT_HIT_RADIUS: 8
-function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
-function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
-function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
-function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamXYFrame(: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
@@ -337,6 +337,7 @@ interface-member HeatmapProps::property::legendInteraction = optional legendInte
 interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member HeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member HeatmapProps::property::showValues = optional showValues: boolean | undefined
+interface-member HeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member HeatmapProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member HeatmapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member HeatmapProps::property::valueFormat = optional valueFormat: ((d: number) => string) | undefined

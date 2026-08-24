@@ -12,14 +12,18 @@ import {
   useChartMode,
   useChartSelection,
   useGradientLegendInteraction,
-  useThemeSequential,
+  useThemeSequential
 } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import {
+  SafeRender,
+  renderEmptyState,
+  renderLoadingState
+} from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { scaleSequential } from "d3-scale"
@@ -29,10 +33,18 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GradientLegendConfig } from "../../types/legendTypes"
 
+function flattenFeatureProperties(datum: Datum): Datum {
+  return datum.properties && typeof datum.properties === "object"
+    ? { ...datum.properties, ...datum }
+    : datum
+}
+
 /**
  * ChoroplethMap component props
  */
-export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
+export interface ChoroplethMapProps<
+  TDatum extends Datum = Datum
+> extends BaseChartProps {
   /**
    * Either a `GeoJSON.Feature[]` array (one feature per region) or a
    * reference string the library resolves into bundled topology:
@@ -184,8 +196,9 @@ export interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseCh
  * `colorScheme`. For diverging data (positive/negative around zero), use
  * a diverging scheme name and pass `frameProps={{ colorDomain: [-max, max] }}`.
  */
-export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMapProps<TDatum>) {
-
+export function ChoroplethMap<TDatum extends Datum = Datum>(
+  props: ChoroplethMapProps<TDatum>
+) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -196,10 +209,10 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     description: props.description,
     accessibleTable: props.accessibleTable,
     summary: props.summary,
-      mobileInteraction: props.mobileInteraction,
+    mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
-    responsiveRules: props.responsiveRules,
-})
+    responsiveRules: props.responsiveRules
+  })
 
   // Color scheme resolution priority:
   //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"
@@ -239,7 +252,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     frameProps = {},
     stroke,
     strokeWidth,
-    opacity,
+    opacity
   } = props
 
   // Tile maps default to zoomable; non-tile maps default to not zoomable
@@ -252,16 +265,18 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   // sample and crash the value-accessor map below.
   const resolvedAreasRaw = useReferenceAreas(areas)
   const resolvedAreas = useMemo(
-    () => (resolvedAreasRaw ? filterSparseArray(resolvedAreasRaw) : resolvedAreasRaw),
-    [resolvedAreasRaw],
+    () =>
+      resolvedAreasRaw ? filterSparseArray(resolvedAreasRaw) : resolvedAreasRaw,
+    [resolvedAreasRaw]
   )
 
   // ── All hooks must be called unconditionally (before any early returns) ──
 
-  const valAcc = useMemo(() =>
-    typeof valueAccessor === "function"
-      ? valueAccessor
-      : (d: Datum) => d?.properties?.[valueAccessor] ?? d?.[valueAccessor],
+  const valAcc = useMemo(
+    () =>
+      typeof valueAccessor === "function"
+        ? valueAccessor
+        : (d: Datum) => d?.properties?.[valueAccessor] ?? d?.[valueAccessor],
     [valueAccessor]
   )
 
@@ -269,7 +284,10 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
 
   // Build sequential color scale
   const colorScale = useMemo(() => {
-    if (!resolvedAreas) return scaleSequential(getSequentialInterpolator(undefined)).domain([0, 1])
+    if (!resolvedAreas)
+      return scaleSequential(getSequentialInterpolator(undefined)).domain([
+        0, 1
+      ])
     let min = Infinity
     let max = -Infinity
     for (const feature of resolvedAreas) {
@@ -291,7 +309,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   const gradientLegendState = useGradientLegendInteraction(
     legendInteraction,
     valAcc,
-    valueDomain,
+    valueDomain
   )
 
   // Selection
@@ -299,7 +317,7 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     activeSelectionHook,
     hoverSelectionHook,
     customHoverBehavior,
-    customClickBehavior,
+    customClickBehavior
   } = useChartSelection({
     selection,
     linkedHover,
@@ -307,12 +325,14 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     onClick,
     chartType: "ChoroplethMap",
     chartId,
-    mobileInteraction: resolved.mobileInteraction,
+    mobileInteraction: resolved.mobileInteraction
   })
 
   const resolvedSelection = useResolvedSelection(selection)
-  const effectiveSelectionHook = hoverSelectionHook ||
-    gradientLegendState.legendSelectionHook || activeSelectionHook
+  const effectiveSelectionHook =
+    hoverSelectionHook ||
+    gradientLegendState.legendSelectionHook ||
+    activeSelectionHook
 
   // Area style
   const areaStyleFn = useMemo(() => {
@@ -331,36 +351,78 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
       base,
       styleRules,
       (raw) => ({ value: valAcc(raw) }),
-      (f) => (f && typeof f === "object" && (f as Datum).properties ? { ...(f as Datum).properties, ...f } : f),
+      (f) =>
+        f && typeof f === "object" && (f as Datum).properties
+          ? { ...(f as Datum).properties, ...f }
+          : f
     ) as (d: Datum) => Style
     // Overlay top-level primitive props before selection wrap so they apply
     // to every region regardless of selection state.
-    const withPrimitives = mergeShapeStyle(ruled, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
+    const withPrimitives = mergeShapeStyle(ruled, {
+      stroke,
+      strokeWidth,
+      opacity
+    }) as (d: Datum) => Style
     if (effectiveSelectionHook) {
-      return wrapStyleWithSelection(withPrimitives, effectiveSelectionHook, resolvedSelection) as (d: Datum) => Style
+      return wrapStyleWithSelection(
+        withPrimitives,
+        effectiveSelectionHook,
+        resolvedSelection,
+        flattenFeatureProperties
+      ) as (d: Datum) => Style
     }
     return withPrimitives
-  }, [valAcc, colorScale, effectiveSelectionHook, resolvedSelection, areaOpacity, stroke, strokeWidth, opacity, styleRules])
+  }, [
+    valAcc,
+    colorScale,
+    effectiveSelectionHook,
+    resolvedSelection,
+    areaOpacity,
+    stroke,
+    strokeWidth,
+    opacity,
+    styleRules
+  ])
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)
-  const defaultTooltip = useMemo(() => (d: Datum) => {
-    const name = d?.properties?.name || d?.properties?.NAME || d?.name || d?.NAME || "Feature"
-    const val = valAcc(d)
+  const defaultTooltip = useMemo(
+    () => (d: Datum) => {
+      const name =
+        d?.properties?.name ||
+        d?.properties?.NAME ||
+        d?.name ||
+        d?.NAME ||
+        "Feature"
+      const val = valAcc(d)
 
-    const formatValue = (v: string | number | Date | null | undefined): string => {
-      if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
-      if (Number.isInteger(v)) return v.toLocaleString()
-      return v.toLocaleString(undefined, { maximumFractionDigits: 2 })
-    }
+      const formatValue = (
+        v: string | number | Date | null | undefined
+      ): string => {
+        if (typeof v !== "number" || !isFinite(v)) return String(v ?? "")
+        if (Number.isInteger(v)) return v.toLocaleString()
+        return v.toLocaleString(undefined, { maximumFractionDigits: 2 })
+      }
 
-    return (
-      <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
-        <div style={{ fontWeight: 600 }}>{name}</div>
-        {val != null && <div style={{ opacity: 0.7 }}>{formatValue(val)}</div>}
-      </div>
-    )
-  }, [valAcc])
+      return (
+        <div
+          style={{
+            background: "rgba(0,0,0,0.85)",
+            color: "white",
+            padding: "6px 10px",
+            borderRadius: 4,
+            fontSize: 12
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>{name}</div>
+          {val != null && (
+            <div style={{ opacity: 0.7 }}>{formatValue(val)}</div>
+          )}
+        </div>
+      )
+    },
+    [valAcc]
+  )
 
   const marginDefaults = resolveAxisFreeMarginDefaults(resolved)
   const gradientLegend = useMemo(() => {
@@ -368,37 +430,58 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     const config: GradientLegendConfig = {
       colorFn: (value: number) => colorScale(value),
       domain: valueDomain,
-      label: typeof valueAccessor === "string" ? valueAccessor : "value",
+      label: typeof valueAccessor === "string" ? valueAccessor : "value"
     }
     return { gradient: config }
   }, [colorScale, resolved.showLegend, valueAccessor, valueDomain])
-  const { legend, margin, legendPosition, legendMarginReserved } = useChartLegendAndMargin({
-    data: [],
-    colorBy: undefined,
-    colorScale: undefined,
-    showLegend: false,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: marginDefaults,
-    additionalLegend: gradientLegend,
-    chartWidth: resolved.width,
-    chartHeight: resolved.height,
-    legendLayout: frameProps.legendLayout,
-    frameLegend: frameProps,
-    hasTitle: !!resolved.title,
-    // Geo frames draw no horizontal axis, so a bottom legend only needs its
-    // own content box and plot-edge distance.
-    axisChrome: { hasAxis: false },
-  })
+  const { legend, margin, legendPosition, legendMarginReserved } =
+    useChartLegendAndMargin({
+      data: [],
+      colorBy: undefined,
+      colorScale: undefined,
+      showLegend: false,
+      legendPosition: legendPositionProp,
+      userMargin,
+      defaults: marginDefaults,
+      additionalLegend: gradientLegend,
+      chartWidth: resolved.width,
+      chartHeight: resolved.height,
+      legendLayout: frameProps.legendLayout,
+      frameLegend: frameProps,
+      hasTitle: !!resolved.title,
+      // Geo frames draw no horizontal axis, so a bottom legend only needs its
+      // own content box and plot-edge distance.
+      axisChrome: { hasAxis: false }
+    })
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   // The secondary fallback fires while `areas` is still resolving (e.g.
   // a "world-110m" reference geography being fetched). Thread
   // `loadingContent` through both calls so a `false` suppression OR
   // a custom node applies during the geo-resolution wait too.
-  const loadingEl = renderLoadingState(loading, resolved.width, resolved.height, loadingContent)
-    || (!resolvedAreas ? renderLoadingState(true, resolved.width, resolved.height, loadingContent) : null)
-  const emptyEl = !loadingEl ? renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent) : null
+  const loadingEl =
+    renderLoadingState(
+      loading,
+      resolved.width,
+      resolved.height,
+      loadingContent
+    ) ||
+    (!resolvedAreas
+      ? renderLoadingState(
+          true,
+          resolved.width,
+          resolved.height,
+          loadingContent
+        )
+      : null)
+  const emptyEl = !loadingEl
+    ? renderEmptyState(
+        resolvedAreas,
+        resolved.width,
+        resolved.height,
+        emptyContent
+      )
+    : null
 
   // Validate areas is a valid GeoJSON feature array.
   // We skip accessor validation here because valueAccessor resolves through
@@ -406,7 +489,14 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   if (Array.isArray(resolvedAreas) && resolvedAreas.length > 0) {
     const sample = resolvedAreas[0]
     if (!sample || typeof sample !== "object" || !sample.geometry) {
-      return <ChartError componentName="ChoroplethMap" message="ChoroplethMap: areas must be an array of GeoJSON Features with a geometry property." width={resolved.width} height={resolved.height} />
+      return (
+        <ChartError
+          componentName="ChoroplethMap"
+          message="ChoroplethMap: areas must be an array of GeoJSON Features with a geometry property."
+          width={resolved.width}
+          height={resolved.height}
+        />
+      )
     }
   }
 
@@ -425,10 +515,16 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
     legendHoverBehavior: gradientLegendState.onLegendHover,
     legendClickBehavior: gradientLegendState.onLegendClick,
     legendHighlightedCategory: gradientLegendState.highlightedCategory,
-    legendIsolatedCategories: legendInteraction === "isolate"
-      ? gradientLegendState.isolatedCategories
-      : undefined,
-    tooltipContent: tooltip === false ? () => null : tooltip === true ? defaultTooltip : (normalizeTooltip(tooltip) || defaultTooltip),
+    legendIsolatedCategories:
+      legendInteraction === "isolate"
+        ? gradientLegendState.isolatedCategories
+        : undefined,
+    tooltipContent:
+      tooltip === false
+        ? () => null
+        : tooltip === true
+          ? defaultTooltip
+          : normalizeTooltip(tooltip) || defaultTooltip,
     ...(graticule != null && { graticule }),
     ...(fitPadding != null && { fitPadding }),
     ...(zoomable && { zoomable: true }),
@@ -446,14 +542,18 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
       mobileInteraction: resolved.mobileInteraction,
       customHoverBehavior,
       customClickBehavior,
-      linkedHoverInClickPredicate: false,
+      linkedHoverInClickPredicate: false
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
-    ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
+    ...(props.autoPlaceAnnotations !== undefined && {
+      autoPlaceAnnotations: props.autoPlaceAnnotations
+    }),
     ...(resolved.title && { title: resolved.title }),
     ...(resolved.description && { description: resolved.description }),
     ...(resolved.summary && { summary: resolved.summary }),
-    ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
+    ...(resolved.accessibleTable !== undefined && {
+      accessibleTable: resolved.accessibleTable
+    }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps
@@ -464,7 +564,11 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(props: ChoroplethMap
   if (emptyEl) return emptyEl
 
   return (
-    <SafeRender componentName="ChoroplethMap" width={resolved.width} height={resolved.height}>
+    <SafeRender
+      componentName="ChoroplethMap"
+      width={resolved.width}
+      height={resolved.height}
+    >
       <StreamGeoFrame {...streamProps} />
     </SafeRender>
   )

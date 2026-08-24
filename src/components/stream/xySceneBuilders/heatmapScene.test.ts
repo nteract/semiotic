@@ -3,6 +3,15 @@ import { buildHeatmapScene } from "./heatmapScene"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
+import { getSelectionProvenance } from "../../store/selectionProvenance"
+import { wrapStyleWithSelection } from "../../charts/shared/selectionUtils"
+
+function selectionAwareStyle(): (datum: Datum) => Datum {
+  return wrapStyleWithSelection(() => ({}), {
+    isActive: false,
+    predicate: () => true
+  })
+}
 
 function makeCtx(overrides: Partial<XYSceneContext> = {}): XYSceneContext {
   const identity = (v: number) => v
@@ -320,8 +329,10 @@ describe("buildHeatmapScene (static mode) — color LUT and deduplication", () =
     const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
     const fills = new Set(nodes.map((n) => n.fill))
-    // When min === max, all cells get the same color
+    // A collapsed sequential domain resolves to its midpoint: the cells stay
+    // uniform without becoming the palette's near-white minimum.
     expect(fills.size).toBe(1)
+    expect(nodes[0].fill).not.toBe("rgb(247, 251, 255)")
   })
 })
 
@@ -385,6 +396,43 @@ describe("buildStreamingHeatmapScene", () => {
     expect(datum!.count).toBe(2)
     // For count aggregation, the cell value should be the count
     expect(datum!.value).toBe(2)
+  })
+
+  it("retains raw provenance only for selection-aware aggregate styling", () => {
+    const data = [
+      { x: 5, y: 5, value: 100, cohort: "Alpha" },
+      { x: 15, y: 15, value: 200, cohort: "Beta" }
+    ]
+    const ctx = makeStreamCtx({
+      config: {
+        heatmapAggregation: "count",
+        heatmapXBins: 5,
+        heatmapYBins: 5,
+        valueAccessor: "value",
+        areaStyle: selectionAwareStyle()
+      }
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+
+    expect(getSelectionProvenance(nodes[0]!.datum!)).toEqual(data)
+    expect(Object.keys(nodes[0]!.datum!)).not.toContain(
+      "__semioticSelectionData"
+    )
+
+    const styledOnly = buildHeatmapScene(
+      makeStreamCtx({
+        config: {
+          heatmapAggregation: "count",
+          heatmapXBins: 5,
+          heatmapYBins: 5,
+          valueAccessor: "value",
+          areaStyle: () => ({ stroke: "black" })
+        }
+      }),
+      data,
+      defaultLayout
+    )
+    expect(getSelectionProvenance(styledOnly[0]!.datum!)).toBeUndefined()
   })
 
   it("sum aggregation sums values per bin", () => {
@@ -614,6 +662,17 @@ describe("buildStreamingHeatmapScene", () => {
     expect(nodes).toHaveLength(2)
     const fills = nodes.map((n) => n.fill)
     expect(fills[0]).not.toBe(fills[1])
+  })
+
+  it("keeps constant aggregate cells visibly inside the sequential palette", () => {
+    const data = [
+      { x: 5, y: 5, value: 1 },
+      { x: 95, y: 95, value: 1 },
+    ]
+    const nodes = buildHeatmapScene(makeStreamCtx(), data, defaultLayout)
+
+    expect(new Set(nodes.map((node) => node.fill)).size).toBe(1)
+    expect(nodes[0].fill).not.toBe("rgb(247, 251, 255)")
   })
 
   it("large bin grid (100x100) with sparse data produces only occupied cells", () => {
