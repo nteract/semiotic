@@ -8,6 +8,7 @@ logs
 *-compiled*
 build
 coverage
+/vitest-reports/
 .vscode
 *.sublime-project
 *.sublime-workspace

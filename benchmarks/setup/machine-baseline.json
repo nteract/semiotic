@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-machine-baseline",
-  "capturedAt": "2026-08-24T10:44:40.786Z",
+  "capturedAt": "2026-08-24T20:05:58.737Z",
   "source": {
-    "gitCommit": "8482157ff",
+    "gitCommit": "9c29790ba",
     "artifact": "checkout npm pack --ignore-scripts",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 281
+      "changedPathCount": 4
     }
   },
   "referenceEnvironment": {
@@ -102,12 +102,12 @@
       },
       "archive": {
         "fileName": "semiotic-3.9.1.tgz",
-        "bytes": 4575121,
-        "sha1": "e9f1e165a3d7496b149e79b23c5cbd83d8ad666b",
-        "integrity": "sha512-uhs2TekiiqdNGegdo1/4sM0UfaCqCSz1Jl0vGuXl9TuWt2ByjweE7zlYX6aHoy2khnYZSQqMYYsGNzsPgRrNlQ=="
+        "bytes": 4575361,
+        "sha1": "9fef7abd603ceeaa5cdf09d45e6133db0991973b",
+        "integrity": "sha512-amwiXBRWdTpLFlyTng+MPHsljE5zzVBupolOqRl+FrCvDCoMmDPF9lt6dLtwwn1ouhwHr4OAGVbC59eG2PUp2Q=="
       },
       "unpacked": {
-        "bytes": 16683564,
+        "bytes": 16666375,
         "fileCount": 1178
       },
       "files": [
@@ -177,21 +177,6 @@
           "mode": 420
         },
         {
-          "path": "dist/c-2FPXIYSP.min.js",
-          "size": 1876,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-2RLKHGNK.min.js",
-          "size": 410,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-2RNNSWXK.min.js",
-          "size": 33661,
-          "mode": 420
-        },
-        {
           "path": "dist/c-2TTS7T4X.min.js",
           "size": 1417,
           "mode": 420
@@ -199,11 +184,6 @@
         {
           "path": "dist/c-3BLJEQNG.min.js",
           "size": 1519,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-3UXZL6JZ.min.js",
-          "size": 176484,
           "mode": 420
         },
         {
@@ -217,13 +197,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-52TEGIUJ.min.js",
-          "size": 2427,
+          "path": "dist/c-4FF4MZG2.min.js",
+          "size": 20770,
           "mode": 420
         },
         {
-          "path": "dist/c-5BOKF5JR.min.js",
-          "size": 172398,
+          "path": "dist/c-4PLQZ5Z5.min.js",
+          "size": 742114,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-52TEGIUJ.min.js",
+          "size": 2427,
           "mode": 420
         },
         {
@@ -232,8 +217,8 @@
           "mode": 420
         },
         {
-          "path": "dist/c-5ON4IZZ5.min.js",
-          "size": 577,
+          "path": "dist/c-5E5JSMO4.min.js",
+          "size": 478,
           "mode": 420
         },
         {
@@ -252,8 +237,23 @@
           "mode": 420
         },
         {
+          "path": "dist/c-6ZWWWOJJ.min.js",
+          "size": 33661,
+          "mode": 420
+        },
+        {
           "path": "dist/c-756G4PM3.min.js",
           "size": 1073,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-7AL6AVVJ.min.js",
+          "size": 22244,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-7MG6EATQ.min.js",
+          "size": 7819,
           "mode": 420
         },
         {
@@ -272,8 +272,8 @@
           "mode": 420
         },
         {
-          "path": "dist/c-AS7IWQ6U.min.js",
-          "size": 5636,
+          "path": "dist/c-B7C4SEEF.min.js",
+          "size": 11778,
           "mode": 420
         },
         {
@@ -287,18 +287,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-C7RYZ3KA.min.js",
-          "size": 22244,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-CARJTSLW.min.js",
-          "size": 142064,
-          "mode": 420
-        },
-        {
           "path": "dist/c-CGNHBHCE.min.js",
           "size": 13245,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-CIX4BD6L.min.js",
+          "size": 1876,
           "mode": 420
         },
         {
@@ -317,16 +312,6 @@
           "mode": 420
         },
         {
-          "path": "dist/c-D5SXNTG7.min.js",
-          "size": 7326,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-D64PM7CK.min.js",
-          "size": 11778,
-          "mode": 420
-        },
-        {
           "path": "dist/c-DADXPJXV.min.js",
           "size": 935,
           "mode": 420
@@ -334,6 +319,11 @@
         {
           "path": "dist/c-DPMVAUAW.min.js",
           "size": 78566,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-DVEK4GK4.min.js",
+          "size": 74212,
           "mode": 420
         },
         {
@@ -357,18 +347,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-FUTTBGNP.min.js",
-          "size": 742152,
-          "mode": 420
-        },
-        {
           "path": "dist/c-G36WS6LN.min.js",
           "size": 459,
           "mode": 420
         },
         {
-          "path": "dist/c-G3YXQ4OR.min.js",
-          "size": 94061,
+          "path": "dist/c-G47YMEJM.min.js",
+          "size": 141535,
           "mode": 420
         },
         {
@@ -397,13 +382,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-IUHFPMHD.min.js",
-          "size": 3011,
+          "path": "dist/c-INKEBEVC.min.js",
+          "size": 307058,
           "mode": 420
         },
         {
-          "path": "dist/c-JJS4RN66.min.js",
-          "size": 20791,
+          "path": "dist/c-ITEAJY2P.min.js",
+          "size": 2100,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-IUHFPMHD.min.js",
+          "size": 3011,
           "mode": 420
         },
         {
@@ -412,23 +402,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-KVCMQFPR.min.js",
-          "size": 60698,
-          "mode": 420
-        },
-        {
           "path": "dist/c-LKBSGFQC.min.js",
           "size": 66272,
           "mode": 420
         },
         {
-          "path": "dist/c-MEE7EZRI.min.js",
-          "size": 2100,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-MHIOTNJV.min.js",
-          "size": 478,
+          "path": "dist/c-LPF4H46Y.min.js",
+          "size": 410,
           "mode": 420
         },
         {
@@ -442,6 +422,11 @@
           "mode": 420
         },
         {
+          "path": "dist/c-MTA2AY7H.min.js",
+          "size": 176484,
+          "mode": 420
+        },
+        {
           "path": "dist/c-N4G2L7ID.min.js",
           "size": 181,
           "mode": 420
@@ -449,11 +434,6 @@
         {
           "path": "dist/c-NDJADPIF.min.js",
           "size": 900,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-NXZI3GTX.min.js",
-          "size": 231,
           "mode": 420
         },
         {
@@ -472,23 +452,33 @@
           "mode": 420
         },
         {
-          "path": "dist/c-OE3DWU35.min.js",
-          "size": 306924,
-          "mode": 420
-        },
-        {
           "path": "dist/c-OQ7M4AGV.min.js",
           "size": 8146,
           "mode": 420
         },
         {
-          "path": "dist/c-PFQWFKJ5.min.js",
-          "size": 11105,
+          "path": "dist/c-PGKQGGQ2.min.js",
+          "size": 233,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-PNLVVXCL.min.js",
+          "size": 5636,
           "mode": 420
         },
         {
           "path": "dist/c-PPWDL5ZI.min.js",
           "size": 695,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-PTAQFF3L.min.js",
+          "size": 12964,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-PY24XEPM.min.js",
+          "size": 142118,
           "mode": 420
         },
         {
@@ -507,13 +497,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-RN7BQCJO.min.js",
-          "size": 74212,
+          "path": "dist/c-RSVIHIQ4.min.js",
+          "size": 2667,
           "mode": 420
         },
         {
-          "path": "dist/c-RSVIHIQ4.min.js",
-          "size": 2667,
+          "path": "dist/c-RZJGIHYX.min.js",
+          "size": 60698,
           "mode": 420
         },
         {
@@ -522,13 +512,23 @@
           "mode": 420
         },
         {
+          "path": "dist/c-SD44BRJS.min.js",
+          "size": 577,
+          "mode": 420
+        },
+        {
           "path": "dist/c-SLGMUBUL.min.js",
           "size": 440,
           "mode": 420
         },
         {
-          "path": "dist/c-SR5Z4UR2.min.js",
-          "size": 141441,
+          "path": "dist/c-SPHR763G.min.js",
+          "size": 94061,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-SROB63I5.min.js",
+          "size": 11197,
           "mode": 420
         },
         {
@@ -544,6 +544,16 @@
         {
           "path": "dist/c-UC5PTTFI.min.js",
           "size": 721,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-UMFVUWDG.min.js",
+          "size": 7326,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-URUC6PO7.min.js",
+          "size": 2457,
           "mode": 420
         },
         {
@@ -564,11 +574,6 @@
         {
           "path": "dist/c-VGW3VG3I.min.js",
           "size": 239,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-VJ7L3GC7.min.js",
-          "size": 7819,
           "mode": 420
         },
         {
@@ -602,23 +607,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-XIDA2BYT.min.js",
-          "size": 93653,
-          "mode": 420
-        },
-        {
           "path": "dist/c-XJWNZPIJ.min.js",
           "size": 11035,
           "mode": 420
         },
         {
-          "path": "dist/c-YEDRFWUQ.min.js",
-          "size": 2457,
+          "path": "dist/c-YGAPNFSR.min.js",
+          "size": 93653,
           "mode": 420
         },
         {
-          "path": "dist/c-YNTDYBXU.min.js",
-          "size": 12964,
+          "path": "dist/c-Z7ZMT5PO.min.js",
+          "size": 172398,
           "mode": 420
         },
         {
@@ -638,7 +638,7 @@
         },
         {
           "path": "dist/components/access/chartAccessCapabilities.generated.d.ts",
-          "size": 575,
+          "size": 629,
           "mode": 420
         },
         {
@@ -673,7 +673,7 @@
         },
         {
           "path": "dist/components/ai/builtInChartRecipeLayouts.d.ts",
-          "size": 67,
+          "size": 148,
           "mode": 420
         },
         {
@@ -1538,7 +1538,7 @@
         },
         {
           "path": "dist/components/charts/physics/chainReactionTypes.d.ts",
-          "size": 3806,
+          "size": 4021,
           "mode": 420
         },
         {
@@ -3723,7 +3723,7 @@
         },
         {
           "path": "dist/components/store/selectionProvenance.d.ts",
-          "size": 516,
+          "size": 522,
           "mode": 420
         },
         {
@@ -5358,7 +5358,7 @@
         },
         {
           "path": "dist/geo.min.js",
-          "size": 287261,
+          "size": 287411,
           "mode": 420
         },
         {
@@ -5458,7 +5458,7 @@
         },
         {
           "path": "dist/semiotic-access.module.min.js",
-          "size": 12024,
+          "size": 7096,
           "mode": 420
         },
         {
@@ -5468,12 +5468,12 @@
         },
         {
           "path": "dist/semiotic-ai-core.min.js",
-          "size": 325858,
+          "size": 325910,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ai-core.module.min.js",
-          "size": 321251,
+          "size": 321303,
           "mode": 420
         },
         {
@@ -5488,12 +5488,12 @@
         },
         {
           "path": "dist/semiotic-ai.module.min.js",
-          "size": 298205,
+          "size": 298300,
           "mode": 420
         },
         {
           "path": "dist/semiotic-client-cjs-shared.min.js",
-          "size": 2180339,
+          "size": 2175811,
           "mode": 420
         },
         {
@@ -5543,12 +5543,12 @@
         },
         {
           "path": "dist/semiotic-evidence.min.js",
-          "size": 135956,
+          "size": 131028,
           "mode": 420
         },
         {
           "path": "dist/semiotic-evidence.module.min.js",
-          "size": 30995,
+          "size": 26067,
           "mode": 420
         },
         {
@@ -5743,7 +5743,7 @@
         },
         {
           "path": "dist/semiotic-server-edge-node.module.min.js",
-          "size": 744861,
+          "size": 744823,
           "mode": 420
         },
         {
@@ -5753,12 +5753,12 @@
         },
         {
           "path": "dist/semiotic-server-edge.min.js",
-          "size": 750213,
+          "size": 750175,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server-edge.module.min.js",
-          "size": 647454,
+          "size": 647416,
           "mode": 420
         },
         {
@@ -5768,7 +5768,7 @@
         },
         {
           "path": "dist/semiotic-server-node.min.js",
-          "size": 752764,
+          "size": 752726,
           "mode": 420
         },
         {
@@ -5908,7 +5908,7 @@
         },
         {
           "path": "dist/server.min.js",
-          "size": 752764,
+          "size": 752726,
           "mode": 420
         },
         {
@@ -5933,7 +5933,7 @@
         },
         {
           "path": "package.json",
-          "size": 29798,
+          "size": 31089,
           "mode": 420
         },
         {
@@ -6010,88 +6010,88 @@
         "sourceBytes": 2978,
         "timing": {
           "samplesMs": [
-            0.431,
-            0.093,
-            0.086,
+            0.433,
+            0.096,
             0.083,
-            0.08,
-            0.079,
-            0.136,
-            0.076,
-            0.144,
             0.092,
+            0.081,
+            0.079,
+            0.134,
             0.08,
+            0.143,
+            0.094,
+            0.083,
+            0.076,
             0.075,
-            0.077,
-            0.072,
-            0.071
+            0.075,
+            0.075
           ],
-          "minMs": 0.071,
-          "p50Ms": 0.08,
+          "minMs": 0.075,
+          "p50Ms": 0.083,
           "p95Ms": 0.23,
-          "p99Ms": 0.39,
-          "maxMs": 0.431,
-          "meanMs": 0.112
+          "p99Ms": 0.392,
+          "maxMs": 0.433,
+          "meanMs": 0.113
         }
       },
       {
         "id": "server-edge",
         "path": "dist/semiotic-server-edge.module.min.js",
-        "sourceBytes": 647454,
+        "sourceBytes": 647416,
         "timing": {
           "samplesMs": [
-            10.826,
-            10.098,
-            10.008,
-            10.137,
-            9.979,
-            9.95,
-            10.09,
-            9.952,
-            10.039,
-            10.05,
-            9.93,
-            9.923,
-            9.943,
-            9.973,
-            9.918
+            10.813,
+            10.084,
+            10.082,
+            10.024,
+            10.009,
+            9.988,
+            10.157,
+            9.99,
+            10.058,
+            10.059,
+            10.064,
+            9.968,
+            10.018,
+            9.986,
+            9.968
           ],
-          "minMs": 9.918,
-          "p50Ms": 9.979,
-          "p95Ms": 10.344,
-          "p99Ms": 10.73,
-          "maxMs": 10.826,
-          "meanMs": 10.054
+          "minMs": 9.968,
+          "p50Ms": 10.024,
+          "p95Ms": 10.354,
+          "p99Ms": 10.721,
+          "maxMs": 10.813,
+          "meanMs": 10.084
         }
       },
       {
         "id": "ai-core",
         "path": "dist/semiotic-ai-core.module.min.js",
-        "sourceBytes": 321251,
+        "sourceBytes": 321303,
         "timing": {
           "samplesMs": [
-            4.826,
-            4.125,
-            4.003,
-            3.909,
-            3.936,
-            3.858,
-            3.903,
-            3.827,
-            3.89,
-            3.814,
-            3.839,
-            3.785,
-            3.789,
-            3.784,
-            3.778
+            4.831,
+            4.034,
+            3.925,
+            3.885,
+            3.908,
+            3.834,
+            3.97,
+            3.85,
+            4.04,
+            3.852,
+            3.829,
+            3.798,
+            4.45,
+            4.172,
+            3.951
           ],
-          "minMs": 3.778,
-          "p50Ms": 3.858,
-          "p95Ms": 4.335,
-          "p99Ms": 4.728,
-          "maxMs": 4.826,
-          "meanMs": 3.938
+          "minMs": 3.798,
+          "p50Ms": 3.925,
+          "p95Ms": 4.565,
+          "p99Ms": 4.778,
+          "maxMs": 4.831,
+          "meanMs": 4.022
         }
       }
     ],
@@ -6102,20 +6102,20 @@
         "exportCount": 42,
         "timing": {
           "samplesMs": [
-            68.684,
-            66.81,
-            65.992,
-            66.741,
-            64.9,
-            66.26,
-            70.547
+            138.638,
+            69.119,
+            67.746,
+            67.634,
+            80.252,
+            68.956,
+            67.999
           ],
-          "minMs": 64.9,
-          "p50Ms": 66.741,
-          "p95Ms": 69.988,
-          "p99Ms": 70.435,
-          "maxMs": 70.547,
-          "meanMs": 67.134
+          "minMs": 67.634,
+          "p50Ms": 68.956,
+          "p95Ms": 121.122,
+          "p99Ms": 135.135,
+          "maxMs": 138.638,
+          "meanMs": 80.049
         }
       },
       {
@@ -6124,20 +6124,20 @@
         "exportCount": 14,
         "timing": {
           "samplesMs": [
-            81.187,
-            80.218,
-            79.913,
-            79.759,
-            80.817,
-            80.466,
-            80.35
+            101.609,
+            81.816,
+            84.078,
+            81.765,
+            81.491,
+            82.528,
+            83.197
           ],
-          "minMs": 79.759,
-          "p50Ms": 80.35,
-          "p95Ms": 81.076,
-          "p99Ms": 81.165,
-          "maxMs": 81.187,
-          "meanMs": 80.387
+          "minMs": 81.491,
+          "p50Ms": 82.528,
+          "p95Ms": 96.349,
+          "p99Ms": 100.557,
+          "maxMs": 101.609,
+          "meanMs": 85.212
         }
       },
       {
@@ -6146,20 +6146,20 @@
         "exportCount": 77,
         "timing": {
           "samplesMs": [
-            18.917,
-            19.357,
-            19.044,
-            19.105,
-            18.819,
-            18.739,
-            19.186
+            19.054,
+            19.268,
+            19.286,
+            19.156,
+            19.58,
+            19.322,
+            19.075
           ],
-          "minMs": 18.739,
-          "p50Ms": 19.044,
-          "p95Ms": 19.306,
-          "p99Ms": 19.347,
-          "maxMs": 19.357,
-          "meanMs": 19.024
+          "minMs": 19.054,
+          "p50Ms": 19.268,
+          "p95Ms": 19.503,
+          "p99Ms": 19.564,
+          "maxMs": 19.58,
+          "meanMs": 19.249
         }
       }
     ],
@@ -6177,28 +6177,28 @@
       "svgSha256": "7c54e9211e9660e974e56782b70df93e024fa855053224ec30f146a8d8f5245a",
       "timing": {
         "samplesMs": [
-          2.067,
-          1.611,
-          1.934,
-          2.047,
-          1.724,
-          3.61,
-          3.311,
-          1.855,
-          1.565,
-          1.488,
-          1.434,
-          1.479,
-          1.371,
-          1.394,
-          1.281
+          1.892,
+          1.547,
+          1.91,
+          1.984,
+          1.709,
+          1.605,
+          3.251,
+          1.842,
+          1.54,
+          1.495,
+          1.427,
+          1.48,
+          1.382,
+          1.401,
+          1.296
         ],
-        "minMs": 1.281,
-        "p50Ms": 1.611,
-        "p95Ms": 3.401,
-        "p99Ms": 3.568,
-        "maxMs": 3.61,
-        "meanMs": 1.878
+        "minMs": 1.296,
+        "p50Ms": 1.547,
+        "p95Ms": 2.364,
+        "p99Ms": 3.074,
+        "maxMs": 3.251,
+        "meanMs": 1.717
       }
     },
     "workers": [
@@ -6208,20 +6208,20 @@
         "sourceBytes": 11472,
         "timing": {
           "samplesMs": [
-            50.438,
-            46.922,
-            45.977,
-            45.266,
-            46.14,
-            46.681,
-            46.486
+            49.973,
+            46.757,
+            46.714,
+            46.987,
+            46.824,
+            46.66,
+            46.196
           ],
-          "minMs": 45.266,
-          "p50Ms": 46.486,
-          "p95Ms": 49.384,
-          "p99Ms": 50.227,
-          "maxMs": 50.438,
-          "meanMs": 46.844
+          "minMs": 46.196,
+          "p50Ms": 46.757,
+          "p95Ms": 49.077,
+          "p99Ms": 49.793,
+          "maxMs": 49.973,
+          "meanMs": 47.159
         }
       },
       {
@@ -6230,20 +6230,20 @@
         "sourceBytes": 41694,
         "timing": {
           "samplesMs": [
-            25.876,
-            22.813,
-            23.096,
-            22.985,
-            23.078,
-            23.163,
-            22.794
+            25.749,
+            23.146,
+            22.73,
+            22.643,
+            22.552,
+            22.757,
+            22.564
           ],
-          "minMs": 22.794,
-          "p50Ms": 23.078,
-          "p95Ms": 25.062,
-          "p99Ms": 25.713,
-          "maxMs": 25.876,
-          "meanMs": 23.401
+          "minMs": 22.552,
+          "p50Ms": 22.73,
+          "p95Ms": 24.968,
+          "p99Ms": 25.593,
+          "maxMs": 25.749,
+          "meanMs": 23.163
         }
       }
     ],
@@ -6252,14 +6252,14 @@
       "compression": "gzip level 9 applied independently to each emitted file",
       "total": {
         "fileCount": 1443,
-        "rawBytes": 77048613,
-        "gzipBytes": 31343266
+        "rawBytes": 77055492,
+        "gzipBytes": 31344216
       },
       "groups": {
         "javascript": {
           "fileCount": 815,
-          "rawBytes": 18248430,
-          "gzipBytes": 5062343
+          "rawBytes": 18248748,
+          "gzipBytes": 5062661
         },
         "stylesheet": {
           "fileCount": 68,
@@ -6269,12 +6269,12 @@
         "html": {
           "fileCount": 326,
           "rawBytes": 8336149,
-          "gzipBytes": 1995029
+          "gzipBytes": 1995285
         },
         "other": {
           "fileCount": 234,
-          "rawBytes": 49578349,
-          "gzipBytes": 24086002
+          "rawBytes": 49584910,
+          "gzipBytes": 24086378
         }
       }
     },
@@ -6289,35 +6289,35 @@
       "initialize": {
         "timing": {
           "samplesMs": [
-            613.206,
-            604.164,
-            632.482,
-            607.803,
-            607.374
+            892.834,
+            635.026,
+            611.871,
+            613.258,
+            616.947
           ],
-          "minMs": 604.164,
-          "p50Ms": 607.803,
-          "p95Ms": 628.627,
-          "p99Ms": 631.711,
-          "maxMs": 632.482,
-          "meanMs": 613.006
+          "minMs": 611.871,
+          "p50Ms": 616.947,
+          "p95Ms": 841.272,
+          "p99Ms": 882.522,
+          "maxMs": 892.834,
+          "meanMs": 673.987
         }
       },
       "toolsList": {
         "timing": {
           "samplesMs": [
-            3.403,
-            3.464,
-            3.484,
-            3.348,
-            3.407
+            3.662,
+            3.57,
+            3.478,
+            3.526,
+            3.547
           ],
-          "minMs": 3.348,
-          "p50Ms": 3.407,
-          "p95Ms": 3.48,
-          "p99Ms": 3.483,
-          "maxMs": 3.484,
-          "meanMs": 3.421
+          "minMs": 3.478,
+          "p50Ms": 3.547,
+          "p95Ms": 3.643,
+          "p99Ms": 3.658,
+          "maxMs": 3.662,
+          "meanMs": 3.556
         }
       }
     }
