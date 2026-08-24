@@ -1022,6 +1022,13 @@ interface-member LineageDagConfig::property::edgeColors = optional edgeColors: P
 interface-member LineageDagConfig::property::edgeOpacity = optional edgeOpacity: number | undefined
 interface-member LineageDagConfig::property::edgeTypeAccessor = optional edgeTypeAccessor: string | undefined
 interface-member LineageDagConfig::property::edgeWidth = optional edgeWidth: number | undefined
+interface-member LineageDagConfig::property::hullColors = optional hullColors: Partial<Record<string, string>> | undefined
+interface-member LineageDagConfig::property::hullFillOpacity = optional hullFillOpacity: number | undefined
+interface-member LineageDagConfig::property::hullGroupAccessor = optional hullGroupAccessor: string | undefined
+interface-member LineageDagConfig::property::hullLabel = optional hullLabel: ((groupValue: string) => string) | undefined
+interface-member LineageDagConfig::property::hullPadding = optional hullPadding: number | undefined
+interface-member LineageDagConfig::property::hullRadius = optional hullRadius: number | undefined
+interface-member LineageDagConfig::property::hullStrokeOpacity = optional hullStrokeOpacity: number | undefined
 interface-member LineageDagConfig::property::labelAccessor = optional labelAccessor: string | undefined
 interface-member LineageDagConfig::property::layerAccessor = optional layerAccessor: string | undefined
 interface-member LineageDagConfig::property::layerCount = optional layerCount: number | undefined
@@ -1237,6 +1244,7 @@ interface-member NetworkLayoutContext::property::nodes = required nodes: Realtim
 interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
 interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
 interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member NetworkLayoutResult::property::backgrounds = optional backgrounds: ReactNode
 interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
 interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
 interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode

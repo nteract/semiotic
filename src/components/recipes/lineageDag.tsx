@@ -9,7 +9,11 @@ import type {
   NetworkCurvedEdge,
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
-import { readField } from "./recipeUtils"
+import { clamp, nonNegativeFinite, readField } from "./recipeUtils"
+import {
+  renderLineageHullBackgrounds,
+  type LineageHullRect,
+} from "./lineageDagHulls"
 
 /**
  * Level of detail for a node glyph.
@@ -70,6 +74,11 @@ export interface LineageDagConfig {
   backEdgeAccessor?: string
   /** Edge type, drives edge color. @default "edgeType" */
   edgeTypeAccessor?: string
+  /**
+   * Draw a convex hull behind nodes sharing this datum field (for example,
+   * `"subtopologyId"`). Omit to render no hull background.
+   */
+  hullGroupAccessor?: string
 
   // ── visuals ─────────────────────────────────────────────────────────────
   /** Fill per partition. Overridable; recipe ships dark-theme-friendly defaults. */
@@ -90,6 +99,18 @@ export interface LineageDagConfig {
   edgeWidth?: number
   /** Back-edge stroke width in px. @default `edgeWidth`, else 1.5 */
   backEdgeWidth?: number
+  /** Hull fill/stroke color overrides keyed by stringified group value. */
+  hullColors?: Partial<Record<string, string>>
+  /** Space in px between node rectangles and their group hull. @default 16 */
+  hullPadding?: number
+  /** Rounded hull-corner radius in px. @default 12 */
+  hullRadius?: number
+  /** Hull fill opacity. @default 0.08 */
+  hullFillOpacity?: number
+  /** Hull stroke opacity. @default 0.4 */
+  hullStrokeOpacity?: number
+  /** Optional visible label for each hull group. */
+  hullLabel?: (groupValue: string) => string
 
   /**
    * Render the per-node icon. Receives the resolved semantic/partition, the
@@ -130,6 +151,10 @@ function normalizeStores(raw: unknown): LineageStoreSlot[] {
       ? { storeName: s, slotIndex: i }
       : { storeName: String((s as LineageStoreSlot).storeName ?? ""), slotIndex: (s as LineageStoreSlot).slotIndex ?? i }
   )
+}
+
+function hullOpacity(value: number | undefined, fallback: number): number {
+  return Number.isFinite(value) ? clamp(value as number, 0, 1) : fallback
 }
 
 /**
@@ -190,6 +215,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const backEdgeWidth = cfg.backEdgeWidth ?? cfg.edgeWidth ?? 1.5
   const showChips = cfg.showStoreChips !== false
   const chipColor = cfg.storeChipColor ?? "var(--semiotic-info, #6a8caf)"
+  const hullGroupAcc = cfg.hullGroupAccessor
 
   // ── Domain (layer/row counts) ───────────────────────────────────────────
   let layerCount = cfg.layerCount
@@ -243,6 +269,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const positions = new Map<string, { cx: number; cy: number }>()
   const dimById = new Map<string, boolean>()
   const sceneNodes: NetworkSceneNode[] = []
+  const hullGroups: Map<string, LineageHullRect[]> | null =
+    hullGroupAcc == null ? null : new Map()
   const glyphs: Array<{
     id: string
     cx: number
@@ -325,6 +353,16 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
       sceneNodes.push(rect)
       glyphs.push({ id, cx, cy, partition, semantic, label, stores, opacity, selected, node: rawDatum })
     }
+
+    if (hullGroups && hullGroupAcc != null) {
+      const rawGroup = readField(node, hullGroupAcc, null)
+      if (rawGroup != null) {
+        const groupValue = String(rawGroup)
+        const groupRects = hullGroups.get(groupValue) ?? []
+        groupRects.push({ id, x: cx - w / 2, y: cy - h / 2, w, h })
+        hullGroups.set(groupValue, groupRects)
+      }
+    }
   }
 
   // ── Edges ───────────────────────────────────────────────────────────────
@@ -399,7 +437,24 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
       </g>
     )
 
-  return { sceneNodes, sceneEdges, overlays }
+  const backgrounds = hullGroups && hullGroups.size > 0
+    ? renderLineageHullBackgrounds(hullGroups, {
+        colors: cfg.hullColors,
+        padding: cfg.hullPadding == null ? 16 : nonNegativeFinite(cfg.hullPadding),
+        radius: cfg.hullRadius == null ? 12 : nonNegativeFinite(cfg.hullRadius),
+        fillOpacity: hullOpacity(cfg.hullFillOpacity, 0.08),
+        strokeOpacity: hullOpacity(cfg.hullStrokeOpacity, 0.4),
+        label: cfg.hullLabel,
+        resolveColor: ctx.resolveColor,
+        dimById,
+        selectedId: selId,
+        dimOpacity,
+      })
+    : null
+
+  return backgrounds
+    ? { sceneNodes, sceneEdges, backgrounds, overlays }
+    : { sceneNodes, sceneEdges, overlays }
 }
 
 // ── Overlay glyph renderer ─────────────────────────────────────────────────

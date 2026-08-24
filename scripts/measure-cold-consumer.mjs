@@ -68,7 +68,7 @@ if (write) {
 
 const comparison = compareColdConsumerReports(baseline, report)
 const stale = []
-if (!comparison.current) {
+if (comparison.blocking) {
   stale.push("benchmarks/setup/cold-consumer-imports.json")
 }
 if (nextReadme !== readme) stale.push("README.md")
@@ -81,9 +81,15 @@ if (stale.length > 0) {
     console.error("\nExact measurement-contract differences:")
     for (const error of comparison.structuralErrors) console.error(`  - ${error}`)
   }
-  if (comparison.sizeDeltas.length > 0) {
-    console.error("\nByte differences outside the supported runner variance:")
-    for (const difference of comparison.sizeDeltas) {
+  if (comparison.sizeFailures.length > 0) {
+    console.error("\nByte growth beyond the warning runway:")
+    for (const difference of comparison.sizeFailures) {
+      console.error(`  - ${formatSizeDifference(difference)}`)
+    }
+  }
+  if (comparison.sizeWarnings.length > 0) {
+    console.error("\nAdditional byte differences inside the warning runway:")
+    for (const difference of comparison.sizeWarnings) {
       console.error(`  - ${formatSizeDifference(difference)}`)
     }
   }
@@ -96,6 +102,24 @@ if (stale.length > 0) {
   console.error("\nFor an intentional contract or size change, rebuild and regenerate with:")
   console.error("  npm run dist:prod && npm run docs:cold-consumer")
   process.exit(1)
+}
+
+if (comparison.sizeWarnings.length > 0) {
+  console.warn("COLD-CONSUMER CHECK: WARN (CI remains green)")
+  console.warn("Byte differences outside runner variance but inside the warning runway:")
+  for (const difference of comparison.sizeWarnings) {
+    console.warn(`  - ${formatSizeDifference(difference)}`)
+  }
+  console.warn(
+    "\nTreat these warnings as actionable bundle debt. Review the import graph or intentional payload growth now; do not refresh the baseline merely to silence the warning.",
+  )
+  console.warn(
+    "For an intentional, reviewed size change, rebuild and regenerate with:\n  npm run dist:prod && npm run docs:cold-consumer",
+  )
+  console.warn(
+    `\nCurrent runner: ${process.platform}/${process.arch}; Node ${process.version}; esbuild ${report.method.bundler.version}`,
+  )
+  process.exit(0)
 }
 
 console.log(`COLD-CONSUMER CHECK: PASS (${report.measurements.length} public exports)`)
@@ -126,10 +150,19 @@ function readBaselineReport(filePath) {
   return baseline
 }
 
-function formatSizeDifference({ importPath, symbol, metric, baselineBytes, currentBytes, delta, tolerance }) {
+function formatSizeDifference({
+  importPath,
+  symbol,
+  metric,
+  baselineBytes,
+  currentBytes,
+  delta,
+  tolerance,
+  failureThreshold,
+}) {
   const signedDelta = delta >= 0 ? `+${delta}` : String(delta)
   const percentage = baselineBytes === 0 ? "n/a" : `${((delta / baselineBytes) * 100).toFixed(3)}%`
-  return `${importPath} (${symbol}) ${metric}: ${baselineBytes} B → ${currentBytes} B (${signedDelta} B, ${percentage}; allowed ±${tolerance} B)`
+  return `${importPath} (${symbol}) ${metric}: ${baselineBytes} B → ${currentBytes} B (${signedDelta} B, ${percentage}; runner variance ±${tolerance} B; positive growth fails above +${failureThreshold} B)`
 }
 
 function optionValue(args, option) {

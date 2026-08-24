@@ -143,6 +143,13 @@ export interface NetworkLayoutResult {
   sceneEdges?: NetworkSceneEdge[]
   /** Optional labels placed at arbitrary plot-relative positions. */
   labels?: NetworkLabel[]
+  /**
+   * SVG graphics composited below the canvas scene. Use for layout-derived
+   * regions and enclosures that must sit behind edges and nodes while sharing
+   * their fitted plot coordinates. Backgrounds are non-interactive and are
+   * included in live, hydrated, and static SVG rendering.
+   */
+  backgrounds?: ReactNode
   /** SVG overlays composited above the canvas. */
   overlays?: ReactNode
   /**

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import { renderToStaticMarkup } from "react-dom/server"
 import { lineageDagLayout, type LineageDagConfig } from "./lineageDag"
 import type { NetworkLayoutContext } from "../stream/networkCustomLayout"
 import type { RealtimeNode, RealtimeEdge, NetworkRectNode, NetworkCircleNode, NetworkCurvedEdge } from "../stream/networkTypes"
@@ -145,6 +146,84 @@ describe("lineageDagLayout", () => {
     const b = lineageDagLayout(makeCtx(baseConfig, nodes, edges))
     const geo = (r: typeof a) => (r.sceneNodes as NetworkRectNode[]).map((n) => [n.id, n.x, n.y, n.w, n.h])
     expect(geo(a)).toEqual(geo(b))
+  })
+
+  it("omits the background layer when no hull accessor is configured", () => {
+    const result = lineageDagLayout(makeCtx(baseConfig, nodes, edges))
+    expect(Object.prototype.hasOwnProperty.call(result, "backgrounds")).toBe(false)
+  })
+
+  it("emits one deterministic, non-interactive background hull per sorted group", () => {
+    const groupedNodes = nodes.map((node, index) => ({
+      ...node,
+      data: {
+        ...(node.data as Record<string, unknown>),
+        subtopologyId: index % 2 === 0 ? "zeta" : "alpha",
+      },
+    })) as RealtimeNode[]
+    const config: LineageDagConfig = {
+      ...baseConfig,
+      hullGroupAccessor: "subtopologyId",
+      hullColors: { alpha: "#123456" },
+      hullLabel: (group) => `Group ${group}`,
+    }
+
+    const first = renderToStaticMarkup(lineageDagLayout(makeCtx(config, groupedNodes, edges)).backgrounds)
+    const second = renderToStaticMarkup(lineageDagLayout(makeCtx(config, groupedNodes, edges)).backgrounds)
+
+    expect(first).toBe(second)
+    expect((first.match(/class="lineage-dag-hull"/g) ?? [])).toHaveLength(2)
+    expect(first.indexOf('data-lineage-hull="alpha"')).toBeLessThan(
+      first.indexOf('data-lineage-hull="zeta"')
+    )
+    expect(first).toContain('fill="#123456"')
+    expect(first).toContain('fill-opacity="0.08"')
+    expect(first).toContain('stroke-opacity="0.4"')
+    expect(first).toContain("pointer-events:none")
+    expect(first).toContain("Group alpha")
+    expect(first).toContain(" Q")
+  })
+
+  it("dims a hull only when its whole group is outside reachableIds", () => {
+    const groupedNodes = nodes.map((node, index) => ({
+      ...node,
+      data: {
+        ...(node.data as Record<string, unknown>),
+        subtopologyId: index < 2 ? "reachable" : "outside",
+      },
+    })) as RealtimeNode[]
+    const result = lineageDagLayout(makeCtx({
+      ...baseConfig,
+      hullGroupAccessor: "subtopologyId",
+      reachableIds: ["src"],
+      dimOpacity: 0.1,
+    }, groupedNodes, edges))
+    const markup = renderToStaticMarkup(result.backgrounds)
+
+    expect(markup).toMatch(/data-lineage-hull="outside" opacity="0\.1"/)
+    expect(markup).not.toMatch(/data-lineage-hull="reachable" opacity=/)
+  })
+
+  it("dims a hull when its whole group is excluded by shared selection", () => {
+    const groupedNodes = nodes.map((node, index) => ({
+      ...node,
+      data: {
+        ...(node.data as Record<string, unknown>),
+        subtopologyId: index < 2 ? "focus" : "outside",
+      },
+    })) as RealtimeNode[]
+    const result = lineageDagLayout(makeCtx({
+      ...baseConfig,
+      hullGroupAccessor: "subtopologyId",
+      dimOpacity: 0.1,
+    }, groupedNodes, edges, {
+      isActive: true,
+      predicate: (datum) => (datum as { id?: string }).id === "agg",
+    }))
+    const markup = renderToStaticMarkup(result.backgrounds)
+
+    expect(markup).toMatch(/data-lineage-hull="outside" opacity="0\.1"/)
+    expect(markup).not.toMatch(/data-lineage-hull="focus" opacity=/)
   })
 
   it("auto-computes layerCount/maxLayerSize from node coords when omitted", () => {

@@ -9,11 +9,13 @@
  * Best-practice context: ESLint's max-lines defaults to 300 and docs
  * recommend 100–500. Visualization / stream-frame code is denser, so
  * Semiotic uses a higher hard ceiling with a ratchet allowlist for the
- * existing mega-files we are actively splitting.
+ * existing mega-files we are actively splitting. Allowlisted files enter an
+ * always-visible warning band when they exceed their reviewed `maxLines`;
+ * they fail only after using the band's configured `ratchetGraceLines`.
  *
  * Escape hatches (corner cases only):
  *   1. Allowlist entry in `scripts/file-size-policy.json` with `path`,
- *      `maxLines` (ratchet ceiling), and a non-empty `reason`.
+ *      `maxLines` (review/warning ceiling), and a non-empty `reason`.
  *   2. Inline marker in the first 40 lines of a file:
  *        // file-size-limit: allow — short reason
  *      Prefer the allowlist so exemptions stay reviewable in one place.
@@ -45,8 +47,7 @@ const jsonOut = process.argv.includes("--json")
 const warnOnly = process.argv.includes("--warn-only")
 const verbose = process.argv.includes("--verbose")
 
-const INLINE_ALLOW_RE =
-  /file-size-limit:\s*allow(?:\s*[—–-]\s*|\s+)(.{8,})/i
+const INLINE_ALLOW_RE = /file-size-limit:\s*allow(?:\s*[—–-]\s*|\s+)(.{8,})/i
 const TEST_FILE_RE = /\.(test|spec)\.[^.]+$/
 
 function loadPolicy() {
@@ -129,7 +130,10 @@ function readInlineAllow(filePath) {
   for (const line of head) {
     const m = line.match(INLINE_ALLOW_RE)
     if (m) {
-      const reason = m[1].trim().replace(/\*\/\s*$/, "").trim()
+      const reason = m[1]
+        .trim()
+        .replace(/\*\/\s*$/, "")
+        .trim()
       if (reason.length >= 8) return reason
     }
   }
@@ -138,6 +142,42 @@ function readInlineAllow(filePath) {
 
 function classify(relPath, policy) {
   return isTestPath(relPath) ? policy.test : policy.production
+}
+
+export function classifyAllowlistedGrowth(lines, maxLines, graceLines = 0) {
+  const blockingLines = maxLines + Math.max(0, graceLines)
+  return {
+    severity:
+      lines <= maxLines
+        ? "none"
+        : lines <= blockingLines
+          ? "warning"
+          : "failure",
+    blockingLines
+  }
+}
+
+export function formatAllowlistedGrowthWarning(findings) {
+  const lines = [
+    `⚠ ${findings.length} allowlisted file(s) grew past their reviewed ceiling (warning; CI remains green):`,
+    ""
+  ]
+
+  for (const finding of [...findings].sort((a, b) => b.lines - a.lines)) {
+    lines.push(
+      `  ${finding.lines} lines (review ceiling ${finding.maxLines}, blocking ceiling ${finding.blockingLines}, hard ${finding.hard})  ${finding.path}`,
+      `    reason: ${finding.reason}`
+    )
+  }
+
+  lines.push(
+    "",
+    "Treat these warnings as actionable architecture debt. Review the growth now,",
+    "prefer a meaningful extraction, and do not raise maxLines merely to silence",
+    "the warning. The runway exists to plan the work before CI must block it."
+  )
+
+  return lines.join("\n")
 }
 
 function main() {
@@ -155,6 +195,7 @@ function main() {
 
   const violations = []
   const growth = []
+  const growthWarnings = []
   const staleAllow = []
   const warnings = []
   const inlineExempt = []
@@ -166,6 +207,7 @@ function main() {
     const band = classify(rel, policy)
     const hard = band.maxLines
     const warnAt = band.warnLines ?? hard
+    const ratchetGraceLines = band.ratchetGraceLines ?? 0
     const allow = allowByPath.get(rel)
     const inlineReason = readInlineAllow(full)
 
@@ -174,15 +216,27 @@ function main() {
     if (lines > hard) {
       if (allow) {
         if (lines > allow.maxLines) {
-          growth.push({
+          const classification = classifyAllowlistedGrowth(
+            lines,
+            allow.maxLines,
+            ratchetGraceLines
+          )
+          const finding = {
             path: rel,
             lines,
             maxLines: allow.maxLines,
+            blockingLines: classification.blockingLines,
             hard,
             reason: allow.reason
-          })
+          }
+          if (classification.severity === "warning") {
+            growthWarnings.push(finding)
+          } else {
+            growth.push(finding)
+          }
         }
-        // still over hard but within ratchet — ok
+        // Still over the ordinary hard limit, but governed by the allowlist's
+        // reviewed ceiling + warning runway.
       } else if (inlineReason) {
         inlineExempt.push({ path: rel, lines, hard, reason: inlineReason })
       } else {
@@ -209,12 +263,13 @@ function main() {
         const prev = allowByPath.get(m.path)
         return {
           path: m.path,
-          // Snap ceiling to the current size. The gate forbids growth above
-          // maxLines, so regenerating after a shrink tightens the ratchet.
+          // Snap the reviewed warning ceiling to the current size. The
+          // configured runway stays fixed, so a shrink tightens both the
+          // warning and blocking thresholds.
           maxLines: m.lines,
           reason:
             prev?.reason ||
-            `Grandfathered ${m.isTest ? "test" : "production"} file above hard limit (${m.hard}). Split on meaningful touch; do not grow past maxLines.`
+            `Grandfathered ${m.isTest ? "test" : "production"} file above hard limit (${m.hard}). Split on meaningful touch; treat growth past maxLines as actionable warning debt.`
         }
       })
 
@@ -241,6 +296,7 @@ function main() {
     scanned: measured.length,
     violations,
     growth,
+    growthWarnings,
     staleAllow,
     orphans,
     warnings,
@@ -279,19 +335,23 @@ See scripts/check-file-size.mjs for the full policy.
   if (growth.length) {
     failed = true
     console.error(
-      `\n✗ ${growth.length} allowlisted file(s) grew past their ratchet ceiling:\n`
+      `\n✗ ${growth.length} allowlisted file(s) grew past their blocking ceiling:\n`
     )
     for (const g of growth.sort((a, b) => b.lines - a.lines)) {
       console.error(
-        `  ${g.lines} lines (ceiling ${g.maxLines}, hard ${g.hard})  ${g.path}`
+        `  ${g.lines} lines (review ceiling ${g.maxLines}, blocking ceiling ${g.blockingLines}, hard ${g.hard})  ${g.path}`
       )
       console.error(`    reason: ${g.reason}`)
     }
     console.error(`
-Allowlisted files may not grow. Split out a helper module, or if growth is
-unavoidable temporarily, raise maxLines only with a PR note explaining why
-and a plan to split.
+This file exhausted its warning runway. Split out a helper module, or if the
+growth is genuinely cohesive, revise the reviewed ceiling only with a PR note
+explaining why and a concrete split/review plan.
 `)
+  }
+
+  if (growthWarnings.length && !jsonOut) {
+    console.warn(`\n${formatAllowlistedGrowthWarning(growthWarnings)}\n`)
   }
 
   if (staleAllow.length) {
@@ -354,10 +414,16 @@ Remove the stale entries from scripts/file-size-policy.json, or run:
         ? ""
         : `, ${warnings.length} soft warning${warnings.length === 1 ? "" : "s"}` +
           (verbose ? "" : " (npm run check:file-size -- --verbose)")
+    const ratchetWarnNote =
+      growthWarnings.length === 0
+        ? ""
+        : `, ${growthWarnings.length} allowlist growth warning${growthWarnings.length === 1 ? "" : "s"}`
     console.log(
-      `✓ file size gate passed (${measured.length} files scanned, ${overHard} allowlisted over hard limit${warnNote}).`
+      `✓ file size gate passed (${measured.length} files scanned, ${overHard} allowlisted over hard limit${warnNote}${ratchetWarnNote}).`
     )
   }
 }
 
-main()
+const isMain =
+  process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+if (isMain) main()

@@ -62,9 +62,13 @@ const MAX_CURRENT_INK_DIFFERENCE = 0.25
 const cjsRequire = createRequire(__filename)
 
 const { makeSsrParityCases } = cjsRequire("./ssr-parity-fixtures.js") as {
-  makeSsrParityCases: (ReactModule: typeof React) => ParityCase[]
+  makeSsrParityCases: (
+    ReactModule: typeof React,
+    recipes?: Record<string, unknown>,
+  ) => ParityCase[]
 }
-const cases = makeSsrParityCases(React)
+const recipes = cjsRequire("../dist/semiotic-recipes.min.js") as Record<string, unknown>
+const cases = makeSsrParityCases(React, recipes)
 
 // Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
@@ -149,6 +153,23 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(evidence.markCountByType["edge:curved"]).toBeGreaterThan(0)
     expect(svg).toContain("stroke-dasharray")
     expect(svg).toContain("M-7 -5 L5 0 L-7 5")
+  }
+  if (id === "network-custom-lineage-hulls") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:rect"]).toBe(7)
+    expect(evidence.markCountByType["edge:curved"]).toBe(6)
+    expect(svg.match(/data-lineage-hull=/g)).toHaveLength(3)
+    expect(svg).toContain('class="lineage-dag-hulls"')
+    expect(svg).toContain("Sub-topology ingest")
+    expect(svg).toContain("Sub-topology enrich")
+    expect(svg).toContain("Sub-topology output")
+    expect(svg).toContain("pointer-events:none")
+    expect(svg.indexOf('data-lineage-hull="enrich"')).toBeLessThan(
+      svg.indexOf('data-lineage-hull="ingest"'),
+    )
+    expect(svg.indexOf('data-lineage-hull="ingest"')).toBeLessThan(
+      svg.indexOf('data-lineage-hull="output"'),
+    )
   }
   if (id === "orbit") {
     expect(evidence.frameType).toBe("network")

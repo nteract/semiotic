@@ -130,7 +130,7 @@ export function NetworkSSRFrame({
           />
         ) : null}
         <g transform={`translate(${margin.left},${margin.top})`}>
-          {resolvedBackground}
+          {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
         </g>
         <g transform={`translate(${margin.left},${margin.top})`}>
           {sceneEdges

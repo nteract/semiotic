@@ -614,9 +614,9 @@ const StreamNetworkFrame = memo(forwardRef<
     storeRef.current?.isAnimating ?? false
   )
 
-  // customLayout overlays are read straight from `storeRef.current.customLayoutOverlays`
-  // at render time (see the `foregroundGraphics` composition below) — the same
-  // pattern as StreamXYFrame. Every overlay-changing path (config/data/theme/
+  // customLayout backgrounds/overlays are read straight from the store at
+  // render time (see the layer composition below) — the same pattern as
+  // StreamXYFrame. Every decoration-changing path (config/data/theme/
   // hover) already sets `dirtyRef` + `scheduleRender`, and the render loop's
   // throttled `setAnnotationFrame` re-renders to pick up the fresh overlays.
   // So no separate React state / per-change setState is needed (and can't
@@ -1384,7 +1384,7 @@ const StreamNetworkFrame = memo(forwardRef<
       themeBackground,
       maxDevicePixelRatio,
       renderMode,
-      hasBackgroundGraphics: Boolean(backgroundGraphics),
+      hasBackgroundGraphics: Boolean(backgroundGraphics || store.customLayoutBackgrounds),
       dirtyRef,
       resolutionDirtyRef,
       lastFrameTimeRef,
@@ -1550,7 +1550,7 @@ const StreamNetworkFrame = memo(forwardRef<
           backdropFill={surfaceBackground ?? undefined}
           overflowVisible
         >
-          {resolvedBackground}
+          {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
         </CanvasFrameBackground>
 
         <canvas

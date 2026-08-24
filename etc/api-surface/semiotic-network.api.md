@@ -324,6 +324,7 @@ interface-member NetworkLayoutContext::property::nodes = required nodes: Realtim
 interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
 interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
 interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member NetworkLayoutResult::property::backgrounds = optional backgrounds: ReactNode
 interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
 interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
 interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode

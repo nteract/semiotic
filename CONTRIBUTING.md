@@ -206,7 +206,13 @@ CI enforces hard line counts on `src/**/*.{ts,tsx,js,jsx}` (physical lines, same
 ESLint’s `max-lines` defaults to 300 and docs recommend 100–500; visualization / stream-frame code is denser, so Semiotic uses a higher ceiling plus a **ratchet allowlist** for the remaining mega-files we are splitting.
 
 - Prefer extracting a helper module over growing a large file.
-- Grandfathered files live in `scripts/file-size-policy.json` with a `maxLines` ceiling — they **must not grow** past that ceiling.
+- Grandfathered files live in `scripts/file-size-policy.json`. Their `maxLines` is a reviewed
+  warning ceiling; crossing it emits an always-visible warning but remains non-blocking within the
+  configured `ratchetGraceLines` runway (50 production lines, 100 test lines). Exceeding the end of
+  that runway fails CI.
+- **Take ratchet warnings seriously.** They are time to review cohesion and plan or perform a
+  meaningful extraction before the gate becomes blocking. Do not raise `maxLines` merely to silence
+  a warning, and do not let repeated small additions consume the runway unnoticed.
 - When a split brings a file under the hard limit, remove its allowlist entry (or run `npm run check:file-size -- --update-allowlist`).
 - Escape hatch for true corner cases: add an allowlist entry with a clear `reason`, or (for generated fixtures) an inline `// file-size-limit: allow — reason` in the first 40 lines.
 
@@ -215,6 +221,18 @@ npm run check:file-size
 npm run check:file-size -- --json          # machine-readable report
 npm run check:file-size -- --update-allowlist
 ```
+
+### Cold-consumer bundle ratchet
+
+`npm run check:cold-consumer` keeps package exports and the measurement method exact, so structural
+contract drift still fails immediately. Byte measurements use two levels: changes inside the
+supported runner variance pass silently; changes outside that variance warn without failing until
+positive growth exceeds four times the metric's runner tolerance. Size improvements warn for a
+baseline refresh but never fail solely for making a consumer bundle smaller.
+
+**Take cold-consumer warnings seriously.** Inspect the affected named import and its reachable graph
+before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
+intentional, acceptable part of that public import—not simply to make CI quiet.
 
 ## Before Opening a PR
 

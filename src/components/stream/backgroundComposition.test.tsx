@@ -1,6 +1,6 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import * as React from "react"
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import StreamGeoFrame from "./StreamGeoFrame"
@@ -82,5 +82,28 @@ describe("Stream Frame background composition", () => {
       />
     )
     expectOrderedLayers(container, ".stream-frame-background__backdrop")
+  })
+
+  it("composes a custom network layout background below the canvas", async () => {
+    const { container } = render(
+      <StreamNetworkFrame
+        chartType="force"
+        nodes={[{ id: "a" }]}
+        edges={[]}
+        customNetworkLayout={() => ({
+          sceneNodes: [],
+          backgrounds: <path data-testid="layout-background" d="M0,0 L10,0 L10,10 Z" />,
+        })}
+      />
+    )
+
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="layout-background"]')).toBeTruthy()
+    })
+    const background = container.querySelector('[data-testid="layout-background"]')!
+    const canvas = container.querySelector("canvas")!
+    expect(
+      background.compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 })

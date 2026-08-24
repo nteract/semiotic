@@ -14,6 +14,9 @@ const PARTITION_COLORS = {
   "topic-source": "#1f8a70", "topic-sink": "#c0552d",
   "topic-bridge": "#3f5e8c", processor: "#3a3a52",
 }
+const SUBTOPOLOGY_HULL_COLORS = {
+  6: "#fb7185", 7: "#fb923c", 8: "#60a5fa", 9: "#818cf8",
+}
 function renderKstreamsIcon({ semantic, partition, size, color }) {
   // topic → a log/database glyph; processor → a colored chip + semantic symbol.
   return /* svg */ null
@@ -26,6 +29,7 @@ function toChartData(layout) {
       id: dn.id, x: dn.x, y: dn.y,
       partition: dn.node.partition, semantic: dn.node.semantic,
       label: dn.node.label, stores: dn.node.stores,
+      subtopologyId: dn.node.subtopologyId,
     })),
     edges: layout.edges.map((de) => ({
       id: de.id, source: de.source, target: de.target,
@@ -57,6 +61,9 @@ function LineageViews() {
         layoutConfig={{
           layerCount: ..., maxLayerSize: ..., reachableIds, selectedId,
           renderIcon: renderKstreamsIcon, partitionColors: PARTITION_COLORS,
+          hullGroupAccessor: "subtopologyId",
+          hullColors: SUBTOPOLOGY_HULL_COLORS,
+          hullLabel: (id) => \`Sub-topology \${id}\`,
         }}
         selection={{ name: "kstreams" }}   // consume the shared store → ring
         onObservation={onHover}            // hover → reach preview
@@ -103,6 +110,16 @@ export default function KstreamsPage() {
         <Kstreams />
       </div>
 
+      <h2 id="subtopology-hulls">Config-driven sub-topology hulls</h2>
+      <p>
+        The checked-by-default <strong>Sub-topology hulls</strong> control groups the recipe's
+        fitted node rectangles by <code>subtopologyId</code> and draws a padded convex hull behind
+        each group. Toggle it off to see the opt-in behavior: the page omits
+        <code>hullGroupAccessor</code> entirely. Because these hulls come from the layout's
+        background layer, the same paths appear in the live chart and in static output from
+        <code>renderChart("NetworkCustomChart", ...)</code>; they never participate in hit-testing.
+      </p>
+
       <h2 id="composite-glyphs">Composite glyphs as one hit-testable unit</h2>
       <p>
         Each node is more than a shape + a label: a partition-colored container, a semantic icon, a
@@ -110,11 +127,12 @@ export default function KstreamsPage() {
         <strong>
           exactly one <code>rect</code> scene node per node
         </strong>{" "}
-        — that single mark owns the canvas hit area and carries the datum — and draws all the decoration
-        in the layout's <code>overlays</code> layer, which is <code>pointer-events: none</code>. So
-        the rich glyph never intercepts a hover: hover and click always resolve to the node as a
-        unit. As the graph gets denser the recipe drops to a compact glyph, then an icon, then a 5px
-        dot (the minimap) — a level-of-detail ramp driven by the fitted size.
+        — that single mark owns the canvas hit area and carries the datum — and draws all the
+        decoration in the layout's <code>overlays</code> layer, which is{" "}
+        <code>pointer-events: none</code>. So the rich glyph never intercepts a hover: hover and
+        click always resolve to the node as a unit. As the graph gets denser the recipe drops to a
+        compact glyph, then an icon, then a 5px dot (the minimap) — a level-of-detail ramp driven by
+        the fitted size.
       </p>
 
       <h2 id="interaction">Controlled interaction, owned by the host</h2>

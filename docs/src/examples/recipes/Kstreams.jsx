@@ -17,6 +17,24 @@ const PARTITION_COLORS = {
   unknown: "#5a5a6a",
 }
 
+const SUBTOPOLOGY_HULL_COLORS = {
+  0: "#2dd4bf",
+  1: "#38bdf8",
+  2: "#a78bfa",
+  3: "#f472b6",
+  4: "#fbbf24",
+  5: "#a3e635",
+  6: "#fb7185",
+  7: "#fb923c",
+  8: "#60a5fa",
+  9: "#818cf8",
+  10: "#e879f9",
+  11: "#4ade80",
+  12: "#22d3ee",
+}
+
+const subtopologyHullLabel = (groupValue) => `Sub-topology ${groupValue}`
+
 const SEMANTIC_GLYPH = {
   source: "▶",
   sink: "▼",
@@ -180,6 +198,7 @@ function LineageViews() {
   const [variant, setVariant] = useState(1)
   const [rootId, setRootId] = useState("orders")
   const [selectedId, setSelectedId] = useState(null)
+  const [showHulls, setShowHulls] = useState(true)
   // Display detail is a continuous 0→1 value (0 = detailed full glyphs,
   // 1 = compact icon-only) so the toggle can animate size, spacing, and edges.
   // `dispTarget` is where we're headed; `dispT` is the animated value.
@@ -342,6 +361,15 @@ function LineageViews() {
       minGapX,
       minGapY,
       edgeWidth: edgeW,
+      ...(showHulls
+        ? {
+            hullGroupAccessor: "subtopologyId",
+            hullColors: SUBTOPOLOGY_HULL_COLORS,
+            hullFillOpacity: 0.1,
+            hullStrokeOpacity: 0.55,
+            hullLabel: subtopologyHullLabel,
+          }
+        : {}),
     }),
     [
       mainLayout.layerCount,
@@ -352,6 +380,7 @@ function LineageViews() {
       minGapX,
       minGapY,
       edgeW,
+      showHulls,
     ],
   )
 
@@ -420,6 +449,22 @@ function LineageViews() {
             <option value="detailed">Detailed</option>
             <option value="compact">Compact (icons)</option>
           </select>
+        </label>
+        <label
+          style={{
+            display: "inline-flex",
+            gap: "6px",
+            alignItems: "center",
+            fontSize: "13px",
+            color: "var(--text-secondary, #8888a0)",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showHulls}
+            onChange={(event) => setShowHulls(event.target.checked)}
+          />
+          Sub-topology hulls
         </label>
         <button
           onClick={() => setVariant((v) => (v === 1 ? 2 : 1))}

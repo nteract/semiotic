@@ -1,6 +1,7 @@
 // Polyfill TextEncoder/TextDecoder for react-dom/server in jsdom
 import { TextEncoder, TextDecoder } from "util"
 import type { Datum } from "../charts/shared/datumTypes"
+import * as ReactDOMServer from "react-dom/server"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import {
@@ -17,6 +18,8 @@ import type { FrameGraphicsContext, StreamScales } from "../stream/types"
 import type { OrdinalScales } from "../stream/ordinalTypes"
 import type { GeoScales } from "../stream/geoTypes"
 import { DARK_THEME } from "../store/ThemeStore"
+import { NetworkCustomChart } from "../charts/custom/NetworkCustomChart"
+import { lineageDagLayout } from "../recipes/lineageDag"
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -807,6 +810,69 @@ describe("renderNetworkToStaticSVG - regression", () => {
 
     expect(svg).toContain("<svg")
     expect(svg).toContain("stream-network-frame")
+  })
+
+  it("renders lineage group hulls behind marks with live-SSR geometry parity", () => {
+    const hullNodes = [
+      { id: "a", x: 0, y: 0, partition: "topic-source", subtopologyId: "beta" },
+      { id: "b", x: 1, y: -0.5, partition: "processor", subtopologyId: "alpha" },
+      { id: "c", x: 1, y: 0.5, partition: "processor", subtopologyId: "alpha" },
+      { id: "d", x: 2, y: 0, partition: "topic-sink", subtopologyId: "beta" },
+    ]
+    const hullEdges = [
+      { source: "a", target: "b" },
+      { source: "b", target: "d" },
+    ]
+    const layoutConfig = {
+      layerCount: 3,
+      maxLayerSize: 2,
+      hullGroupAccessor: "subtopologyId",
+      hullColors: { alpha: "#123456", beta: "#abcdef" },
+    }
+    const margin = { top: 40, right: 40, bottom: 40, left: 40 }
+    const props = {
+      nodes: hullNodes,
+      edges: hullEdges,
+      layout: lineageDagLayout,
+      layoutConfig,
+      width: 600,
+      height: 320,
+      margin,
+    }
+
+    const svg = renderChart("NetworkCustomChart", props, { precision: 3 })
+    const repeated = renderChart("NetworkCustomChart", props, { precision: 3 })
+    const liveSsr = ReactDOMServer.renderToStaticMarkup(
+      <NetworkCustomChart {...props} />
+    )
+    const hullPaths = (markup: string) => Array.from(
+      markup.matchAll(/data-lineage-hull="([^"]+)"[^>]*><path[^>]* d="([^"]+)"/g),
+      (match) => [match[1], match[2]]
+    )
+
+    expect(svg).toBe(repeated)
+    expect(countMatches(svg, /class="lineage-dag-hull"/g)).toBe(2)
+    expect(svg.indexOf('data-lineage-hull="alpha"')).toBeLessThan(
+      svg.indexOf('data-lineage-hull="beta"')
+    )
+    expect(svg.indexOf('class="lineage-dag-hulls"')).toBeLessThan(
+      svg.indexOf('fill="#1f7a8c"')
+    )
+    expect(hullPaths(liveSsr)).toEqual(hullPaths(renderChart("NetworkCustomChart", props)))
+
+    const withoutHulls = renderChart("NetworkCustomChart", {
+      ...props,
+      layoutConfig: { layerCount: 3, maxLayerSize: 2 },
+    })
+    expect(withoutHulls).not.toContain("lineage-dag-hull")
+    expect(withoutHulls).toBe(renderChart("NetworkCustomChart", {
+      ...props,
+      layoutConfig: {
+        layerCount: 3,
+        maxLayerSize: 2,
+        hullGroupAccessor: undefined,
+      },
+    }))
   })
 })
 

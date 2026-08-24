@@ -48,6 +48,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
 import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
+import { applyNetworkCustomLayoutOutput, clearNetworkCustomLayoutOutput } from "./networkCustomLayoutOutput"
 import {
   restyleNetworkCustomScene,
   snapshotNetworkCustomStyles
@@ -89,6 +90,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
   sceneNodes: NetworkSceneNode[] = []
   sceneEdges: NetworkSceneEdge[] = []
   labels: NetworkLabel[] = []
+  /** Backgrounds returned from customNetworkLayout (consumed by StreamNetworkFrame). */
+  customLayoutBackgrounds: import("react").ReactNode = null
   /** Overlays returned from customNetworkLayout (consumed by StreamNetworkFrame). */
   customLayoutOverlays: import("react").ReactNode = null
   /** Most recent custom layout result for host readback (`getCustomLayout()`).
@@ -836,9 +839,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
           this.sceneNodes = []
           this.sceneEdges = []
           this.labels = []
-          this.customLayoutOverlays = null
-          this.customLayoutHtmlMarks = []
-          this.lastCustomLayoutResult = null
+          clearNetworkCustomLayoutOutput(this)
           this._customRestyle = undefined
           this._customRestyleEdge = undefined
           this.hasCustomRestyle = false
@@ -851,9 +852,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
-      this.customLayoutOverlays = result.overlays ?? null
-      this.customLayoutHtmlMarks = result.htmlMarks ?? []
-      this.lastCustomLayoutResult = result
+      applyNetworkCustomLayoutOutput(this, result)
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
       // quadtree. A recovered failure deliberately does not.
@@ -883,11 +882,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
 
-    // Built-in chart types: clear stale overlays / HTML marks from a prior
+    // Built-in chart types: clear stale backgrounds / overlays / HTML marks from a prior
     // customLayout run.
-    this.customLayoutOverlays = null
-    this.customLayoutHtmlMarks = []
-    this.lastCustomLayoutResult = null
+    clearNetworkCustomLayoutOutput(this)
     this.lastCustomLayoutFailure = null
 
     const plugin = getLayoutPlugin(this.config.chartType)
@@ -1524,9 +1521,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.sceneNodes = []
     this.sceneEdges = []
     this.labels = []
-    this.customLayoutOverlays = null
-    this.customLayoutHtmlMarks = []
-    this.lastCustomLayoutResult = null
+    clearNetworkCustomLayoutOutput(this)
     this.lastCustomLayoutFailure = null
     this._customRestyle = undefined
     this._customRestyleEdge = undefined

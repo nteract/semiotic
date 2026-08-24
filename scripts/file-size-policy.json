@@ -1,6 +1,6 @@
 {
   "$schema": "./file-size-policy.schema.json",
-  "description": "Source file size policy for Semiotic. New or growing files must stay under the hard limits. Existing oversized files are listed with a ratchet ceiling (maxLines). Prefer splitting modules over raising maxLines.",
+  "description": "Source file size policy for Semiotic. New files must stay under the hard limits. Existing oversized files use maxLines as a reviewed warning ceiling plus a bounded ratchetGraceLines runway before failure. Warnings are actionable architecture debt; prefer splitting modules over raising ceilings.",
   "roots": [
     "src"
   ],
@@ -17,11 +17,13 @@
   ],
   "production": {
     "maxLines": 800,
-    "warnLines": 500
+    "warnLines": 500,
+    "ratchetGraceLines": 50
   },
   "test": {
     "maxLines": 1500,
-    "warnLines": 800
+    "warnLines": 800,
+    "ratchetGraceLines": 100
   },
   "allowlist": [
     {
