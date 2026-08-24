@@ -25,6 +25,7 @@ import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
+import { resolveCanvasFontFamily } from "../../stream/renderers/canvasTypography"
 
 registerXYPlugin(scatterXYPlugin)
 
@@ -505,7 +506,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
       const _cx = Math.max(0, Math.min(w, xC))
       const _cy = Math.max(0, Math.min(h, yC))
 
-      ctx.font = `600 ${quadrantLabelSize}px sans-serif`
+      ctx.font = `600 ${quadrantLabelSize}px ${resolveCanvasFontFamily(ctx)}`
       ctx.globalAlpha = 0.5
 
       const padding = 8

@@ -3,6 +3,7 @@ import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { isHatchFill } from "../../charts/shared/hatchFill"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
+import { resolveCanvasFontFamily } from "./canvasTypography"
 
 /**
  * Canvas renderer that applies diagonal-line hatching to bar-funnel dropoff bars.
@@ -115,6 +116,7 @@ export const barFunnelLabelRenderer = (
   const padV = 3
   const lineGap = 2
   const cornerRadius = 4
+  const fontFamily = resolveCanvasFontFamily(ctx)
 
   // Minimum bar width (px) before label is suppressed entirely
   const MIN_LABEL_BAR_WIDTH = 25
@@ -150,9 +152,9 @@ export const barFunnelLabelRenderer = (
     const valStr = formatNumber(value)
 
     // Measure text widths
-    ctx.font = `bold ${pctFontSize}px sans-serif`
+    ctx.font = `bold ${pctFontSize}px ${fontFamily}`
     const pctW = showPct ? ctx.measureText(pctStr).width : 0
-    ctx.font = `${valFontSize}px sans-serif`
+    ctx.font = `${valFontSize}px ${fontFamily}`
     const valW = ctx.measureText(valStr).width
 
     // Compute label box dimensions — single line for first step, two lines otherwise
@@ -192,16 +194,16 @@ export const barFunnelLabelRenderer = (
 
     if (showPct) {
       // Two-line label: bold percentage + value
-      ctx.font = `bold ${pctFontSize}px sans-serif`
+      ctx.font = `bold ${pctFontSize}px ${fontFamily}`
       ctx.fillStyle = primaryTextColor
       ctx.fillText(pctStr, lx, boxY + padV)
 
-      ctx.font = `${valFontSize}px sans-serif`
+      ctx.font = `${valFontSize}px ${fontFamily}`
       ctx.fillStyle = secondaryTextColor
       ctx.fillText(valStr, lx, boxY + padV + pctFontSize + lineGap)
     } else {
       // Single-line label: just value
-      ctx.font = `bold ${valFontSize}px sans-serif`
+      ctx.font = `bold ${valFontSize}px ${fontFamily}`
       ctx.fillStyle = primaryTextColor
       ctx.fillText(valStr, lx, boxY + padV)
     }

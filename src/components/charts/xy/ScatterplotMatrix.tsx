@@ -434,7 +434,8 @@ function DiagonalCell({
         textAnchor="middle"
         fontSize={11}
         fontWeight="bold"
-        fill="#333"
+        fill="var(--semiotic-text, #333)"
+        fontFamily="var(--semiotic-font-family, sans-serif)"
       >
         {label}
       </text>
@@ -507,7 +508,8 @@ function LabelCell({ label, cellSize }: { label: string; cellSize: number }) {
         dominantBaseline="middle"
         fontSize={12}
         fontWeight="bold"
-        fill="#333"
+        fill="var(--semiotic-text, #333)"
+        fontFamily="var(--semiotic-font-family, sans-serif)"
       >
         {label}
       </text>
@@ -639,7 +641,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   return (
     <div
       className={className}
-      style={{ position: "relative" }}
+      style={{ position: "relative", color: "var(--semiotic-text, #333)", fontFamily: "var(--semiotic-font-family, sans-serif)" }}
       role="group"
       aria-label={description || title || `Scatterplot matrix comparing ${fields.length} fields`}
     >
@@ -682,7 +684,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                 transform: "rotate(180deg)",
                 fontSize: 11,
                 fontWeight: "bold",
-                color: "#333"
+                color: "var(--semiotic-text, #333)"
               }}
             >
               {resolveExplicitColor(fieldLabels, rowField) ?? rowField}

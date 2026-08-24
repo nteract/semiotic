@@ -4,6 +4,7 @@ import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { resolveCanvasPaint } from "./canvasRenderHelpers"
 import { parseCanvasColor } from "./colorUtils"
+import { resolveCanvasFontFamily } from "./canvasTypography"
 
 /**
  * Returns a contrasting text color (black or white) based on the
@@ -35,7 +36,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
 
   ctx.save()
   try {
-  for (const node of heatNodes) {
+    const fontFamily = resolveCanvasFontFamily(ctx)
+    for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
     const nodeStyle = node.style
     if (nodeStyle?.opacity != null) {
@@ -83,12 +85,12 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
         ctx,
         typeof resolvedFill === "string" ? resolvedFill : "#4e79a7"
       )
-      ctx.font = `${fontSize}px sans-serif`
+      ctx.font = `${fontSize}px ${fontFamily}`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillText(formatted, centerX, centerY)
     }
-  }
+    }
   } finally {
     ctx.restore()
   }

@@ -1277,6 +1277,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
+            fontFamily: "var(--semiotic-font-family, sans-serif)",
             width: responsiveWidth ? "100%" : size[0],
             height: responsiveHeight ? "100%" : size[1],
           }}
@@ -1369,6 +1370,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         tabIndex={0}
         style={{
           position: "relative",
+          fontFamily: "var(--semiotic-font-family, sans-serif)",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",
