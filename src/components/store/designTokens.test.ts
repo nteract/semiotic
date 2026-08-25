@@ -65,6 +65,28 @@ describe("designTokensToTheme", () => {
     expect(designTokensToTheme(tokens).typography).toMatchObject(theme.typography)
   })
 
+  it("round-trips an organizational aesthetic profile as theme metadata", () => {
+    const base = resolveThemePreset("journalist")!
+    const theme = {
+      ...base,
+      aesthetics: {
+        name: "News graphics desk",
+        weights: {
+          "palette-authorship": 3,
+          "editorial-emphasis": 2,
+        },
+        thresholds: { emphasisRatioMax: 0.25 },
+        rationales: {
+          "palette-authorship": "Our charts should carry our visual voice.",
+        },
+        minimumScore: 75,
+      },
+    }
+
+    const recovered = designTokensToTheme(themeToTokens(theme))
+    expect(recovered.aesthetics).toEqual(theme.aesthetics)
+  })
+
   it("retains a preset's effective title size when titleFontSize is unset", () => {
     for (const preset of ["high-contrast", "journalist"]) {
       const theme = resolveThemePreset(preset)!

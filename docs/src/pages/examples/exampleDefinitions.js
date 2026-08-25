@@ -84,6 +84,147 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "aesthetic-policy-studio",
+    path: "/examples/aesthetic-policy-studio",
+    sourceFile: "AestheticPolicyStudioExamplePage.jsx",
+    sourceFiles: [
+      "AestheticPolicyStudioExamplePage.jsx",
+      "AestheticPolicyStudioExamplePage.css",
+      "aestheticPolicyStudio.js",
+    ],
+    isPilot: true,
+    title: "Aesthetic Policy Studio",
+    eyebrow: "Design governance · weights → evidence → visual voice",
+    description:
+      "See Semiotic's balanced default, then watch two opposing organizational aesthetic policies select different chart treatments without compromising the shared trust floor.",
+    contract: {
+      publicImports: [
+        "semiotic/ai",
+        "semiotic/ordinal",
+        "semiotic/themes",
+        "semiotic/themes/react",
+      ],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "deterministic-organizational-aesthetic-policy-comparison",
+          replay: true,
+          schemaVersion: "1",
+          inventory: { rows: 5, charts: 3, profiles: 3, candidates: 2 },
+        },
+      },
+      provenance: {
+        source:
+          "Synthetic public-service performance fixture designed to compare organizational aesthetic policies without changing evidence",
+        capturedAt: "2026-08-25",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "aesthetic-policy contract change",
+      },
+      accessibility: {
+        summary:
+          "Every chart carries the same exact data, descriptive copy, summary, labels, and accessible table; policy scores and selection reasons are also available as text",
+        navigation:
+          "Semantic default, invariant, organization, decision-matrix, and research sections provide a complete linear reading without pointer-dependent disclosure",
+        keyboard:
+          "Built-in chart navigation and native research links preserve the full briefing for keyboard readers",
+        forcedColors:
+          "Chart marks, institutional panels, score states, selection cells, and policy boundaries retain system-color separation",
+      },
+      motion: {
+        reducedMotion: "The comparison is settled and contains no timed or looping motion",
+        visibility: "No polling, observers, streams, workers, or hidden-page processes run",
+      },
+      responsive: {
+        status: "container-responsive-with-stacked-policy-comparison",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable profile, candidate, feature, and invariant identities",
+      },
+      ssr: {
+        status: "Vite-build-and-deterministic-chart-compatible",
+        hydration:
+          "Policy selection and scores are deterministic; chart widths resolve after mount without changing data, profile, or chosen treatment",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy route using public ordinal, theme, and AI entry points",
+          interaction: "three five-row charts and two bounded two-candidate scoring passes",
+          memory: "one immutable five-row fixture, three profiles, and two candidate specs",
+          hiddenPage: "no timers, requests, observers, streams, or workers",
+        },
+      },
+    },
+  },
+  {
+    id: "bad-chart-autopsy",
+    path: "/examples/bad-chart-autopsy",
+    sourceFile: "BadChartAutopsyExamplePage.jsx",
+    sourceFiles: [
+      "BadChartAutopsyExamplePage.jsx",
+      "BadChartAutopsyExamplePage.css",
+      "badChartAutopsy.js",
+    ],
+    isPilot: true,
+    title: "Bad Chart Autopsy",
+    eyebrow: "Chart evaluation · reject → repair → prove",
+    description:
+      "Take apart a persuasive but misleading benchmark chart, then preserve its data while Semiotic diagnoses, repairs, and proves a defensible replacement.",
+    contract: {
+      publicImports: ["semiotic/ai", "semiotic/ordinal", "semiotic/server"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "deterministic-chart-evaluation-case",
+          replay: true,
+          schemaVersion: "1",
+          inventory: { rows: 5, charts: 2, repairSteps: 3 },
+        },
+      },
+      provenance: {
+        source: "Synthetic benchmark fixture designed to expose known chart-deception patterns",
+        capturedAt: "2026-08-24",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "evaluation-contract change",
+      },
+      accessibility: {
+        summary:
+          "The before-and-after charts are paired with ranked textual findings, exact repair steps, scene evidence, and an accessible table on the released chart",
+        navigation:
+          "Four native-button stages expose intake, diagnosis, evidence, and repair without making animation or pointer input the only reading path",
+        keyboard:
+          "Native stage buttons and built-in BarChart navigation preserve the complete workflow for keyboard readers",
+        forcedColors:
+          "Specimen boundaries, verdicts, controls, finding labels, and chart marks retain system-color boundaries and text labels",
+      },
+      motion: {
+        reducedMotion:
+          "The example uses discrete reader-controlled stages and no timed or looping motion",
+        visibility:
+          "No polling, observer, worker, or hidden-page process runs; both reports are deterministic bounded computations",
+      },
+      responsive: {
+        status: "container-responsive-with-stacked-phone-comparison",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable stage, finding, chart, and repair-code identities",
+      },
+      ssr: {
+        status: "Vite-build-and-static-render-evidence-compatible",
+        hydration:
+          "The initial intake stage and deterministic evaluation results are stable; responsive widths resolve after mount without changing the case",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route importing public ordinal and AI surfaces plus the server evidence renderer",
+          interaction: "four local stage transitions with no data mutation or background work",
+          memory: "two five-row configurations and two bounded evaluation reports",
+          hiddenPage: "no timers, streams, observers, or workers",
+        },
+      },
+    },
+  },
+  {
     id: "how-a-hit-travels",
     path: "/examples/how-a-hit-travels",
     sourceFile: "HowAHitTravelsExamplePage.jsx",
@@ -1581,6 +1722,30 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Aesthetic Policy Studio",
+    path: "/examples/aesthetic-policy-studio",
+    publishedAt: "2026-08-25T21:00:00-07:00",
+    eyebrow: "Design governance · weights → evidence → visual voice",
+    description:
+      "See Semiotic's balanced default, then watch two opposing organizational aesthetic policies select different chart treatments without compromising the shared trust floor.",
+    preview: "aesthetic-policy-studio",
+    badges: ["Weighted policy", "Theme governance", "Candidate selection", "Accessible"],
+    frames: ["ordinal"],
+    topics: ["design", "ai", "accessibility"],
+  },
+  {
+    title: "Bad Chart Autopsy",
+    path: "/examples/bad-chart-autopsy",
+    publishedAt: "2026-08-24T21:00:00-07:00",
+    eyebrow: "Chart evaluation · reject → repair → prove",
+    description:
+      "Take apart a persuasive but misleading benchmark chart, then preserve its data while Semiotic diagnoses, repairs, and proves a defensible replacement.",
+    preview: "bad-chart-autopsy",
+    badges: ["Unified evaluation", "Render evidence", "Repair ledger", "Accessible"],
+    frames: ["ordinal"],
+    topics: ["ai", "design", "accessibility"],
+  },
+  {
     title: "How a Hit Travels",
     path: "/examples/how-a-hit-travels",
     publishedAt: "2026-08-09T23:01:36-07:00",
@@ -2325,6 +2490,8 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/aesthetic-policy-studio": "AestheticPolicyStudioExamplePage.jsx",
+  "/examples/bad-chart-autopsy": "BadChartAutopsyExamplePage.jsx",
   "/examples/how-a-hit-travels": "HowAHitTravelsExamplePage.jsx",
   "/examples/living-ledger": "LivingLedgerExamplePage.jsx",
   "/examples/the-last-scarcity": "TheLastScarcityExamplePage.jsx",

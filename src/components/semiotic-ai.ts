@@ -210,6 +210,9 @@ export type {
   AuditAccessibilityOptions
 } from "./charts/shared/auditAccessibility"
 export * from "./ai/evaluateChart"
+export * from "./ai/auditVisualHierarchy"
+export * from "./ai/evaluateAesthetics"
+export type * from "./ai/aestheticProfileTypes"
 export type {
   MobileAuditStatus,
   MobileAuditCategory,

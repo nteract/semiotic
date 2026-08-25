@@ -30,10 +30,14 @@ class-member RingBuffer::method::remove = required remove(predicate: (item: T) =
 class-member RingBuffer::method::resize = required resize(newCapacity: number): T[]
 class-member RingBuffer::method::toArray = required toArray(): T[]
 class-member RingBuffer::method::update = required update(predicate: (item: T) => boolean, updater: (item: T) => T): T[]
+const AESTHETICS_OFF_PROFILE: Readonly<AestheticProfile>
 const CARBON_ALERT: {readonly danger: "#da1e28"; readonly warning: "#f1c21b"; readonly success: "#24a148"; readonly info: "#0043ce";}
 const CARBON_CATEGORICAL_14: string[]
 const COLOR_BLIND_SAFE_CATEGORICAL: string[]
 const DARK_THEME: SemioticTheme
+const DEFAULT_AESTHETIC_PROFILE: Readonly<AestheticProfile>
+const DEFAULT_AESTHETIC_THRESHOLDS: Readonly<Required<AestheticThresholds>>
+const DEFAULT_AESTHETIC_WEIGHTS: Readonly<Record<AestheticFeatureId, number>>
 const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
@@ -48,6 +52,7 @@ function auditAccessibility(component: string, props: Datum, options?: AuditAcce
 function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
+function auditVisualHierarchy(input: VisualHierarchyInput): VisualHierarchyAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
 function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefined
@@ -61,6 +66,7 @@ function darkenColor(hex: string, factor?: number | undefined): string
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
 function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
+function evaluateAesthetics(component: string, props: Datum, options?: EvaluateAestheticsOptions | undefined): AestheticEvaluationResult
 function evaluateChart(component: string, props?: Datum | undefined, data?: readonly Datum[] | undefined, options?: EvaluateChartOptions | undefined): EvaluateChartResult
 function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
@@ -116,6 +122,10 @@ function valueToAngle(value: number, min: number, max: number, sweepRad: number,
 interface A11yFinding
 interface AccessibilityAuditResult
 interface AdaptiveTimeTickOptions
+interface AestheticEvaluationResult
+interface AestheticFeatureResult
+interface AestheticProfile
+interface AestheticThresholds
 interface ArcBoundingBox
 interface AuditAccessibilityOptions
 interface AuditDataOptions
@@ -134,6 +144,7 @@ interface DataAuditResult
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
+interface EvaluateAestheticsOptions
 interface EvaluateChartFinding
 interface EvaluateChartNotification
 interface EvaluateChartOptions extends AuditAccessibilityOptions
@@ -183,6 +194,9 @@ interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface VegaLiteEncoding
 interface VegaLiteSpec
+interface VisualHierarchyAuditResult
+interface VisualHierarchyFinding
+interface VisualHierarchyInput
 interface-member A11yFinding::property::critical = required critical: boolean
 interface-member A11yFinding::property::fix = optional fix: string | undefined
 interface-member A11yFinding::property::heuristic = required heuristic: string
@@ -197,6 +211,36 @@ interface-member AccessibilityAuditResult::property::reference = required refere
 interface-member AccessibilityAuditResult::property::summary = required summary: {criticalsPassed: number; criticalsEvaluated: number; fails: number; warnings: number; manual: number; passes: number;}
 interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
 interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
+interface-member AestheticEvaluationResult::property::component = required readonly component: string
+interface-member AestheticEvaluationResult::property::features = required readonly features: readonly AestheticFeatureResult[]
+interface-member AestheticEvaluationResult::property::method = required readonly method: "weighted-machine-visible-features"
+interface-member AestheticEvaluationResult::property::minimumScore = required readonly minimumScore: number
+interface-member AestheticEvaluationResult::property::ok = required readonly ok: boolean
+interface-member AestheticEvaluationResult::property::profile = required readonly profile: string
+interface-member AestheticEvaluationResult::property::score = required readonly score: null | number
+interface-member AestheticEvaluationResult::property::totalWeight = required readonly totalWeight: number
+interface-member AestheticEvaluationResult::property::weightedPoints = required readonly weightedPoints: number
+interface-member AestheticFeatureResult::property::contribution = required readonly contribution: number
+interface-member AestheticFeatureResult::property::evidence = required readonly evidence: Readonly<Record<string, boolean | number | string>>
+interface-member AestheticFeatureResult::property::id = required readonly id: AestheticFeatureId
+interface-member AestheticFeatureResult::property::label = required readonly label: string
+interface-member AestheticFeatureResult::property::message = required readonly message: string
+interface-member AestheticFeatureResult::property::rationale = optional readonly rationale: string | undefined
+interface-member AestheticFeatureResult::property::score = required readonly score: number
+interface-member AestheticFeatureResult::property::status = required readonly status: AestheticFeatureStatus
+interface-member AestheticFeatureResult::property::weight = required readonly weight: number
+interface-member AestheticProfile::property::minimumScore = optional minimumScore: number | undefined
+interface-member AestheticProfile::property::name = optional name: string | undefined
+interface-member AestheticProfile::property::rationales = optional rationales: Partial<Record<AestheticFeatureId, string>> | undefined
+interface-member AestheticProfile::property::thresholds = optional thresholds: AestheticThresholds | undefined
+interface-member AestheticProfile::property::weights = optional weights: Partial<Record<AestheticFeatureId, number>> | undefined
+interface-member AestheticThresholds::property::categoricalColorMax = optional categoricalColorMax: number | undefined
+interface-member AestheticThresholds::property::emphasisRatioMax = optional emphasisRatioMax: number | undefined
+interface-member AestheticThresholds::property::emphasisRatioMin = optional emphasisRatioMin: number | undefined
+interface-member AestheticThresholds::property::hierarchyRatio = optional hierarchyRatio: number | undefined
+interface-member AestheticThresholds::property::scaffoldContrastMax = optional scaffoldContrastMax: number | undefined
+interface-member AestheticThresholds::property::scaffoldContrastMin = optional scaffoldContrastMin: number | undefined
+interface-member AestheticThresholds::property::titleScaleRatio = optional titleScaleRatio: number | undefined
 interface-member ArcBoundingBox::property::cx = required cx: number
 interface-member ArcBoundingBox::property::cy = required cy: number
 interface-member ArcBoundingBox::property::height = required height: number
@@ -291,6 +335,8 @@ interface-member DescribeChartResult::property::annotations = optional annotatio
 interface-member DescribeChartResult::property::caveats = optional caveats: string[] | undefined
 interface-member DescribeChartResult::property::levels = required levels: {l1?: string; l2?: string; l3?: string; l4?: string;}
 interface-member DescribeChartResult::property::text = required text: string
+interface-member EvaluateAestheticsOptions::property::profile = optional readonly profile: AestheticProfile | undefined
+interface-member EvaluateAestheticsOptions::property::theme = optional readonly theme: SemioticTheme | undefined
 interface-member EvaluateChartFinding::property::code = required readonly code: string
 interface-member EvaluateChartFinding::property::count = optional readonly count: number | undefined
 interface-member EvaluateChartFinding::property::critical = optional readonly critical: boolean | undefined
@@ -502,6 +548,7 @@ interface-member ResponsiveSizeOptions::property::minHeight = optional minHeight
 interface-member ResponsiveSizeOptions::property::minWidth = optional minWidth: number | undefined
 interface-member ResponsiveSizeOptions::property::widthStep = optional widthStep: number | undefined
 interface-member SemioticTheme::property::accessibility = optional accessibility: undefined | {colorBlindSafe?: boolean; highContrast?: boolean;}
+interface-member SemioticTheme::property::aesthetics = optional aesthetics: AestheticProfile | undefined
 interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
@@ -579,8 +626,27 @@ interface-member VegaLiteSpec::property::transform = optional transform: Datum[]
 interface-member VegaLiteSpec::property::usermeta = optional usermeta: (Datum & {idid?: Datum;}) | undefined
 interface-member VegaLiteSpec::property::vconcat = optional vconcat: VegaLiteSpec[] | undefined
 interface-member VegaLiteSpec::property::width = optional width: number | undefined
+interface-member VisualHierarchyAuditResult::property::evidence = optional readonly evidence: undefined | {readonly weakestDataContrast: number; readonly scaffoldContrast: number; readonly hierarchyRatio: number;}
+interface-member VisualHierarchyAuditResult::property::finding = required readonly finding: VisualHierarchyFinding
+interface-member VisualHierarchyAuditResult::property::method = required readonly method: "mark-to-scaffold-contrast"
+interface-member VisualHierarchyAuditResult::property::ok = required readonly ok: boolean
+interface-member VisualHierarchyAuditResult::property::status = required readonly status: VisualHierarchyStatus
+interface-member VisualHierarchyFinding::property::code = required readonly code: "SCAFFOLD_DOMINANCE" | "SCAFFOLD_VISIBILITY" | "VISUAL_HIERARCHY_MANUAL"
+interface-member VisualHierarchyFinding::property::fix = optional readonly fix: string | undefined
+interface-member VisualHierarchyFinding::property::message = required readonly message: string
+interface-member VisualHierarchyFinding::property::status = required readonly status: VisualHierarchyStatus
+interface-member VisualHierarchyInput::property::backgroundColor = required readonly backgroundColor: string
+interface-member VisualHierarchyInput::property::dataColors = required readonly dataColors: readonly string[]
+interface-member VisualHierarchyInput::property::maximumScaffoldContrast = optional readonly maximumScaffoldContrast: number | undefined
+interface-member VisualHierarchyInput::property::minimumHierarchyRatio = optional readonly minimumHierarchyRatio: number | undefined
+interface-member VisualHierarchyInput::property::minimumScaffoldContrast = optional readonly minimumScaffoldContrast: number | undefined
+interface-member VisualHierarchyInput::property::scaffoldColor = required readonly scaffoldColor: string
+interface-member VisualHierarchyInput::property::scaffoldOpacity = optional readonly scaffoldOpacity: number | undefined
 type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
 type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
+type AestheticFeatureId = "editorial-emphasis" | "mark-scaffold-hierarchy" | "palette-authorship" | "palette-economy" | "theme-coherence" | "typographic-hierarchy"
+type AestheticFeatureStatus = "disabled" | "pass" | "warn"
+type AestheticFeatureWeights = Partial<Record<AestheticFeatureId, number>>
 type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "comparing" | "locating" | "nesting" | "presenting" | "ranking" | "relating" | "tracing" | "tracking"
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
@@ -601,4 +667,5 @@ type ThemePresetName = (string & {}) | KnownThemePresetName
 type TimeGranularity = "days" | "hours" | "minutes" | "months" | "seconds" | "years"
 type TooltipChromeMode = "css" | "default"
 type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type VisualHierarchyStatus = "manual" | "pass" | "warn"
 ```
