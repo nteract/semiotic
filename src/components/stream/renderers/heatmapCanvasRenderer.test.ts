@@ -112,6 +112,22 @@ describe("heatmapCanvasRenderer", () => {
     expect(ctx.fillText).toHaveBeenCalledWith("7", 25, 35)
   })
 
+  it("uses the chart font-family token for cell values", () => {
+    const ctx = createMockCanvasContext()
+    const canvas = document.createElement("canvas")
+    canvas.style.setProperty("--semiotic-font-family", '"IBM Plex Mono", monospace')
+    Object.defineProperty(ctx, "canvas", { value: canvas })
+
+    heatmapCanvasRenderer(
+      ctx,
+      [makeHeatcellNode({ w: 30, h: 30, value: 7, showValues: true })],
+      makeScales(),
+      makeLayout()
+    )
+
+    expect(ctx.font).toContain('"IBM Plex Mono", monospace')
+  })
+
   it("sets globalAlpha from style.opacity (decay)", () => {
     const ctx = createMockCanvasContext()
     const alphaValues: number[] = []

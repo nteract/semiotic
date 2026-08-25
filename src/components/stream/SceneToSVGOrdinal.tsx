@@ -67,6 +67,7 @@ function funnelRectLabels(node: RectSceneNode, key: string): React.ReactNode {
     labels.push(
       <text key={`${key}-funnel-step`} x={stepX} y={stepY + 3} textAnchor="middle"
         dominantBaseline="hanging" fontSize={14} fontWeight="bold" fill="#fff"
+        fontFamily="var(--semiotic-font-family, sans-serif)"
         stroke="rgba(0,0,0,0.6)" strokeWidth={3} paintOrder="stroke">
         {step}
       </text>,
@@ -88,6 +89,7 @@ function funnelRectLabels(node: RectSceneNode, key: string): React.ReactNode {
       labels.push(
         <text key={`${key}-funnel-value`} x={valueX} y={valueY + 22} textAnchor="middle"
           dominantBaseline="hanging" fontSize={13} fontWeight="bold" fill="#fff"
+          fontFamily="var(--semiotic-font-family, sans-serif)"
           stroke="rgba(0,0,0,0.5)" strokeWidth={3} paintOrder="stroke">
           {text}
         </text>,

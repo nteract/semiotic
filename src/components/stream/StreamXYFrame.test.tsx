@@ -82,6 +82,7 @@ describe("StreamXYFrame", () => {
       const { container } = render(<StreamXYFrame chartType="scatter" />)
       const frame = container.querySelector(".stream-xy-frame")
       expect(frame).toBeTruthy()
+      expect(frame).toHaveStyle({ fontFamily: "var(--semiotic-font-family, sans-serif)" })
       const canvases = frame?.querySelectorAll("canvas")
       // StreamXYFrame renders two canvases: data + interaction
       expect(canvases?.length).toBeGreaterThanOrEqual(2)
