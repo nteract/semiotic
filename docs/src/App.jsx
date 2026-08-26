@@ -237,6 +237,9 @@ const USWarTimelineExamplePage = lazy(() => import("./pages/examples/USWarTimeli
 const ArtMovementGenealogyExamplePage = lazy(
   () => import("./pages/examples/ArtMovementGenealogyExamplePage"),
 )
+const TransitDiagramExamplePage = lazy(
+  () => import("./pages/examples/TransitDiagramExamplePage"),
+)
 const ParisIsometricLandmarksExamplePage = lazy(
   () => import("./pages/examples/ParisIsometricLandmarksExamplePage"),
 )
@@ -352,6 +355,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "WhereYouDrawTheLineExamplePage.jsx": WhereYouDrawTheLineExamplePage,
   "USWarTimelineExamplePage.jsx": USWarTimelineExamplePage,
   "ArtMovementGenealogyExamplePage.jsx": ArtMovementGenealogyExamplePage,
+  "TransitDiagramExamplePage.jsx": TransitDiagramExamplePage,
   "ParisIsometricLandmarksExamplePage.jsx": ParisIsometricLandmarksExamplePage,
   "UrineWheelExamplePage.jsx": UrineWheelExamplePage,
   "ErieRailroadOrganizationExamplePage.jsx": ErieRailroadOrganizationExamplePage,

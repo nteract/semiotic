@@ -84,6 +84,73 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "lines-of-thought",
+    path: "/examples/lines-of-thought",
+    sourceFile: "TransitDiagramExamplePage.jsx",
+    sourceFiles: [
+      "TransitDiagramExamplePage.jsx",
+      "TransitDiagramExamplePage.css",
+      "data/transitDiagramExamples.js",
+    ],
+    isPilot: true,
+    title: "Lines of Thought",
+    eyebrow: "Transit diagrams · authored geometry → topology fallback",
+    description:
+      "Follow the subway diagram from Beckian wayfinding to abstract networks, then compare an art-directed system with a coordinate-free watershed laid out from topology alone.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/recipes"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "deterministic-authored-transit-and-coordinate-free-watershed-comparison",
+          replay: true,
+          schemaVersion: "1",
+          inventory: { charts: 2, transitStations: 12, watershedNodes: 9, lines: 7 },
+        },
+      },
+      provenance: {
+        source:
+          "Synthetic networks designed to demonstrate the recipe's authored and automatic geometry contracts",
+        capturedAt: "2026-08-26",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "transit-diagram recipe or example-contract change",
+      },
+      accessibility: {
+        summary:
+          "Both diagrams include descriptions, summaries, labels, and accessible tables; the historical and interpretive claims remain available as prose",
+        navigation:
+          "History, authored, automatic watershed, and option sections provide a complete linear reading independent of chart interaction",
+        keyboard:
+          "Native buttons, range and checkbox controls, links, and built-in network navigation expose the complete comparison",
+        forcedColors:
+          "Plate boundaries, controls, line labels, stations, and prose retain explicit text or system-color separation",
+      },
+      motion: {
+        reducedMotion: "The layouts are deterministic and contain no timed or looping motion",
+        visibility: "No polling, observers, workers, streams, or hidden-page processes run",
+      },
+      responsive: {
+        status: "container-responsive-with-bounded-horizontal-chart-floor",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity: "stable station, segment, and line identities across layout modes",
+      },
+      ssr: {
+        status: "Vite-build-and-custom-network-scene-compatible",
+        hydration:
+          "Both fixtures and fallback positions are deterministic; chart widths resolve after mount without changing topology",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle: "lazy example route using public network and recipes entry points",
+          interaction: "two small bounded graphs and local control updates",
+          memory: "twenty-one nodes, thirteen authored edge rows, and eight watershed edge rows",
+          hiddenPage: "no timers, requests, observers, streams, or workers",
+        },
+      },
+    },
+  },
+  {
     id: "aesthetic-policy-studio",
     path: "/examples/aesthetic-policy-studio",
     sourceFile: "AestheticPolicyStudioExamplePage.jsx",
@@ -1722,6 +1789,18 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Lines of Thought",
+    path: "/examples/lines-of-thought",
+    publishedAt: "2026-08-26T01:00:00-07:00",
+    eyebrow: "Transit diagrams · authored geometry → topology fallback",
+    description:
+      "Follow the subway diagram from Beckian wayfinding to abstract networks, then compare an art-directed system with a coordinate-free watershed laid out from topology alone.",
+    preview: "transit-diagram",
+    badges: ["NetworkCustomChart", "Automatic fallback", "Octilinear recipe"],
+    frames: ["network", "custom"],
+    topics: ["history", "design", "accessibility"],
+  },
+  {
     title: "Aesthetic Policy Studio",
     path: "/examples/aesthetic-policy-studio",
     publishedAt: "2026-08-25T21:00:00-07:00",
@@ -2490,6 +2569,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/lines-of-thought": "TransitDiagramExamplePage.jsx",
   "/examples/aesthetic-policy-studio": "AestheticPolicyStudioExamplePage.jsx",
   "/examples/bad-chart-autopsy": "BadChartAutopsyExamplePage.jsx",
   "/examples/how-a-hit-travels": "HowAHitTravelsExamplePage.jsx",

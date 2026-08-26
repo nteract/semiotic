@@ -742,6 +742,23 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "lines-of-thought",
+    shortLabel: "Lines of Thought",
+    note: "One custom-network recipe compares publication-minded authored station geometry with a deterministic topology fallback, then carries the metro-map grammar into a coordinate-free watershed without pretending schematic distance is geography or flow volume.",
+    uses: [
+      "input-static",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-custom-layout",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "aesthetic-policy-studio",
     shortLabel: "Aesthetic Policy Studio",
     note: "One fixed service-performance dataset passes through Semiotic's balanced default and two opposing organizational policies, making theme-owned weights, machine-visible evidence, candidate selection, and the invariant comprehension floor inspectable in one executive briefing.",

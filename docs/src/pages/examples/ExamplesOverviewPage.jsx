@@ -62,11 +62,32 @@ const PREVIEW_COMPONENTS = {
   "data-viz-for-dummies-6": MiniDataVizForDummiesSixPreview,
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
+  "transit-diagram": MiniTransitDiagramPreview,
   oregontrail: MiniOregonTrailPreview,
   earthquakes: MiniEarthquakesPreview,
   "europa-languages": MiniEuropaLanguagesPreview,
   "equal-places-atlas": MiniEqualPlacesAtlasPreview,
   maup: MiniMaupPreview,
+}
+
+function MiniTransitDiagramPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0e4" />
+      <g fill="none" strokeLinecap="round" strokeWidth="5">
+        <path d="M12 78L45 45H132L173 14H229" stroke="#d94a3a" />
+        <path d="M12 22L45 45H132L173 78H229" stroke="#2775a8" />
+        <path d="M74 14L105 45H132L173 78" stroke="#27845e" />
+      </g>
+      <g fill="#fff" stroke="#17242b" strokeWidth="1.6">
+        {[
+          [12, 78], [45, 45], [132, 45], [173, 14], [229, 14],
+          [12, 22], [173, 78], [229, 78], [74, 14], [105, 45],
+        ].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" />)}
+      </g>
+      <circle cx="132" cy="45" r="6" fill="#fff" stroke="#17242b" strokeWidth="2.5" />
+    </svg>
+  )
 }
 
 function MiniAestheticPolicyStudioPreview() {
