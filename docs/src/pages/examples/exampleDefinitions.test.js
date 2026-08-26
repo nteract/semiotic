@@ -176,10 +176,6 @@ describe("validateExampleDefinitions", () => {
   })
 
   it("publishes the newest example first with a deterministic route tie-break", () => {
-    expect(EXAMPLE_DEFINITIONS[0]).toMatchObject({
-      path: "/examples/aesthetic-policy-studio",
-      title: "Aesthetic Policy Studio",
-    })
     expect([...EXAMPLE_DEFINITIONS].sort(compareExampleDefinitionsNewestFirst)).toEqual(
       EXAMPLE_DEFINITIONS,
     )
@@ -200,7 +196,7 @@ describe("validateExampleDefinitions", () => {
 
     expect(result.ok).toBe(false)
     expect(result.errors).toContain(
-      'ExampleDefinition publishedAt for "aesthetic-policy-studio" must be a valid RFC3339 timestamp',
+      `ExampleDefinition publishedAt for "${definition.id}" must be a valid RFC3339 timestamp`,
     )
   })
 
