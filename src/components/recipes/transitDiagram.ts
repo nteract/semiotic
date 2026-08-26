@@ -267,7 +267,7 @@ function placeLabels(
       baseline: "middle",
       fontSize,
       fill: config.labelColor ?? "var(--semiotic-text, #222)",
-      stroke: "var(--semiotic-background, white)",
+      stroke: "var(--semiotic-bg, white)",
       strokeWidth: 3,
       paintOrder: "stroke",
     })
@@ -365,7 +365,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
       cy: point.y,
       r: interchange ? (config.interchangeRadius ?? 7) : (config.stationRadius ?? 4),
       style: {
-        fill: config.stationFill ?? "var(--semiotic-background, white)",
+        fill: config.stationFill ?? "var(--semiotic-bg, white)",
         stroke: config.stationStroke ?? "var(--semiotic-text, #222)",
         strokeWidth: interchange ? 3 : 1.5,
       },
