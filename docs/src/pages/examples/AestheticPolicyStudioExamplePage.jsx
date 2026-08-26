@@ -128,7 +128,7 @@ export default function AestheticPolicyStudioExamplePage() {
 
   return (
     <ExamplePageLayout title="Aesthetic Policy Studio">
-      <main className="policy-studio">
+      <div className="policy-studio">
         <header className="policy-hero">
           <div>
             <span className="policy-kicker">SEMIOTIC · DESIGN GOVERNANCE BRIEFING</span>
@@ -307,7 +307,7 @@ export default function AestheticPolicyStudioExamplePage() {
             </a>
           </nav>
         </footer>
-      </main>
+      </div>
     </ExamplePageLayout>
   )
 }

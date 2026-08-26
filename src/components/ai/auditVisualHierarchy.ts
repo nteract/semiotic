@@ -1,4 +1,9 @@
 import { contrastRatio } from "../charts/shared/colorContrast"
+import {
+  colorEvidenceToHex,
+  compositeColorEvidence,
+  parseColorEvidence
+} from "./colorEvidence"
 
 export type VisualHierarchyStatus = "pass" | "warn" | "manual"
 
@@ -39,45 +44,19 @@ export interface VisualHierarchyAuditResult {
   readonly method: "mark-to-scaffold-contrast"
 }
 
-interface RGB {
-  r: number
-  g: number
-  b: number
-}
-
-function parseHex(value: string): RGB | null {
-  let hex = value.trim().replace(/^#/, "")
-  if (/^[a-f\d]{3}$/i.test(hex)) {
-    hex = hex
-      .split("")
-      .map((part) => `${part}${part}`)
-      .join("")
-  }
-  const match = hex.match(/^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-  if (!match) return null
-  return {
-    r: Number.parseInt(match[1], 16),
-    g: Number.parseInt(match[2], 16),
-    b: Number.parseInt(match[3], 16)
-  }
-}
-
-function toHex(channel: number): string {
-  return Math.round(channel).toString(16).padStart(2, "0")
-}
-
 function composite(
   foreground: string,
   background: string,
   opacity: number
 ): string | null {
-  const fg = parseHex(foreground)
-  const bg = parseHex(background)
+  const fg = parseColorEvidence(foreground)
+  const bg = parseColorEvidence(background)
   if (!fg || !bg) return null
-  const alpha = Math.min(1, Math.max(0, opacity))
-  return `#${toHex(fg.r * alpha + bg.r * (1 - alpha))}${toHex(
-    fg.g * alpha + bg.g * (1 - alpha)
-  )}${toHex(fg.b * alpha + bg.b * (1 - alpha))}`
+  const composited = compositeColorEvidence(
+    { ...fg, a: fg.a * Math.min(1, Math.max(0, opacity)) },
+    bg
+  )
+  return composited ? colorEvidenceToHex(composited) : null
 }
 
 /**
@@ -97,16 +76,22 @@ function composite(
 export function auditVisualHierarchy(
   input: VisualHierarchyInput
 ): VisualHierarchyAuditResult {
+  const background = parseColorEvidence(input.backgroundColor)
+  const opaqueBackground = background ? colorEvidenceToHex(background) : null
   const scaffoldComposite = composite(
     input.scaffoldColor,
     input.backgroundColor,
     input.scaffoldOpacity ?? 1
   )
-  const scaffoldContrast = scaffoldComposite
-    ? contrastRatio(scaffoldComposite, input.backgroundColor)
-    : null
+  const scaffoldContrast =
+    scaffoldComposite && opaqueBackground
+      ? contrastRatio(scaffoldComposite, opaqueBackground)
+      : null
   const dataContrasts = input.dataColors
-    .map((color) => contrastRatio(color, input.backgroundColor))
+    .map((color) => composite(color, input.backgroundColor, 1))
+    .map((color) =>
+      color && opaqueBackground ? contrastRatio(color, opaqueBackground) : null
+    )
     .filter((value): value is number => value !== null)
 
   if (

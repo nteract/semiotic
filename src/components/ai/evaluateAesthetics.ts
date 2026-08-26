@@ -6,6 +6,12 @@ import {
   auditVisualHierarchy,
   type VisualHierarchyAuditResult
 } from "./auditVisualHierarchy"
+import {
+  canonicalColorEvidence,
+  colorEvidenceToHex,
+  compositeColorEvidence,
+  parseColorEvidence
+} from "./colorEvidence"
 import type {
   AestheticFeatureId,
   AestheticFeatureWeights,
@@ -13,7 +19,7 @@ import type {
   AestheticThresholds
 } from "./aestheticProfileTypes"
 
-export type AestheticFeatureStatus = "pass" | "warn" | "disabled"
+export type AestheticFeatureStatus = "pass" | "warn" | "manual" | "disabled"
 
 export interface AestheticFeatureResult {
   readonly id: AestheticFeatureId
@@ -120,6 +126,12 @@ const TABLEAU_10 = [
 ]
 
 const UBIQUITOUS_PALETTES = [D3_CATEGORY_10, TABLEAU_10]
+const UBIQUITOUS_NAMED_SCHEMES = new Set(["category10", "tableau10"])
+const CYCLE_BY_CATEGORY_COMPONENTS = new Set([
+  "DonutChart",
+  "PieChart",
+  "SwimlaneChart"
+])
 
 const FEATURE_LABELS: Record<AestheticFeatureId, string> = {
   "mark-scaffold-hierarchy": "Mark–scaffold hierarchy",
@@ -201,14 +213,22 @@ function resolveThresholds(
 }
 
 function normalizeColor(value: unknown): string | undefined {
-  if (typeof value !== "string") return undefined
-  const color = value.trim().toLowerCase()
-  return /^#[a-f\d]{3}([a-f\d]{3})?$/i.test(color) ? color : undefined
+  return canonicalColorEvidence(value)
 }
 
 function colorArray(value: unknown): string[] {
-  const values = Array.isArray(value) ? value : [value]
+  const values = Array.isArray(value)
+    ? value
+    : value && typeof value === "object"
+      ? Object.values(value)
+      : [value]
   return values.map(normalizeColor).filter((color): color is string => !!color)
+}
+
+function colorSchemeColors(value: unknown): string[] {
+  return Array.isArray(value) || (value && typeof value === "object")
+    ? colorArray(value)
+    : []
 }
 
 function isUbiquitousPalette(colors: ReadonlyArray<string>): boolean {
@@ -221,11 +241,20 @@ function isUbiquitousPalette(colors: ReadonlyArray<string>): boolean {
 }
 
 function explicitColors(props: Datum): string[] {
+  const framePieceStyle =
+    props.frameProps &&
+    typeof props.frameProps === "object" &&
+    props.frameProps.pieceStyle &&
+    typeof props.frameProps.pieceStyle === "object"
+      ? (props.frameProps.pieceStyle as Datum)
+      : undefined
   const colors = [
-    ...colorArray(props.colorScheme),
+    ...colorSchemeColors(props.colorScheme),
     ...colorArray(props.color),
     ...colorArray(props.fill),
-    ...colorArray(props.stroke)
+    ...colorArray(props.stroke),
+    ...colorArray(framePieceStyle?.fill),
+    ...colorArray(framePieceStyle?.stroke)
   ]
   const rules = Array.isArray(props.styleRules)
     ? (props.styleRules as StyleRule[])
@@ -241,10 +270,18 @@ function explicitColors(props: Datum): string[] {
 }
 
 function authoredFillColors(props: Datum): string[] {
+  const framePieceStyle =
+    props.frameProps &&
+    typeof props.frameProps === "object" &&
+    props.frameProps.pieceStyle &&
+    typeof props.frameProps.pieceStyle === "object"
+      ? (props.frameProps.pieceStyle as Datum)
+      : undefined
   const colors = [
-    ...colorArray(props.colorScheme),
+    ...colorSchemeColors(props.colorScheme),
     ...colorArray(props.color),
-    ...colorArray(props.fill)
+    ...colorArray(props.fill),
+    ...colorArray(framePieceStyle?.fill)
   ]
   const rules = Array.isArray(props.styleRules)
     ? (props.styleRules as StyleRule[])
@@ -256,20 +293,120 @@ function authoredFillColors(props: Datum): string[] {
   return Array.from(new Set(colors))
 }
 
-function dataColors(props: Datum, theme: SemioticTheme): string[] {
-  const explicit = colorArray(props.colorScheme)
+function accessorValues(props: Datum, accessor: unknown): string[] {
+  const data = Array.isArray(props.data) ? (props.data as Datum[]) : []
+  if (typeof accessor === "string") {
+    return Array.from(new Set(data.map((datum) => String(datum[accessor]))))
+  }
+  if (typeof accessor === "function") {
+    return Array.from(
+      new Set(data.map((datum, index) => String(accessor(datum, index))))
+    )
+  }
+  return []
+}
+
+function matchingRuleFillColors(props: Datum): string[] {
+  const data = Array.isArray(props.data) ? (props.data as Datum[]) : []
+  const rules = Array.isArray(props.styleRules)
+    ? (props.styleRules as StyleRule[])
+    : []
+  const valueAccessor =
+    typeof props.valueAccessor === "string"
+      ? props.valueAccessor
+      : typeof props.yAccessor === "string"
+        ? props.yAccessor
+        : "value"
+  const categoryAccessor =
+    typeof props.categoryAccessor === "string"
+      ? props.categoryAccessor
+      : "category"
+  const colors: string[] = []
+  for (const rule of rules) {
+    if (!rule.style || typeof rule.style === "function") continue
+    if (
+      data.some((datum, index) =>
+        ruleMatches(rule, datum, {
+          value: Number(datum[valueAccessor]),
+          category: String(datum[categoryAccessor] ?? ""),
+          index
+        })
+      )
+    ) {
+      colors.push(...colorArray(rule.style.fill))
+    }
+  }
+  return Array.from(new Set(colors))
+}
+
+function dataColors(
+  component: string,
+  props: Datum,
+  theme: SemioticTheme
+): string[] {
+  const explicit = colorSchemeColors(props.colorScheme)
   const direct = colorArray(props.color)
+  const colorByValues = accessorValues(props, props.colorBy)
+  const cyclesByCategory = CYCLE_BY_CATEGORY_COMPONENTS.has(component)
+  const categoryValues = cyclesByCategory
+    ? accessorValues(props, props.categoryAccessor ?? "category")
+    : []
+  const schemeMap =
+    props.colorScheme &&
+    typeof props.colorScheme === "object" &&
+    !Array.isArray(props.colorScheme)
+      ? (props.colorScheme as Record<string, unknown>)
+      : undefined
+  const mappedValues = (values: string[], fallback: "gray" | "theme") =>
+    values.map(
+      (value, index) =>
+        normalizeColor(schemeMap?.[value]) ??
+        (fallback === "gray"
+          ? "#999999"
+          : theme.colors.categorical.length > 0
+            ? theme.colors.categorical[index % theme.colors.categorical.length]
+            : "#007bff")
+    )
   const palette =
-    explicit.length > 0
-      ? explicit
+    colorByValues.length > 0
+      ? schemeMap
+        ? mappedValues(colorByValues, "gray")
+        : explicit.length > 0
+          ? explicit
+          : theme.colors.categorical
       : direct.length > 0
         ? direct
-        : theme.colors.categorical
-  const base = props.colorBy ? palette : palette.slice(0, 1)
-  const accents = authoredFillColors(props).filter(
+        : categoryValues.length > 0 && schemeMap
+          ? mappedValues(categoryValues, "theme")
+          : explicit.length > 0 && !schemeMap
+            ? explicit
+            : theme.colors.categorical
+  const visibleRoleCount = Math.max(
+    1,
+    colorByValues.length || categoryValues.length || 1
+  )
+  const base =
+    colorByValues.length > 0 || categoryValues.length > 0
+      ? palette.slice(0, Math.min(palette.length, visibleRoleCount))
+      : palette.slice(0, 1)
+  const accents = matchingRuleFillColors(props).filter(
     (color) => !base.includes(color)
   )
   return Array.from(new Set([...base, ...accents]))
+}
+
+function hierarchyBackground(theme: SemioticTheme): string {
+  const rawSurface = theme.colors.surface ?? theme.colors.background
+  const surface = parseColorEvidence(rawSurface)
+  const background = parseColorEvidence(theme.colors.background)
+  if (!surface) return rawSurface
+  if (surface.a === 1)
+    return colorEvidenceToHex(surface) ?? rawSurface
+  if (!background) return rawSurface
+  const composited = compositeColorEvidence(surface, background)
+  return composited
+    ? (colorEvidenceToHex(composited) ?? rawSurface)
+    : rawSurface
 }
 
 function hierarchyScore(
@@ -293,13 +430,17 @@ function feature(
   weights: Record<AestheticFeatureId, number>,
   message: string,
   evidence: Record<string, string | number | boolean>,
-  rationales: AestheticProfile["rationales"]
+  rationales: AestheticProfile["rationales"],
+  statusOverride?: AestheticFeatureStatus
 ): AestheticFeatureResult {
   const weight = weights[id]
   return {
     id,
     label: FEATURE_LABELS[id],
-    status: weight === 0 ? "disabled" : score >= 0.8 ? "pass" : "warn",
+    status:
+      weight === 0
+        ? "disabled"
+        : (statusOverride ?? (score >= 0.8 ? "pass" : "warn")),
     score,
     weight,
     contribution: score * weight,
@@ -309,18 +450,8 @@ function feature(
   }
 }
 
-function countColorRoles(props: Datum, colors: ReadonlyArray<string>): number {
-  const data = Array.isArray(props.data) ? (props.data as Datum[]) : []
-  if (typeof props.colorBy === "string" && data.length > 0) {
-    return Math.max(
-      1,
-      new Set(data.map((row) => String(row[props.colorBy as string]))).size
-    )
-  }
-  const authoredRules = Array.isArray(props.styleRules)
-    ? (props.styleRules as StyleRule[]).length
-    : 0
-  return Math.min(colors.length, Math.max(1, authoredRules + 1))
+function countColorRoles(colors: ReadonlyArray<string>): number {
+  return Math.max(1, colors.length)
 }
 
 function emphasisEvidence(props: Datum): { ratio: number; authored: boolean } {
@@ -375,12 +506,9 @@ export function evaluateAesthetics(
     weights[id] = Number.isFinite(value) ? Math.max(0, value) : 0
   }
   const thresholds = resolveThresholds(profile)
-  const colors = dataColors(props, theme)
-  const background =
-    normalizeColor(theme.colors.surface) ??
-    normalizeColor(theme.colors.background) ??
-    "#ffffff"
-  const scaffold = normalizeColor(theme.colors.grid) ?? "#e0e0e0"
+  const colors = dataColors(component, props, theme)
+  const background = hierarchyBackground(theme)
+  const scaffold = theme.colors.grid
   const hierarchy = auditVisualHierarchy({
     backgroundColor: background,
     dataColors: colors,
@@ -392,22 +520,29 @@ export function evaluateAesthetics(
 
   const explicit = explicitColors(props)
   const usesDefaultPalette = isUbiquitousPalette(
-    theme.colors.categorical.map((d) => d.toLowerCase())
+    theme.colors.categorical
+      .map(normalizeColor)
+      .filter((color): color is string => !!color)
   )
+  const authoredPalette = authoredFillColors(props)
+  const namedScheme =
+    typeof props.colorScheme === "string"
+      ? props.colorScheme.trim().toLowerCase()
+      : undefined
   const paletteSource =
-    colorArray(props.colorScheme).length > 0 ? "chart" : "theme"
-  const authoredPalette =
-    paletteSource === "chart" ? colorArray(props.colorScheme) : colors
-  const authorshipScore =
+    authoredPalette.length > 0 || namedScheme ? "chart" : "theme"
+  const paletteIsUbiquitous =
     paletteSource === "chart"
-      ? isUbiquitousPalette(authoredPalette)
-        ? 0.2
-        : 1
+      ? isUbiquitousPalette(authoredPalette) ||
+        (namedScheme ? UBIQUITOUS_NAMED_SCHEMES.has(namedScheme) : false)
       : usesDefaultPalette
-        ? 0.2
-        : 0.8
+  const authorshipScore = paletteIsUbiquitous
+    ? 0.2
+    : paletteSource === "chart"
+      ? 1
+      : 0.8
 
-  const roleCount = countColorRoles(props, colors)
+  const roleCount = countColorRoles(colors)
   const economyScore =
     roleCount <= thresholds.categoricalColorMax
       ? 1
@@ -467,18 +602,21 @@ export function evaluateAesthetics(
         markContrast: hierarchy.evidence?.weakestDataContrast ?? 0,
         scaffoldContrast: hierarchy.evidence?.scaffoldContrast ?? 0
       },
-      profile.rationales
+      profile.rationales,
+      hierarchy.status
     ),
     feature(
       "palette-authorship",
       authorshipScore,
       weights,
-      usesDefaultPalette && paletteSource === "theme"
-        ? "The chart inherits a ubiquitous categorical default without an organizational palette decision."
+      paletteIsUbiquitous
+        ? paletteSource === "theme"
+          ? "The chart inherits a ubiquitous categorical default without an organizational palette decision."
+          : "The chart explicitly selects a ubiquitous categorical palette."
         : "The effective palette records an authored choice beyond the ubiquitous defaults.",
       {
         paletteSource,
-        ubiquitousDefault: usesDefaultPalette,
+        ubiquitousDefault: paletteIsUbiquitous,
         colorCount: colors.length
       },
       profile.rationales

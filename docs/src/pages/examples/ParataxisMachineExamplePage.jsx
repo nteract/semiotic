@@ -164,7 +164,7 @@ export default function ParataxisMachineExamplePage() {
           </button>
         </nav>
 
-        <main id="pm-narrative">
+        <div id="pm-narrative">
           <section id="gap" className="pm-section pm-section-gap">
             <SectionHeading
               number="01"
@@ -732,7 +732,7 @@ export default function ParataxisMachineExamplePage() {
               </p>
             </div>
           </details>
-        </main>
+        </div>
       </div>
       </LinkedCharts>
     </ExamplePageLayout>

@@ -452,7 +452,7 @@ export default function WhereYouDrawTheLineExamplePage() {
 
   return (
     <ExamplePageLayout title="Where You Draw the Line">
-      <main ref={pageRef} className="maup-example">
+      <div ref={pageRef} className="maup-example">
         <section className="maup-hero" aria-labelledby="maup-deck">
           <p className="maup-kicker">An explorable explanation of the modifiable areal unit problem</p>
           <p id="maup-deck" className="maup-deck">Nothing beneath the boundary changes. The answer does.</p>
@@ -510,7 +510,7 @@ export default function WhereYouDrawTheLineExamplePage() {
         </section>
 
         <details className="maup-construction"><summary>Inspect the construction</summary><p>Cedar Bend is deterministic. The geography is `StreamGeoFrame` over a local GeoJSON city support; the calendar is `TemporalHistogram`; the line and sensitivity field use `XYCustomChart` scene-node layouts. Border handles and explanatory annotations are SVG overlays on the corresponding frame geometry.</p><p>This explainer concerns aggregate sensitivity. It does not license individual inference from district averages, and it does not claim that every partition is equally defensible.</p></details>
-      </main>
+      </div>
     </ExamplePageLayout>
   )
 }

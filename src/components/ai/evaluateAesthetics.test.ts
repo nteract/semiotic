@@ -99,6 +99,79 @@ describe("evaluateAesthetics", () => {
     expect(hierarchy?.evidence.markContrast).toBeCloseTo(4.82, 1)
   })
 
+  it.each([
+    { color: "#173f5f" },
+    { fill: "#173f5f" },
+    { frameProps: { pieceStyle: { fill: "#173f5f" } } }
+  ])("recognizes every static authored fill path", (authoredStyle) => {
+    const result = evaluateAesthetics("DotPlot", {
+      data: rows,
+      ...authoredStyle
+    })
+    const authorship = result.features.find(
+      (item) => item.id === "palette-authorship"
+    )
+
+    expect(authorship).toMatchObject({
+      status: "pass",
+      score: 1,
+      evidence: { paletteSource: "chart", ubiquitousDefault: false }
+    })
+  })
+
+  it("matches uniform and category-cycling ordinal color behavior", () => {
+    const props = {
+      data: rows.slice(0, 2),
+      categoryAccessor: "model",
+      valueAccessor: "score",
+      colorScheme: ["#173f5f", "#b43b2d"]
+    }
+    const bar = evaluateAesthetics("BarChart", props)
+    const pie = evaluateAesthetics("PieChart", props)
+
+    expect(
+      bar.features.find((item) => item.id === "palette-economy")?.evidence
+        .colorRoles
+    ).toBe(1)
+    expect(
+      pie.features.find((item) => item.id === "palette-economy")?.evidence
+        .colorRoles
+    ).toBe(2)
+  })
+
+  it("computes rgb theme evidence and preserves unresolved colors as manual", () => {
+    const rgbTheme = resolveThemeUpdate(authoredTheme, {
+      colors: {
+        primary: "rgb(23, 63, 95)",
+        categorical: ["rgb(23, 63, 95)"],
+        background: "rgb(251, 247, 237)",
+        surface: "rgb(251, 247, 237)",
+        grid: "rgba(93, 82, 66, 0.24)"
+      }
+    })
+    const computed = evaluateAesthetics(
+      "DotPlot",
+      { data: rows, color: "rgb(23, 63, 95)" },
+      { theme: rgbTheme }
+    )
+    const unresolved = evaluateAesthetics(
+      "DotPlot",
+      { data: rows, color: "steelblue" },
+      {
+        theme: resolveThemeUpdate(rgbTheme, {
+          colors: { surface: "var(--brand-surface)" }
+        })
+      }
+    )
+
+    expect(
+      computed.features.find((item) => item.id === "mark-scaffold-hierarchy")
+    ).toMatchObject({ status: "pass" })
+    expect(
+      unresolved.features.find((item) => item.id === "mark-scaffold-hierarchy")
+    ).toMatchObject({ status: "manual", evidence: { markContrast: 0 } })
+  })
+
   it("scores every categorical color when colorBy makes the palette visible", () => {
     const result = evaluateAesthetics("DotPlot", {
       data: rows,
