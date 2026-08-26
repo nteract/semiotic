@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest"
-import type { RealtimeEdge, RealtimeNode } from "../stream/networkTypes"
+import type {
+  NetworkCircleNode,
+  NetworkCurvedEdge,
+  RealtimeEdge,
+  RealtimeNode,
+} from "../stream/networkTypes"
 import {
   computeTransitDiagramPositions,
+  offsetTransitPath,
   octilinearRoute,
   roundedTransitPath,
 } from "./transitDiagramGeometry"
@@ -83,6 +89,23 @@ describe("computeTransitDiagramPositions", () => {
     const secondTop = Math.min(result.positions.get("x")!.y, result.positions.get("y")!.y)
     expect(firstBottom).toBeLessThan(secondTop)
   })
+
+  it("keeps disconnected components inside a constrained plot", () => {
+    const constrainedPlot = { width: 120, height: 100 }
+    const result = computeTransitDiagramPositions(
+      ["a", "b", "c", "d"].map((id) => ({ id, data: { id } })),
+      [],
+      constrainedPlot,
+    )
+
+    expect([...result.positions.values()]).toHaveLength(4)
+    for (const position of result.positions.values()) {
+      expect(position.x).toBeGreaterThanOrEqual(0)
+      expect(position.x).toBeLessThanOrEqual(constrainedPlot.width)
+      expect(position.y).toBeGreaterThanOrEqual(0)
+      expect(position.y).toBeLessThanOrEqual(constrainedPlot.height)
+    }
+  })
 })
 
 describe("transit route geometry", () => {
@@ -106,6 +129,20 @@ describe("transit route geometry", () => {
         8,
       ),
     ).toContain("Q30,0")
+  })
+
+  it("keeps the requested perpendicular offset through bends", () => {
+    const offset = offsetTransitPath(
+      [
+        { x: 0, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 30 },
+      ],
+      10,
+    )
+
+    expect(offset[1].x).toBeCloseTo(20)
+    expect(offset[1].y).toBeCloseTo(10)
   })
 })
 
@@ -160,5 +197,75 @@ describe("transitDiagramLayout", () => {
 
     expect(result.sceneEdges?.map((edge) => edge.style.stroke)).toEqual(["#963", "#09f"])
     expect(result.labels).toEqual([])
+  })
+
+  it("reverses authored waypoints while preserving reverse-edge metadata", () => {
+    const result = transitDiagramLayout({
+      nodes: [wrappedNode({ id: "a", x: 0, y: 0 }), wrappedNode({ id: "b", x: 1, y: 0 })],
+      edges: [
+        wrappedEdge({ source: "a", target: "b", line: "red" }),
+        wrappedEdge({
+          source: "b",
+          target: "a",
+          line: "blue",
+          points: [
+            { x: 0.75, y: 0 },
+            { x: 0.25, y: 0 },
+          ],
+        }),
+      ],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: { cornerRadius: 0, lineWidth: 2, lineGap: 0, showLabels: false },
+    })
+
+    const blue = result.sceneEdges?.find(
+      (edge): edge is NetworkCurvedEdge => edge.type === "curved" && edge.id?.endsWith(":blue") === true,
+    )
+    expect(blue?.pathD).toBe("M36,179 L168,179 L432,179 L564,179")
+    expect(blue).toMatchObject({
+      label: "blue: b to a",
+      datum: { source: "b", target: "a" },
+      accessibility: {
+        label: "blue, b to a",
+        tableFields: { source: "b", target: "a" },
+      },
+    })
+  })
+
+  it("does not read prototype properties as configured line colors", () => {
+    const result = transitDiagramLayout({
+      nodes: [wrappedNode({ id: "a" }), wrappedNode({ id: "b" })],
+      edges: [wrappedEdge({ source: "a", target: "b", line: "constructor" })],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#123456",
+      config: { lineColors: {}, showLabels: false },
+    })
+
+    expect(result.sceneEdges?.[0].style.stroke).toBe("#123456")
+  })
+
+  it("grows default interchange markers to cover wide line bundles", () => {
+    const result = transitDiagramLayout({
+      nodes: [wrappedNode({ id: "a" }), wrappedNode({ id: "b" })],
+      edges: [
+        wrappedEdge({
+          source: "a",
+          target: "b",
+          lines: ["a", "b", "c", "d", "e"],
+        }),
+      ],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: { showLabels: false },
+    })
+
+    const circles = result.sceneNodes?.filter(
+      (node): node is NetworkCircleNode => node.type === "circle",
+    )
+    expect(circles?.map((node) => node.r)).toEqual([19, 19])
   })
 })

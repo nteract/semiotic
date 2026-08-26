@@ -176,33 +176,29 @@ function automaticPositions(
   const components = connectedComponents(adjacency)
   const dataById = new Map(nodes.map((node) => [node.id, node.data]))
   const positions = new Map<string, TransitDiagramPositionedNode>()
-  const availableHeight = Math.max(
-    1,
-    plot.height - padding * 2 - componentGap * Math.max(0, components.length - 1),
-  )
+  const plotWidth = Math.max(0, plot.width)
+  const plotHeight = Math.max(0, plot.height)
+  const horizontalPadding = Math.min(padding, plotWidth / 2)
+  const verticalPadding = Math.min(padding, plotHeight / 2)
+  const innerPlotHeight = Math.max(0, plotHeight - verticalPadding * 2)
+  const effectiveGap = components.length > 1 ? Math.min(componentGap, innerPlotHeight / components.length) : 0
+  const availableHeight = Math.max(0, innerPlotHeight - effectiveGap * Math.max(0, components.length - 1))
   const totalWeight = components.reduce((sum, component) => sum + Math.sqrt(component.length), 0)
-  let top = padding
+  let top = verticalPadding
 
   for (const component of components) {
     const height = availableHeight * (Math.sqrt(component.length) / totalWeight)
     const levels = orderedLevels(component, adjacency, rootId)
-    const maxLevelSize = Math.max(1, ...levels.map((level) => level.length))
-    const innerWidth = Math.max(1, plot.width - padding * 2)
-    const innerHeight = Math.max(1, height - padding)
+    const innerWidth = Math.max(0, plotWidth - horizontalPadding * 2)
     levels.forEach((level, levelIndex) => {
       const x =
-        levels.length === 1
-          ? plot.width / 2
-          : padding + (levelIndex / (levels.length - 1)) * innerWidth
+        levels.length === 1 ? plotWidth / 2 : horizontalPadding + (levelIndex / (levels.length - 1)) * innerWidth
       level.forEach((id, index) => {
-        const y =
-          maxLevelSize === 1
-            ? top + height / 2
-            : top + padding / 2 + (index / (maxLevelSize - 1)) * innerHeight
+        const y = level.length === 1 ? top + height / 2 : top + (index / (level.length - 1)) * height
         positions.set(id, { id, x, y, data: dataById.get(id) as Datum })
       })
     })
-    top += height + componentGap
+    top += height + effectiveGap
   }
   return positions
 }
@@ -317,17 +313,31 @@ export function offsetTransitPath(
   return points.map((point, index) => {
     const previous = index > 0 ? normal(points[index - 1], point) : null
     const next = index < points.length - 1 ? normal(point, points[index + 1]) : null
-    let nx = (previous?.x ?? 0) + (next?.x ?? 0)
-    let ny = (previous?.y ?? 0) + (next?.y ?? 0)
+    if (!previous || !next) {
+      const endpointNormal = next ?? previous ?? { x: 0, y: 0 }
+      return {
+        x: point.x + endpointNormal.x * distance,
+        y: point.y + endpointNormal.y * distance,
+      }
+    }
+    let nx = previous.x + next.x
+    let ny = previous.y + next.y
     const length = Math.hypot(nx, ny)
     if (length < 0.001) {
-      nx = (next ?? previous)?.x ?? 0
-      ny = (next ?? previous)?.y ?? 0
-    } else {
-      nx /= length
-      ny /= length
+      return { x: point.x + next.x * distance, y: point.y + next.y * distance }
     }
-    return { x: point.x + nx * distance, y: point.y + ny * distance }
+    nx /= length
+    ny /= length
+    // Scale the angle bisector so its projection onto both segment normals is
+    // the requested distance. Normalizing the bisector alone pinches bundles.
+    const denominator = nx * next.x + ny * next.y
+    if (Math.abs(denominator) < 0.001) {
+      return { x: point.x + next.x * distance, y: point.y + next.y * distance }
+    }
+    const miterLimit = Math.abs(distance) * 4
+    const requestedScale = distance / denominator
+    const scale = Math.max(-miterLimit, Math.min(miterLimit, requestedScale))
+    return { x: point.x + nx * scale, y: point.y + ny * scale }
   })
 }
 
