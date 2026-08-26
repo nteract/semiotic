@@ -177,8 +177,8 @@ describe("validateExampleDefinitions", () => {
 
   it("publishes the newest example first with a deterministic route tie-break", () => {
     expect(EXAMPLE_DEFINITIONS[0]).toMatchObject({
-      path: "/examples/how-a-hit-travels",
-      title: "How a Hit Travels",
+      path: "/examples/aesthetic-policy-studio",
+      title: "Aesthetic Policy Studio",
     })
     expect([...EXAMPLE_DEFINITIONS].sort(compareExampleDefinitionsNewestFirst)).toEqual(
       EXAMPLE_DEFINITIONS,
@@ -200,8 +200,15 @@ describe("validateExampleDefinitions", () => {
 
     expect(result.ok).toBe(false)
     expect(result.errors).toContain(
-      'ExampleDefinition publishedAt for "how-a-hit-travels" must be a valid RFC3339 timestamp',
+      'ExampleDefinition publishedAt for "aesthetic-policy-studio" must be a valid RFC3339 timestamp',
     )
+  })
+
+  it("declares the complete Aesthetic Policy Studio source bundle", () => {
+    const definition = getExampleDefinition("/examples/aesthetic-policy-studio")
+    expect(definition.sourceFiles).toContain(definition.sourceFile)
+    expect(definition.sourceFiles).toContain("AestheticPolicyStudioExamplePage.css")
+    expect(definition.sourceFiles).toContain("aestheticPolicyStudio.js")
   })
 
   it("declares the complete Last Scarcity source bundle", () => {
