@@ -4,6 +4,8 @@ import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
+  "aesthetic-policy-studio": MiniAestheticPolicyStudioPreview,
+  "bad-chart-autopsy": MiniBadChartAutopsyPreview,
   "how-a-hit-travels": MiniHitTravelsPreview,
   "living-ledger": MiniLivingLedgerPreview,
   "last-scarcity": MiniLastScarcityPreview,
@@ -60,11 +62,121 @@ const PREVIEW_COMPONENTS = {
   "data-viz-for-dummies-6": MiniDataVizForDummiesSixPreview,
   mobilevis: MiniMobileVisPreview,
   networkviz: MiniNetworkVizPreview,
+  "transit-diagram": MiniTransitDiagramPreview,
   oregontrail: MiniOregonTrailPreview,
   earthquakes: MiniEarthquakesPreview,
   "europa-languages": MiniEuropaLanguagesPreview,
   "equal-places-atlas": MiniEqualPlacesAtlasPreview,
   maup: MiniMaupPreview,
+}
+
+function MiniTransitDiagramPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f5f0e4" />
+      <g fill="none" strokeLinecap="round" strokeWidth="5">
+        <path d="M12 78L45 45H132L173 14H229" stroke="#d94a3a" />
+        <path d="M12 22L45 45H132L173 78H229" stroke="#2775a8" />
+        <path d="M74 14L105 45H132L173 78" stroke="#27845e" />
+      </g>
+      <g fill="#fff" stroke="#17242b" strokeWidth="1.6">
+        {[
+          [12, 78], [45, 45], [132, 45], [173, 14], [229, 14],
+          [12, 22], [173, 78], [229, 78], [74, 14], [105, 45],
+        ].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" />)}
+      </g>
+      <circle cx="132" cy="45" r="6" fill="#fff" stroke="#17242b" strokeWidth="2.5" />
+    </svg>
+  )
+}
+
+function MiniAestheticPolicyStudioPreview() {
+  const values = [76, 60, 53, 42, 27]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f3efe5" />
+      <rect x="7" y="8" width="72" height="80" rx="4" fill="#fff" stroke="#c9c1b2" />
+      <rect x="85" y="8" width="72" height="80" rx="2" fill="#f7f9fa" stroke="#18324a" />
+      <rect x="163" y="8" width="72" height="80" rx="8" fill="#fff8ee" stroke="#5b2b82" />
+      <g stroke="#d7dfe3" strokeWidth="0.6">
+        <path d="M14 26H72M14 42H72M14 58H72M14 74H72" />
+      </g>
+      {values.map((x, index) => (
+        <circle
+          key={`default-${x}`}
+          cx={18 + x * 0.62}
+          cy={24 + index * 13}
+          r="2.5"
+          fill="#1f77b4"
+        />
+      ))}
+      {values.map((value, index) => (
+        <rect
+          key={`civic-${value}`}
+          x="92"
+          y={19 + index * 13}
+          width={value * 0.68}
+          height="7"
+          fill="#18324a"
+        />
+      ))}
+      <g stroke="#ded0c4" strokeWidth="0.6">
+        <path d="M170 26H228M170 42H228M170 58H228M170 74H228" />
+      </g>
+      {values.map((x, index) => (
+        <circle
+          key={`editorial-${x}`}
+          cx={174 + x * 0.65}
+          cy={24 + index * 13}
+          r={index === 0 ? 4 : 3}
+          fill={index === 0 ? "#d4385a" : "#5b2b82"}
+        />
+      ))}
+      <path d="M81 12V84M159 12V84" stroke="#17212b" strokeDasharray="1 2" />
+    </svg>
+  )
+}
+
+function MiniBadChartAutopsyPreview() {
+  const suspect = [71, 59, 49, 31, 18]
+  const repaired = [76, 72, 69, 62, 57]
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#eee9dc" />
+      <path d="M121 7V89" stroke="#18201f" strokeWidth="1" strokeDasharray="2 2" />
+      <text x="12" y="15" fill="#b6302f" fontSize="7" fontWeight="900">
+        REJECT
+      </text>
+      <text x="231" y="15" textAnchor="end" fill="#255f85" fontSize="7" fontWeight="900">
+        PASS
+      </text>
+      {suspect.map((height, index) => (
+        <rect
+          key={`suspect-${height}`}
+          x={12 + index * 20}
+          y={84 - height}
+          width="13"
+          height={height}
+          fill="#ffea00"
+          stroke="#b6302f"
+          strokeWidth="0.8"
+        />
+      ))}
+      {repaired.map((height, index) => (
+        <rect
+          key={`repaired-${height}`}
+          x={136 + index * 18}
+          y={84 - height}
+          width="12"
+          height={height}
+          fill="#255f85"
+        />
+      ))}
+      <path d="M10 84H111M132 84H230" stroke="#18201f" strokeWidth="1" />
+      <circle cx="118" cy="48" r="9" fill="#b6302f" />
+      <path d="m114 44 8 8m0-8-8 8" stroke="#fff" strokeWidth="1.5" />
+    </svg>
+  )
 }
 
 export function ExamplePreview({ preview }) {

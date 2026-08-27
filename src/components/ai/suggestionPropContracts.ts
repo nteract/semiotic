@@ -9,7 +9,7 @@
  * common defaults that otherwise tend to leak across component families.
  */
 export interface SuggestionPropContract {
-  readonly componentKind: "chart-hoc" | "value-component"
+  readonly componentKind: "chart-hoc" | "chart-recipe" | "value-component"
   readonly commonChartProps: "supported" | "component-specific"
   readonly headingProp: string
   readonly modeValues: ReadonlyArray<string>

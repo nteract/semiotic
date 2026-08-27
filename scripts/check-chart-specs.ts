@@ -44,6 +44,7 @@ import {
 import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDefinitionPilot"
 import { VALIDATION_MAP } from "../src/components/charts/shared/validationMap"
 import { KNOWN_CHART_COMPONENTS } from "../src/components/charts/shared/knownChartComponents"
+import { generateBuiltInRecipeSchemaTools } from "../src/components/ai/builtInChartRecipes"
 // @ts-expect-error — generators emit `any`-typed schema fragments
 import {
   generateSchemaToolEntry,
@@ -71,6 +72,7 @@ interface SchemaTool {
       properties: Record<string, unknown>
       required: string[]
     }
+    "x-semiotic-kind"?: "recipe"
   }
 }
 interface Schema {
@@ -741,11 +743,17 @@ if (actualChartClinicMetadataModule !== expectedChartClinicMetadataModule) {
 
 // 1. Set parity across all five sources.
 const registryNames = new Set(Object.keys(CHART_SPECS))
-const schemaNames = new Set(schema.tools.map((t) => t.function.name))
+const schemaNames = new Set(
+  schema.tools
+    .filter((tool) => tool.function["x-semiotic-kind"] !== "recipe")
+    .map((tool) => tool.function.name)
+)
 const validationNames = new Set(Object.keys(VALIDATION_MAP))
 const knownComponentNames = new Set<string>(KNOWN_CHART_COMPONENTS)
 const metadataNames = new Set(
-  Object.values(componentMetadata.COMPONENTS_BY_CATEGORY).flat()
+  Object.entries(componentMetadata.COMPONENTS_BY_CATEGORY)
+    .filter(([category]) => category !== "recipe")
+    .flatMap(([, names]) => names)
 )
 
 function diffSets(label: string, actual: Set<string>, expected: Set<string>) {
@@ -762,6 +770,16 @@ diffSets(
   knownComponentNames,
   registryNames
 )
+const expectedRecipeTools = generateBuiltInRecipeSchemaTools()
+const actualRecipeTools = schema.tools.filter(
+  (tool) => tool.function["x-semiotic-kind"] === "recipe"
+)
+if (!isDeepStrictEqual(actualRecipeTools, expectedRecipeTools)) {
+  fail(
+    "ai/schema.json recipe entries drifted from BUILT_IN_CHART_RECIPES " +
+      "(run `npm run docs:chart-specs:schema`)"
+  )
+}
 diffSets(
   "ai/componentMetadata.cjs (vs CHART_SPECS)",
   metadataNames,

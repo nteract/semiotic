@@ -1250,6 +1250,7 @@ const StreamGeoFrame = memo(
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{
             position: "relative",
+            fontFamily: "var(--semiotic-font-family, sans-serif)",
             width: responsiveWidth ? "100%" : size[0],
             height: responsiveHeight ? "100%" : size[1]
           }}
@@ -1321,6 +1322,7 @@ const StreamGeoFrame = memo(
         tabIndex={0}
         style={{
           position: "relative",
+          fontFamily: "var(--semiotic-font-family, sans-serif)",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: allowTooltipOverflow ? "visible" : "hidden",

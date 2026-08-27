@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-browser-baseline",
-  "capturedAt": "2026-08-11T19:08:31.972Z",
+  "capturedAt": "2026-08-24T03:30:52.232Z",
   "source": {
-    "gitCommit": "056398cfb",
+    "gitCommit": "8482157ff",
     "artifact": "checkout dist artifacts served by a local production-mode Vite integration fixture",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 392
+      "changedPathCount": 39
     }
   },
   "referenceEnvironment": {
@@ -41,7 +41,7 @@
   "variancePolicy": {
     "structural": {
       "comparison": "exact",
-      "explanation": "The browser engine, fixed viewport/context, fixture shape, visible Canvas2D success, retained-data paint handoff, and force-worker response contract must stay stable."
+      "explanation": "The browser engine, fixed viewport/context, fixture shape, visible Canvas2D success, retained-data paint handoff, dense-chart pointer highlight, aggregation, and force-worker response contracts must stay stable."
     },
     "timing": {
       "statistic": "p50 elapsed milliseconds",
@@ -55,7 +55,7 @@
       ],
       "samplePolicy": {
         "freshBrowserContexts": 7,
-        "fixture": "Each sample opens a fresh Chromium context and page; Vite startup, navigation/network transfer, and server transforms occur outside the in-page marks."
+        "fixture": "Each sample opens a fresh Chromium context and page; Vite startup, navigation/network transfer, and server transforms occur outside the in-page marks. Dense cases use deterministic 10k/50k inputs and fixed extents."
       },
       "maxRegression": {
         "absoluteMs": 50,
@@ -70,6 +70,10 @@
       "Chromium hydrateRoot commit for a fixed server shell",
       "emitted XY LineChart Canvas2D first visible-pixel timing",
       "retained-data LineChart update to a changed Canvas2D fingerprint",
+      "deterministic 10k and 50k Scatterplot Canvas2D first-paint timing",
+      "real pointer-to-quadtree-hit-to-visible-highlight timing at 10k and 50k points",
+      "same-input 50k opaque batched and near-opaque unbatched Scatterplot control paints",
+      "50k-row Heatmap explicit-bin and automatic-bin Canvas2D first-paint timing",
       "actual emitted forceLayoutWorker browser module startup and deterministic request/response round trip"
     ],
     "externalOrDeferred": [
@@ -84,6 +88,8 @@
     "context": "Each of seven samples uses a fresh headless Chromium context at 800x600 CSS pixels, DPR 1, light color scheme, reduced motion, en-US locale, and UTC timezone.",
     "hydration": "The fixture HTML includes the exact initial React shell; hydration timing ends in its first useLayoutEffect commit.",
     "paint": "The fixture measures from chart mount/update state changes until Canvas2D getImageData observes non-white/non-transparent content. This proves rendered canvas content is available, not compositor presentation or visual completeness across GPUs.",
+    "denseScatter": "Scatterplot inputs use fixed [0,100] domains and a centre anchor. Hover timing starts before a real pointermove, passes through the frame's coalescer and quadtree hit tester, and ends only after the interaction canvas has changed to visible highlight pixels and the anchor hover observation was emitted. The 50k control changes only pointOpacity from 0.999 (unbatched) to 1 (batch-eligible).",
+    "denseHeatmap": "Both Heatmap cases receive the same deterministic 50k rows. One explicitly requests mean aggregation into 64x48 bins; the other exercises the automatic dense-cell aggregation path.",
     "worker": "The fixture starts the emitted forceLayoutWorker.js as a module Worker, sends a seeded normalized force-layout request, and verifies finite positions before recording the startup-plus-round-trip time."
   },
   "metrics": {
@@ -108,10 +114,19 @@
       },
       "harness": {
         "route": "/machine-baseline-examples/",
-        "chart": "LineChart",
+        "charts": [
+          "LineChart",
+          "Scatterplot",
+          "Heatmap"
+        ],
         "renderer": "Canvas2D",
-        "initialRows": 320,
-        "updatedRows": 320,
+        "rows": {
+          "lineInitial": 320,
+          "lineUpdated": 320,
+          "scatter10k": 10000,
+          "scatter50k": 50000,
+          "heatmap50k": 50000
+        },
         "worker": "forceLayoutWorker.js normalized request (12 nodes, 11 edges, seeded 48 iterations)"
       },
       "checks": {
@@ -125,6 +140,54 @@
           "height": 360,
           "changesCanvasFingerprint": true
         },
+        "scatter10k": {
+          "width": 640,
+          "height": 360,
+          "rows": 10000,
+          "hasVisiblePixels": true,
+          "hover": {
+            "observedDatumId": "dense-anchor",
+            "changesInteractionCanvasFingerprint": true,
+            "hasVisibleHighlightPixels": true
+          }
+        },
+        "scatter50k": {
+          "rows": 50000,
+          "unbatched": {
+            "width": 640,
+            "height": 360,
+            "pointOpacity": 0.999,
+            "hasVisiblePixels": true
+          },
+          "batched": {
+            "width": 640,
+            "height": 360,
+            "pointOpacity": 1,
+            "hasVisiblePixels": true
+          },
+          "hover": {
+            "observedDatumId": "dense-anchor",
+            "changesInteractionCanvasFingerprint": true,
+            "hasVisibleHighlightPixels": true
+          }
+        },
+        "heatmap50k": {
+          "rows": 50000,
+          "explicitMeanBins": {
+            "width": 640,
+            "height": 360,
+            "bins": [
+              64,
+              48
+            ],
+            "hasVisiblePixels": true
+          },
+          "automaticBins": {
+            "width": 640,
+            "height": 360,
+            "hasVisiblePixels": true
+          }
+        },
         "forceWorker": {
           "response": "finite normalized positions",
           "positionCount": 12
@@ -134,71 +197,190 @@
     "timings": {
       "hydration": {
         "samplesMs": [
-          5.7,
-          5.4,
-          5.4,
-          5.4,
-          5.3,
-          5.2,
-          5.5
+          7.7,
+          7.3,
+          6.9,
+          6.8,
+          6.8,
+          6.7,
+          6.8
         ],
-        "minMs": 5.2,
-        "p50Ms": 5.4,
-        "p95Ms": 5.64,
-        "p99Ms": 5.688,
-        "maxMs": 5.7,
-        "meanMs": 5.414
+        "minMs": 6.7,
+        "p50Ms": 6.8,
+        "p95Ms": 7.58,
+        "p99Ms": 7.676,
+        "maxMs": 7.7,
+        "meanMs": 7
       },
       "initialCanvasPaint": {
         "samplesMs": [
-          31.6,
-          29.6,
-          26.9,
-          27,
-          27,
-          26.6,
-          27.6
+          36.6,
+          32.9,
+          33.2,
+          33.2,
+          32.8,
+          32.9,
+          32.8
         ],
-        "minMs": 26.6,
-        "p50Ms": 27,
-        "p95Ms": 31,
-        "p99Ms": 31.48,
-        "maxMs": 31.6,
-        "meanMs": 28.043
+        "minMs": 32.8,
+        "p50Ms": 32.9,
+        "p95Ms": 35.58,
+        "p99Ms": 36.396,
+        "maxMs": 36.6,
+        "meanMs": 33.486
       },
       "updateCanvasPaint": {
         "samplesMs": [
-          14.6,
-          17.4,
-          11.2,
-          14.7,
-          9.7,
-          13.5,
-          16.6
+          19.5,
+          11.4,
+          13.7,
+          17,
+          11.6,
+          17.7,
+          13.4
         ],
-        "minMs": 9.7,
-        "p50Ms": 14.6,
-        "p95Ms": 17.16,
-        "p99Ms": 17.352,
-        "maxMs": 17.4,
-        "meanMs": 13.957
+        "minMs": 11.4,
+        "p50Ms": 13.7,
+        "p95Ms": 18.96,
+        "p99Ms": 19.392,
+        "maxMs": 19.5,
+        "meanMs": 14.9
+      },
+      "scatter10kPaint": {
+        "samplesMs": [
+          23.6,
+          24.5,
+          24.6,
+          20.8,
+          22.8,
+          22.1,
+          24.4
+        ],
+        "minMs": 20.8,
+        "p50Ms": 23.6,
+        "p95Ms": 24.57,
+        "p99Ms": 24.594,
+        "maxMs": 24.6,
+        "meanMs": 23.257
+      },
+      "scatter10kHover": {
+        "samplesMs": [
+          36.7,
+          35.2,
+          35.8,
+          35.4,
+          35.3,
+          35.1,
+          35.4
+        ],
+        "minMs": 35.1,
+        "p50Ms": 35.4,
+        "p95Ms": 36.43,
+        "p99Ms": 36.646,
+        "maxMs": 36.7,
+        "meanMs": 35.557
+      },
+      "scatter50kUnbatchedPaint": {
+        "samplesMs": [
+          16.5,
+          14.3,
+          15.6,
+          15.3,
+          14.3,
+          15.4,
+          15.4
+        ],
+        "minMs": 14.3,
+        "p50Ms": 15.4,
+        "p95Ms": 16.23,
+        "p99Ms": 16.446,
+        "maxMs": 16.5,
+        "meanMs": 15.257
+      },
+      "scatter50kBatchedPaint": {
+        "samplesMs": [
+          17.5,
+          16.1,
+          17.1,
+          16.9,
+          16.4,
+          16.8,
+          15.9
+        ],
+        "minMs": 15.9,
+        "p50Ms": 16.8,
+        "p95Ms": 17.38,
+        "p99Ms": 17.476,
+        "maxMs": 17.5,
+        "meanMs": 16.671
+      },
+      "scatter50kHover": {
+        "samplesMs": [
+          39.6,
+          39,
+          40,
+          38.8,
+          38.5,
+          38.8,
+          39
+        ],
+        "minMs": 38.5,
+        "p50Ms": 39,
+        "p95Ms": 39.88,
+        "p99Ms": 39.976,
+        "maxMs": 40,
+        "meanMs": 39.1
+      },
+      "heatmap50kExplicitPaint": {
+        "samplesMs": [
+          31.1,
+          31.5,
+          30,
+          30.9,
+          30,
+          30.5,
+          30.8
+        ],
+        "minMs": 30,
+        "p50Ms": 30.8,
+        "p95Ms": 31.38,
+        "p99Ms": 31.476,
+        "maxMs": 31.5,
+        "meanMs": 30.686
+      },
+      "heatmap50kAutoPaint": {
+        "samplesMs": [
+          8.1,
+          8.7,
+          8.7,
+          8.7,
+          7.4,
+          7.3,
+          7.7
+        ],
+        "minMs": 7.3,
+        "p50Ms": 8.1,
+        "p95Ms": 8.7,
+        "p99Ms": 8.7,
+        "maxMs": 8.7,
+        "meanMs": 8.086
       },
       "forceWorkerRoundTrip": {
         "samplesMs": [
-          23.5,
-          15.5,
-          13.5,
-          15.2,
-          13.7,
-          13.7,
-          16.7
+          34.1,
+          22.9,
+          26.2,
+          23.4,
+          24.1,
+          24.4,
+          20.2
         ],
-        "minMs": 13.5,
-        "p50Ms": 15.2,
-        "p95Ms": 21.46,
-        "p99Ms": 23.092,
-        "maxMs": 23.5,
-        "meanMs": 15.971
+        "minMs": 20.2,
+        "p50Ms": 24.1,
+        "p95Ms": 31.73,
+        "p99Ms": 33.626,
+        "maxMs": 34.1,
+        "meanMs": 25.043
       }
     }
   }

@@ -167,11 +167,10 @@ describe("physics chart server rendering", () => {
     expect(layoutForeground).toBeGreaterThan(suppliedForeground)
   })
 
-  // ChainReactionChart is a documented serverChartConfigs exclusion (its settled
-  // reading is an authored overlay over zero bodies), so its supported static
-  // snapshot is the HOC SSR path. Assert that path derives the *settled* state,
-  // not the authored start — no simulation runs on the server.
-  it("server-renders ChainReactionChart's derived settled state via the HOC path", () => {
+  // The HOC SSR path remains a second proof beside renderChart's dedicated
+  // authored projection. It must derive the *settled* state rather than the
+  // authored start — no simulation runs on the server.
+  it("server-renders ChainReactionChart's derived settled state through React SSR", () => {
     const tasks = [
       {
         id: "brief",

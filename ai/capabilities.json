@@ -128,14 +128,14 @@
       "supportsSelection": false,
       "supportsLinkedHover": false,
       "supportsPush": false,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
         "brush",
         "overview-detail",
         "composite-delegates-interaction",
-        "hoc-ssr-only"
+        "composite-static"
       ]
     },
     "MultiAxisLineChart": {
@@ -187,14 +187,14 @@
       "supportsSelection": false,
       "supportsLinkedHover": false,
       "supportsPush": false,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
         "matrix",
         "brush",
         "composite-delegates-interaction",
-        "hoc-ssr-only"
+        "composite-static"
       ]
     },
     "StackedAreaChart": {
@@ -664,7 +664,7 @@
       "supportsSelection": false,
       "supportsLinkedHover": false,
       "supportsPush": false,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "synthetic",
       "specialFeatures": [
@@ -673,7 +673,7 @@
         "blocker-amplification",
         "settled-projection",
         "deterministic-snapshot",
-        "hoc-ssr-only"
+        "authored-static-projection"
       ]
     },
     "CollisionSwarmChart": {

@@ -60,6 +60,11 @@ import {
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
+import {
+  composeStyleRules,
+  makeXYRuleContext,
+  type StyleRule,
+} from "../shared/styleRules"
 
 registerXYPlugin(swarmXYPlugin)
 
@@ -136,6 +141,8 @@ export interface RealtimeSwarmChartProps<
   cursor?: CSSProperties["cursor"]
   /** Per-datum dot style. Returned values override the top-level dot primitives and category color. */
   pointStyle?: (datum: TDatum) => Style & { r?: number }
+  /** Ordered data-aware dot styling, applied before `pointStyle`. */
+  styleRules?: StyleRule[]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -219,7 +226,7 @@ export interface RealtimeSwarmChartProps<
  */
 export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
   TDatum extends Datum = Datum
->(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -249,6 +256,7 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
     strokeWidth,
     cursor,
     pointStyle,
+    styleRules,
     background,
     tooltipContent,
     tooltip,
@@ -393,7 +401,7 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
   const categoricalPointStyle = useMemo<
     ((datum: Datum) => Style & { r?: number }) | undefined
   >(() => {
-    if (!categoryAccessor && !resolvedPointStyle) return undefined
+    if (!categoryAccessor) return undefined
     return (datum: Datum) => {
       const rawCategory =
         typeof categoryAccessor === "function"
@@ -405,13 +413,42 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
         categoryAccessor && categoryColorScale
           ? { fill: categoryColorScale(String(rawCategory)) }
           : undefined
-      return { ...categoryStyle, ...resolvedPointStyle?.(datum) }
+      return { ...categoryStyle }
     }
-  }, [categoryAccessor, categoryColorScale, resolvedPointStyle])
+  }, [categoryAccessor, categoryColorScale])
+  const swarmRuleContext = useMemo(() => {
+    const xyContext = makeXYRuleContext(
+      (timeAccessor ?? "time") as string | ((d: Datum) => unknown),
+      (valueAccessor ?? "value") as string | ((d: Datum) => unknown),
+    )
+    return (datum: Datum) => {
+      const rawCategory =
+        typeof categoryAccessor === "function"
+          ? categoryAccessor(datum as TDatum)
+          : categoryAccessor
+            ? datum[categoryAccessor]
+            : undefined
+      return xyContext(
+        datum,
+        rawCategory == null ? undefined : String(rawCategory),
+      )
+    }
+  }, [timeAccessor, valueAccessor, categoryAccessor])
+  const ruledPointStyle = useMemo(
+    () => composeStyleRules(categoricalPointStyle, styleRules, swarmRuleContext),
+    [categoricalPointStyle, styleRules, swarmRuleContext],
+  )
+  const authoredPointStyle = useMemo(
+    () => (datum: Datum) => ({
+      ...ruledPointStyle(datum),
+      ...resolvedPointStyle?.(datum),
+    }),
+    [ruledPointStyle, resolvedPointStyle],
+  )
   const effectiveSelectionHook =
     hoverSelectionHook || legendState.legendSelectionHook || activeSelectionHook
   const interactivePointStyle = useRealtimeSelectionStyle(
-    categoricalPointStyle,
+    authoredPointStyle,
     [effectiveSelectionHook],
     selection
   )
@@ -482,9 +519,15 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
     />
   )
 }) as unknown as {
+  /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeSwarmChartProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
+  /** Typed refs retain the authored row through mutation and readback. */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeSwarmChartProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }

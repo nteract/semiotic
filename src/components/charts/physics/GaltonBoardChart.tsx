@@ -213,7 +213,13 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       valueAccessor
     ]
   )
-  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
+  const rerun = usePhysicsRerun(
+    layout.config,
+    rerunMS,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  )
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {

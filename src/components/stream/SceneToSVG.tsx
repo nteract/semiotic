@@ -438,12 +438,14 @@ function xySceneNodeToSVGMark(
           <g key={`heatcell-${i}`}>
             <rect {...cellRect} />
             <text
+              className="semiotic-heatmap-value"
               x={n.x + n.w / 2}
               y={n.y + n.h / 2}
               textAnchor="middle"
               dominantBaseline="middle"
               fill={textColor}
               fontSize={`${fontSize}px`}
+              fontFamily="var(--semiotic-font-family, sans-serif)"
             >
               {formatted}
             </text>
@@ -458,7 +460,7 @@ function xySceneNodeToSVGMark(
         // Range/dumbbell mode: high→low line + endpoint bulbs.
         const dotRadius = n.dotRadius ?? Math.max(2, n.bodyWidth / 2)
         return (
-          <g key={`candle-${i}`}>
+          <g key={`candle-${i}`} style={n.style as React.CSSProperties}>
             <line
               x1={n.x} y1={n.highY} x2={n.x} y2={n.lowY}
               stroke={n.wickColor} strokeWidth={n.wickWidth}
@@ -472,7 +474,7 @@ function xySceneNodeToSVGMark(
       const bodyHeight = Math.max(Math.abs(n.openY - n.closeY), 1)
       const bodyColor = n.isUp ? n.upColor : n.downColor
       return (
-        <g key={`candle-${i}`}>
+        <g key={`candle-${i}`} style={n.style as React.CSSProperties}>
           <line
             x1={n.x} y1={n.highY} x2={n.x} y2={n.lowY}
             stroke={n.wickColor} strokeWidth={n.wickWidth}

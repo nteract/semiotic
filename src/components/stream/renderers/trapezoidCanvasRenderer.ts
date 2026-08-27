@@ -76,13 +76,14 @@ export const funnelLabelRenderer = (
 
   const stepFontSize = 14
   const valueFontSize = 13
+  const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
   ctx.textBaseline = "top"
   ctx.lineJoin = "round"
 
   // Pass 1: Step name labels (one per step row)
   // Collect the total row width per step to decide if step name fits
   ctx.textAlign = "center"
-  ctx.font = `bold ${stepFontSize}px sans-serif`
+  ctx.font = `bold ${stepFontSize}px ${fontFamily}`
   for (const node of rects) {
     const d = node.datum
     if (!d) continue
@@ -109,7 +110,7 @@ export const funnelLabelRenderer = (
   }
 
   // Pass 2: Value labels (one per bar)
-  ctx.font = `bold ${valueFontSize}px sans-serif`
+  ctx.font = `bold ${valueFontSize}px ${fontFamily}`
   for (const node of rects) {
     const d = node.datum
     if (!d) continue

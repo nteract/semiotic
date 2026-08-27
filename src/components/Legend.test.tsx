@@ -17,9 +17,9 @@ function makeLegendGroup(overrides?: Partial<LegendGroup>): LegendGroup {
     items: [
       { label: "Alpha", color: "#e41a1c" },
       { label: "Beta", color: "#377eb8" },
-      { label: "Gamma", color: "#4daf4a" },
+      { label: "Gamma", color: "#4daf4a" }
     ],
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -44,18 +44,25 @@ describe("Legend — categorical items", () => {
     const rects = container.querySelectorAll("rect")
     // Each item gets a 16x16 swatch rect
     const swatches = Array.from(rects).filter(
-      (r) => r.getAttribute("width") === "16" && r.getAttribute("height") === "16"
+      (r) =>
+        r.getAttribute("width") === "16" && r.getAttribute("height") === "16"
     )
     expect(swatches.length).toBe(3)
     // jsdom 29+ normalizes inline style colors to `rgb(...)` on readback to match
     // browser behavior — #e41a1c → rgb(228, 26, 28). Match either form.
     expect(swatches[0].style.fill).toMatch(/^(#e41a1c|rgb\(228,\s*26,\s*28\))$/)
-    expect(swatches[1].style.fill).toMatch(/^(#377eb8|rgb\(55,\s*126,\s*184\))$/)
+    expect(swatches[1].style.fill).toMatch(
+      /^(#377eb8|rgb\(55,\s*126,\s*184\))$/
+    )
   })
 
   it("renders the title when orientation is vertical", () => {
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} title="My Legend" orientation="vertical" />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        title="My Legend"
+        orientation="vertical"
+      />
     )
     const titleEl = container.querySelector(".legend-title")
     expect(titleEl).not.toBeNull()
@@ -64,7 +71,11 @@ describe("Legend — categorical items", () => {
 
   it("does not render the title when orientation is horizontal", () => {
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} title="My Legend" orientation="horizontal" />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        title="My Legend"
+        orientation="horizontal"
+      />
     )
     const titleEl = container.querySelector(".legend-title")
     expect(titleEl).toBeNull()
@@ -78,12 +89,17 @@ describe("Legend — categorical items", () => {
         width={300}
       />
     )
-    expect(container.querySelector(".legend-item")?.getAttribute("transform")).toBe("translate(0,0)")
+    expect(
+      container.querySelector(".legend-item")?.getAttribute("transform")
+    ).toBe("translate(0,0)")
   })
 
   it("keeps vertical row spacing at least as large as custom swatches", () => {
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} legendLayout={{ swatchSize: 30 }} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        legendLayout={{ swatchSize: 30 }}
+      />
     )
     expect(container.innerHTML).toContain("translate(0,30)")
   })
@@ -95,7 +111,10 @@ describe("Legend — ARIA roles", () => {
   it("sets role=listbox on container when interactive (click)", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const listbox = container.querySelector("[role='listbox']")
     expect(listbox).not.toBeNull()
@@ -104,7 +123,10 @@ describe("Legend — ARIA roles", () => {
   it("sets role=listbox on container when interactive (hover)", () => {
     const onHover = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customHoverBehavior={onHover} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customHoverBehavior={onHover}
+      />
     )
     const listbox = container.querySelector("[role='listbox']")
     expect(listbox).not.toBeNull()
@@ -121,7 +143,10 @@ describe("Legend — ARIA roles", () => {
   it("sets role=option on each item when interactive", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const options = container.querySelectorAll("[role='option']")
     expect(options.length).toBe(3)
@@ -275,7 +300,10 @@ describe("Legend — keyboard navigation (vertical)", () => {
   it("ArrowDown moves focus to next sibling", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const options = container.querySelectorAll("[role='option']")
     const focusSpy = vi.spyOn(options[1] as HTMLElement, "focus")
@@ -286,7 +314,10 @@ describe("Legend — keyboard navigation (vertical)", () => {
   it("ArrowUp moves focus to previous sibling", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const options = container.querySelectorAll("[role='option']")
     const focusSpy = vi.spyOn(options[0] as HTMLElement, "focus")
@@ -314,7 +345,12 @@ describe("Legend — orientation", () => {
 
   it("horizontal layout uses translate(X, 0) for item positioning", () => {
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} orientation="horizontal" width={500} height={30} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        orientation="horizontal"
+        width={500}
+        height={30}
+      />
     )
     const legendItemGroup = container.querySelector(".legend-item")
     expect(legendItemGroup).not.toBeNull()
@@ -340,7 +376,9 @@ describe("Legend — orientation", () => {
     expect(swatches.length).toBe(3)
     const legendItemGroup = container.querySelector(".legend-item")
     const firstItem = legendItemGroup?.querySelector("g")
-    const firstX = Number(firstItem?.getAttribute("transform")?.match(/translate\(([\d.]+),/)?.[1])
+    const firstX = Number(
+      firstItem?.getAttribute("transform")?.match(/translate\(([\d.]+),/)?.[1]
+    )
     expect(firstX).toBeGreaterThan(0)
   })
 })
@@ -362,7 +400,10 @@ describe("Legend — non-interactive mode", () => {
   it("items have a tabindex attribute when interactive", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const options = container.querySelectorAll("[role='option']")
     options.forEach((opt) => {
@@ -382,7 +423,10 @@ describe("Legend — non-interactive mode", () => {
   it("renders focus ring rects when interactive", () => {
     const onClick = vi.fn()
     const { container } = renderInSvg(
-      <Legend legendGroups={[makeLegendGroup()]} customClickBehavior={onClick} />
+      <Legend
+        legendGroups={[makeLegendGroup()]}
+        customClickBehavior={onClick}
+      />
     )
     const focusRings = container.querySelectorAll(".semiotic-legend-focus-ring")
     expect(focusRings.length).toBe(3)
@@ -395,7 +439,7 @@ describe("GradientLegend", () => {
   const config = {
     colorFn: (v: number) => `rgb(${Math.round(v)},0,0)`,
     domain: [0, 255] as [number, number],
-    label: "Intensity",
+    label: "Intensity"
   }
 
   it("renders a linearGradient with color stops (vertical)", () => {
@@ -434,11 +478,15 @@ describe("GradientLegend", () => {
       const { container } = renderInSvg(
         <GradientLegend config={config} orientation={orientation} width={200} />
       )
-      const root = container.querySelector<SVGGElement>("[aria-label='Intensity']")
+      const root = container.querySelector<SVGGElement>(
+        "[aria-label='Intensity']"
+      )
       const label = Array.from(root!.querySelectorAll("text")).find(
         (text) => text.textContent === "Intensity"
       )
-      const bar = root!.querySelector<SVGRectElement>("rect:not(.semiotic-gradient-legend-bin)")
+      const bar = root!.querySelector<SVGRectElement>(
+        "rect:not(.semiotic-gradient-legend-bin)"
+      )
 
       expect(Number(label!.getAttribute("y"))).toBeGreaterThanOrEqual(0)
       expect(Number(bar!.getAttribute("y"))).toBeGreaterThan(
@@ -485,7 +533,7 @@ describe("GradientLegend", () => {
   it("uses custom format function for labels", () => {
     const formatted = {
       ...config,
-      format: (v: number) => `${v} units`,
+      format: (v: number) => `${v} units`
     }
     const { container } = renderInSvg(
       <GradientLegend config={formatted} orientation="vertical" />
@@ -505,7 +553,9 @@ describe("GradientLegend", () => {
         customClickBehavior={onClick}
       />
     )
-    const options = container.querySelectorAll<SVGRectElement>(".semiotic-gradient-legend-bin")
+    const options = container.querySelectorAll<SVGRectElement>(
+      ".semiotic-gradient-legend-bin"
+    )
     expect(options).toHaveLength(5)
     expect(options[0].getAttribute("tabindex")).toBe("0")
     expect(options[1].getAttribute("tabindex")).toBe("-1")
@@ -521,7 +571,7 @@ describe("GradientLegend", () => {
     fireEvent.keyDown(options[1], { key: "Enter" })
     expect(onClick).toHaveBeenCalledTimes(1)
     expect(onClick.mock.calls[0][0]).toMatchObject({
-      valueRange: [153, 204],
+      valueRange: [153, 204]
     })
   })
 
@@ -534,17 +584,25 @@ describe("GradientLegend", () => {
         customHoverBehavior={onHover}
       />
     )
-    const options = container.querySelectorAll<SVGRectElement>(".semiotic-gradient-legend-bin")
+    const options = container.querySelectorAll<SVGRectElement>(
+      ".semiotic-gradient-legend-bin"
+    )
     const focusSpy = vi.spyOn(options[1], "focus")
     fireEvent.keyDown(options[0], { key: "ArrowRight" })
     expect(focusSpy).toHaveBeenCalled()
-    expect(container.querySelector("[role='listbox']")?.getAttribute("aria-orientation")).toBe("horizontal")
+    expect(
+      container
+        .querySelector("[role='listbox']")
+        ?.getAttribute("aria-orientation")
+    ).toBe("horizontal")
   })
 
   it("does not add hit-test overlays to a non-interactive gradient", () => {
     const { container } = renderInSvg(<GradientLegend config={config} />)
 
-    expect(container.querySelectorAll(".semiotic-gradient-legend-bin")).toHaveLength(0)
+    expect(
+      container.querySelectorAll(".semiotic-gradient-legend-bin")
+    ).toHaveLength(0)
     expect(container.querySelector("[role='listbox']")).toBeNull()
   })
 })

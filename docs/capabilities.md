@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-08-21 · 59 charts indexed.
+Last regen: 2026-08-24 · 59 charts indexed.
 
 **Column key**
 
@@ -28,11 +28,11 @@ Last regen: 2026-08-21 · 59 charts indexed.
 | **DifferenceChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `crossover-segmentation` |
 | **Heatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | — |
 | **LineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` `gap-handling` `direct-labels` `endpoint-labels` `brush` |
-| **MinimapChart** | ✓ | — | — | — | — | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `hoc-ssr-only` |
+| **MinimapChart** | ✓ | — | — | — | ✓ | categorical | plugin | `brush` `overview-detail` `composite-delegates-interaction` `composite-static` |
 | **MultiAxisLineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `dual-axis` |
 | **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `quadrants` |
 | **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` `brush` |
-| **ScatterplotMatrix** | ✓ | — | — | — | — | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `hoc-ssr-only` |
+| **ScatterplotMatrix** | ✓ | — | — | — | ✓ | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `composite-static` |
 | **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` |
 | **WaterfallChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `waterfall` |
 
@@ -94,7 +94,7 @@ Last regen: 2026-08-21 · 59 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **ChainReactionChart** | — | — | — | — | — | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `hoc-ssr-only` |
+| **ChainReactionChart** | — | — | — | — | ✓ | categorical | synthetic | `physics-simulation` `dependency-machine` `blocker-amplification` `settled-projection` `deterministic-snapshot` `authored-static-projection` |
 | **CollisionSwarmChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
 | **CrucibleChart** | — | ✓ | ✓ | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
 | **EventDropChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
@@ -116,6 +116,6 @@ Last regen: 2026-08-21 · 59 charts indexed.
 
 - 54/59 charts render a top-level legend.
 - 47/59 charts expose a push API.
-- 51/59 charts SSR via the `renderChart()` registry.
+- 54/59 charts SSR via the `renderChart()` registry.
 - 2/59 charts use the customLayout escape hatch.
 - 11/59 charts use synthetic (no-layout) construction.

@@ -9,12 +9,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
-  # Run freshness, size, and packed-consumer gates independently from coverage
-  # and the broader contract suite so regressions appear within the first CI
-  # job instead of after the long-running test path completes.
+  # Keep deterministic source and generated-artifact failures ahead of every
+  # expensive test path. Browser jobs wait only for this lane, rather than for
+  # production bundle measurement and package-consumer checks.
   fast-contracts:
-    name: Fast feedback gates (Node 22)
+    name: Preflight gates (Node 22)
     runs-on: ubuntu-latest
 
     steps:
@@ -30,14 +34,119 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run freshness and size gates
-        run: npm run check:fast
+      - name: Check source policy and repository lints
+        run: |
+          npm run check:router-alignment
+          npm run check:playwright-alignment
+          npm run lint
+          npm run check:custom-lints
+          npm run check:file-size
+          npm run check:test-quality
 
-  # Full gate suite once on the primary LTS. Cross-Node compatibility is
-  # covered by the smoke matrix below — re-running docs/AI/size checks on
-  # every Node version was pure wall-clock cost with no signal.
-  testing-full:
-    name: Full checks (Node 22)
+      - name: Check chart and docs contract drift
+        run: |
+          npm run check:chart-specs
+          npm run check:capabilities
+          npm run check:visual-baseline-capabilities
+          npm run check:docs-coverage
+          npm run check:docs-example-integrity
+          npm run check:docs-prop-tables
+          npm run check:docs-playground-controls
+
+      - name: Check AI, SSR, and authored documentation drift
+        run: |
+          npm run check:llms
+          npm run check:blog-entries
+          npm run check:ai-reference-coverage
+          npm run check:context7
+          npm run check:mcp-registry
+          npm run check:surface
+          npm run check:ai-surface
+          npm run check:ai-contracts
+          npm run check:ai-instructions
+          npm run check:ssr
+          npm run check:jsdoc-coverage
+          npm run check:ai-examples-coverage
+          npm run check:protected-doc-boundaries
+
+  # Vitest's blob reporter carries each shard's test results and V8 coverage
+  # map. Thresholds are disabled only while producing these partial maps and
+  # are enforced by the merged coverage job below.
+  coverage-shards:
+    name: Coverage shard ${{ matrix.shard }}/2 (Node 22)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build test artifacts
+        run: |
+          npm run dist
+          npm run build:mcp
+
+      - name: Run coverage shard
+        env:
+          SEMIOTIC_COVERAGE_SHARD: "true"
+        run: >-
+          npm run test:coverage:shard -- --shard=${{ matrix.shard }}/2
+          --outputFile.blob=vitest-reports/blob-${{ matrix.shard }}-2.json
+
+      - name: Upload coverage shard
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-shard-${{ matrix.shard }}
+          path: vitest-reports/*.json
+          if-no-files-found: error
+          retention-days: 7
+
+  coverage:
+    name: Merged coverage gate (Node 22)
+    runs-on: ubuntu-latest
+    needs: coverage-shards
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download coverage shards
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: coverage-shard-*
+          path: vitest-reports
+          merge-multiple: true
+
+      - name: Merge reports and enforce coverage policy
+        run: npm run test:coverage:merge
+
+  # Build/type/deployment contracts are independent from the coverage and docs
+  # critical paths, so a failure in one lane is reported without hiding work in
+  # the others.
+  full-contracts:
+    name: Build, type, and API contracts (Node 22)
     runs-on: ubuntu-latest
 
     steps:
@@ -75,9 +184,6 @@ jobs:
           npm run test:cloud-run-nightly
           npm run test:smoke-hosted-mcp
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
       - name: Test protected documentation boundary detection
         run: npm run test:protected-doc-boundaries
 
@@ -93,51 +199,6 @@ jobs:
       - name: Run MCP type check
         run: npm run typescript:mcp
 
-      - name: Check chart spec registry round-trip
-        run: npm run check:chart-specs
-
-      - name: Check capability matrix freshness
-        run: npm run check:capabilities
-
-      - name: Check visual baseline capability coverage
-        run: npm run check:visual-baseline-capabilities
-
-      - name: Check docs coverage and per-page quality
-        run: npm run check:docs-coverage
-
-      - name: Check docs example manifest and source integrity
-        run: npm run check:docs-example-integrity
-
-      - name: Check prop-table drift vs chartSpecs
-        run: npm run check:docs-prop-tables
-
-      - name: Check playground control drift vs chartSpecs
-        run: npm run check:docs-playground-controls
-
-      - name: Check llms.txt freshness
-        run: npm run check:llms
-
-      - name: Check blog metadata registry freshness
-        run: npm run check:blog-entries
-
-      - name: Check comprehensive AI reference coverage
-        run: npm run check:ai-reference-coverage
-
-      - name: Check context7.json freshness
-        run: npm run check:context7
-
-      - name: Check MCP Registry submission cross-references
-        run: npm run check:mcp-registry
-
-      - name: Check AI/MCP surface parity
-        run: npm run check:surface
-
-      - name: Check generated AI surface manifest freshness
-        run: npm run check:ai-surface
-
-      - name: Check SSR alignment
-        run: npm run check:ssr
-
       - name: Check public API surface (no breaking changes)
         run: |
           npm run check:api-surface
@@ -145,23 +206,6 @@ jobs:
 
       - name: Check TypeDoc validation policy
         run: npm run check:typedoc
-
-      - name: Check HOC JSDoc coverage (≥2 @example blocks per HOC)
-        run: npm run check:jsdoc-coverage
-
-      - name: Check ai/examples.md coverage + drift
-        run: npm run check:ai-examples-coverage
-
-      - name: Build docs site and smoke-check generated routes
-        run: npm run check:website-build
-
-      - name: Check production package surface and machine baseline
-        run: |
-          npm run check:package-surface
-          npm run check:machine-baseline
-
-      - name: Pack smoke test (verify all entry points resolve)
-        run: npm run check:pack
 
       - name: Verify TypeScript declarations
         run: |
@@ -207,6 +251,45 @@ jobs:
           fi
           echo "All canvas methods are stubbed"
 
+  # Own the one expensive production build and reuse it for every minified
+  # package, docs, size, and packed-consumer check in this lane.
+  docs-package:
+    name: Docs and production package checks (Node 22)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check committed MCP bundle
+        run: npm run check:mcp-bundle
+
+      - name: Build production library and MCP server
+        run: |
+          npm run dist:prod
+          npm run build:mcp
+
+      - name: Check production package contracts
+        run: npm run check:package-contracts:from-dist
+
+      - name: Build docs from the existing production artifacts
+        run: npm run check:website-build:from-dist
+
+      - name: Check machine baseline
+        run: npm run check:machine-baseline
+
+      - name: Pack smoke test (verify all entry points resolve)
+        run: npm run check:pack
+
   # Smoke matrix: install, build, typecheck, and unit tests on each
   # supported Node. Catches runtime/engine issues without re-running the
   # full docs/AI contract suite four times.
@@ -216,9 +299,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22.x is covered by testing-full; matrix is the other supported
-        # engines only. Node 20 is intentionally no longer supported because
-        # the test dependency graph requires Node >=22.
+        # 22.x is covered by the coverage and contract lanes; this matrix is
+        # the other supported engines only. Node 20 is intentionally no longer
+        # supported because the test dependency graph requires Node >=22.
         node-version: ["24.x", "26.x"]
 
     steps:
@@ -244,7 +327,7 @@ jobs:
         run: npm run build:mcp
 
       - name: Run tests
-        run: npx vitest run
+        run: npx vitest run --bail=1
 
       - name: Run type check
         run: npm run typescript
@@ -255,24 +338,35 @@ jobs:
   testing:
     name: testing
     runs-on: ubuntu-latest
-    needs: [fast-contracts, testing-full, testing-matrix, e2e, docs-examples]
+    needs:
+      - fast-contracts
+      - coverage-shards
+      - coverage
+      - full-contracts
+      - docs-package
+      - testing-matrix
+      - e2e
+      - docs-examples
     if: always()
     steps:
       - name: Aggregate matrix result
         run: |
-          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['testing-full'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" || "${{ needs['docs-examples'].result }}" != "success" ]]; then
+          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['coverage-shards'].result }}" != "success" || "${{ needs['coverage'].result }}" != "success" || "${{ needs['full-contracts'].result }}" != "success" || "${{ needs['docs-package'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" || "${{ needs['docs-examples'].result }}" != "success" ]]; then
             {
               echo "## Testing failed"
               echo ""
-              echo "Fast feedback gates result: \`${{ needs['fast-contracts'].result }}\`"
-              echo "Full checks result: \`${{ needs['testing-full'].result }}\`"
+              echo "Preflight gates result: \`${{ needs['fast-contracts'].result }}\`"
+              echo "Coverage shards result: \`${{ needs['coverage-shards'].result }}\`"
+              echo "Merged coverage result: \`${{ needs['coverage'].result }}\`"
+              echo "Build/type/API contracts result: \`${{ needs['full-contracts'].result }}\`"
+              echo "Docs/package result: \`${{ needs['docs-package'].result }}\`"
               echo "Smoke matrix result: \`${{ needs['testing-matrix'].result }}\`"
               echo "E2E result: \`${{ needs['e2e'].result }}\`"
               echo "Docs examples result: \`${{ needs['docs-examples'].result }}\`"
               echo ""
               echo "Open the failed job above for the concrete error."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error title=Testing failed::Fast feedback gates: ${{ needs['fast-contracts'].result }}; Full checks: ${{ needs['testing-full'].result }}; Smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; Docs examples: ${{ needs['docs-examples'].result }}"
+            echo "::error title=Testing failed::Preflight: ${{ needs['fast-contracts'].result }}; coverage shards: ${{ needs['coverage-shards'].result }}; merged coverage: ${{ needs['coverage'].result }}; contracts: ${{ needs['full-contracts'].result }}; docs/package: ${{ needs['docs-package'].result }}; smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; docs examples: ${{ needs['docs-examples'].result }}"
             exit 1
           fi
 
@@ -416,7 +510,9 @@ jobs:
         # unreviewed visual contract, not a reason to create one during a
         # pull request. Maintainers can use `test:visual:bootstrap` locally
         # to generate a proposed baseline, then commit it with review.
-        run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
+        run: >-
+          npx playwright test --project=${{ matrix.project }}
+          --update-snapshots=none
 
       - name: Upload snapshot baselines
         if: always() && matrix.project == 'chromium'

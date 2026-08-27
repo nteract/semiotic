@@ -64,6 +64,8 @@ import {
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
+import { composeStyleRules, type StyleRule } from "../shared/styleRules"
+import { makeHistogramRuleContext } from "./realtimeStyleRules"
 
 registerXYPlugin(barXYPlugin)
 
@@ -144,6 +146,11 @@ export interface RealtimeHistogramProps<
   opacity?: number
   /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
   cursor?: CSSProperties["cursor"]
+  /**
+   * Ordered styling for displayed bins. Rule `value` is `categoryValue` for a
+   * stacked segment or `total` for an unstacked bin; `x` is the bin center.
+   */
+  styleRules?: StyleRule[]
   /** Gap between bars in pixels */
   gap?: number
   /** Show canvas-drawn axes */
@@ -257,7 +264,7 @@ export interface RealtimeHistogramProps<
  */
 export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   TDatum extends Datum = Datum
->(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   // Thread mode-aware dimensions and axes through so `sparkline` and
   // `context` strip the appropriate chrome.
   const resolved = useRealtimeChartMode(props)
@@ -284,6 +291,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     strokeWidth,
     opacity,
     cursor,
+    styleRules,
     gap,
     background,
     tooltipContent,
@@ -532,10 +540,29 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
         ? {}
         : { fill: categoryColorScale(String(datum.category)) }
   }, [categoryAccessor, categoryColorScale])
+  const histogramRuleContext = useMemo(
+    () => makeHistogramRuleContext(),
+    [],
+  )
+  const ruledBarStyle = useMemo(
+    () => composeStyleRules(categoricalBarStyle, styleRules, histogramRuleContext),
+    [categoricalBarStyle, styleRules, histogramRuleContext],
+  )
+  const resolvedBarStyle = useMemo(
+    () => (datum: Datum) => ({
+      ...ruledBarStyle(datum),
+      ...(!categoryAccessor && fill != null && { fill }),
+      ...(stroke != null && { stroke }),
+      ...(strokeWidth != null && { strokeWidth }),
+      ...(opacity != null && { opacity }),
+      ...(cursor != null && { cursor }),
+    }),
+    [ruledBarStyle, categoryAccessor, fill, stroke, strokeWidth, opacity, cursor],
+  )
   const effectiveSelectionHook =
     hoverSelectionHook || legendState.legendSelectionHook || activeSelectionHook
   const interactiveBarStyle = useRealtimeSelectionStyle(
-    categoricalBarStyle,
+    resolvedBarStyle,
     [effectiveSelectionHook],
     selection
   )
@@ -631,9 +658,15 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     />
   )
 }) as unknown as {
+  /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeHistogramProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
+  /** Typed refs retain the authored row through mutation and readback. */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeHistogramProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }

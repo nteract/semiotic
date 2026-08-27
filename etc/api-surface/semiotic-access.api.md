@@ -8,7 +8,7 @@ const BAR_CHART_ACCESS_CONTRACT: ChartAccessContract
 const CHART_ACCESS_CONTRACT_VERSION: 1
 const LINE_CHART_ACCESS_CONTRACT: ChartAccessContract
 const REALTIME_LINE_CHART_ACCESS_CONTRACT: ChartAccessContract
-function createChartAccessContract({ component, props, options, }: ChartAccessContractInput): ChartAccessContract
+function createChartAccessContract({ component, props, options }: ChartAccessContractInput): ChartAccessContract
 interface AccessStatusRecord
 interface ChartAccessContract
 interface ChartAccessContractEvidence
@@ -36,12 +36,12 @@ interface-member ChartAccessContractEvidence::property::description = required d
 interface-member ChartAccessContractInput::property::component = required component: string
 interface-member ChartAccessContractInput::property::options = optional options: undefined | {locale?: string; inChartContainer?: boolean; describe?: boolean; navigable?: boolean; streamStatus?: Array<StreamStatusInput> | StreamStatusInput; streamHistoryLimit?: number; ssrEvidence?: RenderEvidence; realtime?: boolean;}
 interface-member ChartAccessContractInput::property::props = required props: Record<string, unknown>
-interface-member ChartAccessContractKeyboard::property::focusRing = required focusRing: "built-in"
-interface-member ChartAccessContractKeyboard::property::legendInteraction = required legendInteraction: "built-in" | "not-applicable"
-interface-member ChartAccessContractKeyboard::property::markNavigation = required markNavigation: "built-in" | "not-applicable"
-interface-member ChartAccessContractMediaPreferences::property::forcedColors = required forcedColors: "css-custom-properties"
+interface-member ChartAccessContractKeyboard::property::focusRing = required focusRing: GeneratedMarkNavigation
+interface-member ChartAccessContractKeyboard::property::legendInteraction = required legendInteraction: "built-in" | "not-applicable" | "not-enabled" | "unsupported"
+interface-member ChartAccessContractKeyboard::property::markNavigation = required markNavigation: GeneratedMarkNavigation
+interface-member ChartAccessContractMediaPreferences::property::forcedColors = required forcedColors: "css-custom-properties" | "unknown"
 interface-member ChartAccessContractMediaPreferences::property::note = required note: string
-interface-member ChartAccessContractMediaPreferences::property::reducedMotion = required reducedMotion: "built-in"
+interface-member ChartAccessContractMediaPreferences::property::reducedMotion = required reducedMotion: "built-in" | "unknown"
 interface-member ChartAccessContractNavigation::property::composition = required composition: "chart-container"
 interface-member ChartAccessContractNavigation::property::note = optional note: string | undefined
 interface-member ChartAccessContractNavigation::property::supported = required supported: boolean

@@ -45,7 +45,7 @@ function specFilePaths() {
  * Read the chart-spec family files and return a sorted array of capability
  * entries. Each entry has the same shape consumers expect:
  *   { name, category, legend, selection, linkedHover, push, ssr,
- *     colorModel, layoutMode, features }
+ *     colorModel, layoutMode, features, propBags }
  */
 export function parseCapabilityMatrix() {
   const entries = []
@@ -72,8 +72,18 @@ export function parseCapabilityMatrix() {
       const arr = (key) => {
         const r = cap[1].match(new RegExp(`${key}:\\s*\\[([^\\]]*)\\]`))
         if (!r) return []
-        return r[1].split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean)
+        return r[1]
+          .split(",")
+          .map((s) => s.trim().replace(/^"|"$/g, ""))
+          .filter(Boolean)
       }
+      const propBagsMatch = body.match(/propBags:\s*\[([^\]]*)\]/)
+      const propBags = propBagsMatch
+        ? propBagsMatch[1]
+            .split(",")
+            .map((value) => value.trim().replace(/^"|"$/g, ""))
+            .filter(Boolean)
+        : []
       const cat = body.match(/category:\s*"([^"]+)"/)
       entries.push({
         name,
@@ -86,13 +96,22 @@ export function parseCapabilityMatrix() {
         colorModel: (get("colorModel") || "").replace(/^"|"$/g, ""),
         layoutMode: (get("layoutMode") || "").replace(/^"|"$/g, ""),
         features: arr("specialFeatures"),
+        propBags
       })
     }
   }
 
   // Sort by category then alphabetical within category — same order
   // both md/json consumers expect.
-  const ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
+  const ORDER = [
+    "xy",
+    "ordinal",
+    "network",
+    "geo",
+    "realtime",
+    "physics",
+    "value"
+  ]
   entries.sort((a, b) => {
     const ai = ORDER.indexOf(a.category)
     const bi = ORDER.indexOf(b.category)
@@ -104,4 +123,12 @@ export function parseCapabilityMatrix() {
 }
 
 /** Category sort order used by the matrix output. */
-export const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value"]
+export const CATEGORY_ORDER = [
+  "xy",
+  "ordinal",
+  "network",
+  "geo",
+  "realtime",
+  "physics",
+  "value"
+]

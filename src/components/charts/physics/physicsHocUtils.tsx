@@ -65,7 +65,18 @@ export type PhysicsSharedChartProps = {
   selection?: PhysicsChartSelection
   /** Emit hover into the shared selection store for cross-chart highlighting. */
   linkedHover?: LinkedHoverProp
+  /**
+   * Observe the physics pipeline entering or leaving its running/settled
+   * states. This composes with chart-owned observation and rerun behavior.
+   */
+  onSimulationStateChange?: PhysicsSimulationStateChange
 }
+
+export type PhysicsSimulationStateChange = NonNullable<
+  NonNullable<
+    NonNullable<StreamPhysicsFrameProps["config"]>["observation"]
+  >["onSimulationStateChange"]
+>
 
 /**
  * What a physics HOC's `selection` prop accepts.
@@ -217,7 +228,8 @@ export function usePhysicsRerun(
   config: StreamPhysicsFrameProps["config"],
   rerunMS: PhysicsRerunMS | undefined,
   paused: boolean | undefined,
-  onRerun?: () => void
+  onRerun?: () => void,
+  externalStateChange?: PhysicsSimulationStateChange
 ): {
   config: StreamPhysicsFrameProps["config"]
   rerunKey: number
@@ -259,7 +271,7 @@ export function usePhysicsRerun(
   useEffect(() => clearRerun, [clearRerun])
 
   const previousStateChange = config?.observation?.onSimulationStateChange
-  const onSimulationStateChange = useCallback<
+  const composedStateChange = useCallback<
     NonNullable<
       NonNullable<
         NonNullable<StreamPhysicsFrameProps["config"]>["observation"]
@@ -268,6 +280,9 @@ export function usePhysicsRerun(
   >(
     (state, previousState) => {
       previousStateChange?.(state, previousState)
+      if (externalStateChange !== previousStateChange) {
+        externalStateChange?.(state, previousState)
+      }
       if (state === "running") {
         settledRef.current = false
         clearRerun()
@@ -277,19 +292,24 @@ export function usePhysicsRerun(
       settledRef.current = true
       scheduleRerun()
     },
-    [clearRerun, previousStateChange, scheduleRerun]
+    [
+      clearRerun,
+      externalStateChange,
+      previousStateChange,
+      scheduleRerun
+    ]
   )
 
   const rerunnableConfig = useMemo<StreamPhysicsFrameProps["config"]>(() => {
-    if (delay == null) return config
+    if (delay == null && !externalStateChange) return config
     return {
       ...config,
       observation: {
         ...config?.observation,
-        onSimulationStateChange
+        onSimulationStateChange: composedStateChange
       }
     }
-  }, [config, delay, onSimulationStateChange])
+  }, [composedStateChange, config, delay, externalStateChange])
 
   return { config: rerunnableConfig, rerunKey }
 }

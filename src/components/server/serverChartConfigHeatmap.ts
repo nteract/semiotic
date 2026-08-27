@@ -1,4 +1,7 @@
 import type { ChartConfig } from "./serverChartConfigShared"
+import type { Datum } from "../charts/shared/datumTypes"
+import { composeStyleRules, type StyleRule } from "../charts/shared/styleRules"
+import { makeHeatmapRuleContext } from "../charts/shared/heatmapStyleRules"
 
 /**
  * Heatmap keeps cell border props separate from the generic primitive
@@ -17,6 +20,15 @@ export const heatmap: ChartConfig = {
       stroke: (rest.cellBorderColor as string | undefined) ?? "#fff",
       strokeWidth: borderWidth,
     })
+    const ruledCellStyle = composeStyleRules(
+      cellStyle,
+      rest.styleRules as StyleRule[] | undefined,
+      makeHeatmapRuleContext(
+        rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
+        rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
+        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
+      ),
+    )
     const frameColorScheme = typeof frameProps?.colorScheme === "string"
       ? frameProps.colorScheme
       : undefined
@@ -44,7 +56,7 @@ export const heatmap: ChartConfig = {
       ...(rest.heatmapXBins != null && { heatmapXBins: rest.heatmapXBins }),
       ...(rest.heatmapYBins != null && { heatmapYBins: rest.heatmapYBins }),
       // `frameProps.areaStyle` remains the documented final escape hatch.
-      areaStyle: cellStyle,
+      areaStyle: ruledCellStyle,
       ...common,
       ...(effectiveColorScheme !== undefined && { colorScheme: effectiveColorScheme }),
       ...(heatmapColorScale && { heatmapColorScale }),

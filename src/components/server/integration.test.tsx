@@ -50,6 +50,10 @@ function isValidPNG(buf: Buffer): boolean {
   return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 // PNG header
 }
 
+function pngDimensions(buf: Buffer): [number, number] {
+  return [buf.readUInt32BE(16), buf.readUInt32BE(20)]
+}
+
 type StaticFrameProps = Parameters<typeof renderToStaticSVG>[1]
 type RenderChartName = Parameters<typeof renderChart>[0]
 type RenderChartProps = Parameters<typeof renderChart>[1]
@@ -236,6 +240,18 @@ describe("PNG generation (end-to-end)", () => {
 
     expect(isValidPNG(png)).toBe(true)
   })
+
+  it("uses a composite chart's rendered dimensions for image export", async () => {
+    const png = await renderToImage("MinimapChart", {
+      data: lineData,
+      xAccessor: "x",
+      yAccessor: "y",
+      width: 200,
+      height: 150,
+    })
+
+    expect(pngDimensions(png)).toEqual([200, 230])
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -340,6 +356,24 @@ describe("Dashboard composition (end-to-end)", () => {
     ], { width: 800, layout: { columns: 2 } })
 
     expect(isValidSVG(svg)).toBe(true)
+  })
+
+  it("reserves and fits a composite chart's rendered dimensions", () => {
+    const svg = renderDashboard([
+      {
+        component: "MinimapChart",
+        props: {
+          data: lineData,
+          xAccessor: "x",
+          yAccessor: "y",
+          height: 150,
+        },
+      },
+    ], { width: 420, layout: { columns: 1, gap: 0 } })
+
+    expect(svg).toContain('width="420" height="230"')
+    expect(svg).toContain('<foreignObject width="420" height="230"')
+    expect(svg).toContain('viewBox="0 0 420 230"')
   })
 })
 

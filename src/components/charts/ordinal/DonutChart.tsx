@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
@@ -27,6 +28,8 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
   centerContent?: React.ReactNode
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware wedge styling; fieldless thresholds use absolute wedge magnitude. */
+  styleRules?: StyleRule[]
   startAngle?: number
   /** Rounded corner radius on wedge arcs */
   cornerRadius?: number
@@ -102,7 +105,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius: userInnerRadius, centerContent,
-    colorBy, colorScheme, startAngle = 0, cornerRadius,
+    colorBy, colorScheme, styleRules, startAngle = 0, cornerRadius,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -165,6 +168,15 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(
+      valueAccessor as string | ((d: Datum) => unknown),
+    )
+    return (d: Datum) => {
+      const value = readValue(d)
+      return value == null ? undefined : Math.abs(value)
+    }
+  }, [valueAccessor])
 
   // Use the PieChart piece-style recipe with per-slice color cycling.
   const pieceStyle = useOrdinalPieceStyle({
@@ -176,6 +188,8 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
     cycleByCategory: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

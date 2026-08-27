@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import ExamplesOverviewPage, { ExamplePreview } from "./ExamplesOverviewPage"
+import { EXAMPLES } from "./examplesManifest"
 
 describe("ExamplePreview", () => {
   it("renders the How a Hit Travels constellation preview", () => {
@@ -73,6 +74,11 @@ describe("ExamplesOverviewPage", () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getAllByRole("link")[0].getAttribute("href")).toBe("/examples/how-a-hit-travels")
+    const newestExample = [...EXAMPLES].sort((left, right) => {
+      const publishedDifference = Date.parse(right.publishedAt) - Date.parse(left.publishedAt)
+      return publishedDifference || left.path.localeCompare(right.path)
+    })[0]
+
+    expect(screen.getAllByRole("link")[0].getAttribute("href")).toBe(newestExample.path)
   })
 })

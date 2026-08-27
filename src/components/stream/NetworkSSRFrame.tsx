@@ -108,6 +108,7 @@ export function NetworkSSRFrame({
       }
       style={{
         position: "relative",
+        fontFamily: "var(--semiotic-font-family, sans-serif)",
         width: responsiveWidth ? "100%" : size[0],
         height: responsiveHeight ? "100%" : size[1]
       }}

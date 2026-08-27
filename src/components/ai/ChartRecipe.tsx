@@ -15,6 +15,10 @@ import {
   getRecipeLayout,
   resolveChartRecipe,
 } from "./chartRecipeRegistry"
+import {
+  isBuiltInChartRecipeLayoutId,
+  registerBuiltInChartRecipeLayouts,
+} from "./builtInChartRecipeLayouts"
 
 export type ChartRecipe = ChartRecipeDefinition
 
@@ -31,6 +35,14 @@ function runtimeLayout(
 ): CustomLayoutFunction | undefined {
   if (typeof recipe.layout === "function") return recipe.layout
   if (isRegisteredRecipeLayout(recipe.layout)) {
+    const registeredLayout = getRecipeLayout(recipe.layout.id)
+    if (registeredLayout) return registeredLayout
+
+    // The browser AI entry registers portable manifests for discovery without
+    // retaining their rendering implementations. Install the built-ins only
+    // when a renderer actually needs a layout that has not been overridden.
+    if (!isBuiltInChartRecipeLayoutId(recipe.layout.id)) return undefined
+    registerBuiltInChartRecipeLayouts()
     return getRecipeLayout(recipe.layout.id)
   }
   return undefined

@@ -129,9 +129,36 @@ describe("public API compatibility comparison", () => {
       const areaChart = snapshot.match(/^function AreaChart.*$/m)?.[0]
       assert.ok(areaChart, "AreaChart call signature is missing")
       assert.match(areaChart, /AreaChartProps<TDatum>/)
-      assert.match(areaChart, /React\.RefAttributes<RealtimeFrameHandle>/)
+      assert.match(
+        areaChart,
+        /React\.RefAttributes<RealtimeFrameHandle(?:<Datum, Datum>)?>/,
+      )
       assert.match(areaChart, /React\.ReactElement/)
       assert.doesNotMatch(areaChart, /\(props: any\)/)
+
+      const realtimeHandle = snapshot.match(/^interface RealtimeFrameHandle.*$/m)?.[0]
+      assert.ok(realtimeHandle, "RealtimeFrameHandle declaration is missing")
+      assert.match(
+        realtimeHandle,
+        /<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum>/,
+      )
+
+      const realtimeLineSignatures =
+        snapshot.match(/^function RealtimeLineChart.*$/gm) ?? []
+      assert.ok(
+        realtimeLineSignatures.some((line) =>
+          line.includes("RealtimeLineChartHandle<TDatum, TDatum>"),
+        ),
+        "RealtimeLineChart typed readback overload is missing",
+      )
+      assert.ok(
+        realtimeLineSignatures.some((line) =>
+          line.includes(
+            "RealtimeLineChartHandle<TDatum, AggregatedRealtimeDatum>",
+          ),
+        ),
+        "RealtimeLineChart aggregate readback overload is missing",
+      )
 
       const streamFrame = snapshot.match(/^(?:const|function) StreamXYFrame.*$/m)?.[0]
       assert.ok(streamFrame, "StreamXYFrame signature is missing")

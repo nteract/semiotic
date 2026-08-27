@@ -23,6 +23,7 @@ import {
   NEUTRAL_POS,
 } from "../shared/useLikertAggregation"
 import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
+import type { StyleRule } from "../shared/styleRules"
 
 // Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
 // LikertChart drives fill from `baseStyleExtras` (level-keyed
@@ -31,6 +32,11 @@ import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 // module scope avoids re-allocating on every render, which would
 // otherwise bust the helper's `basePieceStyle` memoization.
 const EMPTY_CATEGORY_INDEX_MAP = new Map<string, number>()
+
+function resolveLikertRuleValue(d: Datum): number | undefined {
+  const value = d.__likertPct ?? d.data?.__likertPct
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined
+}
 
 /**
  * LikertChart — visualize Likert scale survey responses.
@@ -108,6 +114,9 @@ export interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChar
    * For diverging orientation, use a diverging palette (red→neutral→blue).
    */
   colorScheme?: string[]
+
+  /** Ordered data-aware segment styling; fieldless thresholds use the displayed signed proportion. */
+  styleRules?: StyleRule[]
 
   categoryLabel?: string
   valueLabel?: string
@@ -211,6 +220,7 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     categoryAccessor = "question", valueAccessor, levelAccessor, countAccessor = "count",
     levels = DEFAULT_LIKERT_LEVELS, orientation = "horizontal",
     colorScheme: colorSchemeProp, barPadding = 20,
+    styleRules,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId, valueFormat,
     loading, loadingContent, emptyContent,
@@ -389,6 +399,8 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
+    styleRules,
+    resolveRuleValue: resolveLikertRuleValue,
     baseStyleExtras: (d) => {
       const label = d.__likertLevelLabel || d.data?.__likertLevelLabel
       const level = d.__likertLevel || d.data?.__likertLevel

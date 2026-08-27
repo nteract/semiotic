@@ -187,20 +187,32 @@ export interface RealtimeFrameProps {
   tickFormatValue?: (value: number) => string
 }
 
-export interface RealtimeFrameHandle {
-  push(point: Datum): void
-  pushMany(points: Datum[]): void
+/**
+ * Imperative push/readback contract shared by streaming-capable HOCs.
+ *
+ * `TDatum` is the authored input row accepted by `push`/`pushMany`/`replace`.
+ * `TReadDatum` defaults to the same type and exists for transforms whose
+ * materialized readback is deliberately different (RealtimeLineChart's
+ * aggregate mode). Omitting both parameters preserves the loose 3.x `Datum`
+ * surface.
+ */
+export interface RealtimeFrameHandle<
+  TDatum extends Datum = Datum,
+  TReadDatum extends Datum = TDatum,
+> {
+  push(point: TDatum): void
+  pushMany(points: TDatum[]): void
   /** Remove data by ID. Requires an ID accessor (pointIdAccessor or dataIdAccessor). */
-  remove(id: string | string[]): Datum[]
+  remove(id: string | string[]): TReadDatum[]
   /** Update data by ID in place. Requires an ID accessor. Returns previous values. */
-  update(id: string | string[], updater: (d: Datum) => Datum): Datum[]
+  update(id: string | string[], updater: (d: TReadDatum) => TReadDatum): TReadDatum[]
   /**
    * Ordinal-only bounded ingest: replace the buffer while preserving category
    * order and enter/move/exit transitions. XY/network/geo typically omit this.
    */
-  replace?(data: Datum[]): void
+  replace?(data: TDatum[]): void
   clear(): void
-  getData(): Datum[]
+  getData(): TReadDatum[]
   /** Returns the frame's resolved scales, or null if unavailable.
    *
    *  The concrete scales object differs by frame type — XY charts

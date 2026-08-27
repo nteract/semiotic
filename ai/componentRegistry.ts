@@ -54,7 +54,8 @@ import {
   GauntletChart,
   CrucibleChart,
   ChainReactionChart,
-  BigNumber
+  BigNumber,
+  ChartRecipe
 } from "semiotic/ai"
 
 import {
@@ -67,6 +68,7 @@ import {
 export interface RegistryEntry {
   component: ComponentType<any>
   category: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
+  recipeId?: string
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
@@ -128,5 +130,16 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
   CrucibleChart: { component: CrucibleChart, category: "physics" },
   ChainReactionChart: { component: ChainReactionChart, category: "physics" },
 
-  BigNumber: { component: BigNumber, category: "value" }
+  BigNumber: { component: BigNumber, category: "value" },
+
+  ParallelCoordinatesRecipe: {
+    component: ChartRecipe,
+    category: "ordinal",
+    recipeId: "ParallelCoordinatesRecipe"
+  },
+  CalendarHeatmapRecipe: {
+    component: ChartRecipe,
+    category: "xy",
+    recipeId: "CalendarHeatmapRecipe"
+  }
 }

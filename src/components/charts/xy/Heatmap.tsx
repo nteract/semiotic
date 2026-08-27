@@ -25,6 +25,8 @@ import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+import { composeStyleRules, type StyleRule } from "../shared/styleRules"
+import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
 
 registerXYPlugin(heatmapXYPlugin)
 
@@ -168,6 +170,12 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
   heatmapXBins?: number
   /** Number of y bins when aggregating. @default 20 */
   heatmapYBins?: number
+  /**
+   * Ordered data-aware cell styling. Aggregated cells expose `value`, `count`,
+   * `sum`, `xCenter`, `yCenter`, and `agg`; the default rule value is the
+   * displayed aggregate and x/y channels are bin centers.
+   */
+  styleRules?: StyleRule[]
 
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
   xExtent?: [number | undefined, number | undefined] | [number]
@@ -278,6 +286,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
     heatmapAggregation,
     heatmapXBins,
     heatmapYBins,
+    styleRules,
     xExtent,
     yExtent,
     frameProps = {},
@@ -386,9 +395,21 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
       strokeWidth: borderWidth,
     })
   }, [cellBorderColor, cellBorderWidth])
+  const cellRuleContext = useMemo(
+    () => makeHeatmapRuleContext(
+      xAccessor as string | ((d: Datum) => unknown) | undefined,
+      yAccessor as string | ((d: Datum) => unknown) | undefined,
+      valueAccessor as string | ((d: Datum) => unknown) | undefined,
+    ),
+    [xAccessor, yAccessor, valueAccessor],
+  )
+  const ruledCellStyle = useMemo(
+    () => composeStyleRules(baseCellStyle, styleRules, cellRuleContext),
+    [baseCellStyle, styleRules, cellRuleContext],
+  )
   const cellStyle = useMemo(
-    () => wrapStyleWithSelection(baseCellStyle, activeSelectionHook, resolvedSelection),
-    [activeSelectionHook, baseCellStyle, resolvedSelection],
+    () => wrapStyleWithSelection(ruledCellStyle, activeSelectionHook, resolvedSelection),
+    [activeSelectionHook, ruledCellStyle, resolvedSelection],
   )
 
   // showValues is handled natively by the canvas renderer and SSR SVG path.

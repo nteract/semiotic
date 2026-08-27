@@ -270,6 +270,40 @@ ref.current.update("p1", d => ({ ...d, y: 99 }))      // update in place
 ref.current.clear()                                    // reset
 ref.current.getData()                                  // read current data`} language="js" />
 
+      <h3>Typed handles</h3>
+      <p>
+        In TypeScript, parameterize <code>RealtimeFrameHandle</code> with the authored row type.
+        The same type flows through <code>push</code>, <code>pushMany</code>, <code>remove</code>,{" "}
+        <code>update</code>, and <code>getData</code>. The unparameterized form remains the loose
+        3.x-compatible <code>Datum</code> handle.
+      </p>
+      <CodeBlock code={`import type { RealtimeFrameHandle } from "semiotic/realtime"
+
+interface Reading {
+  id: string
+  time: number
+  value: number
+}
+
+const ref = useRef<RealtimeFrameHandle<Reading>>(null)
+ref.current?.push({ id: "sensor-1", time: Date.now(), value: 42 })
+ref.current?.update("sensor-1", row => ({ ...row, value: row.value + 1 }))
+const rows: Reading[] = ref.current?.getData() ?? []
+
+<RealtimeLineChart<Reading>
+  ref={ref}
+  pointIdAccessor="id"
+  timeAccessor="time"
+  valueAccessor="value"
+/>
+// omit data: the ref owns ingestion`} language="tsx" />
+      <p>
+        <code>RealtimeLineChart</code> aggregate mode has a deliberate different readback type:
+        use <code>RealtimeLineChartHandle&lt;Reading, AggregatedRealtimeDatum&gt;</code>. It still
+        accepts <code>Reading</code> in <code>push()</code>, while <code>getData()</code> returns
+        the displayed window summaries.
+      </p>
+
       <p>
         <code>remove()</code> and <code>update()</code> require an ID accessor so
         the store can find the item to modify. XY charts use <code>pointIdAccessor</code>,
@@ -450,6 +484,7 @@ useSyncedPushData(ref, rows, { id: "id", resetKey: theme })
         <li><strong>Network edge cascade.</strong> Removing a node automatically removes all connected edges. You don't need to remove edges manually.</li>
         <li><strong>Extent tracking.</strong> The store tracks min/max values incrementally. When you remove an item that was the min or max, the extent is marked dirty and recalculated on the next scene computation.</li>
         <li><strong>Update preserves buffer position.</strong> Unlike remove+push, <code>update()</code> modifies the datum in place. This matters for decay encoding (age-based opacity) — an updated item keeps its original age.</li>
+        <li><strong>Typed refs are additive.</strong> <code>RealtimeFrameHandle&lt;TDatum&gt;</code> preserves row types; existing <code>RealtimeFrameHandle</code> refs remain valid.</li>
       </ul>
     </PageLayout>
   )

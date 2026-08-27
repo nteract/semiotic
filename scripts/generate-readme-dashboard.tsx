@@ -349,11 +349,19 @@ function currentReleaseDate(version: string): string {
   return match?.[1] ?? new Date().toISOString().slice(0, 10)
 }
 
-function schemaCount(version: string): number {
+function schemaCounts(version: string): { charts: number; recipes: number } {
   const schema = version.startsWith("v")
-    ? readJsonAtTag<{ tools?: unknown[] }>(version, "ai/schema.json")
+    ? readJsonAtTag<{
+        tools?: Array<{
+          function?: { "x-semiotic-kind"?: string }
+        }>
+      }>(version, "ai/schema.json")
     : JSON.parse(readFileSync(resolve(repoRoot, "ai/schema.json"), "utf8"))
-  return schema.tools?.length ?? 0
+  const tools = schema.tools ?? []
+  const recipes = tools.filter(
+    (tool) => tool.function?.["x-semiotic-kind"] === "recipe"
+  ).length
+  return { charts: tools.length - recipes, recipes }
 }
 
 type Capabilities = {
@@ -606,13 +614,14 @@ function buildData() {
   const releaseIds = [...RELEASE_TAGS, currentId]
   const releaseRows = releaseIds.map((id, index) => {
     const label = id.replace(/^v/, "")
+    const catalog = schemaCounts(id)
     return {
       id,
       label,
       short: label.replace(/^3\./, ""),
       date: id.startsWith("v") ? tagDate(id) : currentReleaseDate(version),
       index,
-      charts: schemaCount(id),
+      ...catalog,
       exports: exportCount(id)
     }
   })
@@ -845,7 +854,7 @@ function buildDashboard() {
   <desc id="desc">A server-rendered dashboard showing Semiotic's chart catalog, bundle sizes, capability coverage, chart families, and documentation surface growth since version 3.0.0.</desc>
   <rect width="${width}" height="${height}" fill="${CURRENT_COLORS.bg}" />
   <g transform="translate(34,${kpiTop})">
-    ${kpi(0, "schema-backed charts", String(latest.charts), CURRENT_COLORS.blue)}
+    ${kpi(0, "charts + recipes", `${latest.charts} + ${latest.recipes}`, CURRENT_COLORS.blue)}
     ${kpi(158, "SSR renderable", String(ssrCount), CURRENT_COLORS.teal)}
     ${kpi(292, "push capable", String(pushCount), CURRENT_COLORS.purple)}
     ${kpi(421, "linked hover", String(linkedCount), CURRENT_COLORS.magenta)}
@@ -854,7 +863,7 @@ function buildDashboard() {
     ${kpi(836, "AI bundle", `${aiBundle.kb}KB`, CURRENT_COLORS.red)}
     ${kpi(958, "server bundle", `${serverBundle.kb}KB`, CURRENT_COLORS.cyan)}
   </g>
-  ${card(24, cardTop, topW, topH, "Catalog growth", `${first.charts} charts in ${first.label} → ${latest.charts} in ${latest.label}`, chartGrowth, "AI schema count + public package exports, read from release artifacts")}
+  ${card(24, cardTop, topW, topH, "Catalog growth", `${first.charts} charts in ${first.label} → ${latest.charts} charts + ${latest.recipes} recipes in ${latest.label}`, chartGrowth, "AI schema count + public package exports, read from release artifacts")}
   ${card(24 + topW + gap, cardTop, topW, topH, "Bundle budget", "Subpath imports keep production payloads intentional", bundleChart, "Measured from current production dist with gzip -9")}
   ${card(24 + (topW + gap) * 2, cardTop, topW, topH, "Capability surface", "SSR, push, hover, and selection coverage stay explicit", capabilityChart, "Capability matrix began in 3.5.2 and is release-gated")}
   ${card(24, cardTop + topH + gap, bottomW, bottomH, "Families by render path", "SSR is broad; realtime stays browser/live where that is the point", familyChart, "Stacked by SSR-renderable vs browser/live-only chart count")}
