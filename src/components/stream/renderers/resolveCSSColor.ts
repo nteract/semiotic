@@ -50,6 +50,8 @@ let observerInstalled = false
 let installedObserver: MutationObserver | null = null
 let installedMql: MediaQueryList | null = null
 let installedMqlHandler: ((e: MediaQueryListEvent) => void) | null = null
+let installedFontSet: FontFaceSet | null = null
+let installedFontLoadHandler: ((event: Event) => void) | null = null
 type CSSColorInvalidationSubscriber = {
   getElement: () => Element | null
   listener: () => void
@@ -78,6 +80,12 @@ function teardownGlobalObserver(): void {
   }
   installedMql = null
   installedMqlHandler = null
+
+  if (installedFontSet && installedFontLoadHandler) {
+    installedFontSet.removeEventListener("loadingdone", installedFontLoadHandler)
+  }
+  installedFontSet = null
+  installedFontLoadHandler = null
   observerInstalled = false
 }
 
@@ -188,13 +196,23 @@ function ensureGlobalObserver(): void {
       // matchMedia can throw in older browsers / jsdom — safe to ignore
     }
   }
+
+  // Canvas text does not participate in the browser's font cascade after it
+  // has been painted. A web font named by --semiotic-font-family may finish
+  // loading after the first frame, so repaint settled canvases when the font
+  // set completes a load cycle. SVG/HTML update themselves automatically.
+  if (document.fonts && typeof document.fonts.addEventListener === "function") {
+    installedFontSet = document.fonts
+    installedFontLoadHandler = () => invalidateAndNotify()
+    installedFontSet.addEventListener("loadingdone", installedFontLoadHandler)
+  }
 }
 
 /**
- * Repaint subscription for settled canvases whose CSS cascade changes without
- * a ThemeStore update (ancestor class/style changes or system color-scheme
- * media changes). Notifications are scoped to the subscribed element's DOM
- * branch; requestAnimationFrame coalescing remains owned by the frame.
+ * Repaint subscription for settled canvases whose CSS cascade or loaded fonts
+ * change without a ThemeStore update. CSS mutation notifications are scoped
+ * to the subscribed element's DOM branch; font completion is document-wide.
+ * requestAnimationFrame coalescing remains owned by the frame.
  */
 export function subscribeToCSSColorInvalidation(
   getElement: () => Element | null,

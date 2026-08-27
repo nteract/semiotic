@@ -1,5 +1,10 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { SemioticTheme } from "./themeCore"
+import type {
+  AestheticFeatureId,
+  AestheticProfile,
+  AestheticThresholds,
+} from "../ai/aestheticProfileTypes"
 import { DARK_THEME, LIGHT_THEME } from "./themeCore"
 
 /**
@@ -264,6 +269,51 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   const tickSize = resolvePixelDimension(byPath.get("semiotic.tick-font-size")?.value)
   const labelSize = resolvePixelDimension(byPath.get("semiotic.axis-label-font-size")?.value)
 
+  // Organizational aesthetic policy is metadata, not paint. Native tokens
+  // preserve it so the same theme object can drive rendering and evaluation.
+  const aestheticWeights: Partial<Record<AestheticFeatureId, number>> = {}
+  const aestheticThresholds: AestheticThresholds = {}
+  const aestheticRationales: Partial<Record<AestheticFeatureId, string>> = {}
+  for (const token of flat) {
+    const weight = token.path.match(/^semiotic\.aesthetics\.weights\.(.+)$/)
+    if (weight && typeof token.value === "number" && Number.isFinite(token.value)) {
+      aestheticWeights[weight[1] as AestheticFeatureId] = token.value
+    }
+    const threshold = token.path.match(/^semiotic\.aesthetics\.thresholds\.(.+)$/)
+    if (threshold && typeof token.value === "number" && Number.isFinite(token.value)) {
+      aestheticThresholds[threshold[1] as keyof AestheticThresholds] = token.value
+    }
+    const rationale = token.path.match(/^semiotic\.aesthetics\.rationales\.(.+)$/)
+    if (rationale && typeof token.value === "string") {
+      aestheticRationales[rationale[1] as AestheticFeatureId] = token.value
+    }
+  }
+  const aestheticName = byPath.get("semiotic.aesthetics.profile")?.value
+  const aestheticMinimum = byPath.get("semiotic.aesthetics.minimum-score")?.value
+  const hasAestheticPolicy =
+    typeof aestheticName === "string" ||
+    typeof aestheticMinimum === "number" ||
+    Object.keys(aestheticWeights).length > 0 ||
+    Object.keys(aestheticThresholds).length > 0 ||
+    Object.keys(aestheticRationales).length > 0
+  const aesthetics: AestheticProfile | undefined = hasAestheticPolicy
+    ? {
+        ...(typeof aestheticName === "string" ? { name: aestheticName } : {}),
+        ...(typeof aestheticMinimum === "number"
+          ? { minimumScore: aestheticMinimum }
+          : {}),
+        ...(Object.keys(aestheticWeights).length > 0
+          ? { weights: aestheticWeights }
+          : {}),
+        ...(Object.keys(aestheticThresholds).length > 0
+          ? { thresholds: aestheticThresholds }
+          : {}),
+        ...(Object.keys(aestheticRationales).length > 0
+          ? { rationales: aestheticRationales }
+          : {}),
+      }
+    : undefined
+
   // Mode + base theme.
   const bgLum = luminance(resolved.background)
   const mode = options.base?.mode ?? (bgLum != null ? (bgLum < 0.5 ? "dark" : "light") : LIGHT_THEME.mode)
@@ -290,5 +340,6 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
       ...(tickSize != null ? { tickSize } : {}),
       ...(labelSize != null ? { labelSize } : {}),
     },
+    ...(aesthetics ? { aesthetics } : {}),
   }
 }

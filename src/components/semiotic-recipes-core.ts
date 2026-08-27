@@ -128,6 +128,23 @@ export type { FlextreeConfig } from "./recipes/flextree"
 export { dagreLayout } from "./recipes/dagre"
 export type { DagreConfig } from "./recipes/dagre"
 
+export {
+  transitDiagramLayout,
+  computeTransitDiagramPositions,
+  octilinearRoute,
+  offsetTransitPath,
+  roundedTransitPath,
+} from "./recipes/transitDiagram"
+export type {
+  TransitDiagramConfig,
+  TransitDiagramLineDescriptor,
+  TransitDiagramLineValue,
+  TransitDiagramPoint,
+  TransitDiagramPositionOptions,
+  TransitDiagramPositionResult,
+  TransitDiagramPositionedNode,
+} from "./recipes/transitDiagram"
+
 export { lineageDagLayout } from "./recipes/lineageDag"
 export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
 

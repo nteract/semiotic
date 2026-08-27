@@ -57,7 +57,7 @@ import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import { rehitOrdinalFrameCursor } from "./ordinalFrameCursorInteraction"
 
 // Canvas setup / hover
-import { getDevicePixelRatio } from "./canvasSetup"
+import { getDevicePixelRatio, subscribeToCanvasFontInvalidation } from "./canvasSetup"
 import type { HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { resolveFrameGraphics } from "./frameGraphics"
@@ -253,6 +253,11 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       tableId,
       rafRef, renderFnRef, scheduleRender, frameRuntime,
     } = frame
+
+    useEffect(() => subscribeToCanvasFontInvalidation(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }), [scheduleRender])
 
     // ── Hydration boundary ───────────────────────────────────────────────
     // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
@@ -950,6 +955,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{
             position: "relative",
+            fontFamily: "var(--semiotic-font-family, sans-serif)",
             width: responsiveWidth ? "100%" : size[0],
             height: responsiveHeight ? "100%" : size[1],
           }}
@@ -1044,6 +1050,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         tabIndex={0}
         style={{
           position: "relative",
+          fontFamily: "var(--semiotic-font-family, sans-serif)",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",

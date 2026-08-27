@@ -593,7 +593,7 @@ export default function LDATopicCrucibleExamplePage() {
           </aside>
         </header>
 
-        <main className="ltc-body">
+        <div className="ltc-body">
           <blockquote className="ltc-method-quote">
             <p>“Tools are enshrined methodologies.”</p>
             <cite>
@@ -978,7 +978,7 @@ export default function LDATopicCrucibleExamplePage() {
               the <Link to="/charts/crucible-chart">CrucibleChart API</Link>.
             </p>
           </footer>
-        </main>
+        </div>
       </div>
     </ExamplePageLayout>
   )
