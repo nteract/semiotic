@@ -133,6 +133,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       pointOpacity: { type: "number", default: 0.7 },
       categoryPadding: { type: "number", default: 20 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
       // Brush props are runtime-only — schema.json hides them from LLMs.
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
@@ -164,6 +165,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       outlierRadius: { type: "number", default: 3 },
       categoryPadding: { type: "number", default: 20 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -190,6 +192,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       relative: { type: "boolean", default: false, description: "Normalize counts per category to show relative frequency" },
       categoryPadding: { type: "number", default: 20 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
       brush: { type: "boolean", description: "Enable a value-axis brush overlay for range selection." },
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, rField? }." },
@@ -221,6 +224,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       showIQR: { type: "boolean", default: true, description: "Show interquartile range lines" },
       categoryPadding: { type: "number", default: 20 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], omitFromSchema: true },
@@ -251,6 +255,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       amplitude: { type: "number", default: 1.5, description: "Unitless multiplier of row height (>1 creates overlap)" },
       categoryPadding: { type: "number", omitFromSchema: true },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -278,6 +283,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       dotRadius: { type: "number", default: 5 },
       categoryPadding: { type: "number", default: 10 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
       // Canonical schema flags showGrid `true` for DotPlot — grid lines help
       // readers eyeball values along the value axis.
       showGrid: { type: "boolean", default: true },
@@ -307,6 +313,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       data: { type: "array", description: "Array of data objects" },
       categoryAccessor: { type: ["string", "function"], default: "category" },
       valueAccessor: { type: ["string", "function"], default: "value" },
+      styleRules: STYLE_RULES_PROP_SPEC,
       // schema.json describes `startAngle` as radians but the runtime
       // converts via degrees → radians (`* Math.PI / 180`). The JSDoc on
       // PieChartProps was corrected; the schema description here intentionally
@@ -337,6 +344,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       data: { type: "array", description: "Array of data objects" },
       categoryAccessor: { type: ["string", "function"], default: "category" },
       valueAccessor: { type: ["string", "function"], default: "value" },
+      styleRules: STYLE_RULES_PROP_SPEC,
       innerRadius: { type: "number", default: 60, description: "Inner radius of the donut hole in pixels" },
       centerContent: { type: ["boolean", "object", "string", "number"], description: "React node to render in the center of the donut; false suppresses it." },
       startAngle: { type: "number", default: 0 },
@@ -398,6 +406,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       centerContent: { type: ["object", "string", "number", "function"], omitFromSchema: true },
       showScaleLabels: { type: "boolean", default: true },
       backgroundColor: { type: "string", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -432,6 +441,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       showCategoryTicks: { type: "boolean", default: false, description: "Show category tick labels on ordinal axis" },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -457,6 +467,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       seriesAccessor: { type: ["string", "function"], description: "Series identity; points with the same series are connected into a polygon. Defaults to colorBy." },
       pointRadius: { type: "number", default: 4 },
       valueExtent: { type: "array", description: "Fixed value-axis domain; defaults to [0, data-max]." },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -494,6 +505,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       tickLabelEdgeAlign: { type: "boolean", description: "Align endpoint tick labels inward to avoid clipping." },
       responsiveWidth: { type: "boolean" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -528,6 +540,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       barPadding: { type: "number", default: 20 },
       valueExtent: { type: "array", omitFromSchema: true },
+      styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
       renderModes: ["hybrid"],

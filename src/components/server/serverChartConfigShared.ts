@@ -3,6 +3,7 @@ import type { ChartMode } from "../charts/shared/types"
 import type { ChartModeInput, ChartModeResult } from "../charts/shared/chartMode"
 import type { SemioticTheme } from "../store/themeCore"
 import type { ReactNode } from "react"
+import type { EvidenceSink } from "./renderEvidence"
 /**
  * Shared helpers + ChartConfig type for serverChartConfigs family modules.
  */
@@ -37,6 +38,18 @@ export interface ChartConfig {
   layout?: ServerChartLayoutDefaults
   /** Build frame props from HOC-level props */
   buildProps: (data: ServerChartData, colorBy: ServerAccessor | undefined, colorScheme: ServerColorScheme, common: Datum, rest: Datum) => Datum
+  /**
+   * Render a chart-owned static composition instead of one Stream Frame.
+   *
+   * Composite HOCs such as MinimapChart and ScatterplotMatrix have more than
+   * one scene, while ChainReactionChart's semantic reading is authored SVG
+   * chrome over an intentionally empty physics body scene. Forcing those
+   * forms through a single lower-level frame either drops meaning or returns
+   * an empty image. A custom renderer still receives the normalized
+   * HOC-level props and must populate the same evidence sink as a frame
+   * renderer, so `renderChartWithEvidence()` remains truthful.
+   */
+  renderStatic?: (frameProps: Datum, sink?: EvidenceSink) => string
   /** Optional chart-owned SVG overlay rendered after the shared frame. */
   renderOverlay?: (frameProps: Datum, context: ServerChartOverlayContext) => ReactNode
 }

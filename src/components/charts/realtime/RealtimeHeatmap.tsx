@@ -56,6 +56,8 @@ import {
   useRealtimeFrameHandle,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
+import { composeStyleRules, type StyleRule } from "../shared/styleRules"
+import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
 
 registerXYPlugin(heatmapXYPlugin)
 
@@ -130,6 +132,11 @@ export interface RealtimeHeatmapProps<
   customColorScale?: (value: number) => string
   /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
   cursor?: CSSProperties["cursor"]
+  /**
+   * Ordered styling for displayed aggregate cells. Rule `value` is the chosen
+   * aggregate; `count`, `sum`, `xCenter`, `yCenter`, and `agg` are fields.
+   */
+  styleRules?: StyleRule[]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -225,7 +232,7 @@ export interface RealtimeHeatmapProps<
  */
 export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
   TDatum extends Datum = Datum
->(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -248,6 +255,7 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     colorScheme,
     customColorScale,
     cursor,
+    styleRules,
     background,
     tooltipContent,
     tooltip,
@@ -385,8 +393,20 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     const style = { cursor }
     return () => style
   }, [cursor])
+  const cellRuleContext = useMemo(
+    () => makeHeatmapRuleContext(
+      (timeAccessor ?? "time") as string | ((d: Datum) => unknown),
+      (valueAccessor ?? "value") as string | ((d: Datum) => unknown),
+      (valueAccessor ?? "value") as string | ((d: Datum) => unknown),
+    ),
+    [timeAccessor, valueAccessor],
+  )
+  const ruledCellStyle = useMemo(
+    () => composeStyleRules(cursorCellStyle, styleRules, cellRuleContext),
+    [cursorCellStyle, styleRules, cellRuleContext],
+  )
   const interactiveCellStyle = useRealtimeSelectionStyle(
-    cursorCellStyle,
+    ruledCellStyle,
     [
       hoverSelectionHook,
       gradientLegendState.legendSelectionHook,
@@ -461,9 +481,15 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     />
   )
 }) as unknown as {
+  /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeHeatmapProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
+  ): React.ReactElement | null
+  /** Typed refs retain the authored row through mutation and readback. */
+  <TDatum extends Datum = Datum>(
+    props: RealtimeHeatmapProps<TDatum> &
+      React.RefAttributes<RealtimeFrameHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }

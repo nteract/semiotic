@@ -49,6 +49,8 @@ export type {
 
 export const DEFAULT_WIDTH = 900
 export const DEFAULT_HEIGHT = 520
+export const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] =
+  []
 
 export function gauntletWallColliders(
   layout: Pick<GauntletLayout, "width" | "floorY"> &

@@ -13,6 +13,7 @@ import type {
   PhysicsSemanticItem
 } from "../../stream/physics/StreamPhysicsTypes"
 import { resolveCanvasPaint } from "../../stream/renderers/canvasRenderHelpers"
+import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 import {
   CORE_KIND,
   NEGATIVE_KIND,
@@ -94,7 +95,8 @@ export function drawGauntletBody(
       GAUNTLET_SURFACE_PAINT,
       "#fff"
     )
-    ctx.font = `900 ${datum.kind === NEGATIVE_KIND ? 9 : 8}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+    const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
+    ctx.font = `900 ${datum.kind === NEGATIVE_KIND ? 9 : 8}px ${fontFamily}`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
     ctx.fillText(property?.short ?? property?.id?.slice(0, 1).toUpperCase() ?? "?", 0, 0.5)

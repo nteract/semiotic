@@ -2,7 +2,7 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import {
   DifferenceChart,
   computeDifferenceSegments,
@@ -10,6 +10,20 @@ import {
 } from "./DifferenceChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
+import { LinkedCharts, useSelectionActions } from "../../LinkedCharts"
+
+function SelectDifferenceWinner() {
+  const { selectPoints } = useSelectionActions(
+    "difference-winner",
+    "test-producer"
+  )
+
+  React.useEffect(() => {
+    selectPoints({ __diffWinner: ["A"] })
+  }, [selectPoints])
+
+  return null
+}
 
 // Mock StreamXYFrame to capture props
 let lastXYFrameProps = {} as CapturedXYFrameProps
@@ -477,6 +491,52 @@ describe("DifferenceChart", () => {
     const lineStyle = lastXYFrameProps.lineStyle
     expect(lineStyle({ __diffSegment: "line-A" }).stroke).toBe("#ff0000")
     expect(lineStyle({ __diffSegment: "line-B" }).stroke).toBe("#0000ff")
+  })
+
+  it("dims non-matching area, line, and point marks for linked selections", async () => {
+    render(
+      <TooltipProvider>
+        <LinkedCharts showLegend={false}>
+          <SelectDifferenceWinner />
+          <DifferenceChart
+            data={sampleData}
+            xAccessor="date"
+            seriesAAccessor="actual"
+            seriesBAccessor="forecast"
+            showPoints
+            selection={{
+              name: "difference-winner",
+              unselectedOpacity: 0.17
+            }}
+          />
+        </LinkedCharts>
+      </TooltipProvider>
+    )
+
+    await waitFor(() => {
+      expect(lastXYFrameProps.areaStyle({
+        __diffSegment: "seg-0-B",
+        __diffWinner: "B"
+      }).fillOpacity).toBe(0.17)
+      expect(lastXYFrameProps.lineStyle({
+        __diffSegment: "line-B",
+        __diffWinner: "B"
+      }).strokeOpacity).toBe(0.17)
+      expect(lastXYFrameProps.pointStyle({
+        __diffSegment: "line-B",
+        __diffWinner: "B"
+      }).fillOpacity).toBe(0.17)
+    })
+
+    expect(lastXYFrameProps.areaStyle({
+      __diffSegment: "seg-0-A",
+      __diffWinner: "A"
+    }).fillOpacity).toBe(0.6)
+    expect(
+      lastXYFrameProps.data
+        .filter((datum) => datum.__diffSegment === "line-A")
+        .every((datum) => datum.__diffWinner === "A")
+    ).toBe(true)
   })
 
   it("forwards a custom legend with series labels", () => {

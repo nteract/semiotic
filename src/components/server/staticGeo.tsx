@@ -1,7 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.browser"
+import * as ReactDOMServer from "react-dom/server"
 import { GeoPipelineStore } from "../stream/GeoPipelineStore"
 import type { GeoPipelineConfig, StreamGeoFrameProps } from "../stream/geoTypes"
 import {

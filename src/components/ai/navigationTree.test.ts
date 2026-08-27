@@ -165,11 +165,16 @@ describe("buildNavigationTree — network, hierarchy, and geo families", () => {
       valueAccessor: "value",
       childrenAccessor: "children"
     })
-    expect(tree.label).toContain("2 leaves across 3 hierarchy levels")
+    expect(tree.label).toBe(
+      "A treemap chart with 2 leaves and 3 total descendants across 3 hierarchy levels, leaf total 6."
+    )
     const rootBranch = tree.children?.[0]
-    expect(rootBranch?.label).toBe("Total: 2 descendants, total 6.")
+    expect(rootBranch?.label).toBe(
+      "Total: 2 direct children, 3 total descendants, 2 leaves, leaf total 6."
+    )
+    expect(rootBranch?.datum).toMatchObject({ name: "Total" })
     expect(rootBranch?.children?.[0].label).toBe(
-      "Engineering: 1 descendant, total 4."
+      "Engineering: 1 direct child, 1 total descendant, 1 leaf, leaf total 4."
     )
     expect(rootBranch?.children?.[0].children?.[0]).toMatchObject({
       role: "datum",
@@ -191,11 +196,86 @@ describe("buildNavigationTree — network, hierarchy, and geo families", () => {
     expect(tree.label).toContain(
       "Use linked highlighting to compare related locations."
     )
-    expect(tree.children?.[0].label).toBe("Regions: 2 marks.")
-    expect(tree.children?.[0].children?.map((child) => child.label)).toEqual([
-      "North: 8.",
-      "South: 3."
+    expect(tree.label).toContain(
+      "Values are available for 2 of 2 regions; range 3 to 8, average 5.5, total 11."
+    )
+    expect(tree.children?.map((child) => child.label)).toEqual([
+      "Highest values: 1 region, range 8 to 8, average 8, total 8.",
+      "Lowest values: 1 region, range 3 to 3, average 3, total 3."
     ])
+    expect(
+      tree.children
+        ?.flatMap((child) => child.children ?? [])
+        .map((child) => child.label)
+    ).toEqual(["North: 8, rank 1 of 2.", "South: 3, rank 2 of 2."])
+  })
+
+  it("speaks hierarchy zeros and negatives and caps omitted leaves once per branch", () => {
+    const tree = buildNavigationTree(
+      "TreeDiagram",
+      {
+        data: {
+          name: "Portfolio",
+          children: [
+            {
+              name: "Signed",
+              children: [
+                { name: "Zero", value: 0 },
+                { name: "Loss", value: -4 },
+                { name: "Gain", value: 9 }
+              ]
+            },
+            { name: "Deferred", value: 3 }
+          ]
+        }
+      },
+      { maxLeaves: 2 }
+    )
+    const portfolio = tree.children?.[0]
+    const signed = portfolio?.children?.[0]
+
+    expect(tree.label).toContain("4 leaves and 5 total descendants")
+    expect(tree.label).toContain("leaf total 8")
+    expect(signed?.children?.map((child) => child.label)).toEqual([
+      "Zero: 0.",
+      "Loss: -4.",
+      "1 more leaf in Signed not shown; navigation is capped at 2."
+    ])
+    expect(portfolio?.children?.[1].label).toBe(
+      "1 more leaf in Portfolio not shown; navigation is capped at 2."
+    )
+  })
+
+  it("groups choropleth regions into metric readings and isolates missing values", () => {
+    const areas = [
+      { type: "Feature", properties: { name: "Alpha", score: 100 } },
+      { type: "Feature", properties: { name: "Beta", score: 60 } },
+      { type: "Feature", properties: { name: "Gamma", score: 40 } },
+      { type: "Feature", properties: { name: "Delta", score: 10 } },
+      { type: "Feature", properties: { name: "Unknown", score: null } }
+    ]
+    const tree = buildNavigationTree("ChoroplethMap", {
+      areas,
+      valueAccessor: "score"
+    })
+
+    expect(tree.label).toContain(
+      "Values are available for 4 of 5 regions; range 10 to 100, average 52.5, total 210."
+    )
+    expect(tree.children?.map((child) => child.label)).toEqual([
+      "Highest values: 1 region, range 100 to 100, average 100, total 100.",
+      "Middle values: 2 regions, range 40 to 60, average 50, total 100.",
+      "Lowest values: 1 region, range 10 to 10, average 10, total 10.",
+      "No numeric value: 1 region, no numeric values."
+    ])
+    expect(tree.children?.[1].children?.map((child) => child.label)).toEqual([
+      "Beta: 60, rank 2 of 4.",
+      "Gamma: 40, rank 3 of 4."
+    ])
+    expect(tree.children?.[3].children?.[0]).toMatchObject({
+      label: "Unknown: no numeric value.",
+      datum: areas[4]
+    })
   })
 
   it("uses FlowMap nodes and ProportionalSymbolMap point IDs for locations", () => {

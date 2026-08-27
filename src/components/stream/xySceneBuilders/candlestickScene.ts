@@ -75,7 +75,10 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
       wickColor,
       wickWidth,
       isUp,
-      style: { cursor: cs.cursor },
+      style: {
+        cursor: cs.cursor,
+        ...(ctx.config.pointStyle?.(d) ?? {}),
+      },
       datum: d,
     }
     if (isRangeMode) {

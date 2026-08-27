@@ -59,7 +59,9 @@ import {
   xyCustomChart,
   ordinalCustomChart,
   networkCustomChart,
-  geoCustomChart
+  geoCustomChart,
+  parallelCoordinatesRecipe,
+  calendarHeatmapRecipe
 } from "./serverChartConfigsCustom"
 import {
   galtonBoardChart,
@@ -72,6 +74,11 @@ import {
   packetFlowChart,
   physicsCustomChart
 } from "./serverChartConfigsPhysics"
+import {
+  chainReactionChart,
+  minimapChart,
+  scatterplotMatrix
+} from "./serverChartConfigsComposite"
 
 // ── Registry ───────────────────────────────────────────────────────────
 
@@ -94,6 +101,8 @@ export const CHART_CONFIGS = {
   Heatmap: heatmap,
   WaterfallChart: waterfallChart,
   MultiAxisLineChart: multiAxisLineChart,
+  MinimapChart: minimapChart,
+  ScatterplotMatrix: scatterplotMatrix,
   TemporalHistogram: temporalHistogram,
   XYCustomChart: xyCustomChart,
   BarChart: barChart,
@@ -113,6 +122,8 @@ export const CHART_CONFIGS = {
   RadarChart: radarChart,
   GaugeChart: gaugeChart,
   OrdinalCustomChart: ordinalCustomChart,
+  ParallelCoordinatesRecipe: parallelCoordinatesRecipe,
+  CalendarHeatmapRecipe: calendarHeatmapRecipe,
   ForceDirectedGraph: forceDirectedGraph,
   NetworkCustomChart: networkCustomChart,
   SankeyDiagram: sankeyDiagram,
@@ -135,5 +146,6 @@ export const CHART_CONFIGS = {
   GauntletChart: gauntletChart,
   CrucibleChart: crucibleChart,
   PacketFlowChart: packetFlowChart,
+  ChainReactionChart: chainReactionChart,
   PhysicsCustomChart: physicsCustomChart
 } satisfies Record<string, ChartConfig>

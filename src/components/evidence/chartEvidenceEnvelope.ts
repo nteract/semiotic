@@ -12,9 +12,12 @@ import {
   CHART_ACCESS_CONTRACT_VERSION,
   createChartAccessContract,
   type ChartAccessContract,
-  type StreamStatusInput,
+  type StreamStatusInput
 } from "../access/chartAccessContract"
-import { buildReaderGrounding, type ChartReaderGrounding } from "../ai/readerGrounding"
+import {
+  buildReaderGrounding,
+  type ChartReaderGrounding
+} from "../ai/readerGrounding"
 import { profileData } from "../ai/profileData"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RenderEvidence } from "../server/renderEvidence"
@@ -160,7 +163,9 @@ function stableStringify(value: unknown): string {
     const entries = Object.entries(value as Record<string, unknown>)
       .filter(([, nested]) => nested !== undefined)
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`)
+      .map(
+        ([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`
+      )
     return `{${entries.join(",")}}`
   }
   return JSON.stringify(value)
@@ -180,8 +185,8 @@ export function stableEvidenceHash(value: unknown): string {
 function sha256Hex(message: string): string {
   const k = SHA256_K
   const h = [
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c,
+    0x1f83d9ab, 0x5be0cd19
   ]
   const bytes = Array.from(new TextEncoder().encode(message))
   const bitLength = bytes.length * 8
@@ -190,23 +195,36 @@ function sha256Hex(message: string): string {
   const high = Math.floor(bitLength / 4294967296)
   const low = bitLength >>> 0
   bytes.push(
-    (high >>> 24) & 255, (high >>> 16) & 255,
-    (high >>> 8) & 255, high & 255,
-    (low >>> 24) & 255, (low >>> 16) & 255,
-    (low >>> 8) & 255, low & 255,
+    (high >>> 24) & 255,
+    (high >>> 16) & 255,
+    (high >>> 8) & 255,
+    high & 255,
+    (low >>> 24) & 255,
+    (low >>> 16) & 255,
+    (low >>> 8) & 255,
+    low & 255
   )
   const words: number[] = []
   for (let index = 0; index < bytes.length; index += 4) {
     words.push(
-      ((bytes[index]! << 24) | (bytes[index + 1]! << 16) |
-       (bytes[index + 2]! << 8) | bytes[index + 3]!) >>> 0
+      ((bytes[index]! << 24) |
+        (bytes[index + 1]! << 16) |
+        (bytes[index + 2]! << 8) |
+        bytes[index + 3]!) >>>
+        0
     )
   }
   for (let chunk = 0; chunk < words.length; chunk += 16) {
     const w = [...words.slice(chunk, chunk + 16)]
     for (let index = 16; index < 64; index += 1) {
-      const s0 = rotr(w[index - 15]!, 7) ^ rotr(w[index - 15]!, 18) ^ (w[index - 15]! >>> 3)
-      const s1 = rotr(w[index - 2]!, 17) ^ rotr(w[index - 2]!, 19) ^ (w[index - 2]! >>> 10)
+      const s0 =
+        rotr(w[index - 15]!, 7) ^
+        rotr(w[index - 15]!, 18) ^
+        (w[index - 15]! >>> 3)
+      const s1 =
+        rotr(w[index - 2]!, 17) ^
+        rotr(w[index - 2]!, 19) ^
+        (w[index - 2]! >>> 10)
       w[index] = (w[index - 16]! + s0 + w[index - 7]! + s1) >>> 0
     }
     let [a, b, c, d, e, f, g, hh] = h
@@ -217,9 +235,13 @@ function sha256Hex(message: string): string {
       const s0 = rotr(a!, 2) ^ rotr(a!, 13) ^ rotr(a!, 22)
       const maj = (a! & b!) ^ (a! & c!) ^ (b! & c!)
       const temp2 = (s0 + maj) >>> 0
-      hh = g; g = f; f = e
+      hh = g
+      g = f
+      f = e
       e = (d! + temp1) >>> 0
-      d = c; c = b; b = a
+      d = c
+      c = b
+      b = a
       a = (temp1 + temp2) >>> 0
     }
     const next = [a, b, c, d, e, f, g, hh]
@@ -244,10 +266,12 @@ const SHA256_K = [
   0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
   0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 ] as const
 
-function countIntendedMarks(props: Record<string, unknown>): number | undefined {
+function countIntendedMarks(
+  props: Record<string, unknown>
+): number | undefined {
   const rows = props.data
   if (!Array.isArray(rows)) return undefined
   return rows.length
@@ -269,7 +293,8 @@ function inferRenderParity(input: {
     return "unknown"
   }
   if (input.observed === 0 && input.intended > 0) return "mismatch"
-  if (input.evidence?.status === "empty" && input.intended > 0) return "mismatch"
+  if (input.evidence?.status === "empty" && input.intended > 0)
+    return "mismatch"
   return input.observed === input.intended ? "match" : "unknown"
 }
 
@@ -278,23 +303,27 @@ function inferRenderParity(input: {
  * placing it in a portable envelope. Shape and aggregate evidence remain;
  * caller-owned source records do not.
  */
+const PRIVATE_PROFILE_KEYS = new Set([
+  "data",
+  "rawInput",
+  "sample",
+  "numericFields",
+  "network",
+  "hierarchy",
+  "geo",
+  "topValues",
+  "distinctValues"
+])
+
 function redactProfileForEnvelope(profile: unknown): unknown {
+  if (Array.isArray(profile)) return profile.map(redactProfileForEnvelope)
   if (!profile || typeof profile !== "object") return profile
-  const source = profile as Record<string, unknown>
-  const output: Record<string, unknown> = { ...source }
-  for (const key of [
-    "data",
-    "rawInput",
-    "sample",
-    "numericFields",
-    "network",
-    "hierarchy",
-    "geo",
-  ]) {
-    delete output[key]
-  }
-  if (output.candidates && typeof output.candidates === "object") {
-    output.candidates = redactProfileForEnvelope(output.candidates)
+  const output: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(
+    profile as Record<string, unknown>
+  )) {
+    if (value === undefined || PRIVATE_PROFILE_KEYS.has(key)) continue
+    output[key] = redactProfileForEnvelope(value)
   }
   return output
 }
@@ -328,35 +357,46 @@ function normalizeSourceRecords(
   ) {
     return [
       ...(Array.isArray(props.nodes) ? props.nodes : []),
-      ...(Array.isArray(props.edges) ? props.edges : []),
+      ...(Array.isArray(props.edges) ? props.edges : [])
     ]
   }
-  if (component === "ChoroplethMap" || component === "ProportionalSymbolMap") {
-    return Array.isArray(props.features)
-      ? props.features
-      : Array.isArray(props.points)
-        ? props.points
-        : []
+  if (component === "ChoroplethMap") {
+    if (Array.isArray(props.areas)) return props.areas
+    if (
+      props.areas &&
+      typeof props.areas === "object" &&
+      Array.isArray((props.areas as Record<string, unknown>).features)
+    ) {
+      return (props.areas as { features: unknown[] }).features
+    }
+    return typeof props.areas === "string"
+      ? [{ geographyReference: props.areas }]
+      : []
+  }
+  if (component === "ProportionalSymbolMap") {
+    return Array.isArray(props.points) ? props.points : []
   }
   if (component === "FlowMap") {
     return [
       ...(Array.isArray(props.nodes) ? props.nodes : []),
-      ...(Array.isArray(props.flows) ? props.flows : []),
+      ...(Array.isArray(props.flows) ? props.flows : [])
+    ]
+  }
+  if (component === "DistanceCartogram") {
+    return [
+      ...(Array.isArray(props.points) ? props.points : []),
+      ...(Array.isArray(props.lines) ? props.lines : [])
     ]
   }
   if (
     component === "TreeDiagram" ||
     component === "Treemap" ||
-    component === "CirclePack"
+    component === "CirclePack" ||
+    component === "OrbitDiagram"
   ) {
-    return props.hierarchy && typeof props.hierarchy === "object"
-      ? [props.hierarchy]
-      : []
+    return props.data && typeof props.data === "object" ? [props.data] : []
   }
-  if (
-    component === "BigNumber" ||
-    component === "GaugeChart"
-  ) {
+  if (component === "BigNumber" || component === "GaugeChart") {
     const value = props.value
     return value === undefined ? [] : [{ value }]
   }
@@ -371,17 +411,19 @@ export function toEvidenceEnvelope(
 ): ChartEvidenceEnvelope {
   const rows = normalizeSourceRecords(component, props)
   const profile = profileData(rows as ReadonlyArray<Datum>, {
-    rawInput: props,
+    rawInput: props
   })
   const inputHash = stableEvidenceHash({
     component,
     rowCount: rows.length,
-    records: rows,
+    records: rows
   })
   const portableProfile = redactProfileForEnvelope(profile)
   const grounding = buildReaderGrounding(component, props as Datum)
   if (grounding.structure) {
-    const redacted = redactNavigationTree(grounding.structure) as ChartReaderGrounding["structure"]
+    const redacted = redactNavigationTree(
+      grounding.structure
+    ) as ChartReaderGrounding["structure"]
     grounding.structure = redacted
   }
   const access =
@@ -394,24 +436,26 @@ export function toEvidenceEnvelope(
         inChartContainer: options.inChartContainer === true,
         streamStatus: options.streamStatus,
         streamHistoryLimit: options.streamHistoryLimit,
-        ssrEvidence: options.ssrEvidence,
-      },
+        ssrEvidence: options.ssrEvidence
+      }
     })
   if (access.navigation.tree) {
-    access.navigation.tree = redactNavigationTree(access.navigation.tree) as never
+    access.navigation.tree = redactNavigationTree(
+      access.navigation.tree
+    ) as never
   }
   const intendedMarks = countIntendedMarks(props)
   const observedMarks = observedMarkCount(options.ssrEvidence)
   const parity = inferRenderParity({
     intended: intendedMarks,
     observed: observedMarks,
-    evidence: options.ssrEvidence,
+    evidence: options.ssrEvidence
   })
   const modalityChecks = options.modalityChecks ?? {}
   const vision = modalityChecks.vision ?? { observations: [] }
   const tandem = modalityChecks.tandem ?? {
     agreements: [],
-    conflicts: [],
+    conflicts: []
   }
   const transformOperations = options.transformOperations ?? []
 
@@ -419,18 +463,19 @@ export function toEvidenceEnvelope(
     schemaVersion: CHART_EVIDENCE_ENVELOPE_VERSION,
     chart: {
       component,
-      surfaceVersion: options.surfaceVersion ?? String(CHART_EVIDENCE_ENVELOPE_VERSION),
-      ...(options.chartId ? { chartId: options.chartId } : {}),
+      surfaceVersion:
+        options.surfaceVersion ?? String(CHART_EVIDENCE_ENVELOPE_VERSION),
+      ...(options.chartId ? { chartId: options.chartId } : {})
     },
     input: {
       ...(options.sourceId ? { source: options.sourceId } : {}),
       rowCount: rows.length,
       profile: portableProfile,
-      hash: inputHash,
+      hash: inputHash
     },
     transform: {
       operations: transformOperations,
-      hash: stableEvidenceHash(transformOperations),
+      hash: stableEvidenceHash(transformOperations)
     },
     render: {
       mode: options.ssrEvidence ? "svg" : "not-rendered",
@@ -441,7 +486,7 @@ export function toEvidenceEnvelope(
       marksIntended: intendedMarks,
       marksObserved: observedMarks,
       parity,
-      ...(options.ssrEvidence ? { evidence: options.ssrEvidence } : {}),
+      ...(options.ssrEvidence ? { evidence: options.ssrEvidence } : {})
     },
     access,
     meaning: {
@@ -449,40 +494,37 @@ export function toEvidenceEnvelope(
       ...(grounding.intent?.act
         ? { communicativeAct: grounding.intent.act }
         : {}),
-      ...(options.claims ? { claims: options.claims } : {}),
+      ...(options.claims ? { claims: options.claims } : {})
     },
     modalityChecks: {
       structured: {
         observations: modalityChecks.structured?.observations ?? [],
-        model: null,
+        model: null
       },
       vision: {
         observations: vision.observations ?? [],
-        ...(vision.model ? { model: vision.model } : {}),
+        ...(vision.model ? { model: vision.model } : {})
       },
       tandem: {
         agreements: tandem.agreements ?? [],
         conflicts: tandem.conflicts ?? [],
-        ...(tandem.model
-          ? { model: tandem.model }
-          : {}),
-      },
+        ...(tandem.model ? { model: tandem.model } : {})
+      }
     },
     audit: {
       accessibility: access.evidence.audit,
-      ...options.audits,
+      ...options.audits
     },
     limits: {
       uncertaintyShown: options.uncertaintyShown,
       knownGaps: options.knownGaps ?? [],
       unsupportedClaims: options.unsupportedClaims ?? [],
-      privacyScope:
-        options.privacyScope ?? {
-          semantic: ["field names", "aggregates", "bounded navigation"],
-          renderedSvg: ["visual geometry", "labels", "no raw rows by default"],
-          dashboardScreenshot: ["everything visible; treat as broad disclosure"],
-        },
-    },
+      privacyScope: options.privacyScope ?? {
+        semantic: ["field names", "aggregates", "bounded navigation"],
+        renderedSvg: ["visual geometry", "labels", "no raw rows by default"],
+        dashboardScreenshot: ["everything visible; treat as broad disclosure"]
+      }
+    }
   }
 }
 
@@ -497,7 +539,17 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       `Unsupported evidence envelope schemaVersion: ${String(envelope.schemaVersion)}`
     )
   }
-  for (const section of ["chart", "input", "transform", "render", "access", "meaning", "modalityChecks", "audit", "limits"] as const) {
+  for (const section of [
+    "chart",
+    "input",
+    "transform",
+    "render",
+    "access",
+    "meaning",
+    "modalityChecks",
+    "audit",
+    "limits"
+  ] as const) {
     if (!envelope[section] || typeof envelope[section] !== "object") {
       throw new TypeError(`Evidence envelope is missing section: ${section}`)
     }
@@ -506,9 +558,20 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     throw new TypeError("Evidence envelope has an incompatible access contract")
   }
   const access = envelope.access as ChartAccessContract
-  for (const section of ["text", "keyboard", "navigation", "table", "mediaPreferences", "streamStatus", "ssr", "evidence"] as const) {
+  for (const section of [
+    "text",
+    "keyboard",
+    "navigation",
+    "table",
+    "mediaPreferences",
+    "streamStatus",
+    "ssr",
+    "evidence"
+  ] as const) {
     if (!access[section] || typeof access[section] !== "object") {
-      throw new TypeError(`Evidence envelope access section is missing: ${section}`)
+      throw new TypeError(
+        `Evidence envelope access section is missing: ${section}`
+      )
     }
   }
   if (typeof access.table.enabled !== "boolean") {
@@ -522,17 +585,13 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!meaning.grounding || typeof meaning.grounding !== "object") {
     throw new TypeError("Evidence envelope meaning requires reader grounding")
   }
-  if (
-    !chart.component ||
-    typeof chart.component !== "string"
-  ) {
+  if (!chart.component || typeof chart.component !== "string") {
     throw new TypeError("Evidence envelope chart requires a component string")
   }
-  if (
-    !Number.isSafeInteger(input.rowCount) ||
-    input.rowCount < 0
-  ) {
-    throw new TypeError("Evidence envelope input requires non-negative rowCount")
+  if (!Number.isSafeInteger(input.rowCount) || input.rowCount < 0) {
+    throw new TypeError(
+      "Evidence envelope input requires non-negative rowCount"
+    )
   }
   if (!Array.isArray(transform.operations)) {
     throw new TypeError("Evidence envelope transform requires operations array")
@@ -540,21 +599,33 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!["svg", "canvas", "png", "not-rendered"].includes(render.mode)) {
     throw new TypeError("Evidence envelope render requires mode")
   }
-  const modality = envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
+  const modality =
+    envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
   for (const section of ["structured", "vision", "tandem"] as const) {
     if (!modality[section] || typeof modality[section] !== "object") {
-      throw new TypeError(`Evidence envelope modalityChecks is missing: ${section}`)
+      throw new TypeError(
+        `Evidence envelope modalityChecks is missing: ${section}`
+      )
     }
   }
   for (const section of ["structured", "vision"] as const) {
     if (!Array.isArray(modality[section].observations)) {
-      throw new TypeError(`Evidence envelope ${section} observations must be an array`)
+      throw new TypeError(
+        `Evidence envelope ${section} observations must be an array`
+      )
     }
   }
   for (const section of ["structured", "vision"] as const) {
     for (const observation of modality[section].observations) {
-      if (!observation || typeof observation !== "object" || typeof observation.id !== "string" || typeof observation.finding !== "string") {
-        throw new TypeError(`Evidence envelope ${section} observations require string id and finding`)
+      if (
+        !observation ||
+        typeof observation !== "object" ||
+        typeof observation.id !== "string" ||
+        typeof observation.finding !== "string"
+      ) {
+        throw new TypeError(
+          `Evidence envelope ${section} observations require string id and finding`
+        )
       }
     }
   }
@@ -562,7 +633,9 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     !Array.isArray(modality.tandem.agreements) ||
     !Array.isArray(modality.tandem.conflicts)
   ) {
-    throw new TypeError("Evidence envelope tandem agreements and conflicts must be arrays")
+    throw new TypeError(
+      "Evidence envelope tandem agreements and conflicts must be arrays"
+    )
   }
   for (const conflict of modality.tandem.conflicts) {
     if (
@@ -571,15 +644,24 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       typeof conflict.id !== "string" ||
       conflict.id.length === 0
     ) {
-      throw new TypeError("Evidence envelope tandem conflict requires a non-empty id")
+      throw new TypeError(
+        "Evidence envelope tandem conflict requires a non-empty id"
+      )
     }
   }
   if (!Array.isArray(modality.tandem.agreements)) {
     throw new TypeError("Evidence envelope tandem agreements must be an array")
   }
   for (const agreement of modality.tandem.agreements) {
-    if (!agreement || typeof agreement !== "object" || typeof agreement.id !== "string" || typeof agreement.finding !== "string") {
-      throw new TypeError("Evidence envelope tandem agreements require string id and finding")
+    if (
+      !agreement ||
+      typeof agreement !== "object" ||
+      typeof agreement.id !== "string" ||
+      typeof agreement.finding !== "string"
+    ) {
+      throw new TypeError(
+        "Evidence envelope tandem agreements require string id and finding"
+      )
     }
   }
   const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
@@ -589,38 +671,55 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     !limits.privacyScope ||
     typeof limits.privacyScope !== "object"
   ) {
-    throw new TypeError("Evidence envelope limits require arrays and privacy scope")
+    throw new TypeError(
+      "Evidence envelope limits require arrays and privacy scope"
+    )
   }
   if (
     render.marksObserved !== undefined &&
     (!Number.isSafeInteger(render.marksObserved) || render.marksObserved < 0)
   ) {
-    throw new TypeError("Evidence envelope marksObserved must be a non-negative safe integer")
+    throw new TypeError(
+      "Evidence envelope marksObserved must be a non-negative safe integer"
+    )
   }
   if (meaning.claims !== undefined) {
     if (!Array.isArray(meaning.claims)) {
       throw new TypeError("Evidence envelope claims must be an array")
     }
     for (const claim of meaning.claims) {
-      if (!claim || typeof claim !== "object" || typeof claim.claim !== "string") {
+      if (
+        !claim ||
+        typeof claim !== "object" ||
+        typeof claim.claim !== "string"
+      ) {
         throw new TypeError("Evidence envelope claims require a claim string")
       }
       if (
         claim.confidence !== undefined &&
-        (typeof claim.confidence !== "number" || !Number.isFinite(claim.confidence))
+        (typeof claim.confidence !== "number" ||
+          !Number.isFinite(claim.confidence))
       ) {
         throw new TypeError("Evidence envelope claim confidence must be finite")
       }
     }
   }
-  if (transform.operations.some((operation) => !operation || typeof operation.operation !== "string")) {
-    throw new TypeError("Evidence envelope transform operations require operation strings")
+  if (
+    transform.operations.some(
+      (operation) => !operation || typeof operation.operation !== "string"
+    )
+  ) {
+    throw new TypeError(
+      "Evidence envelope transform operations require operation strings"
+    )
   }
   if (
     render.marksIntended !== undefined &&
     (!Number.isSafeInteger(render.marksIntended) || render.marksIntended < 0)
   ) {
-    throw new TypeError("Evidence envelope marksIntended must be a non-negative safe integer")
+    throw new TypeError(
+      "Evidence envelope marksIntended must be a non-negative safe integer"
+    )
   }
   return value as ChartEvidenceEnvelope
 }

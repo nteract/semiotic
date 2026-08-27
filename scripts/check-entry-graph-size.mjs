@@ -73,10 +73,17 @@ const ENTRY_GRAPHS = [
   { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
   // Access contracts compose AI grounding/audit systems; keep them off chart
   // production graphs while retaining a narrow tooling budget.
-  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 35 },
+  // Bumped 35→36: authored hierarchy rollups and choropleth coverage/range/
+  // rank branches replace the former flat mark dump. Production measures
+  // 35.4 KiB gzip; these are the public navigation semantics, not a runtime
+  // dependency leak.
+  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 36 },
   // Evidence envelopes include data profiles and grounding; this is tooling,
-  // not a chart runtime dependency.
-  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 180 },
+  // not a chart runtime dependency. The public aesthetic-evaluation evidence
+  // adds its reusable color-evidence normalization here. CI measures 50.1 KiB
+  // gzip, so retain a narrow one-KiB guard band rather than the inherited
+  // 180 KiB ceiling that could not detect accidental runtime coupling.
+  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 51 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -91,7 +98,10 @@ const ENTRY_GRAPHS = [
   // reviewable KiB of headroom instead of splitting common chrome at release.
   // The custom-layout readiness bridge is shared by StreamXYFrame consumers.
   // Current production graphs: network 154.3 KiB, geo 111.6 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 156 },
+  // Bumped 156→157: visualization text now inherits the theme font family,
+  // including network labels in live and SSR frames. Linux CI measures the
+  // resulting network graph at 156.2 KiB; retain less than 1 KiB headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 157 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -158,7 +168,19 @@ const ENTRY_GRAPHS = [
   // identity graph shares ThemeProvider/LinkedCharts store instances with the
   // micro entry. This adds ~4.1 KiB to AI's shared graph; measured 530.5 KiB,
   // leaving 1.5 KiB headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 532 },
+  // Bumped 532→538: the two built-in portable recipe pilots add their
+  // manifests plus calendar/parallel runtime layouts to the generic
+  // ChartRecipe host. Production measures 536.0 KiB gzip; the raw layouts
+  // remain shared with semiotic/recipes rather than duplicated HOCs.
+  // Bumped 538→540 after completing the recipe and semantic-navigation
+  // tranches: production measures 538.6 KiB gzip. Keep less than 1.5 KiB of
+  // runway around the canonical catalog rather than dropping accepted schema
+  // or reader behavior to preserve a stale round number.
+  // Bumped 540→545: the public aesthetic-policy evaluator and its color-
+  // evidence normalization join the canonical AI catalog. Linux CI measures
+  // 543.5 KiB gzip; retain 1.5 KiB of reviewable headroom for that accepted
+  // public analysis surface.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 545 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
@@ -236,21 +258,31 @@ for (const { entry, label, limitKb } of ENTRY_GRAPHS) {
   })
 }
 
-console.log(
-  "Chunk-aware entry graph sizes (entry + static ESM imports, gzip):\n"
-)
-for (const r of rows) {
-  const mark = r.ok ? "✓" : "✗"
-  console.log(
-    `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
-  )
+console.log("Chunk-aware entry graph sizes (entry + static ESM imports, gzip):")
+
+function printRows(rowsToPrint) {
+  for (const r of rowsToPrint) {
+    const mark = r.ok ? "✓" : "✗"
+    console.log(
+      `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
+    )
+  }
 }
+
+const passingRows = rows.filter((row) => row.ok)
+const failingRows = rows.filter((row) => !row.ok)
+
+console.log("\nPassing entry graphs:")
+printRows(passingRows)
+console.log("\nFailing entry graphs:")
+if (failingRows.length === 0) console.log("  none")
+else printRows(failingRows)
 
 if (printOnly) process.exit(0)
 
 if (failed) {
   console.error(
-    "\n✗ One or more entry graphs exceed their chunk-aware gzip budget.\n" +
+    "\nOne or more entry graphs exceed their chunk-aware gzip budget.\n" +
       "  Facades alone are ~2 KB; budgets measure the reachable shared-chunk graph.\n" +
       "  Raise limits only with a PR note, or split the heavy shared chunk."
   )

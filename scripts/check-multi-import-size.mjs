@@ -38,6 +38,7 @@ import { constants as zlibConstants, gzipSync } from "node:zlib"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, "..")
 const printOnly = process.argv.includes("--print")
+const analyze = process.argv.includes("--analyze")
 
 // Budget for the "someone uses AI tooling + several chart families" path that
 // previously paid the full fat-entry tax. Allow headroom for d3/platform noise
@@ -107,7 +108,7 @@ async function measureMultiImportGzip() {
     const outDir = join(consumerRoot, "out")
     mkdirSync(outDir)
 
-    await build({
+    const buildResult = await build({
       entryPoints: [join(consumerRoot, "entry.js")],
       bundle: true,
       minify: true,
@@ -118,6 +119,7 @@ async function measureMultiImportGzip() {
       nodePaths: [consumerNm, join(REPO_ROOT, "node_modules")],
       external: EXTERNAL,
       logLevel: "silent",
+      metafile: analyze,
     })
 
     // Count the initial import graph, rather than every output file. Dynamic
@@ -140,13 +142,39 @@ async function measureMultiImportGzip() {
 
     let totalGzip = 0
     let totalRaw = 0
+    const outputFiles = []
     for (const name of files) {
       const buf = readFileSync(join(outDir, name))
+      const gzipBytes = gzipSync(buf, {
+        level: zlibConstants.Z_BEST_COMPRESSION
+      }).length
       totalRaw += buf.length
-      totalGzip += gzipSync(buf, { level: zlibConstants.Z_BEST_COMPRESSION }).length
+      totalGzip += gzipBytes
+      outputFiles.push([name, buf.length, gzipBytes])
     }
 
-    return { totalGzip, totalRaw, fileCount: files.size }
+    const inputBytes = new Map()
+    if (buildResult.metafile) {
+      for (const [outputPath, output] of Object.entries(
+        buildResult.metafile.outputs
+      )) {
+        if (!files.has(outputPath.split("/").pop())) continue
+        for (const [inputPath, input] of Object.entries(output.inputs)) {
+          inputBytes.set(
+            inputPath,
+            (inputBytes.get(inputPath) ?? 0) + input.bytesInOutput
+          )
+        }
+      }
+    }
+
+    return {
+      totalGzip,
+      totalRaw,
+      fileCount: files.size,
+      outputFiles: outputFiles.sort((a, b) => b[1] - a[1]),
+      inputBytes: [...inputBytes].sort((a, b) => b[1] - a[1])
+    }
   } finally {
     rmSync(packageRoot, { recursive: true, force: true })
     rmSync(consumerRoot, { recursive: true, force: true })
@@ -165,6 +193,18 @@ console.log(`  files: ${fileCount}`)
 console.log(`  raw:   ${formatKb(totalRaw)}`)
 console.log(`  gzip:  ${formatKb(totalGzip)}`)
 console.log(`  budget: ${formatKb(MULTI_IMPORT_GZIP_BUDGET)}`)
+if (analyze) {
+  console.log("  initial output files:")
+  for (const [name, rawBytes, gzipBytes] of result.outputFiles) {
+    console.log(
+      `    ${formatKb(rawBytes).padStart(9)} raw / ${formatKb(gzipBytes).padStart(8)} gzip  ${name}`
+    )
+  }
+  console.log("  largest retained inputs:")
+  for (const [name, bytes] of result.inputBytes.slice(0, 40)) {
+    console.log(`    ${formatKb(bytes).padStart(9)}  ${name}`)
+  }
+}
 
 if (printOnly) process.exit(0)
 

@@ -1,11 +1,37 @@
-import { describe, expect, it } from "vitest"
+import { renderHook } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
 import {
   physicsMarginForMode,
   resolvePhysicsChartSize,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsModes,
-  resolvePhysicsTooltipProps
+  resolvePhysicsTooltipProps,
+  usePhysicsRerun
 } from "./physicsHocUtils"
+
+describe("usePhysicsRerun", () => {
+  it("composes the public state callback with chart-owned observation when reruns are disabled", () => {
+    const chartOwned = vi.fn()
+    const publicCallback = vi.fn()
+    const { result } = renderHook(() =>
+      usePhysicsRerun(
+        { observation: { onSimulationStateChange: chartOwned } },
+        null,
+        false,
+        undefined,
+        publicCallback
+      )
+    )
+
+    result.current.config?.observation?.onSimulationStateChange?.(
+      "settled",
+      "running"
+    )
+
+    expect(chartOwned).toHaveBeenCalledWith("settled", "running")
+    expect(publicCallback).toHaveBeenCalledWith("settled", "running")
+  })
+})
 
 describe("resolvePhysicsModes", () => {
   it("treats legacy mode=mechanical as simulationMode", () => {

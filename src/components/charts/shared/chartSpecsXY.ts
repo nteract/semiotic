@@ -316,6 +316,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor", "valueAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of data objects with x, y, and value" },
       xAccessor: { type: ["string", "function"], default: "x" },
       yAccessor: { type: ["string", "function"], default: "y" },
@@ -545,9 +546,9 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       // through the inner Scatterplots, not this top-level wrapper.
       // Consumers wire those features on the cells they configure.
       supportsLegend: true, supportsSelection: false, supportsLinkedHover: false,
-      supportsPush: false, supportsSSR: false,
+      supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["matrix", "brush", "composite-delegates-interaction", "hoc-ssr-only"],
+      specialFeatures: ["matrix", "brush", "composite-delegates-interaction", "composite-static"],
     },
   },
 
@@ -588,9 +589,9 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       // wrapped chart's own ref and props; this wrapper doesn't
       // wire them at its level.
       supportsLegend: true, supportsSelection: false, supportsLinkedHover: false,
-      supportsPush: false, supportsSSR: false,
+      supportsPush: false, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["brush", "overview-detail", "composite-delegates-interaction", "hoc-ssr-only"],
+      specialFeatures: ["brush", "overview-detail", "composite-delegates-interaction", "composite-static"],
     },
   },
 

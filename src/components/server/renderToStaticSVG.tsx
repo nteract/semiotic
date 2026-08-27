@@ -8,13 +8,13 @@ import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
  * staticGeo / staticPhysics; shared chrome in staticSVGChrome.
  */
 import * as React from "react"
-import * as ReactDOMServer from "react-dom/server.browser"
+import * as ReactDOMServer from "react-dom/server"
 import type { StreamXYFrameProps } from "../stream/types"
 import type { StreamNetworkFrameProps } from "../stream/networkTypes"
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"
 import type { StreamGeoFrameProps } from "../stream/geoTypes"
 import { CHART_CONFIGS } from "./serverChartConfigs"
-import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
+import { resolveTheme } from "./themeResolver"
 import {
   buildEvidence,
   type EvidenceSink,
@@ -39,6 +39,17 @@ import {
   VALUE_RENDERERS,
   type ValueChartName
 } from "./staticValue"
+import {
+  composeDashboard,
+  type DashboardChart,
+  type RenderDashboardOptions
+} from "./renderDashboard"
+
+export type {
+  DashboardChart,
+  DashboardLayout,
+  RenderDashboardOptions
+} from "./renderDashboard"
 
 export function renderToStaticSVG(
   frameType: FrameType,
@@ -115,10 +126,35 @@ export interface RenderChartOptions {
 }
 
 const PRECISION_ATTRIBUTES = new Set([
-  "d", "transform", "points", "viewBox", "x", "y", "x1", "x2", "y1", "y2",
-  "cx", "cy", "r", "rx", "ry", "width", "height", "dx", "dy", "offset",
-  "startOffset", "stroke-width", "stroke-opacity", "stroke-dasharray",
-  "stroke-dashoffset", "fill-opacity", "opacity", "font-size", "letter-spacing",
+  "d",
+  "transform",
+  "points",
+  "viewBox",
+  "x",
+  "y",
+  "x1",
+  "x2",
+  "y1",
+  "y2",
+  "cx",
+  "cy",
+  "r",
+  "rx",
+  "ry",
+  "width",
+  "height",
+  "dx",
+  "dy",
+  "offset",
+  "startOffset",
+  "stroke-width",
+  "stroke-opacity",
+  "stroke-dasharray",
+  "stroke-dashoffset",
+  "fill-opacity",
+  "opacity",
+  "font-size",
+  "letter-spacing"
 ])
 const SVG_NUMBER = /-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi
 
@@ -166,13 +202,19 @@ function roundSvgGeometryValue(value: string, precision: number): string {
 export function serializeSvgPrecision(svg: string, precision?: number): string {
   const resolved = resolvedPrecision(precision)
   if (resolved === undefined) return svg
-  return svg.replace(/<[^>]+>/g, (tag) => tag.replace(
-    /\s([\w:-]+)="([^"]*)"/g,
-    (attribute, name: string, value: string) => {
-      if (!PRECISION_ATTRIBUTES.has(name) || /\b(?:var|calc|url)\(/i.test(value)) return attribute
-      return ` ${name}="${roundSvgGeometryValue(value, resolved)}"`
-    },
-  ))
+  return svg.replace(/<[^>]+>/g, (tag) =>
+    tag.replace(
+      /\s([\w:-]+)="([^"]*)"/g,
+      (attribute, name: string, value: string) => {
+        if (
+          !PRECISION_ATTRIBUTES.has(name) ||
+          /\b(?:var|calc|url)\(/i.test(value)
+        )
+          return attribute
+        return ` ${name}="${roundSvgGeometryValue(value, resolved)}"`
+      }
+    )
+  )
 }
 
 const COMMON_FRAME_PROP_KEYS = [
@@ -327,7 +369,10 @@ function renderChartInternal(
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
   if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {
-      svg: serializeSvgPrecision(renderValueChart(component as ValueChartName, props, sink), options?.precision),
+      svg: serializeSvgPrecision(
+        renderValueChart(component as ValueChartName, props, sink),
+        options?.precision
+      ),
       frameType: "value"
     }
   }
@@ -442,36 +487,42 @@ function renderChartInternal(
     rest
   )
 
-  // Dispatch to the appropriate frame renderer
+  // Dispatch to a chart-owned composite renderer when one exists. This is
+  // still the renderChart registry path (and therefore still evidence-backed),
+  // but it avoids pretending a multi-scene HOC is one Stream Frame.
   let svg: string
-  switch (config.frameType) {
-    case "xy":
-      svg = renderStreamXYFrame(
-        frameProps2 as StreamXYFrameProps & ThemeAwareProps,
-        sink
-      )
-      break
-    case "ordinal":
-      svg = renderOrdinalFrame(
-        frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps,
-        sink
-      )
-      break
-    case "network":
-      svg = renderNetworkFrame(
-        frameProps2 as StreamNetworkFrameProps & ThemeAwareProps,
-        sink
-      )
-      break
-    case "geo":
-      svg = renderGeoFrame(
-        frameProps2 as StreamGeoFrameProps & ThemeAwareProps,
-        sink
-      )
-      break
-    case "physics":
-      svg = renderPhysicsFrame(frameProps2 as StaticPhysicsFrameProps, sink)
-      break
+  if (config.renderStatic) {
+    svg = config.renderStatic(frameProps2, sink)
+  } else {
+    switch (config.frameType) {
+      case "xy":
+        svg = renderStreamXYFrame(
+          frameProps2 as StreamXYFrameProps & ThemeAwareProps,
+          sink
+        )
+        break
+      case "ordinal":
+        svg = renderOrdinalFrame(
+          frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps,
+          sink
+        )
+        break
+      case "network":
+        svg = renderNetworkFrame(
+          frameProps2 as StreamNetworkFrameProps & ThemeAwareProps,
+          sink
+        )
+        break
+      case "geo":
+        svg = renderGeoFrame(
+          frameProps2 as StreamGeoFrameProps & ThemeAwareProps,
+          sink
+        )
+        break
+      case "physics":
+        svg = renderPhysicsFrame(frameProps2 as StaticPhysicsFrameProps, sink)
+        break
+    }
   }
 
   const overlay = config.renderOverlay?.(frameProps2, {
@@ -490,7 +541,7 @@ function renderChartInternal(
 
   return {
     svg: serializeSvgPrecision(svg, options?.precision),
-    frameType: config.frameType as RenderEvidence["frameType"],
+    frameType: config.frameType as RenderEvidence["frameType"]
   }
 }
 
@@ -503,6 +554,34 @@ export interface RenderToImageOptions {
   scale?: number
   /** Background color (overrides theme) */
   background?: string
+}
+
+interface SVGDimensions {
+  width: number
+  height: number
+}
+
+function renderedSvgDimensions(
+  svg: string,
+  fallback: SVGDimensions
+): SVGDimensions {
+  const openingTag = svg.match(/^<svg\b[^>]*>/)?.[0]
+  if (!openingTag) return fallback
+
+  const readDimension = (name: "width" | "height", fallbackValue: number) => {
+    const match = openingTag.match(
+      new RegExp(
+        `\\b${name}=(?:"([0-9]+(?:\\.[0-9]+)?)"|'([0-9]+(?:\\.[0-9]+)?)')`
+      )
+    )
+    const value = Number(match?.[1] ?? match?.[2])
+    return Number.isFinite(value) && value > 0 ? value : fallbackValue
+  }
+
+  return {
+    width: readDimension("width", fallback.width),
+    height: readDimension("height", fallback.height)
+  }
 }
 
 /**
@@ -552,8 +631,11 @@ export async function renderToImage(
     )
   }
 
-  const width = props.width || props.size?.[0] || 600
-  const height = props.height || props.size?.[1] || 400
+  const requestedDimensions = {
+    width: props.width || props.size?.[0] || 600,
+    height: props.height || props.size?.[1] || 400
+  }
+  const { width, height } = renderedSvgDimensions(svg, requestedDimensions)
 
   const svgBuffer =
     typeof globalThis.Buffer !== "undefined"
@@ -570,187 +652,12 @@ export async function renderToImage(
   return pipeline.png().toBuffer()
 }
 
-// ── Dashboard composition ──────────────────────────────────────────────
-
-export interface DashboardChart {
-  /** Frame type or HOC component name */
-  component?: RenderChartName
-  frameType?: FrameType
-  /** Chart props (data, accessors, etc.) */
-  props: Datum
-  /** Span multiple columns (for emphasis="primary") */
-  colSpan?: number
-}
-
-export interface DashboardLayout {
-  /** Number of columns */
-  columns?: number
-  /** Gap between charts in pixels */
-  gap?: number
-}
-
-export interface RenderDashboardOptions {
-  title?: string
-  subtitle?: string
-  theme?: ThemeInput
-  width?: number
-  height?: number
-  layout?: DashboardLayout
-  background?: string
-  /** Output format */
-  format?: "svg"
-}
-
-/**
- * Compose multiple charts into a single SVG.
- */
 export function renderDashboard(
   charts: DashboardChart[],
   options: RenderDashboardOptions = {}
 ): string {
-  const {
-    title,
-    subtitle,
-    theme: themeInput,
-    width = 1200,
-    height: heightInput,
-    layout = {},
-    background
-  } = options
-
-  const theme = resolveTheme(themeInput)
-  const s = themeStyles(theme)
-  const columns = layout.columns || 2
-  const gap = layout.gap ?? 16
-
-  // Header height
-  let headerHeight = 0
-  if (title) headerHeight += 30
-  if (subtitle) headerHeight += 20
-  if (headerHeight > 0) headerHeight += 10 // padding
-
-  // Compute cell dimensions
-  const chartAreaWidth = width - gap
-  const cellWidth = Math.floor((chartAreaWidth - gap * (columns - 1)) / columns)
-
-  // Lay out charts in rows
-  const rows: {
-    chart: DashboardChart
-    x: number
-    y: number
-    w: number
-    h: number
-  }[] = []
-  let col = 0
-  let rowY = headerHeight + gap
-  let rowHeight = 0
-  const defaultCellHeight = 300
-
-  for (const chart of charts) {
-    const span = Math.min(chart.colSpan || 1, columns)
-    const cellW = cellWidth * span + gap * (span - 1)
-    const cellH = chart.props.height || defaultCellHeight
-
-    // Wrap to next row if needed
-    if (col + span > columns) {
-      rowY += rowHeight + gap
-      col = 0
-      rowHeight = 0
-    }
-
-    const x = gap / 2 + col * (cellWidth + gap)
-    rows.push({ chart, x, y: rowY, w: cellW, h: cellH })
-    rowHeight = Math.max(rowHeight, cellH)
-    col += span
-  }
-
-  const totalHeight = heightInput || rowY + rowHeight + gap
-
-  // Render each chart as an embedded SVG
-  const chartElements = rows.map((item, i) => {
-    const { chart, x, y, w, h } = item
-    const chartProps = {
-      ...chart.props,
-      width: w,
-      height: h,
-      theme: themeInput,
-      _idPrefix: `chart-${i}`
-    }
-
-    let svgStr: string
-    if (chart.component) {
-      svgStr = renderChart(chart.component, chartProps)
-    } else if (chart.frameType) {
-      svgStr = renderToStaticSVG(
-        chart.frameType,
-        chartProps as StaticFrameProps
-      )
-    } else {
-      svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`
-    }
-
-    // Strip outer <svg> wrapper — we'll embed the content
-    // Use a foreignObject with the full SVG for clean nesting
-    return (
-      <g key={`dashboard-chart-${i}`} transform={`translate(${x},${y})`}>
-        <foreignObject width={w} height={h}>
-          <div
-            // @ts-expect-error — xmlns for foreignObject child
-            xmlns="http://www.w3.org/1999/xhtml"
-            dangerouslySetInnerHTML={{ __html: svgStr }}
-          />
-        </foreignObject>
-      </g>
-    )
+  return composeDashboard(charts, options, {
+    chart: renderChart,
+    frame: renderToStaticSVG
   })
-
-  const dashboardSVG = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={width}
-      height={totalHeight}
-      role="img"
-      aria-label={title || "Dashboard"}
-      style={{ fontFamily: s.fontFamily }}
-    >
-      {title && <title>{title}</title>}
-      {background && (
-        <rect
-          x={0}
-          y={0}
-          width={width}
-          height={totalHeight}
-          fill={background}
-        />
-      )}
-      {title && (
-        <text
-          x={width / 2}
-          y={24}
-          textAnchor="middle"
-          fontSize={s.titleFontSize + 4}
-          fontWeight={s.titleFontWeight}
-          fill={s.text}
-          fontFamily={s.titleFontFamily}
-        >
-          {title}
-        </text>
-      )}
-      {subtitle && (
-        <text
-          x={width / 2}
-          y={title ? 46 : 20}
-          textAnchor="middle"
-          fontSize={s.labelSize}
-          fill={s.textSecondary}
-          fontFamily={s.fontFamily}
-        >
-          {subtitle}
-        </text>
-      )}
-      {chartElements}
-    </svg>
-  )
-
-  return ReactDOMServer.renderToStaticMarkup(dashboardSVG)
 }

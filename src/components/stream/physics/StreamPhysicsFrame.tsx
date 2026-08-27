@@ -18,7 +18,7 @@ import {
   useFrameCanvasHost
 } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../isServerEnvironment"
-import { getDevicePixelRatio, prepareCanvas } from "../canvasSetup"
+import { getDevicePixelRatio, prepareCanvas, subscribeToCanvasFontInvalidation } from "../canvasSetup"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import {
   createPhysicsCanvasThemeCache,
@@ -451,6 +451,12 @@ export const StreamPhysicsFrame = memo(
         size,
         frameRuntime
       } = frame
+
+      useEffect(() => subscribeToCanvasFontInvalidation(() => {
+        dirtyRef.current = true
+        scheduleRender()
+      }), [scheduleRender])
+
       const frameWidth = size[0]
       const frameHeight = size[1]
       const plotWidth = Math.max(1, frameWidth - margin.left - margin.right)
@@ -1453,7 +1459,9 @@ export const StreamPhysicsFrame = memo(
             <AccessibleTablePortal accessibleTable={accessibleTable}>
               <SkipToTableLink tableId={tableId} />
               <PhysicsSemanticDataTable
-                chartTitle={typeof title === "string" ? title : ariaLabel}
+                chartTitle={
+                  typeof title === "string" ? title : description
+                }
                 items={allSemanticItems}
                 tableId={tableId}
               />

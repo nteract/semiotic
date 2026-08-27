@@ -72,6 +72,46 @@ export function themeToTokens(theme: SemioticTheme): Datum {
         $type: "string",
         $description: "d3-scale-chromatic sequential scheme name",
       },
+      ...(theme.aesthetics
+        ? {
+            aesthetics: {
+              ...(theme.aesthetics.name
+                ? {
+                    profile: {
+                      $value: theme.aesthetics.name,
+                      $type: "string",
+                    },
+                  }
+                : {}),
+              ...(theme.aesthetics.minimumScore != null
+                ? {
+                    "minimum-score": {
+                      $value: theme.aesthetics.minimumScore,
+                      $type: "number",
+                    },
+                  }
+                : {}),
+              weights: Object.fromEntries(
+                Object.entries(theme.aesthetics.weights ?? {}).map(([id, weight]) => [
+                  id,
+                  { $value: weight, $type: "number" },
+                ]),
+              ),
+              thresholds: Object.fromEntries(
+                Object.entries(theme.aesthetics.thresholds ?? {}).map(([id, value]) => [
+                  id,
+                  { $value: value, $type: "number" },
+                ]),
+              ),
+              rationales: Object.fromEntries(
+                Object.entries(theme.aesthetics.rationales ?? {}).map(([id, rationale]) => [
+                  id,
+                  { $value: rationale, $type: "string" },
+                ]),
+              ),
+            },
+          }
+        : {}),
       ...(theme.colors.diverging ? {
         diverging: {
           $value: theme.colors.diverging,

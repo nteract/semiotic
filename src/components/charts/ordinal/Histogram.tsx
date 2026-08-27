@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 /**
  * Default categoryAccessor — hoisted to module scope so it stays
@@ -83,6 +84,8 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered bin styling; fieldless thresholds use displayed bin `count`. Rules can also target `bin`, `range`, and `category`. */
+  styleRules?: StyleRule[]
   categoryPadding?: number
   enableHover?: boolean
   showGrid?: boolean
@@ -199,7 +202,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     valueAccessor = "value",
     bins = 25, relative = false,
     valueFormat,
-    colorBy, colorScheme,
+    colorBy, colorScheme, styleRules,
     categoryPadding = resolved.mode === "sparkline" ? 0 : 20,
     tooltip, annotations,
     valueExtent,
@@ -278,6 +281,10 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown))
+    return (d: Datum) => typeof d.count === "number" ? d.count : readValue(d)
+  }, [valueAccessor])
 
   // Consolidated summary-style — same recipe as BoxPlot/ViolinPlot/
   // RidgelinePlot.
@@ -291,6 +298,8 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { fillOpacity: 0.8 },
     linkStrokeToFill: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(() => {

@@ -2,16 +2,16 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type {
   ChartCapability,
   ChartDataProfile,
-  ChartFamily,
+  ChartFamily
 } from "./chartCapabilityTypes"
 import type {
   ChartRecipe,
   DataRoleDefinition,
-  IntentDefinition,
+  IntentDefinition
 } from "./chartRecipes"
 
 function intentId(intent: IntentDefinition): string | undefined {
-  return typeof intent === "string" ? intent : intent.id ?? intent.name
+  return typeof intent === "string" ? intent : (intent.id ?? intent.name)
 }
 
 function intentScore(intent: IntentDefinition): number {
@@ -34,7 +34,8 @@ function recipeFamily(recipe: ChartRecipe): ChartFamily {
   if (intents.has("relationship")) return "network"
   if (intents.has("distribution")) return "distribution"
   if (intents.has("correlation")) return "relationship"
-  if (intents.has("trend") || intents.has("composition-over-time")) return "time-series"
+  if (intents.has("trend") || intents.has("composition-over-time"))
+    return "time-series"
   if (
     intents.has("compare-categories") ||
     intents.has("rank") ||
@@ -47,9 +48,14 @@ function recipeFamily(recipe: ChartRecipe): ChartFamily {
 
 function familiarity(recipe: ChartRecipe): number {
   const declared = Object.values(recipe.audience?.familiarity ?? {})
-  const numeric = declared.find((value): value is number => typeof value === "number")
-  if (numeric !== undefined) return Math.max(1, Math.min(5, Math.round(numeric)))
-  const words = declared.filter((value): value is string => typeof value === "string")
+  const numeric = declared.find(
+    (value): value is number => typeof value === "number"
+  )
+  if (numeric !== undefined)
+    return Math.max(1, Math.min(5, Math.round(numeric)))
+  const words = declared.filter(
+    (value): value is string => typeof value === "string"
+  )
   if (words.includes("high")) return 4
   if (words.includes("medium")) return 3
   if (words.includes("low")) return 2
@@ -58,7 +64,7 @@ function familiarity(recipe: ChartRecipe): number {
 
 function rowsForSource(
   profile: ChartDataProfile,
-  source: DataRoleDefinition["source"],
+  source: DataRoleDefinition["source"]
 ): ReadonlyArray<Datum> {
   if (source === "nodes") return profile.network?.nodes ?? []
   if (source === "edges") return profile.network?.edges ?? []
@@ -71,16 +77,26 @@ function rowsForSource(
 function fieldExists(
   profile: ChartDataProfile,
   role: DataRoleDefinition,
-  field: string,
+  field: string
 ): boolean {
   const rows = rowsForSource(profile, role.source)
-  return rows.some((row) => row != null && Object.prototype.hasOwnProperty.call(row, field))
+  return rows.some(
+    (row) => row != null && Object.prototype.hasOwnProperty.call(row, field)
+  )
+}
+
+function looksLikeIdentifierField(field: string): boolean {
+  return (
+    /^(?:id|key)$/i.test(field) ||
+    /(?:^|[_-])(?:id|key)$/i.test(field) ||
+    /[a-z0-9](?:Id|ID|Key)$/.test(field)
+  )
 }
 
 export function resolveRecipeRoleField(
   recipe: ChartRecipe,
   role: DataRoleDefinition,
-  profile: ChartDataProfile,
+  profile: ChartDataProfile
 ): string | undefined {
   if (role.field && fieldExists(profile, role, role.field)) return role.field
 
@@ -102,12 +118,23 @@ export function resolveRecipeRoleField(
     case "temporal":
       return profile.primary.time ?? profile.primary.x
     case "nominal":
-    case "ordinal":
-      return profile.primary.category ?? profile.primary.series
+    case "ordinal": {
+      const identifiers = new Set(profile.identifiers ?? [])
+      return (
+        profile.candidates.category.find(
+          (candidate) =>
+            !identifiers.has(candidate.field) &&
+            !looksLikeIdentifierField(candidate.field)
+        )?.field ?? profile.primary.series
+      )
+    }
     case "identifier": {
       const rows = rowsForSource(profile, role.source)
       const candidate = ["id", "key", "name"].find((field) =>
-        rows.some((row) => row != null && Object.prototype.hasOwnProperty.call(row, field)),
+        rows.some(
+          (row) =>
+            row != null && Object.prototype.hasOwnProperty.call(row, field)
+        )
       )
       return candidate
     }
@@ -118,9 +145,47 @@ export function resolveRecipeRoleField(
   }
 }
 
-function recipeFit(recipe: ChartRecipe, profile: ChartDataProfile): string | null {
+function resolveRecipeRoleFields(
+  recipe: ChartRecipe,
+  role: DataRoleDefinition,
+  profile: ChartDataProfile
+): string[] {
+  if (!role.multiple) {
+    const field = resolveRecipeRoleField(recipe, role, profile)
+    return field ? [field] : []
+  }
+
+  const semanticType = role.semanticType
+  const identifiers = new Set(profile.identifiers ?? [])
+  const matching = Object.entries(profile.fields)
+    .filter(
+      ([field, summary]) =>
+        !identifiers.has(field) &&
+        !looksLikeIdentifierField(field) &&
+        (semanticType === "quantitative"
+          ? summary.type === "numeric"
+          : semanticType === "temporal"
+            ? summary.type === "date"
+            : summary.type === "categorical")
+    )
+    .map(([field]) => field)
+  return matching.slice(0, role.maximum ?? matching.length)
+}
+
+function recipeFit(
+  recipe: ChartRecipe,
+  profile: ChartDataProfile
+): string | null {
   for (const role of recipe.dataRoles) {
     if (role.required === false) continue
+    if (role.multiple) {
+      const fields = resolveRecipeRoleFields(recipe, role, profile)
+      const minimum = role.minimum ?? 1
+      if (fields.length < minimum) {
+        return `needs at least ${minimum} data fields for role "${role.role}" (${role.semanticType})`
+      }
+      continue
+    }
     const field = resolveRecipeRoleField(recipe, role, profile)
     if (!field) return `needs data role "${role.role}" (${role.semanticType})`
   }
@@ -137,16 +202,21 @@ function recipeFit(recipe: ChartRecipe, profile: ChartDataProfile): string | nul
 
 function recipeProps(
   recipe: ChartRecipe,
-  profile: ChartDataProfile,
+  profile: ChartDataProfile
 ): Record<string, unknown> {
   const layoutConfig: Record<string, unknown> = {}
   for (const role of recipe.dataRoles) {
+    if (role.multiple && role.accessor) {
+      const fields = resolveRecipeRoleFields(recipe, role, profile)
+      if (fields.length > 0) layoutConfig[role.accessor] = fields
+      continue
+    }
     const field = resolveRecipeRoleField(recipe, role, profile)
     if (field && role.accessor) layoutConfig[role.accessor] = field
   }
   const base: Record<string, unknown> = {
     recipeId: recipe.id,
-    layoutConfig,
+    layoutConfig
   }
   if (recipe.frameFamily.startsWith("Network")) {
     base.nodes = profile.network?.nodes ?? profile.data
@@ -158,11 +228,11 @@ function recipeProps(
   } else {
     base.data = profile.data
   }
-  const mobile = recipe.mobile ?? (
-    typeof recipe.accessibility.minimumHitTarget === "number"
+  const mobile =
+    recipe.mobile ??
+    (typeof recipe.accessibility.minimumHitTarget === "number"
       ? { minimumHitTarget: recipe.accessibility.minimumHitTarget }
-      : undefined
-  )
+      : undefined)
   if (mobile) base.mobileSemantics = mobile
   return base
 }
@@ -182,15 +252,17 @@ export function recipeToChartCapability(recipe: ChartRecipe): ChartCapability {
       positiveRationale.push(intent.rationale)
     }
   }
-  positiveRationale.push(...(recipe.reception?.strengths ?? []).map(
-    (strength) => `Reception strength: ${strength}`,
-  ))
+  positiveRationale.push(
+    ...(recipe.reception?.strengths ?? []).map(
+      (strength) => `Reception strength: ${strength}`
+    )
+  )
 
   const risks = recipe.reception?.risks ?? []
   const misuse = recipe.designContract.misuse ?? []
   const caveats = [
     ...(recipe.designContract.caveats ?? []),
-    ...(recipe.caveats ?? []),
+    ...(recipe.caveats ?? [])
   ]
 
   return {
@@ -203,25 +275,32 @@ export function recipeToChartCapability(recipe: ChartRecipe): ChartCapability {
     rubric: {
       familiarity: familiarity(recipe),
       accuracy: 4,
-      precision: risks.some((risk) => /precis|comparison/i.test(risk)) ? 2 : 3,
+      precision: risks.some((risk) => /precis|comparison/i.test(risk)) ? 2 : 3
     },
     fits: (profile) => recipeFit(recipe, profile),
     intentScores,
     caveats: () => [...risks, ...misuse, ...caveats],
     buildProps: (profile) => recipeProps(recipe, profile),
-    mobile: recipe.mobile ?? (
-      typeof recipe.accessibility.minimumHitTarget === "number"
+    mobile:
+      recipe.mobile ??
+      (typeof recipe.accessibility.minimumHitTarget === "number"
         ? { minimumHitTarget: recipe.accessibility.minimumHitTarget }
-        : undefined
-    ),
+        : undefined),
     recipe,
+    suggestionPropContract: {
+      componentKind: "chart-recipe",
+      commonChartProps: "supported",
+      headingProp: "title",
+      modeValues: ["primary", "context", "sparkline", "mobile"]
+    },
     positiveRationale,
     whyCustom: {
       defaultAlternative: recipe.designContract.defaultAlternative,
-      reason: recipe.designContract.whyNotDefault ?? recipe.designContract.whyCustom,
+      reason:
+        recipe.designContract.whyNotDefault ?? recipe.designContract.whyCustom,
       tradeoff:
         recipe.designContract.tradeoff ??
-        (risks.length > 0 ? risks[0] : undefined),
-    },
+        (risks.length > 0 ? risks[0] : undefined)
+    }
   }
 }

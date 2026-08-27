@@ -87,6 +87,95 @@ export interface EvidenceSink {
   evidence?: RenderEvidence
 }
 
+export interface CompositeEvidenceInput {
+  frameType: RenderEvidence["frameType"]
+  width: number
+  height: number
+  parts: ReadonlyArray<RenderEvidence | undefined>
+  /** Semantic marks painted directly by the composite rather than a child frame. */
+  additionalMarkCountByType?: Readonly<Record<string, number>>
+  title?: unknown
+  description?: unknown
+  categories?: string[]
+  nodeCount?: number
+  edgeCount?: number
+  legendItems?: number
+  extraWarnings?: string[]
+  /** The primary child domains, when the composition has one primary scene. */
+  xDomain?: [number, number]
+  yDomain?: [number, number]
+}
+
+/**
+ * Combine evidence from a chart-owned multi-scene renderer.
+ *
+ * The aggregation consumes the evidence emitted by each actual child frame
+ * plus explicit semantic marks painted by the compositor (for example SPLOM
+ * diagonal histograms or ChainReaction task/dependency glyphs). It therefore
+ * avoids both expensive synthetic mark arrays and optimistic input-row counts.
+ */
+export function buildCompositeEvidence(
+  input: CompositeEvidenceInput
+): RenderEvidence {
+  const parts = input.parts.filter(
+    (part): part is RenderEvidence => part != null
+  )
+  const markCountByType: Record<string, number> = {}
+  for (const part of parts) {
+    for (const [type, count] of Object.entries(part.markCountByType)) {
+      markCountByType[type] = (markCountByType[type] ?? 0) + count
+    }
+  }
+  for (const [type, count] of Object.entries(
+    input.additionalMarkCountByType ?? {}
+  )) {
+    if (count > 0) markCountByType[type] = (markCountByType[type] ?? 0) + count
+  }
+  const markCount = Object.values(markCountByType).reduce(
+    (sum, count) => sum + count,
+    0
+  )
+  const empty = markCount === 0
+  const warnings = Array.from(
+    new Set([
+      ...parts.flatMap((part) => part.warnings),
+      ...(input.extraWarnings ?? []),
+      ...(empty ? ["EMPTY_SCENE"] : [])
+    ])
+  )
+  const ariaLabel =
+    (typeof input.description === "string" && input.description) ||
+    (typeof input.title === "string" && input.title) ||
+    `${input.frameType} chart, ${markCount} marks`
+
+  return {
+    component: "",
+    frameType: input.frameType,
+    status: empty ? "empty" : "ok",
+    empty,
+    markCount,
+    markCountByType,
+    width: input.width,
+    height: input.height,
+    ...(input.xDomain ? { xDomain: input.xDomain } : {}),
+    ...(input.yDomain ? { yDomain: input.yDomain } : {}),
+    ...(input.categories ? { categories: input.categories } : {}),
+    ...(input.nodeCount !== undefined ? { nodeCount: input.nodeCount } : {}),
+    ...(input.edgeCount !== undefined ? { edgeCount: input.edgeCount } : {}),
+    ...(input.legendItems !== undefined
+      ? { legendItems: input.legendItems }
+      : {}),
+    annotationCount: parts.reduce(
+      (sum, part) => sum + part.annotationCount,
+      0
+    ),
+    ariaLabel,
+    warnings,
+    semanticStatus: "not-assessed",
+    semanticDiagnostics: []
+  }
+}
+
 /** Tally scene nodes by their `type` field. */
 export function tallyByType(
   nodes: ReadonlyArray<{ type?: string }>

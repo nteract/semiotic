@@ -27,7 +27,7 @@ const DIVERGING_INTERPOLATORS: Record<string, (t: number) => string> = {
 
 // ── Types ─────────────────────────────────────────────────────────────
 
-export interface AggregatedRow {
+export interface AggregatedRow extends Datum {
   __likertCategory: string
   /** Stacking key — may be sentinel value for neutral halves */
   __likertLevel: string
@@ -36,6 +36,13 @@ export interface AggregatedRow {
   __likertCount: number
   __likertPct: number
   __likertLevelIndex: number
+}
+
+export interface LikertAggregationFieldAliases {
+  category?: string
+  level?: string
+  count?: string
+  score?: string
 }
 
 /** Sentinel level names for the neutral split halves */
@@ -121,6 +128,7 @@ export function aggregateData(
   getScore: ((d: Datum) => number) | null,
   getLevel: ((d: Datum) => string) | null,
   getCount: ((d: Datum) => number) | null,
+  fieldAliases: LikertAggregationFieldAliases = {},
 ): AggregatedRow[] {
   const counts = new Map<string, Map<string, number>>()
   const levelSet = new Set(levels)
@@ -160,7 +168,13 @@ export function aggregateData(
     for (let li = 0; li < levels.length; li++) {
       const level = levels[li]
       const count = catMap.get(level) || 0
+      const publicFields: Datum = {}
+      if (fieldAliases.category) publicFields[fieldAliases.category] = cat
+      if (fieldAliases.level) publicFields[fieldAliases.level] = level
+      if (fieldAliases.count) publicFields[fieldAliases.count] = count
+      if (fieldAliases.score) publicFields[fieldAliases.score] = li + 1
       rows.push({
+        ...publicFields,
         __likertCategory: cat,
         __likertLevel: level,
         __likertLevelLabel: level,
@@ -282,20 +296,46 @@ export function useLikertAggregation({
   const getCount = useMemo(() => !isRawMode ? resolveAccessorFn<number>(countAccessor, "count") : null, [isRawMode, countAccessor])
 
   const accumulatorRef = useRef<Datum[]>([])
+  const fieldAliases = useMemo<LikertAggregationFieldAliases>(() => ({
+    category:
+      typeof categoryAccessor === "string" ? categoryAccessor : undefined,
+    level: typeof levelAccessor === "string" ? levelAccessor : undefined,
+    count: typeof countAccessor === "string" ? countAccessor : undefined,
+    score:
+      !levelAccessor && typeof valueAccessor === "string"
+        ? valueAccessor
+        : undefined,
+  }), [categoryAccessor, countAccessor, levelAccessor, valueAccessor])
 
   const processedData = useMemo(() => {
     const safeData = data || []
     if (safeData.length === 0) return []
-    let agg = aggregateData(safeData, levels, getCat, getScore, getLevel, getCount)
+    let agg = aggregateData(
+      safeData,
+      levels,
+      getCat,
+      getScore,
+      getLevel,
+      getCount,
+      fieldAliases
+    )
     if (isDiverging) {
       agg = toDivergingValues(agg, levels)
       agg = orderForDiverging(agg, levels)
     }
     return agg
-  }, [data, levels, getCat, getScore, getLevel, getCount, isDiverging])
+  }, [data, levels, getCat, getScore, getLevel, getCount, fieldAliases, isDiverging])
 
   const reAggregate = useCallback((rawData: Datum[]) => {
-    let agg = aggregateData(rawData, levels, getCat, getScore, getLevel, getCount)
+    let agg = aggregateData(
+      rawData,
+      levels,
+      getCat,
+      getScore,
+      getLevel,
+      getCount,
+      fieldAliases
+    )
     if (isDiverging) {
       agg = toDivergingValues(agg, levels)
       agg = orderForDiverging(agg, levels)
@@ -305,7 +345,7 @@ export function useLikertAggregation({
     // from the old percentages to the new ones. `clear() + pushMany()`
     // would wipe prevPositionMap and skip the animation entirely.
     frameRef.current?.replace(agg)
-  }, [levels, getCat, getScore, getLevel, getCount, isDiverging, frameRef])
+  }, [levels, getCat, getScore, getLevel, getCount, fieldAliases, isDiverging, frameRef])
 
   return { processedData, reAggregate, accumulatorRef }
 }

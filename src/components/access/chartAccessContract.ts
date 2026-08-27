@@ -7,14 +7,20 @@
 import { describeChart, type DescribeChartResult } from "../ai/describeChart"
 import {
   buildNavigationTree,
-  type NavTreeNode,
+  supportsStructuredNavigation,
+  type NavTreeNode
 } from "../ai/navigationTree"
 import {
   auditAccessibility,
-  type AccessibilityAuditResult,
+  type AccessibilityAuditResult
 } from "../charts/shared/auditAccessibility"
 import type { RenderEvidence } from "../server/renderEvidence"
 import type { StreamStatus } from "../charts/shared/useStreamStatus"
+import {
+  CHART_ACCESS_CAPABILITIES,
+  type GeneratedChartAccessCapabilities,
+  type GeneratedMarkNavigation
+} from "./chartAccessCapabilities.generated"
 
 export const CHART_ACCESS_CONTRACT_VERSION = 1 as const
 
@@ -31,9 +37,10 @@ export interface ChartAccessContractText {
 }
 
 export interface ChartAccessContractKeyboard {
-  markNavigation: "built-in" | "not-applicable"
-  legendInteraction: "built-in" | "not-applicable"
-  focusRing: "built-in"
+  markNavigation: GeneratedMarkNavigation | "unsupported"
+  legendInteraction:
+    "built-in" | "not-enabled" | "not-applicable" | "unsupported"
+  focusRing: GeneratedMarkNavigation | "unsupported"
 }
 
 export interface ChartAccessContractNavigation {
@@ -44,8 +51,8 @@ export interface ChartAccessContractNavigation {
 }
 
 export interface ChartAccessContractMediaPreferences {
-  reducedMotion: "built-in"
-  forcedColors: "css-custom-properties"
+  reducedMotion: "built-in" | "unknown"
+  forcedColors: "css-custom-properties" | "unknown"
   note: string
 }
 
@@ -70,7 +77,10 @@ export interface ChartAccessContractEvidence {
   description: DescribeChartResult
 }
 
-export type StreamStatusInput = Pick<AccessStatusRecord, "status" | "lastPushTime">
+export type StreamStatusInput = Pick<
+  AccessStatusRecord,
+  "status" | "lastPushTime"
+>
 
 export interface ChartAccessContractInput {
   component: string
@@ -104,27 +114,14 @@ export interface ChartAccessContract {
   evidence: ChartAccessContractEvidence
 }
 
-/**
- * Components for which `buildNavigationTree()` constructs a structured tree.
- * Mirrors the family sets dispatched by the navigation builder so capability
- * reporting cannot drift from the actual implementation.
- */
-const NAVIGATION_SUPPORTED = new Set([
-  "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
-  "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram",
-  "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",
-  "LineChart", "AreaChart", "StackedAreaChart", "DifferenceChart",
-  "Scatterplot", "BubbleChart", "ConnectedScatterplot", "QuadrantChart",
-  "MultiAxisLineChart", "MinimapChart",
-  "BarChart", "StackedBarChart", "GroupedBarChart", "DotPlot",
-  "PieChart", "DonutChart", "FunnelChart",
-  "Histogram", "BoxPlot", "ViolinPlot", "RidgelinePlot", "SwarmPlot",
-])
-const TABLE_UNSUPPORTED = new Set(["BigNumber"])
-
-function supportsAccessibleTable(component: string, props: Record<string, unknown>): boolean {
-  if (TABLE_UNSUPPORTED.has(component)) return false
-  return props.accessibleTable !== false
+function supportsAccessibleTable(
+  capabilities: GeneratedChartAccessCapabilities | undefined,
+  props: Record<string, unknown>
+): boolean {
+  return (
+    capabilities?.supportsAccessibleTable === true &&
+    props.accessibleTable !== false
+  )
 }
 const DEFAULT_STREAM_HISTORY_LIMIT = 5
 
@@ -133,7 +130,7 @@ function hasText(value: unknown): value is string {
 }
 
 function normalizeStatusHistory(
-  input: ChartAccessContractInput["options"],
+  input: ChartAccessContractInput["options"]
 ): AccessStatusRecord[] {
   const raw = input?.streamStatus
   if (!raw) return []
@@ -141,10 +138,14 @@ function normalizeStatusHistory(
     (record): record is AccessStatusRecord =>
       !!record && typeof record.status === "string"
   )
-  return records.slice(-(input?.streamHistoryLimit ?? DEFAULT_STREAM_HISTORY_LIMIT))
+  return records.slice(
+    -(input?.streamHistoryLimit ?? DEFAULT_STREAM_HISTORY_LIMIT)
+  )
 }
 
-function describeStatusHistory(history: AccessStatusRecord[]): string | undefined {
+function describeStatusHistory(
+  history: AccessStatusRecord[]
+): string | undefined {
   if (history.length === 0) return undefined
   const phrases = history.map((record) => {
     if (record.status === "idle") return "no data received"
@@ -156,32 +157,76 @@ function describeStatusHistory(history: AccessStatusRecord[]): string | undefine
   return `Last ${history.length} stream ${history.length === 1 ? "status" : "statuses"}: ${sequence}.`
 }
 
+function legendInteraction(
+  capabilities: GeneratedChartAccessCapabilities | undefined,
+  props: Record<string, unknown>
+): ChartAccessContractKeyboard["legendInteraction"] {
+  if (!capabilities) return "unsupported"
+  if (!capabilities.supportsLegend || props.showLegend === false) {
+    return "not-applicable"
+  }
+  const legendRequested =
+    props.showLegend === true ||
+    props.legend != null ||
+    ["colorBy", "lineBy", "areaBy", "stackBy", "groupBy"].some(
+      (prop) => props[prop] != null
+    )
+  if (!legendRequested) return "not-applicable"
+  return props.legendInteraction === "isolate" ||
+    props.legendInteraction === "highlight"
+    ? "built-in"
+    : "not-enabled"
+}
+
+function markNavigation(
+  capabilities: GeneratedChartAccessCapabilities | undefined,
+  navigationSupported: boolean
+): ChartAccessContractKeyboard["markNavigation"] {
+  if (!capabilities) return "unsupported"
+  if (
+    capabilities.markNavigation === "delegated" ||
+    capabilities.markNavigation === "not-applicable"
+  ) {
+    return capabilities.markNavigation
+  }
+  return navigationSupported ? "built-in" : "unsupported"
+}
+
 /** Build a stable access inventory for a chart configuration. */
 export function createChartAccessContract({
   component,
   props,
-  options = {},
+  options = {}
 }: ChartAccessContractInput): ChartAccessContract {
-  const realtime = options.realtime ?? component === "RealtimeLineChart"
+  const capabilities = CHART_ACCESS_CAPABILITIES[component]
+  const realtime = capabilities
+    ? capabilities.realtime
+    : options.realtime === true
   const description = describeChart(component, props as never, {
-    ...(options.locale ? { locale: options.locale } : {}),
+    ...(options.locale ? { locale: options.locale } : {})
   })
-  const navigationSupported = NAVIGATION_SUPPORTED.has(component)
-  const tree = navigationSupported && options.navigable !== false
-    ? buildNavigationTree(component, props as never, {
-        ...(options.locale ? { locale: options.locale } : {}),
-      })
-    : undefined
+  const runtimeNavigationSupported = supportsStructuredNavigation(
+    component,
+    props as never
+  )
+  const navigationSupported =
+    runtimeNavigationSupported || capabilities?.recipeNavigation === true
+  const tree =
+    runtimeNavigationSupported && options.navigable !== false
+      ? buildNavigationTree(component, props as never, {
+          ...(options.locale ? { locale: options.locale } : {})
+        })
+      : undefined
   const audit = auditAccessibility(component, props as never, {
     inChartContainer: options.inChartContainer === true,
     describe: options.describe === true || hasText(props.summary),
-    navigable:
-      options.navigable !== false &&
-      (navigationSupported || options.navigable === true),
+    navigable: options.navigable !== false && navigationSupported
   })
-  const history = realtime
-    ? normalizeStatusHistory(options)
-    : []
+  const history = realtime ? normalizeStatusHistory(options) : []
+  const resolvedMarkNavigation = markNavigation(
+    capabilities,
+    navigationSupported
+  )
 
   return {
     schemaVersion: CHART_ACCESS_CONTRACT_VERSION,
@@ -190,14 +235,12 @@ export function createChartAccessContract({
       ...(hasText(props.title) ? { title: props.title } : {}),
       ...(hasText(props.description) ? { description: props.description } : {}),
       ...(hasText(props.summary) ? { summary: props.summary } : {}),
-      accessibleTable: supportsAccessibleTable(component, props),
+      accessibleTable: supportsAccessibleTable(capabilities, props)
     },
     keyboard: {
-      markNavigation: "built-in",
-      legendInteraction: props.showLegend === false
-        ? "not-applicable"
-        : "built-in",
-      focusRing: "built-in",
+      markNavigation: resolvedMarkNavigation,
+      legendInteraction: legendInteraction(capabilities, props),
+      focusRing: resolvedMarkNavigation
     },
     navigation: {
       supported: navigationSupported,
@@ -205,21 +248,25 @@ export function createChartAccessContract({
       ...(tree ? { tree } : undefined),
       ...(!tree
         ? {
-            note:
-              "Structured datum navigation is composed through ChartContainer. Realtime charts currently provide table access and bounded status history rather than a point-by-point tree.",
+            note: navigationSupported
+              ? runtimeNavigationSupported
+                ? "Structured datum navigation is available through ChartContainer; enable its navigable option to materialize the tree."
+                : "Structured datum navigation is declared for this built-in recipe; load its recipe manifest through semiotic/ai before materializing the tree."
+              : "No datum-level structured navigation is registered for this chart. Exact-value table access may still be available."
           }
-        : {}),
+        : {})
     },
     table: {
-      enabled: supportsAccessibleTable(component, props),
+      enabled: supportsAccessibleTable(capabilities, props),
       source: "scene",
-      pagination: "built-in",
+      pagination: "built-in"
     },
     mediaPreferences: {
-      reducedMotion: "built-in",
-      forcedColors: "css-custom-properties",
-      note:
-        "Runtime detection is available through useReducedMotion and useHighContrast; canvas styling uses CSS custom properties so forced-colors changes cascade.",
+      reducedMotion: capabilities ? "built-in" : "unknown",
+      forcedColors: capabilities ? "css-custom-properties" : "unknown",
+      note: capabilities
+        ? "Runtime detection is available through useReducedMotion and useHighContrast; canvas styling uses CSS custom properties so forced-colors changes cascade."
+        : "No generated runtime capability record exists for this component; media-preference support is unknown."
     },
     streamStatus: realtime
       ? {
@@ -232,28 +279,33 @@ export function createChartAccessContract({
           ...(describeStatusHistory(history)
             ? { accessibleDescription: describeStatusHistory(history) }
             : {}),
-          note:
-            "Hosts may expose this bounded, non-visible description to screen readers or agents. Do not render it in visible UI.",
+          note: "Hosts may expose this bounded, non-visible description to screen readers or agents. Do not render it in visible UI."
         }
       : {
           supported: false,
-          note: "Static chart; no push-ingest lifecycle.",
+          note: "Static chart; no push-ingest lifecycle."
         },
-    ssr: realtime
-      ? {
-          supported: false,
-          note:
-            "Live push charts intentionally omit static SSR; capture a bounded-window static twin before claiming server evidence.",
-        }
-      : {
-          supported: true,
-          evidence: options.ssrEvidence,
-          note:
-            "Supply renderChartWithEvidence output to attach non-empty scene proof.",
-        },
+    ssr:
+      capabilities?.supportsSSR === true
+        ? {
+            supported: true,
+            evidence: options.ssrEvidence,
+            note: options.ssrEvidence
+              ? "Server rendering is registered and attached render evidence records the observed scene."
+              : "Server rendering is registered; supply renderChartWithEvidence output before claiming a non-empty scene."
+          }
+        : {
+            supported: false,
+            ...(options.ssrEvidence ? { evidence: options.ssrEvidence } : {}),
+            note: realtime
+              ? "Live push charts intentionally omit static SSR; capture a supported bounded-window static twin before claiming server evidence."
+              : capabilities
+                ? "The chart capability registry does not expose this component through renderChart; do not claim server evidence for the HOC surface."
+                : "No generated capability record exists for this component; SSR support is unknown and therefore reported as unsupported."
+          },
     evidence: {
       audit,
-      description,
-    },
+      description
+    }
   }
 }

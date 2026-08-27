@@ -78,8 +78,8 @@ export interface ChartCapabilities {
    *  pure-synthetic charts (GaugeChart) declare false. */
   supportsPush: boolean
   /** Renders to a static SVG via `renderChart()` from `semiotic/server`
-   *  through a registered entry in `serverChartConfigs.ts`. SSR-only
-   *  charts (none yet) and HOC-SSR exclusions also declare false. */
+   *  through a registered entry in `serverChartConfigs.ts`. Live push-only
+   *  charts declare false because no bounded static dataset was supplied. */
   supportsSSR: boolean
 
   /**
@@ -496,6 +496,12 @@ const physicsProps: Record<string, ChartPropSpec> = {
   legendLayout: { type: "object" },
   selection: { type: "object" },
   linkedHover: { type: ["boolean", "string", "object"] },
+  onSimulationStateChange: {
+    type: "function",
+    omitFromSchema: true,
+    description:
+      "Observe running/settled pipeline state changes without reaching into frameProps.config."
+  },
   loading: { type: "boolean" },
   loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
   emptyContent: { type: ["boolean", "object"], omitFromSchema: true },

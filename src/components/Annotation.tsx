@@ -16,7 +16,7 @@ type AnnotationNote = {
 }
 
 type AnnotationConnector = {
-  end?: "arrow"
+  end?: "arrow" | "none"
   type?: "line" | "curve"
   curve?: number
 }
@@ -180,36 +180,43 @@ function renderNote(
   const lineHeight = 16
   const labelPad = 2
   const padding = 4
-  const titleLines =
-    title ? (noWrap ? [title] : wrapText(title, wrap)) : []
-  const labelLines =
-    label ? (noWrap ? [label] : wrapText(label, wrap)) : []
+  const titleLines = title ? (noWrap ? [title] : wrapText(title, wrap)) : []
+  const labelLines = label ? (noWrap ? [label] : wrapText(label, wrap)) : []
   const useHTML = note.useHTML || note.html
 
   // For leftRight orientation, offset text horizontally away from the note-line
-  const textX = orientation === "leftRight"
-    ? (textAnchor === "end" ? -padding : padding)
-    : 0
+  const textX =
+    orientation === "leftRight"
+      ? textAnchor === "end"
+        ? -padding
+        : padding
+      : 0
 
   let yOffset = 0
   const textElements: React.ReactElement[] = []
 
-  const textFill = color || "var(--semiotic-annotation-color, var(--semiotic-text, #333))"
+  const textFill =
+    color || "var(--semiotic-annotation-color, var(--semiotic-text, #333))"
 
   if (useHTML) {
     const width = wrap
     const totalLines = titleLines.length + labelLines.length
-    const height = Math.max(lineHeight, totalLines * lineHeight + (title && label ? labelPad : 0))
-    const foreignObjectX = textAnchor === "end"
-      ? textX - width
-      : textAnchor === "middle"
-        ? textX - width / 2
-        : textX
-    const textAlign = textAnchor === "end"
-      ? "right"
-      : textAnchor === "middle"
-        ? "center"
-        : "left"
+    const height = Math.max(
+      lineHeight,
+      totalLines * lineHeight + (title && label ? labelPad : 0)
+    )
+    const foreignObjectX =
+      textAnchor === "end"
+        ? textX - width
+        : textAnchor === "middle"
+          ? textX - width / 2
+          : textX
+    const textAlign =
+      textAnchor === "end"
+        ? "right"
+        : textAnchor === "middle"
+          ? "center"
+          : "left"
     textElements.push(
       <foreignObject
         key="annotation-note-html"
@@ -233,7 +240,14 @@ function renderNote(
             wordBreak: "break-word"
           }}
         >
-          {title && <div className="annotation-note-title" style={{ fontWeight: "bold" }}>{title}</div>}
+          {title && (
+            <div
+              className="annotation-note-title"
+              style={{ fontWeight: "bold" }}
+            >
+              {title}
+            </div>
+          )}
           {label && <div className="annotation-note-label">{label}</div>}
         </div>
       </foreignObject>
@@ -332,7 +346,7 @@ function renderNote(
   // labelPad is the gap between the note-line and the nearest text.
   const totalLines = titleLines.length + labelLines.length
   const baselineSpan = Math.max(0, totalLines - 1) * lineHeight
-  const labelGap = (labelLines.length > 0 && titleLines.length > 0) ? labelPad : 0
+  const labelGap = labelLines.length > 0 && titleLines.length > 0 ? labelPad : 0
   const visualHeight = baselineSpan + lineHeight + labelGap
   let contentYOffset = 0
 
@@ -354,13 +368,14 @@ function renderNote(
     }
   }
 
-  const contentTransform = contentYOffset !== 0
-    ? `translate(0,${contentYOffset})`
-    : undefined
+  const contentTransform =
+    contentYOffset !== 0 ? `translate(0,${contentYOffset})` : undefined
 
   return (
     <g className="annotation-note" transform={`translate(${dx},${dy})`}>
-      <g className="annotation-note-content" transform={contentTransform}>{textElements}</g>
+      <g className="annotation-note-content" transform={contentTransform}>
+        {textElements}
+      </g>
       {noteLine}
     </g>
   )
@@ -377,8 +392,7 @@ function renderSubject(
 
   switch (type) {
     case "callout-circle": {
-      const totalRadius =
-        (subject?.radius || 0) + (subject?.radiusPadding || 0)
+      const totalRadius = (subject?.radius || 0) + (subject?.radiusPadding || 0)
       if (totalRadius > 0) {
         elements.push(
           <circle
@@ -519,12 +533,8 @@ function renderConnector(
   let startX = 0
   let startY = 0
 
-  if (
-    (type === "callout-circle" || type === "label") &&
-    subject?.radius
-  ) {
-    const totalRadius =
-      (subject.radius || 0) + (subject.radiusPadding || 0)
+  if ((type === "callout-circle" || type === "label") && subject?.radius) {
+    const totalRadius = (subject.radius || 0) + (subject.radiusPadding || 0)
     if (totalRadius > 0 && (dx !== 0 || dy !== 0)) {
       const angle = Math.atan2(dy, dx)
       startX = Math.cos(angle) * totalRadius
@@ -543,8 +553,7 @@ function renderConnector(
         const absTdy = Math.abs(tdy)
         const hw = w / 2
         const hh = h / 2
-        const t =
-          absTdx * hh > absTdy * hw ? hw / absTdx : hh / absTdy
+        const t = absTdx * hh > absTdy * hw ? hw / absTdx : hh / absTdy
         startX = cx + tdx * t
         startY = cy + tdy * t
       }
@@ -562,9 +571,7 @@ function renderConnector(
     }
   }
 
-  const connectorLength = Math.sqrt(
-    (dx - startX) ** 2 + (dy - startY) ** 2
-  )
+  const connectorLength = Math.sqrt((dx - startX) ** 2 + (dy - startY) ** 2)
 
   if (connectorLength > 0.5) {
     const stroke = color || "var(--semiotic-text-secondary, currentColor)"
@@ -614,7 +621,7 @@ function renderConnector(
 
     if (connector?.end === "arrow") {
       const arrowSize = 10
-      const angleOffset = 16 / 180 * Math.PI
+      const angleOffset = (16 / 180) * Math.PI
       const a1x = startX + arrowSize * Math.cos(arrowAngle + angleOffset)
       const a1y = startY + arrowSize * Math.sin(arrowAngle + angleOffset)
       const a2x = startX + arrowSize * Math.cos(arrowAngle - angleOffset)
@@ -655,8 +662,8 @@ function AnnotationRenderer(props: AnnotationRendererProps) {
     "data-testid": dataTestId
   } = props
 
-  const x = Array.isArray(rawX) ? rawX[0] ?? 0 : rawX
-  const y = Array.isArray(rawY) ? rawY[0] ?? 0 : rawY
+  const x = Array.isArray(rawX) ? (rawX[0] ?? 0) : rawX
+  const y = Array.isArray(rawY) ? (rawY[0] ?? 0) : rawY
   const disableSet = new Set(Array.isArray(disable) ? disable : [])
 
   let dx = baseDx || 0
@@ -694,8 +701,10 @@ function AnnotationRenderer(props: AnnotationRendererProps) {
       {...(strokeDasharray && { strokeDasharray })}
       {...events}
     >
-      {!disableSet.has("connector") && renderConnector(dx, dy, connector, color, resolvedType, subject)}
-      {!disableSet.has("subject") && renderSubject(resolvedType, subject, color, x, y)}
+      {!disableSet.has("connector") &&
+        renderConnector(dx, dy, connector, color, resolvedType, subject)}
+      {!disableSet.has("subject") &&
+        renderSubject(resolvedType, subject, color, x, y)}
       {!disableSet.has("note") && renderNote(note, dx, dy, color)}
     </g>
   )

@@ -343,7 +343,9 @@ function PhysicsSemanticDataTable(props: {
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
   const containerRef = React.useRef<HTMLDivElement>(null)
-  const regionLabel = `Data summary for ${chartTitle ?? "physics chart"}`
+  const regionLabel = chartTitle
+    ? `Data summary for ${chartTitle}`
+    : `Data summary for physics chart ${tableId}`
 
   React.useEffect(() => {
     if (!isExpanded) setVisibleCount(PHYSICS_TABLE_SAMPLE_SIZE)

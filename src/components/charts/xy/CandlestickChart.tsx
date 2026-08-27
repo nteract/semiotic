@@ -19,6 +19,8 @@ import ChartError from "../shared/ChartError"
 import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { normalizePartialMargin } from "../../types/marginType"
+import { useResolvedSelection } from "../shared/useResolvedSelection"
+import { wrapStyleWithSelection } from "../shared/selectionUtils"
 
 registerXYPlugin(candlestickXYPlugin)
 
@@ -164,11 +166,20 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     warnMissingField("CandlestickChart", safeData, "closeAccessor", closeAccessor!)
   }
 
-  const { customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
+  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
     selection, linkedHover,
     onObservation, onClick, chartType: "CandlestickChart", chartId,
     mobileInteraction: resolved.mobileInteraction,
   })
+  const resolvedSelection = useResolvedSelection(selection)
+  const selectionPointStyle = useMemo(
+    () => wrapStyleWithSelection(
+      () => ({}),
+      activeSelectionHook,
+      resolvedSelection
+    ),
+    [activeSelectionHook, resolvedSelection]
+  )
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
 
@@ -234,6 +245,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     lowAccessor,
     ...(!isRange && { openAccessor, closeAccessor }),
     ...(candlestickStyle && { candlestickStyle }),
+    ...(activeSelectionHook && { pointStyle: selectionPointStyle }),
     scalePadding,
     extentPadding,
     size: [width, height],

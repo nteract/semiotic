@@ -203,7 +203,13 @@ export const EventDropChart = forwardRef(function EventDropChart<
       windows
     ]
   )
-  const rerun = usePhysicsRerun(layout.config, rerunMS, paused)
+  const rerun = usePhysicsRerun(
+    layout.config,
+    rerunMS,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  )
 
   const metadata = layout.metadata as EventDropProjectionMetadata | undefined
   const spawnDatum = useCallback(

@@ -259,6 +259,14 @@ const themeShapeProps = [
     default: '"8px"',
     description: "Global border radius token. Maps to --semiotic-border-radius.",
   },
+  {
+    name: "aesthetics",
+    type: "AestheticProfile",
+    required: false,
+    default: "DEFAULT_AESTHETIC_PROFILE",
+    description:
+      "Organization-level weights, thresholds, and rationales used by evaluateAesthetics. Set every weight to zero to disable aesthetic scoring while retaining raw evidence.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -734,6 +742,103 @@ const ssrCSS = Object.entries(THEME_PRESETS)
   .join("\\n\\n")`}
         language="jsx"
       />
+
+      <h2 id="aesthetic-policy">Weighted Aesthetic Policy</h2>
+      <p>
+        A theme can carry an <code>aesthetics</code> profile alongside its paint tokens. The profile
+        does not claim to measure beauty. It assigns organizational importance to six observable
+        features, then <code>evaluateAesthetics()</code> reports each measurement, weight, and
+        contribution before computing the aggregate.
+      </p>
+      <ul>
+        <li>
+          <code>mark-scaffold-hierarchy</code> — contrast of data marks relative to grids and guides
+        </li>
+        <li>
+          <code>palette-authorship</code> — whether the effective palette moves beyond ubiquitous
+          D3/Tableau defaults
+        </li>
+        <li>
+          <code>palette-economy</code> — color-role count against an explicit ceiling
+        </li>
+        <li>
+          <code>typographic-hierarchy</code> — measured title-to-supporting-type scale
+        </li>
+        <li>
+          <code>theme-coherence</code> — explicit chart colors inside or outside the theme vocabulary
+        </li>
+        <li>
+          <code>editorial-emphasis</code> — the share of marks selected by authored style rules
+        </li>
+      </ul>
+      <CodeBlock
+        code={`import { ThemeProvider } from "semiotic/themes/react"
+import {
+  AESTHETICS_OFF_PROFILE,
+  evaluateAesthetics,
+  resolveThemePreset,
+} from "semiotic/themes"
+
+const base = resolveThemePreset("journalist")
+const newsroomTheme = {
+  ...base,
+  aesthetics: {
+    name: "News graphics desk",
+    minimumScore: 75,
+    weights: {
+      "mark-scaffold-hierarchy": 3,
+      "palette-authorship": 2,
+      "palette-economy": 1,
+      "typographic-hierarchy": 1,
+      "theme-coherence": 2,
+      "editorial-emphasis": 2,
+    },
+    rationales: {
+      "palette-authorship": "Published work should carry our visual identity.",
+    },
+  },
+}
+
+const report = evaluateAesthetics("DotPlot", chartProps, {
+  theme: newsroomTheme,
+})
+
+// Turn taste off without changing the theme's paint:
+const noTaste = { ...newsroomTheme, aesthetics: AESTHETICS_OFF_PROFILE }
+
+<ThemeProvider theme={newsroomTheme}><Chart /></ThemeProvider>`}
+        language="jsx"
+      />
+      <p>
+        This weighted quality-function structure follows research that recommends making aesthetic
+        formulas, weights, composition, and interpretation explicit when no universal measure has
+        consensus. Human response remains a separate validation layer; the validated BeauVis scale
+        is suitable for collecting that judgment. Professional visualization style-guide practice
+        supplies the organizational precedent for authored palettes, subordinate grays, and
+        selective emphasis.
+      </p>
+      <p>
+        <code>themeToTokens()</code> and <code>designTokensToTheme()</code> preserve the profile,
+        weights, thresholds, and rationales as theme metadata. CSS serialization intentionally
+        carries only paint because CSS cannot execute the scoring policy.
+      </p>
+      <p>
+        <a href="https://doi.org/10.1145/3593224" target="_blank" rel="noreferrer">
+          Grace weighted quality model
+        </a>{" "}
+        ·{" "}
+        <a href="https://arxiv.org/abs/2207.14147" target="_blank" rel="noreferrer">
+          BeauVis validation scale
+        </a>{" "}
+        ·{" "}
+        <a
+          href="https://www.datawrapper.de/blog/colors-for-data-vis-style-guides"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Organizational color systems
+        </a>
+      </p>
 
       <h3 id="design-tokens-import">Importing a brand's design tokens</h3>
       <p>

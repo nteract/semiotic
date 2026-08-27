@@ -53,6 +53,7 @@ import type { WindowAccumulator } from "../../realtime/WindowAccumulator"
 import type { ReorderBuffer } from "../../realtime/ReorderBuffer"
 import {
   type AggregateConfig,
+  type AggregatedRealtimeDatum,
   createAccumulator,
   aggregatedRows,
   hasBand,
@@ -77,33 +78,27 @@ import type { LegendValue } from "../../types/legendTypes"
 import type { PartialMargin } from "../../types/marginType"
 import {
   buildRealtimeFrameChromeProps,
-  useRealtimeChartMode
+  readRealtimeNumber,
+  useRealtimeChartMode,
+  useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
+import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import {
+  composeStyleRules,
+  makeXYRuleContext,
+  type StyleRule
+} from "../shared/styleRules"
 
 registerXYPlugin(lineXYPlugin)
-
-/** Read a numeric time/value off a datum via accessor, with a field-name fallback. */
-function readNum<TDatum extends Datum>(
-  datum: Datum,
-  accessor: ChartAccessor<TDatum, number> | undefined,
-  fallback: string
-): number | null {
-  const raw: unknown =
-    typeof accessor === "function"
-      ? accessor(datum)
-      : datum[String(accessor ?? fallback)]
-  if (raw == null) return null
-  if (raw instanceof Date) return raw.getTime()
-  const n = Number(raw)
-  return Number.isFinite(n) ? n : null
-}
-
 /**
  * Imperative handle for RealtimeLineChart. It extends the shared realtime
  * handle without changing that cross-chart contract: only this chart exposes
  * event-time tail flushing.
  */
-export interface RealtimeLineChartHandle extends RealtimeFrameHandle {
+export interface RealtimeLineChartHandle<
+  TDatum extends Datum = Datum,
+  TReadDatum extends Datum = TDatum
+> extends RealtimeFrameHandle<TDatum, TReadDatum> {
   /**
    * Release every event still held by `eventTime`, in event-time order.
    * Call this when an input source reaches an asserted end-of-stream or batch
@@ -166,6 +161,8 @@ export interface RealtimeLineChartProps<
   opacity?: number
   /** Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior. */
   cursor?: CSSProperties["cursor"]
+  /** Ordered data-aware line styling, resolved against the displayed series sample. */
+  styleRules?: StyleRule[]
   /** Show canvas-drawn axes */
   showAxes?: boolean
   /** Background fill color */
@@ -288,7 +285,10 @@ export interface RealtimeLineChartProps<
  */
 export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   TDatum extends Datum = Datum
->(props: RealtimeLineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+>(
+  props: RealtimeLineChartProps<TDatum>,
+  ref: React.Ref<RealtimeFrameHandle<TDatum, Datum>>
+) {
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -304,11 +304,12 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     timeExtent,
     valueExtent,
     extentPadding,
-    stroke = "#007bff",
-    strokeWidth = 2,
+    stroke: strokeProp,
+    strokeWidth: strokeWidthProp,
     strokeDasharray,
     opacity,
     cursor,
+    styleRules,
     background,
     tooltipContent,
     tooltip,
@@ -341,6 +342,8 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     resolved.width,
     resolved.height
   ]
+  const stroke = strokeProp ?? "#007bff"
+  const strokeWidth = strokeWidthProp ?? 2
   const seriesLabel =
     typeof valueAccessor === "string" ? valueAccessor : "Value"
   const lineLegend = useMemo<LegendValue | undefined>(() => {
@@ -409,16 +412,19 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   // ── Linked hover via shared hook ──
-  const { customHoverBehavior: linkedHoverBehavior, customClickBehavior } =
-    useChartSelection({
-      selection,
-      linkedHover,
-      unwrapData: true,
-      onObservation,
-      chartType: "RealtimeLineChart",
-      chartId,
-      mobileInteraction: resolved.mobileInteraction
-    })
+  const {
+    activeSelectionHook,
+    customHoverBehavior: linkedHoverBehavior,
+    customClickBehavior
+  } = useChartSelection({
+    selection,
+    linkedHover,
+    unwrapData: true,
+    onObservation,
+    chartType: "RealtimeLineChart",
+    chartId,
+    mobileInteraction: resolved.mobileInteraction
+  })
 
   const combinedHoverBehavior = useCallback(
     (d: HoverData | null) => {
@@ -434,13 +440,13 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   // stream. Refs keep the imperative handle referentially stable while still
   // reaching live config/accessors.
   const aggEnabled = aggregate != null
-  const [aggRows, setAggRows] = useState<Datum[]>([])
+  const [aggRows, setAggRows] = useState<AggregatedRealtimeDatum[]>([])
   const accRef = useRef<WindowAccumulator | null>(null)
   const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
   aggConfigRef.current = aggregate
   const aggEnabledRef = useRef(aggEnabled)
   aggEnabledRef.current = aggEnabled
-  const aggRowsRef = useRef<Datum[]>(aggRows)
+  const aggRowsRef = useRef<AggregatedRealtimeDatum[]>(aggRows)
   aggRowsRef.current = aggRows
   const accessorsRef = useRef({ timeAccessor, valueAccessor })
   accessorsRef.current = { timeAccessor, valueAccessor }
@@ -474,8 +480,8 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     if (acc && data) {
       const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
       for (const d of data) {
-        const t = readNum(d, ta, "time")
-        const v = readNum(d, va, "value")
+        const t = readRealtimeNumber(d, ta, "time")
+        const v = readRealtimeNumber(d, va, "value")
         if (t != null && v != null) acc.push(t, v)
       }
     }
@@ -496,8 +502,8 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     if (!acc || !cfg) return
     const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
     for (const p of points) {
-      const t = readNum(p, ta, "time")
-      const v = readNum(p, va, "value")
+      const t = readRealtimeNumber(p, ta, "time")
+      const v = readRealtimeNumber(p, va, "value")
       if (t != null && v != null) acc.push(t, v)
     }
     setAggRows(aggregatedRows(acc, cfg))
@@ -547,7 +553,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     const eventAccessor = timeAccessor
     reorderRef.current = createReorderBuffer(
       eventTimeRef.current!,
-      (d) => readNum(d, eventAccessor, "time") ?? NaN
+      (d) => readRealtimeNumber(d, eventAccessor, "time") ?? NaN
     )
   }, [etKey, eventTimeEnabled, routeReleased, timeAccessor])
 
@@ -573,7 +579,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
               cb({
                 type: "late-data",
                 datum: lp,
-                eventTime: readNum(lp, ta, "time") ?? NaN,
+                eventTime: readRealtimeNumber(lp, ta, "time") ?? NaN,
                 watermark: rb.watermark,
                 policy,
                 lateCount: rb.lateCount,
@@ -597,7 +603,10 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   }, [routeReleased])
 
   // Keep the public handle stable while tracking both live ingest paths.
-  useImperativeHandle<RealtimeFrameHandle, RealtimeLineChartHandle>(
+  useImperativeHandle<
+    RealtimeFrameHandle<TDatum, Datum>,
+    RealtimeLineChartHandle<TDatum, Datum>
+  >(
     ref,
     () => ({
       push: (point) => ingestPoints([point]),
@@ -645,9 +654,48 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       )
     : null
 
-  const lineStyle: LineStyle = { stroke, strokeWidth, strokeDasharray }
-  if (opacity != null) lineStyle.opacity = opacity
-  if (cursor != null) lineStyle.cursor = cursor
+  const baseLineStyle = useMemo(
+    () => () => ({ stroke: "#007bff", strokeWidth: 2 }) as LineStyle,
+    []
+  )
+  const lineRuleContext = useMemo(
+    () =>
+      makeXYRuleContext(
+        aggEnabled
+          ? AGG_TIME
+          : ((timeAccessor ?? "time") as string | ((d: Datum) => unknown)),
+        aggEnabled
+          ? AGG_VALUE
+          : ((valueAccessor ?? "value") as string | ((d: Datum) => unknown))
+      ),
+    [aggEnabled, timeAccessor, valueAccessor]
+  )
+  const ruledLineStyle = useMemo(
+    () => composeStyleRules(baseLineStyle, styleRules, lineRuleContext),
+    [baseLineStyle, styleRules, lineRuleContext]
+  )
+  const primitiveLineStyle = useMemo(
+    () =>
+      mergeShapeStyle(ruledLineStyle, {
+        stroke: strokeProp,
+        strokeWidth: strokeWidthProp,
+        opacity
+      }),
+    [ruledLineStyle, strokeProp, strokeWidthProp, opacity]
+  )
+  const lineStyleWithPrimitives = useMemo(
+    () => (datum: Datum) => ({
+      ...primitiveLineStyle(datum),
+      ...(strokeDasharray != null && { strokeDasharray }),
+      ...(cursor != null && { cursor })
+    }),
+    [primitiveLineStyle, strokeDasharray, cursor]
+  )
+  const interactiveLineStyle = useRealtimeSelectionStyle(
+    lineStyleWithPrimitives,
+    [activeSelectionHook],
+    selection
+  )
 
   const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
 
@@ -698,7 +746,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       yExtent={valueExtent}
       extentPadding={extentPadding}
       band={frameBand}
-      lineStyle={lineStyle}
+      lineStyle={interactiveLineStyle ?? lineStyleWithPrimitives}
       showAxes={showAxes}
       background={background}
       hoverAnnotation={enableHover}
@@ -733,10 +781,19 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     props: RealtimeLineChartProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
-  /** Specific overload keeps ElementRef/ComponentRef aware of flush(). */
+  /** Aggregate mode accepts authored rows but materializes window summaries. */
   <TDatum extends Datum = Datum>(
-    props: RealtimeLineChartProps<TDatum> &
-      React.RefAttributes<RealtimeLineChartHandle>
+    props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & {
+      aggregate: AggregateConfig
+    } & React.RefAttributes<
+        RealtimeLineChartHandle<TDatum, AggregatedRealtimeDatum>
+      >
+  ): React.ReactElement | null
+  /** Typed non-aggregate refs retain the authored row and expose flush(). */
+  <TDatum extends Datum = Datum>(
+    props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & {
+      aggregate?: undefined
+    } & React.RefAttributes<RealtimeLineChartHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }

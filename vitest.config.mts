@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { semioticSourceAliases } from './vite.shared.mjs'
 
 const repoRoot = dirname(fileURLToPath(import.meta.url))
+const isCoverageShard = process.env.SEMIOTIC_COVERAGE_SHARD === 'true'
 
 export default defineConfig({
   resolve: {
@@ -36,7 +37,10 @@ export default defineConfig({
       // Vitest reports only modules imported by a particular test run, which
       // lets an untested production module disappear from the percentage.
       include: ['src/components/**/*.{ts,tsx,js,jsx}'],
-      reporter: ['text-summary', 'json'],
+      // Coverage shards hand their maps to a dedicated merge job. Reporting
+      // and thresholds belong to that complete merged denominator, not to an
+      // individual half of the suite.
+      reporter: isCoverageShard ? [] : ['text-summary', 'json'],
       exclude: [
         'node_modules/**',
         'dist/**',
@@ -47,7 +51,7 @@ export default defineConfig({
         // production root pattern above.
         'docs/**',
       ],
-      thresholds: {
+      thresholds: isCoverageShard ? undefined : {
         // Global floors raised toward the measured aggregate (~78/68/81/80) so
         // the gate bites a real regression instead of leaving ~16 points of
         // slack on branches. A ~6-point buffer absorbs normal churn.

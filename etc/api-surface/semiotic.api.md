@@ -45,78 +45,84 @@ const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function AccessibleNavTree({ tree, label, visible, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps): React.JSX.Element
 function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BumpChart<TDatum extends Datum = Datum>(props: BumpChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function CandlestickChart<TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CategoryColorProvider({ colors, categories, colorScheme, children }: CategoryColorProviderProps): React.JSX.Element
 function ChartContainer(: React.RefAttributes<import("semiotic-internal/semiotic-ai").ChartContainerHandle> & import("semiotic-internal/semiotic-ai").ChartContainerProps): React.ReactNode
 function ChartGrid({ children, columns, minCellWidth, gap, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, chartDefaults, className, style, }: ChartGridProps): React.JSX.Element
-function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
 function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
 function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
-function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function IntentMark({ manifest, label, className, showSummary, }: IntentMarkProps): React.JSX.Element
 function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function LinkedCharts({ children, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MobileAnnotationCalloutList({ items, title, empty, ordered, renderItem, className, style, }: MobileAnnotationCalloutListProps): React.JSX.Element | null
 function MobileChartContainer({ children, controls, mobile, breakpoint, chartMode, mobileInteraction, mobileSemantics, mobileSummary, chips, activeChip, onChipChange, detail, detailTitle, detailMode, initialDetailOpen, allowHorizontalScroll, hideToolbar, chartDefaults, ...containerProps }: MobileChartContainerProps): React.JSX.Element
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
-function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
-function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
-function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeLineChartHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeTemporalHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & React.RefAttributes<RealtimeLineChartHandle<TDatum, AggregatedRealtimeDatum>> & {aggregate: AggregateConfig;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & React.RefAttributes<RealtimeLineChartHandle<TDatum, TDatum>> & {aggregate?: undefined;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeTemporalHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeTemporalHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
 function SmallMultipleChart<TItem extends SmallMultipleItem<unknown> = SmallMultipleItem<unknown>>({ items, children, columns, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, gap, mode, chartHeight, sharedExtent, valueAccessor, dataAccessor, extentProps, linkedHover, selection, linkedBy, linkProvider, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField, mobileInteraction, mobileSemantics, labelMode, chartDefaults, className, style, }: SmallMultipleChartProps<TItem>): React.JSX.Element
-function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamNetworkFrame(: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function StreamOrdinalFrame(: React.RefAttributes<import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function StreamXYFrame(: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function SwarmPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwarmPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function SwimlaneChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwimlaneChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwarmPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SwarmPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwimlaneChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SwimlaneChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element
 function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React.JSX.Element
-function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (Date | number | value: string, index?: number, allTicks?: number[]) => string
 function annotationStableId(annotation: Datum): string | undefined
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
@@ -203,6 +209,8 @@ function zoomMobileRange(value: [number, number], domain: [number, number], dire
 interface AccessibleNavTreeProps
 interface ActivateObservation extends ObservationBase
 interface AdaptiveTimeTickOptions
+interface AggregateConfig
+interface AggregatedRealtimeDatum extends Datum
 interface AnnotationActivateObservation extends ObservationBase
 interface AnnotationActivationEvent
 interface AnnotationContext
@@ -324,9 +332,10 @@ interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface RankBumpDataOptions<TDatum extends Datum = Datum>
 interface RankedBumpData<TDatum extends Datum = Datum>
 interface RankedBumpDatum<TDatum extends Datum = Datum> extends Datum
+interface RealtimeFrameHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum>
 interface RealtimeHeatmapProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeHistogramProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
-interface RealtimeLineChartHandle extends RealtimeFrameHandle
+interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>
 interface RealtimeLineChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
@@ -419,6 +428,22 @@ interface-member ActivateObservation::property::inputType = required inputType: 
 interface-member ActivateObservation::property::type = required type: "activate"
 interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
 interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
+interface-member AggregateConfig::property::band = optional band: AggregateBand | undefined
+interface-member AggregateConfig::property::gap = optional gap: number | string | undefined
+interface-member AggregateConfig::property::hop = optional hop: number | string | undefined
+interface-member AggregateConfig::property::retain = optional retain: number | undefined
+interface-member AggregateConfig::property::sigma = optional sigma: number | undefined
+interface-member AggregateConfig::property::size = required size: number | string
+interface-member AggregateConfig::property::stat = optional stat: AggregateStat | undefined
+interface-member AggregateConfig::property::window = optional window: WindowType | undefined
+interface-member AggregatedRealtimeDatum::property::__aggEnd = required __aggEnd: number
+interface-member AggregatedRealtimeDatum::property::__aggLower = optional __aggLower: number | undefined
+interface-member AggregatedRealtimeDatum::property::__aggPartial = required __aggPartial: boolean
+interface-member AggregatedRealtimeDatum::property::__aggStart = required __aggStart: number
+interface-member AggregatedRealtimeDatum::property::__aggUpper = optional __aggUpper: number | undefined
+interface-member AggregatedRealtimeDatum::property::count = required count: number
+interface-member AggregatedRealtimeDatum::property::time = required time: number
+interface-member AggregatedRealtimeDatum::property::value = required value: number
 interface-member AnnotationActivateObservation::property::annotationId = required annotationId: string
 interface-member AnnotationActivateObservation::property::inputType = required inputType: ObservationInputType
 interface-member AnnotationActivateObservation::property::type = required type: "annotation-activate"
@@ -602,6 +627,7 @@ interface-member BoxPlotProps::property::showCategoryTicks = optional showCatego
 interface-member BoxPlotProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member BoxPlotProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member BoxPlotProps::property::showOutliers = optional showOutliers: boolean | undefined
+interface-member BoxPlotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member BoxPlotProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member BoxPlotProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member BoxPlotProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -796,6 +822,7 @@ interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: Char
 interface-member CirclePackProps::property::padding = optional padding: number | undefined
 interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member CirclePackProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member CirclePackProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member CirclePackProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member CirclePackProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member CircularBrushProps::property::arcFill = optional arcFill: string | undefined
@@ -961,6 +988,7 @@ interface-member DonutChartProps::property::legendPosition = optional legendPosi
 interface-member DonutChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member DonutChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member DonutChartProps::property::startAngle = optional startAngle: number | undefined
+interface-member DonutChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member DonutChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member DonutChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member DotPlotProps::property::annotations = optional annotations: Datum[] | undefined
@@ -982,6 +1010,7 @@ interface-member DotPlotProps::property::showCategoryTicks = optional showCatego
 interface-member DotPlotProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member DotPlotProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member DotPlotProps::property::sort = optional sort: "asc" | "auto" | "desc" | ((a: string, b: string) => number) | boolean | undefined
+interface-member DotPlotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member DotPlotProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member DotPlotProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member DotPlotProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -1035,6 +1064,7 @@ interface-member FunnelChartProps::property::showAxes = optional showAxes: boole
 interface-member FunnelChartProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member FunnelChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member FunnelChartProps::property::stepAccessor = optional stepAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member FunnelChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member FunnelChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member FunnelChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member GaugeChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -1052,6 +1082,7 @@ interface-member GaugeChartProps::property::min = optional min: number | undefin
 interface-member GaugeChartProps::property::needleColor = optional needleColor: string | undefined
 interface-member GaugeChartProps::property::showNeedle = optional showNeedle: boolean | undefined
 interface-member GaugeChartProps::property::showScaleLabels = optional showScaleLabels: boolean | undefined
+interface-member GaugeChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member GaugeChartProps::property::sweep = optional sweep: number | undefined
 interface-member GaugeChartProps::property::thresholds = optional thresholds: GaugeThreshold[] | undefined
 interface-member GaugeChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
@@ -1125,6 +1156,7 @@ interface-member HeatmapProps::property::legendInteraction = optional legendInte
 interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member HeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member HeatmapProps::property::showValues = optional showValues: boolean | undefined
+interface-member HeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member HeatmapProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member HeatmapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member HeatmapProps::property::valueFormat = optional valueFormat: ((d: number) => string) | undefined
@@ -1156,6 +1188,7 @@ interface-member HistogramProps::property::relative = optional relative: boolean
 interface-member HistogramProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member HistogramProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member HistogramProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member HistogramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member HistogramProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member HistogramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member HistogramProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -1240,6 +1273,7 @@ interface-member LikertChartProps::property::orientation = optional orientation:
 interface-member LikertChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member LikertChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member LikertChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LikertChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member LikertChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member LikertChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member LikertChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -1512,6 +1546,7 @@ interface-member OrbitDiagramProps::property::showLabels = optional showLabels: 
 interface-member OrbitDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member OrbitDiagramProps::property::showRings = optional showRings: boolean | undefined
 interface-member OrbitDiagramProps::property::speed = optional speed: number | undefined
+interface-member OrbitDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member OrbitDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member OrbitNode::property::angle = required angle: number
 interface-member OrbitNode::property::children = optional children: OrbitNode[] | undefined
@@ -1538,6 +1573,7 @@ interface-member PieChartProps::property::legendPosition = optional legendPositi
 interface-member PieChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member PieChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member PieChartProps::property::startAngle = optional startAngle: number | undefined
+interface-member PieChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member PieChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member PieChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member ProcessSankeyIssue::property::endpoint = optional endpoint: string | undefined
@@ -1648,6 +1684,7 @@ interface-member RadarChartProps::property::pointRadius = optional pointRadius: 
 interface-member RadarChartProps::property::seriesAccessor = optional seriesAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RadarChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member RadarChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member RadarChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RadarChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member RadarChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member RadarChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -1670,6 +1707,16 @@ interface-member RankedBumpDatum::property::__bumpValue = required __bumpValue: 
 interface-member RankedBumpDatum::property::__bumpXValue = required __bumpXValue: unknown
 interface-member RankedBumpDatum::property::x = required x: number
 interface-member RankedBumpDatum::property::y = required y: number
+interface-member RealtimeFrameHandle::method::clear = required clear(): void
+interface-member RealtimeFrameHandle::method::getCustomLayout = optional getCustomLayout(): unknown
+interface-member RealtimeFrameHandle::method::getData = required getData(): TReadDatum[]
+interface-member RealtimeFrameHandle::method::getLayoutFailure = optional getLayoutFailure(): unknown
+interface-member RealtimeFrameHandle::method::getScales = optional getScales(): unknown
+interface-member RealtimeFrameHandle::method::push = required push(point: TDatum): void
+interface-member RealtimeFrameHandle::method::pushMany = required pushMany(points: TDatum[]): void
+interface-member RealtimeFrameHandle::method::remove = required remove(id: string | string[]): TReadDatum[]
+interface-member RealtimeFrameHandle::method::replace = optional replace(data: TDatum[]): void
+interface-member RealtimeFrameHandle::method::update = required update(id: string | string[], updater: (d: TReadDatum) => TReadDatum): TReadDatum[]
 interface-member RealtimeHeatmapProps::property::aggregation = optional aggregation: "count" | "mean" | "sum" | undefined
 interface-member RealtimeHeatmapProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member RealtimeHeatmapProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
@@ -1710,6 +1757,7 @@ interface-member RealtimeHeatmapProps::property::showAxes = optional showAxes: b
 interface-member RealtimeHeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member RealtimeHeatmapProps::property::size = optional size: [number, number] | undefined
 interface-member RealtimeHeatmapProps::property::staleness = optional staleness: StalenessConfig | undefined
+interface-member RealtimeHeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeHeatmapProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -1769,6 +1817,7 @@ interface-member RealtimeHistogramProps::property::size = optional size: [number
 interface-member RealtimeHistogramProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeHistogramProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeHistogramProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeHistogramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeHistogramProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -1823,6 +1872,7 @@ interface-member RealtimeLineChartProps::property::staleness = optional stalenes
 interface-member RealtimeLineChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeLineChartProps::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member RealtimeLineChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeLineChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeLineChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -1878,6 +1928,7 @@ interface-member RealtimeSwarmChartProps::property::size = optional size: [numbe
 interface-member RealtimeSwarmChartProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeSwarmChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeSwarmChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeSwarmChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeSwarmChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -1934,6 +1985,7 @@ interface-member RealtimeWaterfallChartProps::property::size = optional size: [n
 interface-member RealtimeWaterfallChartProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeWaterfallChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeWaterfallChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeWaterfallChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeWaterfallChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -2010,6 +2062,7 @@ interface-member RidgelinePlotProps::property::orientation = optional orientatio
 interface-member RidgelinePlotProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member RidgelinePlotProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member RidgelinePlotProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member RidgelinePlotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RidgelinePlotProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member RidgelinePlotProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member RidgelinePlotProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -2102,6 +2155,7 @@ interface-member SelectionConfig::property::selectedStyle = optional selectedSty
 interface-member SelectionConfig::property::unselectedOpacity = optional unselectedOpacity: number | undefined
 interface-member SelectionConfig::property::unselectedStyle = optional unselectedStyle: Datum | undefined
 interface-member SemioticTheme::property::accessibility = optional accessibility: undefined | {colorBlindSafe?: boolean; highContrast?: boolean;}
+interface-member SemioticTheme::property::aesthetics = optional aesthetics: AestheticProfile | undefined
 interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
@@ -2645,6 +2699,7 @@ interface-member SwarmPlotProps::property::showGrid = optional showGrid: boolean
 interface-member SwarmPlotProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member SwarmPlotProps::property::sizeBy = optional sizeBy: ChartAccessor<TDatum, number> | undefined
 interface-member SwarmPlotProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member SwarmPlotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member SwarmPlotProps::property::symbolBy = optional symbolBy: ChartAccessor<TDatum, string> | undefined
 interface-member SwarmPlotProps::property::symbolMap = optional symbolMap: Record<string, import("../../semiotic-recipes-core").NetworkSymbolName> | undefined
 interface-member SwarmPlotProps::property::tooltip = optional tooltip: TooltipProp | undefined
@@ -2680,6 +2735,7 @@ interface-member SwimlaneChartProps::property::roundedTop = optional roundedTop:
 interface-member SwimlaneChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member SwimlaneChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member SwimlaneChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member SwimlaneChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member SwimlaneChartProps::property::subcategoryAccessor = required subcategoryAccessor: ChartAccessor<TDatum, string>
 interface-member SwimlaneChartProps::property::tickLabelEdgeAlign = optional tickLabelEdgeAlign: boolean | undefined
 interface-member SwimlaneChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
@@ -2731,6 +2787,7 @@ interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: numbe
 interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreeDiagramProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member TreeDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member TreeDiagramProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member TreeDiagramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member TreemapProps::property::childrenAccessor = optional childrenAccessor: ChartAccessor<TNode, TNode[]> | undefined
@@ -2750,6 +2807,7 @@ interface-member TreemapProps::property::padding = optional padding: number | un
 interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
 interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreemapProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member TreemapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member TreemapProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member TreemapProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member UseBrushSelectionOptions::property::name = required name: string
@@ -2856,6 +2914,7 @@ interface-member ViolinPlotProps::property::showCategoryTicks = optional showCat
 interface-member ViolinPlotProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member ViolinPlotProps::property::showIQR = optional showIQR: boolean | undefined
 interface-member ViolinPlotProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member ViolinPlotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ViolinPlotProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member ViolinPlotProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member ViolinPlotProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined

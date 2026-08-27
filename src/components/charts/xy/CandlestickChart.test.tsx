@@ -2,9 +2,23 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, waitFor } from "@testing-library/react"
 import { CandlestickChart, type CandlestickChartProps } from "./CandlestickChart"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { LinkedCharts, useSelectionActions } from "../../LinkedCharts"
+
+function SelectCandleCohort() {
+  const { selectPoints } = useSelectionActions(
+    "candle-cohort",
+    "test-producer"
+  )
+
+  React.useEffect(() => {
+    selectPoints({ cohort: ["Alpha"] })
+  }, [selectPoints])
+
+  return null
+}
 
 let lastXYFrameProps = {} as CapturedXYFrameProps
 vi.mock("../../stream/StreamXYFrame", () => {
@@ -47,6 +61,34 @@ describe("CandlestickChart", () => {
       </TooltipProvider>
     )
     expect(container.querySelector(".stream-xy-frame")).toBeFalsy()
+  })
+
+  it("projects active linked selections into candlestick mark styles", async () => {
+    const linkedData = [
+      { ...ohlc[0], cohort: "Alpha" },
+      { ...ohlc[1], cohort: "Beta" }
+    ]
+    render(
+      <TooltipProvider>
+        <LinkedCharts showLegend={false}>
+          <SelectCandleCohort />
+          <CandlestickChart
+            data={linkedData}
+            xAccessor="t"
+            openAccessor="o"
+            highAccessor="h"
+            lowAccessor="l"
+            closeAccessor="c"
+            selection={{ name: "candle-cohort", unselectedOpacity: 0.19 }}
+          />
+        </LinkedCharts>
+      </TooltipProvider>
+    )
+
+    await waitFor(() => {
+      expect(lastXYFrameProps.pointStyle(linkedData[1]).opacity).toBe(0.19)
+    })
+    expect(lastXYFrameProps.pointStyle(linkedData[0]).opacity).toBeUndefined()
   })
 
   describe("chart type + accessor forwarding", () => {

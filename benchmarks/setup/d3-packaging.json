@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "package": "3.9.1",
+  "generatedAt": "2026-08-24T10:32:25.740Z",
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "node": "v22.23.1"
+  },
+  "method": {
+    "artifact": "npm pack --ignore-scripts production tarball",
+    "externalized": "Packed Semiotic package with individual d3 runtime dependencies resolved by the consumer bundler.",
+    "bundled": "Synthetic package generated from the packed family ESM entries with all d3 modules folded into its split ESM graph; React, optional adapters, and topojson-client remain external.",
+    "webpack": "5.109.2",
+    "next": "16.3.2",
+    "nextBundler": "webpack",
+    "esbuild": "0.28.1",
+    "hostExternals": [
+      "react",
+      "react-dom",
+      "react-dom/*",
+      "matter-js",
+      "@dimforge/rapier2d-compat",
+      "world-atlas",
+      "roughjs",
+      "sharp",
+      "gifenc",
+      "jsdom",
+      "topojson-client"
+    ]
+  },
+  "bundledVariant": {
+    "rawBytes": 1395933,
+    "gzipBytes": 449248,
+    "files": 50,
+    "outputFiles": 44
+  },
+  "d3InstallClosure": {
+    "directPackages": 12,
+    "installedPackages": 22,
+    "unpackedBytes": 1974605,
+    "packages": [
+      "d3-array",
+      "d3-brush",
+      "d3-chord",
+      "d3-color",
+      "d3-dispatch",
+      "d3-drag",
+      "d3-ease",
+      "d3-force",
+      "d3-format",
+      "d3-geo",
+      "d3-hierarchy",
+      "d3-interpolate",
+      "d3-path",
+      "d3-quadtree",
+      "d3-scale",
+      "d3-selection",
+      "d3-shape",
+      "d3-time",
+      "d3-time-format",
+      "d3-timer",
+      "d3-transition",
+      "d3-zoom"
+    ]
+  },
+  "webpack": [
+    {
+      "name": "xy-line",
+      "subpath": "xy",
+      "symbol": "LineChart",
+      "externalized": {
+        "rawBytes": 440788,
+        "gzipBytes": 140480,
+        "files": 7,
+        "resolvedD3Modules": 23
+      },
+      "bundled": {
+        "rawBytes": 513127,
+        "gzipBytes": 158300,
+        "files": 10,
+        "resolvedD3Modules": 0
+      },
+      "delta": {
+        "rawBytes": 72339,
+        "gzipBytes": 17820
+      }
+    },
+    {
+      "name": "ordinal-bar",
+      "subpath": "ordinal",
+      "symbol": "BarChart",
+      "externalized": {
+        "rawBytes": 441940,
+        "gzipBytes": 129604,
+        "files": 3,
+        "resolvedD3Modules": 6
+      },
+      "bundled": {
+        "rawBytes": 453101,
+        "gzipBytes": 133390,
+        "files": 3,
+        "resolvedD3Modules": 0
+      },
+      "delta": {
+        "rawBytes": 11161,
+        "gzipBytes": 3786
+      }
+    },
+    {
+      "name": "network-sankey",
+      "subpath": "network",
+      "symbol": "SankeyDiagram",
+      "externalized": {
+        "rawBytes": 545054,
+        "gzipBytes": 173375,
+        "files": 5,
+        "resolvedD3Modules": 6
+      },
+      "bundled": {
+        "rawBytes": 539642,
+        "gzipBytes": 172323,
+        "files": 5,
+        "resolvedD3Modules": 0
+      },
+      "delta": {
+        "rawBytes": -5412,
+        "gzipBytes": -1052
+      }
+    },
+    {
+      "name": "geo-choropleth",
+      "subpath": "geo",
+      "symbol": "ChoroplethMap",
+      "externalized": {
+        "rawBytes": 1819372,
+        "gzipBytes": 572562,
+        "files": 6,
+        "resolvedD3Modules": 0
+      },
+      "bundled": {
+        "rawBytes": 1830180,
+        "gzipBytes": 576064,
+        "files": 6,
+        "resolvedD3Modules": 0
+      },
+      "delta": {
+        "rawBytes": 10808,
+        "gzipBytes": 3502
+      }
+    }
+  ],
+  "next": {
+    "case": {
+      "subpath": "xy",
+      "symbol": "LineChart"
+    },
+    "externalized": {
+      "rawBytes": 1319915,
+      "gzipBytes": 409424,
+      "files": 24
+    },
+    "bundled": {
+      "rawBytes": 1406948,
+      "gzipBytes": 432226,
+      "files": 29
+    },
+    "delta": {
+      "rawBytes": 87033,
+      "gzipBytes": 22802
+    }
+  },
+  "decision": {
+    "model": "externalized-runtime-dependencies",
+    "rationale": "Externalized d3 produced the smaller gzip payload in 3 of 4 representative webpack builds and in the Next/webpack route. The one bundled win was too small to justify larger common XY/ordinal/geo paths or a custom dependency contract.",
+    "exception": "None. Every directly imported d3 package remains a normal runtime dependency and a bare production-artifact import; consumer bundlers own final tree-shaking and deduplication."
+  }
+}

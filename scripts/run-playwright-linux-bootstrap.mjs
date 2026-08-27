@@ -73,6 +73,12 @@ const hasUpdateArg = options.some((arg) => arg.startsWith("--update-snapshots"))
 
 const playwrightArgs = [...(specs.length > 0 ? specs : defaultSpecs), ...options]
 
+// This command is handed to `bash -lc`, so every forwarded Playwright token
+// must remain one shell argument. In particular, grep expressions commonly
+// contain `|` or parentheses; joining raw argv used to turn those into shell
+// pipelines and either run the wrong tests or fail with `command not found`.
+const shellArgument = (value) => `'${String(value).replaceAll("'", "'\\''")}'`
+
 if (!hasProjectArg) {
   playwrightArgs.push("--project=chromium", "--project=firefox", "--project=webkit")
 }
@@ -85,8 +91,9 @@ const missingOnly = playwrightArgs.some((arg) => arg === "--update-snapshots=mis
 const visualCommand = missingOnly
   ? `node scripts/run-playwright-missing-snapshot-bootstrap.mjs ${playwrightArgs
       .filter((arg) => arg !== "--update-snapshots=missing")
+      .map(shellArgument)
       .join(" ")}`
-  : `npx playwright test ${playwrightArgs.join(" ")}`
+  : `npx playwright test ${playwrightArgs.map(shellArgument).join(" ")}`
 
 const command = [
   "npm ci",
