@@ -35,7 +35,8 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
 
   ctx.save()
   try {
-  for (const node of heatNodes) {
+    const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
+    for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
     const nodeStyle = node.style
     if (nodeStyle?.opacity != null) {
@@ -83,12 +84,12 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
         ctx,
         typeof resolvedFill === "string" ? resolvedFill : "#4e79a7"
       )
-      ctx.font = `${fontSize}px sans-serif`
+      ctx.font = `${fontSize}px ${fontFamily}`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillText(formatted, centerX, centerY)
     }
-  }
+    }
   } finally {
     ctx.restore()
   }

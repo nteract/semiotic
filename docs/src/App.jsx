@@ -237,6 +237,9 @@ const USWarTimelineExamplePage = lazy(() => import("./pages/examples/USWarTimeli
 const ArtMovementGenealogyExamplePage = lazy(
   () => import("./pages/examples/ArtMovementGenealogyExamplePage"),
 )
+const TransitDiagramExamplePage = lazy(
+  () => import("./pages/examples/TransitDiagramExamplePage"),
+)
 const ParisIsometricLandmarksExamplePage = lazy(
   () => import("./pages/examples/ParisIsometricLandmarksExamplePage"),
 )
@@ -276,6 +279,10 @@ const DigitalHumanitiesThunderdomeExamplePage = lazy(
 )
 const DatavizPeopleExamplePage = lazy(() => import("./pages/examples/DatavizPeopleExamplePage"))
 const DistantReadingExamplePage = lazy(() => import("./pages/examples/DistantReadingExamplePage"))
+const AestheticPolicyStudioExamplePage = lazy(
+  () => import("./pages/examples/AestheticPolicyStudioExamplePage"),
+)
+const BadChartAutopsyExamplePage = lazy(() => import("./pages/examples/BadChartAutopsyExamplePage"))
 const WorldOfFunnelsExamplePage = lazy(() => import("./pages/examples/WorldOfFunnelsExamplePage"))
 const WhatTheMachineSeesExamplePage = lazy(
   () => import("./pages/examples/WhatTheMachineSeesExamplePage"),
@@ -320,6 +327,8 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "AestheticPolicyStudioExamplePage.jsx": AestheticPolicyStudioExamplePage,
+  "BadChartAutopsyExamplePage.jsx": BadChartAutopsyExamplePage,
   "HowAHitTravelsExamplePage.jsx": HowAHitTravelsExamplePage,
   "LivingLedgerExamplePage.jsx": LivingLedgerExamplePage,
   "TheLastScarcityExamplePage.jsx": TheLastScarcityExamplePage,
@@ -346,6 +355,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "WhereYouDrawTheLineExamplePage.jsx": WhereYouDrawTheLineExamplePage,
   "USWarTimelineExamplePage.jsx": USWarTimelineExamplePage,
   "ArtMovementGenealogyExamplePage.jsx": ArtMovementGenealogyExamplePage,
+  "TransitDiagramExamplePage.jsx": TransitDiagramExamplePage,
   "ParisIsometricLandmarksExamplePage.jsx": ParisIsometricLandmarksExamplePage,
   "UrineWheelExamplePage.jsx": UrineWheelExamplePage,
   "ErieRailroadOrganizationExamplePage.jsx": ErieRailroadOrganizationExamplePage,

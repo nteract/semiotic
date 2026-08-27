@@ -1,0 +1,629 @@
+.autopsy-page {
+  --autopsy-ink: #18201f;
+  --autopsy-paper: #eee9dc;
+  --autopsy-red: #b6302f;
+  --autopsy-blue: #255f85;
+  --semiotic-bg: #fff;
+  --semiotic-text: #18201f;
+  --semiotic-text-secondary: #4f5957;
+  --semiotic-border: #9b9e98;
+  color: var(--autopsy-ink);
+  background:
+    linear-gradient(rgba(24, 32, 31, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 32, 31, 0.035) 1px, transparent 1px), var(--autopsy-paper);
+  background-size: 24px 24px;
+  border: 1px solid #c8c1af;
+  box-shadow: 0 24px 70px rgba(20, 25, 24, 0.14);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.autopsy-page h2,
+.autopsy-page h3 {
+  color: var(--autopsy-ink);
+}
+
+.autopsy-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 0.38fr);
+  gap: 18px 36px;
+  padding: clamp(28px, 5vw, 68px);
+  border-bottom: 3px solid var(--autopsy-ink);
+}
+
+.autopsy-kicker,
+.autopsy-workbench__header span,
+.autopsy-evidence span,
+.autopsy-repair__heading span,
+.autopsy-close > span {
+  margin: 0;
+  font:
+    800 11px/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.13em;
+}
+
+.autopsy-hero h2 {
+  grid-column: 1;
+  max-width: 850px;
+  margin: 0;
+  font:
+    900 clamp(42px, 7vw, 86px)/0.92 Georgia,
+    serif;
+  letter-spacing: -0.055em;
+}
+
+.autopsy-hero > p:not(.autopsy-kicker) {
+  grid-column: 1;
+  max-width: 780px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.autopsy-claim {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: end;
+  padding: 24px;
+  border: 2px solid var(--autopsy-red);
+  color: var(--autopsy-red);
+  transform: rotate(1.5deg);
+}
+
+.autopsy-claim span,
+.autopsy-claim strong {
+  display: block;
+}
+.autopsy-claim span {
+  font:
+    800 10px/1.2 ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+}
+.autopsy-claim strong {
+  margin-top: 10px;
+  font:
+    900 27px/1.05 Georgia,
+    serif;
+}
+
+.autopsy-stages {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--autopsy-ink);
+}
+
+.autopsy-stages button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  min-height: 84px;
+  padding: 16px;
+  border: 0;
+  border-right: 1px solid var(--autopsy-ink);
+  color: inherit;
+  background: rgba(255, 255, 255, 0.2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.autopsy-stages button:last-child {
+  border-right: 0;
+}
+.autopsy-stages button[data-state="current"] {
+  color: #fff;
+  background: var(--autopsy-ink);
+}
+.autopsy-stages button[data-state="complete"] {
+  background: rgba(37, 95, 133, 0.12);
+}
+.autopsy-stages button > span {
+  grid-row: 1 / span 2;
+  font:
+    800 12px/1 ui-monospace,
+    monospace;
+}
+.autopsy-stages button strong {
+  font-size: 16px;
+}
+.autopsy-stages button small {
+  opacity: 0.72;
+}
+
+.autopsy-workbench {
+  padding: clamp(22px, 4vw, 52px);
+}
+.autopsy-workbench__header {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.35fr) 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.autopsy-workbench__header h3 {
+  margin: 5px 0 0;
+  font:
+    900 34px/1 Georgia,
+    serif;
+}
+.autopsy-workbench__header p {
+  max-width: 760px;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.autopsy-chart-stage {
+  min-width: 0;
+}
+.autopsy-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.autopsy-specimen {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 54px 12px 8px;
+  border: 2px solid var(--autopsy-ink);
+  background: #fff;
+  box-shadow: 7px 7px 0 rgba(24, 32, 31, 0.12);
+}
+.autopsy-specimen[data-kind="suspect"] {
+  background: #fffef6;
+}
+.autopsy-specimen[data-kind="repaired"] {
+  border-color: var(--autopsy-blue);
+  --semiotic-bg: #fbf7ed;
+  --semiotic-text: #173f5f;
+  --semiotic-text-secondary: #53676f;
+  --semiotic-grid: #d9d2c1;
+  --semiotic-border: #b7ad98;
+  background: #fbf7ed;
+}
+.autopsy-specimen__tag {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-bottom: 1px solid currentColor;
+  font:
+    800 10px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.1em;
+}
+.autopsy-specimen[data-kind="suspect"] .autopsy-specimen__tag strong {
+  color: var(--autopsy-red);
+}
+.autopsy-specimen[data-kind="repaired"] .autopsy-specimen__tag strong {
+  color: var(--autopsy-blue);
+}
+.autopsy-specimen__deck {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 1px 12px;
+  margin: 4px 18px -8px;
+  color: #173f5f;
+}
+.autopsy-specimen__deck span {
+  align-self: end;
+  font:
+    800 9px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.13em;
+}
+.autopsy-specimen__deck strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font:
+    900 46px/0.85 Georgia,
+    serif;
+  letter-spacing: -0.06em;
+}
+.autopsy-specimen__deck small {
+  font:
+    700 11px/1.2 Inter,
+    system-ui,
+    sans-serif;
+}
+
+.autopsy-report {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+.autopsy-verdict {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 150px;
+  padding: 18px;
+  border: 2px solid currentColor;
+  text-align: center;
+  transform: rotate(-1deg);
+}
+.autopsy-verdict[data-status="fail"] {
+  color: var(--autopsy-red);
+}
+.autopsy-verdict[data-status="pass"] {
+  color: var(--autopsy-blue);
+}
+.autopsy-verdict span {
+  font:
+    800 10px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.1em;
+}
+.autopsy-verdict strong {
+  margin: 8px 0;
+  font:
+    900 42px/1 Georgia,
+    serif;
+}
+.autopsy-verdict small {
+  line-height: 1.4;
+}
+.autopsy-findings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.autopsy-finding {
+  padding: 14px;
+  border-left: 4px solid var(--autopsy-red);
+  background: rgba(255, 255, 255, 0.56);
+}
+.autopsy-finding > span {
+  display: block;
+  color: var(--autopsy-red);
+  font:
+    800 9px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.autopsy-finding strong {
+  display: block;
+  margin-top: 7px;
+  font:
+    800 12px/1.2 ui-monospace,
+    monospace;
+}
+.autopsy-finding p {
+  margin: 8px 0;
+  font-size: 13px;
+  line-height: 1.38;
+}
+.autopsy-finding small {
+  display: block;
+  padding-top: 8px;
+  border-top: 1px solid rgba(24, 32, 31, 0.18);
+  line-height: 1.35;
+}
+
+.autopsy-evidence {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  margin-top: 24px;
+  padding: 22px;
+  color: #eaf1f5;
+  background: var(--autopsy-ink);
+}
+.autopsy-evidence div {
+  display: flex;
+  flex-direction: column;
+}
+.autopsy-evidence strong {
+  margin: 7px 0;
+  font:
+    900 27px/1 Georgia,
+    serif;
+}
+.autopsy-evidence p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.autopsy-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 380px);
+  margin: 28px 0 0 auto;
+  padding: 16px 20px;
+  border: 0;
+  color: #fff;
+  background: var(--autopsy-red);
+  font:
+    800 14px/1 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.autopsy-next span {
+  font-size: 22px;
+}
+
+.autopsy-repair {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 3px solid var(--autopsy-blue);
+}
+.autopsy-repair__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+.autopsy-repair__heading h3 {
+  margin: 5px 0 0;
+  font:
+    900 34px/1 Georgia,
+    serif;
+}
+.autopsy-repair__heading .autopsy-verdict {
+  min-width: 180px;
+  min-height: 112px;
+}
+.autopsy-fix-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 24px;
+}
+.autopsy-fix-grid article {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid var(--autopsy-blue);
+  background: rgba(255, 255, 255, 0.5);
+}
+.autopsy-fix-grid article > span {
+  color: var(--autopsy-blue);
+  font:
+    800 9px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.12em;
+}
+.autopsy-fix-grid article > strong {
+  margin: 8px 0 15px;
+  font:
+    800 13px/1.2 ui-monospace,
+    monospace;
+}
+.autopsy-fix-grid del {
+  color: var(--autopsy-red);
+}
+.autopsy-fix-grid ins {
+  margin-top: 6px;
+  color: var(--autopsy-blue);
+  font-weight: 800;
+  text-decoration: none;
+}
+.autopsy-fix-grid p {
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.autopsy-release-note {
+  margin: 20px 0 0;
+  padding: 16px;
+  border-left: 5px solid var(--autopsy-blue);
+  background: rgba(37, 95, 133, 0.1);
+  font-weight: 700;
+}
+
+.autopsy-aesthetic-gate {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.42fr) 1fr;
+  gap: 14px 24px;
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid #b7ad98;
+  background: #fbf7ed;
+}
+.autopsy-aesthetic-gate > div:first-child {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 5px 12px;
+}
+.autopsy-aesthetic-gate > div:first-child span {
+  grid-column: 1 / -1;
+  font:
+    800 9px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.13em;
+}
+.autopsy-aesthetic-gate > div:first-child strong {
+  color: #173f5f;
+  font:
+    900 24px/1 Georgia,
+    serif;
+}
+.autopsy-aesthetic-gate b {
+  padding: 6px 8px;
+  color: #fff;
+  background: #2d6a4f;
+  font:
+    900 10px/1 ui-monospace,
+    monospace;
+  letter-spacing: 0.08em;
+}
+.autopsy-aesthetic-gate > p,
+.autopsy-aesthetic-gate > small {
+  margin: 0;
+  line-height: 1.45;
+}
+.autopsy-aesthetic-gate > small {
+  grid-column: 2;
+  color: #53605d;
+}
+.autopsy-aesthetic-gate > nav {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.autopsy-aesthetic-gate a {
+  color: #173f5f;
+  font:
+    800 11px/1.2 ui-monospace,
+    monospace;
+}
+.autopsy-aesthetic-features {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 1px;
+  margin-top: 8px;
+  background: #cfc6b3;
+  border: 1px solid #cfc6b3;
+}
+.autopsy-aesthetic-features label {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(90px, 0.45fr) 32px minmax(110px, 0.45fr) 38px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: #fbf7ed;
+}
+.autopsy-aesthetic-features label > span {
+  display: grid;
+  gap: 4px;
+}
+.autopsy-aesthetic-features label strong {
+  color: #173f5f;
+  font:
+    800 12px/1.2 ui-monospace,
+    monospace;
+}
+.autopsy-aesthetic-features label small {
+  color: #53605d;
+  font-size: 11px;
+}
+.autopsy-aesthetic-features meter {
+  width: 100%;
+  accent-color: #2d6a4f;
+}
+.autopsy-aesthetic-features output,
+.autopsy-aesthetic-features label > b {
+  font:
+    800 11px/1 ui-monospace,
+    monospace;
+  text-align: right;
+}
+.autopsy-aesthetic-features input[type="range"] {
+  width: 100%;
+  accent-color: #b43b2d;
+}
+.autopsy-aesthetic-features label[data-status="disabled"] {
+  opacity: 0.58;
+}
+
+.autopsy-close {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 18px 28px;
+  padding: clamp(24px, 4vw, 48px);
+  color: #fff;
+  background: var(--autopsy-blue);
+}
+.autopsy-close p {
+  margin: 0;
+  font:
+    800 20px/1.3 Georgia,
+    serif;
+}
+.autopsy-close code {
+  grid-column: 2;
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .autopsy-hero {
+    grid-template-columns: 1fr;
+  }
+  .autopsy-hero h2,
+  .autopsy-hero > p:not(.autopsy-kicker),
+  .autopsy-claim {
+    grid-column: 1;
+  }
+  .autopsy-claim {
+    grid-row: auto;
+  }
+  .autopsy-stages {
+    grid-template-columns: 1fr 1fr;
+  }
+  .autopsy-stages button:nth-child(2) {
+    border-right: 0;
+  }
+  .autopsy-stages button:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--autopsy-ink);
+  }
+  .autopsy-workbench__header,
+  .autopsy-report,
+  .autopsy-evidence,
+  .autopsy-close {
+    grid-template-columns: 1fr;
+  }
+  .autopsy-repair__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .autopsy-repair__heading .autopsy-verdict {
+    min-width: 0;
+  }
+  .autopsy-comparison,
+  .autopsy-fix-grid,
+  .autopsy-aesthetic-gate {
+    grid-template-columns: 1fr;
+  }
+  .autopsy-aesthetic-gate > small,
+  .autopsy-aesthetic-gate > nav {
+    grid-column: 1;
+  }
+  .autopsy-aesthetic-features {
+    grid-column: 1;
+  }
+  .autopsy-aesthetic-features label {
+    grid-template-columns: 1fr 30px;
+  }
+  .autopsy-aesthetic-features label > span,
+  .autopsy-aesthetic-features meter,
+  .autopsy-aesthetic-features input[type="range"] {
+    grid-column: 1;
+  }
+  .autopsy-aesthetic-features output,
+  .autopsy-aesthetic-features label > b {
+    grid-column: 2;
+  }
+  .autopsy-close code {
+    grid-column: 1;
+  }
+}
+
+@media (forced-colors: active) {
+  .autopsy-page,
+  .autopsy-specimen,
+  .autopsy-finding,
+  .autopsy-fix-grid article {
+    forced-color-adjust: auto;
+  }
+  .autopsy-verdict,
+  .autopsy-specimen,
+  .autopsy-evidence,
+  .autopsy-next {
+    border: 2px solid CanvasText;
+  }
+}

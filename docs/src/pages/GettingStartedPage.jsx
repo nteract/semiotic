@@ -24,7 +24,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 165,
+    "kb": 166,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 112,
+    "kb": 113,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
@@ -74,12 +74,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 98,
+    "kb": 102,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 91,
+    "kb": 95,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -89,12 +89,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 92,
+    "kb": 95,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 84,
+    "kb": 87,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -104,12 +104,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes",
-    "kb": 7,
+    "kb": 12,
     "blurb": "Theme presets only (tufte, carbon, etc.)"
   },
   {
     "importPath": "semiotic/themes/core",
-    "kb": 7,
+    "kb": 12,
     "blurb": "Theme presets and token helpers"
   },
   {
@@ -129,7 +129,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 167,
+    "kb": 168,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -144,12 +144,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 548,
+    "kb": 552,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 96,
+    "kb": 101,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -164,7 +164,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 355,
+    "kb": 359,
     "blurb": "Everything below (full bundle)"
   }
 ])

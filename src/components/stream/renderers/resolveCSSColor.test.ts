@@ -208,6 +208,62 @@ describe("resolveCSSColor", () => {
     expect(disconnect).toHaveBeenCalledTimes(2)
   })
 
+  it("repaints settled canvases when an asynchronous web font finishes loading", () => {
+    const fontListeners = new Set<EventListenerOrEventListenerObject>()
+    const fontSet = {
+      addEventListener: vi.fn(
+        (type: string, listener: EventListenerOrEventListenerObject) => {
+          if (type === "loadingdone") fontListeners.add(listener)
+        }
+      ),
+      removeEventListener: vi.fn(
+        (type: string, listener: EventListenerOrEventListenerObject) => {
+          if (type === "loadingdone") fontListeners.delete(listener)
+        }
+      )
+    }
+    const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts")
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: fontSet
+    })
+
+    const canvas = document.createElement("canvas")
+    document.body.appendChild(canvas)
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(() => canvas, listener)
+
+    try {
+      const beforeFontLoad = getCSSColorCacheVersion()
+      for (const registered of fontListeners) {
+        if (typeof registered === "function") {
+          registered(new Event("loadingdone"))
+        } else {
+          registered.handleEvent(new Event("loadingdone"))
+        }
+      }
+
+      expect(listener).toHaveBeenCalledTimes(1)
+      expect(getCSSColorCacheVersion()).toBe(beforeFontLoad + 1)
+    } finally {
+      unsubscribe()
+      if (originalFonts) {
+        Object.defineProperty(document, "fonts", originalFonts)
+      } else {
+        Object.defineProperty(document, "fonts", {
+          configurable: true,
+          value: undefined
+        })
+      }
+    }
+
+    expect(fontSet.removeEventListener).toHaveBeenCalledWith(
+      "loadingdone",
+      expect.any(Function)
+    )
+    expect(fontListeners.size).toBe(0)
+  })
+
   it("isolates caches between canvases", () => {
     const ctxA = makeCtx("--c", "#aaaaaa")
     const ctxB = makeCtx("--c", "#bbbbbb")

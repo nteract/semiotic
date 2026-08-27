@@ -79,10 +79,11 @@ const ENTRY_GRAPHS = [
   // dependency leak.
   { entry: "semiotic-access.module.min.js", label: "access", limitKb: 36 },
   // Evidence envelopes include data profiles and grounding; this is tooling,
-  // not a chart runtime dependency. The production graph is 49.8 KiB, so
-  // retain a narrow explicit guard band rather than the inherited
+  // not a chart runtime dependency. The public aesthetic-evaluation evidence
+  // adds its reusable color-evidence normalization here. CI measures 50.1 KiB
+  // gzip, so retain a narrow one-KiB guard band rather than the inherited
   // 180 KiB ceiling that could not detect accidental runtime coupling.
-  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 50 },
+  { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 51 },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -97,7 +98,10 @@ const ENTRY_GRAPHS = [
   // reviewable KiB of headroom instead of splitting common chrome at release.
   // The custom-layout readiness bridge is shared by StreamXYFrame consumers.
   // Current production graphs: network 154.3 KiB, geo 111.6 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 156 },
+  // Bumped 156→157: visualization text now inherits the theme font family,
+  // including network labels in live and SSR frames. Linux CI measures the
+  // resulting network graph at 156.2 KiB; retain less than 1 KiB headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 157 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -172,7 +176,11 @@ const ENTRY_GRAPHS = [
   // tranches: production measures 538.6 KiB gzip. Keep less than 1.5 KiB of
   // runway around the canonical catalog rather than dropping accepted schema
   // or reader behavior to preserve a stale round number.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 540 },
+  // Bumped 540→545: the public aesthetic-policy evaluator and its color-
+  // evidence normalization join the canonical AI catalog. Linux CI measures
+  // 543.5 KiB gzip; retain 1.5 KiB of reviewable headroom for that accepted
+  // public analysis surface.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 545 },
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
@@ -250,21 +258,31 @@ for (const { entry, label, limitKb } of ENTRY_GRAPHS) {
   })
 }
 
-console.log(
-  "Chunk-aware entry graph sizes (entry + static ESM imports, gzip):\n"
-)
-for (const r of rows) {
-  const mark = r.ok ? "✓" : "✗"
-  console.log(
-    `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
-  )
+console.log("Chunk-aware entry graph sizes (entry + static ESM imports, gzip):")
+
+function printRows(rowsToPrint) {
+  for (const r of rowsToPrint) {
+    const mark = r.ok ? "✓" : "✗"
+    console.log(
+      `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
+    )
+  }
 }
+
+const passingRows = rows.filter((row) => row.ok)
+const failingRows = rows.filter((row) => !row.ok)
+
+console.log("\nPassing entry graphs:")
+printRows(passingRows)
+console.log("\nFailing entry graphs:")
+if (failingRows.length === 0) console.log("  none")
+else printRows(failingRows)
 
 if (printOnly) process.exit(0)
 
 if (failed) {
   console.error(
-    "\n✗ One or more entry graphs exceed their chunk-aware gzip budget.\n" +
+    "\nOne or more entry graphs exceed their chunk-aware gzip budget.\n" +
       "  Facades alone are ~2 KB; budgets measure the reachable shared-chunk graph.\n" +
       "  Raise limits only with a PR note, or split the heavy shared chunk."
   )

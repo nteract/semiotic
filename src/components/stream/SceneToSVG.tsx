@@ -438,12 +438,14 @@ function xySceneNodeToSVGMark(
           <g key={`heatcell-${i}`}>
             <rect {...cellRect} />
             <text
+              className="semiotic-heatmap-value"
               x={n.x + n.w / 2}
               y={n.y + n.h / 2}
               textAnchor="middle"
               dominantBaseline="middle"
               fill={textColor}
               fontSize={`${fontSize}px`}
+              fontFamily="var(--semiotic-font-family, sans-serif)"
             >
               {formatted}
             </text>
