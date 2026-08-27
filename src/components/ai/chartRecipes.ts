@@ -85,6 +85,12 @@ export interface DataRoleDefinition {
   description?: string
   /** Which input collection owns the field for multi-table/network/geo recipes. */
   source?: "data" | "nodes" | "edges" | "areas" | "points" | "lines" | string
+  /** Resolve this role to an ordered field list instead of one field. */
+  multiple?: boolean
+  /** Minimum number of resolved fields required for a multi-field role. */
+  minimum?: number
+  /** Maximum number of fields emitted for a multi-field role. */
+  maximum?: number
 }
 
 export type EncodingChannel =

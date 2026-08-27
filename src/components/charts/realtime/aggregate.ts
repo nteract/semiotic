@@ -60,6 +60,18 @@ export const AGG_COUNT = "count"
 export const AGG_START = "__aggStart"
 export const AGG_END = "__aggEnd"
 
+/** Materialized row returned by RealtimeLineChart in aggregate mode. */
+export interface AggregatedRealtimeDatum extends Datum {
+  time: number
+  value: number
+  count: number
+  __aggPartial: boolean
+  __aggStart: number
+  __aggEnd: number
+  __aggLower?: number
+  __aggUpper?: number
+}
+
 /**
  * Build a `WindowAccumulator` from a config, parsing duration strings.
  * Returns `null` when the window width is unparseable, so the caller can
@@ -96,13 +108,13 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
 export function aggregatedRows(
   acc: WindowAccumulator,
   config: AggregateConfig
-): Datum[] {
+): AggregatedRealtimeDatum[] {
   const stat: AggregateStat = config.stat ?? "mean"
   const band: AggregateBand = config.band ?? "none"
   const sigma = config.sigma ?? 1
 
   return acc.emit().map(w => {
-    const row: Datum = {
+    const row: AggregatedRealtimeDatum = {
       [AGG_TIME]: (w.start + w.end) / 2,
       [AGG_VALUE]: statValue(w, stat),
       [AGG_COUNT]: w.count,

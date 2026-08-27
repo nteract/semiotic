@@ -709,6 +709,25 @@ describe("xySceneNodeToSVG — heatcell", () => {
     expect(html).toContain('stroke="#11110e"')
     expect(html).toContain('stroke-width="0"')
   })
+
+  it("makes rendered cell values addressable and font-token aware", () => {
+    const node = {
+      type: "heatcell",
+      x: 5,
+      y: 10,
+      w: 30,
+      h: 30,
+      fill: "#fff",
+      value: 42,
+      showValues: true
+    }
+
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+
+    expect(html).toContain('class="semiotic-heatmap-value"')
+    expect(html).toContain('font-family="var(--semiotic-font-family, sans-serif)"')
+    expect(html).toContain(">42</text>")
+  })
 })
 
 describe("xySceneNodeToSVG — candlestick", () => {

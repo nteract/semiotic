@@ -437,7 +437,13 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     }),
     [bodyLimit, frameProps.config, layout.config]
   )
-  const rerun = usePhysicsRerun(resolvedConfig, rerunMS, paused)
+  const rerun = usePhysicsRerun(
+    resolvedConfig,
+    rerunMS,
+    paused,
+    undefined,
+    props.onSimulationStateChange
+  )
 
   const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
     selection,

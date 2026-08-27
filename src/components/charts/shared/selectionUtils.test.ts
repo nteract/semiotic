@@ -4,8 +4,9 @@ import {
   normalizeLinkedHover,
   normalizeLinkedBrush,
   wrapStyleWithSelection,
-  type SelectionHookResult,
+  type SelectionHookResult
 } from "./selectionUtils"
+import { getSelectionProvenance } from "../../store/selectionProvenance"
 import type { Datum } from "./datumTypes"
 
 // ── normalizeLinkedHover ──────────────────────────────────────────────────
@@ -50,8 +51,16 @@ describe("normalizeLinkedHover", () => {
   })
 
   it("passes through series mode and an explicit seriesField", () => {
-    const result = normalizeLinkedHover({ name: "s", mode: "series", seriesField: "region" })
-    expect(result).toMatchObject({ name: "s", mode: "series", seriesField: "region" })
+    const result = normalizeLinkedHover({
+      name: "s",
+      mode: "series",
+      seriesField: "region"
+    })
+    expect(result).toMatchObject({
+      name: "s",
+      mode: "series",
+      seriesField: "region"
+    })
   })
 })
 
@@ -72,7 +81,6 @@ describe("normalizeLinkedBrush", () => {
     const result = normalizeLinkedBrush(input)
     expect(result).toEqual(input)
   })
-
 })
 
 // ── wrapStyleWithSelection ────────────────────────────────────────────────
@@ -80,20 +88,22 @@ describe("normalizeLinkedBrush", () => {
 describe("wrapStyleWithSelection", () => {
   const baseStyleFn = (d: Datum) => ({
     fill: d.color || "blue",
-    stroke: "black",
+    stroke: "black"
   })
 
   it("returns the base style function when selectionHook is null (no selection)", () => {
     const wrapped = wrapStyleWithSelection(baseStyleFn, null)
     expect(wrapped).toBe(baseStyleFn)
+    expect(getSelectionProvenance(wrapped)?.[0]).not.toBe(wrapped)
   })
 
   it("returns base styles when selection is not active", () => {
     const hook: SelectionHookResult = {
       isActive: false,
-      predicate: () => false,
+      predicate: () => false
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
+    expect(getSelectionProvenance(wrapped)?.[0]).toBe(wrapped)
     const style = wrapped({ color: "red" })
     expect(style).toEqual({ fill: "red", stroke: "black" })
   })
@@ -101,7 +111,7 @@ describe("wrapStyleWithSelection", () => {
   it("returns full opacity for matching datums when selection is active", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.category === "A",
+      predicate: (d) => d.category === "A"
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style = wrapped({ color: "red", category: "A" })
@@ -114,7 +124,7 @@ describe("wrapStyleWithSelection", () => {
   it("dims non-matching datums with default opacity", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.category === "A",
+      predicate: (d) => d.category === "A"
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style = wrapped({ color: "red", category: "B" })
@@ -126,10 +136,10 @@ describe("wrapStyleWithSelection", () => {
   it("uses custom unselectedOpacity", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.category === "A",
+      predicate: (d) => d.category === "A"
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook, {
-      unselectedOpacity: 0.3,
+      unselectedOpacity: 0.3
     })
     const style = wrapped({ category: "B" })
     expect(style.opacity).toBe(0.3)
@@ -140,10 +150,10 @@ describe("wrapStyleWithSelection", () => {
   it("applies selectedStyle overrides for matching datums", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.category === "A",
+      predicate: (d) => d.category === "A"
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook, {
-      selectedStyle: { strokeWidth: 3, stroke: "gold" },
+      selectedStyle: { strokeWidth: 3, stroke: "gold" }
     })
     const style = wrapped({ color: "red", category: "A" })
     expect(style.strokeWidth).toBe(3)
@@ -154,10 +164,10 @@ describe("wrapStyleWithSelection", () => {
   it("applies unselectedStyle overrides for non-matching datums", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.category === "A",
+      predicate: (d) => d.category === "A"
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook, {
-      unselectedStyle: { filter: "grayscale(100%)" },
+      unselectedStyle: { filter: "grayscale(100%)" }
     })
     const style = wrapped({ category: "B" })
     expect(style.opacity).toBe(DEFAULT_SELECTION_OPACITY)
@@ -167,7 +177,7 @@ describe("wrapStyleWithSelection", () => {
   it("works with multiple selection fields in predicate", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: (d) => d.region === "North" && d.year === 2024,
+      predicate: (d) => d.region === "North" && d.year === 2024
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
 
@@ -178,10 +188,35 @@ describe("wrapStyleWithSelection", () => {
     expect(noMatchStyle.opacity).toBe(DEFAULT_SELECTION_OPACITY)
   })
 
+  it("can match an authored wrapper through its interactive datum shape", () => {
+    const hook: SelectionHookResult = {
+      isActive: true,
+      predicate: (d) => d.name === "North" && d.score === 8
+    }
+    const wrapped = wrapStyleWithSelection(
+      baseStyleFn,
+      hook,
+      undefined,
+      (feature) => ({ ...(feature.properties as Datum), ...feature })
+    )
+
+    const selected = wrapped({
+      type: "Feature",
+      properties: { name: "North", score: 8 }
+    })
+    const unselected = wrapped({
+      type: "Feature",
+      properties: { name: "South", score: 3 }
+    })
+
+    expect(selected.opacity).toBeUndefined()
+    expect(unselected.opacity).toBe(DEFAULT_SELECTION_OPACITY)
+  })
+
   it("does not mutate the base style object (wrapStyleWithSelection)", () => {
     const hook: SelectionHookResult = {
       isActive: true,
-      predicate: () => false,
+      predicate: () => false
     }
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style1 = wrapped({ color: "red" })

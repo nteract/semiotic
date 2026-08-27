@@ -240,7 +240,7 @@ export default function UkraineWarHistoryExamplePage() {
 
   return (
     <ExamplePageLayout title="Ukraine: Four Clocks of a Long War">
-      <main className="uwh-page">
+      <div className="uwh-page">
         <header className="uwh-hero">
           <div className="uwh-hero__copy">
             <p className="uwh-kicker">A Semiotic evidence atlas · 2022–2026</p>
@@ -839,7 +839,7 @@ export default function UkraineWarHistoryExamplePage() {
             contributors; tiles © CARTO.
           </footer>
         </section>
-      </main>
+      </div>
     </ExamplePageLayout>
   )
 }

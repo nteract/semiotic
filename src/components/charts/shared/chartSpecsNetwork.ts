@@ -194,6 +194,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       layout: { type: "string", enum: ["tree", "cluster", "partition", "treemap", "circlepack"] as const, default: "tree" },
       orientation: { type: "string", enum: ["vertical", "horizontal", "radial"] as const, default: "vertical" },
@@ -224,6 +225,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       childrenAccessor: { type: ["string", "function"], default: "children" },
       valueAccessor: { type: ["string", "function"], default: "value" },
@@ -254,6 +256,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       childrenAccessor: { type: ["string", "function"], default: "children" },
       valueAccessor: { type: ["string", "function"], default: "value" },
@@ -282,6 +285,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["common"],
     ownProps: {
+      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Hierarchical root object with children: { name: 'root', children: [...] }" },
       childrenAccessor: { type: ["string", "function"], default: "children", description: "Key to access children from each datum" },
       nodeIdAccessor: { type: ["string", "function"], default: "name", description: "Key to identify each node" },

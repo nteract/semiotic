@@ -43,7 +43,7 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveFrameGraphics } from "./frameGraphics"
 
-import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
+import { prepareCanvas, getDevicePixelRatio, syncCanvasSize, subscribeToCanvasFontInvalidation } from "./canvasSetup"
 import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -302,6 +302,11 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       scheduleRender,
       frameRuntime,
     } = frame
+
+    useEffect(() => subscribeToCanvasFontInvalidation(() => {
+      dirtyRef.current = true
+      scheduleRender()
+    }), [scheduleRender])
 
     // XY post-expands margin to at least 60px on any side that has a
     // configured marginal graphic. Copy the hook's margin before mutating
@@ -1277,6 +1282,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
+            fontFamily: "var(--semiotic-font-family, sans-serif)",
             width: responsiveWidth ? "100%" : size[0],
             height: responsiveHeight ? "100%" : size[1],
           }}
@@ -1369,6 +1375,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         tabIndex={0}
         style={{
           position: "relative",
+          fontFamily: "var(--semiotic-font-family, sans-serif)",
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: "visible",

@@ -135,10 +135,14 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
       if (v < lo) lo = v
       if (v > hi) hi = v
     }
-    if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo === hi) {
-      // Degenerate axis (all-equal or all-missing) — pin to a unit range so
-      // every row plots at the axis midpoint instead of NaN.
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
+      // All-missing axis — pin to a unit range so no invalid scale escapes.
       domains[f] = [0, 1]
+    } else if (lo === hi) {
+      // Center a constant dimension around its authored value. Using [0, 1]
+      // here would send any constant other than 0.5 outside the plot.
+      const padding = Math.max(Math.abs(lo) * 0.01, 0.5)
+      domains[f] = [lo - padding, hi + padding]
     } else {
       domains[f] = [lo, hi]
     }

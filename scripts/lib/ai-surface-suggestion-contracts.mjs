@@ -23,6 +23,7 @@ export function buildSuggestionPropContracts(schema, componentIndex) {
         }
         const properties = entry.parameters?.properties ?? {}
         const valueComponent = category === "value"
+        const recipeComponent = category === "recipe"
         const preferredHeading = valueComponent ? "label" : "title"
         const fallbackHeading = valueComponent ? "title" : "label"
         const headingProp = properties[preferredHeading]
@@ -39,7 +40,9 @@ export function buildSuggestionPropContracts(schema, componentIndex) {
           {
             componentKind: valueComponent
               ? "value-component"
-              : "chart-hoc",
+              : recipeComponent
+                ? "chart-recipe"
+                : "chart-hoc",
             commonChartProps: valueComponent
               ? "component-specific"
               : "supported",

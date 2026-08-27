@@ -180,6 +180,121 @@ const linkedHoverEvidence = [
       "linked-hover-wave-one-hocs-state.png",
     ],
   },
+  {
+    charts: [
+      "BubbleChart",
+      "BumpChart",
+      "CandlestickChart",
+      "ConnectedScatterplot",
+      "DifferenceChart",
+      "Heatmap",
+      "MultiAxisLineChart",
+      "QuadrantChart",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every deterministic XY target",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-xy-cohort-state.png",
+      "linked-hover-deterministic-xy-multi-axis-state.png",
+      "linked-hover-deterministic-xy-difference-state.png",
+    ],
+  },
+  {
+    charts: [
+      "ChordDiagram",
+      "CirclePack",
+      "ForceDirectedGraph",
+      "OrbitDiagram",
+      "ProcessSankey",
+      "SankeyDiagram",
+      "TreeDiagram",
+      "Treemap",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every deterministic network target",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-network-cohort-state.png",
+    ],
+  },
+  {
+    charts: [
+      "ChoroplethMap",
+      "DistanceCartogram",
+      "FlowMap",
+      "ProportionalSymbolMap",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every deterministic geo target",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-geo-cohort-state.png",
+    ],
+  },
+  {
+    charts: ["LikertChart", "SwimlaneChart"],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every remaining static ordinal target",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-static-ordinal-state.png",
+    ],
+  },
+  {
+    charts: [
+      "RealtimeHeatmap",
+      "RealtimeHistogram",
+      "RealtimeLineChart",
+      "RealtimeSwarmChart",
+      "RealtimeWaterfallChart",
+      "TemporalHistogram",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every realtime-family target after public ingestion",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-realtime-cohort-state.png",
+      "data-realtime-cohort-ready",
+    ],
+  },
+  {
+    charts: [
+      "CollisionSwarmChart",
+      "EventDropChart",
+      "GaltonBoardChart",
+      "UnitPileChart",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every settled-physics target after public readiness",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-settled-physics-state.png",
+      "data-physics-settled-ready",
+    ],
+  },
+  {
+    charts: [
+      "CrucibleChart",
+      "GauntletChart",
+      "PacketFlowChart",
+      "ProcessFlowChart",
+    ],
+    source: "integration-tests/brush-selection.spec.ts",
+    fixture: "integration-tests/coordinated-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes every authored-physics target after terminal readiness",
+      "must redraw when its linked-hover selection becomes active",
+      "linked-hover-deterministic-authored-physics-state.png",
+      "data-physics-authored-ready",
+    ],
+  },
 ]
 
 const linkedHoverCoveredCharts = new Set()
@@ -211,44 +326,6 @@ for (const evidence of linkedHoverEvidence) {
 // interaction-state screenshots. Do not add to this map casually; the
 // intended direction is down.
 const LINKED_HOVER_BURN_DOWN = new Map([
-  ["BubbleChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["BumpChart", "new in 3.8.6: no chart-specific linked-hover interaction snapshot yet"],
-  ["CandlestickChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ConnectedScatterplot", "no chart-specific linked-hover interaction snapshot yet"],
-  ["DifferenceChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["Heatmap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["MultiAxisLineChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["QuadrantChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["LikertChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["SwimlaneChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ChordDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["CirclePack", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ForceDirectedGraph", "no chart-specific linked-hover interaction snapshot yet"],
-  ["OrbitDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  // ProcessSankey now claims supportsLinkedHover; burn down once a deterministic
-  // band/ribbon interaction snapshot lands (selectionDatum raw vs scene).
-  ["ProcessSankey", "no chart-specific linked-hover interaction snapshot yet"],
-  ["SankeyDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["TreeDiagram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["Treemap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ChoroplethMap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["DistanceCartogram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["FlowMap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["ProportionalSymbolMap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RealtimeHeatmap", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RealtimeHistogram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RealtimeLineChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RealtimeSwarmChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["RealtimeWaterfallChart", "no chart-specific linked-hover interaction snapshot yet"],
-  ["TemporalHistogram", "no chart-specific linked-hover interaction snapshot yet"],
-  ["CollisionSwarmChart", "physics linked-hover needs a deterministic interaction snapshot"],
-  ["CrucibleChart", "crucible linked-hover needs a deterministic terminal-state interaction snapshot"],
-  ["EventDropChart", "event-time physics linked-hover needs a deterministic interaction snapshot"],
-  ["GaltonBoardChart", "settled Galton linked-hover needs a deterministic interaction snapshot"],
-  ["GauntletChart", "gauntlet linked-hover needs a deterministic gate-state interaction snapshot"],
-  ["PacketFlowChart", "packet-flow linked-hover needs a deterministic route interaction snapshot"],
-  ["ProcessFlowChart", "process-flow linked-hover needs a deterministic capacity-state interaction snapshot"],
-  ["UnitPileChart", "settled unit-pile linked-hover needs a deterministic interaction snapshot"],
 ])
 
 const linkedHoverBurnDownCharts = new Set(LINKED_HOVER_BURN_DOWN.keys())

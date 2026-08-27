@@ -1,6 +1,6 @@
 "use client"
 
-// Semiotic AI — curated HOC-only surface for AI code generation
+// Semiotic AI — curated chart and portable-recipe surface for AI code generation
 // Import: import { LineChart, BarChart, ... } from "semiotic/ai"
 
 export { LineChart } from "./charts/xy/LineChart"
@@ -153,90 +153,9 @@ export type { DetailsPanelProps } from "./DetailsPanel"
 export { ObservationReadout, observedDatum } from "./ObservationReadout"
 export type { ObservationReadoutProps } from "./ObservationReadout"
 
-// AI validation
-export { validateProps } from "./charts/shared/validateProps"
-export type { ValidationResult } from "./charts/shared/validateProps"
-
-// Anti-pattern diagnostics
-export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
-export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
-export {
-  diagnoseTokenEncoding,
-  normalizeTokenEncoding,
-  suggestTokenEncoding,
-  tokenTaskIntentToCapabilityIntents
-} from "./recipes/tokenEncoding"
-export type {
-  PositionedToken,
-  SuggestTokenEncodingInput,
-  TokenCapabilityIntent,
-  TokenCountStrategy,
-  TokenDiagnostic,
-  TokenDiagnosticCode,
-  TokenDiagnosticsContext,
-  TokenEncoding,
-  TokenEncodingSuggestion,
-  TokenGeneratorInput,
-  TokenGridOptions,
-  TokenLabelPolicy,
-  TokenLayout,
-  TokenSemantics,
-  TokenSet,
-  TokenTaskIntent,
-  TokenType,
-  VisualToken
-} from "./recipes/tokenEncoding"
-
-// Accessibility audit — Chartability (POUR-CAF) heuristics over a chart config
-export {
-  auditAccessibility,
-  formatAccessibilityAudit,
-  accessibilityCaveats
-} from "./charts/shared/auditAccessibility"
-export {
-  auditMobileVisualization,
-  formatMobileVisualizationAudit,
-  mobileVisualizationCaveats
-} from "./charts/shared/auditMobileVisualization"
-export {
-  responsiveRuleMatches,
-  resolveResponsiveRules
-} from "./charts/shared/responsiveRules"
-export type {
-  A11yPrinciple,
-  A11yStatus,
-  A11yFinding,
-  AccessibilityAuditResult,
-  AuditAccessibilityOptions
-} from "./charts/shared/auditAccessibility"
-export * from "./ai/evaluateChart"
-export type {
-  MobileAuditStatus,
-  MobileAuditCategory,
-  MobileAuditImpact,
-  MobileVisualizationInteractionContract,
-  MobileVisualizationLabelContract,
-  MobileVisualizationCustomContract,
-  MobileVisualizationContract,
-  MobileVisualizationFinding,
-  MobileVisualizationAuditResult,
-  AuditMobileVisualizationOptions
-} from "./charts/shared/auditMobileVisualization"
-export type {
-  MobileClearSelectionBehavior,
-  MobileSnapBehavior,
-  MobileInteractionConfig,
-  MobileInteractionProp,
-  ResolvedMobileInteractionConfig
-} from "./charts/shared/types"
-export type {
-  ResponsiveOrientation,
-  ResponsiveRuleCondition,
-  ResponsiveRuleContext,
-  ResponsiveRule,
-  ResponsiveRuleMatch,
-  ResponsiveRuleResult
-} from "./charts/shared/responsiveRules"
+// AI validation, diagnostics, and accessibility audits live in a focused
+// facade so this chart catalog remains a navigable public-entry module.
+export * from "./semiotic-ai-audits"
 
 // Statistical overlay types
 export type {
@@ -625,8 +544,7 @@ export {
   unregisterRecipeLayout,
   getRecipeLayout
 } from "./ai/chartRecipeRegistry"
-export { ChartRecipe } from "./ai/ChartRecipe"
-export type { ChartRecipeProps } from "./ai/ChartRecipe"
+export * from "./ai/builtInChartRecipePublic"
 export {
   recipeToChartCapability,
   resolveRecipeRoleField

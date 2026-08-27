@@ -9,6 +9,20 @@ import type {
   DistributionStats
 } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
+import type { Datum } from "../../charts/shared/datumTypes"
+
+function makeSummaryDatum(
+  pieceData: Datum[],
+  category: string,
+  stats: DistributionStats,
+): Datum {
+  return {
+    ...pieceData[0],
+    ...stats,
+    category,
+    data: pieceData,
+  }
+}
 
 export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
   const { scales, columns, config, getR, resolveSummaryStyle } = ctx
@@ -38,7 +52,16 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
     const whiskerMin = values.find(v => v >= lowerFence) ?? min
     const whiskerMax = [...values].reverse().find(v => v <= upperFence) ?? max
 
-    const style = resolveSummaryStyle(col.pieceData[0], col.name)
+    const stats: DistributionStats = {
+      n: values.length,
+      min: whiskerMin,
+      q1,
+      median,
+      q3,
+      max: whiskerMax,
+      mean: values.reduce((s, v) => s + v, 0) / values.length,
+    }
+    const style = resolveSummaryStyle(makeSummaryDatum(col.pieceData, col.name, stats), col.name)
 
     const outliers: BoxplotSceneNode["outliers"] = []
     if (showOutliers) {
@@ -63,7 +86,7 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
       medianPos: rScale(median),
       q3Pos: rScale(q3),
       maxPos: rScale(whiskerMax),
-      stats: { n: values.length, min: whiskerMin, q1, median, q3, max: whiskerMax, mean: values.reduce((s, v) => s + v, 0) / values.length },
+      stats,
       style,
       datum: col.pieceData,
       category: col.name,
@@ -170,7 +193,8 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
       pathStr += " Z"
     }
 
-    const style = resolveSummaryStyle(col.pieceData[0], col.name)
+    const stats = computeDistributionStats(values)
+    const style = resolveSummaryStyle(makeSummaryDatum(col.pieceData, col.name, stats), col.name)
 
     // IQR overlay
     let iqrLine: ViolinSceneNode["iqrLine"]
@@ -198,7 +222,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
       translateY: 0,
       bounds: violinBounds,
       iqrLine,
-      stats: computeDistributionStats(values),
+      stats,
       style,
       datum: col.pieceData,
       category: col.name
@@ -245,8 +269,6 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     const total = values.length
     const maxCount = getMax(counts, 1)
 
-    const style = resolveSummaryStyle(col.pieceData[0], col.name)
-
     for (let i = 0; i < numBins; i++) {
       if (counts[i] === 0) continue
 
@@ -262,11 +284,20 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
 
       // Align bar to baseline (bottom of the column band)
       const y = col.x + col.width - barH
+      const binDatum: Datum = {
+        ...col.pieceData[0],
+        bin: i,
+        count: counts[i],
+        range: [vMin + i * binWidth, vMin + (i + 1) * binWidth],
+        category: col.name,
+        data: col.pieceData,
+      }
+      const style = resolveSummaryStyle(binDatum, col.name)
 
       nodes.push(buildRectNode(
         x, y, w, barH,
         style,
-        { bin: i, count: counts[i], range: [vMin + i * binWidth, vMin + (i + 1) * binWidth], category: col.name },
+        binDatum,
         col.name
       ))
     }
@@ -306,7 +337,8 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     }
     const maxCount = getMax(counts, 1)
 
-    const style = resolveSummaryStyle(col.pieceData[0], col.name)
+    const stats = computeDistributionStats(values)
+    const style = resolveSummaryStyle(makeSummaryDatum(col.pieceData, col.name, stats), col.name)
     const halfBand = col.width * amplitude
 
     // Build one-sided area path (density extends in one direction from baseline)
@@ -351,7 +383,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
       translateX: 0,
       translateY: 0,
       bounds: ridgeBounds,
-      stats: computeDistributionStats(values),
+      stats,
       style: { ...style, fillOpacity: style.fillOpacity ?? 0.5 },
       datum: col.pieceData,
       category: col.name

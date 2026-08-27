@@ -18,6 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 /**
  * PieChart component props
@@ -56,6 +57,8 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
    * theme's categorical palette when omitted.
    */
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware wedge styling; fieldless thresholds use absolute wedge magnitude. */
+  styleRules?: StyleRule[]
   /**
    * Rotation in **degrees** applied to the first wedge. `0` starts at 12
    * o'clock and proceeds clockwise; `90` starts at 3 o'clock, `180` at 6
@@ -148,7 +151,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   const {
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
-    colorBy, colorScheme, startAngle = 0, cornerRadius,
+    colorBy, colorScheme, styleRules, startAngle = 0, cornerRadius,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -200,6 +203,15 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(() => {
+    const readValue = makeRuleValueResolver(
+      valueAccessor as string | ((d: Datum) => unknown),
+    )
+    return (d: Datum) => {
+      const value = readValue(d)
+      return value == null ? undefined : Math.abs(value)
+    }
+  }, [valueAccessor])
 
   // PieChart's `effectiveColorBy` may differ from the raw `colorBy`
   // prop (e.g. when it derives from `categoryAccessor` for the
@@ -218,6 +230,8 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     // PieChart's "categoryAccessor implicitly differentiates slices"
     // semantics.
     cycleByCategory: true,
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

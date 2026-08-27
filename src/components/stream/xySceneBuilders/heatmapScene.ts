@@ -14,11 +14,27 @@ import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
 import type { XYSceneContext } from "./types"
+import {
+  attachSelectionProvenance,
+  getSelectionProvenance
+} from "../../store/selectionProvenance"
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
 // Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
 const COLOR_LUT_SIZE = 256
 const colorLutCache = new Map<string, string[]>()
+
+function colorLutIndex(value: number, minValue: number, maxValue: number): number {
+  if (minValue === maxValue) return Math.floor(COLOR_LUT_SIZE / 2)
+  return Math.min(
+    Math.floor(
+      ((value - minValue) * (COLOR_LUT_SIZE - 1)) /
+        (maxValue - minValue) +
+        0.5
+    ),
+    COLOR_LUT_SIZE - 1
+  )
+}
 
 function getColorLut(schemeName: string): string[] {
   const cacheKey = Object.prototype.hasOwnProperty.call(
@@ -179,8 +195,6 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     : ctx.config.themeSequential || "blues"
   const customColorScale = ctx.config.heatmapColorScale
   const lut = customColorScale ? undefined : getColorLut(schemeName)
-  const valRange = maxVal - minVal || 1
-  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
 
   const cellW = layout.width / xCount
   const cellH = layout.height / yCount
@@ -195,7 +209,7 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     const xi = key % xCount
     const yi = (key - xi) / xCount
 
-    const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+    const lutIdx = colorLutIndex(val, minVal, maxVal)
     const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
     const labelOpts = showValues
       ? { value: val, showValues: true as const, valueFormat }
@@ -234,6 +248,10 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
 
   const counts = new Int32Array(totalCells)
   const sums = new Float64Array(totalCells)
+  const cellRows =
+    getSelectionProvenance(ctx.config.areaStyle)?.[0] === ctx.config.areaStyle
+    ? new Map<number, Datum[]>()
+    : undefined
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
@@ -248,6 +266,14 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
     counts[idx]++
     const val = getVal(d)
     sums[idx] += isFinite(val) ? val : 0
+    if (cellRows) {
+      let rows = cellRows.get(idx)
+      if (!rows) {
+        rows = []
+        cellRows.set(idx, rows)
+      }
+      rows.push(d)
+    }
   }
 
   // Compute aggregated values for color scale min/max without overwriting sums
@@ -267,13 +293,11 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   }
   if (!isFinite(minVal)) return []
 
-  const valRange = maxVal - minVal || 1
   const customColorScale = ctx.config.heatmapColorScale
   const schemeName = typeof ctx.config.colorScheme === "string"
     ? ctx.config.colorScheme
     : ctx.config.themeSequential || "blues"
   const lut = customColorScale ? undefined : getColorLut(schemeName)
-  const lutScale = (COLOR_LUT_SIZE - 1) / valRange
   const cellW = layout.width / xBins
   const cellH = layout.height / yBins
   const showValues = ctx.config.showValues
@@ -294,7 +318,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
         default: val = counts[idx]; break
       }
 
-      const lutIdx = Math.min((val - minVal) * lutScale + 0.5 | 0, COLOR_LUT_SIZE - 1)
+      const lutIdx = colorLutIndex(val, minVal, maxVal)
       const fill = customColorScale ? customColorScale(val) : lut![lutIdx]
 
       const labelOpts = showValues
@@ -306,16 +330,19 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
       // which doesn't tell the user *where* in their data the cell sits.
       const xCenter = xMin + (xi + 0.5) * xBinSize
       const yCenter = yMin + (yi + 0.5) * yBinSize
-      const datum = {
-        xi,
-        yi,
-        value: val,
-        count: counts[idx],
-        sum: sums[idx],
-        xCenter,
-        yCenter,
-        agg,
-      }
+      const datum = attachSelectionProvenance(
+        {
+          xi,
+          yi,
+          value: val,
+          count: counts[idx],
+          sum: sums[idx],
+          xCenter,
+          yCenter,
+          agg
+        },
+        cellRows?.get(idx)
+      )
       nodes.push(applyHeatcellStyle(buildHeatcellNode(
         xi * cellW, (yBins - 1 - yi) * cellH,
         cellW, cellH, fill,

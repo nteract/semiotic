@@ -128,7 +128,7 @@ export function DistanceCartogramOverlay({
                 y={cy - 2}
                 fontSize={style.labelSize}
                 fill={style.labelColor}
-                fontFamily="system-ui, sans-serif"
+                fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
               >
                 {cost}
                 {costLabel ? ` ${costLabel}` : ""}
@@ -157,7 +157,7 @@ export function DistanceCartogramOverlay({
             fontSize={7}
             fontWeight={700}
             fill="#555"
-            fontFamily="system-ui, sans-serif"
+            fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
           >
             N
           </text>

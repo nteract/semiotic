@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`semiotic/line` one-chart boundary** — `LineChart` can now be imported from
   a dedicated micro entry that excludes the rest of the XY catalog and direct
-  Stream Frames. The first-party graph measures about **120 KB gzip** and the
-  packed cold-consumer browser bundle about **139 KiB**, versus roughly 158 KB
-  and 167 KiB for `semiotic/xy`. The boundary has a strict 121 KB graph budget,
-  package/API snapshots, cold-consumer coverage, agent guidance, and mixed-facade
-  smoke coverage proving `semiotic/themes/react` and `semiotic/line` share the
-  CommonJS provider runtime.
+  Stream Frames. The boundary has a dedicated static-graph budget, generated
+  first-party and packed cold-consumer measurements, package/API snapshots,
+  agent guidance, and mixed-facade smoke coverage proving
+  `semiotic/themes/react` and `semiotic/line` share the CommonJS provider
+  runtime. Current measurements live in the generated README tables rather
+  than this changelog entry so release notes cannot drift from built artifacts.
 - **`ChartAccessContract@1`** — a stable inventory of authored title,
   description, summary, exact-value table state, keyboard/focus support,
   navigation composition, reduced-motion behavior, forced-colors behavior,
@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   baseline.
 - **`semiotic/access` public entrypoint** — stable ESM/CJS/types exports expose
   the contract factory, types, schema version, and first-wave baseline contracts.
-  The access tooling graph measures about **33 KB gzip** with a 35 KB budget.
+  After the semantic hierarchy/choropleth navigation tranche, the access tooling
+  graph measures **35.4 KiB gzip** with a narrow 36 KiB budget.
 - **`ChartEvidenceEnvelope@1`** — portable provenance ledger composing data
   profile, deterministic input/transform hashes, render evidence, Chart Access
   Contract, reader grounding, communicative act, claims, modality observations,
@@ -47,10 +48,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   existing diagnostics, grounding, render, accessibility, and repair payloads.
 - **`semiotic/evidence` public entrypoint** — stable exports for envelope
   construction/parsing, stable hashing, publication gates, and associated types.
-  The evidence tooling graph measures about **47 KB gzip** with a 180 KB budget;
+  The evidence tooling graph measures **49.8 KiB gzip** with a 50 KiB budget;
   it stays off production chart-family graphs.
+- **Controlled dense-browser baseline** — seven fresh Chromium contexts now
+  measure visible Scatterplot paint and pointer-to-quadtree-hit-to-visible-
+  highlight latency at 10k and 50k points, explicit and automatic 50k Heatmap
+  aggregation, a same-runner point-batching control, retained LineChart updates,
+  and the emitted force worker. Structural checks require visible pixels, changed
+  interaction-canvas fingerprints, and the exact deterministic hover datum.
+- **Schema-visible built-in recipe pilots** — `ParallelCoordinatesRecipe` and
+  `CalendarHeatmapRecipe` are now portable, JSON-safe catalog entries rather
+  than agent-invisible layout helpers. They participate in `suggestCharts`,
+  expose Draft 2020-12 schemas through CLI/MCP discovery, render through the
+  generic React `ChartRecipe` host and server/MCP registries, and ship with
+  accessible-text requirements, docs/examples, schema-instance tests, and
+  non-empty scene evidence. The raw layouts remain available from
+  `semiotic/recipes` for React-only callbacks and bespoke frame control. The
+  measured packed-consumer cost is +7.8 KiB gzip for `semiotic/ai` and +5.8 KiB
+  for chart-free discovery through `semiotic/ai/core`; the first-party AI graph
+  is 538.6 KiB against a documented 540 KiB ceiling after the completed recipe
+  and semantic-navigation tranches.
+- **Composite `renderChart()` implementations** — `MinimapChart`,
+  `ScatterplotMatrix`, and `ChainReactionChart` now produce standalone,
+  evidence-backed SVG through `semiotic/server` and MCP instead of relying on
+  an undocumented React-HOC-only path. Minimap preserves detail + overview and
+  a controlled brush window; SPLOM preserves every scatter cell, diagonal
+  distribution, field label, and legend; ChainReaction renders the authored
+  current-time task/dependency projection and blocker reach while deliberately
+  omitting arbitrary in-flight replay balls. Pixel parity and review sheets
+  cover Chromium, Firefox, and WebKit on macOS and pinned Linux.
 
 ### Changed
+- **Built-in recipe layouts load with the recipe renderer** — the browser AI
+  entry still registers portable manifests for discovery, while
+  `ParallelCoordinatesRecipe` and `CalendarHeatmapRecipe` layout implementations
+  are registered only when `ChartRecipe` renders. Suggestion and description
+  consumers no longer retain unused rendering code, restoring multi-subpath
+  bundle runway without weakening its budget.
 - **`LineChart` guidance and executable contracts now prefer `semiotic/line`**
   when it is a route's only XY chart; `semiotic/xy` remains the family entry for
   mixed XY catalogs. Chart Clinic, AI examples, Context7, Getting Started,
@@ -82,10 +116,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ChartDefinition now produces a real downstream artifact** — the seven
   pilot definitions generate their canonical AI-schema registry entries, with
   equality coverage preventing the pilot and `ai/schema.json` from drifting.
-- **Faster same-style point painting** — contiguous opaque canvas points with
-  identical fill/stroke/radius share a path and paint operation. Pulses,
-  patterns, translucent marks, and other overlap-sensitive points retain
-  per-mark compositing.
+- **Behavior-safe same-style point batching** — contiguous opaque canvas points
+  with identical fill/stroke/radius share bounded paths of at most 2,048 points.
+  Pulses, patterns, translucent marks, and other overlap-sensitive points retain
+  per-mark compositing. The controlled 50k browser comparison does not establish
+  a net paint win over its near-opaque unbatched control, so this is no longer
+  described as a proven speedup.
 - **AI diagnostics provide concrete repairs** — validation diagnoses now
   suggest how to remove unknown props, add required props, or correct component
   names. `BigNumber` reports a dedicated error when chart-only
@@ -100,8 +136,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   graphs instead of tiny re-export facades, documentation examples use family
   subpath imports, and CONTRIBUTING now documents focused/fast/release check
   tiers plus the complete new-chart checklist.
+- **Access and evidence claims fail closed from generated capabilities** — a
+  compact map generated from all 59 chart specs now drives SSR, realtime, table,
+  legend, and mark-navigation declarations. The runtime navigation dispatcher is
+  authoritative for structured navigation; BigNumber, composites, live-only
+  charts, passive legends, and unknown custom components expose explicit
+  not-applicable, delegated, not-enabled, or unsupported states instead of
+  universal built-in claims. Composite navigation remains delegated while the
+  three new server implementations now report supported SSR from the same
+  generated registry. Render evidence cannot promote an unsupported component.
+- **Complex charts now expose overview-first navigation semantics** — hierarchy
+  trees distinguish direct children, total descendants, leaves, and leaf-value
+  rollups at every authored parent while retaining zero/negative values and
+  selectable parent nodes. Choropleths announce numeric coverage, range,
+  average, and total before grouping ranked regions into equal-width high,
+  middle, and low thirds of the observed range plus a missing-value branch.
+  `useNavigationSync` normalizes GeoJSON properties and
+  synchronizes any semantic node carrying a datum, and the access contract
+  continues to derive support from the runtime dispatcher. The documentation
+  route has browser-level ARIA-tree, keyboard-focus, and axe coverage for both
+  representative readings.
+- **Bundle guidance is generated and outcome-labeled** — README, the AI
+  reference, and Getting Started share generated production artifact rows. The
+  packed cold-consumer baseline records that `semiotic/line` and `semiotic/xy`
+  converge on the same raw LineChart graph, so `/line` is documented as a narrow
+  API/direct-artifact boundary rather than an application-bundle saving. New
+  per-chart entries require both a 10 KiB and 7% packed-consumer win.
+- **Linked-hover evidence burns down by deterministic cohort** — Bubble, Bump,
+  Candlestick, Connected Scatterplot, Difference, Heatmap, Multi-Axis Line, and
+  Quadrant charts share one coordinated fixture; Chord, Circle Pack, Force,
+  Orbit, Process Sankey, Sankey, Tree, and Treemap share another. Both assert
+  every target's canvas redraw. A third family fixture proves the same contract
+  for Choropleth, Distance Cartogram, Flow Map, and Proportional Symbol Map,
+  using correctly wound local GeoJSON and padded projected points rather than
+  external geography. A fourth closes the remaining static ordinal forms with
+  Likert and Swimlane over a caller-visible shared field. A fifth cohort proves
+  all six realtime-family forms: five live HOCs omit `data`, populate through
+  public refs, and confirm materialized buffers through `getData()`, while the
+  intentionally bounded `TemporalHistogram` uses its required `data` prop.
+  Two final physics cohorts cover CollisionSwarm, EventDrop, Galton, UnitPile,
+  Crucible, Gauntlet, PacketFlow, and ProcessFlow according to their actual
+  reading contracts: public simulation settlement, authored terminal events,
+  authored routes, or materialized data. Physics HOCs now expose a composed
+  `onSimulationStateChange` callback so consumers and tests can observe the
+  lifecycle without replacing chart-owned behavior. Selected states are
+  captured in Chromium, Firefox, and WebKit on macOS and pinned Linux. The
+  explicit linked-hover burn-down is now closed at 54 of 54 capable charts.
+- **`styleRules` is now a cross-family authoring contract** — all 16 ordinal
+  HOCs, static and realtime Heatmap, all six realtime forms, and Tree, Treemap,
+  CirclePack, and Orbit now expose schema-visible declarative rules with matching
+  React and `renderChart()` behavior. Aggregate cells and bins resolve against
+  displayed values and retain fields such as `count`, `sum`, `agg`, and `range`;
+  box, violin, and ridgeline summaries expose their rendered statistics and use
+  the median for fieldless thresholds. Pie/Donut use absolute wedge magnitude,
+  Likert uses displayed signed percentage, and Gauge documents its synthetic
+  zone-segment context. Existing per-mark style functions and top-level primitive
+  props retain final precedence over declarative rules.
+- **Push handles retain authored row types** — `RealtimeFrameHandle<TDatum,
+  TReadDatum = TDatum>` now carries its datum through `push`, `pushMany`,
+  `replace`, `remove`, `update`, and `getData`, and is exported from the root
+  and realtime entries. The five live realtime HOCs expose typed-ref overloads
+  while preserving unparameterized 3.x refs. `RealtimeLineChartHandle` is also
+  generic; aggregate mode explicitly separates source rows from
+  `AggregatedRealtimeDatum` readback rather than pretending the transform
+  returns the authored input shape.
 
 ### Fixed
+- **Constant-value heatmaps remain visible across renderers** — static,
+  realtime, canvas, and server heatmaps resolve collapsed sequential domains
+  at the palette midpoint instead of mapping every occupied cell to the
+  near-white minimum. Coordinated readiness tests and all six browser/platform
+  linked-hover sheets now prove the streaming cells contain visible ink.
+- **Repeated unnamed physics charts expose unique summary landmarks** —
+  accessible data-table regions fall back to their instance-local table ID,
+  preventing duplicate landmark names in coordinated dashboards while keeping
+  authored titles and descriptions as the preferred label.
+- **Ridgeline visual baselines match the repaired SSR style contract** — all
+  six browser/platform parity sheets now record the fill-linked outline shared
+  by server SVG and client canvas rather than the stale black server outline.
+- **Linked-selection intersections preserve row identity through aggregates** —
+  intersected clauses must now be satisfied by the same represented source row;
+  separate rows in one bin or cell can no longer manufacture a combination that
+  did not exist. Union and crossfilter retain their independent-clause behavior.
+- **Access contracts no longer overclaim keyboard navigation or reject built-in
+  recipes** — mark navigation is resolved from the authoritative structured-
+  navigation builder, while both schema-visible recipes now carry generated
+  access and SSR records. Recipe evidence can pass publication gates, and
+  realtime, gauge, and unsupported ordinal/physics surfaces report honestly.
+- **Recipe and physics surfaces agree across renderers** — server/MCP recipe
+  defaults now match the React/schema 600×400 contract and primary margins;
+  lowercase words ending in `id` (such as `paid`, `valid`, and `hybrid`) remain
+  eligible data roles; and `PhysicsCustomChart` plus `ChainReactionChart` now
+  forward the shared `onSimulationStateChange` callback they advertise.
+- **Node server rendering exits cleanly** — shared static renderers now import
+  React's condition-aware server entry so Node selects its Node renderer while
+  browser/edge builds retain their compatible implementation. One-shot export
+  and documentation processes no longer remain alive on React's browser
+  renderer `MessagePort` after their work finishes.
+- **Linux visual-test arguments are shell-safe** — the bootstrapper now quotes
+  every forwarded Playwright argument, so multi-chart grep expressions and
+  other shell-significant values reach the container unchanged instead of
+  becoming host-shell pipelines.
+- **Difference and Candlestick linked selection now changes their marks** —
+  Difference wraps its synthesized area, line, and point styles with the active
+  selection predicate; Candlestick applies selection-aware candle styling in
+  both retained canvas and SVG/static output. Focused HOC and scene-builder
+  tests cover the repaired paths.
+- **Likert linked-hover keeps public fields** — aggregated Likert rows now
+  retain string-based category/level/count accessors (or raw score accessors)
+  alongside their private layout fields in React and server paths. Explicit
+  cross-chart selection can use the caller's authored field names instead of
+  depending on undocumented `__likert*` keys.
+- **Realtime selection survives chart-owned aggregation** — histogram bins and
+  streaming heatmap cells retain non-enumerable references to the raw rows they
+  represent only when a selection-aware style requires them; ordinary borders,
+  colors, and style rules stay on the allocation-free aggregate path. Selection
+  predicates match a derived mark when any represented row satisfies the
+  complete clause, while the bookkeeping stays out of tooltips, accessible
+  tables, and serialization. `RealtimeLineChart` now also applies its published
+  `selection` contract to the rendered line style instead of subscribing without
+  a visible repaint.
+- **Composite dashboard charts keep accessible names instance-local** — static
+  Minimap, ScatterplotMatrix, and ChainReaction renderers derive title and
+  description IDs from `renderDashboard`'s sanitized panel prefix, preventing
+  duplicate `aria-labelledby` targets when a dashboard repeats a chart type.
+- **Crucible linked selection reads the authored material** — generated
+  Crucible bodies keep chart metadata around the caller's row, so the shared
+  physics selection bridge now unwraps `sourceDatum` before evaluating named
+  selection-store predicates. Cross-chart fields such as `cohort` therefore
+  dim and highlight terminal Crucible marks like the other physics HOCs.
 - **Docs routes recover from interrupted lazy-module loads** — failed Vite
   preloads now trigger one guarded refresh, and repeated failures show a usable
   reload action instead of leaving examples or other documentation routes on a
@@ -153,6 +316,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicit registration rather than side-effect-only imports, preventing blank
   Sankey, force, chord, hierarchy, or orbit output under
   `"sideEffects": false` builds.
+- **Evidence normalization and privacy match public chart inputs** — hierarchy
+  envelopes read `data`; Choropleth reads `areas`; proportional, flow, and
+  distance maps normalize their real point/flow/line props. Redacted profiles
+  retain field names and aggregates but remove raw rows, samples, categorical
+  `topValues`, and `distinctValues`; deterministic hashes still bind the private
+  source.
+- **Typed legacy-test consolidation** — meaningful Annotation and Legend JSX
+  cases now live in their TSX suites and the duplicate files are gone. The merge
+  exposed and fixed the public annotation connector type so runtime-supported
+  `end="none"` is also valid TypeScript.
+- **Machine baselines require the emitted product** — the setup baseline rejects
+  a Vite-only documentation shell and requires the prerendered route manifest;
+  its failure text points to the owning production website build.
 
 ## [3.9.1] - 2026-08-19
 
@@ -186,6 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ProcessSankey layout quality and example stability improved** — boundary-fan centering, pool highlighting, ledger assertions, ordering heuristics, deterministic documentation layouts, and history-river integration coverage were tightened.
 - **Physics layouts now reflow as one system** — `responsiveWidth` / `responsiveHeight` measure the HOC-owned container and rebuild bodies, colliders, projections, chrome, and semantic geometry together. This applies to the stock Physics charts, Crucible, and ChainReaction instead of stretching a child canvas over stale coordinates; direct `StreamPhysicsFrame` bounds also follow the measured frame.
 - **Package entry graphs preserve runtime identity with less duplication** — ESM and CommonJS consumers share canonical client contexts across family subpaths, pure `themes/core`, `recipes/core`, and `utils/core` imports remain React-free, and mixed facades retain explicit client boundaries without fragmenting providers.
+- **d3 stays externalized as ordinary runtime dependencies** — packed webpack builds favored consumer-owned d3 resolution in three of four representative chart families, and a real Next 16 webpack route was 22.8 KiB gzip smaller than a fully bundled package variant. The 1.0 KiB Sankey-only bundled win does not justify larger common XY/ordinal/geo paths or a custom peer contract. A checked artifact/source/dependency policy plus reproducible `benchmarks/setup/d3-packaging.json` evidence now guards the decision.
 
 ### Fixed
 

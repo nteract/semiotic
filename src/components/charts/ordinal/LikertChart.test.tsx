@@ -176,6 +176,49 @@ describe("LikertChart", () => {
     expect(lastOrdinalFrameProps.stackBy).toBe("__likertLevel")
   })
 
+  it("retains public string-accessor fields on aggregated rows for coordination", () => {
+    render(
+      <TooltipProvider>
+        <LikertChart
+          data={[
+            { prompt: "Q1", phase: "Alpha", responses: 6 },
+            { prompt: "Q1", phase: "Beta", responses: 3 },
+            { prompt: "Q1", phase: "Gamma", responses: 1 },
+          ]}
+          categoryAccessor="prompt"
+          levelAccessor="phase"
+          countAccessor="responses"
+          levels={["Alpha", "Beta", "Gamma"]}
+        />
+      </TooltipProvider>
+    )
+
+    const rows = lastOrdinalFrameProps.data as Datum[]
+    expect(new Set(rows.map((row) => row.prompt))).toEqual(new Set(["Q1"]))
+    expect(new Set(rows.map((row) => row.phase))).toEqual(
+      new Set(["Alpha", "Beta", "Gamma"])
+    )
+    expect(rows.find((row) => row.phase === "Alpha")?.responses).toBe(6)
+  })
+
+  it("retains raw score aliases after aggregation", () => {
+    render(
+      <TooltipProvider>
+        <LikertChart
+          data={rawData}
+          categoryAccessor="question"
+          valueAccessor="score"
+          levels={levels5}
+        />
+      </TooltipProvider>
+    )
+
+    const rows = lastOrdinalFrameProps.data as Datum[]
+    expect(new Set(rows.map((row) => row.score))).toEqual(
+      new Set([1, 2, 3, 4, 5])
+    )
+  })
+
   // ── Test 9: default color scheme ──────────────────────────────────
 
   it("applies default diverging color scheme when colorScheme is not provided", () => {

@@ -67,6 +67,7 @@ function clustering(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): R
 function collidersFromScales<TBand = number | string>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
 function comparePhysicsTrace<TSample = PhysicsScalarTraceSample>(trace: readonly TSample[], envelope: PhysicsReferenceEnvelope, options?: PhysicsTraceComparisonOptions<TSample> | undefined): PhysicsTraceComparison
 function composePhysicsControllers(controllers: null | readonly PhysicsController[] | undefined): ComposedPhysicsControllers | null
+function computeTransitDiagramPositions(nodes: readonly {id: string; data: Datum;}[], edges: readonly TransitDiagramEdgeLike[], plot: PlotBox, options?: TransitDiagramPositionOptions | undefined): TransitDiagramPositionResult
 function countPairwiseCrossings<T>(items: readonly T[], endpoints: (item: T) => readonly [number, number], comparePair?: ((a: T, b: T) => boolean) | undefined): number
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
@@ -149,6 +150,8 @@ function nonNegativeFinite(value: number | undefined): number
 function normalizePoint(a: Point): Point
 function normalizeScores(scores: Record<string, number>): Record<string, number>
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
+function octilinearRoute(source: TransitDiagramPoint, target: TransitDiagramPoint): TransitDiagramPoint[]
+function offsetTransitPath(points: readonly TransitDiagramPoint[], distance: number): TransitDiagramPoint[]
 function orderByBarycenter<T>(input: readonly T[], relations: readonly WeightedOrderRelation<T>[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
 function orderByGroupDegree<N extends GraphNode>(nodes: readonly N[], edges: readonly GraphEdge[], groupAccessor?: ((n: N) => number | string) | keyof N | undefined): string[]
 function orderExactSmall<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: (Pick<GuardedOrderOptions<T>, "maxEvaluations"> & {maxItems?: number;}) | undefined): T[]
@@ -186,6 +189,7 @@ function reserveMarginPct(input: {demand: number; capacityOrNetGen: number; inte
 function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[]
 function ringArcPath(startAngle: number, endAngle: number, innerRadius: number, outerRadius: number, opts?: PolarOptions | undefined): string
 function roundedEnclosure(p: RoundedEnclosureProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
+function roundedTransitPath(points: readonly TransitDiagramPoint[], radius: number): string
 function routeSurfaceRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number;}): StreamPhysicsRegionEffect
 function runLengthEncode<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
 function runs<T, V = unknown>(items: readonly T[], value: (item: T, index: number) => V, opts?: RunOptions<T, V> | undefined): Run<V>[]
@@ -214,6 +218,7 @@ function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: 
 function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
+function transitDiagramLayout(ine: NetworkLayoutContext<import("../semiotic-recipes-core").TransitDiagramConfig>): import("../semiotic-network").NetworkLayoutResult
 function unitize(value: number, options: UnitizeOptions): UnitizeResult
 function unitizeRange(value: number, rangeValue: number, options: UnitizeOptions): UnitizeRangeResult
 function unwrapDatum<T = Datum>(value: unknown): T | null
@@ -434,6 +439,12 @@ interface TokenLayerOptions<D = unknown> extends TokenGridOptions
 interface TokenLayerResult<D = unknown>
 interface TokenPosition
 interface TokenSet<D = unknown>
+interface TransitDiagramConfig
+interface TransitDiagramLineDescriptor
+interface TransitDiagramPoint
+interface TransitDiagramPositionOptions
+interface TransitDiagramPositionResult
+interface TransitDiagramPositionedNode
 interface UnitSign
 interface UnitizeOptions
 interface UnitizeRangeResult extends UnitizeResult
@@ -1864,6 +1875,50 @@ interface-member TokenSet::property::shown = required shown: number
 interface-member TokenSet::property::tokens = required tokens: VisualToken<D>[]
 interface-member TokenSet::property::total = required total: number
 interface-member TokenSet::property::unitValue = optional unitValue: number | undefined
+interface-member TransitDiagramConfig::property::componentGap = optional componentGap: number | undefined
+interface-member TransitDiagramConfig::property::cornerRadius = optional cornerRadius: number | undefined
+interface-member TransitDiagramConfig::property::dimOpacity = optional dimOpacity: number | undefined
+interface-member TransitDiagramConfig::property::direction = optional direction: "left-to-right" | "right-to-left" | undefined
+interface-member TransitDiagramConfig::property::interchangeRadius = optional interchangeRadius: number | undefined
+interface-member TransitDiagramConfig::property::labelAccessor = optional labelAccessor: ((d: Datum) => string) | string | undefined
+interface-member TransitDiagramConfig::property::labelColor = optional labelColor: string | undefined
+interface-member TransitDiagramConfig::property::labelFontSize = optional labelFontSize: number | undefined
+interface-member TransitDiagramConfig::property::layoutMode = optional layoutMode: "authored" | "auto" | "automatic" | undefined
+interface-member TransitDiagramConfig::property::lineAccessor = optional lineAccessor: ((d: Datum) => TransitDiagramLineValue | undefined) | string | undefined
+interface-member TransitDiagramConfig::property::lineColorAccessor = optional lineColorAccessor: ((d: Datum) => string | undefined) | string | undefined
+interface-member TransitDiagramConfig::property::lineColors = optional lineColors: Record<string, string> | undefined
+interface-member TransitDiagramConfig::property::lineGap = optional lineGap: number | undefined
+interface-member TransitDiagramConfig::property::lineOrder = optional lineOrder: string[] | undefined
+interface-member TransitDiagramConfig::property::lineWidth = optional lineWidth: number | undefined
+interface-member TransitDiagramConfig::property::padding = optional padding: number | undefined
+interface-member TransitDiagramConfig::property::pointsAccessor = optional pointsAccessor: string | undefined
+interface-member TransitDiagramConfig::property::rootId = optional rootId: string | undefined
+interface-member TransitDiagramConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member TransitDiagramConfig::property::stationFill = optional stationFill: string | undefined
+interface-member TransitDiagramConfig::property::stationRadius = optional stationRadius: number | undefined
+interface-member TransitDiagramConfig::property::stationStroke = optional stationStroke: string | undefined
+interface-member TransitDiagramConfig::property::xAccessor = optional xAccessor: ((d: Datum) => number | undefined) | string | undefined
+interface-member TransitDiagramConfig::property::yAccessor = optional yAccessor: ((d: Datum) => number | undefined) | string | undefined
+interface-member TransitDiagramLineDescriptor::property::color = optional color: string | undefined
+interface-member TransitDiagramLineDescriptor::property::id = required id: string
+interface-member TransitDiagramLineDescriptor::property::label = optional label: string | undefined
+interface-member TransitDiagramPoint::property::x = required x: number
+interface-member TransitDiagramPoint::property::y = required y: number
+interface-member TransitDiagramPositionOptions::property::componentGap = optional componentGap: number | undefined
+interface-member TransitDiagramPositionOptions::property::direction = optional direction: "left-to-right" | "right-to-left" | undefined
+interface-member TransitDiagramPositionOptions::property::layoutMode = optional layoutMode: "authored" | "auto" | "automatic" | undefined
+interface-member TransitDiagramPositionOptions::property::padding = optional padding: number | undefined
+interface-member TransitDiagramPositionOptions::property::rootId = optional rootId: string | undefined
+interface-member TransitDiagramPositionOptions::property::xAccessor = optional xAccessor: ((d: Datum) => number | undefined) | string | undefined
+interface-member TransitDiagramPositionOptions::property::yAccessor = optional yAccessor: ((d: Datum) => number | undefined) | string | undefined
+interface-member TransitDiagramPositionResult::property::mode = required mode: "authored" | "automatic"
+interface-member TransitDiagramPositionResult::property::positions = required positions: Map<string, TransitDiagramPositionedNode>
+interface-member TransitDiagramPositionResult::property::projectAuthoredPoint = required projectAuthoredPoint: (point: TransitDiagramPoint) => TransitDiagramPoint
+interface-member TransitDiagramPositionResult::property::warnings = required warnings: string[]
+interface-member TransitDiagramPositionedNode::property::data = required data: Datum
+interface-member TransitDiagramPositionedNode::property::id = required id: string
+interface-member TransitDiagramPositionedNode::property::x = required x: number
+interface-member TransitDiagramPositionedNode::property::y = required y: number
 interface-member UnitSign::property::end = required end: number
 interface-member UnitSign::property::fraction = required fraction: number
 interface-member UnitSign::property::index = required index: number
@@ -1998,4 +2053,5 @@ type TokenLayout = "bar-segment" | "beeswarm" | "column" | "dotplot" | "grid" | 
 type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "possible-outcome" | "posterior-sample" | "risk-case" | "topic-anchor" | "unitized-measure"
 type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
 type TokenType = "dot" | "glyph" | "icon"
+type TransitDiagramLineValue = ReadonlyArray<TransitDiagramLineDescriptor | number | string> | TransitDiagramLineDescriptor | number | string
 ```

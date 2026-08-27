@@ -23,6 +23,7 @@ import {
   composeProps,
 } from "../src/components/charts/shared/chartSpecs"
 import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDefinitionPilot"
+import { generateBuiltInRecipeSchemaTools } from "../src/components/ai/builtInChartRecipes"
 // .mjs file imported from .ts works under tsx
 // @ts-expect-error — generators emit `any`-typed schema fragments
 import {
@@ -61,6 +62,7 @@ interface SchemaTool {
       properties: Record<string, unknown>
       required: string[]
     }
+    "x-semiotic-kind"?: "recipe"
   }
 }
 
@@ -85,7 +87,10 @@ function generateToolForSpec(name: string, spec: (typeof CHART_SPECS)[string]): 
 let regeneratedCount = 0
 let preservedCount = 0
 const seen = new Set<string>()
-const nextTools: SchemaTool[] = existing.tools.map((tool) => {
+const existingChartTools = existing.tools.filter(
+  (tool) => tool.function["x-semiotic-kind"] !== "recipe",
+)
+const nextTools: SchemaTool[] = existingChartTools.map((tool) => {
   const spec = CHART_SPECS[tool.function.name]
   if (!spec) {
     preservedCount++
@@ -105,6 +110,8 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
   nextTools.push(generateToolForSpec(name, spec))
   appendedCount++
 }
+
+nextTools.push(...(generateBuiltInRecipeSchemaTools() as SchemaTool[]))
 
 const next: Schema = { ...existing, tools: nextTools }
 writeFileSync(schemaPath, JSON.stringify(next, null, 2) + "\n", "utf8")

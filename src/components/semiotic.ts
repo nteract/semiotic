@@ -703,7 +703,8 @@ export type {
   AnnotationAnchorMode,
   CrosshairStyle,
   HoverAnnotationConfig,
-  HoverData
+  HoverData,
+  RealtimeFrameHandle
 } from "./realtime/types"
 
 // ── Realtime chart HOC types ───────────────────────────────────────────
@@ -712,6 +713,10 @@ export type {
   RealtimeLineChartHandle,
   RealtimeLineChartProps
 } from "./charts/realtime/RealtimeLineChart"
+export type {
+  AggregateConfig,
+  AggregatedRealtimeDatum
+} from "./charts/realtime/aggregate"
 export type {
   RealtimeTemporalHistogramProps,
   RealtimeHistogramProps,

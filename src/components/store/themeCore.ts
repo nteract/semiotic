@@ -1,4 +1,5 @@
 import type { ThemeSemanticColors } from "../stream/streamThemeTypes"
+import type { AestheticProfile } from "../ai/aestheticProfileTypes"
 
 // React-free theme contracts, presets, and resolution helpers. Keep this
 // module free of store/provider imports so server, RSC, and edge entry points
@@ -75,16 +76,19 @@ export interface SemioticTheme {
     /** Enforce minimum 3:1 contrast ratios */
     highContrast?: boolean
   }
+  /** Organizational weights for machine-visible presentation features. */
+  aesthetics?: AestheticProfile
 }
 
 export type SemioticThemeUpdate = Omit<
   Partial<SemioticTheme>,
-  "colors" | "typography" | "tooltip" | "accessibility"
+  "colors" | "typography" | "tooltip" | "accessibility" | "aesthetics"
 > & {
   colors?: Partial<SemioticTheme["colors"]>
   typography?: Partial<SemioticTheme["typography"]>
   tooltip?: Partial<NonNullable<SemioticTheme["tooltip"]>>
   accessibility?: Partial<NonNullable<SemioticTheme["accessibility"]>>
+  aesthetics?: AestheticProfile
 }
 
 export type ThemeStoreUpdate =
@@ -295,13 +299,27 @@ export function resolveThemeUpdate(
     return current
   }
 
+  const mergeAesthetics = (
+    base: SemioticTheme["aesthetics"]
+  ): SemioticTheme["aesthetics"] =>
+    theme.aesthetics
+      ? {
+          ...base,
+          ...theme.aesthetics,
+          weights: { ...base?.weights, ...theme.aesthetics.weights },
+          thresholds: { ...base?.thresholds, ...theme.aesthetics.thresholds },
+          rationales: { ...base?.rationales, ...theme.aesthetics.rationales }
+        }
+      : base
+
   if (theme.mode && theme.mode !== "auto") {
     const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
     return applyThemeAccessibility({
       ...base,
       ...theme,
       colors: { ...base.colors, ...(theme.colors || {}) },
-      typography: { ...base.typography, ...(theme.typography || {}) }
+      typography: { ...base.typography, ...(theme.typography || {}) },
+      aesthetics: mergeAesthetics(base.aesthetics)
     } as SemioticTheme)
   }
 
@@ -309,6 +327,7 @@ export function resolveThemeUpdate(
     ...current,
     ...theme,
     colors: { ...current.colors, ...(theme.colors || {}) },
-    typography: { ...current.typography, ...(theme.typography || {}) }
+    typography: { ...current.typography, ...(theme.typography || {}) },
+    aesthetics: mergeAesthetics(current.aesthetics)
   } as SemioticTheme)
 }

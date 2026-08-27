@@ -75,7 +75,7 @@ export type {
   WindowAccumulatorConfig,
   AggregatedWindow,
 } from "./realtime/WindowAccumulator"
-export type { AggregateConfig } from "./charts/realtime/aggregate"
+export type { AggregateConfig, AggregatedRealtimeDatum } from "./charts/realtime/aggregate"
 
 // Event-time ingestion types
 export type {
@@ -119,7 +119,8 @@ export type {
   AnnotationContext,
   CrosshairStyle,
   HoverAnnotationConfig,
-  HoverData
+  HoverData,
+  RealtimeFrameHandle
 } from "./realtime/types"
 
 export type {

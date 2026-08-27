@@ -20,6 +20,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -34,6 +35,8 @@ export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChart
   seriesAccessor?: ChartAccessor<TDatum, string>
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware point styling; fieldless thresholds use `valueAccessor`. */
+  styleRules?: StyleRule[]
   pointRadius?: number
   /** Fixed value-axis domain. Defaults to `[0, data-max]`. */
   valueExtent?: [number | undefined, number | undefined] | [number]
@@ -112,6 +115,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     colorBy,
     categoryFormat,
     colorScheme,
+    styleRules,
     pointRadius = 4,
     valueExtent,
     tooltip,
@@ -183,6 +187,10 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
   const pieceStyle = useOrdinalPieceStyle({
     colorBy: colorByResolved,
     colorScale: setup.colorScale,
@@ -197,6 +205,8 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { r: pointRadius, fillOpacity: 0.85 },
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

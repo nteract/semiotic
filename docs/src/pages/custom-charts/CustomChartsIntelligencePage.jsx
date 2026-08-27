@@ -146,6 +146,30 @@ export default function CustomChartsIntelligencePage() {
       </section>
 
       <section>
+        <h2>Built-in portable recipe pilots</h2>
+        <p>
+          <code>ParallelCoordinatesRecipe</code> and <code>CalendarHeatmapRecipe</code> are the first
+          recipes promoted into the serialized catalog. They are returned by suggestions, have
+          JSON schemas, render through MCP and the server renderer, and use the generic React
+          <code>ChartRecipe</code> host instead of adding one-off chart HOCs.
+        </p>
+        <CodeBlock
+          language="json"
+          code={`{
+  "component": "ParallelCoordinatesRecipe",
+  "props": {
+    "data": [{ "id": "a", "mpg": 32, "power": 88, "weight": 2100 }],
+    "layoutConfig": { "fields": ["mpg", "power", "weight"] },
+    "title": "Vehicle profiles",
+    "description": "Profiles compared across independently scaled measures.",
+    "summary": "No vehicle dominates every measure.",
+    "accessibleTable": true
+  }
+}`}
+        />
+      </section>
+
+      <section>
         <h2>Mobile semantics</h2>
         <p>
           Custom layouts are opaque until the recipe says how they behave on a phone. The{" "}

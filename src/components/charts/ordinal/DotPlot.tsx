@@ -20,6 +20,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -31,6 +32,8 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   valueFormat?: (d: number | string) => string
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware dot styling; fieldless thresholds use `valueAccessor`. */
+  styleRules?: StyleRule[]
   /** Category ordering. Default (`undefined`) resolves to `"auto"`, which
    *  preserves insertion order while streaming and falls through to
    *  value-desc on static data — the recommended choice when using the
@@ -123,7 +126,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "horizontal", valueFormat,
-    colorBy, colorScheme, sort = "auto", dotRadius = 5,
+    colorBy, colorScheme, styleRules, sort = "auto", dotRadius = 5,
     categoryPadding = 10, tooltip, annotations, regression, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -180,6 +183,10 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
+    [valueAccessor],
+  )
 
   // Consolidated piece-style. `r` and `fillOpacity` are mark-shape
   // defaults flowed in via `baseStyleExtras` so they sit BEFORE the
@@ -194,6 +201,8 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: { r: dotRadius, fillOpacity: 0.8 },
+    styleRules,
+    resolveRuleValue,
   })
 
   const defaultTooltipContent = useMemo(

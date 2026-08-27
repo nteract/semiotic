@@ -79,6 +79,12 @@ describe("AI surface suggestion prop contracts", () => {
       headingProp: "title",
       modeValues: ["primary", "context", "sparkline", "mobile"],
     })
+    assert.deepEqual(contracts.ParallelCoordinatesRecipe, {
+      componentKind: "chart-recipe",
+      commonChartProps: "supported",
+      headingProp: "title",
+      modeValues: [],
+    })
   })
 
   it("declares a contract for every schema component", () => {

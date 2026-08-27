@@ -62,12 +62,17 @@ class-member WindowAccumulator::method::push = required push(time: number, value
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip(): TooltipContentFn
-function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeLineChartHandle> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & React.RefAttributes<RealtimeLineChartHandle<TDatum, AggregatedRealtimeDatum>> & {aggregate: AggregateConfig;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: Omit<RealtimeLineChartProps<TDatum>, "aggregate"> & React.RefAttributes<RealtimeLineChartHandle<TDatum, TDatum>> & {aggregate?: undefined;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeLineChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeLineChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeSwarmChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeSwarmChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RealtimeWaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeWaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamNetworkFrame(: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function StreamXYFrame(: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function TemporalHistogram<TDatum extends Datum = Datum>(props: TemporalHistogramProps<TDatum>): React.JSX.Element
@@ -85,6 +90,7 @@ function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function statValue(w: AggregatedWindow, stat: AggregateStat): number
 interface AggregateConfig
+interface AggregatedRealtimeDatum extends Datum
 interface AggregatedWindow
 interface AnnotationContext
 interface BarStyle
@@ -113,9 +119,10 @@ interface MotionProcessEncoding<TDatum>
 interface MotionTimeEncoding<TDatum>
 interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
+interface RealtimeFrameHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum>
 interface RealtimeHeatmapProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeHistogramProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
-interface RealtimeLineChartHandle extends RealtimeFrameHandle
+interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>
 interface RealtimeLineChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeSwarmChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
 interface RealtimeWaterfallChartProps<TDatum extends Datum = Datum> extends RealtimeAccessibilityProps
@@ -143,6 +150,14 @@ interface-member AggregateConfig::property::sigma = optional sigma: number | und
 interface-member AggregateConfig::property::size = required size: number | string
 interface-member AggregateConfig::property::stat = optional stat: AggregateStat | undefined
 interface-member AggregateConfig::property::window = optional window: WindowType | undefined
+interface-member AggregatedRealtimeDatum::property::__aggEnd = required __aggEnd: number
+interface-member AggregatedRealtimeDatum::property::__aggLower = optional __aggLower: number | undefined
+interface-member AggregatedRealtimeDatum::property::__aggPartial = required __aggPartial: boolean
+interface-member AggregatedRealtimeDatum::property::__aggStart = required __aggStart: number
+interface-member AggregatedRealtimeDatum::property::__aggUpper = optional __aggUpper: number | undefined
+interface-member AggregatedRealtimeDatum::property::count = required count: number
+interface-member AggregatedRealtimeDatum::property::time = required time: number
+interface-member AggregatedRealtimeDatum::property::value = required value: number
 interface-member AggregatedWindow::property::count = required count: number
 interface-member AggregatedWindow::property::end = required end: number
 interface-member AggregatedWindow::property::max = required max: number
@@ -265,6 +280,16 @@ interface-member MultiLineTooltipConfig::property::separator = optional separato
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member RealtimeFrameHandle::method::clear = required clear(): void
+interface-member RealtimeFrameHandle::method::getCustomLayout = optional getCustomLayout(): unknown
+interface-member RealtimeFrameHandle::method::getData = required getData(): TReadDatum[]
+interface-member RealtimeFrameHandle::method::getLayoutFailure = optional getLayoutFailure(): unknown
+interface-member RealtimeFrameHandle::method::getScales = optional getScales(): unknown
+interface-member RealtimeFrameHandle::method::push = required push(point: TDatum): void
+interface-member RealtimeFrameHandle::method::pushMany = required pushMany(points: TDatum[]): void
+interface-member RealtimeFrameHandle::method::remove = required remove(id: string | string[]): TReadDatum[]
+interface-member RealtimeFrameHandle::method::replace = optional replace(data: TDatum[]): void
+interface-member RealtimeFrameHandle::method::update = required update(id: string | string[], updater: (d: TReadDatum) => TReadDatum): TReadDatum[]
 interface-member RealtimeHeatmapProps::property::aggregation = optional aggregation: "count" | "mean" | "sum" | undefined
 interface-member RealtimeHeatmapProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member RealtimeHeatmapProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
@@ -305,6 +330,7 @@ interface-member RealtimeHeatmapProps::property::showAxes = optional showAxes: b
 interface-member RealtimeHeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member RealtimeHeatmapProps::property::size = optional size: [number, number] | undefined
 interface-member RealtimeHeatmapProps::property::staleness = optional staleness: StalenessConfig | undefined
+interface-member RealtimeHeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeHeatmapProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -364,6 +390,7 @@ interface-member RealtimeHistogramProps::property::size = optional size: [number
 interface-member RealtimeHistogramProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeHistogramProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeHistogramProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeHistogramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeHistogramProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -418,6 +445,7 @@ interface-member RealtimeLineChartProps::property::staleness = optional stalenes
 interface-member RealtimeLineChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeLineChartProps::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member RealtimeLineChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeLineChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeLineChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -473,6 +501,7 @@ interface-member RealtimeSwarmChartProps::property::size = optional size: [numbe
 interface-member RealtimeSwarmChartProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeSwarmChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeSwarmChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeSwarmChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeSwarmChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
@@ -529,6 +558,7 @@ interface-member RealtimeWaterfallChartProps::property::size = optional size: [n
 interface-member RealtimeWaterfallChartProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member RealtimeWaterfallChartProps::property::stroke = optional stroke: string | undefined
 interface-member RealtimeWaterfallChartProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member RealtimeWaterfallChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RealtimeWaterfallChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined

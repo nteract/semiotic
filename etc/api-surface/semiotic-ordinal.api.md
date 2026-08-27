@@ -6,27 +6,27 @@ _Edit dist/semiotic-ordinal.d.ts's sources, then re-run `npm run docs:api-surfac
 ```
 const DEFAULT_HIT_RADIUS: 8
 function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GaugeChart(props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RadarChart<TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function RidgelinePlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RidgelinePlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function StackedBarChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & StackedBarChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamOrdinalFrame(: React.RefAttributes<import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-ordinal").StreamOrdinalFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function SwarmPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwarmPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function SwimlaneChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & SwimlaneChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwarmPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SwarmPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function SwimlaneChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SwimlaneChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
 function estimateLabelWidth(text: number | string, fontSize: number): number
@@ -178,6 +178,7 @@ interface-member DonutChartProps::property::legendPosition = optional legendPosi
 interface-member DonutChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member DonutChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member DonutChartProps::property::startAngle = optional startAngle: number | undefined
+interface-member DonutChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member DonutChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member DonutChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member FunnelChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -196,6 +197,7 @@ interface-member FunnelChartProps::property::showAxes = optional showAxes: boole
 interface-member FunnelChartProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member FunnelChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member FunnelChartProps::property::stepAccessor = optional stepAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member FunnelChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member FunnelChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member FunnelChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member GaugeChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -213,6 +215,7 @@ interface-member GaugeChartProps::property::min = optional min: number | undefin
 interface-member GaugeChartProps::property::needleColor = optional needleColor: string | undefined
 interface-member GaugeChartProps::property::showNeedle = optional showNeedle: boolean | undefined
 interface-member GaugeChartProps::property::showScaleLabels = optional showScaleLabels: boolean | undefined
+interface-member GaugeChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member GaugeChartProps::property::sweep = optional sweep: number | undefined
 interface-member GaugeChartProps::property::thresholds = optional thresholds: GaugeThreshold[] | undefined
 interface-member GaugeChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
@@ -354,6 +357,7 @@ interface-member LikertChartProps::property::orientation = optional orientation:
 interface-member LikertChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member LikertChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member LikertChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LikertChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member LikertChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member LikertChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member LikertChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -408,6 +412,7 @@ interface-member PieChartProps::property::legendPosition = optional legendPositi
 interface-member PieChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member PieChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member PieChartProps::property::startAngle = optional startAngle: number | undefined
+interface-member PieChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member PieChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member PieChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member RadarChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -424,6 +429,7 @@ interface-member RadarChartProps::property::pointRadius = optional pointRadius: 
 interface-member RadarChartProps::property::seriesAccessor = optional seriesAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RadarChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member RadarChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member RadarChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member RadarChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member RadarChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member RadarChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
@@ -662,6 +668,7 @@ interface-member SwimlaneChartProps::property::roundedTop = optional roundedTop:
 interface-member SwimlaneChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member SwimlaneChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member SwimlaneChartProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member SwimlaneChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member SwimlaneChartProps::property::subcategoryAccessor = required subcategoryAccessor: ChartAccessor<TDatum, string>
 interface-member SwimlaneChartProps::property::tickLabelEdgeAlign = optional tickLabelEdgeAlign: boolean | undefined
 interface-member SwimlaneChartProps::property::tooltip = optional tooltip: TooltipProp | undefined

@@ -197,7 +197,7 @@ export function CrucibleChrome<TDatum extends Datum>({
                     x={x + width / 2}
                     y={layout.phaseRail.y + layout.phaseRail.height + 13}
                     fill={active ? INK : MUTED_INK}
-                    fontFamily="system-ui, sans-serif"
+                    fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
                     fontSize={8.5}
                     fontWeight={active ? 800 : 650}
                     letterSpacing="0.04em"
@@ -235,7 +235,7 @@ export function CrucibleChrome<TDatum extends Datum>({
               x={outlet.x + outlet.width / 2}
               y={outlet.y + Math.min(13, outlet.height / 2 + 3)}
               fill={MUTED_INK}
-              fontFamily="system-ui, sans-serif"
+              fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
               fontSize={8}
               fontWeight={750}
               letterSpacing="0.05em"
@@ -343,7 +343,7 @@ export function CrucibleProjectionOverlay({
                   x={x + laneWidth * 0.32}
                   y={layout.projection.y + barHeight + 10}
                   fill={MUTED_INK}
-                  fontFamily="system-ui, sans-serif"
+                  fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
                   fontSize={7.5}
                   fontWeight={700}
                   textAnchor="middle"
@@ -356,7 +356,7 @@ export function CrucibleProjectionOverlay({
                   x={x + laneWidth * 0.32}
                   y={layout.projection.y + barHeight + 19}
                   fill={INK}
-                  fontFamily="system-ui, sans-serif"
+                  fontFamily="var(--semiotic-font-family, system-ui, sans-serif)"
                   fontSize={8}
                   fontWeight={850}
                   textAnchor="middle"

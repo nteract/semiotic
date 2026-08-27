@@ -22,6 +22,11 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import {
+  composeStyleRules,
+  makeNodeRuleContext,
+  type StyleRule,
+} from "../shared/styleRules"
 
 registerLayoutPlugin("orbit", orbitLayoutPlugin)
 
@@ -56,6 +61,8 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
   colorScheme?: string | string[] | Record<string, string>
   /** Color by hierarchy depth instead of field @default false */
   colorByDepth?: boolean
+  /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
+  styleRules?: StyleRule[]
   /**
    * Ring arrangement mode:
    * - "flat": all children in one ring
@@ -177,6 +184,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     colorBy,
     colorScheme,
     colorByDepth = false,
+    styleRules,
     orbitMode = "flat",
     orbitSize = 2.95,
     speed = 0.25,
@@ -276,9 +284,26 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
     }
   }, [colorBy, colorByDepth, colorScale, schemeColors, themeCategorical, colorScheme, categoryIndexMap])
 
+  const nodeRuleContext = useMemo(
+    () => makeNodeRuleContext(
+      colorBy as string | ((d: Datum) => unknown) | undefined,
+      "value",
+    ),
+    [colorBy],
+  )
+  const ruledNodeStyleFn = useMemo(
+    () => composeStyleRules(
+      baseNodeStyleFn,
+      styleRules,
+      nodeRuleContext,
+      (d) => d.data || d,
+    ),
+    [baseNodeStyleFn, styleRules, nodeRuleContext],
+  )
+
   const nodeStyleFn = useMemo(
-    () => mergeShapeStyle(baseNodeStyleFn, { stroke, strokeWidth, opacity }),
-    [baseNodeStyleFn, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(ruledNodeStyleFn, { stroke, strokeWidth, opacity }),
+    [ruledNodeStyleFn, stroke, strokeWidth, opacity]
   )
   const nodeStyle = useMemo(
     () => wrapNetworkNodeStyleWithSelection(

@@ -18,6 +18,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 
 /**
  * FunnelChart component props
@@ -32,6 +33,8 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
   categoryAccessor?: ChartAccessor<TDatum, string>
   colorBy?: ChartAccessor<TDatum, string>
   colorScheme?: string | string[] | Record<string, string>
+  /** Ordered data-aware step styling; fieldless thresholds use step value. */
+  styleRules?: StyleRule[]
   /**
    * Funnel orientation.
    *
@@ -139,6 +142,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     categoryAccessor,
     colorBy,
     colorScheme,
+    styleRules,
     orientation = "horizontal",
     connectorOpacity = 0.3,
     showLabels = true,
@@ -224,6 +228,12 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
+  const resolveRuleValue = useMemo(
+    () => makeRuleValueResolver(
+      valueAccessor as string | ((d: Datum) => unknown),
+    ),
+    [valueAccessor],
+  )
 
   // For single-category funnel, resolve one uniform fill color
   const uniformFill = useMemo(() => {
@@ -249,6 +259,8 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
+    styleRules,
+    resolveRuleValue,
   })
 
   // Default tooltip showing step, value, and percentage

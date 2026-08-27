@@ -55,6 +55,23 @@ describe("buildCandlestickScene", () => {
     expect(nodes[1].type).toBe("candlestick")
   })
 
+  it("applies per-datum point styles to candlestick scene nodes", () => {
+    const data = [
+      { x: 0, open: 10, high: 15, low: 5, close: 12, cohort: "Alpha" },
+      { x: 10, open: 12, high: 18, low: 9, close: 8, cohort: "Beta" },
+    ]
+    const ctx = makeCtx({
+      config: {
+        pointStyle: (datum) => ({ opacity: datum.cohort === "Alpha" ? 1 : 0.2 }),
+      },
+    })
+
+    const nodes = buildCandlestickScene(ctx, data, defaultLayout)
+
+    expect(nodes[0].style?.opacity).toBe(1)
+    expect(nodes[1].style?.opacity).toBe(0.2)
+  })
+
   it("sets isUp=true when close >= open, isUp=false when close < open", () => {
     const data = [
       { x: 0, open: 10, high: 20, low: 5, close: 15 },   // up: 15 >= 10
