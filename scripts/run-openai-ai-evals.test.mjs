@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { AI_EVAL_PROVIDERS } from "./lib/ai-eval-providers.mjs"
 import {
   calculateResponseCost,
   extractOutputText,
@@ -128,4 +129,36 @@ test("validateFilterValues rejects typos before a paid run", () => {
       ),
     /Unknown suite: firsttry/
   )
+})
+
+test("provider registry registers orcarouter as an OpenAI-compatible provider", () => {
+  assert.ok(AI_EVAL_PROVIDERS.orcarouter)
+  assert.equal(
+    AI_EVAL_PROVIDERS.orcarouter.apiUrl,
+    "https://api.orcarouter.ai/v1/responses"
+  )
+  assert.equal(AI_EVAL_PROVIDERS.orcarouter.apiKeyEnv, "ORCAROUTER_API_KEY")
+  assert.equal(AI_EVAL_PROVIDERS.orcarouter.projectEnv, null)
+  assert.ok(AI_EVAL_PROVIDERS.orcarouter.defaultModels.includes("orcarouter/auto"))
+  assert.equal(AI_EVAL_PROVIDERS.orcarouter.pricesPerMillion, null)
+})
+
+test("providers without a price table report zero cost", () => {
+  assert.equal(calculateResponseCost("orcarouter/auto", {}, null), 0)
+  assert.equal(requestUpperBoundCost("orcarouter/auto", {}, null), 0)
+  const record = publicRequestRecord({
+    model: "orcarouter/auto",
+    suite: "first-try",
+    fixtureId: "line/static",
+    response: {
+      id: "resp_1",
+      model: "orcarouter/auto",
+      status: "completed",
+      usage: { input_tokens: 10, output_tokens: 5 },
+    },
+    rawOutput: "{\"component\":\"LineChart\",\"props\":{}}",
+    latencyMs: 12,
+    prices: null,
+  })
+  assert.equal(record.estimatedUsd, 0)
 })

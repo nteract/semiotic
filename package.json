@@ -361,6 +361,7 @@
     "check:agent-skill": "node scripts/check-agent-skill.mjs",
     "eval:ai": "node scripts/run-ai-evals.mjs",
     "eval:ai:openai": "node scripts/run-openai-ai-evals.mjs",
+    "eval:ai:orcarouter": "node scripts/run-openai-ai-evals.mjs --provider=orcarouter",
     "eval:ai:trials": "node scripts/summarize-openai-ai-eval-trials.mjs",
     "test:ai-evals": "node --test scripts/ai-eval-scoring.test.mjs scripts/ai-eval-report-summary.test.mjs scripts/run-openai-ai-evals.test.mjs scripts/summarize-openai-ai-eval-trials.test.mjs",
     "test:ai:openai": "node --test scripts/run-openai-ai-evals.test.mjs",

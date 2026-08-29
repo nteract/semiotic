@@ -49,6 +49,19 @@ npm run eval:ai:openai -- \
   --confirm-spend
 ```
 
+The same runner accepts other registered OpenAI-compatible providers from
+`scripts/lib/ai-eval-providers.mjs`. The `orcarouter` provider points the
+Responses-API queue at the OrcaRouter AI gateway (`ORCAROUTER_API_KEY`, no
+project ID, no per-model price table), so a zero-markup trial never needs
+`--max-usd` or `--confirm-spend`:
+
+```sh
+npm run eval:ai:orcarouter -- \
+  --models=orcarouter/auto \
+  --suites=first-try \
+  --output-dir=evals/reports/orcarouter/trial-a
+```
+
 Use `--validate-only` first for one minimal request. The live runner refuses
 paid work unless `--confirm-spend` and a positive `--max-usd` are both present.
 It never writes the credential, project ID, raw prompts, or raw API response
