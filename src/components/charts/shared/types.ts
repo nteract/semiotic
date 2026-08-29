@@ -134,7 +134,8 @@ export interface BaseChartProps {
   responsiveHeight?: boolean
   /**
    * Maximum canvas backing-store pixel ratio. Defaults to 3 on desktop and 2
-   * on coarse-pointer/small-screen devices. Canvas chart families repaint
+   * on coarse-pointer/small-screen devices. Very large canvases are further
+   * capped by a shared backing-store budget. Canvas chart families repaint
    * automatically when browser zoom or display density changes.
    */
   maxDevicePixelRatio?: number

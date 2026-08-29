@@ -609,7 +609,7 @@ export const StreamPhysicsFrame = memo(
         // Consume resolution dirty (browser zoom) so a paint-only invalidation
         // does not stick; physics paint always re-rasterizes when scheduled.
         resolutionDirtyRef.current = false
-        const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+        const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
         const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (!ctx) {
           sceneRevisionDiagnosticsRef.current.afterCompute(

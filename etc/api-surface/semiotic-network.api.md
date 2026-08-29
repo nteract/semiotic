@@ -46,6 +46,7 @@ function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): bool
 function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
+function useSelectionActions(name: string, clientId?: string | undefined): UseSelectionActionsResult
 function validateProcessSankey(nodes: ProcessSankeyNode[], edges: ProcessSankeyEdge[], domain: [number, number], options?: undefined | {usageMode?: ProcessSankeyUsageMode;}): ProcessSankeyIssue[]
 interface CategoricalLegendConfig
 interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps

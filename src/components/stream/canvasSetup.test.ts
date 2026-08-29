@@ -68,6 +68,30 @@ describe("canvas device pixel ratio", () => {
     expect(getDevicePixelRatio(2.5)).toBe(2.5)
   })
 
+  it("caps oversized backing stores by area and physical dimension", () => {
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 3 })
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1200 })
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 900 })
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) })
+
+    expect(getDevicePixelRatio(undefined, [600, 400])).toBe(3)
+
+    const tallDpr = getDevicePixelRatio(undefined, [496, 8793])
+    expect(tallDpr).toBeCloseTo(Math.sqrt(8_388_608 / (496 * 8793)))
+    expect(8793 * tallDpr).toBeLessThan(16_384)
+
+    expect(getDevicePixelRatio(undefined, [100, 12_000])).toBeCloseTo(16_384 / 12_000)
+  })
+
   it("re-arms the resolution query and notifies when effective DPR changes", async () => {
     Object.defineProperty(window, "devicePixelRatio", { configurable: true, writable: true, value: 2 })
     const queries: Array<{

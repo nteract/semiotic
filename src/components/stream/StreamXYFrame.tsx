@@ -937,7 +937,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, dimsChanged)
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
-      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
 
       // Canvas geometry is host lifecycle, not interaction-paint state. Keep
       // both stacked layers aligned on the initial synchronous mount paint,

@@ -27,27 +27,27 @@ describe("Semiotic architecture example data", () => {
 
   it("maps the public chart leaves through the five frame models", () => {
     const frames = new Set(
-      SEMIOTIC_ARCHITECTURE_NODES
-        .filter((node) => node.layer === "frame")
-        .map((node) => node.id)
+      SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.layer === "frame").map((node) => node.id),
     )
     expect(frames).toEqual(
-      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"])
+      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"]),
     )
 
-    const profilesById = new Map(
-      SEMIOTIC_EXAMPLE_PROFILES.map((profile) => [profile.id, profile])
-    )
+    const profilesById = new Map(SEMIOTIC_EXAMPLE_PROFILES.map((profile) => [profile.id, profile]))
     expect(architectureHighlight(profilesById.get("climate-anomaly"))).toContain("frame-xy")
     expect(architectureHighlight(profilesById.get("us-war-timeline"))).toContain("frame-ordinal")
-    expect(architectureHighlight(profilesById.get("art-movement-genealogy"))).toContain("frame-network")
-    expect(architectureHighlight(profilesById.get("paris-isometric-landmarks"))).toContain("frame-geo")
+    expect(architectureHighlight(profilesById.get("art-movement-genealogy"))).toContain(
+      "frame-network",
+    )
+    expect(architectureHighlight(profilesById.get("paris-isometric-landmarks"))).toContain(
+      "frame-geo",
+    )
     expect(architectureHighlight(profilesById.get("watermarks"))).toContain("frame-physics")
   })
 
   it("maps the Wikipedia realtime example to the imperative Push API", () => {
     const wikipedia = SEMIOTIC_EXAMPLE_PROFILES.find(
-      (profile) => profile.id === "wikipedia-realtime"
+      (profile) => profile.id === "wikipedia-realtime",
     )
     const highlighted = architectureHighlight(wikipedia)
 
@@ -58,7 +58,7 @@ describe("Semiotic architecture example data", () => {
 
   it("maps the Lake Travis ISOTYPE example across every custom frame", () => {
     const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
-      (candidate) => candidate.id === "lake-travis-isotype"
+      (candidate) => candidate.id === "lake-travis-isotype",
     )
     const highlighted = architectureHighlight(profile)
 
@@ -71,7 +71,7 @@ describe("Semiotic architecture example data", () => {
 
   it("maps the data-center ISOTYPE ledger across every custom frame", () => {
     const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
-      (candidate) => candidate.id === "data-centers-isotype"
+      (candidate) => candidate.id === "data-centers-isotype",
     )
     const highlighted = architectureHighlight(profile)
 
@@ -84,7 +84,7 @@ describe("Semiotic architecture example data", () => {
 
   it("maps the discrete tokenization example through custom XY layouts", () => {
     const profile = SEMIOTIC_EXAMPLE_PROFILES.find(
-      (candidate) => candidate.id === "sometimes-better-discrete"
+      (candidate) => candidate.id === "sometimes-better-discrete",
     )
     const highlighted = architectureHighlight(profile)
 
@@ -96,7 +96,7 @@ describe("Semiotic architecture example data", () => {
 
   it("uses the port replay to connect four previously dark chart families", () => {
     const portReplay = SEMIOTIC_EXAMPLE_PROFILES.find(
-      (profile) => profile.id === "port-congestion-replay"
+      (profile) => profile.id === "port-congestion-replay",
     )
     const highlighted = architectureHighlight(portReplay)
 

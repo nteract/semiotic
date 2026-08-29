@@ -200,7 +200,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -781,7 +781,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -1411,7 +1411,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -2019,7 +2019,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -2614,7 +2614,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3199,7 +3199,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3572,7 +3572,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -3977,7 +3977,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -4554,7 +4554,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -5126,7 +5126,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -5692,7 +5692,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6260,7 +6260,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -6807,7 +6807,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -7357,7 +7357,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -7899,7 +7899,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8455,7 +8455,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -8985,7 +8985,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -9519,7 +9519,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -10055,7 +10055,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -10581,7 +10581,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11127,7 +11127,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -11635,7 +11635,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -12156,7 +12156,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -12697,7 +12697,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -13284,7 +13284,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -13852,7 +13852,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -14398,7 +14398,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -14946,7 +14946,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -15475,7 +15475,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -15996,7 +15996,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -16399,7 +16399,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -16853,7 +16853,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -17351,7 +17351,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -17821,7 +17821,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -18279,7 +18279,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -18906,7 +18906,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -19447,7 +19447,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -20020,7 +20020,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -20351,7 +20351,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -20755,7 +20755,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -21301,7 +21301,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -21885,7 +21885,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -22362,7 +22362,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -22975,7 +22975,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -23709,7 +23709,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -24004,7 +24004,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "margin": {
               "type": [
@@ -24724,7 +24724,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -25169,7 +25169,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -25610,7 +25610,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -26053,7 +26053,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -26654,7 +26654,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -27128,7 +27128,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -27502,7 +27502,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -27871,7 +27871,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -29168,7 +29168,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -29608,7 +29608,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "className": {
               "type": "string"
@@ -30145,7 +30145,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",
@@ -30672,7 +30672,7 @@
             },
             "maxDevicePixelRatio": {
               "type": "number",
-              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes."
+              "description": "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes."
             },
             "axisExtent": {
               "type": "string",

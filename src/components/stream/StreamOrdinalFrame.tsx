@@ -769,7 +769,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // DPR setup — only resize the canvas buffer when dimensions actually change.
       // Setting canvas.width/height (even to the same value) implicitly clears the
       // buffer and forces GPU reallocation on HiDPI displays.
-      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
       const newWidth = size[0] * dpr
       const newHeight = size[1] * dpr
       if (canvas.width !== newWidth || canvas.height !== newHeight) {

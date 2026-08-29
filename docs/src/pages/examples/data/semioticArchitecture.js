@@ -742,6 +742,22 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "machine-semiosphere",
+    shortLabel: "Machine Semiosphere",
+    note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",
+    uses: [
+      "input-static",
+      "hoc-bar",
+      "hoc-network-custom",
+      "feature-accessors",
+      "feature-accessibility",
+      "feature-tooltips",
+      "feature-custom-layout",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "lines-of-thought",
     shortLabel: "Lines of Thought",
     note: "One custom-network recipe compares publication-minded authored station geometry with a deterministic topology fallback, then carries the metro-map grammar into a coordinate-free watershed without pretending schematic distance is geography or flow volume.",
