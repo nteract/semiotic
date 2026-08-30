@@ -74,7 +74,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 102,
+    "kb": 103,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
@@ -89,12 +89,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 95,
+    "kb": 99,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 87,
+    "kb": 91,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -144,7 +144,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 552,
+    "kb": 553,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -164,7 +164,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 359,
+    "kb": 360,
     "blurb": "Everything below (full bundle)"
   }
 ])

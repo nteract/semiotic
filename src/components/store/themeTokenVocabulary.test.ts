@@ -24,6 +24,7 @@ import { HIGH_CONTRAST_THEME, LIGHT_THEME } from "./ThemeStore"
  * with a reason — if a name belongs to the theme, emit it instead.
  */
 const CONSUMER_KNOBS: Record<string, string> = {
+  "--semiotic-adjacency-flow-arrow-fill": "Adjacency Flow direction-marker fill override",
   "--semiotic-data-table-bg": "accessible data-table surface override",
   "--semiotic-data-table-border": "accessible data-table border override",
   "--semiotic-data-table-text": "accessible data-table text override",
