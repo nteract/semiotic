@@ -280,7 +280,11 @@ describe("adjacency flow CSR/SSR parity", () => {
         )
       )
       expect(mismatchWarnings).toEqual([])
-      expect(container.querySelector("canvas")).toBeTruthy()
+      expect(
+        container.querySelector(
+          '[aria-label="Network chart, 3 nodes, 3 edges"]'
+        )
+      ).toBeTruthy()
       expect(
         container.querySelector(".semiotic-accessible-data-table")
       ).toBeTruthy()
