@@ -283,6 +283,11 @@ export function RecipesIndex() {
           title="Net Ensemble"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/adjacency-flow"
+          title="Adjacency Flow"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
+        />
 
         <div className="sub-header">Dashboards</div>
 

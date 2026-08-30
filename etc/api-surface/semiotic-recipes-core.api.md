@@ -33,7 +33,9 @@ const isotypeServerGlyph: GlyphDef
 function absorbRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
 function activeCountOverDomain<T = Datum>(items: readonly T[], options: ActiveCountOptions<T>): ActiveCount[]
 function addPoints(a: Point, b: Point): Point
+function adjacencyFlowLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").AdjacencyFlowConfig>): import("../semiotic-network").NetworkLayoutResult
 function adjacencyMatrix(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: AdjacencyMatrixOptions | undefined): AdjacencyMatrix
+function aggregateAdjacencyFlow(inputNodes: readonly Datum[], inputEdges: readonly Datum[], options?: AggregateAdjacencyFlowOptions | undefined): AggregatedAdjacencyFlowResult
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "region" | "type">): RegionCountMap
 function allocateCells<T extends CellWeight>(weights: readonly T[], totalCells: number, opts?: AllocateCellsOptions | undefined): AllocatedCellsFor<T>[]
 function analyzeNetEnsemble(nodes: readonly {id: string;}[], edges: readonly {source: string; target: string;}[], options?: undefined | {fingerprintRounds?: number;}): NetEnsembleAnalysis
@@ -232,8 +234,12 @@ function wrapValue(value: number, period: number, min?: number | undefined): num
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number
 interface ActiveCount
 interface ActiveCountOptions<T>
+interface AdjacencyFlowConfig
+interface AdjacencyFlowGroupSummary
 interface AdjacencyMatrix
 interface AdjacencyMatrixOptions
+interface AggregateAdjacencyFlowOptions
+interface AggregatedAdjacencyFlowResult
 interface AllocateCellsOptions
 interface AllocatedCells extends CellWeight
 interface AngleScaleOptions
@@ -462,12 +468,60 @@ interface-member ActiveCountOptions::property::domain = required domain: [number
 interface-member ActiveCountOptions::property::end = optional end: Accessor<T> | undefined
 interface-member ActiveCountOptions::property::start = optional start: Accessor<T> | undefined
 interface-member ActiveCountOptions::property::step = optional step: number | undefined
+interface-member AdjacencyFlowConfig::property::arrowColor = optional arrowColor: string | undefined
+interface-member AdjacencyFlowConfig::property::arrowSize = optional arrowSize: number | undefined
+interface-member AdjacencyFlowConfig::property::colorMode = optional colorMode: "edge" | "single" | "source" | "target" | undefined
+interface-member AdjacencyFlowConfig::property::cornerRadius = optional cornerRadius: number | undefined
+interface-member AdjacencyFlowConfig::property::edgeColor = optional edgeColor: ((edge: Datum) => string | undefined) | string | undefined
+interface-member AdjacencyFlowConfig::property::flowGap = optional flowGap: number | undefined
+interface-member AdjacencyFlowConfig::property::flowScale = optional flowScale: number | undefined
+interface-member AdjacencyFlowConfig::property::labelAccessor = optional labelAccessor: ((node: Datum) => string) | string | undefined
+interface-member AdjacencyFlowConfig::property::labelFontSize = optional labelFontSize: number | undefined
+interface-member AdjacencyFlowConfig::property::maxCellSize = optional maxCellSize: number | undefined
+interface-member AdjacencyFlowConfig::property::maxFlowWidth = optional maxFlowWidth: number | undefined
+interface-member AdjacencyFlowConfig::property::maxLabelLength = optional maxLabelLength: number | undefined
+interface-member AdjacencyFlowConfig::property::minFlowWidth = optional minFlowWidth: number | undefined
+interface-member AdjacencyFlowConfig::property::nodeColor = optional nodeColor: ((node: Datum, index: number) => string | undefined) | string | undefined
+interface-member AdjacencyFlowConfig::property::nodeSize = optional nodeSize: number | undefined
+interface-member AdjacencyFlowConfig::property::nodeStroke = optional nodeStroke: string | undefined
+interface-member AdjacencyFlowConfig::property::nodeTextColor = optional nodeTextColor: string | undefined
+interface-member AdjacencyFlowConfig::property::order = optional order: readonly string[] | undefined
+interface-member AdjacencyFlowConfig::property::padding = optional padding: number | undefined
+interface-member AdjacencyFlowConfig::property::portPadding = optional portPadding: number | undefined
+interface-member AdjacencyFlowConfig::property::showArrows = optional showArrows: boolean | undefined
+interface-member AdjacencyFlowConfig::property::showGrid = optional showGrid: boolean | undefined
+interface-member AdjacencyFlowConfig::property::showValues = optional showValues: boolean | undefined
+interface-member AdjacencyFlowConfig::property::valueAccessor = optional valueAccessor: ((edge: Datum) => number | undefined) | string | undefined
+interface-member AdjacencyFlowConfig::property::valueFontSize = optional valueFontSize: number | undefined
+interface-member AdjacencyFlowConfig::property::valueFormat = optional valueFormat: ((value: number, edge: Datum) => string) | undefined
+interface-member AdjacencyFlowGroupSummary::property::collapsed = required collapsed: boolean
+interface-member AdjacencyFlowGroupSummary::property::group = required group: string
+interface-member AdjacencyFlowGroupSummary::property::incomingValue = required incomingValue: number
+interface-member AdjacencyFlowGroupSummary::property::internalValue = required internalValue: number
+interface-member AdjacencyFlowGroupSummary::property::label = required label: string
+interface-member AdjacencyFlowGroupSummary::property::memberIds = required memberIds: string[]
+interface-member AdjacencyFlowGroupSummary::property::nodeId = required nodeId: null | string
+interface-member AdjacencyFlowGroupSummary::property::outgoingValue = required outgoingValue: number
 interface-member AdjacencyMatrix::property::cells = required cells: MatrixCell[]
 interface-member AdjacencyMatrix::property::maxValue = required maxValue: number
 interface-member AdjacencyMatrix::property::order = required order: string[]
 interface-member AdjacencyMatrix::property::size = required size: number
 interface-member AdjacencyMatrixOptions::property::groupAccessor = optional groupAccessor: "id" | ((n: GraphNode) => number | string) | undefined
 interface-member AdjacencyMatrixOptions::property::order = optional order: readonly string[] | undefined
+interface-member AggregateAdjacencyFlowOptions::property::collapseSingletons = optional collapseSingletons: boolean | undefined
+interface-member AggregateAdjacencyFlowOptions::property::expandedGroups = optional expandedGroups: Iterable<string> | undefined
+interface-member AggregateAdjacencyFlowOptions::property::groupAccessor = optional groupAccessor: AdjacencyFlowNodeAccessor | undefined
+interface-member AggregateAdjacencyFlowOptions::property::groupIdPrefix = optional groupIdPrefix: string | undefined
+interface-member AggregateAdjacencyFlowOptions::property::includeInternalFlows = optional includeInternalFlows: boolean | undefined
+interface-member AggregateAdjacencyFlowOptions::property::labelAccessor = optional labelAccessor: AdjacencyFlowNodeAccessor | undefined
+interface-member AggregateAdjacencyFlowOptions::property::nodeIdAccessor = optional nodeIdAccessor: AdjacencyFlowNodeAccessor | undefined
+interface-member AggregateAdjacencyFlowOptions::property::sourceAccessor = optional sourceAccessor: AdjacencyFlowEdgeAccessor | undefined
+interface-member AggregateAdjacencyFlowOptions::property::targetAccessor = optional targetAccessor: AdjacencyFlowEdgeAccessor | undefined
+interface-member AggregateAdjacencyFlowOptions::property::valueAccessor = optional valueAccessor: AdjacencyFlowValueAccessor | undefined
+interface-member AggregatedAdjacencyFlowResult::property::edges = required edges: AggregatedAdjacencyFlowEdge[]
+interface-member AggregatedAdjacencyFlowResult::property::groups = required groups: AdjacencyFlowGroupSummary[]
+interface-member AggregatedAdjacencyFlowResult::property::nodes = required nodes: AggregatedAdjacencyFlowNode[]
+interface-member AggregatedAdjacencyFlowResult::property::omittedEdgeCount = required omittedEdgeCount: number
 interface-member AllocateCellsOptions::property::minPerCategory = optional minPerCategory: number | undefined
 interface-member AllocatedCells::property::cells = required cells: number
 interface-member AllocatedCells::property::exact = required exact: number
@@ -1996,6 +2050,11 @@ interface-member WordTrailsWordInfo::property::resolvedColumnColor = required re
 interface-member WordTrailsWordInfo::property::segment = required segment: number
 interface-member WordTrailsWordInfo::property::weight = required weight: number
 interface-member WordTrailsWordInfo::property::word = required word: string
+type AdjacencyFlowEdgeAccessor = ((edge: Datum) => string | undefined) | string
+type AdjacencyFlowNodeAccessor = ((node: Datum) => string | undefined) | string
+type AdjacencyFlowValueAccessor = ((edge: Datum) => number | undefined) | string
+type AggregatedAdjacencyFlowEdge = Datum & {source: string; target: string; value: number; edgeCount: number; internal: boolean; memberEdges: Datum[];}
+type AggregatedAdjacencyFlowNode = Datum & {id: string; label: string; group: string; aggregate: boolean; memberIds: string[]; memberCount: number; internalValue: number; incomingValue: number; outgoingValue: number;}
 type AllocatedCellsFor<T extends CellWeight = CellWeight> = AllocatedCells & T
 type AnnotationCohesion = "blended" | "layer"
 type AutoPlaceAnnotations = AutoPlaceAnnotationsConfig | boolean
