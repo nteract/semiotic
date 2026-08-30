@@ -258,10 +258,7 @@ export default function MachineSemiosphereExamplePage() {
                         <p key={paragraph}>{paragraph}</p>
                       ))}
                     </div>
-                    <MachineSemiosphereChapterVisual
-                      type={chapter.visual}
-                      reducedMotion={reducedMotion}
-                    />
+                    <MachineSemiosphereChapterVisual type={chapter.visual} />
                     <p className="semiosphere-chapter__source-note">
                       <span>
                         <strong>Evidence:</strong> {chapter.evidence}.

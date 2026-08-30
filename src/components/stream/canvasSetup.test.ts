@@ -90,6 +90,16 @@ describe("canvas device pixel ratio", () => {
     expect(8793 * tallDpr).toBeLessThan(16_384)
 
     expect(getDevicePixelRatio(undefined, [100, 12_000])).toBeCloseTo(16_384 / 12_000)
+
+    const oversizedAreaDpr = getDevicePixelRatio(undefined, [4_000, 3_000])
+    expect(oversizedAreaDpr).toBeLessThan(1)
+    expect(oversizedAreaDpr).toBeCloseTo(Math.sqrt(8_388_608 / (4_000 * 3_000)))
+    expect(4_000 * 3_000 * oversizedAreaDpr ** 2).toBeCloseTo(8_388_608)
+
+    const oversizedDimensionDpr = getDevicePixelRatio(undefined, [100, 20_000])
+    expect(oversizedDimensionDpr).toBeLessThan(1)
+    expect(oversizedDimensionDpr).toBeCloseTo(16_384 / 20_000)
+    expect(20_000 * oversizedDimensionDpr).toBeCloseTo(16_384)
   })
 
   it("re-arms the resolution query and notifies when effective DPR changes", async () => {

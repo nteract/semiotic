@@ -187,7 +187,6 @@ const VISUAL_META = Object.freeze({
 
 export const MachineSemiosphereChapterVisual = React.memo(function MachineSemiosphereChapterVisual({
   type,
-  reducedMotion,
 }) {
   const [width, hostRef] = useResponsiveWidth(220, 680, { bucket: 20 })
   const meta = VISUAL_META[type]
@@ -200,25 +199,25 @@ export const MachineSemiosphereChapterVisual = React.memo(function MachineSemios
         <h3>{meta.title}</h3>
       </header>
       <div className="semiosphere-chapter-visual__plot" ref={hostRef}>
-        <ChapterPlot type={type} width={width} reducedMotion={reducedMotion} />
+        <ChapterPlot type={type} width={width} />
       </div>
       <figcaption className="semiosphere-chapter-visual__caption">{meta.caption}</figcaption>
     </figure>
   )
 })
 
-function ChapterPlot({ type, width, reducedMotion }) {
+function ChapterPlot({ type, width }) {
   switch (type) {
     case "daily-actions":
-      return <DailyActionsChart width={width} reducedMotion={reducedMotion} />
+      return <DailyActionsChart width={width} />
     case "board-scale":
-      return <BoardScaleChart width={width} reducedMotion={reducedMotion} />
+      return <BoardScaleChart width={width} />
     case "observed-lifetimes":
-      return <ObservedLifetimesChart width={width} reducedMotion={reducedMotion} />
+      return <ObservedLifetimesChart width={width} />
     case "handoffs":
       return <HandoffRows />
     case "forensic-recovery":
-      return <ForensicRecoveryChart width={width} reducedMotion={reducedMotion} />
+      return <ForensicRecoveryChart width={width} />
     case "evidence-summary":
       return <EvidenceSummary />
     default:
@@ -226,16 +225,12 @@ function ChapterPlot({ type, width, reducedMotion }) {
   }
 }
 
-function chartAnimation() {
-  return false
-}
-
 function formatJulyDay(value) {
   const date = new Date(`${String(value)}T12:00:00Z`)
   return Number.isNaN(date.getTime()) ? String(value) : `Jul ${date.getUTCDate()}`
 }
 
-function DailyActionsChart({ width, reducedMotion }) {
+function DailyActionsChart({ width }) {
   return (
     <BarChart
       chartId="machine-semiosphere-daily-actions"
@@ -251,7 +246,7 @@ function DailyActionsChart({ width, reducedMotion }) {
       color={INCIDENT}
       showGrid
       enableHover
-      animate={chartAnimation(reducedMotion)}
+      animate={false}
       accessibleTable
       description="Recovered attacker actions by day from July 9 through July 13, 2026."
       summary="July 11 is the peak with 7,677 actions. The five daily counts sum to 17,613."
@@ -270,7 +265,7 @@ function DailyActionsChart({ width, reducedMotion }) {
   )
 }
 
-function BoardScaleChart({ width, reducedMotion }) {
+function BoardScaleChart({ width }) {
   const compactLabels = {
     "Messages + files (minimum)": "Messages + files",
     "Targeted messages": "Targeted",
@@ -291,7 +286,7 @@ function BoardScaleChart({ width, reducedMotion }) {
       color={MEMORY}
       showGrid
       enableHover
-      animate={chartAnimation(reducedMotion)}
+      animate={false}
       accessibleTable
       description="Published counts for messages and files, targeted messages, mailboxes, and files on the unauthorized board."
       summary="More than 70,000 messages and files were reported. These overlapping categories cannot be summed."
@@ -310,7 +305,7 @@ function BoardScaleChart({ width, reducedMotion }) {
   )
 }
 
-function ObservedLifetimesChart({ width, reducedMotion }) {
+function ObservedLifetimesChart({ width }) {
   const compactLabels = {
     "Early board discoverers": "Board discoverers",
     "Convention builders (grouped)": "Conventions",
@@ -335,7 +330,7 @@ function ObservedLifetimesChart({ width, reducedMotion }) {
       margin={{ top: 12, right: 22, bottom: 40, left: width < 420 ? 94 : 164 }}
       showGrid
       enableHover
-      animate={chartAnimation(reducedMotion)}
+      animate={false}
       accessibleTable
       description="Derived spans between first and last published observations for three agent groups and two shared traces."
       summary="The chart compares observation windows, not known lifespans. Several shared traces remain in the published record after short-lived agent groups end."
@@ -356,7 +351,7 @@ function ObservedLifetimesChart({ width, reducedMotion }) {
   )
 }
 
-function ForensicRecoveryChart({ width, reducedMotion }) {
+function ForensicRecoveryChart({ width }) {
   const rows = [
     { label: "Initial review", value: 1, kind: "baseline" },
     { label: "Reproduced decoding", value: 4, kind: "recovered" },
@@ -383,7 +378,7 @@ function ForensicRecoveryChart({ width, reducedMotion }) {
       margin={{ top: 12, right: 28, bottom: 40, left: width < 420 ? 74 : 154 }}
       showGrid
       enableHover
-      animate={chartAnimation(reducedMotion)}
+      animate={false}
       accessibleTable
       description="An indexed comparison of the initial review and the findings after investigators reproduced the agents' decoding procedure."
       summary="Hugging Face reports roughly four times the initial findings after reproducing the decoding procedure. The values are a relative index, not counts."

@@ -104,6 +104,7 @@ interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChartProps
 interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProps
 interface UseForceLayoutResult
+interface UseSelectionActionsResult
 interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
 interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
 interface-member ChordDiagramProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
@@ -687,6 +688,9 @@ interface-member TreemapProps::property::valueAccessor = optional valueAccessor:
 interface-member UseForceLayoutResult::property::error = required error: Error | null
 interface-member UseForceLayoutResult::property::positions = required positions: Record<string, Point> | null
 interface-member UseForceLayoutResult::property::status = required status: ForceLayoutStatus
+interface-member UseSelectionActionsResult::property::clear = required clear: () => void
+interface-member UseSelectionActionsResult::property::clientId = required clientId: string
+interface-member UseSelectionActionsResult::property::selectPoints = required selectPoints: (fieldValues: Record<string, unknown[]>) => void
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type ForceLayoutStatus = "error" | "pending" | "ready"

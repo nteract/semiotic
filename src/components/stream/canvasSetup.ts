@@ -62,8 +62,8 @@ function isMobileCanvasEnvironment(): boolean {
   const coarsePointer =
     typeof window.matchMedia === "function" &&
     window.matchMedia("(pointer: coarse)").matches
-  const narrowViewport = Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) < 768
-  return coarsePointer || narrowViewport
+  return coarsePointer ||
+    Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) < 768
 }
 
 /**
@@ -108,18 +108,17 @@ export function getDevicePixelRatio(
   if (typeof window === "undefined") return 1
   const raw = window.devicePixelRatio || 1
   const defaultCap = isMobileCanvasEnvironment() ? MOBILE_CANVAS_DPR_CAP : DESKTOP_CANVAS_DPR_CAP
-  let cap = typeof maxDevicePixelRatio === "number" && maxDevicePixelRatio > 0
+  const cap = typeof maxDevicePixelRatio === "number" && maxDevicePixelRatio > 0
     ? maxDevicePixelRatio
     : defaultCap
+  if (!size) return Math.max(1, Math.min(raw, cap))
 
-  if (size) {
-    const [width, height] = size
-    const areaCap = Math.sqrt(MAX_CANVAS_BACKING_PIXELS / (width * height))
-    const dimensionCap = MAX_CANVAS_BACKING_DIMENSION / Math.max(width, height)
-    cap = Math.min(cap, Math.max(1, areaCap), Math.max(1, dimensionCap))
-  }
-
-  return Math.max(1, Math.min(raw, cap))
+  const [width, height] = size
+  const sizeCap = Math.min(
+    Math.sqrt(MAX_CANVAS_BACKING_PIXELS / (width * height)),
+    MAX_CANVAS_BACKING_DIMENSION / Math.max(width, height)
+  )
+  return Math.max(sizeCap < 1 ? 0 : 1, Math.min(raw, cap, sizeCap))
 }
 
 /**

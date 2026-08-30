@@ -65,7 +65,7 @@ describe("MachineSemiosphereCharts", () => {
     "forensic-recovery",
     "evidence-summary",
   ])("renders the fixed %s chapter visual", (type) => {
-    const { container } = render(<MachineSemiosphereChapterVisual type={type} reducedMotion />)
+    const { container } = render(<MachineSemiosphereChapterVisual type={type} />)
 
     expect(container.querySelector("figure.semiosphere-chapter-visual")).toBeInTheDocument()
     expect(container.querySelector("figcaption")).not.toBeEmptyDOMElement()
