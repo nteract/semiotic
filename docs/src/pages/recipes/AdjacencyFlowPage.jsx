@@ -3,49 +3,89 @@ import { Link } from "react-router-dom"
 import RecipeLayout from "../../components/RecipeLayout"
 import AdjacencyFlow from "../../examples/recipes/AdjacencyFlow"
 
-const fullSourceCode = `import { NetworkCustomChart } from "semiotic/network"
+const fullSourceCode = `import { useMemo, useState } from "react"
+import { NetworkCustomChart } from "semiotic/network"
 import { adjacencyFlowLayout, aggregateAdjacencyFlow } from "semiotic/recipes"
 
-const [expandedGroups, setExpandedGroups] = useState(new Set(["ABC", "DEF", "GHI"]))
+const nodes = [
+  { id: "A", label: "A", group: "ABC" },
+  { id: "B", label: "B", group: "ABC" },
+  { id: "C", label: "C", group: "ABC" },
+  { id: "D", label: "D", group: "DEF" },
+  { id: "E", label: "E", group: "DEF" },
+  { id: "F", label: "F", group: "DEF" },
+  { id: "G", label: "G", group: "GHI" },
+  { id: "H", label: "H", group: "GHI" },
+  { id: "I", label: "I", group: "GHI" },
+]
 
-const { nodes: visibleNodes, edges: visibleEdges } = useMemo(
-  () => aggregateAdjacencyFlow(nodes, edges, {
-    groupAccessor: "group",
-    expandedGroups,
-    // Within-group edges become a weighted self-flow when collapsed.
-    includeInternalFlows: true,
-  }),
-  [nodes, edges, expandedGroups]
-)
+const edges = [
+  { source: "A", target: "B", value: 10 },
+  { source: "B", target: "C", value: 25 },
+  { source: "C", target: "A", value: 3 },
+  { source: "C", target: "D", value: 8 },
+  { source: "D", target: "E", value: 7 },
+  { source: "E", target: "F", value: 12 },
+  { source: "F", target: "D", value: 2 },
+  { source: "F", target: "G", value: 9 },
+  { source: "G", target: "H", value: 22 },
+  { source: "H", target: "I", value: 14 },
+  { source: "I", target: "G", value: 5 },
+]
 
-<NetworkCustomChart
-  nodes={visibleNodes}
-  edges={visibleEdges}
-  nodeIDAccessor="id"
-  sourceAccessor="source"
-  targetAccessor="target"
-  layout={adjacencyFlowLayout}
-  layoutConfig={{
-    showArrows: true,
-    showValues: true,
-    colorMode: "single", // or "source" | "target" | "edge"
-    maxCellSize: 92,
-    cornerRadius: 9,
-  }}
-  style={{
-    "--semiotic-adjacency-flow-arrow-fill": "rgba(255, 255, 255, 0.72)",
-  }}
-  tooltip={(d) => d.source
-    ? <strong>{d.source} → {d.target}: {d.value}</strong>
-    : <strong>{d.label}</strong>}
-  onClick={(d) => toggleGroup(d.group)}
-  title="Adjacency flow journey"
-  description="Ordered weighted flows; forward routes are upper-right and reversals lower-left."
-  summary="Three phases dominate, with backtracking concentrated in the middle phase."
-  accessibleTable
-  width={900}
-  height={700}
-/>
+export default function AdjacencyFlowExample() {
+  const [expandedGroups, setExpandedGroups] = useState(
+    () => new Set(["ABC", "DEF", "GHI"])
+  )
+  const { nodes: visibleNodes, edges: visibleEdges } = useMemo(
+    () => aggregateAdjacencyFlow(nodes, edges, {
+      groupAccessor: "group",
+      expandedGroups,
+      includeInternalFlows: true,
+    }),
+    [expandedGroups]
+  )
+  const toggleGroup = (group) => {
+    if (!group) return
+    setExpandedGroups((current) => {
+      const next = new Set(current)
+      if (next.has(group)) next.delete(group)
+      else next.add(group)
+      return next
+    })
+  }
+
+  return (
+    <NetworkCustomChart
+      nodes={visibleNodes}
+      edges={visibleEdges}
+      nodeIDAccessor="id"
+      sourceAccessor="source"
+      targetAccessor="target"
+      layout={adjacencyFlowLayout}
+      layoutConfig={{
+        showArrows: true,
+        showValues: true,
+        colorMode: "single",
+        maxCellSize: 92,
+        cornerRadius: 9,
+      }}
+      style={{
+        "--semiotic-adjacency-flow-arrow-fill": "rgba(255, 255, 255, 0.72)",
+      }}
+      tooltip={(d) => d.source
+        ? <strong>{d.source} → {d.target}: {d.value}</strong>
+        : <strong>{d.label}</strong>}
+      onClick={(d) => toggleGroup(d.group)}
+      title="Adjacency flow journey"
+      description="Ordered weighted flows; forward routes are upper-right and reversals lower-left."
+      summary="Three phases dominate, with backtracking concentrated in the middle phase."
+      accessibleTable
+      width={900}
+      height={700}
+    />
+  )
+}
 `
 
 export default function AdjacencyFlowPage() {

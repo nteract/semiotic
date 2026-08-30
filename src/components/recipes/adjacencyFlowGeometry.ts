@@ -278,11 +278,7 @@ export function allocateAdjacencyFlowWidths(
     })
   }
 
-  const gap = Math.max(0, config.flowGap ?? 0.75)
-  const available = Math.max(
-    1,
-    nodeSize - Math.max(0, config.portPadding ?? 4) * 2
-  )
+  const available = adjacencyFlowPortWidth(nodeSize, config)
   let scale =
     config.flowScale == null
       ? Number.POSITIVE_INFINITY
@@ -290,6 +286,7 @@ export function allocateAdjacencyFlowWidths(
   if (config.flowScale == null) {
     for (const group of groups.values()) {
       const valueTotal = group.reduce((sum, edge) => sum + edge.value, 0)
+      const gap = adjacencyFlowEffectiveGap(group.length, nodeSize, config)
       const widthAvailable = Math.max(
         0.1,
         available - gap * Math.max(0, group.length - 1)
@@ -310,6 +307,7 @@ export function allocateAdjacencyFlowWidths(
   let shrink = 1
   for (const group of groups.values()) {
     const desired = group.reduce((sum, edge) => sum + edge.width, 0)
+    const gap = adjacencyFlowEffectiveGap(group.length, nodeSize, config)
     const widthAvailable = Math.max(
       0.1,
       available - gap * Math.max(0, group.length - 1)
@@ -323,16 +321,17 @@ export function allocateAdjacencyFlowWidths(
 export function allocateAdjacencyFlowPorts(
   groups: Map<string, FlowEdge[]>,
   nodesById: Map<string, PlacedNode>,
+  nodeSize: number,
   config: AdjacencyFlowConfig
 ): Map<string, number> {
   const ports = new Map<string, number>()
-  const gap = Math.max(0, config.flowGap ?? 0.75)
   for (const [key, group] of groups) {
     const nodeId = key.slice(key.indexOf("\u0000") + 1)
     const node = nodesById.get(nodeId)
     if (!node) continue
     const verticalPort = key.startsWith("out-")
     const center = verticalPort ? node.cy : node.cx
+    const gap = adjacencyFlowEffectiveGap(group.length, nodeSize, config)
     const total =
       group.reduce((sum, edge) => sum + edge.width, 0) +
       gap * Math.max(0, group.length - 1)
@@ -345,4 +344,30 @@ export function allocateAdjacencyFlowPorts(
     }
   }
   return ports
+}
+
+function adjacencyFlowPortWidth(
+  nodeSize: number,
+  config: AdjacencyFlowConfig
+): number {
+  return Math.max(1, nodeSize - Math.max(0, config.portPadding ?? 4) * 2)
+}
+
+/**
+ * Preserve a sliver of the port for strokes before allocating gaps. Dense
+ * groups reduce their gap rather than allowing the stack to escape the node.
+ */
+function adjacencyFlowEffectiveGap(
+  edgeCount: number,
+  nodeSize: number,
+  config: AdjacencyFlowConfig
+): number {
+  if (edgeCount <= 1) return 0
+  const requested = Math.max(0, config.flowGap ?? 0.75)
+  const available = adjacencyFlowPortWidth(nodeSize, config)
+  const strokeReserve = Math.min(0.1, available)
+  return Math.min(
+    requested,
+    Math.max(0, (available - strokeReserve) / (edgeCount - 1))
+  )
 }

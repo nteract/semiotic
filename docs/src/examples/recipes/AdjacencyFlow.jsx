@@ -56,21 +56,24 @@ const journeyEdges = [
   { source: "I", target: "D", value: 2 },
 ]
 
-function useMeasuredWidth(min = 320) {
+function useMeasuredWidth() {
   const ref = useRef(null)
   const [width, setWidth] = useState(null)
   useEffect(() => {
     const element = ref.current
     if (!element) return
     const measure = () => {
-      const next = Math.max(min, Math.floor(element.clientWidth - 2))
+      const style = window.getComputedStyle(element)
+      const horizontalPadding =
+        (Number.parseFloat(style.paddingLeft) || 0) + (Number.parseFloat(style.paddingRight) || 0)
+      const next = Math.max(1, Math.floor(element.clientWidth - horizontalPadding))
       setWidth((previous) => (previous === next ? previous : next))
     }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [min])
+  }, [])
   return [ref, width]
 }
 

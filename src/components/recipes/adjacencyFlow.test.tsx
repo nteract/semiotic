@@ -132,6 +132,30 @@ describe("adjacencyFlowLayout", () => {
     )
   })
 
+  it("reduces dense port gaps so every stroke remains inside its node", () => {
+    const denseNodes = Array.from({ length: 21 }, (_, index) => ({
+      id: String(index),
+      label: String(index)
+    }))
+    const denseEdges = denseNodes.slice(1).map((node) => ({
+      source: "0",
+      target: node.id,
+      value: 1
+    }))
+    const result = adjacencyFlowLayout(
+      context(denseNodes, denseEdges, { nodeSize: 4 })
+    )
+    const source = result.sceneNodes?.find(
+      (node) => node.id === "0"
+    ) as NetworkRectNode
+    for (const edge of result.sceneEdges as NetworkCurvedEdge[]) {
+      const startY = Number(edge.pathD.match(/^M[\d.]+,([\d.]+)/)?.[1])
+      const halfWidth = Number(edge.style.strokeWidth) / 2
+      expect(startY - halfWidth).toBeGreaterThanOrEqual(source.y)
+      expect(startY + halfWidth).toBeLessThanOrEqual(source.y + source.h)
+    }
+  })
+
   it("renders a compact self-flow, dotted matrix, and visible direction arrows", () => {
     const result = adjacencyFlowLayout(
       context(nodeRows, [{ source: "B", target: "B", value: 12 }])

@@ -94,7 +94,7 @@ export const adjacencyFlowLayout: NetworkCustomLayout<AdjacencyFlowConfig> = (
   const indexById = new Map(placedNodes.map((node) => [node.id, node.index]))
   const flows = adjacencyFlowAggregateEdges(ctx.edges, indexById, config)
   const groups = allocateAdjacencyFlowWidths(flows, nodeSize, config)
-  const ports = allocateAdjacencyFlowPorts(groups, nodesById, config)
+  const ports = allocateAdjacencyFlowPorts(groups, nodesById, nodeSize, config)
 
   const singleFlowColor =
     ctx.theme.semantic.info ??
