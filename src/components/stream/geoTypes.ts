@@ -280,7 +280,7 @@ export interface StreamGeoFrameProps<T = Datum> {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   className?: string
   background?: string
-  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  /** Maximum canvas backing-store DPR; large canvases also use the shared backing-store budget. */
   maxDevicePixelRatio?: number
   runtimeMode?: "bounded" | "streaming"
   /** Maximum retained points and lines after imperative streaming begins. @default 500 */

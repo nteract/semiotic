@@ -4,6 +4,7 @@ import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 
 const PREVIEW_COMPONENTS = {
+  "machine-semiosphere": MiniMachineSemiospherePreview,
   "aesthetic-policy-studio": MiniAestheticPolicyStudioPreview,
   "bad-chart-autopsy": MiniBadChartAutopsyPreview,
   "how-a-hit-travels": MiniHitTravelsPreview,
@@ -70,6 +71,51 @@ const PREVIEW_COMPONENTS = {
   maup: MiniMaupPreview,
 }
 
+function MiniMachineSemiospherePreview() {
+  const chapterStations = [9, 25, 41, 57, 73, 89]
+  const sideStations = [
+    [57, 25],
+    [78, 57],
+    [184, 41],
+    [207, 73],
+  ]
+
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#f1ecdf" />
+      <g stroke="#60716b" strokeWidth="0.45" opacity="0.16">
+        {[24, 48, 72].map((y) => (
+          <path key={`horizontal-${y}`} d={`M8 ${y}H234`} />
+        ))}
+        {[24, 48, 72, 96, 120, 144, 168, 192, 216].map((x) => (
+          <path key={`vertical-${x}`} d={`M${x} 6V90`} />
+        ))}
+      </g>
+
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M121 7V90" stroke="#5e6965" strokeWidth="7" />
+        <path d="M121 9V25H91L74 25H57" stroke="#e46f5d" strokeWidth="4.5" />
+        <path d="M121 41V57H94L78 57" stroke="#b8dc68" strokeWidth="4.5" />
+        <path d="M121 41H160L176 41H184" stroke="#57c9bd" strokeWidth="4.5" />
+        <path d="M121 73H171L187 73H207" stroke="#e1b65f" strokeWidth="4.5" />
+      </g>
+
+      <g fill="#fffaf0" stroke="#20302b" strokeWidth="1.6">
+        {chapterStations.map((cy, index) => (
+          <circle key={cy} cx="121" cy={cy} r={index === 2 || index === 3 ? 5.2 : 4.1} />
+        ))}
+        {sideStations.map(([cx, cy]) => (
+          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3.2" />
+        ))}
+      </g>
+      <g fill="#20302b">
+        <circle cx="121" cy="41" r="1.6" />
+        <circle cx="121" cy="57" r="1.6" />
+      </g>
+    </svg>
+  )
+}
+
 function MiniTransitDiagramPreview() {
   return (
     <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
@@ -81,9 +127,19 @@ function MiniTransitDiagramPreview() {
       </g>
       <g fill="#fff" stroke="#17242b" strokeWidth="1.6">
         {[
-          [12, 78], [45, 45], [132, 45], [173, 14], [229, 14],
-          [12, 22], [173, 78], [229, 78], [74, 14], [105, 45],
-        ].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" />)}
+          [12, 78],
+          [45, 45],
+          [132, 45],
+          [173, 14],
+          [229, 14],
+          [12, 22],
+          [173, 78],
+          [229, 78],
+          [74, 14],
+          [105, 45],
+        ].map(([x, y]) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" />
+        ))}
       </g>
       <circle cx="132" cy="45" r="6" fill="#fff" stroke="#17242b" strokeWidth="2.5" />
     </svg>

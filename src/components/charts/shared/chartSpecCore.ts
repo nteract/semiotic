@@ -275,7 +275,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   responsiveRules: { type: "array", description: "Semantic responsive transforms applied before chart-mode defaults." },
   mobileSemantics: { type: "object", description: "Phone/mobile contract consumed by audits, recipes, adapters, and agents." },
   mobileInteraction: { type: ["boolean", "object"], description: "Touch-first interaction policy for phone-sized chart slots." },
-  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; canvases repaint when browser zoom or display density changes." },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes." },
   axisExtent: {
     type: "string",
     enum: ["nice", "exact"] as const,
@@ -361,7 +361,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
-  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes." },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes." },
   margin: { type: ["number", "object"] },
   className: { type: "string" },
   title: { type: "string", description: "Visible title and accessible chart name." },
@@ -445,7 +445,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   size: { type: "array", description: "[width, height] in pixels" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
-  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; canvases repaint when browser zoom or display density changes." },
+  maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes." },
   className: { type: "string" },
   title: { type: "string" },
   description: {

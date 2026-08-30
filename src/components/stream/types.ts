@@ -814,7 +814,8 @@ export interface StreamXYFrameProps<T = Datum>
   background?: string
   /**
    * Maximum canvas backing-store pixel ratio. Defaults to 3 on desktop and 2
-   * on coarse-pointer/small-screen devices. Increase this when mark crispness
+   * on coarse-pointer/small-screen devices; very large canvases are further
+   * capped by a shared backing-store budget. Increase this when mark crispness
    * at high browser zoom is more important than canvas memory/paint cost.
    */
   maxDevicePixelRatio?: number

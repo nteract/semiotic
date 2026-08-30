@@ -773,7 +773,7 @@ const StreamGeoFrame = memo(
       graphicsScaleTracker.sync(store.scales)
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, false)
 
-      const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+      const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
 
       // Particles / transition / scene rebuild / rotation need a full data paint.
       // Hover-only scheduleRender skips the data canvas and only updates the

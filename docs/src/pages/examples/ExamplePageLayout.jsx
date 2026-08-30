@@ -20,6 +20,9 @@ export default function ExamplePageLayout({
   nextPage,
   children,
   useFullCodeFallback = true,
+  showViewToggle = true,
+  showContractPanels = true,
+  showPageHeader = true,
 }) {
   const normalizePath = (value) => value.replace(/\/+$/, "").replace(/\/{2,}/g, "/")
   // Prev/next derive from the examples manifest (the single source of the
@@ -31,10 +34,7 @@ export default function ExamplePageLayout({
   const index = EXAMPLES.findIndex((example) => example.path === normalizedPath)
   const prev = prevPage ?? (index > 0 ? EXAMPLES[index - 1] : undefined)
   const next = nextPage ?? (index >= 0 ? EXAMPLES[index + 1] : undefined)
-  const exampleDefinition = useMemo(
-    () => getExampleDefinition(normalizedPath),
-    [normalizedPath],
-  )
+  const exampleDefinition = useMemo(() => getExampleDefinition(normalizedPath), [normalizedPath])
   const sourceLoaders = useMemo(() => getExampleSourceLoaders(normalizedPath), [normalizedPath])
   const [sourceFiles, setSourceFiles] = useState([])
   const [activeSourceFile, setActiveSourceFile] = useState("")
@@ -58,9 +58,7 @@ export default function ExamplePageLayout({
     // paying for it on every example route visit.
     if (!blocksMode || !hasFullCodeFallback) return undefined
 
-    Promise.all(
-      sourceLoaders.map(async ({ file, load }) => ({ file, source: await load() })),
-    )
+    Promise.all(sourceLoaders.map(async ({ file, load }) => ({ file, source: await load() })))
       .then((files) => {
         if (!cancelled) {
           setSourceFiles(files)
@@ -78,8 +76,7 @@ export default function ExamplePageLayout({
       cancelled = true
     }
   }, [blocksMode, hasFullCodeFallback, sourceLoaders])
-  const selectedSource =
-    sourceFiles.find(({ file }) => file === activeSourceFile) ?? sourceFiles[0]
+  const selectedSource = sourceFiles.find(({ file }) => file === activeSourceFile) ?? sourceFiles[0]
   const selectedSourceIndex = Math.max(
     0,
     sourceFiles.findIndex(({ file }) => file === selectedSource?.file),
@@ -168,20 +165,24 @@ export default function ExamplePageLayout({
           </div>
         </nav>
 
-        <div className="example-page-header" style={styles.header}>
-          <h1 style={styles.title}>{title}</h1>
-          <div className="blocks-view-actions">
-            <BlocksViewToggle
-              blockCount={blockCount}
-              blocksMode={blocksMode}
-              setBlocksMode={setBlocksMode}
-            />
+        {showPageHeader && (
+          <div className="example-page-header" style={styles.header}>
+            <h1 style={styles.title}>{title}</h1>
+            {showViewToggle && (
+              <div className="blocks-view-actions">
+                <BlocksViewToggle
+                  blockCount={blockCount}
+                  blocksMode={blocksMode}
+                  setBlocksMode={setBlocksMode}
+                />
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         <div className="example-page-content" style={styles.content}>
           {children}
-          {exampleDefinition?.contract && (
+          {showContractPanels && exampleDefinition?.contract && (
             <Suspense fallback={null}>
               <ExampleContractPanels definition={exampleDefinition} />
             </Suspense>
@@ -216,9 +217,7 @@ export default function ExamplePageLayout({
                 id={`${sourceTabsId}-panel`}
                 role={sourceFiles.length > 1 ? "tabpanel" : undefined}
                 aria-labelledby={
-                  sourceFiles.length > 1
-                    ? `${sourceTabsId}-tab-${selectedSourceIndex}`
-                    : undefined
+                  sourceFiles.length > 1 ? `${sourceTabsId}-tab-${selectedSourceIndex}` : undefined
                 }
               >
                 <CodeBlock
