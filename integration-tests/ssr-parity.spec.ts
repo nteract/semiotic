@@ -154,6 +154,20 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(svg).toContain("stroke-dasharray")
     expect(svg).toContain("M-7 -5 L5 0 L-7 5")
   }
+  if (id === "network-custom-transit-modes") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:circle"]).toBe(18)
+    expect(evidence.markCountByType["node:arc"]).toBe(8)
+    expect(evidence.markCountByType["edge:curved"]).toBe(24)
+    expect(svg).toContain('data-transit-mode="primary"')
+    expect(svg).toContain('data-transit-mode="compact"')
+    expect(svg).toContain('data-transit-mode="minimap"')
+    expect(svg).toContain('class="transit-diagram-stations"')
+    expect(svg).toContain('data-transit-glyph="interchange"')
+    expect(svg).toContain("#d1495b")
+    expect(svg).toContain("#277da1")
+    expect(svg).toContain("#43aa8b")
+  }
   if (id === "network-custom-lineage-hulls") {
     expect(evidence.frameType).toBe("network")
     expect(evidence.markCountByType["node:rect"]).toBe(7)
@@ -574,6 +588,9 @@ test.describe("SSR / CSR parity", () => {
         : { ...c.props, animate: false }
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
+      if (c.id === "network-custom-transit-modes") {
+        expect(getRenderChartWithEvidence()(c.component, ssrProps).svg).toBe(ssrSvg)
+      }
 
       // Render only this fixture's CSR chart. Mounting the full matrix for
       // every screenshot multiplies browser startup work by 52 and makes

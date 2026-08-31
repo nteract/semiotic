@@ -385,6 +385,23 @@ const customNetworkEdges = [
   { source: "fallback", target: "reader", value: 2, label: "supports" },
 ]
 
+const transitModeNodes = [
+  { id: "alpha", label: "Alpha source", glyph: "A", stationColor: "#8f2d56", lineColor: "#d1495b" },
+  { id: "beta", label: "Beta source", glyph: "B", stationColor: "#176b87", lineColor: "#277da1" },
+  { id: "gamma", label: "Gamma source", glyph: "G", stationColor: "#527a3b", lineColor: "#43aa8b" },
+  { id: "junction", label: "Junction", glyph: "+", stationColor: "#6d4c91" },
+  { id: "interchange", label: "Interchange", glyph: "I", stationColor: "#6d4c91", transfer: true },
+  { id: "terminal", label: "Terminal", glyph: "T", stationColor: "#315a75" },
+]
+
+const transitModeEdges = [
+  { source: "alpha", target: "junction" },
+  { source: "beta", target: "junction" },
+  { source: "junction", target: "interchange" },
+  { source: "gamma", target: "interchange" },
+  { source: "interchange", target: "terminal" },
+]
+
 const lineageHullNodes = [
   { id: "orders", label: "Orders", x: 0, y: -0.75, partition: "topic-source", semantic: "source", subtopologyId: "ingest" },
   { id: "validate", label: "Validate", x: 1, y: -0.75, partition: "processor", semantic: "filter", subtopologyId: "ingest" },
@@ -656,6 +673,140 @@ function makeGlyphNetworkLayout(React, recipes) {
         h("rect", { x: 8, y: 8, width: ctx.dimensions.width - 16, height: ctx.dimensions.height - 16, fill: "none", stroke: "#cbd5e1", strokeDasharray: "5 5" }),
         ...arrows,
       ),
+    }
+  }
+}
+
+function makeTransitModesLayout(React, recipes) {
+  const h = React.createElement
+  const transitLayout = recipes.transitDiagramLayout
+  if (typeof transitLayout !== "function") {
+    throw new Error("SSR parity fixture requires transitDiagramLayout")
+  }
+  const modes = ["primary", "compact", "minimap"]
+  const shiftPath = (pathD, dx, dy) =>
+    pathD.replace(
+      /(-?\d*\.?\d+(?:e[+-]?\d+)?),(-?\d*\.?\d+(?:e[+-]?\d+)?)/gi,
+      (_, rawX, rawY) => `${Number(rawX) + dx},${Number(rawY) + dy}`,
+    )
+  const renderStation = ({ station, x, y, radius, interchange, mode }) => {
+    const size = radius + (mode === "primary" ? 3 : 1.5)
+    return h(
+      "g",
+      { transform: `translate(${x} ${y})`, "data-transit-glyph": station.id },
+      h("rect", {
+        x: -size,
+        y: -size,
+        width: size * 2,
+        height: size * 2,
+        rx: interchange ? size : 2,
+        fill: station.stationColor,
+        stroke: "#fff",
+        strokeWidth: 1.5,
+      }),
+      h(
+        "text",
+        {
+          y: 0.5,
+          fill: "#fff",
+          fontSize: mode === "primary" ? 8 : 6.5,
+          fontWeight: 900,
+          textAnchor: "middle",
+          dominantBaseline: "middle",
+        },
+        station.glyph,
+      ),
+    )
+  }
+
+  return (ctx) => {
+    if (ctx.nodes.length === 0) return { sceneNodes: [], sceneEdges: [] }
+    const gap = 12
+    const titleHeight = 24
+    const panelWidth = (ctx.dimensions.width - gap * (modes.length - 1)) / modes.length
+    const panelHeight = ctx.dimensions.height - titleHeight
+    const sceneNodes = []
+    const sceneEdges = []
+    const labels = []
+    const overlayGroups = []
+
+    modes.forEach((mode, index) => {
+      const dx = index * (panelWidth + gap)
+      const result = transitLayout({
+        ...ctx,
+        dimensions: {
+          width: panelWidth,
+          height: panelHeight,
+          plot: { x: 0, y: 0, width: panelWidth, height: panelHeight },
+        },
+        config: {
+          ...ctx.config,
+          mode,
+          lineMode: "source-rooted",
+          sourceColorAccessor: "lineColor",
+          renderStation,
+          padding: 24,
+          cornerRadius: 7,
+          labelFontSize: 9,
+        },
+      })
+      sceneEdges.push(
+        ...(result.sceneEdges || []).map((edge) => ({
+          ...edge,
+          pathD: shiftPath(edge.pathD, dx, titleHeight),
+        })),
+      )
+      sceneNodes.push(
+        ...(result.sceneNodes || []).map((node) =>
+          "cx" in node
+            ? { ...node, cx: node.cx + dx, cy: node.cy + titleHeight }
+            : node,
+        ),
+      )
+      labels.push(
+        ...(result.labels || []).map((label) => ({
+          ...label,
+          x: label.x + dx,
+          y: label.y + titleHeight,
+        })),
+      )
+      overlayGroups.push(
+        h(
+          "g",
+          { key: mode, "data-transit-mode": mode },
+          h("rect", {
+            x: dx,
+            y: 0,
+            width: panelWidth,
+            height: ctx.dimensions.height,
+            fill: "none",
+            stroke: "#cbd5e1",
+            strokeDasharray: "4 4",
+          }),
+          h(
+            "text",
+            {
+              x: dx + panelWidth / 2,
+              y: 15,
+              fill: "#334155",
+              fontSize: 10,
+              fontWeight: 900,
+              textAnchor: "middle",
+            },
+            mode.toUpperCase(),
+          ),
+          result.overlays
+            ? h("g", { transform: `translate(${dx} ${titleHeight})` }, result.overlays)
+            : null,
+        ),
+      )
+    })
+
+    return {
+      sceneNodes,
+      sceneEdges,
+      labels,
+      overlays: h("g", { className: "transit-mode-parity" }, ...overlayGroups),
     }
   }
 }
@@ -1294,6 +1445,24 @@ function makeSsrParityCases(React, recipes = {}) {
         width: 440,
         height: 320,
         title: "SSR custom network glyphs",
+      },
+    },
+    {
+      id: "network-custom-transit-modes",
+      component: "NetworkCustomChart",
+      props: {
+        nodes: transitModeNodes,
+        edges: transitModeEdges,
+        layout: makeTransitModesLayout(React, recipes),
+        nodeIDAccessor: "id",
+        sourceAccessor: "source",
+        targetAccessor: "target",
+        width: 680,
+        height: 310,
+        margin: { top: 20, right: 20, bottom: 20, left: 20 },
+        title: "SSR source-rooted transit detail modes",
+        description:
+          "Primary and compact custom station glyphs plus segmented minimap stations share one deterministic source-rooted DAG layout.",
       },
     },
     {

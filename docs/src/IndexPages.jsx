@@ -288,6 +288,11 @@ export function RecipesIndex() {
           title="Adjacency Flow"
           thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/transit-diagram"
+          title="Transit Diagram"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
+        />
 
         <div className="sub-header">Dashboards</div>
 

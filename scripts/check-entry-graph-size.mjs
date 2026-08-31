@@ -181,7 +181,11 @@ const ENTRY_GRAPHS = [
   // 543.5 KiB gzip; retain 1.5 KiB of reviewable headroom for that accepted
   // public analysis surface.
   { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 545 },
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 100 },
+  // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
+  // line derivation, and station-rendering contract extend the curated recipes
+  // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
+  // runway for this accepted public API growth.
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 101 },
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
