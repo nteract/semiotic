@@ -930,7 +930,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     let circleCount = 0
     let maxR = 0
     for (const node of this.sceneNodes) {
-      if (node.type === "circle") {
+      if (node.type === "circle" && node.datum) {
         circleCount++
         if (node.r > maxR) maxR = node.r
       }
@@ -942,10 +942,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
       return
     }
 
-    const circles: NetworkCircleNode[] = new Array(circleCount)
-    let i = 0
+    const circles: NetworkCircleNode[] = []
     for (const node of this.sceneNodes) {
-      if (node.type === "circle") circles[i++] = node
+      if (node.type === "circle" && node.datum) circles.push(node)
     }
     this._nodeQuadtree = d3Quadtree<NetworkCircleNode>()
       .x((n) => n.cx)

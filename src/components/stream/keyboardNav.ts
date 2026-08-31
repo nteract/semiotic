@@ -388,9 +388,10 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
   // binding (read by `nodeColorMap`); they must not enter the keyboard
   // nav graph or focus would start on an off-canvas invisible node.
   for (const node of scene) {
+    if (!node.datum) continue
     if (node.type === "circle" && node.cx != null) {
       if (node.r <= 0) continue
-      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
+      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum.id ?? "_default" })
     } else if (node.type === "rect" && node.x != null) {
       if (node.w <= 0 || node.h <= 0) continue
       points.push({
@@ -400,15 +401,15 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
         shape: "rect",
         w: node.w,
         h: node.h,
-        group: node.datum?.id ?? "_default"
+        group: node.datum.id ?? "_default"
       })
     } else if (node.type === "arc" && node.cx != null) {
-      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
+      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum.id ?? "_default" })
     } else if (node.type === "symbol" && node.cx != null) {
       if (node.size <= 0) continue
-      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum?.id ?? "_default" })
+      points.push({ x: node.cx, y: node.cy, datum: node.datum, shape: "circle", group: node.datum.id ?? "_default" })
     } else if (node.type === "glyph" && node.cx != null) {
-      if (node.size <= 0 || node.datum == null) continue
+      if (node.size <= 0) continue
       const geometry = glyphHitGeometry(node.glyph, node.size)
       points.push({
         x: node.cx + geometry.centerDx,
@@ -417,7 +418,7 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
         shape: "rect",
         w: geometry.halfWidth * 2,
         h: geometry.halfHeight * 2,
-        group: node.datum?.id ?? "_default"
+        group: node.datum.id ?? "_default"
       })
     }
   }

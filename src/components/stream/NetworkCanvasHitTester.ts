@@ -109,7 +109,7 @@ function hitTestNode(
   py: number,
   maxDistance: number = 30
 ): NetworkHitResult | null {
-  if (node.datum == null) return null
+  if (!node.datum) return null
   switch (node.type) {
     case "circle":
       return hitTestCircle(node, px, py, maxDistance)
@@ -134,7 +134,6 @@ function hitTestGlyph(
 ): NetworkHitResult | null {
   // A composite glyph hit-tests as a circle over its drawn bounds — centered
   // on the visual box (which the anchor may offset from cx/cy).
-  if (node.datum == null) return null
   const geometry = glyphHitGeometry(node.glyph, node.size)
   const cx = node.cx + geometry.centerDx
   const cy = node.cy + geometry.centerDy

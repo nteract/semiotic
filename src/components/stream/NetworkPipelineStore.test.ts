@@ -361,6 +361,21 @@ describe("NetworkPipelineStore", () => {
       expect(store.maxNodeRadius).toBeGreaterThan(0)
     })
 
+    it("excludes decorative null-datum circles from the index", () => {
+      const store = new NetworkPipelineStore(makeConfig())
+      store.sceneNodes = Array.from({ length: 520 }, (_, index) => ({
+        type: "circle" as const,
+        cx: index,
+        cy: index,
+        r: 4,
+        style: { fill: "#999" },
+        datum: index === 0 ? null : { id: `n${index}` }
+      }))
+
+      expect(store.nodeQuadtree).not.toBeNull()
+      expect(store.nodeQuadtree!.size()).toBe(519)
+    })
+
     it("invalidates the lazily-cached index after clear()", () => {
       const store = new NetworkPipelineStore(makeConfig({ chartType: "force", iterations: 1 }))
       const { nodes, edges } = makeForceGraph(520)
