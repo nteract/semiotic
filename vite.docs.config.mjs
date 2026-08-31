@@ -3,11 +3,13 @@ import { basename, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+import { docsEntryContract } from "./scripts/check-docs-entry-contract.mjs"
 import { browserProcessDefines, semioticSourceAliases } from "./vite.shared.mjs"
 
 const repoRoot = dirname(fileURLToPath(import.meta.url))
 const docsRoot = resolve(repoRoot, "docs/public")
 const outDir = resolve(repoRoot, "docs/build")
+const docsEntryPath = resolve(repoRoot, "docs/src/index.jsx")
 
 function copyDocsPublicAssets() {
   return {
@@ -35,7 +37,7 @@ function copyDocsPublicAssets() {
 }
 
 function docsDevEntrypoint() {
-  const entryUrl = `/@fs/${resolve(repoRoot, "docs/src/index.jsx")}`
+  const entryUrl = `/@fs/${docsEntryPath}`
   const docsEntrypointRE = /^\/src\/index\.(?:js|jsx|ts|tsx)$/
   const rewriteHtml = (html) =>
     html
@@ -85,6 +87,7 @@ export default defineConfig(({ mode }) => ({
       ],
       exclude: [/dist\//, /node_modules\//],
     }),
+    docsEntryContract({ entryPath: docsEntryPath }),
     copyDocsPublicAssets(),
   ],
   resolve: {

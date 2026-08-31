@@ -8,7 +8,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs"
-import { dirname, relative, resolve, sep } from "node:path"
+import { dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { loadExampleDefinitions } from "./prerender.mjs"
 
@@ -105,7 +105,7 @@ export function validateDocsBuild({
   apiAssets = REQUIRED_API_ASSETS,
   machineReadableRoutes = REQUIRED_MACHINE_READABLE_ROUTES,
 } = {}) {
-  const failures = validateEagerDocsMount(buildDir)
+  const failures = []
 
   for (const route of routes) {
     const filePath = routeHtmlPath(buildDir, route.routePath)
@@ -202,87 +202,6 @@ export function validateDocsBuild({
     ok: failures.length === 0,
     failures,
   }
-}
-
-export function validateEagerDocsMount(buildDir = DEFAULT_BUILD_DIR) {
-  const failures = []
-  const htmlPath = resolve(buildDir, "index.html")
-
-  if (!existsSync(htmlPath)) {
-    return [`Missing docs root HTML at ${htmlPath}`]
-  }
-
-  const html = readFileSync(htmlPath, "utf8")
-  const moduleEntries = [...html.matchAll(/<script\b[^>]*\btype=["']module["'][^>]*>/gi)]
-    .map(([tag]) => tag.match(/\bsrc=["']([^"']+)["']/i)?.[1])
-    .filter(Boolean)
-
-  if (moduleEntries.length === 0) {
-    return [`Docs root HTML has no external module entry at ${htmlPath}`]
-  }
-
-  const pending = moduleEntries
-    .map((specifier) => resolveBuiltModule(buildDir, htmlPath, specifier))
-    .filter(Boolean)
-  const eagerModules = new Map()
-
-  while (pending.length > 0) {
-    const modulePath = pending.pop()
-    if (eagerModules.has(modulePath)) continue
-    if (!existsSync(modulePath)) {
-      failures.push(`Missing eager docs module at ${modulePath}`)
-      continue
-    }
-
-    const source = readFileSync(modulePath, "utf8")
-    eagerModules.set(modulePath, source)
-    for (const specifier of staticModuleSpecifiers(source)) {
-      const dependencyPath = resolveBuiltModule(buildDir, modulePath, specifier)
-      if (dependencyPath && !eagerModules.has(dependencyPath)) {
-        pending.push(dependencyPath)
-      }
-    }
-  }
-
-  const hasEagerReactMount = [...eagerModules.values()].some((source) =>
-    /\bcreateRoot\b[\s\S]{0,240}\bgetElementById\(\s*["'`]root["'`]\s*\)/.test(source),
-  )
-
-  if (!hasEagerReactMount) {
-    failures.push(
-      "Docs root module graph has no eager React mount; do not defer the app entry with import(), because Vite preload helpers can create a silent circular evaluation deadlock",
-    )
-  }
-
-  return failures
-}
-
-function staticModuleSpecifiers(source) {
-  const specifiers = []
-  const patterns = [
-    /\bimport\s*["'`]([^"'`]+)["'`]/g,
-    /\b(?:import|export)(?!\s*\()[^"'`;]*?\bfrom\s*["'`]([^"'`]+)["'`]/g,
-  ]
-
-  for (const pattern of patterns) {
-    for (const match of source.matchAll(pattern)) {
-      specifiers.push(match[1])
-    }
-  }
-
-  return specifiers
-}
-
-function resolveBuiltModule(buildDir, importerPath, specifier) {
-  const cleanSpecifier = specifier.split(/[?#]/, 1)[0]
-  if (!cleanSpecifier.endsWith(".js") || /^(?:[a-z]+:)?\/\//i.test(cleanSpecifier)) return null
-
-  const modulePath = cleanSpecifier.startsWith("/")
-    ? resolve(buildDir, `.${cleanSpecifier}`)
-    : resolve(dirname(importerPath), cleanSpecifier)
-  const relativePath = relative(buildDir, modulePath)
-  if (relativePath === ".." || relativePath.startsWith(`..${sep}`)) return null
-  return modulePath
 }
 
 function expectIncludes(failures, text, expected, routePath, label) {
