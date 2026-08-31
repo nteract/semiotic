@@ -92,7 +92,7 @@ export interface RealtimeHistogramProps<
   width?: number
   /** Chart height (alternative to size) */
   height?: number
-  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  /** Maximum canvas backing-store DPR; large canvases also use the shared backing-store budget. */
   maxDevicePixelRatio?: number
   /** Chart margins */
   margin?: PartialMargin

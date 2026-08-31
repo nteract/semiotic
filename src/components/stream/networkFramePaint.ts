@@ -206,7 +206,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     now - store.lastIngestTime > staleThreshold
 
   if (needsDataRepaint) {
-    const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+    const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
     if (!prepareCanvas(canvas, size, margin, dpr)) return
     c2d.clearRect(-margin.left, -margin.top, size[0], size[1])
 

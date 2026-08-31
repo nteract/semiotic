@@ -4,19 +4,20 @@ import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import ExamplePageLayout from "./ExamplePageLayout"
 
-const sourceLoader = vi.hoisted(() =>
-  vi.fn(() => Promise.reject(new Error("missing source"))),
+const sourceLoader = vi.hoisted(() => vi.fn(() => Promise.reject(new Error("missing source"))))
+const pageLoader = vi.hoisted(() =>
+  vi.fn(() => Promise.resolve("export default function Page() {}")),
 )
-const pageLoader = vi.hoisted(() => vi.fn(() => Promise.resolve("export default function Page() {}")))
 const cssLoader = vi.hoisted(() => vi.fn(() => Promise.resolve(".page { color: red; }")))
 
 vi.mock("./exampleSourceMap", () => ({
-  getExampleSourceLoaders: (path) => path.includes("the-last-scarcity")
-    ? [
-        { file: "TheLastScarcityExamplePage.jsx", load: pageLoader },
-        { file: "TheLastScarcityExamplePage.css", load: cssLoader },
-      ]
-    : [{ file: "ExamplePage.jsx", load: sourceLoader }],
+  getExampleSourceLoaders: (path) =>
+    path.includes("the-last-scarcity")
+      ? [
+          { file: "TheLastScarcityExamplePage.jsx", load: pageLoader },
+          { file: "TheLastScarcityExamplePage.css", load: cssLoader },
+        ]
+      : [{ file: "ExamplePage.jsx", load: sourceLoader }],
 }))
 
 describe("ExamplePageLayout", () => {
@@ -84,6 +85,27 @@ describe("ExamplePageLayout", () => {
     )
 
     expect(screen.getByRole("link", { name: /next example/i })).toBeTruthy()
+    expect(sourceLoader).not.toHaveBeenCalled()
+  })
+
+  it("can omit the code-view control for a reading-only example", () => {
+    render(
+      <MemoryRouter initialEntries={["/examples/watermarks"]}>
+        <ExamplePageLayout
+          title="Watermarks"
+          showViewToggle={false}
+          useFullCodeFallback={false}
+          showContractPanels={false}
+          showPageHeader={false}
+        >
+          <p>Narrative content</p>
+        </ExamplePageLayout>
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByRole("button", { name: "Show full code view" })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/implementation guidance/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Watermarks" })).not.toBeInTheDocument()
     expect(sourceLoader).not.toHaveBeenCalled()
   })
 

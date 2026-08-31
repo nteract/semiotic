@@ -28,12 +28,50 @@ async function hoverEvidenceSource(page: Parameters<typeof waitForRafs>[0], sour
   await waitForRafs(page, 4)
 }
 
+async function readLinkedHoverTargetState(
+  testCase: Locator,
+  targetIds: string[]
+): Promise<string> {
+  const states: string[] = []
+  for (const targetId of targetIds) {
+    const target = testCase.locator(`[data-linked-hover-chart='${targetId}']`)
+    const state = await readCanvasState(target)
+    states.push(`${targetId}:${state.join(",")}`)
+  }
+  return states.join("|")
+}
+
+async function waitForLinkedHoverTargetsStable(
+  page: Parameters<typeof waitForRafs>[0],
+  testCase: Locator,
+  targetIds: string[]
+): Promise<void> {
+  const deadline = Date.now() + 5_000
+  let previous = ""
+  let stableFrames = 0
+  while (Date.now() < deadline) {
+    const current = await readLinkedHoverTargetState(testCase, targetIds)
+    if (current === previous) {
+      stableFrames += 1
+      if (stableFrames >= 3) return
+    } else {
+      previous = current
+      stableFrames = 0
+    }
+    await waitForRafs(page, 1)
+  }
+  throw new Error(
+    `linked-hover targets did not stabilize: ${targetIds.join(", ")}`
+  )
+}
+
 async function proveLinkedHoverTargetsChanged(
   page: Parameters<typeof waitForRafs>[0],
   testCase: Locator,
   sourceId: string,
   targetIds: string[]
 ) {
+  await waitForLinkedHoverTargetsStable(page, testCase, targetIds)
   const before = new Map<string, string[]>()
   for (const targetId of targetIds) {
     const target = testCase.locator(`[data-linked-hover-chart="${targetId}"]`)
@@ -46,6 +84,8 @@ async function proveLinkedHoverTargetsChanged(
     page,
     testCase.locator(`[data-linked-hover-chart="${sourceId}"]`)
   )
+
+  await waitForLinkedHoverTargetsStable(page, testCase, targetIds)
 
   for (const targetId of targetIds) {
     const target = testCase.locator(`[data-linked-hover-chart="${targetId}"]`)

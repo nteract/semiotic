@@ -84,6 +84,82 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "machine-semiosphere",
+    path: "/examples/machine-semiosphere",
+    sourceFile: "MachineSemiosphereExamplePage.jsx",
+    sourceFiles: [
+      "MachineSemiosphereExamplePage.jsx",
+      "MachineSemiosphereExamplePage.css",
+      "machine-semiosphere/story.js",
+      "machine-semiosphere/data.js",
+      "machine-semiosphere/MachineSemiosphereCharts.jsx",
+    ],
+    isPilot: true,
+    title: "The Machine Semiosphere",
+    eyebrow: "July 2026 incident · cross-run traces",
+    description:
+      "Follow six scroll chapters through the reported July 2026 Hugging Face incident, using one vertical evidence map and fixed inline visuals to show how information crossed otherwise separate agent runs.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/ordinal", "semiotic/recipes", "semiotic/utils"],
+      data: {
+        states: ["snapshot"],
+        fixture: {
+          kind: "checked-in-reported-incident-story-and-authored-evidence-map",
+          replay: false,
+          schemaVersion: "2",
+          inventory: { chapters: 6, maps: 1, inlineVisuals: 6 },
+        },
+      },
+      provenance: {
+        source:
+          "Public reports from Hugging Face, METR and Redwood Research, and OpenAI about the reported July 2026 Hugging Face incident",
+        capturedAt: "2026-08-27",
+        freshnessOwner: "Semiotic maintainers",
+        reviewCadence: "source report, chapter, evidence label, or map revision",
+      },
+      accessibility: {
+        summary:
+          "Six linear chapters pair one vertical transit-style evidence map with fixed inline visuals, plain-language evidence labels, limitations, sources, and accessible chart tables",
+        navigation:
+          "The complete account follows ordinary document scroll order; hover adds optional detail but no chapter, claim, source, or table requires chart interaction",
+        keyboard:
+          "Native source links, chart navigation, and accessible tables expose the same evidence in document order",
+        forcedColors:
+          "Map stations, routes, inline chart marks, evidence notes, links, and tables retain boundaries and redundant text labels in forced-colors mode",
+      },
+      motion: {
+        reducedMotion:
+          "The authored map and inline visuals are fixed; reduced-motion users receive the same settled charts and reading order without timed transitions",
+        visibility:
+          "All fixtures are local, with no replay, polling, streaming, workers, or hidden-page activity",
+      },
+      responsive: {
+        status: "container-responsive-vertical-map-and-inline-visuals",
+        viewports: [320, 390, 768, 1280],
+        selectionIdentity:
+          "stable chapter, station, route, fact, and source identities across desktop and mobile layouts",
+      },
+      ssr: {
+        status: "Vite-build-and-component-SSR-compatible",
+        hydration:
+          "Checked-in chapter data, authored station positions, fixed inline visuals, and static prose render deterministically before responsive sizing and optional hover begin after mount",
+      },
+      performance: {
+        status: "bounded-and-route-split",
+        budgets: {
+          bundle:
+            "lazy example route using public network, ordinal, recipes, and utility entry points with compact local story and evidence fixtures",
+          interaction:
+            "six scroll chapters, one authored transit map, six fixed inline visuals, and optional local hover details",
+          memory:
+            "one immutable story, source registry, authored station-and-route map, and bounded inline chart fixtures",
+          hiddenPage:
+            "no requests, timers, streams, workers, persistent telemetry, or remote writes",
+        },
+      },
+    },
+  },
+  {
     id: "lines-of-thought",
     path: "/examples/lines-of-thought",
     sourceFile: "TransitDiagramExamplePage.jsx",
@@ -1788,6 +1864,18 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "The Machine Semiosphere",
+    path: "/examples/machine-semiosphere",
+    publishedAt: "2026-08-27T12:00:00-07:00",
+    eyebrow: "July 2026 incident · cross-run traces",
+    description:
+      "Follow six scroll chapters through the reported July 2026 Hugging Face incident, using one vertical evidence map and fixed inline visuals to show how information crossed otherwise separate agent runs.",
+    preview: "machine-semiosphere",
+    badges: ["July 2026 incident", "Vertical evidence map", "Cross-run traces", "Accessible"],
+    frames: ["ordinal", "network", "custom"],
+    topics: ["process", "uncertainty", "ai", "design", "accessibility"],
+  },
   {
     title: "Lines of Thought",
     path: "/examples/lines-of-thought",

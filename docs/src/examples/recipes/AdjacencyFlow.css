@@ -1,0 +1,9 @@
+.adjacency-flow-frame {
+  --semiotic-text: var(--text-primary) !important;
+  --semiotic-text-secondary: var(--text-secondary) !important;
+  --semiotic-border: var(--surface-3) !important;
+}
+
+.adjacency-flow-demo .semiotic-chart-title {
+  fill: var(--text-primary);
+}

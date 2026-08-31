@@ -23,3 +23,35 @@ body:
     attributes:
       label: Alternatives considered
       description: Have you tried any workarounds or alternatives?
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Primary surface
+      description: Where should this capability live?
+      options:
+        - High-level chart component
+        - Stream Frame or renderer
+        - Server or export API
+        - AI, schema, MCP, or CLI
+        - Documentation or examples
+        - Other or multiple surfaces
+    validations:
+      required: true
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: API and compatibility expectations
+      description:
+        Describe proposed props/import paths, existing behavior that must remain
+        unchanged, and serialization or tree-shaking constraints.
+
+  - type: textarea
+    id: evidence-plan
+    attributes:
+      label: Evidence plan
+      description:
+        List applicable Canvas/live SVG/static rendering, dark-theme,
+        accessibility, visual-baseline, chart-spec/schema, MCP, and
+        golden-example checks. Mark non-applicable surfaces explicitly.

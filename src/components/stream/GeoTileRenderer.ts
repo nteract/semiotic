@@ -229,7 +229,7 @@ export function renderTiles(
     translate: projTranslate as [number, number],
   })
 
-  const dpr = getDevicePixelRatio(maxDevicePixelRatio)
+  const dpr = getDevicePixelRatio(maxDevicePixelRatio, [width, height])
   const providerKey = tileProviderKey(tileURL)
   let allLoaded = true
 

@@ -54,14 +54,16 @@ export function syncCanvasSize(
 
 const MOBILE_CANVAS_DPR_CAP = 2
 const DESKTOP_CANVAS_DPR_CAP = 3
+const MAX_CANVAS_BACKING_PIXELS = 8_388_608
+const MAX_CANVAS_BACKING_DIMENSION = 16_384
 
 function isMobileCanvasEnvironment(): boolean {
   if (typeof window === "undefined") return false
   const coarsePointer =
     typeof window.matchMedia === "function" &&
     window.matchMedia("(pointer: coarse)").matches
-  const narrowViewport = Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) < 768
-  return coarsePointer || narrowViewport
+  return coarsePointer ||
+    Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) < 768
 }
 
 /**
@@ -93,16 +95,30 @@ export function prepareCanvas(
  * Get the effective canvas devicePixelRatio, defaulting to 1 in non-browser
  * environments. By default, mobile/coarse-pointer screens are capped at 2x to
  * avoid allocating very large backing stores on high-density phones and
- * desktop is capped at 3x. `maxDevicePixelRatio` overrides that ceiling.
+ * desktop is capped at 3x. `maxDevicePixelRatio` overrides that DPR ceiling.
+ * When `size` is supplied, very large canvases receive an additional backing-
+ * store cap so full repaints do not allocate or clear tens of megapixels and
+ * DPR scaling does not push a physical side beyond the broadly supported 16K
+ * range.
  */
-export function getDevicePixelRatio(maxDevicePixelRatio?: number): number {
+export function getDevicePixelRatio(
+  maxDevicePixelRatio?: number,
+  size?: readonly [number, number]
+): number {
   if (typeof window === "undefined") return 1
   const raw = window.devicePixelRatio || 1
   const defaultCap = isMobileCanvasEnvironment() ? MOBILE_CANVAS_DPR_CAP : DESKTOP_CANVAS_DPR_CAP
   const cap = typeof maxDevicePixelRatio === "number" && maxDevicePixelRatio > 0
     ? maxDevicePixelRatio
     : defaultCap
-  return Math.max(1, Math.min(raw, cap))
+  if (!size) return Math.max(1, Math.min(raw, cap))
+
+  const [width, height] = size
+  const sizeCap = Math.min(
+    Math.sqrt(MAX_CANVAS_BACKING_PIXELS / (width * height)),
+    MAX_CANVAS_BACKING_DIMENSION / Math.max(width, height)
+  )
+  return Math.max(sizeCap < 1 ? 0 : 1, Math.min(raw, cap, sizeCap))
 }
 
 /**

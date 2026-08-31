@@ -159,6 +159,20 @@ export type {
   NetEnsembleMotif,
 } from "./recipes/netEnsembleLayout"
 
+export { adjacencyFlowLayout } from "./recipes/adjacencyFlow"
+export type { AdjacencyFlowConfig } from "./recipes/adjacencyFlow"
+export { aggregateAdjacencyFlow } from "./recipes/adjacencyFlowAggregation"
+export type {
+  AdjacencyFlowEdgeAccessor,
+  AdjacencyFlowGroupSummary,
+  AdjacencyFlowNodeAccessor,
+  AdjacencyFlowValueAccessor,
+  AggregateAdjacencyFlowOptions,
+  AggregatedAdjacencyFlowEdge,
+  AggregatedAdjacencyFlowNode,
+  AggregatedAdjacencyFlowResult,
+} from "./recipes/adjacencyFlowAggregation"
+
 export { packedClusterMatrix } from "./recipes/packedClusterMatrix"
 export type { PackedClusterMatrixConfig } from "./recipes/packedClusterMatrix"
 

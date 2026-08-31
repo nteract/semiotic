@@ -246,7 +246,7 @@ export interface StreamPhysicsFrameProps {
    * to composite over siblings (same contract as StreamXYFrame).
    */
   background?: string
-  /** Maximum canvas backing-store DPR; defaults to the environment cap. */
+  /** Maximum canvas backing-store DPR; large canvases also use the shared backing-store budget. */
   maxDevicePixelRatio?: number
   backgroundGraphics?: FrameGraphicsProp
   /**
