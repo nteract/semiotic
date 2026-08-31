@@ -1,28 +1,6 @@
 export const PRELOAD_RECOVERY_KEY = "semiotic:preload-recovery-at"
 export const PRELOAD_RECOVERY_WINDOW_MS = 30_000
 
-export function renderEntryLoadFallback(target = document, location = window.location) {
-  const root = target.getElementById("root")
-  if (!root) return
-
-  const fallback = target.createElement("main")
-  fallback.setAttribute("role", "alert")
-
-  const heading = target.createElement("h1")
-  heading.textContent = "This page didn't finish loading"
-
-  const message = target.createElement("p")
-  message.textContent =
-    "A site file may have changed during your visit or the network request was interrupted."
-
-  const reloadLink = target.createElement("a")
-  reloadLink.href = location.href
-  reloadLink.textContent = "Reload page"
-
-  fallback.append(heading, message, reloadLink)
-  root.replaceChildren(fallback)
-}
-
 export function installVitePreloadRecovery(
   target = window,
   {

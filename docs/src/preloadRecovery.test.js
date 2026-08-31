@@ -3,7 +3,6 @@ import {
   PRELOAD_RECOVERY_KEY,
   PRELOAD_RECOVERY_WINDOW_MS,
   installVitePreloadRecovery,
-  renderEntryLoadFallback,
 } from "./preloadRecovery"
 
 function createTarget() {
@@ -64,17 +63,5 @@ describe("installVitePreloadRecovery", () => {
 
     expect(preventDefault).not.toHaveBeenCalled()
     expect(reload).not.toHaveBeenCalled()
-  })
-})
-
-describe("renderEntryLoadFallback", () => {
-  it("renders a reload action when the app entry module rejects", () => {
-    document.body.innerHTML = '<div id="root"></div>'
-
-    renderEntryLoadFallback(document, { href: "https://semiotic.nteract.io/examples/" })
-
-    expect(document.querySelector("main")?.getAttribute("role")).toBe("alert")
-    expect(document.querySelector("h1")?.textContent).toBe("This page didn't finish loading")
-    expect(document.querySelector("a")?.href).toBe("https://semiotic.nteract.io/examples/")
   })
 })
