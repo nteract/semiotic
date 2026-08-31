@@ -201,6 +201,7 @@ export function buildNetworkTableModel(
   for (let index = 0; index < nodes.length; index++) {
     const node = nodes[index]
     if (!node || typeof node !== "object") continue
+    if (node.datum === null) continue
     const rawId = datumRecord(node.datum).id ?? node.id
     const id = rawId != null ? String(rawId) : `node-${index}`
     const [incoming, outgoing, weightedIncoming, weightedOutgoing] =

@@ -8,6 +8,8 @@ import type {
   RealtimeEdge,
   RealtimeNode,
 } from "../stream/networkTypes"
+import { findNearestNetworkNode } from "../stream/NetworkCanvasHitTester"
+import { buildNetworkTableModel } from "../stream/accessibleDataTableModel"
 import {
   computeTransitDiagramPositions,
   offsetTransitPath,
@@ -385,8 +387,39 @@ describe("transitDiagramLayout", () => {
     )
     expect(arcs).toHaveLength(4)
     expect(new Set(arcs?.map((arc) => arc.style.fill))).toEqual(new Set(["#d33", "#36c"]))
+    expect(arcs?.every((arc) => arc.datum === null)).toBe(true)
     expect(outlines).toHaveLength(2)
     expect(outlines?.map((circle) => circle.id)).toEqual(["a--b", "merge"])
+    const collapsedStop = outlines?.find((circle) => circle.id === "a--b")
+    expect(collapsedStop?.datum).toMatchObject({
+      id: "a--b",
+      label: "a / b",
+      stationIds: ["a", "b"],
+      lineIds: ["a", "b"],
+      interchange: true,
+    })
+    expect((collapsedStop?.datum as { stations?: unknown[] }).stations).toEqual([
+      { id: "a", x: 0, y: 0, color: "#d33" },
+      { id: "b", x: 0, y: 0, color: "#36c" },
+    ])
+
+    const hit = collapsedStop
+      ? findNearestNetworkNode(
+          result.sceneNodes ?? [],
+          result.sceneEdges ?? [],
+          collapsedStop.cx,
+          collapsedStop.cy,
+        )
+      : null
+    expect(hit?.datum).toBe(collapsedStop?.datum)
+
+    const table = buildNetworkTableModel(result.sceneNodes ?? [], result.sceneEdges ?? [])
+    expect(table.nodeRows).toHaveLength(2)
+    expect(table.nodeRows.map((row) => row.id).sort()).toEqual(["a--b", "merge"])
+    expect(table.nodeRows.find((row) => row.id === "a--b")?.semantic.values).toEqual({
+      station: "a / b",
+      lines: "a, b",
+    })
     expect(result.labels).toEqual([])
   })
 

@@ -611,10 +611,20 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
         ? (config.interchangeRadius ?? Math.max(5, stop.bundleRadius))
         : (config.stationRadius ?? Math.max(3.5, stop.bundleRadius))
       for (const node of stop.nodes) stationRadii.set(node.id, radius)
-      const datum = stop.nodes[0].data
       const labels = stop.nodes.map(stationLabel)
       const label = labels.join(" / ")
       const id = stop.nodes.map((node) => node.id).join("--")
+      const datum =
+        stop.nodes.length === 1
+          ? stop.nodes[0].data
+          : createSafeDatum((set) => {
+              set("id", id)
+              set("label", label)
+              set("stationIds", stop.nodes.map((node) => node.id))
+              set("stations", stop.nodes.map((node) => node.data))
+              set("lineIds", lineIds)
+              set("interchange", interchange)
+            })
       const accessibility = {
         label: `${label}${interchange ? ", interchange" : ""}`,
         tableFields: { station: label, lines: lineIds.join(", ") },
@@ -659,9 +669,8 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
             stroke: "none",
             opacity: opacityFor(datum),
           },
-          datum,
+          datum: null,
           id: `${id}:${lineId}`,
-          label: `${label}: ${lineId}`,
         }
         sceneNodes.push(segment)
       })

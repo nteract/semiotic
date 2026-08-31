@@ -109,6 +109,7 @@ function hitTestNode(
   py: number,
   maxDistance: number = 30
 ): NetworkHitResult | null {
+  if (node.datum == null) return null
   switch (node.type) {
     case "circle":
       return hitTestCircle(node, px, py, maxDistance)
