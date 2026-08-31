@@ -421,6 +421,7 @@ describe("transitDiagramLayout", () => {
       lines: "a, b",
     })
     expect(result.labels).toEqual([])
+    expect(result.restyle).toBeUndefined()
   })
 
   it("renders custom primary and compact stations in the fitted SVG station layer", () => {

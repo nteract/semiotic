@@ -772,7 +772,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
       mode === "primary" ? config : { ...config, showLabels: false },
     ),
   }
-  if (stationGlyphs.length > 0) return result
+  if (stationGlyphs.length > 0 || mode === "minimap") return result
   return {
     ...result,
     restyle: (node, selection) =>
