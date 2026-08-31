@@ -139,10 +139,12 @@ export type {
   TransitDiagramConfig,
   TransitDiagramLineDescriptor,
   TransitDiagramLineValue,
+  TransitDiagramMode,
   TransitDiagramPoint,
   TransitDiagramPositionOptions,
   TransitDiagramPositionResult,
   TransitDiagramPositionedNode,
+  TransitDiagramStationRenderInfo,
 } from "./recipes/transitDiagram"
 
 export { lineageDagLayout } from "./recipes/lineageDag"

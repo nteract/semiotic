@@ -220,7 +220,7 @@ function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: 
 function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
-function transitDiagramLayout(ine: NetworkLayoutContext<import("../semiotic-recipes-core").TransitDiagramConfig>): import("../semiotic-network").NetworkLayoutResult
+function transitDiagramLayout(ces: NetworkLayoutContext<import("../semiotic-recipes-core").TransitDiagramConfig>): import("../semiotic-network").NetworkLayoutResult
 function unitize(value: number, options: UnitizeOptions): UnitizeResult
 function unitizeRange(value: number, rangeValue: number, options: UnitizeOptions): UnitizeRangeResult
 function unwrapDatum<T = Datum>(value: unknown): T | null
@@ -451,6 +451,7 @@ interface TransitDiagramPoint
 interface TransitDiagramPositionOptions
 interface TransitDiagramPositionResult
 interface TransitDiagramPositionedNode
+interface TransitDiagramStationRenderInfo
 interface UnitSign
 interface UnitizeOptions
 interface UnitizeRangeResult extends UnitizeResult
@@ -1942,12 +1943,16 @@ interface-member TransitDiagramConfig::property::lineAccessor = optional lineAcc
 interface-member TransitDiagramConfig::property::lineColorAccessor = optional lineColorAccessor: ((d: Datum) => string | undefined) | string | undefined
 interface-member TransitDiagramConfig::property::lineColors = optional lineColors: Record<string, string> | undefined
 interface-member TransitDiagramConfig::property::lineGap = optional lineGap: number | undefined
+interface-member TransitDiagramConfig::property::lineMode = optional lineMode: "source-rooted" | undefined
 interface-member TransitDiagramConfig::property::lineOrder = optional lineOrder: string[] | undefined
 interface-member TransitDiagramConfig::property::lineWidth = optional lineWidth: number | undefined
+interface-member TransitDiagramConfig::property::mode = optional mode: TransitDiagramMode | undefined
 interface-member TransitDiagramConfig::property::padding = optional padding: number | undefined
 interface-member TransitDiagramConfig::property::pointsAccessor = optional pointsAccessor: string | undefined
+interface-member TransitDiagramConfig::property::renderStation = optional renderStation: ((info: TransitDiagramStationRenderInfo) => ReactNode) | undefined
 interface-member TransitDiagramConfig::property::rootId = optional rootId: string | undefined
 interface-member TransitDiagramConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member TransitDiagramConfig::property::sourceColorAccessor = optional sourceColorAccessor: ((d: Datum) => string) | string | undefined
 interface-member TransitDiagramConfig::property::stationFill = optional stationFill: string | undefined
 interface-member TransitDiagramConfig::property::stationRadius = optional stationRadius: number | undefined
 interface-member TransitDiagramConfig::property::stationStroke = optional stationStroke: string | undefined
@@ -1973,6 +1978,13 @@ interface-member TransitDiagramPositionedNode::property::data = required data: D
 interface-member TransitDiagramPositionedNode::property::id = required id: string
 interface-member TransitDiagramPositionedNode::property::x = required x: number
 interface-member TransitDiagramPositionedNode::property::y = required y: number
+interface-member TransitDiagramStationRenderInfo::property::interchange = required interchange: boolean
+interface-member TransitDiagramStationRenderInfo::property::lineIds = required lineIds: readonly string[]
+interface-member TransitDiagramStationRenderInfo::property::mode = required mode: "compact" | "primary"
+interface-member TransitDiagramStationRenderInfo::property::radius = required radius: number
+interface-member TransitDiagramStationRenderInfo::property::station = required station: Datum
+interface-member TransitDiagramStationRenderInfo::property::x = required x: number
+interface-member TransitDiagramStationRenderInfo::property::y = required y: number
 interface-member UnitSign::property::end = required end: number
 interface-member UnitSign::property::fraction = required fraction: number
 interface-member UnitSign::property::index = required index: number
@@ -2113,4 +2125,5 @@ type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "po
 type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
 type TokenType = "dot" | "glyph" | "icon"
 type TransitDiagramLineValue = ReadonlyArray<TransitDiagramLineDescriptor | number | string> | TransitDiagramLineDescriptor | number | string
+type TransitDiagramMode = "compact" | "minimap" | "primary"
 ```

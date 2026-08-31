@@ -1,9 +1,11 @@
+import { createElement, type ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type {
-  NetworkCircleNode,
+  NetworkArcNode,
   NetworkCurvedEdge,
   NetworkLabel,
+  NetworkSceneNode,
   RealtimeEdge,
   RealtimeNode,
 } from "../stream/networkTypes"
@@ -29,14 +31,37 @@ export type TransitDiagramLineValue =
   | TransitDiagramLineDescriptor
   | ReadonlyArray<string | number | TransitDiagramLineDescriptor>
 
+export type TransitDiagramMode = "primary" | "compact" | "minimap"
+
+export interface TransitDiagramStationRenderInfo {
+  /** Raw station datum supplied to the chart. */
+  station: Datum
+  /** Fitted center in plot coordinates. */
+  x: number
+  /** Fitted center in plot coordinates. */
+  y: number
+  /** Radius resolved for the active detail mode. */
+  radius: number
+  /** Ordered line ids that pass through this station. */
+  lineIds: readonly string[]
+  interchange: boolean
+  mode: Exclude<TransitDiagramMode, "minimap">
+}
+
 export interface TransitDiagramConfig {
   /** Complete authored x/y positions win by default; otherwise use topology. */
   layoutMode?: "auto" | "authored" | "automatic"
+  /** Station and track level of detail. @default "primary" */
+  mode?: TransitDiagramMode
   xAccessor?: string | ((d: Datum) => number | undefined)
   yAccessor?: string | ((d: Datum) => number | undefined)
   labelAccessor?: string | ((d: Datum) => string)
   lineAccessor?: string | ((d: Datum) => TransitDiagramLineValue | undefined)
   lineColorAccessor?: string | ((d: Datum) => string | undefined)
+  /** Derive one line per source node and propagate it through a directed DAG. */
+  lineMode?: "source-rooted"
+  /** Source-node color used by source-rooted lines. Defaults to `color`. */
+  sourceColorAccessor?: string | ((d: Datum) => string)
   lineColors?: Record<string, string>
   /** Preferred global order for parallel lines. Remaining lines sort by id. */
   lineOrder?: string[]
@@ -54,6 +79,8 @@ export interface TransitDiagramConfig {
   interchangeRadius?: number
   stationFill?: string
   stationStroke?: string
+  /** Replace primary/compact station circles with SVG rendered above the tracks. */
+  renderStation?: (info: TransitDiagramStationRenderInfo) => ReactNode
   showLabels?: boolean
   labelFontSize?: number
   labelColor?: string
@@ -94,7 +121,9 @@ function edgeEndpoint(value: RealtimeEdge["source"]): string {
   return typeof value === "string" ? value : value.id
 }
 
-function normalizeLineValue(value: TransitDiagramLineValue | undefined): TransitDiagramLineDescriptor[] {
+function normalizeLineValue(
+  value: TransitDiagramLineValue | undefined,
+): TransitDiagramLineDescriptor[] {
   const values = Array.isArray(value) ? value : value == null ? [] : [value]
   const descriptors = values.map((entry) => {
     if (typeof entry === "object") return { ...entry, id: String(entry.id) }
@@ -103,17 +132,106 @@ function normalizeLineValue(value: TransitDiagramLineValue | undefined): Transit
   return descriptors.length > 0 ? descriptors : [{ id: "network" }]
 }
 
-function lineDescriptors(edge: PreparedEdge, config: TransitDiagramConfig): TransitDiagramLineDescriptor[] {
+function lineDescriptors(
+  edge: PreparedEdge,
+  config: TransitDiagramConfig,
+): TransitDiagramLineDescriptor[] {
   const accessor = config.lineAccessor
   let value: TransitDiagramLineValue | undefined
   if (typeof accessor === "function") value = accessor(edge.data)
   else if (typeof accessor === "string") value = edge.data[accessor] as TransitDiagramLineValue
   else {
     value = (edge.data.lines ?? edge.data.line ?? edge.data.route ?? edge.data.group) as
-      | TransitDiagramLineValue
-      | undefined
+      TransitDiagramLineValue | undefined
   }
   return normalizeLineValue(value)
+}
+
+interface SourceRootedLines {
+  byEdge: Map<PreparedEdge, TransitDiagramLineDescriptor[]>
+  byNode: Map<string, TransitDiagramLineDescriptor[]>
+}
+
+function sourceLineColor(
+  source: PreparedNode,
+  config: TransitDiagramConfig,
+  resolveColor: (key: string) => string,
+): string {
+  const accessor = config.sourceColorAccessor
+  const value =
+    typeof accessor === "function"
+      ? accessor(source.data)
+      : typeof accessor === "string"
+        ? source.data[accessor]
+        : source.data.color
+  return typeof value === "string" && value ? value : resolveColor(source.id)
+}
+
+function deriveSourceRootedLines(
+  nodes: readonly PreparedNode[],
+  edges: readonly PreparedEdge[],
+  config: TransitDiagramConfig,
+  resolveColor: (key: string) => string,
+): SourceRootedLines {
+  const nodeIds = new Set(nodes.map((node) => node.id))
+  const indegree = new Map(nodes.map((node) => [node.id, 0]))
+  const outgoing = new Map(nodes.map((node) => [node.id, [] as PreparedEdge[]]))
+  for (const edge of edges) {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) continue
+    indegree.set(edge.target, (indegree.get(edge.target) ?? 0) + 1)
+    outgoing.get(edge.source)?.push(edge)
+  }
+  for (const next of outgoing.values()) {
+    next.sort((a, b) => a.target.localeCompare(b.target) || a.source.localeCompare(b.source))
+  }
+
+  const roots = nodes
+    .filter((node) => (indegree.get(node.id) ?? 0) === 0)
+    .sort((a, b) => a.id.localeCompare(b.id))
+  const edgeLines = new Map<PreparedEdge, Map<string, TransitDiagramLineDescriptor>>()
+  const nodeLines = new Map(
+    nodes.map((node) => [node.id, new Map<string, TransitDiagramLineDescriptor>()]),
+  )
+
+  for (const root of roots) {
+    const rootLabel =
+      typeof config.labelAccessor === "function"
+        ? config.labelAccessor(root.data)
+        : readField(root.data, config.labelAccessor ?? "label", root.id)
+    const descriptor: TransitDiagramLineDescriptor = {
+      id: root.id,
+      label: String(rootLabel),
+      color: sourceLineColor(root, config, resolveColor),
+    }
+    const visited = new Set<string>()
+    const queue = [root.id]
+    while (queue.length > 0) {
+      const nodeId = queue.shift() as string
+      if (visited.has(nodeId)) continue
+      visited.add(nodeId)
+      nodeLines.get(nodeId)?.set(descriptor.id, descriptor)
+      for (const edge of outgoing.get(nodeId) ?? []) {
+        let lines = edgeLines.get(edge)
+        if (!lines) {
+          lines = new Map()
+          edgeLines.set(edge, lines)
+        }
+        lines.set(descriptor.id, descriptor)
+        if (!visited.has(edge.target)) queue.push(edge.target)
+      }
+    }
+  }
+
+  const sortedDescriptors = (values: Iterable<TransitDiagramLineDescriptor>) =>
+    [...values].sort((a, b) => a.id.localeCompare(b.id))
+  return {
+    byEdge: new Map(
+      edges.map((edge) => [edge, sortedDescriptors(edgeLines.get(edge)?.values() ?? [])]),
+    ),
+    byNode: new Map(
+      nodes.map((node) => [node.id, sortedDescriptors(nodeLines.get(node.id)?.values() ?? [])]),
+    ),
+  }
 }
 
 function resolveLineColor(
@@ -138,7 +256,11 @@ function resolveLineColor(
   return typeof accessed === "string" ? accessed : resolveColor(line.id)
 }
 
-function prepareSegments(edges: readonly PreparedEdge[], config: TransitDiagramConfig): PhysicalSegment[] {
+function prepareSegments(
+  edges: readonly PreparedEdge[],
+  config: TransitDiagramConfig,
+  sourceRootedLines?: SourceRootedLines,
+): PhysicalSegment[] {
   const segments = new Map<string, PhysicalSegment>()
   for (const edge of edges) {
     const key =
@@ -147,16 +269,31 @@ function prepareSegments(edges: readonly PreparedEdge[], config: TransitDiagramC
         : `${edge.target}\u0000${edge.source}`
     let segment = segments.get(key)
     if (!segment) {
-      segment = { key, source: edge.source, target: edge.target, lines: new Map() }
+      segment = {
+        key,
+        source: edge.source,
+        target: edge.target,
+        lines: new Map(),
+      }
       segments.set(key, segment)
     }
     const authoredOrder = edge.data.lineOrder
     if (Array.isArray(authoredOrder)) segment.authoredOrder = authoredOrder.map(String)
-    for (const descriptor of lineDescriptors(edge, config)) {
+    const descriptors = sourceRootedLines?.byEdge.get(edge) ?? lineDescriptors(edge, config)
+    for (const descriptor of descriptors) {
       if (!segment.lines.has(descriptor.id)) segment.lines.set(descriptor.id, { descriptor, edge })
     }
   }
   return [...segments.values()].sort((a, b) => a.key.localeCompare(b.key))
+}
+
+function orderLineIds(ids: Iterable<string>, config: TransitDiagramConfig): string[] {
+  const rank = new Map((config.lineOrder ?? []).map((id, index) => [id, index]))
+  return [...ids].sort(
+    (a, b) =>
+      (rank.get(a) ?? Number.POSITIVE_INFINITY) - (rank.get(b) ?? Number.POSITIVE_INFINITY) ||
+      a.localeCompare(b),
+  )
 }
 
 function orderSegmentLines(segment: PhysicalSegment, config: TransitDiagramConfig): SegmentLine[] {
@@ -191,10 +328,7 @@ function authoredPoints(
   return reverse ? points.reverse() : points
 }
 
-function enrichedEdgeDatum(
-  edge: PreparedEdge,
-  line: TransitDiagramLineDescriptor,
-): Datum {
+function enrichedEdgeDatum(edge: PreparedEdge, line: TransitDiagramLineDescriptor): Datum {
   return createSafeDatum((set) => {
     for (const [key, value] of Object.entries(edge.data)) set(key, value)
     set("source", edge.source)
@@ -243,12 +377,35 @@ function placeLabels(
     const width = Math.max(fontSize * 2, text.length * fontSize * 0.58)
     const height = fontSize * 1.25
     const distance =
-      Math.max(config.interchangeRadius ?? 7, stationRadii.get(node.id) ?? config.stationRadius ?? 4) + 5
+      Math.max(
+        config.interchangeRadius ?? 7,
+        stationRadii.get(node.id) ?? config.stationRadius ?? 4,
+      ) + 5
     const candidates = [
-      { x: point.x + distance, y: point.y, anchor: "start" as const, left: point.x + distance },
-      { x: point.x - distance, y: point.y, anchor: "end" as const, left: point.x - distance - width },
-      { x: point.x, y: point.y - distance, anchor: "middle" as const, left: point.x - width / 2 },
-      { x: point.x, y: point.y + distance, anchor: "middle" as const, left: point.x - width / 2 },
+      {
+        x: point.x + distance,
+        y: point.y,
+        anchor: "start" as const,
+        left: point.x + distance,
+      },
+      {
+        x: point.x - distance,
+        y: point.y,
+        anchor: "end" as const,
+        left: point.x - distance - width,
+      },
+      {
+        x: point.x,
+        y: point.y - distance,
+        anchor: "middle" as const,
+        left: point.x - width / 2,
+      },
+      {
+        x: point.x,
+        y: point.y + distance,
+        anchor: "middle" as const,
+        left: point.x - width / 2,
+      },
     ]
     const scored = candidates.map((candidate, index) => {
       const box = {
@@ -263,7 +420,11 @@ function placeLabels(
         Math.max(0, box.right - plot.width) +
         Math.max(0, -box.top) +
         Math.max(0, box.bottom - plot.height)
-      return { candidate, box, score: collisions * 10000 + overflow * 10 + index }
+      return {
+        candidate,
+        box,
+        score: collisions * 10000 + overflow * 10 + index,
+      }
     })
     const winner = scored.sort((a, b) => a.score - b.score)[0]
     placed.push(winner.box)
@@ -284,38 +445,59 @@ function placeLabels(
 }
 
 /**
- * Transit-diagram renderer with a deliberately useful fallback.
+ * Transit-diagram renderer for authored maps and plain directed graphs.
  *
- * Complete station x/y coordinates are fitted and honored. If any are missing,
- * the recipe computes a deterministic topology-led layered layout, reduces
- * crossings with repeated barycenter sweeps, and routes every connection using
- * horizontal, vertical, and 45-degree segments. The fallback is a starting
- * point for experimentation; authored coordinates, waypoints, and line order
- * remain the path to publication-quality diagrams.
+ * Complete station x/y coordinates are fitted and honored. Otherwise the
+ * recipe computes a byte-stable topology-led layout with id-based tie breaks.
+ * Connections use horizontal, vertical, and 45-degree segments. Detail modes,
+ * source-rooted lines, custom station glyphs, waypoints, and line order all
+ * share the same fitted geometry.
  */
 export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (ctx) => {
   const config = ctx.config ?? {}
-  const nodes: PreparedNode[] = ctx.nodes.map((wrapper) => ({
-    id: wrapper.id,
-    data: rawDatum(wrapper),
-    wrapper,
-  }))
-  const edges: PreparedEdge[] = ctx.edges.map((wrapper) => ({
-    source: edgeEndpoint(wrapper.source),
-    target: edgeEndpoint(wrapper.target),
-    data: rawDatum(wrapper),
-    wrapper,
-  }))
-  const positionResult = computeTransitDiagramPositions(
-    nodes,
-    edges,
-    ctx.dimensions.plot,
-    config,
-  )
-  const segments = prepareSegments(edges, config)
+  const mode = config.mode ?? "primary"
+  const dimOpacity = config.dimOpacity ?? 0.14
+  const opacityFor = (datum: Datum) =>
+    ctx.selection?.isActive && !ctx.selection.predicate(datum) ? dimOpacity : 1
+  const nodes: PreparedNode[] = ctx.nodes
+    .map((wrapper) => ({
+      id: wrapper.id,
+      data: rawDatum(wrapper),
+      wrapper,
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id))
+  const edges: PreparedEdge[] = ctx.edges
+    .map((wrapper) => ({
+      source: edgeEndpoint(wrapper.source),
+      target: edgeEndpoint(wrapper.target),
+      data: rawDatum(wrapper),
+      wrapper,
+    }))
+    .sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target))
+  const positionResult = computeTransitDiagramPositions(nodes, edges, ctx.dimensions.plot, config)
+  const sourceRootedLines =
+    config.lineMode === "source-rooted"
+      ? deriveSourceRootedLines(nodes, edges, config, ctx.resolveColor)
+      : undefined
+  const segments = prepareSegments(edges, config, sourceRootedLines)
   const lineIdsByStation = new Map(nodes.map((node) => [node.id, new Set<string>()]))
-  const lineWidth = Math.max(1, config.lineWidth ?? 6)
-  const lineGap = Math.max(0, config.lineGap ?? 2)
+  const lineColorsById = new Map<string, string>()
+  if (sourceRootedLines) {
+    for (const [nodeId, descriptors] of sourceRootedLines.byNode) {
+      for (const descriptor of descriptors) {
+        lineIdsByStation.get(nodeId)?.add(descriptor.id)
+        if (descriptor.color) lineColorsById.set(descriptor.id, descriptor.color)
+      }
+    }
+  }
+  const lineWidth = Math.max(
+    1,
+    config.lineWidth ?? (mode === "primary" ? 6 : mode === "compact" ? 3.5 : 2),
+  )
+  const lineGap = Math.max(
+    0,
+    config.lineGap ?? (mode === "primary" ? 2 : mode === "compact" ? 1 : 0.5),
+  )
   const bundleRadiusByStation = new Map<string, number>()
   const sceneEdges: NetworkCurvedEdge[] = []
 
@@ -326,7 +508,10 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     const orderedLines = orderSegmentLines(segment, config)
     const bundleRadius = ((orderedLines.length - 1) / 2) * (lineWidth + lineGap) + lineWidth / 2
     for (const stationId of [segment.source, segment.target]) {
-      bundleRadiusByStation.set(stationId, Math.max(bundleRadiusByStation.get(stationId) ?? 0, bundleRadius))
+      bundleRadiusByStation.set(
+        stationId,
+        Math.max(bundleRadiusByStation.get(stationId) ?? 0, bundleRadius),
+      )
     }
     orderedLines.forEach((line, index) => {
       lineIdsByStation.get(segment.source)?.add(line.descriptor.id)
@@ -337,12 +522,14 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
         config,
         line.edge.source !== segment.source,
       )
-      const base = middle
-        ? [source, ...middle, target]
-        : octilinearRoute(source, target)
+      const base = middle ? [source, ...middle, target] : octilinearRoute(source, target)
       const distance = (index - (orderedLines.length - 1) / 2) * (lineWidth + lineGap)
       const path = offsetTransitPath(base, distance)
       const datum = enrichedEdgeDatum(line.edge, line.descriptor)
+      const color = resolveLineColor(line.descriptor, line.edge, config, ctx.resolveColor)
+      if (!lineColorsById.has(line.descriptor.id)) {
+        lineColorsById.set(line.descriptor.id, color)
+      }
       sceneEdges.push({
         type: "curved",
         id: `${segment.key}:${line.descriptor.id}`,
@@ -350,9 +537,10 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
         pathD: roundedTransitPath(path, config.cornerRadius ?? 10),
         style: {
           fill: "none",
-          stroke: resolveLineColor(line.descriptor, line.edge, config, ctx.resolveColor),
+          stroke: color,
           strokeWidth: lineWidth,
           strokeLinecap: "round",
+          opacity: opacityFor(datum),
         },
         datum,
         accessibleDatum: datum,
@@ -369,59 +557,215 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
   }
 
   const stationRadii = new Map<string, number>()
-  for (const node of nodes) {
-    const lineCount = lineIdsByStation.get(node.id)?.size ?? 0
-    const interchange = lineCount > 1 || node.data.interchange === true || node.data.transfer === true
-    stationRadii.set(
-      node.id,
-      interchange
-        ? (config.interchangeRadius ?? Math.max(7, bundleRadiusByStation.get(node.id) ?? 0))
-        : (config.stationRadius ?? 4),
-    )
-  }
-
-  const sceneNodes: NetworkCircleNode[] = nodes.flatMap((node) => {
-    const point = positionResult.positions.get(node.id)
-    if (!point) return []
-    const lineCount = lineIdsByStation.get(node.id)?.size ?? 0
-    const interchange = lineCount > 1 || node.data.interchange === true || node.data.transfer === true
-    const label =
+  const sceneNodes: NetworkSceneNode[] = []
+  const stationGlyphs: ReactNode[] = []
+  const stationLabel = (node: PreparedNode) => {
+    const value =
       typeof config.labelAccessor === "function"
         ? config.labelAccessor(node.data)
-        : String(readField(node.data, config.labelAccessor ?? "label", node.id))
-    return [{
-      type: "circle" as const,
-      cx: point.x,
-      cy: point.y,
-      r: stationRadii.get(node.id) as number,
-      style: {
-        fill: config.stationFill ?? "var(--semiotic-bg, white)",
-        stroke: config.stationStroke ?? "var(--semiotic-text, #222)",
-        strokeWidth: interchange ? 3 : 1.5,
-      },
-      datum: node.data,
-      accessibleDatum: node.data,
-      accessibility: {
-        label: `${label}${interchange ? ", interchange" : ""}`,
-        tableFields: { station: label, lines: [...(lineIdsByStation.get(node.id) ?? [])].join(", ") },
-      },
-      id: node.id,
-      label,
-    }]
-  })
+        : readField(node.data, config.labelAccessor ?? "label", node.id)
+    return String(value || node.id)
+  }
 
-  const dimOpacity = config.dimOpacity ?? 0.14
-  return {
+  if (mode === "minimap") {
+    const stops = new Map<
+      string,
+      {
+        x: number
+        y: number
+        nodes: PreparedNode[]
+        lineIds: Set<string>
+        bundleRadius: number
+      }
+    >()
+    for (const node of nodes) {
+      const point = positionResult.positions.get(node.id)
+      if (!point) continue
+      const key = `${point.x}\u0000${point.y}`
+      let stop = stops.get(key)
+      if (!stop) {
+        stop = {
+          x: point.x,
+          y: point.y,
+          nodes: [],
+          lineIds: new Set(),
+          bundleRadius: 0,
+        }
+        stops.set(key, stop)
+      }
+      stop.nodes.push(node)
+      for (const lineId of lineIdsByStation.get(node.id) ?? []) stop.lineIds.add(lineId)
+      stop.bundleRadius = Math.max(stop.bundleRadius, bundleRadiusByStation.get(node.id) ?? 0)
+    }
+
+    const orderedStops = [...stops.values()].sort(
+      (a, b) => a.x - b.x || a.y - b.y || a.nodes[0].id.localeCompare(b.nodes[0].id),
+    )
+    for (const stop of orderedStops) {
+      const lineIds = orderLineIds(stop.lineIds, config)
+      const interchange =
+        lineIds.length > 1 ||
+        stop.nodes.length > 1 ||
+        stop.nodes.some((node) => node.data.interchange === true || node.data.transfer === true)
+      const radius = interchange
+        ? (config.interchangeRadius ?? Math.max(5, stop.bundleRadius))
+        : (config.stationRadius ?? Math.max(3.5, stop.bundleRadius))
+      for (const node of stop.nodes) stationRadii.set(node.id, radius)
+      const datum = stop.nodes[0].data
+      const labels = stop.nodes.map(stationLabel)
+      const label = labels.join(" / ")
+      const id = stop.nodes.map((node) => node.id).join("--")
+      const accessibility = {
+        label: `${label}${interchange ? ", interchange" : ""}`,
+        tableFields: { station: label, lines: lineIds.join(", ") },
+      }
+      if (lineIds.length <= 1) {
+        sceneNodes.push({
+          type: "circle",
+          cx: stop.x,
+          cy: stop.y,
+          r: radius,
+          style: {
+            fill:
+              (lineIds[0] && lineColorsById.get(lineIds[0])) ??
+              config.stationFill ??
+              "var(--semiotic-bg, white)",
+            stroke: config.stationStroke ?? "var(--semiotic-text, #222)",
+            strokeWidth: 1.25,
+            opacity: opacityFor(datum),
+          },
+          datum,
+          accessibleDatum: datum,
+          accessibility,
+          id,
+          label,
+        })
+        continue
+      }
+
+      lineIds.forEach((lineId, index) => {
+        const startAngle = -Math.PI / 2 + (index / lineIds.length) * Math.PI * 2
+        const endAngle = -Math.PI / 2 + ((index + 1) / lineIds.length) * Math.PI * 2
+        const segment: NetworkArcNode = {
+          type: "arc",
+          cx: stop.x,
+          cy: stop.y,
+          innerR: 0,
+          outerR: radius,
+          startAngle,
+          endAngle,
+          style: {
+            fill: lineColorsById.get(lineId) ?? ctx.resolveColor(lineId),
+            stroke: "none",
+            opacity: opacityFor(datum),
+          },
+          datum,
+          id: `${id}:${lineId}`,
+          label: `${label}: ${lineId}`,
+        }
+        sceneNodes.push(segment)
+      })
+      sceneNodes.push({
+        type: "circle",
+        cx: stop.x,
+        cy: stop.y,
+        r: radius,
+        style: {
+          fill: "transparent",
+          stroke: config.stationStroke ?? "var(--semiotic-text, #222)",
+          strokeWidth: 1.25,
+          opacity: opacityFor(datum),
+        },
+        datum,
+        accessibleDatum: datum,
+        accessibility,
+        id,
+        label,
+      })
+    }
+  } else {
+    for (const node of nodes) {
+      const point = positionResult.positions.get(node.id)
+      if (!point) continue
+      const lineIds = orderLineIds(lineIdsByStation.get(node.id) ?? [], config)
+      const interchange =
+        lineIds.length > 1 || node.data.interchange === true || node.data.transfer === true
+      const radius = interchange
+        ? (config.interchangeRadius ??
+          Math.max(mode === "primary" ? 7 : 5, bundleRadiusByStation.get(node.id) ?? 0))
+        : (config.stationRadius ?? (mode === "primary" ? 4 : 2.75))
+      stationRadii.set(node.id, radius)
+      const label = stationLabel(node)
+      const customStation = config.renderStation != null
+      sceneNodes.push({
+        type: "circle",
+        cx: point.x,
+        cy: point.y,
+        r: radius,
+        style: customStation
+          ? { fill: "transparent", stroke: "transparent" }
+          : {
+              fill: config.stationFill ?? "var(--semiotic-bg, white)",
+              stroke: config.stationStroke ?? "var(--semiotic-text, #222)",
+              strokeWidth: interchange ? (mode === "primary" ? 3 : 2) : 1.5,
+              opacity: opacityFor(node.data),
+            },
+        datum: node.data,
+        accessibleDatum: node.data,
+        accessibility: {
+          label: `${label}${interchange ? ", interchange" : ""}`,
+          tableFields: { station: label, lines: lineIds.join(", ") },
+        },
+        id: node.id,
+        label,
+      })
+      if (config.renderStation) {
+        const rendered = config.renderStation({
+          station: node.data,
+          x: point.x,
+          y: point.y,
+          radius,
+          lineIds,
+          interchange,
+          mode,
+        })
+        if (rendered != null) {
+          stationGlyphs.push(
+            createElement(
+              "g",
+              {
+                key: node.id,
+                opacity: opacityFor(node.data),
+                style: { pointerEvents: "none" },
+              },
+              rendered,
+            ),
+          )
+        }
+      }
+    }
+  }
+
+  const overlays =
+    stationGlyphs.length > 0
+      ? createElement("g", { className: "transit-diagram-stations" }, ...stationGlyphs)
+      : undefined
+  const result = {
     sceneEdges,
     sceneNodes,
+    overlays,
     labels: placeLabels(
       nodes,
       positionResult.positions,
       lineIdsByStation,
       stationRadii,
       ctx.dimensions.plot,
-      config,
+      mode === "primary" ? config : { ...config, showLabels: false },
     ),
+  }
+  if (stationGlyphs.length > 0) return result
+  return {
+    ...result,
     restyle: (node, selection) =>
       selection?.isActive && !selection.predicate(node.datum as Datum)
         ? { opacity: dimOpacity }

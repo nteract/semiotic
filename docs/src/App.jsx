@@ -413,6 +413,7 @@ const GeographicGridMapsPage = lazy(() => import("./pages/recipes/GeographicGrid
 const WordTrailsPage = lazy(() => import("./pages/recipes/WordTrailsPage"))
 const NetEnsemblePage = lazy(() => import("./pages/recipes/NetEnsemblePage"))
 const AdjacencyFlowPage = lazy(() => import("./pages/recipes/AdjacencyFlowPage"))
+const TransitDiagramPage = lazy(() => import("./pages/recipes/TransitDiagramPage"))
 const BlogIndexPage = lazy(() => import("./blog/BlogIndexPage"))
 const BlogEntryPage = lazy(() => import("./blog/BlogEntryPage"))
 const UsingSSRPage = lazy(() => import("./pages/UsingSSRPage"))
@@ -705,6 +706,7 @@ export default function DocsApp() {
                 <Route path="word-trails" element={<WordTrailsPage />} />
                 <Route path="net-ensemble" element={<NetEnsemblePage />} />
                 <Route path="adjacency-flow" element={<AdjacencyFlowPage />} />
+                <Route path="transit-diagram" element={<TransitDiagramPage />} />
                 {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
                 <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
                 <Route
