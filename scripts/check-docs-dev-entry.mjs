@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
  * Lightweight smoke check for the docs dev server entrypoint. It verifies the
- * docs-local entry file loads, the legacy `/src/index.jsx` compatibility path
- * still resolves, and Vite does not log the noisy pre-transform warning for the
- * old missing entry path.
+ * direct docs entry file loads and Vite does not log the noisy pre-transform
+ * warning for the source path.
  */
 
 import { dirname, resolve } from "node:path"
@@ -86,15 +85,6 @@ async function run() {
     if (routeResponse.statusCode !== 200) {
       throw new Error(`Expected docs route to resolve, got ${routeResponse.statusCode}`)
     }
-    const docsEntryResponse = await request("/docs-entry.jsx")
-    if (
-      docsEntryResponse.statusCode !== 200 ||
-      !String(docsEntryResponse.headers["content-type"] || "").includes("javascript")
-    ) {
-      throw new Error(
-        `Expected /docs-entry.jsx to resolve as JS, got ${docsEntryResponse.statusCode} (${docsEntryResponse.headers["content-type"]})`,
-      )
-    }
     const entryResponse = await request("/src/index.jsx")
     if (
       entryResponse.statusCode !== 200 ||
@@ -109,7 +99,7 @@ async function run() {
     if (logText.includes("Failed to load url /src/index.jsx")) {
       throw new Error("Vite logged a /src/index.jsx pre-transform failure")
     }
-    console.log("✓ docs entrypoint resolves cleanly at", `${BASE}/docs-entry.jsx`)
+    console.log("✓ docs entrypoint resolves cleanly at", `${BASE}/src/index.jsx`)
     cleanup()
     process.exit(0)
   } catch (error) {

@@ -288,7 +288,7 @@
     "check:browser-baseline": "node scripts/browser-baseline.mjs --check",
     "print:browser-baseline": "node scripts/browser-baseline.mjs --print",
     "test:browser-baseline": "node --test scripts/browser-baseline.test.mjs",
-    "test:release-infrastructure": "node --test scripts/bench-manifest.test.mjs scripts/bench-results.test.mjs scripts/browser-baseline.test.mjs scripts/machine-baseline.test.mjs scripts/prerender-determinism.test.mjs scripts/risk-weighted-coverage.test.mjs",
+    "test:release-infrastructure": "node --test scripts/bench-manifest.test.mjs scripts/bench-results.test.mjs scripts/browser-baseline.test.mjs scripts/check-docs-routes.test.mjs scripts/machine-baseline.test.mjs scripts/prerender-determinism.test.mjs scripts/risk-weighted-coverage.test.mjs",
     "baseline:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs --write",
     "report:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs",
     "test:stream-file-size-ratchet": "node --test scripts/stream-file-size-ratchet.test.mjs",

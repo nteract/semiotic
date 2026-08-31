@@ -4,8 +4,11 @@ import "../public/semiotic.css"
 import App from "./App"
 import { createRoot } from "react-dom/client"
 import { LocationAwareRouteLoadErrorBoundary } from "./components/RouteLoadErrorBoundary"
+import { installVitePreloadRecovery } from "./preloadRecovery"
 
 import { BrowserRouter } from "react-router-dom"
+
+installVitePreloadRecovery()
 
 const root = createRoot(document.getElementById("root"))
 
