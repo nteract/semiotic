@@ -17,12 +17,31 @@ AI coding assistants generate correct chart code on the first try.
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.9.1
+## What's New in 3.9.2
 
-3.9.1 is a focused patch release. It removes the webpack “conflicting star
-exports” warning emitted by `semiotic/utils`, while keeping every existing
-utility—including `resolveResponsiveDimension` and `useResponsiveSize`—available
-from the same public entry point.
+3.9.2 expands Semiotic's portable chart, accessibility, evidence, and rendering
+surfaces while tightening browser/server parity and production entry graphs:
+
+- `LineChart` gains the dedicated `semiotic/line` entry, and chart HOCs,
+  network layouts, force workers, and optional overlays load only the runtime
+  code their chart paths need.
+- `ChartAccessContract@1`, `ChartEvidenceEnvelope@1`, and the new
+  `semiotic/access` and `semiotic/evidence` entries provide schema-backed access
+  inventories, privacy-aware provenance, deterministic hashing, MCP evidence
+  fragments, and publication gates.
+- `ParallelCoordinatesRecipe` and `CalendarHeatmapRecipe` are now portable,
+  JSON-safe chart recipes, while Minimap, ScatterplotMatrix, and ChainReaction
+  gain evidence-backed static rendering through `semiotic/server` and MCP.
+- Typed realtime handles preserve authored row types, `styleRules` now spans
+  ordinal, XY, network, geo, realtime, and physics families, and structured
+  navigation provides overview-first hierarchy and choropleth semantics.
+- Renderer and interaction fixes cover constant-value heatmaps, linked
+  selection and hover, automatic network legends, Waterfall and Radar geometry,
+  marginal graphics, custom layouts, tree-shaken network registration, and
+  instance-local accessible names.
+- Release evidence now includes controlled dense-browser measurements,
+  deterministic linked-hover cohorts, generated bundle guidance, stronger AI
+  diagnostics, and stricter shipped-product and contributor gates.
 
 ## Why Semiotic
 
@@ -398,8 +417,8 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/utils` | **103 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **95 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **99 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **91 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **100 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **92 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/react` | **8 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **12 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **12 KB** | Theme presets and token helpers |
@@ -434,26 +453,26 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { LineChart } from "semiotic"` | browser | **139.3 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **139.7 KiB** |
-| `import { LineChart } from "semiotic/line"` | browser | **139.5 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **132.5 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **156.6 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **140.2 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **140.0 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **140.4 KiB** |
+| `import { LineChart } from "semiotic/line"` | browser | **140.3 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **133.1 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **157.5 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **141.0 KiB** |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
-| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **149.7 KiB** |
+| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **150.3 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **262.4 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **118.2 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **263.0 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **252.3 KiB** |
-| `import { suggestCharts } from "semiotic/ai/core"` | browser | **44.7 KiB** |
-| `import { createChartAccessContract } from "semiotic/access"` | browser | **30.9 KiB** |
-| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **39.8 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **263.4 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **118.8 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **264.0 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **253.5 KiB** |
+| `import { suggestCharts } from "semiotic/ai/core"` | browser | **44.8 KiB** |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **31.0 KiB** |
+| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **40.1 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **115.0 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **115.5 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.6 KiB** |
@@ -467,7 +486,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.3 KiB** |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 422.7 KiB raw versus 422.7 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 422.7 KiB raw versus 422.7 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 
@@ -476,8 +495,8 @@ and declares them as normal runtime dependencies. Consumers do not need to
 install d3 packages manually; their bundler resolves, deduplicates, and
 tree-shakes that dependency graph. A packed webpack comparison favored this
 model in three of four representative chart families, and a Next 16 webpack
-route was 22.8 KiB gzip smaller than the fully bundled alternative. The one
-bundled win, Sankey, was only 1.0 KiB gzip. This choice retains a 22-package,
+route was 21.8 KiB gzip smaller than the fully bundled alternative. The one
+bundled win, Sankey, was only 1.1 KiB gzip. This choice retains a 22-package,
 1.9 MB unpacked d3 install closure in exchange for smaller common application
 graphs and an ordinary dependency contract. The checked policy is
 `npm run check:d3-packaging`; the reproducible evidence is in
