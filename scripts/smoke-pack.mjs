@@ -496,13 +496,36 @@ function checkCjsRecipeGeoIsolation(proj, failures) {
       if (request === "d3-geo") loaded = true
       return originalLoad.call(this, request, ...args)
     }
-    const nonGeoEntries = [
+    const recipeEntries = [
       "semiotic/recipes",
       "semiotic/recipes/core",
       "semiotic/recipes/react",
     ]
-    for (const entry of nonGeoEntries) require(entry)
-    if (loaded) throw new Error("a non-geo CJS entry eagerly loaded d3-geo")
+    const expectedEntry = require("node:path").join(
+      "dist",
+      "semiotic-recipes.min.js",
+    )
+    const resolvedEntry = require.resolve("semiotic/recipes")
+    if (!resolvedEntry.endsWith(expectedEntry)) {
+      throw new Error("semiotic/recipes did not resolve through its packed require condition: " + resolvedEntry)
+    }
+    const namespaces = recipeEntries.map((entry) => [entry, require(entry)])
+    if (loaded) throw new Error("a CJS recipe namespace eagerly loaded d3-geo")
+    const geoExports = new Set([
+      "geographicDotGridLayout",
+      "sampleGeographicDotGrid",
+    ])
+    let checked = 0
+    for (const [entry, namespace] of namespaces) {
+      for (const name of Object.keys(namespace)) {
+        if (geoExports.has(name)) continue
+        void namespace[name]
+        checked += 1
+        if (loaded) {
+          throw new Error(entry + " export " + name + " loaded d3-geo")
+        }
+      }
+    }
     const recipes = require("semiotic/recipes")
     if (typeof recipes.dagreLayout !== "function") {
       throw new Error("semiotic/recipes lost its non-geo dagreLayout export")
@@ -511,13 +534,67 @@ function checkCjsRecipeGeoIsolation(proj, failures) {
     if (typeof dotGrid !== "function" || !loaded) {
       throw new Error("geographic dot-grid export was not lazy-loadable")
     }
-    console.log("non-geo entries stayed d3-geo-free; geo recipe loaded on demand")
+    const { geoEquirectangular, geoPath } = require("d3-geo")
+    const area = {
+      type: "Feature",
+      id: "compatibility-area",
+      properties: {},
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[-20, -10], [-20, 10], [20, 10], [20, -10], [-20, -10]]],
+      },
+    }
+    const projection = geoEquirectangular().fitExtent([[0, 0], [120, 80]], area)
+    const sampled = recipes.sampleGeographicDotGrid(
+      [area],
+      {
+        geoPath: geoPath(projection),
+        invertedPoint: (x, y) => projection.invert([x, y]),
+      },
+      { width: 120, height: 80 },
+      { columns: 8 },
+    )
+    if (sampled.dots.length === 0) {
+      throw new Error("d3-geo 3.1.0 did not execute the geoBounds/geoContains recipe path")
+    }
+    console.log(checked + " non-geo exports stayed d3-geo-free; packed require condition and d3-geo 3.1.0 recipe execution passed")
   `
   try {
     const out = runNodeEval(code, { cwd: proj, inputType: "commonjs" })
     console.log(`  ✓ CommonJS recipe geo isolation: ${out.trim()}`)
   } catch (err) {
     failures.push(`CommonJS recipe geo isolation: ${firstLine(err)}`)
+  }
+}
+
+/**
+ * geographicDotGrid calls only geoBounds and geoContains. Both are available
+ * in d3-geo 3.1.0, which is also a common lockfile resolution for the d3 v7
+ * meta-package. Keep that compatible floor and prove the packed consumer can
+ * share its application-owned copy instead of installing a nested d3-geo.
+ */
+function checkCjsRecipeD3GeoDedupe(proj, failures) {
+  const code = `
+    const { createRequire } = require("node:module")
+    const appD3Geo = require.resolve("d3-geo")
+    const semioticRequire = createRequire(require.resolve("semiotic/package.json"))
+    const d3Require = createRequire(require.resolve("d3"))
+    const semioticD3Geo = semioticRequire.resolve("d3-geo")
+    const metaPackageD3Geo = d3Require.resolve("d3-geo")
+    if (semioticD3Geo !== appD3Geo || metaPackageD3Geo !== appD3Geo) {
+      throw new Error(
+        "d3-geo was nested: app=" + appD3Geo +
+        "; semiotic=" + semioticD3Geo +
+        "; d3=" + metaPackageD3Geo
+      )
+    }
+    console.log("semiotic and d3 share the consumer-owned d3-geo 3.1.0")
+  `
+  try {
+    const out = runNodeEval(code, { cwd: proj, inputType: "commonjs" })
+    console.log(`  ✓ CommonJS recipe d3-geo dedupe: ${out.trim()}`)
+  } catch (err) {
+    failures.push(`CommonJS recipe d3-geo dedupe: ${firstLine(err)}`)
   }
 }
 
@@ -963,6 +1040,11 @@ try {
         // runtime peers, while its public declarations import React types; a clean
         // TypeScript app needs both rather than borrowing this repository's tree.
         dependencies: {
+          // Pin the resolution an existing d3 v7 application can carry. The
+          // packed Semiotic install must accept this copy rather than place a
+          // second ESM-only d3-geo under node_modules/semiotic.
+          d3: "7.8.5",
+          "d3-geo": "3.1.0",
           react: sourcePackage.devDependencies.react,
           "react-dom": sourcePackage.devDependencies["react-dom"],
           // The smoke suite imports every public entry point, including the
@@ -1094,6 +1176,7 @@ try {
 
   checkCjsClientContextIdentity(proj, failures)
   checkCjsRecipeGeoIsolation(proj, failures)
+  checkCjsRecipeD3GeoDedupe(proj, failures)
   checkExperimentalFacadeParity(proj, failures)
 
   checkTypeScriptConsumer(proj, packageRoot, failures)

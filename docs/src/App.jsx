@@ -177,6 +177,9 @@ const TimelineCookbookPage = lazy(() => import("./pages/cookbook/TimelinePage"))
 const RadarPlotPage = lazy(() => import("./pages/cookbook/RadarPlotPage"))
 const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
+const MachineSemiosphereExamplePage = lazy(
+  () => import("./pages/examples/MachineSemiosphereExamplePage"),
+)
 const HowAHitTravelsExamplePage = lazy(() => import("./pages/examples/HowAHitTravelsExamplePage"))
 const LivingLedgerExamplePage = lazy(() => import("./pages/examples/LivingLedgerExamplePage"))
 const TheLastScarcityExamplePage = lazy(() => import("./pages/examples/TheLastScarcityExamplePage"))
@@ -237,9 +240,7 @@ const USWarTimelineExamplePage = lazy(() => import("./pages/examples/USWarTimeli
 const ArtMovementGenealogyExamplePage = lazy(
   () => import("./pages/examples/ArtMovementGenealogyExamplePage"),
 )
-const TransitDiagramExamplePage = lazy(
-  () => import("./pages/examples/TransitDiagramExamplePage"),
-)
+const TransitDiagramExamplePage = lazy(() => import("./pages/examples/TransitDiagramExamplePage"))
 const ParisIsometricLandmarksExamplePage = lazy(
   () => import("./pages/examples/ParisIsometricLandmarksExamplePage"),
 )
@@ -327,6 +328,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "MachineSemiosphereExamplePage.jsx": MachineSemiosphereExamplePage,
   "AestheticPolicyStudioExamplePage.jsx": AestheticPolicyStudioExamplePage,
   "BadChartAutopsyExamplePage.jsx": BadChartAutopsyExamplePage,
   "HowAHitTravelsExamplePage.jsx": HowAHitTravelsExamplePage,
@@ -410,6 +412,7 @@ const StreamingMigrationMapPage = lazy(() => import("./pages/recipes/StreamingMi
 const GeographicGridMapsPage = lazy(() => import("./pages/recipes/GeographicGridMapsPage"))
 const WordTrailsPage = lazy(() => import("./pages/recipes/WordTrailsPage"))
 const NetEnsemblePage = lazy(() => import("./pages/recipes/NetEnsemblePage"))
+const AdjacencyFlowPage = lazy(() => import("./pages/recipes/AdjacencyFlowPage"))
 const BlogIndexPage = lazy(() => import("./blog/BlogIndexPage"))
 const BlogEntryPage = lazy(() => import("./blog/BlogEntryPage"))
 const UsingSSRPage = lazy(() => import("./pages/UsingSSRPage"))
@@ -701,6 +704,7 @@ export default function DocsApp() {
                 <Route path="satellites-in-space" element={<SatellitesInSpacePage />} />
                 <Route path="word-trails" element={<WordTrailsPage />} />
                 <Route path="net-ensemble" element={<NetEnsemblePage />} />
+                <Route path="adjacency-flow" element={<AdjacencyFlowPage />} />
                 {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
                 <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
                 <Route

@@ -40,6 +40,7 @@ export default function NetEnsemblePage() {
         { label: "Net Ensemble", path: "/recipes/net-ensemble" },
       ]}
       prevPage={{ title: "Word Trails", path: "/recipes/word-trails" }}
+      nextPage={{ title: "Adjacency Flow", path: "/recipes/adjacency-flow" }}
       dependencies={["semiotic", "react"]}
       fullSourceCode={fullSourceCode}
     >

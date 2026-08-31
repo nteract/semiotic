@@ -35,6 +35,8 @@ export { OrbitDiagram } from "./charts/network/OrbitDiagram"
 export { ProcessSankey } from "./charts/network/ProcessSankey"
 export { NetworkCustomChart } from "./charts/custom/NetworkCustomChart"
 export { responsiveRuleMatches, resolveResponsiveRules } from "./charts/shared/responsiveRules"
+export { useSelectionActions } from "./store/useSelection"
+export type { UseSelectionActionsResult } from "./store/useSelection"
 export type {
   ResponsiveOrientation,
   ResponsiveRuleCondition,

@@ -325,6 +325,7 @@ const navData = [
       { title: "Satellites in Space", path: "/recipes/satellites-in-space" },
       { title: "Word Trails", path: "/recipes/word-trails" },
       { title: "Net Ensemble", path: "/recipes/net-ensemble" },
+      { title: "Adjacency Flow", path: "/recipes/adjacency-flow" },
     ],
   },
   {
