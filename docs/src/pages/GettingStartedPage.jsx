@@ -89,12 +89,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 99,
+    "kb": 100,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 91,
+    "kb": 92,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
