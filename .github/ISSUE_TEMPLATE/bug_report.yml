@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a bug in Semiotic
-labels: ["bug"]
+labels: ["bug :bug:"]
 body:
   - type: textarea
     id: description
@@ -10,14 +10,41 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: component
+    attributes:
+      label: Component or API
+      description:
+        Name the chart, Stream Frame, renderer, MCP tool, CLI command, or other
+        affected API.
+      placeholder: LineChart
+    validations:
+      required: true
+
+  - type: input
+    id: import-path
+    attributes:
+      label: Import path
+      description:
+        Include the exact public package subpath or executable you use.
+      placeholder: semiotic/xy
+    validations:
+      required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to reproduce
-      description: Minimal code or steps to reproduce the issue.
+      label: Minimal reproduction
+      description:
+        Include the smallest data and props/config plus the steps needed to
+        reproduce. Remove sensitive data.
       placeholder: |
         ```jsx
-        <LineChart data={[...]} xAccessor="x" yAccessor="y" />
+        <LineChart
+          data={[{ x: 1, y: 2 }]}
+          xAccessor="x"
+          yAccessor="y"
+        />
         ```
     validations:
       required: true
@@ -36,36 +63,47 @@ body:
       label: React version
       placeholder: "18.2.0"
 
-  - type: dropdown
-    id: component
+  - type: input
+    id: runtime-version
     attributes:
-      label: Component
+      label: Runtime and toolchain versions
+      description:
+        Include the browser or Node version and relevant bundler, framework,
+        test runner, or MCP client versions.
+      placeholder: Node 22.14, Jest 30, Next 16
+    validations:
+      required: true
+
+  - type: dropdown
+    id: renderer
+    attributes:
+      label: Renderer or output path
+      description: Select the path where the problem is visible.
       options:
-        - LineChart
-        - AreaChart
-        - StackedAreaChart
-        - Scatterplot
-        - BubbleChart
-        - Heatmap
-        - BarChart
-        - StackedBarChart
-        - GroupedBarChart
-        - SwarmPlot
-        - BoxPlot
-        - DotPlot
-        - PieChart
-        - DonutChart
-        - ForceDirectedGraph
-        - ChordDiagram
-        - SankeyDiagram
-        - TreeDiagram
-        - Treemap
-        - CirclePack
-        - RealtimeLineChart
-        - RealtimeHistogram
-        - RealtimeSwarmChart
-        - RealtimeWaterfallChart
-        - StreamXYFrame
-        - StreamOrdinalFrame
-        - StreamNetworkFrame
-        - Other
+        - Canvas
+        - Live SVG
+        - Static SVG or SSR
+        - PNG or GIF export
+        - MCP or CLI
+        - Packaging or types
+        - Other or multiple paths
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor-output
+    attributes:
+      label: Diagnostic output
+      description:
+        If relevant, paste `npx semiotic-ai --doctor` output or explain why it
+        is not applicable.
+      render: shell
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Additional evidence
+      description:
+        Add screenshots, render evidence, accessibility findings, console
+        output, or a minimal repository. Note whether equivalent Canvas, live
+        SVG, and static output were checked.

@@ -79,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cover Chromium, Firefox, and WebKit on macOS and pinned Linux.
 
 ### Changed
+- **Contribution templates ask for release-gate evidence** — bug reports now
+  capture the affected API/import, renderer, runtime/toolchain, minimal data and
+  props, and doctor output when relevant. Feature and pull-request templates
+  distinguish chart/rendering evidence from AI/schema/MCP evidence and provide
+  an explicit not-applicable path.
 - **Built-in recipe layouts load with the recipe renderer** — the browser AI
   entry still registers portable manifests for discovery, while
   `ParallelCoordinatesRecipe` and `CalendarHeatmapRecipe` layout implementations
@@ -202,6 +207,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the authored input shape.
 
 ### Fixed
+- **CommonJS recipe consumers can share d3 v7's geographic dependency** — the
+  declared `d3-geo` floor now matches the `geoBounds` and `geoContains` APIs
+  actually used, allowing a consumer-owned 3.1.0 resolution instead of a nested
+  ESM copy. Packed-consumer coverage now verifies the `require` condition and
+  touches every non-geographic recipe export before loading the lazy dot-grid
+  implementation.
 - **Constant-value heatmaps remain visible across renderers** — static,
   realtime, canvas, and server heatmaps resolve collapsed sequential domains
   at the palette midpoint instead of mapping every occupied cell to the
