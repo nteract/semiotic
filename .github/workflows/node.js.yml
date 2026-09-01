@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload coverage shard
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: coverage-shard-${{ matrix.shard }}
           path: vitest-reports/*.json
@@ -133,7 +133,7 @@ jobs:
         run: npm ci
 
       - name: Download coverage shards
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: coverage-shard-*
           path: vitest-reports
@@ -299,9 +299,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22.x is covered by the coverage and contract lanes; this matrix is
-        # the other supported engines only. Node 20 is intentionally no longer
-        # supported because the test dependency graph requires Node >=22.
+        # 22.x is covered by the coverage and contract lanes; this matrix
+        # covers the other supported engines only.
         node-version: ["24.x", "26.x"]
 
     steps:
@@ -441,7 +440,7 @@ jobs:
       # claiming policy-specific animation, performance, or cross-browser parity.
       - name: Upload local docs example contract evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: docs-example-local-contract-evidence
           path: test-results/**/docs-example-local-contract-evidence.v2.json
@@ -450,7 +449,7 @@ jobs:
 
       - name: Upload docs example test artifacts
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: playwright-report-docs-examples
           path: |
@@ -516,7 +515,7 @@ jobs:
 
       - name: Upload snapshot baselines
         if: always() && matrix.project == 'chromium'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: playwright-snapshots
           path: integration-tests/*.spec.ts-snapshots/
@@ -524,7 +523,7 @@ jobs:
 
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: playwright-report-${{ matrix.project }}
           path: |
