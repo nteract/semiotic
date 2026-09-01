@@ -1009,7 +1009,7 @@ try {
     // pack exits 0 but produces nothing (rare, but seen on some runners
     // when --pack-destination is silently ignored).
     console.log("▶ npm pack")
-    const packOut = run(`npm pack --pack-destination "${tmp}" 2>&1`, {
+    const packOut = run(`npm pack --pack-destination "${tmp}" --dry-run=false 2>&1`, {
       cwd: repoRoot
     })
     if (packOut?.trim())
@@ -1072,11 +1072,14 @@ try {
   // eslint-plugin-react / ESLint 10 peer mismatch, and that npm_config_*
   // flag is inherited by child installs — without this override the smoke
   // consumer never gets React and every React entry point fails to import.
+  // `npm publish --dry-run` likewise exposes dry-run config to child commands;
+  // this smoke consumer requires a real installation, just as it requires a
+  // real tarball above.
   // Explicitly use the public registry rather than inheriting a developer's
   // private mirror/token. The fixture installs only public npm dependencies;
   // SEMIOTIC_PACK_REGISTRY can point at an approved CI mirror when needed.
   run(
-    `npm install --no-save --include=dev --ignore-scripts --no-legacy-peer-deps --registry=${quoted(publicNpmRegistry)} ${quoted(tarball)}`,
+    `npm install --dry-run=false --no-save --include=dev --ignore-scripts --no-legacy-peer-deps --registry=${quoted(publicNpmRegistry)} ${quoted(tarball)}`,
     { cwd: proj }
   )
 

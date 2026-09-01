@@ -29,6 +29,7 @@ import {
   snapshotLines
 } from "./lib/api-compatibility.mjs"
 import { createDeclarationAssignability } from "./lib/declaration-assignability.mjs"
+import { npmPackArtifactArgs } from "./lib/npm-pack.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const args = process.argv.slice(2)
@@ -129,8 +130,7 @@ try {
 
   const packed = spawnSync(
     "npm",
-    [
-      "pack",
+    npmPackArtifactArgs([
       `semiotic@${previousVersion}`,
       "--ignore-scripts",
       "--json",
@@ -138,7 +138,7 @@ try {
       archiveDir,
       "--registry",
       registry
-    ],
+    ]),
     {
       cwd: repoRoot,
       encoding: "utf8",

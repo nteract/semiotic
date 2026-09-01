@@ -24,6 +24,7 @@ import os from "node:os"
 import { basename, dirname, extname, join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { gzipSync } from "node:zlib"
+import { npmPackArtifactArgs } from "./npm-pack.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = resolve(__dirname, "../..")
@@ -241,14 +242,13 @@ function createCheckoutTarball(repoRoot, tempRoot) {
   mkdirSync(npmCache, { recursive: true })
   run(
     npmCommand(),
-    [
-      "pack",
+    npmPackArtifactArgs([
       "--json",
       "--silent",
       "--ignore-scripts",
       "--pack-destination",
       packDirectory
-    ],
+    ]),
     {
       cwd: repoRoot,
       env: { NPM_CONFIG_CACHE: npmCache }

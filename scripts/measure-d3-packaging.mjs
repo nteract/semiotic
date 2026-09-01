@@ -34,6 +34,7 @@ import process from "node:process"
 import { fileURLToPath } from "node:url"
 import { gzipSync } from "node:zlib"
 import { build as esbuild } from "esbuild"
+import { npmPackArtifactArgs } from "./lib/npm-pack.mjs"
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(SCRIPT_DIR, "..")
@@ -226,15 +227,14 @@ function packRepository(outputDirectory) {
   }
   const output = execFileSync(
     "npm",
-    [
-      "pack",
+    npmPackArtifactArgs([
       "--ignore-scripts",
       "--json",
       "--pack-destination",
       outputDirectory,
       "--cache",
       join(outputDirectory, "npm-cache")
-    ],
+    ]),
     { cwd: REPO_ROOT, encoding: "utf8" }
   )
   const result = JSON.parse(output)

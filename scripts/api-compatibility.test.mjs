@@ -1,17 +1,57 @@
 /** Run: node --test scripts/api-compatibility.test.mjs */
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, it } from "node:test"
 import { compareDeclarationLines } from "./lib/api-compatibility.mjs"
 import { createDeclarationAssignability } from "./lib/declaration-assignability.mjs"
+import { npmPackArtifactArgs } from "./lib/npm-pack.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 
 describe("public API compatibility comparison", () => {
+  it("writes nested pack artifacts when npm dry-run is inherited", () => {
+    const directory = mkdtempSync(join(tmpdir(), "semiotic-npm-pack-test-"))
+    const archiveDirectory = join(directory, "archive")
+    mkdirSync(archiveDirectory)
+    writeFileSync(
+      join(directory, "package.json"),
+      JSON.stringify({ name: "nested-pack-fixture", version: "1.0.0" }),
+    )
+    writeFileSync(join(directory, "index.js"), "export default true\n")
+
+    try {
+      const packed = spawnSync(
+        "npm",
+        npmPackArtifactArgs([
+          "--ignore-scripts",
+          "--json",
+          "--pack-destination",
+          archiveDirectory,
+        ]),
+        {
+          cwd: directory,
+          encoding: "utf8",
+          env: { ...process.env, npm_config_dry_run: "true" },
+        },
+      )
+      assert.equal(
+        packed.status,
+        0,
+        packed.stderr || packed.stdout || packed.error?.message,
+      )
+      assert.deepEqual(
+        readdirSync(archiveDirectory).filter((name) => name.endsWith(".tgz")),
+        ["nested-pack-fixture-1.0.0.tgz"],
+      )
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it("rejects interface member removal, narrowing, and required-ification", () => {
     const original = [
       "interface WidgetProps",
