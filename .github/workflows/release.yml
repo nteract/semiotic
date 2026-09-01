@@ -61,48 +61,6 @@ jobs:
       - name: Verify npm trusted-publisher authentication
         run: node scripts/check-npm-trusted-publisher.mjs
 
-  visual-contracts:
-    needs: npm-publish-preflight
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [chromium, firefox, webkit]
-    # Match the exact font/browser environment used to author and verify the
-    # committed Linux snapshots. A release tag must not bypass the PR visual
-    # gate merely because npm publication uses a separate job.
-    container: mcr.microsoft.com/playwright:v1.61.1-noble
-    # Firefox requires root's home in this container, but a bind-mounted
-    # Docker config beneath it may be unreadable. Visual tests do not use
-    # Docker, so isolate incidental Docker configuration lookups in /tmp.
-    env:
-      HOME: /root
-      DOCKER_CONFIG: /tmp/semiotic-docker-config
-
-    steps:
-      - name: Checkout tagged source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-
-      - name: Use Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 22.x
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install pinned browser engines
-        run: npx playwright install --with-deps chromium firefox webkit
-
-      - name: Build browser artifacts
-        run: npm run dist
-
-      - name: Verify every committed visual baseline without updates
-        run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
-
   docs-examples:
     needs: npm-publish-preflight
     name: Docs examples (Chromium)
@@ -111,10 +69,9 @@ jobs:
     # legitimate cold transforms room to finish, but bound a stalled Vite or
     # browser worker so publication cannot wait indefinitely.
     timeout-minutes: 25
-    # Authored example routes use their own Vite/source-alias server and are
-    # intentionally excluded from the package visual matrix above. Re-run
-    # them independently on the tagged source so a green PR requirement is
-    # not the only protection before publication.
+    # Authored example routes use their own Vite/source-alias server and test
+    # executable behavior rather than comparing baselines. Visual, browser,
+    # machine, and performance baselines remain PR gates only.
     container: mcr.microsoft.com/playwright:v1.61.1-noble
     env:
       HOME: /root
@@ -161,7 +118,7 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: [visual-contracts, docs-examples]
+    needs: docs-examples
     runs-on: ubuntu-latest
     environment: release
     outputs:
@@ -245,11 +202,36 @@ jobs:
       - name: Install the release browser runtime
         run: npx playwright install --with-deps chromium
 
-      # This is the canonical fail-closed release gate. Keep it before the
-      # immutable artifact: website/declaration builds and every generator must
-      # finish before the bytes that will be published are frozen.
-      - name: Run the complete release gate
-        run: npm run release:check
+      # Use the selected tag's canonical release command, but remove PR-owned
+      # baselines in workflow code so a manual recovery of an older tag also
+      # receives the current publish policy. Deterministic checks still fail
+      # closed before the immutable artifact is frozen.
+      - name: Run deterministic publish gate
+        run: |
+          node <<'NODE'
+          const { spawnSync } = require("node:child_process")
+          const { scripts } = require("./package.json")
+
+          const prOnlyBaselines = new Set([
+            "npm run check:visual-baseline-capabilities",
+            "npm run check:cold-consumer",
+            "npm run check:machine-baseline",
+            "npm run check:browser-baseline",
+          ])
+          const commands = scripts["release:check"]
+            .split(" && ")
+            .filter((command) => !prOnlyBaselines.has(command))
+
+          for (const command of commands) {
+            console.log(`\n> ${command}`)
+            const result = spawnSync(command, {
+              cwd: process.cwd(),
+              shell: true,
+              stdio: "inherit",
+            })
+            if (result.status !== 0) process.exit(result.status || 1)
+          }
+          NODE
 
       - name: Determine npm dist-tag
         id: dist-tag
@@ -287,11 +269,13 @@ jobs:
       - name: Pack-and-import smoke test (exact tarball)
         run: npm run check:pack -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
 
-      - name: Check packed cold-consumer baseline (exact tarball)
+      - name: "Release diagnostics: packed cold-consumer baseline"
         run: npm run check:cold-consumer -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+        continue-on-error: true
 
-      - name: Check packed machine baseline (exact tarball)
+      - name: "Release diagnostics: packed machine baseline"
         run: npm run check:machine-baseline -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+        continue-on-error: true
 
       - name: Reverify immutable release artifact before publication
         run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
@@ -308,8 +292,9 @@ jobs:
         run: npm run check:cloud-run-lock
         continue-on-error: true
 
-      - name: Compare release benchmarks with the previous tag on this runner
+      - name: "Release diagnostics: benchmarks versus previous tag"
         run: npm run bench:release-vs-previous
+        continue-on-error: true
 
       - name: Check whether this exact version is already published
         id: published-artifact

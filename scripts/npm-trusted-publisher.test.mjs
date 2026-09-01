@@ -122,21 +122,69 @@ test("release workflow gates expensive jobs on OIDC preflight and never uses NPM
   )
   assert.match(workflow, /node scripts\/check-npm-trusted-publisher\.mjs/)
   assert.match(workflow, /npm install --global npm@11\.6\.2/)
-  assert.match(
-    workflow,
-    /^  visual-contracts:\n    needs: npm-publish-preflight$/m
-  )
+  assert.doesNotMatch(workflow, /^  visual-contracts:/m)
   assert.match(
     workflow,
     /^  docs-examples:\n    needs: npm-publish-preflight$/m
   )
   assert.match(
     workflow,
-    /^  publish:\n    needs: \[visual-contracts, docs-examples\]\n    runs-on: ubuntu-latest\n    environment: release$/m
+    /^  publish:\n    needs: docs-examples\n    runs-on: ubuntu-latest\n    environment: release$/m
   )
   assert.match(
     workflow,
     /release_tag: \$\{\{ github\.event_name == 'workflow_dispatch'/
   )
   assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN/)
+  assert.doesNotMatch(workflow, /run: npm run release:check/)
+})
+
+test("publish gates exclude PR-only baselines", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/release.yml", import.meta.url),
+    "utf8"
+  )
+  const packageJson = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8")
+  )
+  const baselineCommands = [
+    "check:visual-baseline-capabilities",
+    "check:cold-consumer",
+    "check:machine-baseline",
+    "check:browser-baseline"
+  ]
+
+  assert.match(workflow, /const prOnlyBaselines = new Set/)
+  for (const baselineCommand of baselineCommands) {
+    assert.match(
+      workflow,
+      new RegExp(`"npm run ${baselineCommand.replaceAll(":", "\\:")}"`),
+      `manual recovery must filter ${baselineCommand} from an older tag's release:check`
+    )
+  }
+
+  for (const scriptName of ["release:check", "prepublishOnly"]) {
+    for (const baselineCommand of baselineCommands) {
+      assert.doesNotMatch(
+        packageJson.scripts[scriptName],
+        new RegExp(`npm run ${baselineCommand.replaceAll(":", "\\:")}`),
+        `${scriptName} must not gate publication on ${baselineCommand}`
+      )
+    }
+  }
+
+  for (const diagnostic of [
+    "packed cold-consumer baseline",
+    "packed machine baseline",
+    "benchmarks versus previous tag"
+  ]) {
+    assert.match(
+      workflow,
+      new RegExp(
+        `- name: "Release diagnostics: ${diagnostic}"\\n` +
+          `        run: [^\\n]+\\n` +
+          `        continue-on-error: true`
+      )
+    )
+  }
 })

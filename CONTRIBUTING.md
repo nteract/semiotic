@@ -277,12 +277,13 @@ After the release PR is merged, `npm run publish-release` creates the version
 tag from a clean, validated `main`. The tag workflow independently proves the
 tagged commit is merged into `origin/main` and exchanges GitHub OIDC for a
 short-lived package-scoped npm credential before starting any expensive jobs.
-It then reruns every visual baseline with updates disabled, installs Chromium
-for the local browser contract, runs the complete `release:check`, and only
-then freezes the immutable npm artifact. If infrastructure fails after a tag is
+It then runs deterministic source, API, package, and documentation checks before
+freezing the immutable npm artifact. Performance, machine, browser, and visual
+baselines are PR gates; release runs may report selected baseline diagnostics,
+but they cannot block publication. If infrastructure fails after a tag is
 created but before npm accepts the package, use the Release workflow's manual
-`release_tag` input to retry that exact tag with the current release tooling;
-the immutable-artifact and already-published checks keep reruns idempotent.
+`release_tag` input to retry that exact tag with the current release tooling.
+The immutable-artifact and already-published checks keep reruns idempotent.
 
 ## Community
 
