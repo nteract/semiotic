@@ -6,9 +6,11 @@
  * runner behavior exactly (locked standard-tier price table, gpt-5.6 model
  * family, OPENAI_PROJECT_ID scoping). `orcarouter` is the OpenAI-compatible AI
  * gateway integration: the same `/v1/responses` request shapes and result
- * schemas apply, but cost tracking is zero-markup (no per-model price table)
- * and the `reasoning` request field is omitted because its upstream models
- * reject it when combined with a strict JSON-schema output format.
+ * schemas apply, but there is no per-model price table because the gateway is
+ * zero-markup, so cost is treated as unknown (reported as `null`, never a
+ * zero-dollar estimate) and no spend ceiling is enforced. The `reasoning`
+ * request field is omitted because its upstream models reject it when combined
+ * with a strict JSON-schema output format.
  */
 export const AI_EVAL_PROVIDERS = {
   openai: {
@@ -24,6 +26,7 @@ export const AI_EVAL_PROVIDERS = {
       "gpt-5.6-terra",
       "gpt-5.6-luna",
     ],
+    hasPriceTable: true,
     priceRevision: "openai-standard-2026-07-26",
     reportPrefix: "openai-gpt-5.6",
     requestReasoning: true,
@@ -60,6 +63,7 @@ export const AI_EVAL_PROVIDERS = {
     defaultModels: [
       "orcarouter/auto",
     ],
+    hasPriceTable: false,
     priceRevision: null,
     reportPrefix: "orcarouter",
     requestReasoning: false,
