@@ -234,6 +234,19 @@ baseline refresh but never fail solely for making a consumer bundle smaller.
 before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
 intentional, acceptable part of that public import—not simply to make CI quiet.
 
+### Benchmark baselines
+
+`npm run bench:baseline` refreshes `benchmarks/setup/baseline.json` for local
+`npm run bench:compare:committed` comparisons. Capture it on an otherwise idle machine;
+absolute timings from a different architecture or runner are not comparable.
+
+The PR performance gate uses `npm run bench:pr-vs-main`: it measures the candidate and
+`origin/main` on the same machine with the candidate's identical benchmark cases and fixtures.
+Updating the committed JSON cannot clear this gate. Investigate a family of regressions in its
+shared runtime path, preserve correctness coverage, and rerun the same-hardware comparison.
+Do not remove benchmark cases or raise thresholds to conceal the regression. Refresh the local
+baseline only after reviewing the measured behavior change.
+
 ## Before Opening a PR
 
 Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.

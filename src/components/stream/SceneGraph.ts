@@ -179,33 +179,35 @@ export function buildStackedAreaNodes(
   // disagree on which rows count and the yDomain doesn't match what
   // gets drawn.
   const xSet = new Set<number>()
-  for (const g of groups) {
-    for (const d of g.data) {
-      const x = xGet(d)
-      if (Number.isFinite(x)) xSet.add(x)
-    }
+  type StackedValue = {
+    value: number
+    datum: Datum
+    sources?: Datum[]
   }
-  const xValues = Array.from(xSet).sort((a, b) => a - b)
-
-  // Build value lookup per group per x
-  const valueMaps: Map<string, Map<number, number>> = new Map()
-  const datumMaps = new Map<string, Map<number, Datum[]>>()
+  // Keep the value and its source together. Most group/x pairs have a single
+  // row; only duplicates need a contributor array. Collect x in the same pass
+  // but retain finite-x/invalid-y positions so they still break the path.
+  const valueMaps = new Map<string, Map<number, StackedValue>>()
   for (const g of groups) {
-    const m = new Map<number, number>()
-    const datums = new Map<number, Datum[]>()
+    const m = new Map<number, StackedValue>()
     for (const d of g.data) {
       const x = xGet(d)
       const y = yGet(d)
-      if (Number.isFinite(x) && Number.isFinite(y)) {
-        m.set(x, (m.get(x) || 0) + y)
-        const sources = datums.get(x) ?? []
-        sources.push(d)
-        datums.set(x, sources)
+      if (!Number.isFinite(x)) continue
+      xSet.add(x)
+      if (!Number.isFinite(y)) continue
+      const existing = m.get(x)
+      if (existing) {
+        existing.value += y
+        if (existing.sources) existing.sources.push(d)
+        else existing.sources = [existing.datum, d]
+      } else {
+        m.set(x, { value: y, datum: d })
       }
     }
     valueMaps.set(g.key, m)
-    datumMaps.set(g.key, datums)
   }
+  const xValues = Array.from(xSet).sort((a, b) => a - b)
 
   // Compute totals per x for normalization
   let totals: Map<number, number> | undefined
@@ -214,14 +216,14 @@ export function buildStackedAreaNodes(
     for (const x of xValues) {
       let sum = 0
       for (const g of groups) {
-        sum += valueMaps.get(g.key)?.get(x) || 0
+        sum += valueMaps.get(g.key)?.get(x)?.value || 0
       }
       totals.set(x, sum || 1) // avoid div by 0
     }
   }
 
   const groupKeys = groups.map((g) => g.key)
-  const valueAt = (k: string, x: number) => valueMaps.get(k)?.get(x) || 0
+  const valueAt = (k: string, x: number) => valueMaps.get(k)?.get(x)?.value || 0
 
   // Compute per-x baseline offset (shared with PipelineStore's extent pass).
   // Diverging stacks ignore the single-cursor offset and use dual bases.
@@ -248,37 +250,52 @@ export function buildStackedAreaNodes(
     // Contiguous non-zero runs → separate area nodes (LineChart gapStrategy
     // "break" semantics for stacks). Zero / missing values cut the band so we
     // don't draw a flat line along the axis for inactive series.
-    let segment: {
-      top: [number, number]
-      bottom: [number, number]
-      datum: Datum
-      value: number
-      accessibleDatum: Datum
-    }[] = []
+    let topPath: [number, number][] = []
+    let bottomPath: [number, number][] = []
+    let rawValues: number[] = []
+    let datums: Datum[] = []
+    let accessibleDatums: Datum[] = []
+    let needsSort = false
 
     const flushSegment = () => {
-      if (segment.length >= 2) {
-        // Hit testing requires ascending pixel x, even for reversed scales.
-        segment.sort((a, b) => a.top[0] - b.top[0])
+      if (topPath.length === 0) return
+      if (topPath.length >= 2) {
+        // xValues are already sorted. Only reversed/non-monotonic projections
+        // need a permutation; apply the SAME permutation to every channel.
+        const order = needsSort
+          ? topPath
+              .map((_, index) => index)
+              .sort((a, b) => topPath[a][0] - topPath[b][0])
+          : undefined
         const areaNode: AreaSceneNode = {
           type: "area",
-          topPath: segment.map((vertex) => vertex.top),
-          bottomPath: segment.map((vertex) => vertex.bottom),
-          rawValues: segment.map((vertex) => vertex.value),
+          topPath: order ? order.map((index) => topPath[index]) : topPath,
+          bottomPath: order
+            ? order.map((index) => bottomPath[index])
+            : bottomPath,
+          rawValues: order ? order.map((index) => rawValues[index]) : rawValues,
           style: styleFn(g.key, g.data[0]),
-          datum: segment.map((vertex) => vertex.datum),
-          accessibleDatum: segment.map((vertex) => vertex.accessibleDatum),
+          datum: order ? order.map((index) => datums[index]) : datums,
+          accessibleDatum: order
+            ? order.map((index) => accessibleDatums[index])
+            : accessibleDatums,
           group: g.key
         }
         if (curve) areaNode.curve = curve
         nodes.push(areaNode)
       }
-      segment = []
+      topPath = []
+      bottomPath = []
+      rawValues = []
+      datums = []
+      accessibleDatums = []
+      needsSort = false
     }
 
     for (const x of xValues) {
-      const hasValue = vMap.has(x)
-      let rawY = hasValue ? (vMap.get(x) as number) : 0
+      const entry = vMap.get(x)
+      const hasValue = entry !== undefined
+      let rawY = entry?.value ?? 0
       if (normalize && hasValue) {
         const total = totals!.get(x)!
         rawY = rawY / total
@@ -323,34 +340,34 @@ export function buildStackedAreaNodes(
         flushSegment()
         continue
       }
-      const sources = datumMaps.get(g.key)!.get(x)!
-      const aggregate = vMap.get(x)!
-      const datum =
-        sources.length === 1
-          ? sources[0]
+      const sources = entry!.sources
+      const aggregate = entry!.value
+      const datum = !sources
+        ? entry!.datum
+        : {
+            ...sources[0],
+            __aggregateValue: aggregate,
+            __aggregateCount: sources.length,
+            __aggregateRows: sources
+          }
+      if (topPath.length > 0 && px < topPath[topPath.length - 1][0])
+        needsSort = true
+      // Write directly into the final buffers without a temporary vertex object.
+      topPath.push([px, topY])
+      bottomPath.push([px, bottomY])
+      datums.push(datum)
+      rawValues.push(aggregate)
+      // An aggregate is not one arbitrarily selected source row.
+      accessibleDatums.push(
+        !sources
+          ? datum
           : {
-              ...sources[0],
-              __aggregateValue: aggregate,
-              __aggregateCount: sources.length,
-              __aggregateRows: sources
+              x,
+              value: aggregate,
+              group: g.key,
+              observations: sources.length
             }
-      segment.push({
-        // Area fill spans [base, stackedY] regardless of sign.
-        top: [px, topY],
-        bottom: [px, bottomY],
-        datum,
-        value: aggregate,
-        // An aggregate is not one arbitrarily selected source row.
-        accessibleDatum:
-          sources.length === 1
-            ? datum
-            : {
-                x,
-                value: aggregate,
-                group: g.key,
-                observations: sources.length
-              }
-      })
+      )
       groupTops.set(x, stackedY)
     }
 

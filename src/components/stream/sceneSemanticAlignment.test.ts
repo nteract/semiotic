@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { scaleLinear } from "d3-scale"
 import {
   buildAreaNode,
@@ -126,6 +126,94 @@ describe("stacked area segments", () => {
     x: scaleLinear().domain([0, 10]).range([0, 10]),
     y: scaleLinear().domain([0, 10]).range([0, 10])
   }
+
+  it("indexes each row once without erasing invalid-y gaps or mutating source data", () => {
+    const rows = [5, 1, 3, 4, 2].map((x) =>
+      Object.freeze({ x, y: x === 3 ? NaN : x })
+    )
+    Object.freeze(rows)
+    const xGet = vi.fn(getX)
+    const yGet = vi.fn(getY)
+    const { nodes } = buildStackedAreaNodes(
+      [{ key: "a", data: rows }],
+      scales,
+      xGet,
+      yGet,
+      () => style
+    )
+    expect(xGet).toHaveBeenCalledTimes(rows.length)
+    expect(yGet).toHaveBeenCalledTimes(rows.length)
+    expect(nodes.map((node) => node.rawValues)).toEqual([
+      [1, 2],
+      [4, 5]
+    ])
+    expect(nodes.map((node) => node.datum)).toEqual([
+      [rows[1], rows[4]],
+      [rows[3], rows[0]]
+    ])
+    expect(nodes[0].datum?.[0]).toBe(rows[1])
+    const accessible = nodes[0].accessibleDatum
+    if (!Array.isArray(accessible)) throw new Error("Expected per-vertex accessible data")
+    expect(accessible[0]).toBe(rows[1])
+    expect(nodes[0].datum).not.toBe(nodes[1].datum)
+  })
+
+  it.each([false, true])(
+    "permutes every channel together for folded scales and stable pixel ties (normalized=%s)",
+    (normalize) => {
+      const rows = [
+        { id: "four", x: 4, y: 4 },
+        { id: "three", x: 3, y: 3 },
+        { id: "one-a", x: 1, y: 1 },
+        { id: "one-b", x: 1, y: 4 },
+        { id: "two", x: 2, y: 2 }
+      ]
+      const folded = {
+        ...scales,
+        x: scaleLinear().domain([1, 2, 3, 4]).range([30, 10, 10, 20])
+      }
+      const { nodes, stackedTops } = buildStackedAreaNodes(
+        [{ key: "a", data: rows }],
+        folded,
+        getX,
+        getY,
+        () => style,
+        normalize
+      )
+      expect(nodes).toHaveLength(1)
+      const node = nodes[0]
+      expect(node.topPath).toEqual([
+        [10, normalize ? 1 : 2],
+        [10, normalize ? 1 : 3],
+        [20, normalize ? 1 : 4],
+        [30, normalize ? 1 : 5]
+      ])
+      expect(node.bottomPath).toEqual([
+        [10, 0],
+        [10, 0],
+        [20, 0],
+        [30, 0]
+      ])
+      expect(node.rawValues).toEqual([2, 3, 4, 5])
+      expect(node.datum?.map(({ id }) => id)).toEqual([
+        "two",
+        "three",
+        "four",
+        "one-a"
+      ])
+      expect(node.datum?.[3].__aggregateRows).toEqual([rows[2], rows[3]])
+      expect(node.accessibleDatum).toEqual([
+        rows[4],
+        rows[1],
+        rows[0],
+        { x: 1, value: 5, group: "a", observations: 2 }
+      ])
+      expect(extractAllRows(nodes).map(({ values }) => values.x)).toEqual([
+        2, 3, 4, 1
+      ])
+      expect(stackedTops.get("a")?.get(1)).toBe(normalize ? 1 : 5)
+    }
+  )
 
   it.each(["zero", "diverging", "wiggle", "silhouette"] as const)(
     "keeps each gap-separated segment's own source rows (%s)",
