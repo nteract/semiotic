@@ -6,9 +6,38 @@ import {
   stableApiEntrypoints
 } from "./lib/public-entrypoints.mjs"
 
+test("README entry counts agree with the canonical stable package inventory", () => {
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8")
+  const counts = readme.match(
+    /Semiotic ships (\d+) stable JavaScript entry points \((\d+) subpaths plus the root\)/
+  )
+  assert.ok(counts, "README must document both stable entry counts")
+  const entries = stableApiEntrypoints()
+  assert.equal(Number(counts[1]), entries.length)
+  assert.equal(
+    Number(counts[2]),
+    entries.filter((entry) => entry.subpath !== ".").length
+  )
+})
+
+test("only the experimental namespace is excluded, not similarly named stable entries", () => {
+  const entries = publicJavaScriptEntrypoints({
+    name: "semiotic",
+    exports: Object.fromEntries(
+      ["./experimental", "./experimental/nested", "./experimental-tools"].map(
+        (subpath) => [subpath, "./dist/example.js"]
+      )
+    )
+  })
+  assert.deepEqual(
+    entries.map((entry) => entry.stableApi),
+    [false, false, true]
+  )
+})
+
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
-  assert.equal(entries.length, 34)
+  assert.equal(entries.length, 36)
   assert.equal(
     entries.find((entry) => entry.subpath === "./xy")?.sourcePath,
     "src/components/semiotic-xy.ts"
@@ -18,6 +47,14 @@ test("derives every importable package subpath and keeps previews out of API sna
     "semiotic-server-edge"
   )
   assert.equal(
+    entries.find((entry) => entry.subpath === "./artifact")?.sourcePath,
+    "src/components/semiotic-artifact.ts"
+  )
+  assert.equal(
+    entries.find((entry) => entry.subpath === "./artifact/react")?.sourcePath,
+    "src/components/semiotic-artifact-react.ts"
+  )
+  assert.equal(
     entries.find((entry) => entry.subpath === "./experimental")?.stableApi,
     false
   )
@@ -25,7 +62,7 @@ test("derives every importable package subpath and keeps previews out of API sna
     entries.find((entry) => entry.subpath === "./experimental/vacp")?.stableApi,
     false
   )
-  assert.equal(stableApiEntrypoints().length, 32)
+  assert.equal(stableApiEntrypoints().length, 34)
 })
 
 test("retains condition-only JavaScript exports in the inventory", () => {

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.9.2] - 2026-08-31
+
 ### Added
 - **`semiotic/line` one-chart boundary** — `LineChart` can now be imported from
   a dedicated micro entry that excludes the rest of the XY catalog and direct
@@ -207,6 +210,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the authored input shape.
 
 ### Fixed
+- **Publish dry runs can complete nested artifact checks** — release helpers
+  that require a real tarball now override npm's inherited dry-run setting for
+  their internal `npm pack` calls. API compatibility, machine and cold-consumer
+  baselines, d3 packaging evidence, immutable release artifacts, and package
+  smoke installs no longer receive a successful filename without a written
+  archive during `npm publish --dry-run`.
 - **CommonJS recipe consumers can share d3 v7's geographic dependency** — the
   declared `d3-geo` floor now matches the `geoBounds` and `geoContains` APIs
   actually used, allowing a consumer-owned 3.1.0 resolution instead of a nested

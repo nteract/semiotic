@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 import Ajv2020 from "ajv/dist/2020.js"
 import { describe, expect, it } from "vitest"
+import { validateArtifactContract } from "../../artifact/contract"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
 import {
@@ -48,15 +49,24 @@ function createSchemaValidator() {
   return new Ajv2020({ strict: false, allErrors: true, validateFormats: false })
 }
 
+function validatePublishedArtifact(value: unknown) {
+  const result = validateArtifactContract(value)
+  return {
+    valid: result.valid,
+    errors: result.errors.map(({ path, message }) => `${path}: ${message}`),
+  }
+}
+
 // ── Published schemas: structure + sync with the runtime surface ─────────────
 
 describe("published JSON Schemas (/spec/v0.1)", () => {
   const capability = loadSchema("chart-capability.schema.json")
   const audience = loadSchema("audience-profile.schema.json")
   const annotation = loadSchema("annotation-provenance.schema.json")
+  const artifact = loadSchema("artifact-contract.schema.json")
 
   it("declare the v0.1 spec ids and draft", () => {
-    for (const schema of [capability, audience, annotation]) {
+    for (const schema of [capability, audience, annotation, artifact]) {
       expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema")
       expect(schema.$id).toMatch(/^https:\/\/semiotic\.dev\/spec\/v0\.1\//)
     }
@@ -64,7 +74,7 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
 
   it("compile as Draft 2020-12 schemas", () => {
     const ajv = createSchemaValidator()
-    for (const schema of [capability, audience, annotation]) {
+    for (const schema of [capability, audience, annotation, artifact]) {
       expect(ajv.validateSchema(schema)).toBe(true)
       expect(() => ajv.compile(schema)).not.toThrow()
     }
@@ -74,6 +84,7 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
     expect(IDID_SPEC_VERSION).toBe("0.1")
     expect(capability.properties.specVersion.const).toBe(IDID_SPEC_VERSION)
     expect(audience.properties.specVersion.const).toBe(IDID_SPEC_VERSION)
+    expect(artifact.properties.contractVersion.const).toBe(IDID_SPEC_VERSION)
   })
 
   it("require the same fields the runtime validator requires (capability)", () => {
@@ -185,6 +196,14 @@ describe("published JSON Schemas (/spec/v0.1)", () => {
         files: [
           "annotation-provenance-watcher-threshold.json",
           "annotation-provenance-reviewed-revision.json",
+        ],
+      },
+      {
+        schema: artifact,
+        validate: validatePublishedArtifact,
+        files: [
+          "artifact-contract-full.json",
+          "artifact-contract-unknown-state.json",
         ],
       },
     ]

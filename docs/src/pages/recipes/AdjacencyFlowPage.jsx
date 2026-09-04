@@ -97,6 +97,7 @@ export default function AdjacencyFlowPage() {
         { label: "Adjacency Flow", path: "/recipes/adjacency-flow" },
       ]}
       prevPage={{ title: "Net Ensemble", path: "/recipes/net-ensemble" }}
+      nextPage={{ title: "Transit Diagram", path: "/recipes/transit-diagram" }}
       dependencies={["semiotic", "react"]}
       fullSourceCode={fullSourceCode}
     >

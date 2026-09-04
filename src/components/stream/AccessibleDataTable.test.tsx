@@ -334,6 +334,40 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     expect(within(edgeTable).getByText("informs")).toBeInTheDocument()
     expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edges.")
   })
+
+  it("omits decorative null-datum network nodes from counts and rows", () => {
+    render(
+      <NetworkAccessibleDataTable
+        tableId="decorative-network-node"
+        chartType="Network chart"
+        nodes={[
+          {
+            type: "arc",
+            id: "decorative-wedge",
+            datum: null,
+          },
+          {
+            type: "circle",
+            id: "station",
+            datum: { id: "station" },
+            accessibility: { tableFields: { station: "Station" } },
+          },
+        ]}
+        edges={[]}
+      />
+    )
+
+    const trigger = screen.getByRole("button", {
+      name: "View data summary (1 nodes, 0 edges)",
+    })
+    fireEvent.click(trigger)
+
+    const table = screen.getByRole("table", { name: /node data/i })
+    expect(within(table).getAllByRole("row")).toHaveLength(2)
+    expect(within(table).getByText("Station")).toBeInTheDocument()
+    expect(screen.getByRole("note")).toHaveTextContent("1 nodes, 0 edges.")
+    expect(screen.queryByText("decorative-wedge")).toBeNull()
+  })
 })
 
 // ── interaction fixes (issue #971) ──────────────────────────────────────

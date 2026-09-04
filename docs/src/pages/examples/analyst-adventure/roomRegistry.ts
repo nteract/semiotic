@@ -51,7 +51,11 @@ const executiveEvidenceRows = executiveTelemetry.filter(
   (row) =>
     row.timestamp >= new Date("1984-06-04T09:04:00.000Z") &&
     row.timestamp <= new Date("1984-06-04T09:14:00.000Z"),
-)
+).map((row) => ({
+  ...row,
+  timestamp: row.timestamp.getTime(),
+  observedAt: row.observedAt.toISOString(),
+}))
 
 const executiveEvidenceConfig = portableEvidenceConfig("temporal-lag", "LineChart", {
   data: executiveEvidenceRows,
@@ -72,12 +76,14 @@ const executiveEvidenceConfig = portableEvidenceConfig("temporal-lag", "LineChar
     {
       id: "executive-disappearance-window",
       type: "x-band",
-      x0: new Date("1984-06-04T09:12:00.000Z"),
-      x1: new Date("1984-06-04T09:14:00.000Z"),
+      x0: new Date("1984-06-04T09:12:00.000Z").getTime(),
+      x1: new Date("1984-06-04T09:14:00.000Z").getTime(),
       label: "Disappearance window",
     },
     {
       ...executiveFacts.cachedRoofPing,
+      timestamp: executiveFacts.cachedRoofPing.timestamp.getTime(),
+      observedAt: executiveFacts.cachedRoofPing.observedAt.toISOString(),
       id: "executive-cached-roof",
       stableId: "executive-cached-roof",
       type: "callout",

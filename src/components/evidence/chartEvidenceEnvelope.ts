@@ -20,9 +20,26 @@ import {
 } from "../ai/readerGrounding"
 import { profileData } from "../ai/profileData"
 import type { Datum } from "../charts/shared/datumTypes"
+import {
+  serializeArtifactContract,
+  type PortableArtifactContract,
+  type SerializedArtifactContract
+} from "../artifact/serialization"
+import {
+  compareArtifactIdentity,
+  type ArtifactIdentityBinding
+} from "../artifact/identity"
+import {
+  ARTIFACT_CONTRACT_VERSION,
+  type ArtifactContract
+} from "../artifact/types"
 import type { RenderEvidence } from "../server/renderEvidence"
+import { stableEvidenceHash } from "./stableJsonHash"
+export { stableEvidenceHash } from "./stableJsonHash"
 
 export const CHART_EVIDENCE_ENVELOPE_VERSION = 1 as const
+const ARTIFACT_TRANSFER_BINDING_VERSION = 2 as const
+const LEGACY_ARTIFACT_TRANSFER_BINDING_VERSION = 1 as const
 
 export interface EnvelopeChartSection {
   component: string
@@ -138,6 +155,8 @@ export interface EvidenceEnvelopeOptions {
   knownGaps?: string[]
   unsupportedClaims?: string[]
   uncertaintyShown?: boolean
+  /** Optional interpretation contract preserved beside render evidence. */
+  artifactContract?: PortableArtifactContract
 }
 
 export interface ChartEvidenceEnvelope {
@@ -151,123 +170,67 @@ export interface ChartEvidenceEnvelope {
   modalityChecks: EnvelopeModalityChecks
   audit: EnvelopeAuditSection
   limits: EnvelopeLimitsSection
+  artifact?: SerializedArtifactContract & {
+    transferBindingVersion:
+      | typeof LEGACY_ARTIFACT_TRANSFER_BINDING_VERSION
+      | typeof ARTIFACT_TRANSFER_BINDING_VERSION
+    transferFingerprint: string
+    identityBinding?: ArtifactIdentityBinding
+  }
 }
 
-function stableStringify(value: unknown): string {
-  if (value === null || value === undefined) return "null"
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`
+type EnvelopeArtifactSection = NonNullable<ChartEvidenceEnvelope["artifact"]>
+
+function artifactTransferFingerprint(
+  artifact: SerializedArtifactContract & {
+    transferBindingVersion?: 1 | 2
+    identityBinding?: ArtifactIdentityBinding
   }
-  if (value instanceof Date) return JSON.stringify(value)
-  if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, nested]) => nested !== undefined)
-      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-      .map(
-        ([key, nested]) => `${JSON.stringify(key)}:${stableStringify(nested)}`
+): string {
+  const transferBindingVersion =
+    artifact.transferBindingVersion ?? ARTIFACT_TRANSFER_BINDING_VERSION
+  return stableEvidenceHash({
+    kind: "semiotic.chart-evidence.artifact-transfer",
+    envelopeVersion: CHART_EVIDENCE_ENVELOPE_VERSION,
+    transferBindingVersion,
+    contract: artifact.contract ?? null,
+    transfer: artifact.transfer,
+    ...(transferBindingVersion === ARTIFACT_TRANSFER_BINDING_VERSION
+      ? { identityBinding: artifact.identityBinding ?? null }
+      : {})
+  })
+}
+
+function bindArtifactTransfer(
+  artifact: SerializedArtifactContract,
+  identityBinding: ArtifactIdentityBinding
+): EnvelopeArtifactSection {
+  const bound = { ...artifact, identityBinding }
+  return {
+    ...bound,
+    transferBindingVersion: ARTIFACT_TRANSFER_BINDING_VERSION,
+    transferFingerprint: artifactTransferFingerprint(bound)
+  }
+}
+
+function artifactIdentityBinding(
+  artifact: SerializedArtifactContract,
+  component: string,
+  props: Datum
+): ArtifactIdentityBinding {
+  return artifact.contract?.contractVersion === ARTIFACT_CONTRACT_VERSION &&
+    artifact.transfer.status !== "invalid"
+    ? compareArtifactIdentity(
+        artifact.contract as ArtifactContract,
+        props,
+        component
       )
-    return `{${entries.join(",")}}`
-  }
-  return JSON.stringify(value)
+    : {
+        status: "unknown",
+        mismatchPaths: [],
+        unknownPaths: ["artifactContract"]
+      }
 }
-
-/**
- * Stable SHA-256 over key-sorted JSON.
-
- * This dependency-free implementation keeps the evidence entry browser,
- * edge, Node, and RSC compatible. Input is UTF-8 encoded and processed in
- * standard 512-bit blocks.
- */
-export function stableEvidenceHash(value: unknown): string {
-  return sha256Hex(stableStringify(value))
-}
-
-function sha256Hex(message: string): string {
-  const k = SHA256_K
-  const h = [
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c,
-    0x1f83d9ab, 0x5be0cd19
-  ]
-  const bytes = Array.from(new TextEncoder().encode(message))
-  const bitLength = bytes.length * 8
-  bytes.push(0x80)
-  while (bytes.length % 64 !== 56) bytes.push(0)
-  const high = Math.floor(bitLength / 4294967296)
-  const low = bitLength >>> 0
-  bytes.push(
-    (high >>> 24) & 255,
-    (high >>> 16) & 255,
-    (high >>> 8) & 255,
-    high & 255,
-    (low >>> 24) & 255,
-    (low >>> 16) & 255,
-    (low >>> 8) & 255,
-    low & 255
-  )
-  const words: number[] = []
-  for (let index = 0; index < bytes.length; index += 4) {
-    words.push(
-      ((bytes[index]! << 24) |
-        (bytes[index + 1]! << 16) |
-        (bytes[index + 2]! << 8) |
-        bytes[index + 3]!) >>>
-        0
-    )
-  }
-  for (let chunk = 0; chunk < words.length; chunk += 16) {
-    const w = [...words.slice(chunk, chunk + 16)]
-    for (let index = 16; index < 64; index += 1) {
-      const s0 =
-        rotr(w[index - 15]!, 7) ^
-        rotr(w[index - 15]!, 18) ^
-        (w[index - 15]! >>> 3)
-      const s1 =
-        rotr(w[index - 2]!, 17) ^
-        rotr(w[index - 2]!, 19) ^
-        (w[index - 2]! >>> 10)
-      w[index] = (w[index - 16]! + s0 + w[index - 7]! + s1) >>> 0
-    }
-    let [a, b, c, d, e, f, g, hh] = h
-    for (let index = 0; index < 64; index += 1) {
-      const s1 = rotr(e!, 6) ^ rotr(e!, 11) ^ rotr(e!, 25)
-      const ch = (e! & f!) ^ (~e! & g!)
-      const temp1 = (hh! + s1 + ch + k[index]! + w[index]!) >>> 0
-      const s0 = rotr(a!, 2) ^ rotr(a!, 13) ^ rotr(a!, 22)
-      const maj = (a! & b!) ^ (a! & c!) ^ (b! & c!)
-      const temp2 = (s0 + maj) >>> 0
-      hh = g
-      g = f
-      f = e
-      e = (d! + temp1) >>> 0
-      d = c
-      c = b
-      b = a
-      a = (temp1 + temp2) >>> 0
-    }
-    const next = [a, b, c, d, e, f, g, hh]
-    for (let index = 0; index < 8; index += 1) {
-      h[index] = (h[index]! + next[index]!) >>> 0
-    }
-  }
-  return h.map((word) => word.toString(16).padStart(8, "0")).join("")
-}
-
-const rotr = (value: number, count: number): number =>
-  ((value >>> count) | (value << (32 - count))) >>> 0
-
-const SHA256_K = [
-  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
-  0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-  0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
-  0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
-  0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-  0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
-  0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
-  0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-] as const
 
 function countIntendedMarks(
   props: Record<string, unknown>
@@ -458,6 +421,17 @@ export function toEvidenceEnvelope(
     conflicts: []
   }
   const transformOperations = options.transformOperations ?? []
+  const serializedArtifact = options.artifactContract
+    ? serializeArtifactContract(options.artifactContract, {
+        excludeEvidenceSamples: true
+      })
+    : undefined
+  const artifact = serializedArtifact
+    ? bindArtifactTransfer(
+        serializedArtifact,
+        artifactIdentityBinding(serializedArtifact, component, props)
+      )
+    : undefined
 
   return {
     schemaVersion: CHART_EVIDENCE_ENVELOPE_VERSION,
@@ -524,7 +498,8 @@ export function toEvidenceEnvelope(
         renderedSvg: ["visual geometry", "labels", "no raw rows by default"],
         dashboardScreenshot: ["everything visible; treat as broad disclosure"]
       }
-    }
+    },
+    ...(artifact ? { artifact } : {})
   }
 }
 
@@ -636,6 +611,84 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
     throw new TypeError(
       "Evidence envelope tandem agreements and conflicts must be arrays"
     )
+  }
+  if (envelope.artifact !== undefined) {
+    if (
+      !envelope.artifact ||
+      typeof envelope.artifact !== "object" ||
+      !envelope.artifact.transfer ||
+      typeof envelope.artifact.transfer !== "object"
+    ) {
+      throw new TypeError(
+        "Evidence envelope artifact requires a transfer report"
+      )
+    }
+    const artifact = envelope.artifact as EnvelopeArtifactSection
+    const transfer = artifact.transfer
+    const binding = artifact.identityBinding
+    if (
+      !["preserved", "unsupported-version", "invalid", "excluded"].includes(
+        transfer.status
+      ) ||
+      !Array.isArray(transfer.omittedPaths) ||
+      !transfer.omittedPaths.every((path) => typeof path === "string") ||
+      !Array.isArray(transfer.warnings) ||
+      !transfer.warnings.every((warning) => typeof warning === "string")
+    ) {
+      throw new TypeError(
+        "Evidence envelope artifact has an invalid transfer report"
+      )
+    }
+    const currentBinding =
+      artifact.transferBindingVersion === ARTIFACT_TRANSFER_BINDING_VERSION
+    const validIdentityBinding =
+      binding &&
+      ["match", "mismatch", "unknown"].includes(binding.status) &&
+      Array.isArray(binding.mismatchPaths) &&
+      binding.mismatchPaths.every((path) => typeof path === "string") &&
+      Array.isArray(binding.unknownPaths) &&
+      binding.unknownPaths.every((path) => typeof path === "string")
+    if (
+      (currentBinding && !validIdentityBinding) ||
+      (!currentBinding && binding !== undefined)
+    ) {
+      throw new TypeError(
+        "Evidence envelope artifact has an invalid identity binding"
+      )
+    }
+    if (
+      ![
+        LEGACY_ARTIFACT_TRANSFER_BINDING_VERSION,
+        ARTIFACT_TRANSFER_BINDING_VERSION
+      ].includes(artifact.transferBindingVersion) ||
+      typeof artifact.transferFingerprint !== "string"
+    ) {
+      throw new TypeError(
+        "Evidence envelope artifact requires a supported transfer binding"
+      )
+    }
+    const expectedTransferFingerprint = artifactTransferFingerprint(artifact)
+    if (artifact.transferFingerprint !== expectedTransferFingerprint) {
+      throw new TypeError(
+        "Evidence envelope artifact transfer fingerprint does not match its payload"
+      )
+    }
+    if (envelope.artifact.contract !== undefined) {
+      const restored = serializeArtifactContract(envelope.artifact.contract)
+      const declaredStatus = transfer.status
+      const compatibleExcludedStatus =
+        declaredStatus === "excluded" &&
+        restored.transfer.status === "preserved" &&
+        transfer.omittedPaths.length > 0
+      if (
+        restored.transfer.status !== declaredStatus &&
+        !compatibleExcludedStatus
+      ) {
+        throw new TypeError(
+          "Evidence envelope artifact transfer status does not match its contract"
+        )
+      }
+    }
   }
   for (const conflict of modality.tandem.conflicts) {
     if (

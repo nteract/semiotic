@@ -90,7 +90,9 @@ export function publicJavaScriptEntrypoints(packageJson = readPackageJson()) {
             path: target.replace(/^\.\//, "")
           })),
           apiSnapshotName: sourceName,
-          stableApi: !subpath.startsWith("./experimental")
+          stableApi:
+            subpath !== "./experimental" &&
+            !subpath.startsWith("./experimental/")
         }
       ]
     }

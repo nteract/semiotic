@@ -7,7 +7,7 @@
     "src/components/semiotic-ai.ts",
     "ai/mcp-server.ts"
   ],
-  "version": "3.9.1",
+  "version": "3.9.2",
   "components": {
     "schema": 61,
     "aiChartExports": 56,
@@ -832,24 +832,28 @@
     ]
   },
   "mcp": {
-    "toolCount": 24,
+    "toolCount": 28,
     "tools": [
       "applyTheme",
       "auditAccessibility",
+      "auditArtifact",
       "auditChart",
       "auditMobileVisualization",
       "createChart",
       "diagnoseConfig",
       "evaluateChart",
       "explainChart",
+      "explainRefusal",
       "getChartSchema",
       "getSchema",
       "groundChart",
       "improveChart",
       "interrogateChart",
       "proposeChartVariants",
+      "recommendRepresentation",
       "renderChart",
       "renderInteractiveChart",
+      "repairArtifact",
       "repairChartConfig",
       "reportIssue",
       "suggestChart",
@@ -870,8 +874,9 @@
       ],
       "activation": "semiotic-mcp --profile public or MCP_TOOL_PROFILE=public"
     },
-    "resourceCount": 10,
+    "resourceCount": 11,
     "resources": [
+      "semiotic-artifact-contract-schema",
       "semiotic-behavior-contracts",
       "semiotic-build-info",
       "semiotic-chatgpt-chart-widget",

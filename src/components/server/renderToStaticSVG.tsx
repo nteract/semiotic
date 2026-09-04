@@ -1,4 +1,20 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import {
+  findSvgRoot,
+  mapSvgAttributes,
+  setSvgRootAttributes,
+  svgRootAttribute
+} from "../shared/svgRoot"
+import { renderedSvgDimensions } from "./svgSizing"
+import {
+  serializeArtifactContract,
+  type PortableArtifactContract
+} from "../artifact/serialization"
+import {
+  ARTIFACT_CONTRACT_VERSION,
+  type ArtifactContract
+} from "../artifact/types"
+import { compareArtifactIdentity } from "../artifact/identity"
 import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
 import { applySemanticViability } from "../ai/semanticViability"
 import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
@@ -123,6 +139,8 @@ export interface RenderChartOptions {
    * Values are clamped to the practical 0–8 range.
    */
   precision?: number
+  /** Preserve an interpretation contract in machine-readable render evidence. */
+  artifactContract?: PortableArtifactContract
 }
 
 const PRECISION_ATTRIBUTES = new Set([
@@ -202,19 +220,15 @@ function roundSvgGeometryValue(value: string, precision: number): string {
 export function serializeSvgPrecision(svg: string, precision?: number): string {
   const resolved = resolvedPrecision(precision)
   if (resolved === undefined) return svg
-  return svg.replace(/<[^>]+>/g, (tag) =>
-    tag.replace(
-      /\s([\w:-]+)="([^"]*)"/g,
-      (attribute, name: string, value: string) => {
-        if (
-          !PRECISION_ATTRIBUTES.has(name) ||
-          /\b(?:var|calc|url)\(/i.test(value)
-        )
-          return attribute
-        return ` ${name}="${roundSvgGeometryValue(value, resolved)}"`
-      }
-    )
-  )
+  return mapSvgAttributes(svg, (name, value) => {
+    if (
+      !PRECISION_ATTRIBUTES.has(name) ||
+      /\b(?:var|calc|url)\(/i.test(value)
+    ) {
+      return undefined
+    }
+    return roundSvgGeometryValue(value, resolved)
+  })
 }
 
 const COMMON_FRAME_PROP_KEYS = [
@@ -358,6 +372,26 @@ export function renderChartWithEvidence(
     })
   evidence.component = component
   applySemanticViability(evidence, component, props)
+  if (options?.artifactContract) {
+    const artifact = serializeArtifactContract(options.artifactContract, {
+      excludeEvidenceSamples: true
+    })
+    if (artifact.contract) evidence.artifactContract = artifact.contract
+    evidence.artifactTransfer = artifact.transfer
+    evidence.artifactBinding =
+      artifact.contract?.contractVersion === ARTIFACT_CONTRACT_VERSION &&
+      artifact.transfer.status !== "invalid"
+        ? compareArtifactIdentity(
+            artifact.contract as ArtifactContract,
+            props,
+            component
+          )
+        : {
+            status: "unknown",
+            mismatchPaths: [],
+            unknownPaths: ["artifactContract"]
+          }
+  }
   return { svg, evidence }
 }
 
@@ -556,34 +590,6 @@ export interface RenderToImageOptions {
   background?: string
 }
 
-interface SVGDimensions {
-  width: number
-  height: number
-}
-
-function renderedSvgDimensions(
-  svg: string,
-  fallback: SVGDimensions
-): SVGDimensions {
-  const openingTag = svg.match(/^<svg\b[^>]*>/)?.[0]
-  if (!openingTag) return fallback
-
-  const readDimension = (name: "width" | "height", fallbackValue: number) => {
-    const match = openingTag.match(
-      new RegExp(
-        `\\b${name}=(?:"([0-9]+(?:\\.[0-9]+)?)"|'([0-9]+(?:\\.[0-9]+)?)')`
-      )
-    )
-    const value = Number(match?.[1] ?? match?.[2])
-    return Number.isFinite(value) && value > 0 ? value : fallbackValue
-  }
-
-  return {
-    width: readDimension("width", fallback.width),
-    height: readDimension("height", fallback.height)
-  }
-}
-
 /**
  * Render a chart to a PNG or JPEG Buffer.
  *
@@ -611,7 +617,11 @@ export async function renderToImage(
 
   // Apply background if specified
   if (background) {
-    svg = svg.replace(/<svg /, `<svg style="background:${background}" `)
+    const root = findSvgRoot(svg)
+    const style = root ? svgRootAttribute(root, "style") : undefined
+    svg = setSvgRootAttributes(svg, {
+      style: `${style ? `${style};` : ""}background:${background}`
+    })
   }
 
   // Load sharp dynamically — optional dep, loaded at call time only.

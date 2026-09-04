@@ -28,7 +28,7 @@ describe("custom intent registry across public entry bundles", () => {
           bundle: true,
           format: "esm",
           platform: "node",
-          target: "node20",
+          target: "node22",
           treeShaking: true,
           write: false,
           plugins: [{

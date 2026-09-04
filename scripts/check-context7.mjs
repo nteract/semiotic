@@ -18,7 +18,7 @@
  *      repo on a missing folder, which surfaces internal docs the
  *      `folders` allowlist was meant to curate out.
  *
- *   3. Sub-path drift — rule 0 enumerates the stable public sub-path
+ *   3. Sub-path drift — one or more rules enumerate the stable public sub-path
  *      imports (`semiotic/xy`, `semiotic/ordinal`, etc.). When
  *      `package.json` exports a new stable sub-path, the rule should
  *      mention it; when an export disappears, the rule must drop the
@@ -31,6 +31,7 @@
 import { readFileSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { context7SubpathDrift } from "./lib/context7-subpaths.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -101,8 +102,8 @@ if (Array.isArray(manifest.folders)) {
 }
 
 // ── Sub-path drift vs package.json exports ────────────────────────────
-// Rule 0 enumerates the public sub-path entry points; cross-check that
-// every sub-path package.json exports also appears in the rule, and
+// Dedicated rules enumerate the public sub-path entry points; cross-check that
+// every sub-path package.json exports also appears in those rules, and
 // that the rule doesn't name a sub-path that has been removed.
 const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
 // Experimental preview subpaths are intentionally omitted from Context7 so
@@ -117,38 +118,29 @@ const exportedSubpaths = Object.keys(pkg.exports || {})
   .map((k) => (k.endsWith("/*") ? k.slice(0, -2) : k))
   .filter((k) => !IGNORED_SUBPATHS.has(k))
 
-const subpathRule = (manifest.rules || []).find((r) => r.includes("sub-path"))
-if (!subpathRule) {
+const subpathRules = (manifest.rules || []).filter((rule) =>
+  rule.includes("sub-path")
+)
+if (subpathRules.length === 0) {
   warn(
     "no rule mentions sub-paths — if the public entry points changed, " +
-      "consider documenting them in `rules` so agents see the import boundary",
+      "consider documenting them in `rules` so agents see the import boundary"
   )
 } else {
-  const missingFromRule = exportedSubpaths.filter(
-    (sp) => !subpathRule.includes(`/${sp}`),
-  )
-  const phantomInRule = []
-  // Pull `/word` and nested `/word/word` tokens out of the rule text and compare against the
-  // exported set. The rule format is loose ("`semiotic/xy`, `/ordinal`,
-  // …") so we look for `/<sub-path>` occurrences.
-  const ruleTokens = [...subpathRule.matchAll(/\/([a-z][a-z-]*(?:\/[a-z][a-z-]*)*)/g)].map(
-    (m) => m[1],
-  )
-  for (const tok of ruleTokens) {
-    if (!exportedSubpaths.includes(tok)) phantomInRule.push(tok)
-  }
+  const { missing: missingFromRule, phantom: phantomInRule } =
+    context7SubpathDrift(exportedSubpaths, subpathRules)
   if (missingFromRule.length) {
     fail(
       `sub-path rule is missing entries that package.json exports: ${missingFromRule.join(
-        ", ",
-      )}`,
+        ", "
+      )}`
     )
   }
   if (phantomInRule.length) {
     fail(
       `sub-path rule mentions entries that package.json no longer exports: ${[
-        ...new Set(phantomInRule),
-      ].join(", ")}`,
+        ...new Set(phantomInRule)
+      ].join(", ")}`
     )
   }
 }
@@ -163,11 +155,11 @@ if (errors.length) {
   console.error(
     "\nFix: edit context7.json. The 255-char rule limit and missing-folder " +
       "checks catch the two failure modes Context7's submission flow has " +
-      "actually rejected on this repo.",
+      "actually rejected on this repo."
   )
   process.exit(1)
 }
 
 console.log(
-  `✓ context7.json clean (${manifest.rules?.length ?? 0} rules, ${manifest.folders?.length ?? 0} folders, ${exportedSubpaths.length} exported sub-paths)`,
+  `✓ context7.json clean (${manifest.rules?.length ?? 0} rules, ${manifest.folders?.length ?? 0} folders, ${exportedSubpaths.length} exported sub-paths)`
 )

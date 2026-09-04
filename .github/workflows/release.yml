@@ -3,58 +3,75 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing v* tag to validate and publish
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
-  visual-contracts:
+  npm-publish-preflight:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [chromium, firefox, webkit]
-    # Match the exact font/browser environment used to author and verify the
-    # committed Linux snapshots. A release tag must not bypass the PR visual
-    # gate merely because npm publication uses a separate job.
-    container: mcr.microsoft.com/playwright:v1.61.1-noble
-    # Firefox requires root's home in this container, but a bind-mounted
-    # Docker config beneath it may be unreadable. Visual tests do not use
-    # Docker, so isolate incidental Docker configuration lookups in /tmp.
-    env:
-      HOME: /root
-      DOCKER_CONFIG: /tmp/semiotic-docker-config
-
+    timeout-minutes: 3
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout tagged source
+      # A manual recovery run checks out the selected workflow branch here, so
+      # the newest preflight can validate an older, still-unpublished tag.
+      - name: Checkout release tooling
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
-          cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Verify release tag before expensive jobs
+        run: |
+          if ! echo "$RELEASE_TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
+            echo "Invalid release tag: $RELEASE_TAG"
+            exit 1
+          fi
+          git fetch --force origin \
+            "+refs/heads/main:refs/remotes/origin/main" \
+            "+refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          VERSION=$(git show "$RELEASE_TAG:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
+          EXPECTED_TAG="v${VERSION}"
+          if [ "$RELEASE_TAG" != "$EXPECTED_TAG" ]; then
+            echo "Release tag mismatch: expected $EXPECTED_TAG for package.json version $VERSION, got $RELEASE_TAG"
+            exit 1
+          fi
+          TAGGED_SHA=$(git rev-list -n 1 "$RELEASE_TAG")
+          if ! git merge-base --is-ancestor "$TAGGED_SHA" origin/main; then
+            echo "Release tag $RELEASE_TAG points to $TAGGED_SHA, which is not merged into origin/main"
+            exit 1
+          fi
+          echo "Verified $RELEASE_TAG at $TAGGED_SHA"
 
-      - name: Install pinned browser engines
-        run: npx playwright install --with-deps chromium firefox webkit
-
-      - name: Build browser artifacts
-        run: npm run dist
-
-      - name: Verify every committed visual baseline without updates
-        run: npx playwright test --project=${{ matrix.project }} --update-snapshots=none
+      # Unlike npm publish --dry-run, this exchange proves npm authorizes this
+      # repository and workflow. The short-lived token is immediately discarded.
+      - name: Verify npm trusted-publisher authentication
+        run: node scripts/check-npm-trusted-publisher.mjs
 
   docs-examples:
+    needs: npm-publish-preflight
     name: Docs examples (Chromium)
     runs-on: ubuntu-latest
     # The suite is serial to keep source-route behavior deterministic. Give
     # legitimate cold transforms room to finish, but bound a stalled Vite or
     # browser worker so publication cannot wait indefinitely.
     timeout-minutes: 25
-    # Authored example routes use their own Vite/source-alias server and are
-    # intentionally excluded from the package visual matrix above. Re-run
-    # them independently on the tagged source so a green PR requirement is
-    # not the only protection before publication.
+    # Authored example routes use their own Vite/source-alias server and test
+    # executable behavior rather than comparing baselines. Visual, browser,
+    # machine, and performance baselines remain PR gates only.
     container: mcr.microsoft.com/playwright:v1.61.1-noble
     env:
       HOME: /root
@@ -63,6 +80,8 @@ jobs:
     steps:
       - name: Checkout tagged source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -81,7 +100,7 @@ jobs:
 
       - name: Upload local docs example contract evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-docs-example-local-contract-evidence
           path: test-results/**/docs-example-local-contract-evidence.v2.json
@@ -90,7 +109,7 @@ jobs:
 
       - name: Upload docs example test artifacts
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-playwright-report-docs-examples
           path: |
@@ -99,14 +118,15 @@ jobs:
           retention-days: 7
 
   publish:
-    needs: [visual-contracts, docs-examples]
+    needs: docs-examples
     runs-on: ubuntu-latest
+    environment: release
     outputs:
       dist_tag: ${{ steps.dist-tag.outputs.tag }}
     permissions:
       contents: read
-      # Required only for npm provenance in this job. GitHub Release writes
-      # happen in a separate least-privilege job below.
+      # Required for npm trusted publishing and provenance. GitHub Release
+      # writes happen in a separate least-privilege job below.
       id-token: write
     env:
       MCP_PUBLISHER_VERSION: v1.7.9
@@ -117,20 +137,26 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22.x
-          cache: "npm"
-          registry-url: "https://registry.npmjs.org"
+
+      # Node 22 currently bundles npm 10, but trusted publishing requires npm
+      # >=11.5.1. Pin the supported CLI instead of inheriting runner drift.
+      - name: Install trusted-publishing npm CLI
+        run: |
+          npm install --global npm@11.6.2 --ignore-scripts
+          test "$(npm --version)" = "11.6.2"
 
       - name: Verify release tag matches package version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           EXPECTED_TAG="v${VERSION}"
-          if [ "$GITHUB_REF_NAME" != "$EXPECTED_TAG" ]; then
-            echo "Release tag mismatch: expected $EXPECTED_TAG for package.json version $VERSION, got $GITHUB_REF_NAME"
+          if [ "$RELEASE_TAG" != "$EXPECTED_TAG" ]; then
+            echo "Release tag mismatch: expected $EXPECTED_TAG for package.json version $VERSION, got $RELEASE_TAG"
             exit 1
           fi
           echo "Verified release tag $EXPECTED_TAG"
@@ -138,11 +164,12 @@ jobs:
       - name: Verify tagged commit is merged into main
         run: |
           git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "Release tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not merged into origin/main"
+          TAGGED_SHA=$(git rev-parse HEAD)
+          if ! git merge-base --is-ancestor "$TAGGED_SHA" origin/main; then
+            echo "Release tag $RELEASE_TAG points to $TAGGED_SHA, which is not merged into origin/main"
             exit 1
           fi
-          echo "Verified $GITHUB_SHA is an ancestor of origin/main"
+          echo "Verified $TAGGED_SHA is an ancestor of origin/main"
 
       - name: Install dependencies
         run: npm ci
@@ -175,11 +202,36 @@ jobs:
       - name: Install the release browser runtime
         run: npx playwright install --with-deps chromium
 
-      # This is the canonical fail-closed release gate. Keep it before the
-      # immutable artifact: website/declaration builds and every generator must
-      # finish before the bytes that will be published are frozen.
-      - name: Run the complete release gate
-        run: npm run release:check
+      # Use the selected tag's canonical release command, but remove PR-owned
+      # baselines in workflow code so a manual recovery of an older tag also
+      # receives the current publish policy. Deterministic checks still fail
+      # closed before the immutable artifact is frozen.
+      - name: Run deterministic publish gate
+        run: |
+          node <<'NODE'
+          const { spawnSync } = require("node:child_process")
+          const { scripts } = require("./package.json")
+
+          const prOnlyBaselines = new Set([
+            "npm run check:visual-baseline-capabilities",
+            "npm run check:cold-consumer",
+            "npm run check:machine-baseline",
+            "npm run check:browser-baseline",
+          ])
+          const commands = scripts["release:check"]
+            .split(" && ")
+            .filter((command) => !prOnlyBaselines.has(command))
+
+          for (const command of commands) {
+            console.log(`\n> ${command}`)
+            const result = spawnSync(command, {
+              cwd: process.cwd(),
+              shell: true,
+              stdio: "inherit",
+            })
+            if (result.status !== 0) process.exit(result.status || 1)
+          }
+          NODE
 
       - name: Determine npm dist-tag
         id: dist-tag
@@ -208,20 +260,22 @@ jobs:
           echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
 
       - name: Upload immutable release evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: semiotic-${{ github.ref_name }}-release-artifact
+          name: semiotic-${{ env.RELEASE_TAG }}-release-artifact
           path: ${{ steps.release-artifact.outputs.directory }}
           if-no-files-found: error
 
       - name: Pack-and-import smoke test (exact tarball)
         run: npm run check:pack -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
 
-      - name: Check packed cold-consumer baseline (exact tarball)
+      - name: "Release diagnostics: packed cold-consumer baseline"
         run: npm run check:cold-consumer -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+        continue-on-error: true
 
-      - name: Check packed machine baseline (exact tarball)
+      - name: "Release diagnostics: packed machine baseline"
         run: npm run check:machine-baseline -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+        continue-on-error: true
 
       - name: Reverify immutable release artifact before publication
         run: node scripts/create-release-artifact.mjs --out-dir "${{ steps.release-artifact.outputs.directory }}" --verify
@@ -238,8 +292,9 @@ jobs:
         run: npm run check:cloud-run-lock
         continue-on-error: true
 
-      - name: Compare release benchmarks with the previous tag on this runner
+      - name: "Release diagnostics: benchmarks versus previous tag"
         run: npm run bench:release-vs-previous
+        continue-on-error: true
 
       - name: Check whether this exact version is already published
         id: published-artifact
@@ -261,15 +316,11 @@ jobs:
 
       - name: Dry-run publish exact artifact
         if: steps.published-artifact.outputs.already-published != 'true'
-        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --dry-run --access public --tag ${{ steps.dist-tag.outputs.tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --dry-run --access public --tag ${{ steps.dist-tag.outputs.tag }} --registry=https://registry.npmjs.org
 
       - name: Publish exact artifact to npm
         if: steps.published-artifact.outputs.already-published != 'true'
-        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }} --registry=https://registry.npmjs.org
 
       - name: Post-publish smoke test
         run: |
@@ -382,9 +433,9 @@ jobs:
 
       - name: Upload exact stable Cloud Run source
         if: steps.dist-tag.outputs.tag == 'latest'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: semiotic-${{ github.ref_name }}-cloud-run-source
+          name: semiotic-${{ env.RELEASE_TAG }}-cloud-run-source
           path: ${{ steps.cloud-run-source.outputs.directory }}
           if-no-files-found: error
           retention-days: 30
@@ -398,18 +449,20 @@ jobs:
     steps:
       - name: Checkout release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Download immutable release evidence
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: semiotic-${{ github.ref_name }}-release-artifact
+          name: semiotic-${{ env.RELEASE_TAG }}-release-artifact
           path: release-artifact
 
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           NOTES_FILE="$(mktemp)"
           awk -v ver="$VERSION" '
             BEGIN { flag = 0 }
@@ -418,27 +471,27 @@ jobs:
             flag { print }
           ' CHANGELOG.md > "$NOTES_FILE"
 
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            echo "Release $GITHUB_REF_NAME already exists; updating in place"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; updating in place"
             if [ -s "$NOTES_FILE" ]; then
-              gh release edit "$GITHUB_REF_NAME" \
-                --title "Semiotic $GITHUB_REF_NAME" \
+              gh release edit "$RELEASE_TAG" \
+                --title "Semiotic $RELEASE_TAG" \
                 --notes-file "$NOTES_FILE"
             else
-              gh release edit "$GITHUB_REF_NAME" --title "Semiotic $GITHUB_REF_NAME"
+              gh release edit "$RELEASE_TAG" --title "Semiotic $RELEASE_TAG"
             fi
           elif [ -s "$NOTES_FILE" ]; then
-            gh release create "$GITHUB_REF_NAME" \
-              --title "Semiotic $GITHUB_REF_NAME" \
+            gh release create "$RELEASE_TAG" \
+              --title "Semiotic $RELEASE_TAG" \
               --notes-file "$NOTES_FILE" \
               --verify-tag
           else
-            gh release create "$GITHUB_REF_NAME" \
-              --title "Semiotic $GITHUB_REF_NAME" \
+            gh release create "$RELEASE_TAG" \
+              --title "Semiotic $RELEASE_TAG" \
               --generate-notes \
               --verify-tag
           fi
-          gh release upload "$GITHUB_REF_NAME" release-artifact/* --clobber
+          gh release upload "$RELEASE_TAG" release-artifact/* --clobber
           rm -f "$NOTES_FILE"
 
   deploy-stable-mcp:
@@ -463,11 +516,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Download exact Cloud Run source
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: semiotic-${{ github.ref_name }}-cloud-run-source
+          name: semiotic-${{ env.RELEASE_TAG }}-cloud-run-source
           path: ${{ runner.temp }}/semiotic-cloud-run-source
 
       - name: Require stable deployment identity configuration
@@ -562,6 +616,8 @@ jobs:
     steps:
       - name: Checkout release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -588,3 +644,5 @@ jobs:
       contents: read
       id-token: write
     uses: ./.github/workflows/publish-mcp-registry.yml
+    with:
+      release_tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}

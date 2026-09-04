@@ -353,6 +353,18 @@ describe("extractNetworkNavPoints", () => {
     expect(extractNetworkNavPoints(asNet(scene))).toEqual([])
   })
 
+  it("skips decorative network nodes with null data", () => {
+    const scene = [
+      { type: "arc", cx: 10, cy: 10, datum: null },
+      { type: "circle", cx: 20, cy: 20, r: 5, datum: null },
+      { type: "rect", x: 30, y: 30, w: 10, h: 10, datum: null },
+      { type: "circle", cx: 40, cy: 40, r: 5, datum: { id: "station" } }
+    ]
+    const result = extractNetworkNavPoints(asNet(scene))
+    expect(result).toHaveLength(1)
+    expect(result[0].datum!.id).toBe("station")
+  })
+
   it("skips zero-radius circle nodes (e.g. ProcessSankey color-binding placeholders)", () => {
     // ProcessSankey emits sceneNodes with r:0 at off-canvas coords so
     // the frame's `nodeColorMap` picks up band fills. They must not

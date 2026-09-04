@@ -142,6 +142,11 @@ const RecipeKitPage = lazy(() => import("./pages/custom-charts/RecipeKitPage"))
 const CustomChartsExamplesPage = lazy(
   () => import("./pages/custom-charts/CustomChartsExamplesPage"),
 )
+const ArtifactContractsOverviewPage = lazy(
+  () => import("./pages/artifacts/ArtifactContractsOverviewPage"),
+)
+const ArtifactBenchmarkPage = lazy(() => import("./pages/artifacts/ArtifactBenchmarkPage"))
+const ArtifactGovernancePage = lazy(() => import("./pages/artifacts/ArtifactGovernancePage"))
 const GoFishLayoutsPage = lazy(() => import("./pages/features/GoFishLayoutsPage"))
 const CapabilitiesPage = lazy(() => import("./pages/features/CapabilitiesPage"))
 const InterrogationPage = lazy(() => import("./pages/features/InterrogationPage"))
@@ -413,6 +418,7 @@ const GeographicGridMapsPage = lazy(() => import("./pages/recipes/GeographicGrid
 const WordTrailsPage = lazy(() => import("./pages/recipes/WordTrailsPage"))
 const NetEnsemblePage = lazy(() => import("./pages/recipes/NetEnsemblePage"))
 const AdjacencyFlowPage = lazy(() => import("./pages/recipes/AdjacencyFlowPage"))
+const TransitDiagramPage = lazy(() => import("./pages/recipes/TransitDiagramPage"))
 const BlogIndexPage = lazy(() => import("./blog/BlogIndexPage"))
 const BlogEntryPage = lazy(() => import("./blog/BlogEntryPage"))
 const UsingSSRPage = lazy(() => import("./pages/UsingSSRPage"))
@@ -705,6 +711,7 @@ export default function DocsApp() {
                 <Route path="word-trails" element={<WordTrailsPage />} />
                 <Route path="net-ensemble" element={<NetEnsemblePage />} />
                 <Route path="adjacency-flow" element={<AdjacencyFlowPage />} />
+                <Route path="transit-diagram" element={<TransitDiagramPage />} />
                 {/* `minards-map` and `process-vs-classic-sankey` graduated to /blog/. */}
                 <Route path="minards-map" element={<Navigate to="/blog/minards-march" replace />} />
                 <Route
@@ -815,6 +822,14 @@ export default function DocsApp() {
                 <Route path="glyph-marks" element={<GlyphMarksPage />} />
                 <Route path="recipe-kit" element={<RecipeKitPage />} />
                 <Route path="examples" element={<CustomChartsExamplesPage />} />
+              </Route>
+
+              {/* Artifact contracts — optional interpretation, policy, and transfer sidecars. */}
+              <Route path="artifacts" element={<Outlet />}>
+                <Route index element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<ArtifactContractsOverviewPage />} />
+                <Route path="benchmark" element={<ArtifactBenchmarkPage />} />
+                <Route path="governance" element={<ArtifactGovernancePage />} />
               </Route>
 
               {/* Accessibility — first-class category (before Intelligence).

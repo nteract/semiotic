@@ -7,6 +7,7 @@ import type { NavTreeNode } from "./navigationTree"
 import type { IntentId } from "./intents"
 import { auditVisualizationControls } from "../controls/controlAudit"
 import type { VisualizationControlDefinition } from "../controls/controlContract"
+import { nonJsonValuePaths } from "../artifact/jsonCompatibility"
 
 /**
  * A frame identifies the rendering/runtime substrate a recipe expects. It does
@@ -44,13 +45,14 @@ interface RecipeDatumMarker<TDatum> {
  */
 export type CustomLayoutFunction<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 > = (
   | CustomLayout<TConfig>
   | OrdinalCustomLayout<TConfig>
   | NetworkCustomLayout<TConfig>
   | GeoCustomLayout<TConfig>
-) & RecipeDatumMarker<TDatum>
+) &
+  RecipeDatumMarker<TDatum>
 
 /**
  * Serializable reference used by portable recipes. A host registry resolves
@@ -59,6 +61,10 @@ export type CustomLayoutFunction<
  */
 export interface RegisteredRecipeLayout {
   id: string
+  /** Stable executable-layout version used by portable config handoffs. */
+  version?: string
+  /** Optional package- or author-supplied content identity. */
+  fingerprint?: string
   importPath?: string
   exportName?: string
 }
@@ -176,7 +182,7 @@ export interface DesignContractDefinition {
 
 export interface RecipeStrategyContext<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 > {
   data: ReadonlyArray<TDatum>
   config: TConfig
@@ -195,12 +201,12 @@ export interface RecipeDescription {
 
 export type DescriptionStrategy<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 > = (context: RecipeStrategyContext<TDatum, TConfig>) => RecipeDescription
 
 export type NavigationStrategy<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 > = (context: RecipeStrategyContext<TDatum, TConfig>) => NavTreeNode
 
 /**
@@ -227,7 +233,8 @@ export interface AccessibilityExpectations {
   accessibleTable?: "required" | "recommended" | "not-applicable"
   description?: "required" | "recommended" | "not-applicable"
   /** The semantic unit readers should traverse instead of raw visual primitives. */
-  navigationGranularity?: "datum" | "category" | "group" | "node" | "edge" | "summary" | string
+  navigationGranularity?:
+    "datum" | "category" | "group" | "node" | "edge" | "summary" | string
   dataBearingSceneNodes?: "required" | "recommended" | "not-applicable"
   fallbackTable?: boolean
   redundantEncodings?: string[]
@@ -303,7 +310,10 @@ export interface RecipeAuditExpectations {
   checks?: string[]
 }
 
-export interface RecipeExample<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> {
+export interface RecipeExample<
+  TDatum extends Datum = Datum,
+  TConfig extends object = Record<string, unknown>
+> {
   name: string
   description?: string
   data?: ReadonlyArray<TDatum>
@@ -324,7 +334,7 @@ export interface RecipePortabilityConfig {
  */
 export interface ChartRecipe<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 > {
   id: string
   name: string
@@ -365,7 +375,7 @@ export interface ChartRecipe<
  */
 export function defineChartRecipe<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 >(recipe: ChartRecipe<TDatum, TConfig>): ChartRecipe<TDatum, TConfig> {
   validateChartRecipe(recipe)
   return recipe
@@ -377,7 +387,7 @@ export function defineChartRecipe<
  */
 export function validateChartRecipe<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 >(recipe: ChartRecipe<TDatum, TConfig>): void {
   if (!recipe || typeof recipe !== "object") {
     throw new Error("Chart recipe must be an object.")
@@ -389,7 +399,9 @@ export function validateChartRecipe<
     throw new Error(`Chart recipe "${recipe.id}" requires a non-empty name.`)
   }
   if (!Array.isArray(recipe.dataRoles) || recipe.dataRoles.length === 0) {
-    throw new Error(`Chart recipe "${recipe.id}" requires at least one data role.`)
+    throw new Error(
+      `Chart recipe "${recipe.id}" requires at least one data role.`
+    )
   }
   if (!Array.isArray(recipe.intents) || recipe.intents.length === 0) {
     throw new Error(`Chart recipe "${recipe.id}" requires at least one intent.`)
@@ -397,23 +409,34 @@ export function validateChartRecipe<
   for (const intent of recipe.intents) {
     if (
       typeof intent !== "string" &&
-      (!intent || (typeof intent.id !== "string" && typeof intent.name !== "string"))
+      (!intent ||
+        (typeof intent.id !== "string" && typeof intent.name !== "string"))
     ) {
-      throw new Error(`Chart recipe "${recipe.id}" has an intent without an id or name.`)
+      throw new Error(
+        `Chart recipe "${recipe.id}" has an intent without an id or name.`
+      )
     }
   }
   if (!recipe.designContract?.whyCustom) {
-    throw new Error(`Chart recipe "${recipe.id}" requires designContract.whyCustom.`)
+    throw new Error(
+      `Chart recipe "${recipe.id}" requires designContract.whyCustom.`
+    )
   }
   if (!recipe.accessibility || typeof recipe.accessibility !== "object") {
-    throw new Error(`Chart recipe "${recipe.id}" requires accessibility expectations.`)
+    throw new Error(
+      `Chart recipe "${recipe.id}" requires accessibility expectations.`
+    )
   }
   if (recipe.controls !== undefined) {
-    const controlAudit = auditVisualizationControls({ controls: recipe.controls })
-    const failures = controlAudit.findings.filter((finding) => finding.status === "fail")
+    const controlAudit = auditVisualizationControls({
+      controls: recipe.controls
+    })
+    const failures = controlAudit.findings.filter(
+      (finding) => finding.status === "fail"
+    )
     if (failures.length > 0) {
       throw new Error(
-        `Chart recipe "${recipe.id}" has invalid controls: ${failures.map((finding) => finding.message).join(" ")}`,
+        `Chart recipe "${recipe.id}" has invalid controls: ${failures.map((finding) => finding.message).join(" ")}`
       )
     }
   }
@@ -421,25 +444,48 @@ export function validateChartRecipe<
   if (recipe.portability === "portable") {
     if (!isRegisteredRecipeLayout(recipe.layout)) {
       throw new Error(
-        `Portable chart recipe "${recipe.id}" must reference a registered layout by id.`,
+        `Portable chart recipe "${recipe.id}" must reference a registered layout by id.`
+      )
+    }
+    if (
+      recipe.layout.version !== undefined &&
+      (typeof recipe.layout.version !== "string" ||
+        !recipe.layout.version.trim())
+    ) {
+      throw new Error(
+        `Portable chart recipe "${recipe.id}" has an invalid layout version.`
+      )
+    }
+    if (
+      recipe.layout.fingerprint !== undefined &&
+      (typeof recipe.layout.fingerprint !== "string" ||
+        !recipe.layout.fingerprint.trim())
+    ) {
+      throw new Error(
+        `Portable chart recipe "${recipe.id}" has an invalid layout fingerprint.`
+      )
+    }
+    if (recipe.layout.fingerprint && !recipe.layout.version) {
+      throw new Error(
+        `Portable chart recipe "${recipe.id}" cannot declare a layout fingerprint without a layout version.`
       )
     }
     const schema = recipe.layoutConfigSchema ?? recipe.portabilityConfig?.schema
     if (!schema) {
       throw new Error(
-        `Portable chart recipe "${recipe.id}" requires a serializable layout config schema.`,
+        `Portable chart recipe "${recipe.id}" requires a serializable layout config schema.`
       )
     }
     if (!isJsonSafe(schema)) {
       throw new Error(
-        `Portable chart recipe "${recipe.id}" has a layout config schema that is not JSON-safe.`,
+        `Portable chart recipe "${recipe.id}" has a layout config schema that is not JSON-safe.`
       )
     }
   }
 }
 
 export function isRegisteredRecipeLayout(
-  layout: unknown,
+  layout: unknown
 ): layout is RegisteredRecipeLayout {
   return (
     !!layout &&
@@ -450,18 +496,5 @@ export function isRegisteredRecipeLayout(
 
 /** True when a value can cross JSON/CLI/MCP boundaries without data loss. */
 export function isJsonSafe(value: unknown, seen = new Set<object>()): boolean {
-  if (value === null) return true
-  const type = typeof value
-  if (type === "string" || type === "boolean") return true
-  if (type === "number") return Number.isFinite(value)
-  if (type !== "object") return false
-  if (seen.has(value as object)) return false
-  seen.add(value as object)
-  const result = Array.isArray(value)
-    ? value.every((item) => isJsonSafe(item, seen))
-    : Object.entries(value as Record<string, unknown>).every(
-        ([, item]) => isJsonSafe(item, seen),
-      )
-  seen.delete(value as object)
-  return result
+  return nonJsonValuePaths(value, "$", seen).length === 0
 }

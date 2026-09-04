@@ -234,6 +234,19 @@ baseline refresh but never fail solely for making a consumer bundle smaller.
 before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
 intentional, acceptable part of that public import—not simply to make CI quiet.
 
+### Benchmark baselines
+
+`npm run bench:baseline` refreshes `benchmarks/setup/baseline.json` for local
+`npm run bench:compare:committed` comparisons. Capture it on an otherwise idle machine;
+absolute timings from a different architecture or runner are not comparable.
+
+The PR performance gate uses `npm run bench:pr-vs-main`: it measures the candidate and
+`origin/main` on the same machine with the candidate's identical benchmark cases and fixtures.
+Updating the committed JSON cannot clear this gate. Investigate a family of regressions in its
+shared runtime path, preserve correctness coverage, and rerun the same-hardware comparison.
+Do not remove benchmark cases or raise thresholds to conceal the regression. Refresh the local
+baseline only after reviewing the measured behavior change.
+
 ## Before Opening a PR
 
 Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.
@@ -252,7 +265,15 @@ Add `npm run website:build` when routes, examples, generated API docs, or public
 
 ## Publishing Releases
 
-Releases are automated through GitHub Actions and npm credentials configured in the repository. Release PRs should update `package.json`, `CHANGELOG.md`, and any generated artifacts required by the release checks before tagging.
+Releases are automated through GitHub Actions and npm trusted publishing. The
+`semiotic` package must authorize GitHub Actions for repository
+`nteract/semiotic`, workflow `release.yml`, GitHub environment `release`, with
+`npm publish` allowed. Both npm-authenticating jobs must declare that exact
+environment because it is part of the trusted OIDC identity. Do not add
+`NPM_TOKEN` or `NODE_AUTH_TOKEN` to the release workflow: token credentials take
+precedence over OIDC and can turn an expired secret into a misleading npm 404.
+Release PRs should update `package.json`, `CHANGELOG.md`, and any generated
+artifacts required by the release checks before tagging.
 
 Use `npm run create-release-branch -- <major|minor|patch>` for the maintained
 release flow. It builds the package, MCP server, and docs before refreshing the
@@ -267,9 +288,15 @@ still fails.
 
 After the release PR is merged, `npm run publish-release` creates the version
 tag from a clean, validated `main`. The tag workflow independently proves the
-tagged commit is merged into `origin/main`, reruns every visual baseline with
-updates disabled, installs Chromium for the local browser contract, runs the
-complete `release:check`, and only then freezes the immutable npm artifact.
+tagged commit is merged into `origin/main` and exchanges GitHub OIDC for a
+short-lived package-scoped npm credential before starting any expensive jobs.
+It then runs deterministic source, API, package, and documentation checks before
+freezing the immutable npm artifact. Performance, machine, browser, and visual
+baselines are PR gates; release runs may report selected baseline diagnostics,
+but they cannot block publication. If infrastructure fails after a tag is
+created but before npm accepts the package, use the Release workflow's manual
+`release_tag` input to retry that exact tag with the current release tooling.
+The immutable-artifact and already-published checks keep reruns idempotent.
 
 ## Community
 

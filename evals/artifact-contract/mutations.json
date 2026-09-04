@@ -1,0 +1,90 @@
+{
+  "mutationVersion": "0.1",
+  "description": "Deterministic defects applied to otherwise defensible artifact contracts and chart configurations.",
+  "mutations": [
+    {
+      "id": "unsupported-headline",
+      "label": "Unsupported headline",
+      "target": "contract.claims",
+      "relations": ["claim-support", "abstention"],
+      "description": "Promote a definitive headline while removing its evidence links."
+    },
+    {
+      "id": "missing-denominator",
+      "label": "Missing denominator",
+      "target": "contract.claims.scope",
+      "relations": ["claim-support", "representation-fit"],
+      "description": "Present a rate while omitting the population used as its denominator."
+    },
+    {
+      "id": "truncated-window",
+      "label": "Truncated window",
+      "target": "contract.time.window",
+      "relations": ["time", "abstention"],
+      "description": "Shorten a reporting window while retaining final and settled language."
+    },
+    {
+      "id": "unit-mismatch",
+      "label": "Unit mismatch",
+      "target": "contract.claims.scope",
+      "relations": ["claim-support", "representation-fit", "abstention"],
+      "description": "Place measures with incompatible units into one comparison."
+    },
+    {
+      "id": "source-version-removal",
+      "label": "Source and version removal",
+      "target": "contract.evidence",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "description": "Remove the source URI, source version, data version, and fingerprint from evidence."
+    },
+    {
+      "id": "stale-snapshot",
+      "label": "Stale snapshot",
+      "target": "contract.time",
+      "relations": ["time", "accountability"],
+      "description": "Replace a current snapshot with an older stale materialization."
+    },
+    {
+      "id": "late-event-collapse",
+      "label": "Late-event collapse",
+      "target": "contract.time.revision",
+      "relations": ["time", "challenge-and-correction", "abstention"],
+      "description": "Record a backfill while leaving the affected window in its earlier settled state."
+    },
+    {
+      "id": "uncertainty-removal",
+      "label": "Uncertainty removal",
+      "target": "contract.claims",
+      "relations": ["claim-support", "reception", "preservation"],
+      "description": "Convert a claim to a forecast while dropping its uncertainty description."
+    },
+    {
+      "id": "category-overlap",
+      "label": "Category overlap",
+      "target": "contract.claims.scope",
+      "relations": ["claim-support", "representation-fit"],
+      "description": "Mark categories as overlapping while retaining an additive comparison."
+    },
+    {
+      "id": "inaccessible-interaction",
+      "label": "Inaccessible interaction",
+      "target": "chart.config",
+      "relations": ["reception", "representation-fit"],
+      "description": "Add pointer interaction while disabling the data table and removing interaction guidance."
+    },
+    {
+      "id": "generated-text-prompt-injection",
+      "label": "Generated-text prompt injection",
+      "target": "contract.claims.text",
+      "relations": ["reception", "accountability", "abstention"],
+      "description": "Insert forged boundary and chat-control tokens into generated claim text."
+    },
+    {
+      "id": "provenance-laundering",
+      "label": "Provenance laundering",
+      "target": "contract.claims-and-evidence",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "description": "Make generated prose cite itself while removing its independent source identity and review."
+    }
+  ]
+}

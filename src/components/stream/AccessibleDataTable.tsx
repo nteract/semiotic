@@ -491,10 +491,9 @@ export function NetworkAccessibleDataTable({
     [visible]
   )
 
-  const safeNodes = Array.isArray(nodes) ? nodes : []
-  const safeEdges = Array.isArray(edges) ? edges : []
+  const safeNodes = nodes.filter((node) => node.datum !== null)
 
-  if (safeNodes.length === 0 && safeEdges.length === 0) {
+  if (safeNodes.length === 0 && edges.length === 0) {
     return tableId ? (
       <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
     ) : null
@@ -516,14 +515,14 @@ export function NetworkAccessibleDataTable({
           onClick={() => setSrExpanded(true)}
           style={HIDDEN_TRIGGER_STYLE}
         >
-          View data summary ({safeNodes.length} nodes, {safeEdges.length} edges)
+          View data summary ({safeNodes.length} nodes, {edges.length} edges)
         </button>
       </div>
     )
   }
 
   const { nodeRows, edgeRows, hasWeights, summary } =
-    buildNetworkTableModel(safeNodes, safeEdges)
+    buildNetworkTableModel(safeNodes, edges)
 
   const shownNodeCount = Math.min(visibleNodeCount, nodeRows.length)
   const sampleNodes = nodeRows.slice(0, shownNodeCount)

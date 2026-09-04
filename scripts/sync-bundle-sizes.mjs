@@ -66,6 +66,10 @@ const BLURBS = {
   "./access": "Chart Access Contract factory and first-wave baseline contracts",
   "./evidence":
     "Chart Evidence Envelope, deterministic hashing, and publication gate",
+  "./artifact":
+    "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits",
+  "./artifact/react":
+    "Accessible progressive disclosure for artifact contracts and policy evaluations",
   "./line": "LineChart only — one-chart micro boundary",
   "./xy": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts",
   "./ordinal":
@@ -120,6 +124,8 @@ const BLURBS = {
 const ORDER = [
   "./access",
   "./evidence",
+  "./artifact",
+  "./artifact/react",
   "./line",
   "./xy",
   "./ordinal",

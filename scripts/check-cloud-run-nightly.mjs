@@ -55,6 +55,7 @@ function findCaseInsensitive(contents, value) {
 
 try {
   const report = validateNightlyCloudRunDeployment({
+    packageJson: JSON.parse(read("package.json")),
     dockerfile: read("deploy/cloud-run-nightly/Dockerfile"),
     cloudbuild: read("deploy/cloud-run-nightly/cloudbuild.yaml"),
     verifier: read("deploy/cloud-run-nightly/verify-runtime.mjs"),

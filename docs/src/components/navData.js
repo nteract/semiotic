@@ -223,6 +223,15 @@ const navData = [
     ],
   },
   {
+    title: "Artifact Contracts",
+    path: "/artifacts",
+    children: [
+      { title: "Overview", path: "/artifacts/overview" },
+      { title: "Benchmark", path: "/artifacts/benchmark" },
+      { title: "Policy and Contributions", path: "/artifacts/governance" },
+    ],
+  },
+  {
     title: "Accessibility",
     path: "/accessibility",
     children: [
@@ -326,6 +335,7 @@ const navData = [
       { title: "Word Trails", path: "/recipes/word-trails" },
       { title: "Net Ensemble", path: "/recipes/net-ensemble" },
       { title: "Adjacency Flow", path: "/recipes/adjacency-flow" },
+      { title: "Transit Diagram", path: "/recipes/transit-diagram" },
     ],
   },
   {

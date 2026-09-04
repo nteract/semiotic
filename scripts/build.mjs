@@ -97,6 +97,9 @@ const terserOptions = {
     drop_console: false,
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
+    // Group function declarations before statement/data tables. This keeps
+    // repeated code closer within gzip's window without changing public names.
+    hoist_funs: true,
     passes: 2
   },
   mangle: {
@@ -549,6 +552,22 @@ const generatedBundleMetadata = {
     loading: "eager"
   },
   "semiotic-ai": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager"
+  },
+  "semiotic-artifact": {
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager"
+  },
+  "semiotic-artifact-react": {
     platform: "browser",
     rsc: false,
     edge: false,
@@ -1115,6 +1134,19 @@ async function build() {
       serverOnly: true
     },
     {
+      input: "src/components/semiotic-artifact.ts",
+      name: "semiotic-artifact",
+      analyze: false,
+      minify
+    },
+    {
+      input: "src/components/semiotic-artifact-react.ts",
+      name: "semiotic-artifact-react",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
       input: "src/components/semiotic-data.ts",
       name: "semiotic-data",
       analyze: false,
@@ -1260,6 +1292,21 @@ async function build() {
       .filter((b) => !b.clientOnly && !b.serverOnly)
       .map((b) => [b.name, b.input])
   )
+  const isolatedNeutralEntryNames = new Set([
+    "semiotic-artifact",
+    "semiotic-evidence",
+    "semiotic-utils-core"
+  ])
+  const sharedNeutralEntries = Object.fromEntries(
+    Object.entries(neutralEntries).filter(
+      ([name]) => !isolatedNeutralEntryNames.has(name)
+    )
+  )
+  const isolatedNeutralEntries = Object.fromEntries(
+    Object.entries(neutralEntries).filter(([name]) =>
+      isolatedNeutralEntryNames.has(name)
+    )
+  )
 
   console.log(
     `Bundling ESM shared groups (client=${Object.keys(clientEntries).length}, ` +
@@ -1275,6 +1322,7 @@ async function build() {
   const auxiliaryClientEntryNames = new Set([
     "controls",
     "semiotic-access",
+    "semiotic-artifact-react",
     "semiotic-realtime-react",
     "semiotic-value"
   ])
@@ -1296,6 +1344,10 @@ async function build() {
   )
   primaryClientEntries["semiotic-client-shared"] =
     "src/components/semiotic-client-shared.ts"
+  primaryClientEntries["semiotic-ai-artifact-policy-constants"] =
+    "src/components/internal/semioticAiArtifactPolicyConstants.ts"
+  primaryClientEntries["semiotic-ai-hash-primitives"] =
+    "src/components/evidence/stableJsonHash.ts"
   const auxiliaryClientEntries = Object.fromEntries(
     Object.entries(clientEntries).filter(([name]) =>
       auxiliaryClientEntryNames.has(name)
@@ -1349,10 +1401,23 @@ async function build() {
     groupName: "edge-server-node"
   })
   await createSharedEsmGroup({
-    entries: neutralEntries,
+    entries: sharedNeutralEntries,
     minify,
     groupName: "neutral"
   })
+  // These opt-in tooling entries overlap at the source level but expose very
+  // different public slices. In the broad neutral graph, esbuild placed their
+  // union in a shared chunk, so importing evidence alone also downloaded
+  // unrelated contract builders and chart-config helpers. Keep each boundary
+  // self-contained: none owns React/store identity, and the shared chart-recipe
+  // registry deliberately coordinates bundle copies through a global key.
+  for (const [name, input] of Object.entries(isolatedNeutralEntries)) {
+    await createSharedEsmGroup({
+      entries: { [name]: input },
+      minify,
+      groupName: name
+    })
+  }
   writeClientPassThroughFacades()
   // The browser experimental facade includes the browser static-markup
   // renderer for its unstable settled-physics serializer. Node resolves a
@@ -1377,6 +1442,7 @@ async function build() {
   // and emit tiny public facades that select the requested namespace.
   const isolatedClientCjsNames = new Set([
     "geo",
+    "semiotic-artifact-react",
     "semiotic-recipes",
     "semiotic-recipes-core",
     "semiotic-recipes-react",
@@ -1401,19 +1467,30 @@ async function build() {
   })
   writeClientCjsFacades(clientCjsBundles)
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
+  const artifactReactBundle = bundledEntries.find(
+    (bundle) => bundle.name === "semiotic-artifact-react",
+  )
   const recipesCoreBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-recipes-core",
   )
   const recipesReactBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-recipes-react",
   )
-  if (!geoBundle || !recipesCoreBundle || !recipesReactBundle) {
-    throw new Error("Missing isolated CommonJS geo/recipe build entries")
+  if (
+    !geoBundle ||
+    !artifactReactBundle ||
+    !recipesCoreBundle ||
+    !recipesReactBundle
+  ) {
+    throw new Error("Missing isolated CommonJS client build entries")
   }
   await createCjsBundle({
     ...geoBundle,
     name: "geo",
     esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
+  })
+  await createCjsBundle({
+    ...artifactReactBundle,
   })
   await createCjsBundle({
     input: "src/components/recipes/geographicDotGrid.tsx",

@@ -58,6 +58,7 @@ function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefin
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function computeArcBoundingBox(sweepDegrees?: number | undefined): ArcBoundingBox
 function configToJSX(config: ChartConfig): string
+function configToJSXWithReport(config: ChartConfig): JSXProjectionResult
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function countNodes(root: NavTreeNode): number
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
@@ -73,7 +74,7 @@ function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string
 function formatEvaluateChart(result: EvaluateChartResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
-function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
+function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
@@ -110,7 +111,7 @@ function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toEvaluateChartNotifications(findings: readonly EvaluateChartFinding[], max?: number | undefined): EvaluateChartNotification[]
-function toURL(config: ChartConfig): string
+function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function validateProps(componentName: string, props: Datum): ValidationResult
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
@@ -127,6 +128,7 @@ interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
 interface BuildNavigationTreeOptions
+interface ChartArtifactTransferStatus extends ArtifactTransferStatus
 interface ChartConfig
 interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
@@ -145,8 +147,10 @@ interface EvaluateChartNotification
 interface EvaluateChartOptions extends AuditAccessibilityOptions
 interface EvaluateChartResult
 interface EvaluateChartSummary
+interface FromConfigResult
 interface HatchFill
 interface HatchPatternOptions
+interface JSXProjectionResult
 interface MobileVisualizationAuditResult
 interface MobileVisualizationContract
 interface MobileVisualizationCustomContract
@@ -184,6 +188,7 @@ interface StyleRuleStyle
 interface StyleRuleThreshold
 interface SweepAngles
 interface ToConfigOptions
+interface ToURLOptions
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
@@ -263,9 +268,14 @@ interface-member AuditObservedSceneInput::property::theme = optional theme: unde
 interface-member BuildNavigationTreeOptions::property::locale = optional locale: string | undefined
 interface-member BuildNavigationTreeOptions::property::maxLeaves = optional maxLeaves: number | undefined
 interface-member BuildNavigationTreeOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member ChartArtifactTransferStatus::property::serializedConfigFingerprint = optional serializedConfigFingerprint: string | undefined
+interface-member ChartArtifactTransferStatus::property::serializedDataFingerprint = optional serializedDataFingerprint: null | string | undefined
+interface-member ChartArtifactTransferStatus::property::transferFingerprint = optional transferFingerprint: string | undefined
+interface-member ChartConfig::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member ChartConfig::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
 interface-member ChartConfig::property::component = required component: string
 interface-member ChartConfig::property::createdAt = required createdAt: string
-interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string;}
+interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string; recipeVersion?: string; definitionFingerprint?: string; layoutId?: string; layoutVersion?: string; layoutFingerprint?: string;}
 interface-member ChartConfig::property::portable = optional portable: boolean | undefined
 interface-member ChartConfig::property::props = required props: Datum
 interface-member ChartConfig::property::reason = optional reason: string | undefined
@@ -371,6 +381,10 @@ interface-member EvaluateChartSummary::property::findings = required readonly fi
 interface-member EvaluateChartSummary::property::manual = required readonly manual: number
 interface-member EvaluateChartSummary::property::notifications = required readonly notifications: number
 interface-member EvaluateChartSummary::property::warnings = required readonly warnings: number
+interface-member FromConfigResult::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member FromConfigResult::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
+interface-member FromConfigResult::property::componentName = required componentName: string
+interface-member FromConfigResult::property::props = required props: Datum
 interface-member HatchFill::property::angle = optional angle: number | undefined
 interface-member HatchFill::property::background = optional background: string | undefined
 interface-member HatchFill::property::lineOpacity = optional lineOpacity: number | undefined
@@ -383,6 +397,9 @@ interface-member HatchPatternOptions::property::background = optional background
 interface-member HatchPatternOptions::property::lineWidth = optional lineWidth: number | undefined
 interface-member HatchPatternOptions::property::spacing = optional spacing: number | undefined
 interface-member HatchPatternOptions::property::stroke = optional stroke: string | undefined
+interface-member JSXProjectionResult::property::jsx = required jsx: string
+interface-member JSXProjectionResult::property::omittedPaths = required omittedPaths: string[]
+interface-member JSXProjectionResult::property::warnings = required warnings: string[]
 interface-member MobileVisualizationAuditResult::property::component = required component: string
 interface-member MobileVisualizationAuditResult::property::findings = required findings: MobileVisualizationFinding[]
 interface-member MobileVisualizationAuditResult::property::ok = required ok: boolean
@@ -585,8 +602,10 @@ interface-member SweepAngles::property::offsetRad = required offsetRad: number
 interface-member SweepAngles::property::startAngleDeg = required startAngleDeg: number
 interface-member SweepAngles::property::startAngleRad = required startAngleRad: number
 interface-member SweepAngles::property::sweepRad = required sweepRad: number
+interface-member ToConfigOptions::property::artifactContract = optional artifactContract: ArtifactContract | undefined
 interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
 interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
+interface-member ToURLOptions::property::maxLength = optional maxLength: number | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined

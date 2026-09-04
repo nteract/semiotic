@@ -7,7 +7,8 @@ export default function CodeBlock({
   showLineNumbers = false,
   showCopyButton = true,
   wrap = false,
-  className = ""
+  className = "",
+  codeAreaLabel,
 }) {
   // Support children as fallback for code prop
   code = code || (typeof children === "string" ? children : "")
@@ -29,8 +30,7 @@ export default function CodeBlock({
   }
 
   // Escape HTML entities for safe rendering when Prism isn't available
-  const escapeHtml = (str) =>
-    str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 
   const highlighted =
     window.Prism && window.Prism.languages[language]
@@ -41,11 +41,7 @@ export default function CodeBlock({
   const highlightedLines =
     window.Prism && window.Prism.languages[language]
       ? lines.map((line) =>
-          window.Prism.highlight(
-            line,
-            window.Prism.languages[language],
-            language
-          )
+          window.Prism.highlight(line, window.Prism.languages[language], language),
         )
       : lines.map(escapeHtml)
   const wrapperClassName = ["code-block", className].filter(Boolean).join(" ")
@@ -56,7 +52,7 @@ export default function CodeBlock({
       background: "var(--surface-2)",
       border: "1px solid var(--surface-3)",
       borderRadius: "8px",
-      overflow: "hidden"
+      overflow: "hidden",
     },
     header: {
       display: "flex",
@@ -64,7 +60,7 @@ export default function CodeBlock({
       alignItems: "center",
       padding: "6px 12px",
       borderBottom: "1px solid var(--surface-3)",
-      minHeight: "28px"
+      minHeight: "28px",
     },
     languageBadge: {
       fontSize: "11px",
@@ -72,7 +68,7 @@ export default function CodeBlock({
       letterSpacing: "0.5px",
       color: "var(--text-secondary)",
       textTransform: "uppercase",
-      userSelect: "none"
+      userSelect: "none",
     },
     copyButton: {
       background: "none",
@@ -86,12 +82,12 @@ export default function CodeBlock({
       cursor: "pointer",
       fontFamily: "var(--font-code)",
       transition: "color 0.2s ease, border-color 0.2s ease",
-      lineHeight: "1.4"
+      lineHeight: "1.4",
     },
     codeArea: {
       overflowX: "auto",
       padding: showLineNumbers ? "16px 16px 16px 0" : "16px",
-      margin: 0
+      margin: 0,
     },
     pre: {
       margin: 0,
@@ -101,11 +97,11 @@ export default function CodeBlock({
       fontFamily: "var(--font-code)",
       fontSize: "14px",
       lineHeight: "1.6",
-      color: "var(--text-primary)"
+      color: "var(--text-primary)",
     },
     table: {
       borderCollapse: "collapse",
-      width: "100%"
+      width: "100%",
     },
     lineNumberCell: {
       width: "1px",
@@ -119,7 +115,7 @@ export default function CodeBlock({
       fontSize: "13px",
       lineHeight: "1.6",
       verticalAlign: "top",
-      opacity: 0.5
+      opacity: 0.5,
     },
     lineContentCell: {
       paddingLeft: "0",
@@ -129,7 +125,7 @@ export default function CodeBlock({
       fontFamily: "var(--font-code)",
       fontSize: "14px",
       lineHeight: "1.6",
-      color: "var(--text-primary)"
+      color: "var(--text-primary)",
     },
     inlineCode: {
       whiteSpace: wrap ? "pre-wrap" : "pre",
@@ -138,8 +134,8 @@ export default function CodeBlock({
       fontFamily: "var(--font-code)",
       fontSize: "14px",
       lineHeight: "1.6",
-      color: "var(--text-primary)"
-    }
+      color: "var(--text-primary)",
+    },
   }
 
   return (
@@ -156,7 +152,13 @@ export default function CodeBlock({
           </button>
         )}
       </div>
-      <div style={styles.codeArea} className="code-block-scroll">
+      <div
+        style={styles.codeArea}
+        className="code-block-scroll"
+        role="region"
+        aria-label={codeAreaLabel || `${language.toUpperCase()} code sample`}
+        tabIndex={0}
+      >
         {showLineNumbers ? (
           <pre style={styles.pre}>
             <table style={styles.table}>
@@ -175,10 +177,7 @@ export default function CodeBlock({
           </pre>
         ) : (
           <pre style={styles.pre}>
-            <code
-              style={styles.inlineCode}
-              dangerouslySetInnerHTML={{ __html: highlighted }}
-            />
+            <code style={styles.inlineCode} dangerouslySetInnerHTML={{ __html: highlighted }} />
           </pre>
         )}
       </div>

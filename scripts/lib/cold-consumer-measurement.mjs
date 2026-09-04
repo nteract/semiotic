@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url"
 import { isDeepStrictEqual } from "node:util"
 import { constants as zlibConstants, gzipSync } from "node:zlib"
 import { build, version as esbuildVersion } from "esbuild"
+import { npmPackArtifactArgs } from "./npm-pack.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = resolve(__dirname, "../..")
@@ -110,6 +111,16 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: "./server/node", symbol: "renderToImage", platform: "node" },
   { exportKey: "./ai", symbol: "suggestCharts", platform: "browser" },
   { exportKey: "./ai/core", symbol: "suggestCharts", platform: "browser" },
+  {
+    exportKey: "./artifact",
+    symbol: "buildArtifactContract",
+    platform: "browser"
+  },
+  {
+    exportKey: "./artifact/react",
+    symbol: "ArtifactInspector",
+    platform: "browser"
+  },
   {
     exportKey: "./access",
     symbol: "createChartAccessContract",
@@ -746,7 +757,12 @@ function resolveSuppliedTarball(repoRoot, suppliedTarball) {
 function packTarball(repoRoot, destination) {
   const output = execFileSync(
     "npm",
-    ["pack", "--json", "--ignore-scripts", "--pack-destination", destination],
+    npmPackArtifactArgs([
+      "--json",
+      "--ignore-scripts",
+      "--pack-destination",
+      destination
+    ]),
     {
       cwd: repoRoot,
       encoding: "utf8",

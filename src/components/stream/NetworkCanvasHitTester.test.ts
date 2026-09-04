@@ -159,6 +159,18 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(result!.datum!.id).toBe("chordGroup")
     })
 
+    it("does not hit decorative arcs with null data", () => {
+      const r = 90
+      const angle = Math.PI / 4
+      const result = findNearestNetworkNode(
+        [{ ...arc, datum: null }],
+        [],
+        300 + r * Math.cos(angle),
+        300 + r * Math.sin(angle)
+      )
+      expect(result).toBeNull()
+    })
+
     it("misses inside the inner radius", () => {
       // Point at angle PI/4, radius 50 (inside inner)
       const r = 50

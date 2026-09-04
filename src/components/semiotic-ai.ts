@@ -170,13 +170,52 @@ export {
   toURL,
   fromURL,
   copyConfig,
-  configToJSX
+  configToJSX,
+  configToJSXWithReport
 } from "./export/chartConfig"
 export type {
   ChartConfig,
+  ChartArtifactTransferStatus,
   ToConfigOptions,
+  FromConfigResult,
+  ToURLOptions,
+  JSXProjectionResult,
   CopyFormat
 } from "./export/chartConfig"
+
+// Compatibility bridge for the general artifact contract. Broad collection,
+// lineage, packet, migration, and format-projection utilities live only at
+// `semiotic/artifact`; the established AI entry retains the core authoring,
+// evaluation, audit, grounding, and policy workflow.
+export type * from "./semiotic-artifact"
+export { ARTIFACT_CONTRACT_VERSION } from "./artifact/types"
+export { canonicalJson, fingerprintValue } from "./artifact/fingerprint"
+export {
+  ARTIFACT_FIELD_POLICIES,
+  buildArtifactContract,
+  formatArtifactContract,
+  fromIntentManifest,
+  toIntentManifest,
+  validateArtifactContract
+} from "./artifact/contract"
+export { auditClaims } from "./artifact/claims"
+export { auditTemporalContext } from "./artifact/temporal"
+export {
+  ARTIFACT_POLICIES,
+  activePolicyRules,
+  resolveArtifactPolicy
+} from "./artifact/policies"
+export { recommendRepresentation } from "./artifact/representation"
+export {
+  evaluateArtifact,
+  explainArtifactRefusal,
+  repairArtifact
+} from "./artifact/evaluateArtifact"
+export { buildArtifactGrounding } from "./artifact/grounding"
+export {
+  requireSerializableArtifactContract,
+  serializeArtifactContract
+} from "./artifact/serialization"
 export {
   serializeSelections,
   deserializeSelections
@@ -301,8 +340,17 @@ export * from "./semiotic-ai-data-audit"
 export { profileData } from "./ai/profileData"
 export type { ProfileDataOptions } from "./ai/profileData"
 export { deriveProfileFields, rederiveProfile } from "./ai/deriveProfileFields"
-export type { DerivedProfileFields, ProfilePrimaryFields, ReprofileFieldsOptions } from "./ai/deriveProfileFields"
-export type { ProfileFieldRole, ProfileFieldRoleHint, ProfileFieldRoleHints, NormalizedProfileFieldRoles } from "./ai/fieldRoles"
+export type {
+  DerivedProfileFields,
+  ProfilePrimaryFields,
+  ReprofileFieldsOptions
+} from "./ai/deriveProfileFields"
+export type {
+  ProfileFieldRole,
+  ProfileFieldRoleHint,
+  ProfileFieldRoleHints,
+  NormalizedProfileFieldRoles
+} from "./ai/fieldRoles"
 export type { SuggestionPropContract } from "./ai/suggestionPropContracts"
 export {
   suggestCharts,
@@ -347,7 +395,11 @@ export type {
   ScaleHintInput
 } from "./ai/dataScaleProfile"
 export { inferIntent } from "./ai/inferIntent"
-export type { InferIntentField, InferIntentOptions, InferIntentResult } from "./ai/inferIntent"
+export type {
+  InferIntentField,
+  InferIntentOptions,
+  InferIntentResult
+} from "./ai/inferIntent"
 export { suggestDashboard } from "./ai/suggestDashboard"
 export type {
   DashboardPanel,
@@ -499,7 +551,14 @@ export type {
   SuggestionScaleRange,
   WhyCustomExplanation
 } from "./ai/chartCapabilityTypes"
-export type { ChartFieldPolicy, SemanticRenderEvidence, SemanticViabilityCallback, SemanticViabilityCheck, SemanticViabilityDiagnostic, SemanticViabilityRule } from "./ai/chartCapabilityTypes"
+export type {
+  ChartFieldPolicy,
+  SemanticRenderEvidence,
+  SemanticViabilityCallback,
+  SemanticViabilityCheck,
+  SemanticViabilityDiagnostic,
+  SemanticViabilityRule
+} from "./ai/chartCapabilityTypes"
 export {
   defineChartRecipe,
   validateChartRecipe,
@@ -542,8 +601,10 @@ export {
   resolveChartRecipe,
   registerRecipeLayout,
   unregisterRecipeLayout,
-  getRecipeLayout
+  getRecipeLayout,
+  getRecipeLayoutIdentity
 } from "./ai/chartRecipeRegistry"
+export type { RecipeLayoutIdentity } from "./ai/chartRecipeRegistry"
 export * from "./ai/builtInChartRecipePublic"
 export {
   recipeToChartCapability,
@@ -585,7 +646,13 @@ export {
   registerIntent,
   BUILT_IN_INTENT_IDS
 } from "./ai/intents"
-export type { BuiltInIntentId, IntentDescriptor, IntentFieldKind, IntentId, IntentSignals } from "./ai/intents"
+export type {
+  BuiltInIntentId,
+  IntentDescriptor,
+  IntentFieldKind,
+  IntentId,
+  IntentSignals
+} from "./ai/intents"
 
 // Variant discovery — heuristic proposal + evaluation surface. The built-in
 // proposer emits registered capability variants, adds conservative heuristic
@@ -700,7 +767,9 @@ export type {
   InterrogationAnsweredEvent,
   NavNodeFocusedEvent,
   NavBranchExpandedEvent,
-  AnnotationStatusChangedEvent, ProposalRefusedEvent, RenderEvidenceEvent
+  AnnotationStatusChangedEvent,
+  ProposalRefusedEvent,
+  RenderEvidenceEvent
 } from "./ai/conversationArc"
 
 // AI Observation hooks

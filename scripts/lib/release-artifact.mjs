@@ -13,6 +13,7 @@ import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { basename, isAbsolute, join, relative, resolve } from "node:path"
+import { npmPackArtifactArgs } from "./npm-pack.mjs"
 
 export const RELEASE_ARTIFACT_SCHEMA_VERSION = 2
 
@@ -189,13 +190,12 @@ export function buildReleaseArtifact({ repoRoot, outDir, env = process.env }) {
   let sbomText
   let npmVersion
   try {
-    packed = parseNpmPackJson(command(root, "npm", [
-      "pack",
+    packed = parseNpmPackJson(command(root, "npm", npmPackArtifactArgs([
       "--ignore-scripts",
       "--json",
       "--pack-destination",
       directory,
-    ], npmEnvironment))
+    ]), npmEnvironment))
     sbomText = command(root, "npm", [
       "sbom",
       "--omit=dev",

@@ -1,17 +1,25 @@
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import type {
+  NetworkArcNode,
   NetworkCircleNode,
   NetworkCurvedEdge,
   RealtimeEdge,
   RealtimeNode,
 } from "../stream/networkTypes"
+import { findNearestNetworkNode } from "../stream/NetworkCanvasHitTester"
+import { buildNetworkTableModel } from "../stream/accessibleDataTableModel"
 import {
   computeTransitDiagramPositions,
   offsetTransitPath,
   octilinearRoute,
   roundedTransitPath,
 } from "./transitDiagramGeometry"
-import { transitDiagramLayout } from "./transitDiagram"
+import {
+  transitDiagramLayout,
+  type TransitDiagramStationRenderInfo,
+} from "./transitDiagram"
 
 const plot = { width: 600, height: 360 }
 
@@ -74,6 +82,26 @@ describe("computeTransitDiagramPositions", () => {
     expect(first.warnings[0]).toContain("Complete station positions")
     expect([...first.positions]).toEqual([...second.positions])
     expect(new Set([...first.positions.values()].map((node) => `${node.x},${node.y}`)).size).toBe(4)
+  })
+
+  it("uses stable id tie-breaks regardless of input order", () => {
+    const nodes = ["delta", "alpha", "charlie", "bravo"].map((id) => ({
+      id,
+      data: { id },
+    }))
+    const edges = [
+      { source: "alpha", target: "charlie" },
+      { source: "bravo", target: "charlie" },
+      { source: "charlie", target: "delta" },
+    ]
+    const ordered = computeTransitDiagramPositions(nodes, edges, plot)
+    const reversed = computeTransitDiagramPositions(
+      [...nodes].reverse(),
+      [...edges].reverse(),
+      plot,
+    )
+
+    expect([...ordered.positions]).toEqual([...reversed.positions])
   })
 
   it("keeps disconnected components separated", () => {
@@ -171,7 +199,9 @@ describe("transitDiagramLayout", () => {
     expect(result.sceneEdges?.map((edge) => edge.style.stroke)).toEqual(["#36c", "#d33", "#36c"])
     expect(result.sceneEdges?.every((edge) => edge.accessibility?.tableFields)).toBe(true)
     expect(result.sceneNodes).toHaveLength(3)
-    expect(result.sceneNodes?.find((node) => node.id === "b")).toMatchObject({ r: 7 })
+    expect(result.sceneNodes?.find((node) => node.id === "b")).toMatchObject({
+      r: 7,
+    })
     expect(result.labels).toHaveLength(3)
   })
 
@@ -221,7 +251,8 @@ describe("transitDiagramLayout", () => {
     })
 
     const blue = result.sceneEdges?.find(
-      (edge): edge is NetworkCurvedEdge => edge.type === "curved" && edge.id?.endsWith(":blue") === true,
+      (edge): edge is NetworkCurvedEdge =>
+        edge.type === "curved" && edge.id?.endsWith(":blue") === true,
     )
     expect(blue?.pathD).toBe("M36,179 L168,179 L432,179 L564,179")
     expect(blue).toMatchObject({
@@ -267,5 +298,163 @@ describe("transitDiagramLayout", () => {
       (node): node is NetworkCircleNode => node.type === "circle",
     )
     expect(circles?.map((node) => node.r)).toEqual([19, 19])
+  })
+
+  it("derives deterministic source-rooted lines and colors from a plain DAG", () => {
+    const result = transitDiagramLayout({
+      nodes: [
+        wrappedNode({
+          id: "red-source",
+          label: "Red source",
+          familyColor: "#d33",
+        }),
+        wrappedNode({
+          id: "blue-source",
+          label: "Blue source",
+          familyColor: "#36c",
+        }),
+        wrappedNode({ id: "merge", label: "Merge" }),
+        wrappedNode({ id: "sink", label: "Sink" }),
+      ],
+      edges: [
+        wrappedEdge({ source: "red-source", target: "merge" }),
+        wrappedEdge({ source: "blue-source", target: "merge" }),
+        wrappedEdge({ source: "merge", target: "sink" }),
+      ],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: {
+        lineMode: "source-rooted",
+        sourceColorAccessor: "familyColor",
+        showLabels: false,
+      },
+    })
+
+    expect(result.sceneEdges).toHaveLength(4)
+    expect(result.sceneEdges?.map((edge) => edge.style.stroke)).toEqual([
+      "#36c",
+      "#d33",
+      "#36c",
+      "#d33",
+    ])
+    expect(
+      result.sceneEdges?.slice(2).map((edge) => (edge.datum as { lineId: string }).lineId),
+    ).toEqual(["blue-source", "red-source"])
+    expect(
+      result.sceneNodes?.find((node) => node.id === "merge")?.accessibility?.tableFields,
+    ).toEqual({
+      station: "Merge",
+      lines: "blue-source, red-source",
+    })
+  })
+
+  it("uses compact geometry and suppresses labels", () => {
+    const result = transitDiagramLayout({
+      nodes: [wrappedNode({ id: "a" }), wrappedNode({ id: "b" })],
+      edges: [wrappedEdge({ source: "a", target: "b", line: "red" })],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: { mode: "compact", showLabels: true },
+    })
+
+    expect(result.sceneEdges?.[0].style.strokeWidth).toBe(3.5)
+    expect((result.sceneNodes?.[0] as NetworkCircleNode).r).toBe(2.75)
+    expect(result.labels).toEqual([])
+  })
+
+  it("collapses co-located minimap stops into segmented line-color circles", () => {
+    const result = transitDiagramLayout({
+      nodes: [
+        wrappedNode({ id: "a", x: 0, y: 0, color: "#d33" }),
+        wrappedNode({ id: "b", x: 0, y: 0, color: "#36c" }),
+        wrappedNode({ id: "merge", x: 1, y: 0 }),
+      ],
+      edges: [
+        wrappedEdge({ source: "a", target: "merge" }),
+        wrappedEdge({ source: "b", target: "merge" }),
+      ],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: { mode: "minimap", lineMode: "source-rooted" },
+    })
+
+    const arcs = result.sceneNodes?.filter((node): node is NetworkArcNode => node.type === "arc")
+    const outlines = result.sceneNodes?.filter(
+      (node): node is NetworkCircleNode => node.type === "circle",
+    )
+    expect(arcs).toHaveLength(4)
+    expect(new Set(arcs?.map((arc) => arc.style.fill))).toEqual(new Set(["#d33", "#36c"]))
+    expect(arcs?.every((arc) => arc.datum === null)).toBe(true)
+    expect(outlines).toHaveLength(2)
+    expect(outlines?.map((circle) => circle.id)).toEqual(["a--b", "merge"])
+    const collapsedStop = outlines?.find((circle) => circle.id === "a--b")
+    expect(collapsedStop?.datum).toMatchObject({
+      id: "a--b",
+      label: "a / b",
+      stationIds: ["a", "b"],
+      lineIds: ["a", "b"],
+      interchange: true,
+    })
+    expect((collapsedStop?.datum as { stations?: unknown[] }).stations).toEqual([
+      { id: "a", x: 0, y: 0, color: "#d33" },
+      { id: "b", x: 0, y: 0, color: "#36c" },
+    ])
+
+    const hit = collapsedStop
+      ? findNearestNetworkNode(
+          result.sceneNodes ?? [],
+          result.sceneEdges ?? [],
+          collapsedStop.cx,
+          collapsedStop.cy,
+        )
+      : null
+    expect(hit?.datum).toBe(collapsedStop?.datum)
+
+    const table = buildNetworkTableModel(result.sceneNodes ?? [], result.sceneEdges ?? [])
+    expect(table.nodeRows).toHaveLength(2)
+    expect(table.nodeRows.map((row) => row.id).sort()).toEqual(["a--b", "merge"])
+    expect(table.nodeRows.find((row) => row.id === "a--b")?.semantic.values).toEqual({
+      station: "a / b",
+      lines: "a, b",
+    })
+    expect(result.labels).toEqual([])
+    expect(result.restyle).toBeUndefined()
+  })
+
+  it("renders custom primary and compact stations in the fitted SVG station layer", () => {
+    const calls: TransitDiagramStationRenderInfo[] = []
+    const result = transitDiagramLayout({
+      nodes: [wrappedNode({ id: "a", icon: "A" }), wrappedNode({ id: "b", icon: "B" })],
+      edges: [wrappedEdge({ source: "a", target: "b", line: "red" })],
+      dimensions: { width: 600, height: 360, plot: { x: 0, y: 0, ...plot } },
+      theme: { semantic: {}, categorical: ["#999"] },
+      resolveColor: () => "#999",
+      config: {
+        mode: "compact",
+        renderStation: (info) => {
+          calls.push(info)
+          return createElement(
+            "text",
+            { x: info.x, y: info.y, "data-station": info.station.id },
+            info.station.icon,
+          )
+        },
+      },
+    })
+
+    expect(calls).toHaveLength(2)
+    expect(calls[0]).toMatchObject({
+      radius: 2.75,
+      mode: "compact",
+      lineIds: ["red"],
+    })
+    expect(renderToStaticMarkup(result.overlays)).toContain('class="transit-diagram-stations"')
+    expect(renderToStaticMarkup(result.overlays)).toContain('data-station="a"')
+    expect(result.sceneNodes?.every((node) => node.style.fill === "transparent")).toBe(true)
+    expect(result.labels).toEqual([])
+    expect(result.restyle).toBeUndefined()
   })
 })

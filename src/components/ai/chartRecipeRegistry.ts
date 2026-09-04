@@ -6,10 +6,20 @@ import { recipeToChartCapability } from "./recipeCapability"
 
 type StoredCustomLayoutFunction = (...args: never[]) => unknown
 
+export interface RecipeLayoutIdentity {
+  version: string
+  fingerprint?: string
+}
+
+interface RegisteredRecipeLayout {
+  layout: StoredCustomLayoutFunction
+  identity?: RecipeLayoutIdentity
+}
+
 interface ChartRecipeRegistryStore {
   recipes: Map<string, ChartRecipe>
   capabilities: Map<string, ChartCapability>
-  layouts: Map<string, StoredCustomLayoutFunction>
+  layouts: Map<string, RegisteredRecipeLayout>
 }
 
 const REGISTRY_KEY = Symbol.for("semiotic.chartRecipeRegistry")
@@ -22,7 +32,7 @@ function store(): ChartRecipeRegistryStore {
     root[REGISTRY_KEY] = {
       recipes: new Map(),
       capabilities: new Map(),
-      layouts: new Map(),
+      layouts: new Map()
     }
   }
   return root[REGISTRY_KEY]
@@ -59,16 +69,45 @@ export function hasRegisteredRecipeCapabilities(): boolean {
 /** Register a known runtime implementation used by portable recipe manifests. */
 export function registerRecipeLayout<
   TDatum extends Datum = Datum,
-  TConfig extends object = Record<string, unknown>,
+  TConfig extends object = Record<string, unknown>
 >(
   layoutId: string,
   layout: CustomLayoutFunction<TDatum, TConfig>,
+  identity?: RecipeLayoutIdentity
 ): void {
   if (!layoutId) throw new Error("Recipe layout requires a non-empty id.")
   if (typeof layout !== "function") {
     throw new Error(`Recipe layout "${layoutId}" must be a function.`)
   }
-  store().layouts.set(layoutId, layout as StoredCustomLayoutFunction)
+  if (
+    identity &&
+    (typeof identity.version !== "string" || !identity.version.trim())
+  ) {
+    throw new Error(`Recipe layout "${layoutId}" requires a version identity.`)
+  }
+  if (
+    identity?.fingerprint !== undefined &&
+    (typeof identity.fingerprint !== "string" || !identity.fingerprint.trim())
+  ) {
+    throw new Error(
+      `Recipe layout "${layoutId}" fingerprint must be a non-empty string.`
+    )
+  }
+  const existing = store().layouts.get(layoutId)
+  if (
+    existing &&
+    existing.layout !== layout &&
+    existing.identity?.version === identity?.version &&
+    existing.identity?.fingerprint === identity?.fingerprint
+  ) {
+    throw new Error(
+      `Recipe layout "${layoutId}" cannot replace its implementation without a new version or fingerprint.`
+    )
+  }
+  store().layouts.set(layoutId, {
+    layout: layout as StoredCustomLayoutFunction,
+    ...(identity ? { identity: { ...identity } } : {})
+  })
 }
 
 export function unregisterRecipeLayout(layoutId: string): void {
@@ -76,16 +115,26 @@ export function unregisterRecipeLayout(layoutId: string): void {
 }
 
 export function getRecipeLayout(
-  layoutId: string,
+  layoutId: string
 ): CustomLayoutFunction | undefined {
-  return store().layouts.get(layoutId) as CustomLayoutFunction | undefined
+  return store().layouts.get(layoutId)?.layout as
+    CustomLayoutFunction | undefined
 }
 
-export function resolveChartRecipe(
-  value: unknown,
-): ChartRecipe | undefined {
+export function getRecipeLayoutIdentity(
+  layoutId: string
+): RecipeLayoutIdentity | undefined {
+  const identity = store().layouts.get(layoutId)?.identity
+  return identity ? { ...identity } : undefined
+}
+
+export function resolveChartRecipe(value: unknown): ChartRecipe | undefined {
   if (typeof value === "string") return getChartRecipe(value)
-  if (value && typeof value === "object" && typeof (value as ChartRecipe).id === "string") {
+  if (
+    value &&
+    typeof value === "object" &&
+    typeof (value as ChartRecipe).id === "string"
+  ) {
     return value as ChartRecipe
   }
   return undefined

@@ -11,7 +11,8 @@ import { defaultTooltipStyle } from "../Tooltip/Tooltip"
 
 function formatTooltipValue(v: unknown): string {
   if (v == null) return ""
-  if (typeof v === "number") return Number.isInteger(v) ? String(v) : v.toFixed(2)
+  if (typeof v === "number")
+    return Number.isInteger(v) ? String(v) : v.toFixed(2)
   if (v instanceof Date) return v.toLocaleString()
   return String(v)
 }
@@ -24,7 +25,7 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
   // tooltip — see `buildDefaultRealtimeTooltip` for the realtime
   // family's accessor-aware fallback.
   const datum = (hover.data ?? {}) as Record<string, unknown>
-  const yField = datum.y ?? datum.value
+  const yField = datum.__aggregateValue ?? datum.y ?? datum.value
   const xField = datum.x ?? datum.time
   // XYCustomChart and other bespoke data may carry neither x/y nor value/time.
   // Rather than render blank, fall back to a smart title + de-noised rows.
@@ -46,7 +47,9 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
           {smart.entries.map((e) => (
             <div key={e.key} style={{ opacity: 0.7, fontSize: 11 }}>
               {e.key}:{" "}
-              <span style={{ fontWeight: 600 }}>{formatTooltipValue(e.value)}</span>
+              <span style={{ fontWeight: 600 }}>
+                {formatTooltipValue(e.value)}
+              </span>
             </div>
           ))}
         </div>

@@ -6,10 +6,8 @@ import {
 } from "../../../../src/components/ai/chartRecipeRegistry"
 
 const { defineChartRecipe } = SemioticAI
-const registerChartRecipe =
-  SemioticAI.registerChartRecipe || registerSourceChartRecipe
-const registerRecipeLayout =
-  SemioticAI.registerRecipeLayout || registerSourceRecipeLayout
+const registerChartRecipe = SemioticAI.registerChartRecipe || registerSourceChartRecipe
+const registerRecipeLayout = SemioticAI.registerRecipeLayout || registerSourceRecipeLayout
 
 function aggregateWaffle(data, config) {
   const categoryField = config.categoryAccessor || "category"
@@ -44,9 +42,7 @@ function aggregateWaffle(data, config) {
   })
 
   let remaining = unitCount - categories.reduce((sum, category) => sum + category.units, 0)
-  const byRemainder = [...categories].sort(
-    (a, b) => b.remainder - a.remainder || a.index - b.index,
-  )
+  const byRemainder = [...categories].sort((a, b) => b.remainder - a.remainder || a.index - b.index)
   for (let i = 0; i < remaining; i += 1) {
     byRemainder[i % byRemainder.length].units += 1
   }
@@ -110,6 +106,7 @@ export const waffleRecipeManifest = defineChartRecipe({
   portability: "portable",
   layout: {
     id: "semiotic.layout.waffle",
+    version: "0",
     importPath: "semiotic/recipes",
     exportName: "waffleLayout",
   },
@@ -207,17 +204,28 @@ export const waffleRecipeManifest = defineChartRecipe({
   reception: {
     channels: ["visual", "interactive", "screen-reader", "agent"],
     strengths: ["memorable", "glanceable", "explainable", "teaching-friendly"],
-    risks: ["precise comparison may be harder than a bar chart", "individual cells can become navigation noise"],
+    risks: [
+      "precise comparison may be harder than a bar chart",
+      "individual cells can become navigation noise",
+    ],
     scaffolds: ["legend", "category summary", "accessible table", "description"],
     memorableForm: true,
   },
   designContract: {
-    whyCustom: "A unit grid makes composition more concrete and memorable than an abstract arc or line.",
+    whyCustom:
+      "A unit grid makes composition more concrete and memorable than an abstract arc or line.",
     whyThisForm: "A unit grid makes composition concrete through repeated, inspectable units.",
-    whyNotDefault: "A pie chart would show share but provide less unit-level evidence and less interaction surface.",
+    whyNotDefault:
+      "A pie chart would show share but provide less unit-level evidence and less interaction surface.",
     defaultAlternative: "BarChart",
-    tradeoff: "A bar chart supports more precise comparison; the waffle favors composition and memorability.",
-    misuse: ["too many categories", "too many units", "false precision", "treating each cell as a separate semantic datum"],
+    tradeoff:
+      "A bar chart supports more precise comparison; the waffle favors composition and memorability.",
+    misuse: [
+      "too many categories",
+      "too many units",
+      "false precision",
+      "treating each cell as a separate semantic datum",
+    ],
   },
   mobile: {
     strategy: "summary-cards",
@@ -289,6 +297,6 @@ export const waffleRecipeManifest = defineChartRecipe({
 })
 
 registerChartRecipe(waffleRecipeManifest)
-registerRecipeLayout("semiotic.layout.waffle", waffleLayout)
+registerRecipeLayout("semiotic.layout.waffle", waffleLayout, { version: "0" })
 
 export { aggregateWaffle }
