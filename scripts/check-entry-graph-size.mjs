@@ -96,12 +96,12 @@ const ENTRY_GRAPHS = [
   // lineage, and collection-scoped transfer audits complete that public
   // contract. Its isolated graph measures 113.4 KiB gzip; keep a reviewable
   // 3.6 KiB guard band.
-  // Bumped 117→118 (3.9.2): policy telemetry sidecar support adds a
+  // Bumped 117→118→119 (3.9.2): policy telemetry sidecar support adds a
   // light metadata path on this shared chart contract boundary.
   {
     entry: "semiotic-artifact.module.min.js",
     label: "artifact",
-    limitKb: 118
+    limitKb: 119
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
