@@ -66,7 +66,9 @@ const ENTRY_GRAPHS = [
   // LineChart moved into the primary identity graph so providers from
   // `semiotic/themes/react` and `LinkedCharts` share store instances with it.
   // This costs the family ~3 KiB but removes a split-instance correctness bug.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 159 },
+  // Bumped 159→160 (3.9.2): shared XY frame title/accessibility defaults
+  // add a sub-KiB shared-graph increase.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 160 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -94,10 +96,12 @@ const ENTRY_GRAPHS = [
   // lineage, and collection-scoped transfer audits complete that public
   // contract. Its isolated graph measures 113.4 KiB gzip; keep a reviewable
   // 3.6 KiB guard band.
+  // Bumped 117→118 (3.9.2): policy telemetry sidecar support adds a
+  // light metadata path on this shared chart contract boundary.
   {
     entry: "semiotic-artifact.module.min.js",
     label: "artifact",
-    limitKb: 117
+    limitKb: 118
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
