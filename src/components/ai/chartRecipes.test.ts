@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { Datum } from "../charts/shared/datumTypes"
 import { waffleLayout } from "../recipes/waffle"
-import { defineChartRecipe, type ChartRecipe } from "./chartRecipes"
+import { defineChartRecipe, isJsonSafe, type ChartRecipe } from "./chartRecipes"
 
 interface WaffleRow extends Datum {
   category: string
@@ -12,6 +12,33 @@ interface WaffleConfig {
   rows?: number
   columns?: number
 }
+
+describe("isJsonSafe", () => {
+  it("rejects values that JSON would transform or silently discard", () => {
+    const sparse: unknown[] = []
+    sparse.length = 1
+    const hidden = { visible: true }
+    Object.defineProperty(hidden, "internal", { value: true })
+    const accessor = {}
+    Object.defineProperty(accessor, "computed", {
+      enumerable: true,
+      get: () => {
+        throw new Error("JSON safety checks must not invoke accessors")
+      }
+    })
+    const arrayWithMetadata = [1] as number[] & { label?: string }
+    arrayWithMetadata.label = "hidden by JSON"
+
+    expect(isJsonSafe(new Map([["a", 1]]))).toBe(false)
+    expect(isJsonSafe(new Date("2026-09-03T00:00:00Z"))).toBe(false)
+    expect(isJsonSafe(sparse)).toBe(false)
+    expect(isJsonSafe(hidden)).toBe(false)
+    expect(isJsonSafe(accessor)).toBe(false)
+    expect(isJsonSafe(arrayWithMetadata)).toBe(false)
+    expect(isJsonSafe(-0)).toBe(false)
+    expect(isJsonSafe({ nested: [1, "two", true, null] })).toBe(true)
+  })
+})
 
 describe("defineChartRecipe", () => {
   it("returns the same recipe object without hidden registration or mutation", () => {
@@ -25,23 +52,23 @@ describe("defineChartRecipe", () => {
           role: "category",
           field: "category",
           required: true,
-          semanticType: "nominal",
+          semanticType: "nominal"
         },
         {
           role: "value",
           field: "value",
           required: true,
-          semanticType: "quantitative",
-        },
+          semanticType: "quantitative"
+        }
       ],
       intents: ["part-to-whole"],
       designContract: {
-        whyCustom: "Repeated units make composition concrete.",
+        whyCustom: "Repeated units make composition concrete."
       },
       accessibility: {
         keyboardNavigation: "required",
-        navigationGranularity: "category",
-      },
+        navigationGranularity: "category"
+      }
     }
 
     expect(defineChartRecipe(recipe)).toBe(recipe)
@@ -61,51 +88,53 @@ describe("defineChartRecipe", () => {
           role: "category",
           field: "category",
           required: true,
-          semanticType: "nominal",
-        },
+          semanticType: "nominal"
+        }
       ],
       encodings: [
         {
           channel: "count",
           role: "value",
-          meaning: "Each unit represents one normalized share.",
-        },
+          meaning: "Each unit represents one normalized share."
+        }
       ],
       intents: [
         {
           id: "part-to-whole",
           strength: "primary",
-          rationale: "The unit count shows composition.",
-        },
+          rationale: "The unit count shows composition."
+        }
       ],
       reception: {
         channels: ["visual", "screen-reader", "agent"],
         strengths: ["memorable"],
-        risks: ["false precision"],
+        risks: ["false precision"]
       },
       designContract: {
         whyCustom: "Repeated units make composition concrete.",
-        misuse: ["too many units"],
+        misuse: ["too many units"]
       },
       accessibility: {
         accessibleTable: "required",
-        navigationGranularity: "category",
+        navigationGranularity: "category"
       },
       description: () => ({
         text: "A waffle chart.",
-        levels: { l1: "A waffle chart." },
+        levels: { l1: "A waffle chart." }
       }),
       navigation: () => ({
         id: "root",
         role: "chart",
         label: "A waffle chart.",
-        level: 1,
-      }),
+        level: 1
+      })
     })
 
     expect(recipe.layout).toEqual({ id: "semiotic.layout.waffle" })
     expect(recipe.reception?.channels).toContain("agent")
-    expect(recipe.description?.({ data: [], config: {} }).levels?.l1).toBe("A waffle chart.")
+    expect(recipe.description?.({ data: [], config: {} }).levels?.l1).toBe(
+      "A waffle chart."
+    )
   })
 
   it("rejects recipes without an id or data roles", () => {
@@ -117,8 +146,8 @@ describe("defineChartRecipe", () => {
         dataRoles: [{ role: "value", semanticType: "quantitative" }],
         intents: ["explanation"],
         designContract: { whyCustom: "Test" },
-        accessibility: {},
-      } as unknown as ChartRecipe),
+        accessibility: {}
+      } as unknown as ChartRecipe)
     ).toThrow(/non-empty id/)
 
     expect(() =>
@@ -130,8 +159,8 @@ describe("defineChartRecipe", () => {
         dataRoles: [],
         intents: ["explanation"],
         designContract: { whyCustom: "Test" },
-        accessibility: {},
-      }),
+        accessibility: {}
+      })
     ).toThrow(/at least one data role/)
   })
 
@@ -144,22 +173,36 @@ describe("defineChartRecipe", () => {
       dataRoles: [{ role: "value", semanticType: "quantitative" as const }],
       intents: ["explanation"],
       designContract: { whyCustom: "Test portability." },
-      accessibility: {},
+      accessibility: {}
     }
     expect(() =>
       defineChartRecipe({
         ...base,
         layout: waffleLayout,
-        layoutConfigSchema: { type: "object" },
-      }),
+        layoutConfigSchema: { type: "object" }
+      })
     ).toThrow(/registered layout/)
     expect(() =>
       defineChartRecipe({
         ...base,
         layout: { id: "semiotic.layout.test" },
-        layoutConfigSchema: { validate: () => true },
-      }),
+        layoutConfigSchema: { validate: () => true }
+      })
     ).toThrow(/not JSON-safe/)
+    expect(() =>
+      defineChartRecipe({
+        ...base,
+        layout: { id: "semiotic.layout.test", version: " " },
+        layoutConfigSchema: { type: "object" }
+      })
+    ).toThrow(/invalid layout version/)
+    expect(() =>
+      defineChartRecipe({
+        ...base,
+        layout: { id: "semiotic.layout.test", fingerprint: "sha256:test" },
+        layoutConfigSchema: { type: "object" }
+      })
+    ).toThrow(/without a layout version/)
   })
 
   it("accepts an existing typed Semiotic custom layout without an adapter", () => {
@@ -173,16 +216,16 @@ describe("defineChartRecipe", () => {
         {
           role: "category",
           accessor: "categoryAccessor",
-          semanticType: "nominal",
-        },
+          semanticType: "nominal"
+        }
       ],
       intents: ["part-to-whole"],
       designContract: {
-        whyCustom: "Repeated units make composition concrete.",
+        whyCustom: "Repeated units make composition concrete."
       },
       accessibility: {
-        navigationGranularity: "category",
-      },
+        navigationGranularity: "category"
+      }
     })
 
     expect(recipe.layout).toBe(waffleLayout)

@@ -131,6 +131,7 @@ function clampMobileRange(value: [number, number], domain: [number, number], min
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function configToJSX(config: ChartConfig): string
+function configToJSXWithReport(config: ChartConfig): JSXProjectionResult
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
@@ -143,7 +144,7 @@ function estimateLabelWidth(text: number | string, fontSize: number): number
 function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "compressedPadding" | "crossingsAfter" | "layoutQuality" | "layoutQualityBefore" | "slots"> | null | undefined): null | string
 function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
-function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
+function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function hasOwnTooltipChrome(node: React.ReactNode): boolean
@@ -189,7 +190,7 @@ function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
-function toURL(config: ChartConfig): string
+function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult
 function useCategoryColors(): CategoryColorMap | null
 function useChartObserver(options?: UseChartObserverOptions | undefined): UseChartObserverResult
@@ -234,6 +235,7 @@ interface CategoricalLegendConfig
 interface CategoryColorProviderProps
 interface CenterlineStyle
 interface Changeset<T = Datum>
+interface ChartArtifactTransferStatus extends ArtifactTransferStatus
 interface ChartConfig
 interface ChartContainerDataAuditOptions extends Pick<AuditDataOptions, "checkOutliers">, DataAuditNotificationOptions
 interface ChartContainerHandle
@@ -263,6 +265,7 @@ interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface FocusObservation extends ObservationBase
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
+interface FromConfigResult
 interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface GaugeChartProps extends BaseChartProps
 interface GaugeThreshold
@@ -282,6 +285,7 @@ interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
 interface InventoryAtTimeOptions
 interface InventoryEdge
+interface JSXProjectionResult
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
@@ -388,6 +392,7 @@ interface SyncedPushHandle<T = Datum>
 interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
 interface ThresholdAlertConfig
 interface ToConfigOptions
+interface ToURLOptions
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
@@ -720,9 +725,14 @@ interface-member Changeset::property::bounded = required bounded: boolean
 interface-member Changeset::property::inserts = required inserts: T[]
 interface-member Changeset::property::preserveCategoryOrder = optional preserveCategoryOrder: boolean | undefined
 interface-member Changeset::property::totalSize = optional totalSize: number | undefined
+interface-member ChartArtifactTransferStatus::property::serializedConfigFingerprint = optional serializedConfigFingerprint: string | undefined
+interface-member ChartArtifactTransferStatus::property::serializedDataFingerprint = optional serializedDataFingerprint: null | string | undefined
+interface-member ChartArtifactTransferStatus::property::transferFingerprint = optional transferFingerprint: string | undefined
+interface-member ChartConfig::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member ChartConfig::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
 interface-member ChartConfig::property::component = required component: string
 interface-member ChartConfig::property::createdAt = required createdAt: string
-interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string;}
+interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string; recipeVersion?: string; definitionFingerprint?: string; layoutId?: string; layoutVersion?: string; layoutFingerprint?: string;}
 interface-member ChartConfig::property::portable = optional portable: boolean | undefined
 interface-member ChartConfig::property::props = required props: Datum
 interface-member ChartConfig::property::reason = optional reason: string | undefined
@@ -1048,6 +1058,10 @@ interface-member ForceDirectedGraphProps::property::sourceAccessor = optional so
 interface-member ForceDirectedGraphProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ForceDirectedGraphProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
 interface-member ForceDirectedGraphProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member FromConfigResult::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member FromConfigResult::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
+interface-member FromConfigResult::property::componentName = required componentName: string
+interface-member FromConfigResult::property::props = required props: Datum
 interface-member FunnelChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member FunnelChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member FunnelChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
@@ -1239,6 +1253,9 @@ interface-member InventoryEdge::property::startTime = required startTime: number
 interface-member InventoryEdge::property::systemOutTime = optional systemOutTime: null | number | undefined
 interface-member InventoryEdge::property::target = required target: string
 interface-member InventoryEdge::property::value = required value: number
+interface-member JSXProjectionResult::property::jsx = required jsx: string
+interface-member JSXProjectionResult::property::omittedPaths = required omittedPaths: string[]
+interface-member JSXProjectionResult::property::warnings = required warnings: string[]
 interface-member LegendGroup::property::items = required items: LegendItem[]
 interface-member LegendGroup::property::label = required label: string
 interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
@@ -2758,8 +2775,10 @@ interface-member ThresholdAlertConfig::property::metric = required metric: (node
 interface-member ThresholdAlertConfig::property::pulse = optional pulse: boolean | undefined
 interface-member ThresholdAlertConfig::property::warning = optional warning: number | undefined
 interface-member ThresholdAlertConfig::property::warningColor = optional warningColor: string | undefined
+interface-member ToConfigOptions::property::artifactContract = optional artifactContract: ArtifactContract | undefined
 interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
 interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
+interface-member ToURLOptions::property::maxLength = optional maxLength: number | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined

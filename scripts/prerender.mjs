@@ -69,6 +69,21 @@ const ROUTE_META = {
     description:
       "Build bespoke chart geometry on Semiotic's escape-hatch HOCs: the custom-layout API, per-datum glyph marks, and the recipe chrome kit — recipes inherit hit-testing, accessibility, theming, and SSR from the frame.",
   },
+  artifacts: {
+    title: "Artifact Contracts — Semiotic",
+    description:
+      "Optional, versioned interpretation sidecars for chart purpose, claims, evidence, time, reception, correction, policy evaluation, and transfer.",
+  },
+  "artifacts/overview": {
+    title: "Artifact Contracts — Semiotic",
+    description:
+      "Add an opt-in artifact contract beside a chart, preserve unknowns, evaluate it under named policies, and export a loss-reporting transfer packet.",
+  },
+  "artifacts/benchmark": {
+    title: "Artifact Contract Benchmark — Semiotic",
+    description:
+      "Inspect the measured paired mutation detection, positive-control false-refusal rate, unavailable refusal precision, and limits of Semiotic's Artifact Contract benchmark.",
+  },
   annotations: {
     title: "Annotations — Semiotic",
     description:

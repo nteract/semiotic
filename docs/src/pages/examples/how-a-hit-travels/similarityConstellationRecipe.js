@@ -4,7 +4,9 @@ import { similarityConstellationLayout } from "./SimilarityConstellation"
 export const SIMILARITY_CONSTELLATION_LAYOUT_ID = "semiotic.layout.similarity-constellation.v1"
 export const SIMILARITY_CONSTELLATION_RECIPE_ID = "semiotic.recipe.similarity-constellation.v1"
 
-registerRecipeLayout(SIMILARITY_CONSTELLATION_LAYOUT_ID, similarityConstellationLayout)
+registerRecipeLayout(SIMILARITY_CONSTELLATION_LAYOUT_ID, similarityConstellationLayout, {
+  version: "1",
+})
 
 export const similarityConstellationRecipe = defineChartRecipe({
   id: SIMILARITY_CONSTELLATION_RECIPE_ID,
@@ -14,6 +16,7 @@ export const similarityConstellationRecipe = defineChartRecipe({
   portability: "portable",
   layout: {
     id: SIMILARITY_CONSTELLATION_LAYOUT_ID,
+    version: "1",
     importPath: "./SimilarityConstellation",
     exportName: "similarityConstellationLayout",
   },

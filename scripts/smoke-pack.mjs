@@ -267,6 +267,7 @@ function checkPrivateDeclarations(packageRoot, failures) {
 
 function checkClientBoundaryDirectives(packageRoot, exportsMap, failures) {
   const clientEntries = [
+    "./artifact/react",
     "./realtime",
     "./realtime/core",
     "./realtime/react",
@@ -781,7 +782,7 @@ function checkPortabilitySpec(packageRoot, resources, proj, failures) {
   const specExport = resources.find((resource) => resource.entry === "./spec/*")
   if (!specExport || specExport.target !== "./spec/*") {
     failures.push(
-      "semiotic/spec/*: missing resource export for the published IDID schemas"
+      "semiotic/spec/*: missing resource export for the published portability schemas"
     )
     return
   }
@@ -789,7 +790,8 @@ function checkPortabilitySpec(packageRoot, resources, proj, failures) {
   const schemaNames = [
     "chart-capability.schema.json",
     "audience-profile.schema.json",
-    "annotation-provenance.schema.json"
+    "annotation-provenance.schema.json",
+    "artifact-contract.schema.json"
   ]
   for (const name of schemaNames) {
     const path = join(packageRoot, "spec", "v0.1", name)

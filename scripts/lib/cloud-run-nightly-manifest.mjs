@@ -43,6 +43,7 @@ function between(source, start, end) {
  * access.
  */
 export function validateNightlyCloudRunDeployment({
+  packageJson,
   dockerfile,
   cloudbuild,
   verifier,
@@ -50,6 +51,27 @@ export function validateNightlyCloudRunDeployment({
   activeHealthAliasReferences = []
 }) {
   const errors = []
+
+  const generatedAiSurfaceCheck =
+    "node scripts/generate-ai-surface-manifest.mjs --check"
+  if (
+    packageJson?.scripts?.["check:ai-surface-manifest"] !==
+    generatedAiSurfaceCheck
+  ) {
+    errors.push(
+      `package.json must define check:ai-surface-manifest as ${generatedAiSurfaceCheck}`
+    )
+  }
+  const fullAiSurfaceCheck = packageJson?.scripts?.["check:ai-surface"]
+  if (
+    typeof fullAiSurfaceCheck !== "string" ||
+    !fullAiSurfaceCheck.includes("npm run check:ai-surface-manifest") ||
+    !fullAiSurfaceCheck.includes("scripts/ai-surface-manifest.test.mjs")
+  ) {
+    errors.push(
+      "package.json check:ai-surface must compose the generated manifest check with its Node test suite"
+    )
+  }
 
   if (activeHealthAliasReferences.length > 0) {
     errors.push(
@@ -82,6 +104,7 @@ export function validateNightlyCloudRunDeployment({
     for (const fragment of [
       "COPY src ./src",
       "COPY ai ./ai",
+      "COPY spec ./spec",
       "scripts/build.mjs",
       "scripts/build-mcp.mjs",
       "scripts/generate-ai-surface-manifest.mjs",
@@ -97,19 +120,20 @@ export function validateNightlyCloudRunDeployment({
     }
     if (
       !inOrder(dockerfile, [
-        "npm run check:ai-surface",
+        "npm run check:ai-surface-manifest",
         "npm run dist:prod",
         "npm run build:mcp"
       ])
     ) {
       errors.push(
-        "nightly Dockerfile must check the generated AI surface, build package runtime artifacts, then build the MCP executable"
+        "nightly Dockerfile must use the generated-only AI surface check, build package runtime artifacts, then build the MCP executable"
       )
     }
     for (const fragment of [
       "COPY --from=build /app/node_modules ./node_modules",
       "COPY --from=build /app/dist ./dist",
       "COPY --from=build /app/ai ./ai",
+      "COPY --from=build /app/spec ./spec",
       "ARG SEMIOTIC_DEPLOYMENT_CHANNEL=nightly",
       "ARG SEMIOTIC_GIT_SHA",
       "ARG SEMIOTIC_BUILD_ID",
@@ -146,6 +170,8 @@ export function validateNightlyCloudRunDeployment({
       '"ai/surface-manifest.json"',
       '"ai/system-prompt.md"',
       '"ai/examples.md"',
+      '"spec/v0.1/artifact-contract.schema.json"',
+      '"invalid-artifact-contract-schema"',
       '"unexpected-published-semiotic-package"',
       'requireFromRoot("semiotic/server")',
       'requireFromRoot("semiotic/ai")',

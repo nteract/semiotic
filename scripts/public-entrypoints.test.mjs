@@ -8,7 +8,7 @@ import {
 
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
-  assert.equal(entries.length, 34)
+  assert.equal(entries.length, 36)
   assert.equal(
     entries.find((entry) => entry.subpath === "./xy")?.sourcePath,
     "src/components/semiotic-xy.ts"
@@ -18,6 +18,14 @@ test("derives every importable package subpath and keeps previews out of API sna
     "semiotic-server-edge"
   )
   assert.equal(
+    entries.find((entry) => entry.subpath === "./artifact")?.sourcePath,
+    "src/components/semiotic-artifact.ts"
+  )
+  assert.equal(
+    entries.find((entry) => entry.subpath === "./artifact/react")?.sourcePath,
+    "src/components/semiotic-artifact-react.ts"
+  )
+  assert.equal(
     entries.find((entry) => entry.subpath === "./experimental")?.stableApi,
     false
   )
@@ -25,7 +33,7 @@ test("derives every importable package subpath and keeps previews out of API sna
     entries.find((entry) => entry.subpath === "./experimental/vacp")?.stableApi,
     false
   )
-  assert.equal(stableApiEntrypoints().length, 32)
+  assert.equal(stableApiEntrypoints().length, 34)
 })
 
 test("retains condition-only JavaScript exports in the inventory", () => {

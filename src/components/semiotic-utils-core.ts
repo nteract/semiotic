@@ -13,7 +13,7 @@ export {
   LIGHT_THEME,
   DARK_THEME,
   HIGH_CONTRAST_THEME,
-  COLOR_BLIND_SAFE_CATEGORICAL,
+  COLOR_BLIND_SAFE_CATEGORICAL
 } from "./store/themeCore"
 export {
   themeToCSS,
@@ -22,7 +22,7 @@ export {
   resolveThemePreset,
   THEME_PRESETS,
   CARBON_CATEGORICAL_14,
-  CARBON_ALERT,
+  CARBON_ALERT
 } from "./semiotic-themes-core"
 export type {
   KnownThemePresetName,
@@ -31,7 +31,10 @@ export type {
 
 // ── Format utilities ─────────────────────────────────────────────────────
 export { adaptiveTimeTicks, smartTickFormat } from "./charts/shared/formatUtils"
-export type { AdaptiveTimeTickOptions, TimeGranularity } from "./charts/shared/formatUtils"
+export type {
+  AdaptiveTimeTickOptions,
+  TimeGranularity
+} from "./charts/shared/formatUtils"
 
 // ── Responsive sizing math (React-free) ─────────────────────────────────
 export { resolveResponsiveDimension } from "./stream/responsiveSize"
@@ -45,18 +48,28 @@ export { createHatchPattern } from "./charts/shared/hatchPattern"
 export type { HatchPatternOptions } from "./charts/shared/hatchPattern"
 
 // Declarative hatch-fill descriptor + threshold-aware style rules (pure).
-export { isHatchFill, hatchFillId, hatchFillKey } from "./charts/shared/hatchFill"
+export {
+  isHatchFill,
+  hatchFillId,
+  hatchFillKey
+} from "./charts/shared/hatchFill"
 export type { HatchFill } from "./charts/shared/hatchFill"
 export {
-  resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver,
-  makeXYRuleContext, makeNodeRuleContext, composeStyleRules, makeStyleRuleStyleFn,
+  resolveStyleRules,
+  matchesThreshold,
+  ruleMatches,
+  makeRuleValueResolver,
+  makeXYRuleContext,
+  makeNodeRuleContext,
+  composeStyleRules,
+  makeStyleRuleStyleFn
 } from "./charts/shared/styleRules"
 export type {
   StyleRule,
   StyleRuleStyle,
   StyleRuleThreshold,
   StyleRuleContext,
-  StyleRulePredicate,
+  StyleRulePredicate
 } from "./charts/shared/styleRules"
 
 // ── Validation ───────────────────────────────────────────────────────────
@@ -66,7 +79,7 @@ export {
   auditData,
   formatDataAudit,
   profileNumericFields,
-  toDataAuditNotifications,
+  toDataAuditNotifications
 } from "./data/auditData"
 export type {
   AuditDataOptions,
@@ -76,19 +89,19 @@ export type {
   DataAuditNotificationOptions,
   DataAuditResult,
   NumericFieldProfile,
-  ProfileNumericFieldsOptions,
+  ProfileNumericFieldsOptions
 } from "./data/auditData"
 export type {
   NumericAggregateContract,
   NumericContracts,
   NumericFieldContract,
   NumericFieldRole,
-  NumericRequirement,
+  NumericRequirement
 } from "./data/numericContracts"
 export {
   evaluateChart,
   formatEvaluateChart,
-  toEvaluateChartNotifications,
+  toEvaluateChartNotifications
 } from "./ai/evaluateChart"
 export type {
   EvaluateChartFinding,
@@ -97,33 +110,33 @@ export type {
   EvaluateChartResult,
   EvaluateChartSeverity,
   EvaluateChartStage,
-  EvaluateChartSummary,
+  EvaluateChartSummary
 } from "./ai/evaluateChart"
 export { auditVisualHierarchy } from "./ai/auditVisualHierarchy"
 export type {
   VisualHierarchyAuditResult,
   VisualHierarchyFinding,
   VisualHierarchyInput,
-  VisualHierarchyStatus,
+  VisualHierarchyStatus
 } from "./ai/auditVisualHierarchy"
 export {
   AESTHETICS_OFF_PROFILE,
   DEFAULT_AESTHETIC_PROFILE,
   DEFAULT_AESTHETIC_THRESHOLDS,
   DEFAULT_AESTHETIC_WEIGHTS,
-  evaluateAesthetics,
+  evaluateAesthetics
 } from "./ai/evaluateAesthetics"
 export type {
   AestheticEvaluationResult,
   AestheticFeatureResult,
   AestheticFeatureStatus,
-  EvaluateAestheticsOptions,
+  EvaluateAestheticsOptions
 } from "./ai/evaluateAesthetics"
 export type {
   AestheticFeatureId,
   AestheticFeatureWeights,
   AestheticProfile,
-  AestheticThresholds,
+  AestheticThresholds
 } from "./ai/aestheticProfileTypes"
 export {
   auditAccessibility,
@@ -215,10 +228,33 @@ export { getHitRadius } from "./stream/hitTestUtils"
 export { unwrapDatum } from "./recipes/recipeUtils"
 
 // ── Serialization ────────────────────────────────────────────────────────
-export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
-export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
-export { serializeSelections, deserializeSelections } from "./export/selectionSerializer"
-export type { SerializedSelections, SerializedSelection, SerializedFieldSelection } from "./export/selectionSerializer"
+export {
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX,
+  configToJSXWithReport
+} from "./export/chartConfig"
+export type {
+  ChartConfig,
+  ChartArtifactTransferStatus,
+  ToConfigOptions,
+  FromConfigResult,
+  ToURLOptions,
+  JSXProjectionResult,
+  CopyFormat
+} from "./export/chartConfig"
+export {
+  serializeSelections,
+  deserializeSelections
+} from "./export/selectionSerializer"
+export type {
+  SerializedSelections,
+  SerializedSelection,
+  SerializedFieldSelection
+} from "./export/selectionSerializer"
 export { exportChart } from "./export/exportChart"
 export { auditObservedScene } from "./ai/observedSceneAudit"
 export type {
@@ -246,7 +282,7 @@ export {
   resolveMultiCapableTooltip,
   isMultiTooltip,
   hasOwnTooltipChrome,
-  markTooltipChrome,
+  markTooltipChrome
 } from "./Tooltip/Tooltip"
 export type {
   TooltipProp,
@@ -255,7 +291,7 @@ export type {
   MultiLineTooltipConfig,
   MultiTooltipConfig,
   TooltipRootProps,
-  TooltipChromeMode,
+  TooltipChromeMode
 } from "./Tooltip/Tooltip"
 
 // ── Accessibility hooks ─────────────────────────────────────────────────
@@ -265,6 +301,9 @@ export type {
 export {
   sweepToAngles,
   valueToAngle,
-  computeArcBoundingBox,
+  computeArcBoundingBox
 } from "./charts/shared/radialGeometry"
-export type { SweepAngles, ArcBoundingBox } from "./charts/shared/radialGeometry"
+export type {
+  SweepAngles,
+  ArcBoundingBox
+} from "./charts/shared/radialGeometry"

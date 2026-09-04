@@ -142,6 +142,11 @@ const RecipeKitPage = lazy(() => import("./pages/custom-charts/RecipeKitPage"))
 const CustomChartsExamplesPage = lazy(
   () => import("./pages/custom-charts/CustomChartsExamplesPage"),
 )
+const ArtifactContractsOverviewPage = lazy(
+  () => import("./pages/artifacts/ArtifactContractsOverviewPage"),
+)
+const ArtifactBenchmarkPage = lazy(() => import("./pages/artifacts/ArtifactBenchmarkPage"))
+const ArtifactGovernancePage = lazy(() => import("./pages/artifacts/ArtifactGovernancePage"))
 const GoFishLayoutsPage = lazy(() => import("./pages/features/GoFishLayoutsPage"))
 const CapabilitiesPage = lazy(() => import("./pages/features/CapabilitiesPage"))
 const InterrogationPage = lazy(() => import("./pages/features/InterrogationPage"))
@@ -817,6 +822,14 @@ export default function DocsApp() {
                 <Route path="glyph-marks" element={<GlyphMarksPage />} />
                 <Route path="recipe-kit" element={<RecipeKitPage />} />
                 <Route path="examples" element={<CustomChartsExamplesPage />} />
+              </Route>
+
+              {/* Artifact contracts — optional interpretation, policy, and transfer sidecars. */}
+              <Route path="artifacts" element={<Outlet />}>
+                <Route index element={<Navigate to="overview" replace />} />
+                <Route path="overview" element={<ArtifactContractsOverviewPage />} />
+                <Route path="benchmark" element={<ArtifactBenchmarkPage />} />
+                <Route path="governance" element={<ArtifactGovernancePage />} />
               </Route>
 
               {/* Accessibility — first-class category (before Intelligence).

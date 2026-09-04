@@ -1,0 +1,5581 @@
+{
+  "__generated": true,
+  "__source": [
+    "docs/src/components/navData.js",
+    "docs/src/pages/accessibility/AccessibilityAuditPage.jsx",
+    "docs/src/pages/accessibility/DescribeChartPage.jsx",
+    "docs/src/pages/accessibility/NavigationTreePage.jsx",
+    "docs/src/pages/artifacts/ArtifactContractsOverviewPage.jsx",
+    "docs/src/pages/custom-charts/waffleRecipeManifest.js",
+    "docs/src/pages/examples/WhatTheMachineSeesExamplePage.jsx",
+    "docs/src/pages/examples/how-a-hit-travels/similarityConstellationRecipe.js",
+    "docs/src/pages/examples/urineWheelRecipeManifest.js",
+    "docs/src/pages/features/AnnotationProvenancePage.jsx",
+    "docs/src/pages/features/DataQualityBridgePage.jsx",
+    "docs/src/pages/features/GenerativeUIPage.jsx",
+    "docs/src/pages/features/PortabilitySpecPage.jsx",
+    "docs/src/pages/features/ReaderGroundingPage.jsx",
+    "docs/src/pages/features/SerializationPage.jsx",
+    "docs/src/pages/features/SuggestionsPage.jsx",
+    "docs/src/pages/features/TemporalLifecyclePage.jsx",
+    "package.json",
+    "scripts/generate-artifact-surface-inventory.mjs",
+    "src/components/access/chartAccessContract.ts",
+    "src/components/ai/annotationProvenance.ts",
+    "src/components/ai/audienceProfile.ts",
+    "src/components/ai/auditVisualHierarchy.ts",
+    "src/components/ai/builtInChartRecipes.ts",
+    "src/components/ai/chartCapabilities.ts",
+    "src/components/ai/chartRecipes.ts",
+    "src/components/ai/conversationArc.ts",
+    "src/components/ai/conversationArcTypes.ts",
+    "src/components/ai/dataPitfallsBridge.ts",
+    "src/components/ai/dataQualityBridge.ts",
+    "src/components/ai/describeChart.ts",
+    "src/components/ai/evaluateAesthetics.ts",
+    "src/components/ai/evaluateChart.ts",
+    "src/components/ai/generativeChart.ts",
+    "src/components/ai/intentManifest.ts",
+    "src/components/ai/navigationTree.ts",
+    "src/components/ai/observedSceneAudit.ts",
+    "src/components/ai/readerGrounding.ts",
+    "src/components/ai/repairChartConfig.ts",
+    "src/components/ai/semanticViability.ts",
+    "src/components/ai/suggestCharts.ts",
+    "src/components/artifact/ArtifactInspector.tsx",
+    "src/components/charts/geo/ChoroplethMap.capability.ts",
+    "src/components/charts/geo/DistanceCartogram.capability.ts",
+    "src/components/charts/geo/FlowMap.capability.ts",
+    "src/components/charts/geo/ProportionalSymbolMap.capability.ts",
+    "src/components/charts/network/ChordDiagram.capability.ts",
+    "src/components/charts/network/CirclePack.capability.ts",
+    "src/components/charts/network/ForceDirectedGraph.capability.ts",
+    "src/components/charts/network/OrbitDiagram.capability.ts",
+    "src/components/charts/network/ProcessSankey.capability.ts",
+    "src/components/charts/network/SankeyDiagram.capability.ts",
+    "src/components/charts/network/TreeDiagram.capability.ts",
+    "src/components/charts/network/Treemap.capability.ts",
+    "src/components/charts/ordinal/BarChart.capability.ts",
+    "src/components/charts/ordinal/BoxPlot.capability.ts",
+    "src/components/charts/ordinal/DonutChart.capability.ts",
+    "src/components/charts/ordinal/DotPlot.capability.ts",
+    "src/components/charts/ordinal/FunnelChart.capability.ts",
+    "src/components/charts/ordinal/GaugeChart.capability.ts",
+    "src/components/charts/ordinal/GroupedBarChart.capability.ts",
+    "src/components/charts/ordinal/Histogram.capability.ts",
+    "src/components/charts/ordinal/LikertChart.capability.ts",
+    "src/components/charts/ordinal/PieChart.capability.ts",
+    "src/components/charts/ordinal/RadarChart.capability.ts",
+    "src/components/charts/ordinal/RidgelinePlot.capability.ts",
+    "src/components/charts/ordinal/StackedBarChart.capability.ts",
+    "src/components/charts/ordinal/SwarmPlot.capability.ts",
+    "src/components/charts/ordinal/SwimlaneChart.capability.ts",
+    "src/components/charts/ordinal/ViolinPlot.capability.ts",
+    "src/components/charts/physics/ChainReactionChart.capability.ts",
+    "src/components/charts/physics/CollisionSwarmChart.capability.ts",
+    "src/components/charts/physics/CrucibleChart.capability.ts",
+    "src/components/charts/physics/EventDropChart.capability.ts",
+    "src/components/charts/physics/GaltonBoardChart.capability.ts",
+    "src/components/charts/physics/GauntletChart.capability.ts",
+    "src/components/charts/physics/PacketFlowChart.capability.ts",
+    "src/components/charts/physics/ProcessFlowChart.capability.ts",
+    "src/components/charts/physics/UnitPileChart.capability.ts",
+    "src/components/charts/shared/auditAccessibility.ts",
+    "src/components/charts/value/BigNumber.capability.ts",
+    "src/components/charts/xy/AreaChart.capability.ts",
+    "src/components/charts/xy/BubbleChart.capability.ts",
+    "src/components/charts/xy/BumpChart.capability.ts",
+    "src/components/charts/xy/CandlestickChart.capability.ts",
+    "src/components/charts/xy/ConnectedScatterplot.capability.ts",
+    "src/components/charts/xy/DifferenceChart.capability.ts",
+    "src/components/charts/xy/Heatmap.capability.ts",
+    "src/components/charts/xy/LineChart.capability.ts",
+    "src/components/charts/xy/MinimapChart.capability.ts",
+    "src/components/charts/xy/MultiAxisLineChart.capability.ts",
+    "src/components/charts/xy/QuadrantChart.capability.ts",
+    "src/components/charts/xy/Scatterplot.capability.ts",
+    "src/components/charts/xy/StackedAreaChart.capability.ts",
+    "src/components/charts/xy/WaterfallChart.capability.ts",
+    "src/components/data/auditData.ts",
+    "src/components/data/portability/spec.ts",
+    "src/components/data/portability/vegaLite.ts",
+    "src/components/evidence/chartEvidenceEnvelope.ts",
+    "src/components/evidence/evidenceGate.ts",
+    "src/components/export/chartConfig.ts",
+    "src/components/realtime/lifecycleBands.ts",
+    "src/components/server/renderEvidence.ts",
+    "src/components/store/selectionProvenance.ts"
+  ],
+  "inventoryVersion": 1,
+  "repositoryVersion": "3.9.2",
+  "relations": [
+    {
+      "id": "claim-support",
+      "question": "What evidence and transformations support each claim?"
+    },
+    {
+      "id": "representation-fit",
+      "question": "Why is this representation suitable for the data and task?"
+    },
+    {
+      "id": "reception",
+      "question": "How can each intended reader or system receive the meaning?"
+    },
+    {
+      "id": "time",
+      "question": "What time, freshness, completeness, and revision state applies?"
+    },
+    {
+      "id": "challenge-and-correction",
+      "question": "How can a claim be questioned, corrected, or superseded?"
+    },
+    {
+      "id": "accountability",
+      "question": "Who authored, reviewed, generated, or acted on the artifact?"
+    },
+    {
+      "id": "abstention",
+      "question": "What must remain unknown, conditional, delayed, or refused?"
+    },
+    {
+      "id": "preservation",
+      "question": "What meaning must survive serialization, export, and reuse?"
+    }
+  ],
+  "summary": {
+    "registeredChartCapabilities": 52,
+    "portableRecipes": 4,
+    "registeredLocalRecipes": 1,
+    "utilityGroups": 32,
+    "documentationSurfaces": 13
+  },
+  "coverage": {
+    "chartCapabilities": {
+      "claim-support": {
+        "represented": 0,
+        "partial": 52,
+        "notRepresented": 0
+      },
+      "representation-fit": {
+        "represented": 52,
+        "partial": 0,
+        "notRepresented": 0
+      },
+      "reception": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 52
+      },
+      "time": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 52
+      },
+      "challenge-and-correction": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 52
+      },
+      "accountability": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 52
+      },
+      "abstention": {
+        "represented": 0,
+        "partial": 47,
+        "notRepresented": 5
+      },
+      "preservation": {
+        "represented": 0,
+        "partial": 52,
+        "notRepresented": 0
+      }
+    },
+    "portableRecipes": {
+      "claim-support": {
+        "represented": 0,
+        "partial": 4,
+        "notRepresented": 0
+      },
+      "representation-fit": {
+        "represented": 4,
+        "partial": 0,
+        "notRepresented": 0
+      },
+      "reception": {
+        "represented": 4,
+        "partial": 0,
+        "notRepresented": 0
+      },
+      "time": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 4
+      },
+      "challenge-and-correction": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 4
+      },
+      "accountability": {
+        "represented": 0,
+        "partial": 0,
+        "notRepresented": 4
+      },
+      "abstention": {
+        "represented": 4,
+        "partial": 0,
+        "notRepresented": 0
+      },
+      "preservation": {
+        "represented": 4,
+        "partial": 0,
+        "notRepresented": 0
+      }
+    }
+  },
+  "capabilities": [
+    {
+      "component": "AreaChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/AreaChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "trend"
+      ],
+      "variantCount": 4,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/area-chart",
+        "source": "docs/src/pages/charts/AreaChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "BarChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/BarChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "part-to-whole",
+        "rank"
+      ],
+      "variantCount": 4,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/bar-chart",
+        "source": "docs/src/pages/charts/BarChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "BigNumber",
+      "family": "value",
+      "importPath": "semiotic/value",
+      "source": "src/components/charts/value/BigNumber.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-categories",
+        "part-to-whole",
+        "rank",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fieldPolicy",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "scaleFit",
+        "suggestionPropContract"
+      ],
+      "documentation": {
+        "route": "/charts/big-number",
+        "source": "docs/src/pages/charts/BigNumberPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "BoxPlot",
+      "family": "distribution",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/BoxPlot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/box-plot",
+        "source": "docs/src/pages/charts/BoxPlotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "BubbleChart",
+      "family": "relationship",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/BubbleChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "correlation",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/bubble-chart",
+        "source": "docs/src/pages/charts/BubbleChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "BumpChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/BumpChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-series",
+        "rank",
+        "trend"
+      ],
+      "variantCount": 1,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "semanticViability",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/bump-chart",
+        "source": "docs/src/pages/charts/BumpChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts",
+            "semanticViability"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "CandlestickChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/CandlestickChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "outlier-detection",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/candlestick-chart",
+        "source": "docs/src/pages/charts/CandlestickChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ChainReactionChart",
+      "family": "hierarchy",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/ChainReactionChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "flow",
+        "hierarchy",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "suggestionPropContract"
+      ],
+      "documentation": {
+        "route": "/charts/chain-reaction-chart",
+        "source": "docs/src/pages/charts/ChainReactionChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ChordDiagram",
+      "family": "flow",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/ChordDiagram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "flow"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/chord-diagram",
+        "source": "docs/src/pages/charts/ChordDiagramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ChoroplethMap",
+      "family": "geo",
+      "importPath": "semiotic/geo",
+      "source": "src/components/charts/geo/ChoroplethMap.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "geo"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/choropleth-map",
+        "source": "docs/src/pages/charts/ChoroplethMapPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "CirclePack",
+      "family": "hierarchy",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/CirclePack.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "hierarchy",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/circle-pack",
+        "source": "docs/src/pages/charts/CirclePackPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "CollisionSwarmChart",
+      "family": "distribution",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/CollisionSwarmChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/collision-swarm-chart",
+        "source": "docs/src/pages/charts/CollisionSwarmChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ConnectedScatterplot",
+      "family": "relationship",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/ConnectedScatterplot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "correlation",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/connected-scatterplot",
+        "source": "docs/src/pages/charts/ConnectedScatterplotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "CrucibleChart",
+      "family": "flow",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/CrucibleChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-categories",
+        "flow"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/crucible-chart",
+        "source": "docs/src/pages/charts/CrucibleChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "DifferenceChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/DifferenceChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-series",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/difference-chart",
+        "source": "docs/src/pages/charts/DifferenceChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "DistanceCartogram",
+      "family": "geo",
+      "importPath": "semiotic/geo",
+      "source": "src/components/charts/geo/DistanceCartogram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "geo",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/distance-cartogram",
+        "source": "docs/src/pages/charts/DistanceCartogramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "DonutChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/DonutChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/donut-chart",
+        "source": "docs/src/pages/charts/DonutChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "DotPlot",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/DotPlot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "outlier-detection",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/dot-plot",
+        "source": "docs/src/pages/charts/DotPlotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "EventDropChart",
+      "family": "realtime",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/EventDropChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "distribution",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/event-drop-chart",
+        "source": "docs/src/pages/charts/EventDropChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "FlowMap",
+      "family": "geo",
+      "importPath": "semiotic/geo",
+      "source": "src/components/charts/geo/FlowMap.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "flow",
+        "geo"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/flow-map",
+        "source": "docs/src/pages/charts/FlowMapPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ForceDirectedGraph",
+      "family": "network",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/ForceDirectedGraph.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "correlation",
+        "flow"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/force-directed-graph",
+        "source": "docs/src/pages/charts/ForceDirectedGraphPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "FunnelChart",
+      "family": "flow",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/FunnelChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "flow",
+        "part-to-whole",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/funnel-chart",
+        "source": "docs/src/pages/charts/FunnelChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "GaltonBoardChart",
+      "family": "distribution",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/GaltonBoardChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "distribution",
+        "outlier-detection"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "suggestionPropContract",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/galton-board-chart",
+        "source": "docs/src/pages/charts/GaltonBoardChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "GaugeChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/GaugeChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "part-to-whole",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fieldPolicy",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/gauge-chart",
+        "source": "docs/src/pages/charts/GaugeChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "GauntletChart",
+      "family": "realtime",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/GauntletChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-categories",
+        "flow"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/gauntlet-chart",
+        "source": "docs/src/pages/charts/GauntletChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "GroupedBarChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/GroupedBarChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "compare-series",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/grouped-bar-chart",
+        "source": "docs/src/pages/charts/GroupedBarChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "Heatmap",
+      "family": "relationship",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/Heatmap.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "composition-over-time",
+        "correlation",
+        "distribution"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/heatmap",
+        "source": "docs/src/pages/charts/HeatmapPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "Histogram",
+      "family": "distribution",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/Histogram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "outlier-detection"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/histogram",
+        "source": "docs/src/pages/charts/HistogramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "LikertChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/LikertChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/likert-chart",
+        "source": "docs/src/pages/charts/LikertChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "LineChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/LineChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-series",
+        "correlation",
+        "outlier-detection",
+        "trend"
+      ],
+      "variantCount": 4,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/line-chart",
+        "source": "docs/src/pages/charts/LineChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "MinimapChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/MinimapChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "outlier-detection",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": null,
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "MultiAxisLineChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/MultiAxisLineChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-series",
+        "correlation",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/multi-axis-line-chart",
+        "source": "docs/src/pages/charts/MultiAxisLineChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "OrbitDiagram",
+      "family": "hierarchy",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/OrbitDiagram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "hierarchy"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/orbit-diagram",
+        "source": "docs/src/pages/charts/OrbitDiagramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "PacketFlowChart",
+      "family": "flow",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/PacketFlowChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "flow",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/packet-flow-chart",
+        "source": "docs/src/pages/charts/PacketFlowChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "PieChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/PieChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "part-to-whole",
+        "rank"
+      ],
+      "variantCount": 1,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/pie-chart",
+        "source": "docs/src/pages/charts/PieChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ProcessFlowChart",
+      "family": "realtime",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/ProcessFlowChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "compare-categories",
+        "flow",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/process-flow-chart",
+        "source": "docs/src/pages/charts/ProcessFlowChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ProcessSankey",
+      "family": "flow",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/ProcessSankey.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "change-detection",
+        "composition-over-time",
+        "flow"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/process-sankey",
+        "source": "docs/src/pages/charts/ProcessSankeyPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ProportionalSymbolMap",
+      "family": "geo",
+      "importPath": "semiotic/geo",
+      "source": "src/components/charts/geo/ProportionalSymbolMap.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "geo",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/proportional-symbol-map",
+        "source": "docs/src/pages/charts/ProportionalSymbolMapPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "QuadrantChart",
+      "family": "relationship",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/QuadrantChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "correlation",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/quadrant-chart",
+        "source": "docs/src/pages/charts/QuadrantChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "RadarChart",
+      "family": "relationship",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/RadarChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "part-to-whole",
+        "rank"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/radar-chart",
+        "source": "docs/src/pages/charts/RadarChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "RidgelinePlot",
+      "family": "distribution",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/RidgelinePlot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "composition-over-time",
+        "distribution"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": null,
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "SankeyDiagram",
+      "family": "flow",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/SankeyDiagram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "flow",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/sankey-diagram",
+        "source": "docs/src/pages/charts/SankeyDiagramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "Scatterplot",
+      "family": "relationship",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/Scatterplot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-series",
+        "correlation",
+        "distribution",
+        "outlier-detection",
+        "rank"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/scatterplot",
+        "source": "docs/src/pages/charts/ScatterplotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "StackedAreaChart",
+      "family": "time-series",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/StackedAreaChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-series",
+        "composition-over-time",
+        "part-to-whole",
+        "trend"
+      ],
+      "variantCount": 3,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "scaleFit",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/stacked-area-chart",
+        "source": "docs/src/pages/charts/StackedAreaChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "StackedBarChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/StackedBarChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "compare-series",
+        "composition-over-time",
+        "part-to-whole"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/stacked-bar-chart",
+        "source": "docs/src/pages/charts/StackedBarChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats",
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "SwarmPlot",
+      "family": "distribution",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/SwarmPlot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "outlier-detection"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/swarm-plot",
+        "source": "docs/src/pages/charts/SwarmPlotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "SwimlaneChart",
+      "family": "categorical",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/SwimlaneChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "compare-series",
+        "composition-over-time"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/swimlane-chart",
+        "source": "docs/src/pages/charts/SwimlaneChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "TreeDiagram",
+      "family": "hierarchy",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/TreeDiagram.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "hierarchy"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/tree-diagram",
+        "source": "docs/src/pages/charts/TreeDiagramPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "Treemap",
+      "family": "hierarchy",
+      "importPath": "semiotic/network",
+      "source": "src/components/charts/network/Treemap.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "hierarchy",
+        "part-to-whole"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "scaleFit"
+      ],
+      "documentation": {
+        "route": "/charts/treemap",
+        "source": "docs/src/pages/charts/TreemapPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "UnitPileChart",
+      "family": "categorical",
+      "importPath": "semiotic/physics",
+      "source": "src/components/charts/physics/UnitPileChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution",
+        "part-to-whole"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric",
+        "suggestionPropContract",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/unit-pile-chart",
+        "source": "docs/src/pages/charts/UnitPileChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "ViolinPlot",
+      "family": "distribution",
+      "importPath": "semiotic/ordinal",
+      "source": "src/components/charts/ordinal/ViolinPlot.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "distribution"
+      ],
+      "variantCount": 2,
+      "declaredFields": [
+        "buildProps",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "numericContracts",
+        "rubric",
+        "variants"
+      ],
+      "documentation": {
+        "route": "/charts/violin-plot",
+        "source": "docs/src/pages/charts/ViolinPlotPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "numericContracts"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    },
+    {
+      "component": "WaterfallChart",
+      "family": "flow",
+      "importPath": "semiotic/xy",
+      "source": "src/components/charts/xy/WaterfallChart.capability.ts",
+      "registry": "src/components/ai/chartCapabilities.ts",
+      "intentScores": [
+        "compare-categories",
+        "flow",
+        "trend"
+      ],
+      "variantCount": 0,
+      "declaredFields": [
+        "buildProps",
+        "caveats",
+        "component",
+        "family",
+        "fits",
+        "importPath",
+        "intentScores",
+        "rubric"
+      ],
+      "documentation": {
+        "route": "/charts/waterfall-chart",
+        "source": "docs/src/pages/charts/WaterfallChartPage.jsx"
+      },
+      "relations": {
+        "claim-support": {
+          "status": "partial",
+          "evidence": [
+            "intentScores"
+          ]
+        },
+        "representation-fit": {
+          "status": "represented",
+          "evidence": [
+            "fits",
+            "buildProps",
+            "rubric"
+          ]
+        },
+        "reception": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "time": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "challenge-and-correction": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "accountability": {
+          "status": "not-represented",
+          "evidence": []
+        },
+        "abstention": {
+          "status": "partial",
+          "evidence": [
+            "caveats"
+          ]
+        },
+        "preservation": {
+          "status": "partial",
+          "evidence": [
+            "component",
+            "importPath"
+          ]
+        }
+      }
+    }
+  ],
+  "recipes": {
+    "portable": [
+      {
+        "id": "CalendarHeatmapRecipe",
+        "name": "Calendar Heatmap",
+        "version": "1",
+        "frameFamily": "XYCustomChart",
+        "portability": "portable",
+        "source": "src/components/ai/builtInChartRecipes.ts",
+        "registration": "built-in-registry",
+        "layout": {
+          "id": "semiotic.calendar-heatmap",
+          "importPath": "semiotic/recipes",
+          "exportName": "calendarLayout"
+        },
+        "intents": [
+          "change-detection",
+          "distribution",
+          "trend"
+        ],
+        "documentationRoutes": [
+          "/custom-charts#calendar-heatmap"
+        ],
+        "declaredFields": [
+          "accessibility",
+          "audience",
+          "audit",
+          "dataRoles",
+          "designContract",
+          "encodings",
+          "examples",
+          "frameFamily",
+          "id",
+          "intents",
+          "layout",
+          "layoutConfigSchema",
+          "mobile",
+          "name",
+          "navigation",
+          "portability",
+          "reception",
+          "version"
+        ],
+        "relations": {
+          "claim-support": {
+            "status": "partial",
+            "evidence": [
+              "intents",
+              "encodings"
+            ]
+          },
+          "representation-fit": {
+            "status": "represented",
+            "evidence": [
+              "dataRoles",
+              "encodings",
+              "designContract",
+              "audit"
+            ]
+          },
+          "reception": {
+            "status": "represented",
+            "evidence": [
+              "reception",
+              "accessibility",
+              "navigation",
+              "mobile"
+            ]
+          },
+          "time": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "challenge-and-correction": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "accountability": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "abstention": {
+            "status": "represented",
+            "evidence": [
+              "audit",
+              "designContract"
+            ]
+          },
+          "preservation": {
+            "status": "represented",
+            "evidence": [
+              "portability",
+              "layout",
+              "layoutConfigSchema",
+              "version"
+            ]
+          }
+        }
+      },
+      {
+        "id": "ParallelCoordinatesRecipe",
+        "name": "Parallel Coordinates",
+        "version": "1",
+        "frameFamily": "OrdinalCustomChart",
+        "portability": "portable",
+        "source": "src/components/ai/builtInChartRecipes.ts",
+        "registration": "built-in-registry",
+        "layout": {
+          "id": "semiotic.parallel-coordinates",
+          "importPath": "semiotic/recipes",
+          "exportName": "parallelCoordinatesLayout"
+        },
+        "intents": [
+          "compare-series",
+          "correlation",
+          "outlier-detection"
+        ],
+        "documentationRoutes": [
+          "/custom-charts#parallel-coordinates"
+        ],
+        "declaredFields": [
+          "accessibility",
+          "audience",
+          "audit",
+          "dataRoles",
+          "designContract",
+          "encodings",
+          "examples",
+          "frameFamily",
+          "id",
+          "intents",
+          "layout",
+          "layoutConfigSchema",
+          "mobile",
+          "name",
+          "navigation",
+          "portability",
+          "reception",
+          "version"
+        ],
+        "relations": {
+          "claim-support": {
+            "status": "partial",
+            "evidence": [
+              "intents",
+              "encodings"
+            ]
+          },
+          "representation-fit": {
+            "status": "represented",
+            "evidence": [
+              "dataRoles",
+              "encodings",
+              "designContract",
+              "audit"
+            ]
+          },
+          "reception": {
+            "status": "represented",
+            "evidence": [
+              "reception",
+              "accessibility",
+              "navigation",
+              "mobile"
+            ]
+          },
+          "time": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "challenge-and-correction": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "accountability": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "abstention": {
+            "status": "represented",
+            "evidence": [
+              "audit",
+              "designContract"
+            ]
+          },
+          "preservation": {
+            "status": "represented",
+            "evidence": [
+              "portability",
+              "layout",
+              "layoutConfigSchema",
+              "version"
+            ]
+          }
+        }
+      },
+      {
+        "id": "semiotic.recipe.similarity-constellation.v1",
+        "name": "Similarity Constellation",
+        "version": "1",
+        "frameFamily": "NetworkCustomChart",
+        "portability": "portable",
+        "source": "docs/src/pages/examples/how-a-hit-travels/similarityConstellationRecipe.js",
+        "registration": "direct",
+        "layout": {
+          "id": "semiotic.layout.similarity-constellation.v1",
+          "importPath": "./SimilarityConstellation",
+          "exportName": "similarityConstellationLayout"
+        },
+        "intents": [
+          "change-detection",
+          "correlation",
+          "geo"
+        ],
+        "documentationRoutes": [
+          "/examples/how-a-hit-travels"
+        ],
+        "declaredFields": [
+          "accessibility",
+          "audience",
+          "audit",
+          "caveats",
+          "dataRoles",
+          "description",
+          "designContract",
+          "encodings",
+          "examples",
+          "frameFamily",
+          "id",
+          "intents",
+          "layout",
+          "layoutConfigSchema",
+          "mobile",
+          "name",
+          "navigation",
+          "portability",
+          "reception",
+          "version"
+        ],
+        "relations": {
+          "claim-support": {
+            "status": "partial",
+            "evidence": [
+              "intents",
+              "description",
+              "encodings"
+            ]
+          },
+          "representation-fit": {
+            "status": "represented",
+            "evidence": [
+              "dataRoles",
+              "encodings",
+              "designContract",
+              "audit"
+            ]
+          },
+          "reception": {
+            "status": "represented",
+            "evidence": [
+              "reception",
+              "accessibility",
+              "navigation",
+              "mobile"
+            ]
+          },
+          "time": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "challenge-and-correction": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "accountability": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "abstention": {
+            "status": "represented",
+            "evidence": [
+              "audit",
+              "caveats",
+              "designContract"
+            ]
+          },
+          "preservation": {
+            "status": "represented",
+            "evidence": [
+              "portability",
+              "layout",
+              "layoutConfigSchema",
+              "version"
+            ]
+          }
+        }
+      },
+      {
+        "id": "semiotic.recipe.waffle.v0",
+        "name": "Waffle chart",
+        "version": "0",
+        "frameFamily": "XYCustomChart",
+        "portability": "portable",
+        "source": "docs/src/pages/custom-charts/waffleRecipeManifest.js",
+        "registration": "direct",
+        "layout": {
+          "id": "semiotic.layout.waffle",
+          "importPath": "semiotic/recipes",
+          "exportName": "waffleLayout"
+        },
+        "intents": [
+          "compare-categories",
+          "explanation",
+          "part-to-whole"
+        ],
+        "documentationRoutes": [
+          "/custom-charts/custom-layouts#waffle-chart"
+        ],
+        "declaredFields": [
+          "accessibility",
+          "audience",
+          "audienceFit",
+          "audit",
+          "caveats",
+          "dataRoles",
+          "description",
+          "designContract",
+          "encodings",
+          "examples",
+          "frameFamily",
+          "id",
+          "intents",
+          "layout",
+          "layoutConfigSchema",
+          "mobile",
+          "name",
+          "navigation",
+          "portability",
+          "reception",
+          "version"
+        ],
+        "relations": {
+          "claim-support": {
+            "status": "partial",
+            "evidence": [
+              "intents",
+              "description",
+              "encodings"
+            ]
+          },
+          "representation-fit": {
+            "status": "represented",
+            "evidence": [
+              "dataRoles",
+              "encodings",
+              "designContract",
+              "audit"
+            ]
+          },
+          "reception": {
+            "status": "represented",
+            "evidence": [
+              "reception",
+              "accessibility",
+              "navigation",
+              "mobile"
+            ]
+          },
+          "time": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "challenge-and-correction": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "accountability": {
+            "status": "not-represented",
+            "evidence": []
+          },
+          "abstention": {
+            "status": "represented",
+            "evidence": [
+              "audit",
+              "caveats",
+              "designContract"
+            ]
+          },
+          "preservation": {
+            "status": "represented",
+            "evidence": [
+              "portability",
+              "layout",
+              "layoutConfigSchema",
+              "version"
+            ]
+          }
+        }
+      }
+    ],
+    "local": [
+      {
+        "id": "semiotic.recipe.urine-wheel.v0",
+        "name": "Rota Urinarum",
+        "version": "0",
+        "frameFamily": "NetworkCustomChart",
+        "portability": "local",
+        "source": "docs/src/pages/examples/urineWheelRecipeManifest.js",
+        "registration": "direct",
+        "layout": null,
+        "intents": [
+          "explanation",
+          "relationship",
+          "situated-reading"
+        ],
+        "documentationRoutes": [
+          "/examples/urine-wheel"
+        ],
+        "declaredFields": [
+          "accessibility",
+          "audience",
+          "audienceFit",
+          "audit",
+          "caveats",
+          "dataRoles",
+          "description",
+          "designContract",
+          "encodings",
+          "examples",
+          "frameFamily",
+          "id",
+          "intents",
+          "mobile",
+          "name",
+          "navigation",
+          "portability",
+          "reception",
+          "version"
+        ]
+      }
+    ]
+  },
+  "utilities": [
+    {
+      "id": "accessibility-audit",
+      "source": "src/components/charts/shared/auditAccessibility.ts",
+      "category": "audit",
+      "currentRole": "Checks perceivability, operability, descriptions, navigation, and manual access work.",
+      "futureHome": "reception-evaluation",
+      "action": "merge",
+      "relations": [
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "A11yFinding",
+        "A11yPrinciple",
+        "A11yStatus",
+        "AccessibilityAuditResult",
+        "AuditAccessibilityOptions",
+        "accessibilityCaveats",
+        "auditAccessibility",
+        "formatAccessibilityAudit"
+      ]
+    },
+    {
+      "id": "aesthetic-evaluation",
+      "source": "src/components/ai/evaluateAesthetics.ts",
+      "category": "policy",
+      "currentRole": "Measures design evidence and applies separately declared organizational weights.",
+      "futureHome": "form-policy",
+      "action": "wrap",
+      "relations": [
+        "representation-fit",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "AESTHETICS_OFF_PROFILE",
+        "AestheticEvaluationResult",
+        "AestheticFeatureResult",
+        "AestheticFeatureStatus",
+        "DEFAULT_AESTHETIC_PROFILE",
+        "DEFAULT_AESTHETIC_THRESHOLDS",
+        "DEFAULT_AESTHETIC_WEIGHTS",
+        "EvaluateAestheticsOptions",
+        "evaluateAesthetics"
+      ]
+    },
+    {
+      "id": "annotation-provenance",
+      "source": "src/components/ai/annotationProvenance.ts",
+      "category": "provenance",
+      "currentRole": "Tracks annotation authorship, basis, data version, freshness, editorial status, and supersession.",
+      "futureHome": "accountability-and-correction",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "time",
+        "challenge-and-correction",
+        "accountability"
+      ],
+      "exports": [
+        "Annotated",
+        "AnnotationActorKind",
+        "AnnotationAnchor",
+        "AnnotationBasis",
+        "AnnotationFreshness",
+        "AnnotationLifecycle",
+        "AnnotationLifecycleTreatment",
+        "AnnotationProvenance",
+        "AnnotationSource",
+        "AnnotationStatus",
+        "AnnotationStatusTreatment",
+        "AnnotationStatusVisibility",
+        "ApplyAnnotationLifecycleOptions",
+        "ComputeAnnotationFreshnessOptions",
+        "DEFAULT_LIFECYCLE_THRESHOLDS",
+        "LifecycleBand",
+        "LifecycleBandThresholds",
+        "annotationFreshnessFor",
+        "applyAnnotationLifecycle",
+        "applyAnnotationStatus",
+        "bandFromAge",
+        "computeAnnotationFreshness",
+        "currentTimestamp",
+        "filterAnnotationsByStatus",
+        "withCurrentProvenance",
+        "withProvenance"
+      ]
+    },
+    {
+      "id": "artifact-inspector",
+      "source": "src/components/artifact/ArtifactInspector.tsx",
+      "category": "inspection",
+      "currentRole": "Presents status, time, claims, evidence, corrections, alternatives, policy, and manual-review signals through accessible disclosure.",
+      "futureHome": "reception-projections",
+      "action": "keep",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "time",
+        "challenge-and-correction",
+        "accountability",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "ArtifactInspector",
+        "ArtifactInspectorProps",
+        "ArtifactInspectorSection"
+      ]
+    },
+    {
+      "id": "audience-profile",
+      "source": "src/components/ai/audienceProfile.ts",
+      "category": "policy",
+      "currentRole": "Expresses reader familiarity, learning targets, and reception modality.",
+      "futureHome": "reception",
+      "action": "merge",
+      "relations": [
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "AudienceBiasResult",
+        "AudienceProfile",
+        "AudienceTarget",
+        "ReceivabilitySignal",
+        "ReceptionModality",
+        "applyAudienceBias",
+        "effectiveFamiliarity",
+        "receivabilityBias",
+        "stretchFamiliarityCeiling"
+      ]
+    },
+    {
+      "id": "chart-access-contract",
+      "source": "src/components/access/chartAccessContract.ts",
+      "category": "access",
+      "currentRole": "Builds a versioned account of text, keyboard, navigation, preferences, stream state, and SSR access.",
+      "futureHome": "reception",
+      "action": "merge",
+      "relations": [
+        "reception",
+        "time",
+        "preservation"
+      ],
+      "exports": [
+        "AccessStatusRecord",
+        "CHART_ACCESS_CONTRACT_VERSION",
+        "ChartAccessContract",
+        "ChartAccessContractEvidence",
+        "ChartAccessContractInput",
+        "ChartAccessContractKeyboard",
+        "ChartAccessContractMediaPreferences",
+        "ChartAccessContractNavigation",
+        "ChartAccessContractSsr",
+        "ChartAccessContractStreamStatus",
+        "ChartAccessContractText",
+        "StreamStatusInput",
+        "createChartAccessContract"
+      ]
+    },
+    {
+      "id": "chart-capabilities",
+      "source": "src/components/ai/chartCapabilities.ts",
+      "category": "selection",
+      "currentRole": "Registry of chart fit, intent scores, variants, and caveats.",
+      "futureHome": "purpose-and-form",
+      "action": "keep",
+      "relations": [
+        "representation-fit",
+        "abstention"
+      ],
+      "exports": [
+        "AreaChartCapability",
+        "BarChartCapability",
+        "BoxPlotCapability",
+        "BubbleChartCapability",
+        "BumpChartCapability",
+        "CandlestickChartCapability",
+        "ChainReactionChartCapability",
+        "ChordDiagramCapability",
+        "ChoroplethMapCapability",
+        "CirclePackCapability",
+        "CollisionSwarmChartCapability",
+        "ConnectedScatterplotCapability",
+        "CrucibleChartCapability",
+        "DifferenceChartCapability",
+        "DistanceCartogramCapability",
+        "DonutChartCapability",
+        "DotPlotCapability",
+        "EventDropChartCapability",
+        "FlowMapCapability",
+        "ForceDirectedGraphCapability",
+        "FunnelChartCapability",
+        "GaltonBoardChartCapability",
+        "GaugeChartCapability",
+        "GauntletChartCapability",
+        "GroupedBarChartCapability",
+        "HeatmapCapability",
+        "HistogramCapability",
+        "LikertChartCapability",
+        "LineChartCapability",
+        "MinimapChartCapability",
+        "MultiAxisLineChartCapability",
+        "OrbitDiagramCapability",
+        "PacketFlowChartCapability",
+        "PieChartCapability",
+        "ProcessFlowChartCapability",
+        "ProcessSankeyCapability",
+        "ProportionalSymbolMapCapability",
+        "QuadrantChartCapability",
+        "RadarChartCapability",
+        "RidgelinePlotCapability",
+        "SankeyDiagramCapability",
+        "ScatterplotCapability",
+        "StackedAreaChartCapability",
+        "StackedBarChartCapability",
+        "SwarmPlotCapability",
+        "SwimlaneChartCapability",
+        "TreeDiagramCapability",
+        "TreemapCapability",
+        "UnitPileChartCapability",
+        "ViolinPlotCapability",
+        "WaterfallChartCapability",
+        "getCapabilities",
+        "getCapability",
+        "registerChartCapability",
+        "unregisterChartCapability"
+      ]
+    },
+    {
+      "id": "chart-config-serialization",
+      "source": "src/components/export/chartConfig.ts",
+      "category": "serialization",
+      "currentRole": "Converts chart components and props to JSON, URLs, clipboard text, and JSX.",
+      "futureHome": "preservation",
+      "action": "keep",
+      "relations": [
+        "preservation",
+        "abstention"
+      ],
+      "exports": [
+        "ChartArtifactTransferStatus",
+        "ChartConfig",
+        "CopyFormat",
+        "FromConfigResult",
+        "JSXProjectionResult",
+        "ToConfigOptions",
+        "ToURLOptions",
+        "configToJSX",
+        "configToJSXWithReport",
+        "copyConfig",
+        "fromConfig",
+        "fromURL",
+        "toConfig",
+        "toURL"
+      ]
+    },
+    {
+      "id": "chart-description",
+      "source": "src/components/ai/describeChart.ts",
+      "category": "grounding",
+      "currentRole": "Generates layered descriptions of encoding, statistics, patterns, and communicative act.",
+      "futureHome": "reception-projections",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "CommunicativeAct",
+        "DescribeCapabilityContext",
+        "DescribeChartOptions",
+        "DescribeChartResult",
+        "DescribeLevel",
+        "annotationPhrase",
+        "chartValueFormatter",
+        "communicativeActForIntent",
+        "describeChart",
+        "hasGeneratedAlertAnnotation",
+        "resolveCommunicativeAct"
+      ]
+    },
+    {
+      "id": "chart-evaluation",
+      "source": "src/components/ai/evaluateChart.ts",
+      "category": "evaluation",
+      "currentRole": "Composes validation, data, deception, access, and optional render evidence.",
+      "futureHome": "artifact-evaluation",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "EvaluateChartFinding",
+        "EvaluateChartNotification",
+        "EvaluateChartOptions",
+        "EvaluateChartResult",
+        "EvaluateChartSeverity",
+        "EvaluateChartStage",
+        "EvaluateChartSummary",
+        "evaluateChart",
+        "formatEvaluateChart",
+        "toEvaluateChartNotifications"
+      ]
+    },
+    {
+      "id": "chart-evidence-envelope",
+      "source": "src/components/evidence/chartEvidenceEnvelope.ts",
+      "category": "evidence",
+      "currentRole": "Serializes input, transforms, render observations, access evidence, claims, audits, and limits.",
+      "futureHome": "claims-and-evidence",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "CHART_EVIDENCE_ENVELOPE_VERSION",
+        "ChartEvidenceEnvelope",
+        "EnvelopeAccessSection",
+        "EnvelopeAuditSection",
+        "EnvelopeChartSection",
+        "EnvelopeInputSection",
+        "EnvelopeLimitsSection",
+        "EnvelopeMeaningClaim",
+        "EnvelopeMeaningSection",
+        "EnvelopeModalityChecks",
+        "EnvelopeRenderSection",
+        "EnvelopeTransformOperation",
+        "EnvelopeTransformSection",
+        "EvidenceEnvelopeOptions",
+        "ModalityConflict",
+        "ModalityObservation",
+        "fromEvidenceEnvelope",
+        "stableEvidenceHash",
+        "toEvidenceEnvelope"
+      ]
+    },
+    {
+      "id": "chart-repair",
+      "source": "src/components/ai/repairChartConfig.ts",
+      "category": "evaluation",
+      "currentRole": "Produces bounded repairs or explicit refusals for invalid chart configurations.",
+      "futureHome": "artifact-evaluation",
+      "action": "keep",
+      "relations": [
+        "representation-fit",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "RepairAlternativeResult",
+        "RepairOkResult",
+        "RepairOptions",
+        "RepairResult",
+        "RepairUnknownResult",
+        "repairChartConfig"
+      ]
+    },
+    {
+      "id": "chart-suggestions",
+      "source": "src/components/ai/suggestCharts.ts",
+      "category": "selection",
+      "currentRole": "Ranks built-in charts and recipes for profiled data and reader needs.",
+      "futureHome": "purpose-and-form",
+      "action": "wrap",
+      "relations": [
+        "representation-fit",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "ExplainCapabilityFitResult",
+        "RejectedCapability",
+        "ScoreChartOptions",
+        "SuggestChartsOptions",
+        "explainCapabilityFit",
+        "scoreChart",
+        "suggestCharts",
+        "suggestChartsGrouped"
+      ]
+    },
+    {
+      "id": "conversation-arc",
+      "source": "src/components/ai/conversationArc.ts",
+      "category": "provenance",
+      "currentRole": "Records suggestion, edit, review, export, and annotation-status events with pluggable sinks.",
+      "futureHome": "accountability-history",
+      "action": "wrap",
+      "relations": [
+        "challenge-and-correction",
+        "accountability",
+        "preservation"
+      ],
+      "exports": [
+        "AnnotationStatusChangedEvent",
+        "AudienceSetEvent",
+        "ChartAbandonedEvent",
+        "ChartEditedEvent",
+        "ChartExportedEvent",
+        "ChartRenderedEvent",
+        "ChartReplacedEvent",
+        "ConversationArcEvent",
+        "ConversationArcEventInput",
+        "ConversationArcEventType",
+        "ConversationArcListener",
+        "ConversationArcSink",
+        "ConversationArcStorageLike",
+        "ConversationArcStore",
+        "ConversationArcWebhookFetch",
+        "EnableConversationArcOptions",
+        "IndexedDBConversationArcSinkOptions",
+        "InterrogationAnsweredEvent",
+        "InterrogationAskedEvent",
+        "LoadConversationArcOptions",
+        "LocalStorageConversationArcSinkOptions",
+        "NavBranchExpandedEvent",
+        "NavNodeFocusedEvent",
+        "ProposalRefusedEvent",
+        "RenderEvidenceEvent",
+        "SuggestionChosenEvent",
+        "SuggestionShownEvent",
+        "WebhookConversationArcSinkOptions",
+        "createIndexedDBConversationArcSink",
+        "createLocalStorageConversationArcSink",
+        "createWebhookConversationArcSink",
+        "disableConversationArc",
+        "enableConversationArc",
+        "getConversationArcStore",
+        "loadConversationArc",
+        "recordAnnotationStatusChange",
+        "recordAudienceChange",
+        "registerConversationArcSink",
+        "replayConversationArc",
+        "subscribeToConversationArcChange"
+      ]
+    },
+    {
+      "id": "conversation-arc-types",
+      "source": "src/components/ai/conversationArcTypes.ts",
+      "category": "provenance",
+      "currentRole": "Defines the event vocabulary used by the conversation history.",
+      "futureHome": "accountability-history",
+      "action": "merge",
+      "relations": [
+        "challenge-and-correction",
+        "accountability",
+        "preservation"
+      ],
+      "exports": [
+        "AnnotationStatusChangedEvent",
+        "AudienceSetEvent",
+        "ChartAbandonedEvent",
+        "ChartEditedEvent",
+        "ChartExportedEvent",
+        "ChartRenderedEvent",
+        "ChartReplacedEvent",
+        "ConversationArcEvent",
+        "ConversationArcEventInput",
+        "ConversationArcEventType",
+        "InterrogationAnsweredEvent",
+        "InterrogationAskedEvent",
+        "NavBranchExpandedEvent",
+        "NavNodeFocusedEvent",
+        "ProposalRefusedEvent",
+        "RenderEvidenceEvent",
+        "SuggestionChosenEvent",
+        "SuggestionShownEvent"
+      ]
+    },
+    {
+      "id": "data-audit",
+      "source": "src/components/data/auditData.ts",
+      "category": "audit",
+      "currentRole": "Checks numeric inputs, domains, normalization, and chart-specific data assumptions.",
+      "futureHome": "evidence-evaluation",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "exports": [
+        "AuditDataOptions",
+        "CheckedNumericContract",
+        "DataAuditChartNotification",
+        "DataAuditDiagnosis",
+        "DataAuditNotificationOptions",
+        "DataAuditResult",
+        "NumericFieldProfile",
+        "ProfileNumericFieldsOptions",
+        "auditData",
+        "formatDataAudit",
+        "profileNumericFields",
+        "toDataAuditNotifications"
+      ]
+    },
+    {
+      "id": "data-pitfalls-bridge",
+      "source": "src/components/ai/dataPitfallsBridge.ts",
+      "category": "audit",
+      "currentRole": "Combines external artifact critique with local chart, data, and access checks.",
+      "futureHome": "artifact-evaluation",
+      "action": "investigate",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE",
+        "DataPitfallsAnnotationBridge",
+        "DataPitfallsAnnotationBridgeOptions",
+        "DataPitfallsAnnotationType",
+        "DataPitfallsBridgeOptions",
+        "DataPitfallsBridgeResult",
+        "DataPitfallsChainInput",
+        "DataPitfallsChainStage",
+        "DataPitfallsChartNotification",
+        "DataPitfallsDocumentInput",
+        "DataPitfallsFinding",
+        "DataPitfallsImageInput",
+        "DataPitfallsImageMediaType",
+        "DataPitfallsImageSource",
+        "DataPitfallsInputKind",
+        "DataPitfallsNotificationBridge",
+        "DataPitfallsNotificationBridgeOptions",
+        "DataPitfallsNotificationLevel",
+        "DataPitfallsNotificationMessage",
+        "DataPitfallsRenderedChart",
+        "DataPitfallsReport",
+        "DataPitfallsSemioticAnnotation",
+        "DataPitfallsSeverity",
+        "DataPitfallsSingleArtifactInput",
+        "DataPitfallsSlideContent",
+        "DataPitfallsSlidesInput",
+        "DataPitfallsTextInput",
+        "buildDataPitfallsAnnotationBridge",
+        "buildDataPitfallsBridge",
+        "buildDataPitfallsNotificationBridge",
+        "dataPitfallsFindingToAnnotation",
+        "dataPitfallsFindingToNotification",
+        "toDataPitfallsAnnotations",
+        "toDataPitfallsChain",
+        "toDataPitfallsNotifications"
+      ]
+    },
+    {
+      "id": "data-quality-bridge",
+      "source": "src/components/ai/dataQualityBridge.ts",
+      "category": "evidence",
+      "currentRole": "Translates external quality results into placed or unplaced chart findings.",
+      "futureHome": "claims-and-evidence",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "time",
+        "accountability",
+        "abstention"
+      ],
+      "exports": [
+        "DataQualityAnnotationOptions",
+        "DataQualityAnnotationsResult",
+        "DataQualityCheckKind",
+        "DataQualityResult",
+        "DataQualityStatus",
+        "DbtArtifacts",
+        "GEValidationResult",
+        "UnplacedDataQualityResult",
+        "dataQualityToAnnotations",
+        "fromDbtArtifacts",
+        "fromGreatExpectations"
+      ]
+    },
+    {
+      "id": "evidence-gate",
+      "source": "src/components/evidence/evidenceGate.ts",
+      "category": "evaluation",
+      "currentRole": "Applies a small deterministic pass/fail gate to collected chart evidence.",
+      "futureHome": "artifact-evaluation",
+      "action": "keep",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "exports": [
+        "EvidenceGateFinding",
+        "EvidenceGateOptions",
+        "EvidenceGateResult",
+        "EvidenceGateStatus",
+        "evaluateEvidenceGate"
+      ]
+    },
+    {
+      "id": "generative-chart-loop",
+      "source": "src/components/ai/generativeChart.ts",
+      "category": "evaluation",
+      "currentRole": "Runs deterministic generate, validate, diagnose, repair, and render-evidence stages.",
+      "futureHome": "artifact-evaluation",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "ChartToolDefinition",
+        "ChartToolOptions",
+        "OpenAIResponsesTool",
+        "OpenAIResponsesToolOptions",
+        "PrepareChartInput",
+        "PrepareChartOptions",
+        "PrepareChartResult",
+        "RenderEvidenceMemo",
+        "RenderFn",
+        "chartGenerationTool",
+        "createChartToolHandler",
+        "createRenderEvidenceMemo",
+        "prepareChart",
+        "refreshChartDiagnostics",
+        "toAnthropicTool",
+        "toOpenAIResponsesTool",
+        "toOpenAITool"
+      ]
+    },
+    {
+      "id": "intent-manifest",
+      "source": "src/components/ai/intentManifest.ts",
+      "category": "compatibility",
+      "currentRole": "Packages purpose, audience, form rationale, access, and provenance for review.",
+      "futureHome": "purpose-compatibility-adapter",
+      "action": "wrap",
+      "relations": [
+        "representation-fit",
+        "reception",
+        "accountability",
+        "preservation"
+      ],
+      "exports": [
+        "IntentManifest",
+        "IntentManifestFromRecipeOptions",
+        "intentManifestFromRecipe",
+        "summarizeIntentManifest"
+      ]
+    },
+    {
+      "id": "lifecycle-bands",
+      "source": "src/components/realtime/lifecycleBands.ts",
+      "category": "temporal",
+      "currentRole": "Classifies age into deterministic freshness bands.",
+      "futureHome": "time-and-revision",
+      "action": "keep",
+      "relations": [
+        "time",
+        "abstention"
+      ],
+      "exports": [
+        "DEFAULT_LIFECYCLE_THRESHOLDS",
+        "LifecycleBand",
+        "LifecycleBandThresholds",
+        "bandFromAge"
+      ]
+    },
+    {
+      "id": "navigation-tree",
+      "source": "src/components/ai/navigationTree.ts",
+      "category": "grounding",
+      "currentRole": "Builds a deterministic semantic navigation tree for chart structure and values.",
+      "futureHome": "reception-projections",
+      "action": "keep",
+      "relations": [
+        "reception",
+        "preservation"
+      ],
+      "exports": [
+        "BuildNavigationTreeOptions",
+        "NavTreeNode",
+        "NavTreeRole",
+        "buildNavigationTree",
+        "countNodes",
+        "flattenVisible",
+        "supportsStructuredNavigation"
+      ]
+    },
+    {
+      "id": "observed-scene-audit",
+      "source": "src/components/ai/observedSceneAudit.ts",
+      "category": "audit",
+      "currentRole": "Compares declared recipe semantics with the scene that was actually produced.",
+      "futureHome": "form-evaluation",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention"
+      ],
+      "exports": [
+        "AuditObservedSceneInput",
+        "DeclaredRecipeSemantics",
+        "ObservedAuditFinding",
+        "ObservedAuditStatus",
+        "ObservedSceneAuditResult",
+        "auditObservedScene"
+      ]
+    },
+    {
+      "id": "portable-metadata-spec",
+      "source": "src/components/data/portability/spec.ts",
+      "category": "serialization",
+      "currentRole": "Defines library-neutral capability, audience, and annotation metadata.",
+      "futureHome": "compatibility-adapters",
+      "action": "wrap",
+      "relations": [
+        "reception",
+        "accountability",
+        "preservation"
+      ],
+      "exports": [
+        "BUILTIN_INTENT_IDS",
+        "BuiltInIntentId",
+        "IDID_SPEC_VERSION",
+        "PortableAnnotated",
+        "PortableAnnotationActorKind",
+        "PortableAnnotationAnchor",
+        "PortableAnnotationBasis",
+        "PortableAnnotationFreshness",
+        "PortableAnnotationLifecycle",
+        "PortableAnnotationProvenance",
+        "PortableAnnotationSource",
+        "PortableAnnotationStatus",
+        "PortableAudienceProfile",
+        "PortableAudienceTarget",
+        "PortableChartCapability",
+        "PortableChartRubric",
+        "PortableChartVariant",
+        "PortableIntentId",
+        "PortableMobileCapability",
+        "PortableMobileCustomCapability",
+        "PortableMobileInteractionCapability",
+        "PortableMobileLabelCapability",
+        "PortableReceptionModality",
+        "ValidationResult",
+        "validatePortableAnnotation",
+        "validatePortableAudienceProfile",
+        "validatePortableCapability"
+      ]
+    },
+    {
+      "id": "reader-grounding",
+      "source": "src/components/ai/readerGrounding.ts",
+      "category": "grounding",
+      "currentRole": "Packages descriptions, structure, facts, and intent for non-pixel readers.",
+      "futureHome": "reception-projections",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "ChartReaderGrounding",
+        "ChartReaderGroundingFacts",
+        "ChartReaderGroundingIntent",
+        "ChartReaderGroundingOptions",
+        "PhysicsReaderGrounding",
+        "PhysicsReaderGroundingAggregate",
+        "PhysicsReaderGroundingAggregates",
+        "PhysicsReaderGroundingGeometry",
+        "PhysicsReaderGroundingInput",
+        "PhysicsReaderGroundingSediment",
+        "PhysicsReaderGroundingSimulation",
+        "buildReaderGrounding"
+      ]
+    },
+    {
+      "id": "recipe-contracts",
+      "source": "src/components/ai/chartRecipes.ts",
+      "category": "selection",
+      "currentRole": "Defines portable custom-chart semantics, layout references, access, and audit metadata.",
+      "futureHome": "form-and-preservation",
+      "action": "keep",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention",
+        "preservation"
+      ],
+      "exports": [
+        "AccessibilityExpectations",
+        "AccessibilityTableField",
+        "AudienceFitDefinition",
+        "ChartRecipe",
+        "ChartRecipeFrameFamily",
+        "ChartRecipePortability",
+        "CustomLayoutFunction",
+        "DataRoleDefinition",
+        "DataSemanticType",
+        "DescriptionStrategy",
+        "DesignContractDefinition",
+        "EncodingChannel",
+        "EncodingDefinition",
+        "IntentDefinition",
+        "LiteracyTargetDefinition",
+        "MobileCustomSemanticsDefinition",
+        "MobileDesignDefinition",
+        "MobileInteractionDefinition",
+        "MobileLabelDefinition",
+        "NavigationStrategy",
+        "PortableNavigationStrategy",
+        "ReceptionDefinition",
+        "RecipeAudienceDefinition",
+        "RecipeAuditExpectations",
+        "RecipeDescription",
+        "RecipeExample",
+        "RecipePortabilityConfig",
+        "RecipeStrategyContext",
+        "RegisteredRecipeLayout",
+        "SerializableSchema",
+        "defineChartRecipe",
+        "isJsonSafe",
+        "isRegisteredRecipeLayout",
+        "validateChartRecipe"
+      ]
+    },
+    {
+      "id": "selection-provenance",
+      "source": "src/components/store/selectionProvenance.ts",
+      "category": "provenance",
+      "currentRole": "Associates coordinated-view selections with their source chart and interaction.",
+      "futureHome": "accountability-history",
+      "action": "merge",
+      "relations": [
+        "accountability",
+        "preservation"
+      ],
+      "exports": [
+        "attachSelectionProvenance",
+        "getSelectionProvenance"
+      ]
+    },
+    {
+      "id": "semantic-viability",
+      "source": "src/components/ai/semanticViability.ts",
+      "category": "audit",
+      "currentRole": "Detects rendered scenes that contain marks but cannot carry the intended meaning.",
+      "futureHome": "form-evaluation",
+      "action": "merge",
+      "relations": [
+        "representation-fit",
+        "abstention"
+      ],
+      "exports": [
+        "applySemanticViability"
+      ]
+    },
+    {
+      "id": "server-render-evidence",
+      "source": "src/components/server/renderEvidence.ts",
+      "category": "evidence",
+      "currentRole": "Records static mark counts, domains, semantic status, annotations, and accessible naming.",
+      "futureHome": "claims-and-evidence",
+      "action": "keep",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "preservation"
+      ],
+      "exports": [
+        "CompositeEvidenceInput",
+        "EvidenceSink",
+        "RenderEvidence",
+        "SemanticViabilityStatus",
+        "buildCompositeEvidence",
+        "buildEvidence",
+        "numericDomain",
+        "tallyByType"
+      ]
+    },
+    {
+      "id": "vega-lite-portability",
+      "source": "src/components/data/portability/vegaLite.ts",
+      "category": "serialization",
+      "currentRole": "Carries portable metadata through supported Vega-Lite round trips.",
+      "futureHome": "compatibility-adapters",
+      "action": "wrap",
+      "relations": [
+        "claim-support",
+        "reception",
+        "accountability",
+        "preservation",
+        "abstention"
+      ],
+      "exports": [
+        "IDIDVegaLiteMeta",
+        "ToVegaLiteOptions",
+        "VegaLiteExportResult",
+        "attachIDID",
+        "attachIDIDAnnotations",
+        "readIDID",
+        "readIDIDAnnotations",
+        "toVegaLite",
+        "toVegaLiteResult"
+      ]
+    },
+    {
+      "id": "visual-hierarchy-audit",
+      "source": "src/components/ai/auditVisualHierarchy.ts",
+      "category": "audit",
+      "currentRole": "Checks emphasis hierarchy against declared communicative priorities.",
+      "futureHome": "form-evaluation",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "exports": [
+        "VisualHierarchyAuditResult",
+        "VisualHierarchyFinding",
+        "VisualHierarchyInput",
+        "VisualHierarchyStatus",
+        "auditVisualHierarchy"
+      ]
+    }
+  ],
+  "documentation": [
+    {
+      "route": "/accessibility/audit",
+      "source": "docs/src/pages/accessibility/AccessibilityAuditPage.jsx",
+      "currentRole": "Static access checks and explicit manual-review boundaries.",
+      "futurePlacement": "Artifact Contracts / Reception",
+      "action": "link",
+      "relations": [
+        "reception",
+        "abstention"
+      ]
+    },
+    {
+      "route": "/accessibility/descriptions",
+      "source": "docs/src/pages/accessibility/DescribeChartPage.jsx",
+      "currentRole": "Layered chart descriptions and communicative acts.",
+      "futurePlacement": "Artifact Contracts / Reception",
+      "action": "link",
+      "relations": [
+        "claim-support",
+        "reception"
+      ]
+    },
+    {
+      "route": "/accessibility/navigation",
+      "source": "docs/src/pages/accessibility/NavigationTreePage.jsx",
+      "currentRole": "Structured non-visual navigation through chart content.",
+      "futurePlacement": "Artifact Contracts / Reception",
+      "action": "link",
+      "relations": [
+        "reception",
+        "preservation"
+      ]
+    },
+    {
+      "route": "/annotations/provenance-lifecycle",
+      "source": "docs/src/pages/features/AnnotationProvenancePage.jsx",
+      "currentRole": "Annotation authorship, evidence basis, status, and supersession.",
+      "futurePlacement": "Artifact Contracts / Accountability and correction",
+      "action": "merge",
+      "relations": [
+        "claim-support",
+        "time",
+        "challenge-and-correction",
+        "accountability"
+      ]
+    },
+    {
+      "route": "/artifacts/overview",
+      "source": "docs/src/pages/artifacts/ArtifactContractsOverviewPage.jsx",
+      "currentRole": "Contract workflow and reusable progressive-disclosure inspector.",
+      "futurePlacement": "Artifact Contracts / Overview",
+      "action": "keep",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "time",
+        "challenge-and-correction",
+        "accountability",
+        "abstention",
+        "preservation"
+      ]
+    },
+    {
+      "route": "/examples/what-the-machine-sees",
+      "source": "docs/src/pages/examples/WhatTheMachineSeesExamplePage.jsx",
+      "currentRole": "End-to-end local selection, description, access audit, navigation, and recipe inspection.",
+      "futurePlacement": "Artifact Contracts / Inspector example",
+      "action": "upgrade",
+      "relations": [
+        "representation-fit",
+        "reception",
+        "abstention",
+        "preservation"
+      ]
+    },
+    {
+      "route": "/intelligence/reader-grounding",
+      "source": "docs/src/pages/features/ReaderGroundingPage.jsx",
+      "currentRole": "Agent-readable descriptions, facts, intent, and structure.",
+      "futurePlacement": "Artifact Contracts / Reception projections",
+      "action": "link",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention",
+        "preservation"
+      ]
+    },
+    {
+      "route": "/intelligence/serialization",
+      "source": "docs/src/pages/features/SerializationPage.jsx",
+      "currentRole": "Chart configuration serialization, sharing, and reconstruction.",
+      "futurePlacement": "Artifact Contracts / Preservation",
+      "action": "extend",
+      "relations": [
+        "preservation",
+        "abstention"
+      ]
+    },
+    {
+      "route": "/intelligence/suggestions",
+      "source": "docs/src/pages/features/SuggestionsPage.jsx",
+      "currentRole": "Chart selection by data shape, purpose, scale, and reader needs.",
+      "futurePlacement": "Artifact Contracts / Purpose and form",
+      "action": "link",
+      "relations": [
+        "representation-fit",
+        "reception",
+        "abstention"
+      ]
+    },
+    {
+      "route": "/intelligence/temporal-lifecycle",
+      "source": "docs/src/pages/features/TemporalLifecyclePage.jsx",
+      "currentRole": "Freshness and editorial lifecycle for annotations.",
+      "futurePlacement": "Artifact Contracts / Time and correction",
+      "action": "merge",
+      "relations": [
+        "time",
+        "challenge-and-correction",
+        "accountability"
+      ]
+    },
+    {
+      "route": "/interoperability/data-quality-bridge",
+      "source": "docs/src/pages/features/DataQualityBridgePage.jsx",
+      "currentRole": "External data-quality findings attached to chart interpretation.",
+      "futurePlacement": "Artifact Contracts / Claims and evidence",
+      "action": "link",
+      "relations": [
+        "claim-support",
+        "time",
+        "accountability",
+        "abstention"
+      ]
+    },
+    {
+      "route": "/interoperability/generative-ui",
+      "source": "docs/src/pages/features/GenerativeUIPage.jsx",
+      "currentRole": "Validated generation, repair, refusal, and render proof.",
+      "futurePlacement": "Artifact Contracts / Evaluation",
+      "action": "link",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception",
+        "abstention",
+        "preservation"
+      ]
+    },
+    {
+      "route": "/interoperability/portability-spec",
+      "source": "docs/src/pages/features/PortabilitySpecPage.jsx",
+      "currentRole": "Portable capability, audience, and provenance metadata.",
+      "futurePlacement": "Artifact Contracts / Compatibility",
+      "action": "bridge",
+      "relations": [
+        "reception",
+        "accountability",
+        "preservation"
+      ]
+    }
+  ],
+  "baselineLimits": [
+    "Capability intent scores indicate task fit but do not declare claims or evidence.",
+    "Portable recipes cover form, access, and preservation well but do not yet carry time, correction, or accountability records.",
+    "Existing utilities are distributed across several entry points and do not share one evaluation result.",
+    "A represented field means metadata exists; it is not a correctness or safety certificate."
+  ]
+}

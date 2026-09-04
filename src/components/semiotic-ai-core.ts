@@ -18,33 +18,88 @@ export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
 export {
   auditAccessibility,
   formatAccessibilityAudit,
-  accessibilityCaveats,
+  accessibilityCaveats
 } from "./charts/shared/auditAccessibility"
 export type {
   A11yPrinciple,
   A11yStatus,
   A11yFinding,
   AccessibilityAuditResult,
-  AuditAccessibilityOptions,
+  AuditAccessibilityOptions
 } from "./charts/shared/auditAccessibility"
 export {
   auditMobileVisualization,
   formatMobileVisualizationAudit,
-  mobileVisualizationCaveats,
+  mobileVisualizationCaveats
 } from "./charts/shared/auditMobileVisualization"
 export type {
   MobileVisualizationAuditResult,
-  AuditMobileVisualizationOptions,
+  AuditMobileVisualizationOptions
 } from "./charts/shared/auditMobileVisualization"
-export { toConfig, fromConfig, toURL, fromURL, copyConfig, configToJSX } from "./export/chartConfig"
-export type { ChartConfig, ToConfigOptions, CopyFormat } from "./export/chartConfig"
+export {
+  toConfig,
+  fromConfig,
+  toURL,
+  fromURL,
+  copyConfig,
+  configToJSX,
+  configToJSXWithReport
+} from "./export/chartConfig"
+export type {
+  ChartConfig,
+  ChartArtifactTransferStatus,
+  ToConfigOptions,
+  FromConfigResult,
+  ToURLOptions,
+  JSXProjectionResult,
+  CopyFormat
+} from "./export/chartConfig"
+
+// Compatibility bridge for the general artifact contract. Broad collection,
+// lineage, packet, migration, and format-projection utilities live only at
+// `semiotic/artifact`; the established AI entry retains the core authoring,
+// evaluation, audit, grounding, and policy workflow.
+export type * from "./semiotic-artifact"
+export { ARTIFACT_CONTRACT_VERSION } from "./artifact/types"
+export { canonicalJson, fingerprintValue } from "./artifact/fingerprint"
+export {
+  ARTIFACT_FIELD_POLICIES,
+  buildArtifactContract,
+  formatArtifactContract,
+  fromIntentManifest,
+  toIntentManifest,
+  validateArtifactContract
+} from "./artifact/contract"
+export { auditClaims } from "./artifact/claims"
+export { auditTemporalContext } from "./artifact/temporal"
+export {
+  ARTIFACT_POLICIES,
+  activePolicyRules,
+  resolveArtifactPolicy
+} from "./artifact/policies"
+export { recommendRepresentation } from "./artifact/representation"
+export {
+  evaluateArtifact,
+  explainArtifactRefusal,
+  repairArtifact
+} from "./artifact/evaluateArtifact"
+export { buildArtifactGrounding } from "./artifact/grounding"
+export {
+  requireSerializableArtifactContract,
+  serializeArtifactContract
+} from "./artifact/serialization"
 export { summarizeData } from "./data/DataSummarizer"
-export type { DataSummary, FieldSummary, FieldType, SummarizeOptions } from "./data/DataSummarizer"
+export type {
+  DataSummary,
+  FieldSummary,
+  FieldType,
+  SummarizeOptions
+} from "./data/DataSummarizer"
 export {
   auditData,
   formatDataAudit,
   profileNumericFields,
-  toDataAuditNotifications,
+  toDataAuditNotifications
 } from "./data/auditData"
 export type {
   AuditDataOptions,
@@ -54,12 +109,12 @@ export type {
   DataAuditNotificationOptions,
   DataAuditResult,
   NumericFieldProfile,
-  ProfileNumericFieldsOptions,
+  ProfileNumericFieldsOptions
 } from "./data/auditData"
 export {
   evaluateChart,
   formatEvaluateChart,
-  toEvaluateChartNotifications,
+  toEvaluateChartNotifications
 } from "./ai/evaluateChart"
 export type {
   EvaluateChartFinding,
@@ -68,40 +123,40 @@ export type {
   EvaluateChartResult,
   EvaluateChartSeverity,
   EvaluateChartStage,
-  EvaluateChartSummary,
+  EvaluateChartSummary
 } from "./ai/evaluateChart"
 export { auditVisualHierarchy } from "./ai/auditVisualHierarchy"
 export type {
   VisualHierarchyAuditResult,
   VisualHierarchyFinding,
   VisualHierarchyInput,
-  VisualHierarchyStatus,
+  VisualHierarchyStatus
 } from "./ai/auditVisualHierarchy"
 export {
   AESTHETICS_OFF_PROFILE,
   DEFAULT_AESTHETIC_PROFILE,
   DEFAULT_AESTHETIC_THRESHOLDS,
   DEFAULT_AESTHETIC_WEIGHTS,
-  evaluateAesthetics,
+  evaluateAesthetics
 } from "./ai/evaluateAesthetics"
 export type {
   AestheticEvaluationResult,
   AestheticFeatureResult,
   AestheticFeatureStatus,
-  EvaluateAestheticsOptions,
+  EvaluateAestheticsOptions
 } from "./ai/evaluateAesthetics"
 export type {
   AestheticFeatureId,
   AestheticFeatureWeights,
   AestheticProfile,
-  AestheticThresholds,
+  AestheticThresholds
 } from "./ai/aestheticProfileTypes"
 export type {
   NumericAggregateContract,
   NumericContracts,
   NumericFieldContract,
   NumericFieldRole,
-  NumericRequirement,
+  NumericRequirement
 } from "./data/numericContracts"
 
 export { profileData } from "./ai/profileData"
@@ -110,13 +165,13 @@ export { deriveProfileFields, rederiveProfile } from "./ai/deriveProfileFields"
 export type {
   DerivedProfileFields,
   ProfilePrimaryFields,
-  ReprofileFieldsOptions,
+  ReprofileFieldsOptions
 } from "./ai/deriveProfileFields"
 export type {
   ProfileFieldRole,
   ProfileFieldRoleHint,
   ProfileFieldRoleHints,
-  NormalizedProfileFieldRoles,
+  NormalizedProfileFieldRoles
 } from "./ai/fieldRoles"
 export type { SuggestionPropContract } from "./ai/suggestionPropContracts"
 export type {
@@ -128,18 +183,38 @@ export type {
   SemanticViabilityRule,
   ScoreChartRejected,
   ScoreChartResult,
-  ScoreChartSuggestion,
+  ScoreChartSuggestion
 } from "./ai/chartCapabilityTypes"
 export { inferIntent } from "./ai/inferIntent"
-export type { InferIntentField, InferIntentOptions, InferIntentResult } from "./ai/inferIntent"
-export { BUILT_IN_INTENT_IDS, getIntent, listIntents, registerIntent } from "./ai/intents"
-export type { BuiltInIntentId, IntentDescriptor, IntentFieldKind, IntentId, IntentSignals } from "./ai/intents"
-export { suggestCharts, suggestChartsGrouped, scoreChart, explainCapabilityFit } from "./ai/suggestCharts"
+export type {
+  InferIntentField,
+  InferIntentOptions,
+  InferIntentResult
+} from "./ai/inferIntent"
+export {
+  BUILT_IN_INTENT_IDS,
+  getIntent,
+  listIntents,
+  registerIntent
+} from "./ai/intents"
+export type {
+  BuiltInIntentId,
+  IntentDescriptor,
+  IntentFieldKind,
+  IntentId,
+  IntentSignals
+} from "./ai/intents"
+export {
+  suggestCharts,
+  suggestChartsGrouped,
+  scoreChart,
+  explainCapabilityFit
+} from "./ai/suggestCharts"
 export type {
   SuggestChartsOptions,
   ScoreChartOptions,
   RejectedCapability,
-  ExplainCapabilityFitResult,
+  ExplainCapabilityFitResult
 } from "./ai/suggestCharts"
 export {
   BUILT_IN_CHART_RECIPES,
@@ -177,22 +252,54 @@ export {
   unregisterChartRecipe
 } from "./ai/chartRecipeRegistry"
 export { suggestDashboard } from "./ai/suggestDashboard"
-export type { DashboardPanel, DashboardSuggestion, SuggestDashboardOptions } from "./ai/suggestDashboard"
+export type {
+  DashboardPanel,
+  DashboardSuggestion,
+  SuggestDashboardOptions
+} from "./ai/suggestDashboard"
 export { suggestStreamCharts } from "./ai/suggestStreamCharts"
 export type { SuggestStreamChartsOptions } from "./ai/suggestStreamCharts"
 export type { StreamSchema, StreamSuggestion } from "./ai/streamingTypes"
 export { suggestStretchCharts } from "./ai/suggestStretchCharts"
-export type { StretchSuggestion, SuggestStretchChartsOptions } from "./ai/suggestStretchCharts"
+export type {
+  StretchSuggestion,
+  SuggestStretchChartsOptions
+} from "./ai/suggestStretchCharts"
 export { repairChartConfig } from "./ai/repairChartConfig"
 export type { RepairResult, RepairOptions } from "./ai/repairChartConfig"
 export { proposeVariant, evaluateVariantProposal } from "./ai/variantDiscovery"
-export type { VariantProposal, VariantScore, EvaluateVariantProposalOptions } from "./ai/variantDiscovery"
-export { describeChart, resolveCommunicativeAct, communicativeActForIntent } from "./ai/describeChart"
-export type { DescribeChartResult, DescribeChartOptions, DescribeLevel, CommunicativeAct, DescribeCapabilityContext } from "./ai/describeChart"
+export type {
+  VariantProposal,
+  VariantScore,
+  EvaluateVariantProposalOptions
+} from "./ai/variantDiscovery"
+export {
+  describeChart,
+  resolveCommunicativeAct,
+  communicativeActForIntent
+} from "./ai/describeChart"
+export type {
+  DescribeChartResult,
+  DescribeChartOptions,
+  DescribeLevel,
+  CommunicativeAct,
+  DescribeCapabilityContext
+} from "./ai/describeChart"
 export { buildReaderGrounding } from "./ai/readerGrounding"
-export type { ChartReaderGrounding, ChartReaderGroundingOptions } from "./ai/readerGrounding"
-export { buildNavigationTree, flattenVisible, countNodes } from "./ai/navigationTree"
-export type { NavTreeNode, NavTreeRole, BuildNavigationTreeOptions } from "./ai/navigationTree"
+export type {
+  ChartReaderGrounding,
+  ChartReaderGroundingOptions
+} from "./ai/readerGrounding"
+export {
+  buildNavigationTree,
+  flattenVisible,
+  countNodes
+} from "./ai/navigationTree"
+export type {
+  NavTreeNode,
+  NavTreeRole,
+  BuildNavigationTreeOptions
+} from "./ai/navigationTree"
 export {
   prepareChart,
   refreshChartDiagnostics,
@@ -201,7 +308,7 @@ export {
   toAnthropicTool,
   toOpenAITool,
   toOpenAIResponsesTool,
-  createChartToolHandler,
+  createChartToolHandler
 } from "./ai/generativeChart"
 export type {
   RenderFn,
@@ -212,7 +319,7 @@ export type {
   ChartToolDefinition,
   ChartToolOptions,
   OpenAIResponsesTool,
-  OpenAIResponsesToolOptions,
+  OpenAIResponsesToolOptions
 } from "./ai/generativeChart"
 export { inspectChart } from "./ai/chartClinic"
 export type {
@@ -223,5 +330,5 @@ export type {
   ChartClinicRevisionInput,
   ChartClinicRevisionStatus,
   ChartClinicSceneSummary,
-  ChartClinicBundleGuidance,
+  ChartClinicBundleGuidance
 } from "./ai/chartClinic"

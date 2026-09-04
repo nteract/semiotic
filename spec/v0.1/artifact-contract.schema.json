@@ -1,0 +1,2299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.dev/spec/v0.1/artifact-contract.schema.json",
+  "title": "Semiotic Artifact Contract",
+  "description": "A portable interpretation sidecar that keeps an information artifact's purpose, claims, evidence, time, reception, accountability, and preservation requirements inspectable across interfaces.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "artifact", "purpose", "claims", "evidence"],
+  "properties": {
+    "contractVersion": {
+      "const": "0.1",
+      "description": "Wire-contract version for this document.",
+      "x-semiotic-supplied-by": ["system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "never"
+    },
+    "artifact": {
+      "$ref": "#/$defs/artifactIdentity",
+      "description": "Stable identity and content fingerprints for the artifact.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "never"
+    },
+    "purpose": {
+      "$ref": "#/$defs/purposeContract",
+      "description": "Declared purpose, intended decisions, stakes, and use boundaries.",
+      "x-semiotic-supplied-by": [
+        "author",
+        "system",
+        "model-proposal",
+        "import"
+      ],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": true,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" },
+      "description": "Claims the artifact communicates or relies on.",
+      "x-semiotic-supplied-by": [
+        "author",
+        "system",
+        "model-proposal",
+        "import"
+      ],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": true,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "evidence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceRef" },
+      "description": "Evidence records referenced by claims and transformations.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "time": {
+      "$ref": "#/$defs/temporalContext",
+      "description": "Event, processing, publication, freshness, window, and revision clocks.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "reception": {
+      "$ref": "#/$defs/receptionContract",
+      "description": "Audience and channel requirements for receiving the artifact.",
+      "x-semiotic-supplied-by": [
+        "author",
+        "system",
+        "model-proposal",
+        "import"
+      ],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": true,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "form": {
+      "$ref": "#/$defs/designContract",
+      "description": "Reasoning, risks, and alternatives associated with the chosen form.",
+      "x-semiotic-supplied-by": [
+        "author",
+        "system",
+        "model-proposal",
+        "import"
+      ],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": true,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "contestability": {
+      "$ref": "#/$defs/contestabilityContract",
+      "description": "Ways to challenge, correct, or inspect alternative views of the artifact.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": false,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "required"
+    },
+    "accountability": {
+      "$ref": "#/$defs/accountabilityContract",
+      "description": "Authorship, review, source, and downstream-action records.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": false,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "inheritance": {
+      "$ref": "#/$defs/inheritanceContract",
+      "description": "Requirements that must survive copying, export, or handoff.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "fieldStatus": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/artifactFieldState" },
+      "description": "Path-keyed knowledge states for obligations that are unknown, manual, or not applicable.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": true,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    },
+    "extensions": {
+      "$ref": "#/$defs/jsonObject",
+      "description": "Explicit namespaced extension data preserved without changing core semantics.",
+      "x-semiotic-supplied-by": ["author", "system", "import"],
+      "x-semiotic-derivable": false,
+      "x-semiotic-model-may-propose": false,
+      "x-semiotic-human-review": "policy-dependent"
+    }
+  },
+  "$defs": {
+    "jsonValue": {
+      "description": "A value representable in JSON.",
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/jsonValue" } },
+        { "$ref": "#/$defs/jsonObject" }
+      ]
+    },
+    "jsonObject": {
+      "description": "An explicitly open object whose values are JSON-safe.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/jsonValue" }
+    },
+    "artifactFieldState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["known", "unknown", "manual", "not-applicable"],
+          "description": "Whether this field is known, unresolved, manually judged, or outside the artifact's scope.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Explanation for the field's knowledge state.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "suppliedBy": {
+          "enum": ["author", "system", "model-proposal", "import"],
+          "description": "Actor class responsible for the recorded state.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "derived": {
+          "type": "boolean",
+          "description": "Whether the state came from deterministic derivation.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "reviewedBy": {
+          "type": "string",
+          "description": "Identifier for the reviewer who resolved or confirmed the state.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "artifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable artifact identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "kind": {
+          "enum": ["chart", "dashboard", "story", "alert", "agent-answer"],
+          "description": "Artifact category.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "component": {
+          "type": "string",
+          "description": "Rendering component when the artifact is a chart.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-facing artifact title.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp supplied by the producing system or author.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "configFingerprint": {
+          "type": "string",
+          "description": "Deterministic identity of the serializable configuration.",
+          "x-semiotic-supplied-by": ["system"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "dataFingerprint": {
+          "type": "string",
+          "description": "Deterministic identity of the bound data and declared transformations without embedding the data itself.",
+          "x-semiotic-supplied-by": ["system"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "revision": {
+          "type": "string",
+          "description": "Producer-supplied revision identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "purposeIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Intent identifier from an open vocabulary.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "strength": {
+          "enum": ["primary", "secondary"],
+          "description": "Relative priority of the intent.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "source": {
+          "enum": ["author", "derived", "model-proposal", "import"],
+          "description": "How the intent entered the contract.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Reason this intent applies.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "purposeContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intents"],
+      "properties": {
+        "intents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/purposeIntent" },
+          "description": "Ordered analytical or communicative intents.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "communicativeAct": {
+          "type": "string",
+          "description": "What the artifact asks its audience to understand or do.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "decisionContext": {
+          "type": "string",
+          "description": "Decision or workflow in which the artifact will be used.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        },
+        "stakes": {
+          "enum": ["exploratory", "informational", "operational", "high"],
+          "description": "Consequence level of acting on the artifact.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        },
+        "allowedUses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Uses the author or policy explicitly permits.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "prohibitedUses": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Uses the author or policy explicitly prohibits.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "actorRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable actor identifier when available.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable actor name.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "examples": ["human", "agent", "watcher", "system"],
+          "x-semiotic-recognized-values": [
+            "human",
+            "agent",
+            "watcher",
+            "system"
+          ],
+          "description": "Actor category from an open vocabulary.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        }
+      }
+    },
+    "claimReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["proposed", "reviewed", "approved", "rejected"],
+          "description": "Editorial review state for a claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor responsible for the review decision.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reviewedAt": {
+          "type": "string",
+          "description": "Timestamp recorded by the review system.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Reviewer-authored explanation for the decision.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "claimUncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": ["interval", "distribution", "qualitative", "unknown"],
+          "description": "Form in which uncertainty is represented.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "lower": {
+          "type": "number",
+          "description": "Lower bound for interval uncertainty.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "upper": {
+          "type": "number",
+          "description": "Upper bound for interval uncertainty.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "confidence": {
+          "type": "number",
+          "description": "Confidence measure using the producer's stated scale.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit associated with numeric bounds.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "description": {
+          "type": "string",
+          "description": "Qualitative explanation of uncertainty and limitations.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "status", "evidenceIds"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identifier referenced by evidence, corrections, and actions.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "text": {
+          "type": "string",
+          "description": "Human-readable claim text.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "kind": {
+          "enum": [
+            "description",
+            "observation",
+            "aggregation",
+            "inference",
+            "forecast",
+            "simulation",
+            "alert",
+            "recommendation",
+            "normative"
+          ],
+          "description": "Evidence and communication category of the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "status": {
+          "enum": [
+            "supported",
+            "provisional",
+            "disputed",
+            "superseded",
+            "retracted",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Current support and publication state of the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "evidenceIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Identifiers of evidence records supporting or qualifying the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "scope": {
+          "$ref": "#/$defs/jsonObject",
+          "description": "Structured bounds on population, filters, geography, or other applicability.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/claimUncertainty",
+          "description": "Uncertainty associated with the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "asOf": {
+          "type": "string",
+          "description": "Time at which the claim should be interpreted.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "supersedes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Earlier claim identifiers replaced by this claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "authoredBy": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor responsible for authoring the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "review": {
+          "$ref": "#/$defs/claimReview",
+          "description": "Editorial review record for the claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Open labels used for discovery or policy selection.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "evidenceSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable source name.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Resolvable or descriptive source location.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "version": {
+          "type": "string",
+          "description": "Source version identifier.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "description": "Timestamp at which the source was retrieved.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "publisher": {
+          "type": "string",
+          "description": "Organization or actor publishing the source.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "transformationRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "inputEvidenceIds"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable transformation identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "kind": {
+          "enum": [
+            "aggregation",
+            "filter",
+            "normalization",
+            "binning",
+            "join",
+            "smoothing",
+            "forecasting",
+            "simulation",
+            "other"
+          ],
+          "description": "Class of transformation applied to evidence.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of the transformation.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "inputEvidenceIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Evidence identifiers consumed by the transformation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "parameters": {
+          "$ref": "#/$defs/jsonObject",
+          "description": "JSON-safe transformation parameters.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Assumptions required by the transformation.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Code, query, or procedure implementing the transformation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "performedAt": {
+          "type": "string",
+          "description": "Timestamp at which the transformation was performed.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "performedBy": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor or system that performed the transformation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "boundedEvidenceSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rowCount": {
+          "type": "number",
+          "description": "Total or represented row count.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Fields included in the bounded sample.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "values": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/jsonValue" },
+          "description": "Bounded JSON-safe sample values.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "truncated": {
+          "type": "boolean",
+          "description": "Whether values omit part of the available sample.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable evidence identifier referenced by claims and transformations.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "role": {
+          "enum": [
+            "source-data",
+            "external-source",
+            "transformation",
+            "statistical-test",
+            "model-output",
+            "human-observation",
+            "policy-rule",
+            "quality-check"
+          ],
+          "description": "Role the evidence plays in supporting or qualifying claims.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable evidence label.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "source": {
+          "$ref": "#/$defs/evidenceSource",
+          "description": "Origin and retrieval metadata for the evidence.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "fingerprint": {
+          "type": "string",
+          "description": "Deterministic content identity for the evidence.",
+          "x-semiotic-supplied-by": ["system"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "dataVersion": {
+          "type": "string",
+          "description": "Source data version identifier.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "observedAt": {
+          "type": "string",
+          "description": "Timestamp represented by the evidence observation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "scope": {
+          "$ref": "#/$defs/jsonObject",
+          "description": "Structured bounds on the evidence's applicability.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "sample": {
+          "$ref": "#/$defs/boundedEvidenceSample",
+          "description": "Bounded sample retained for inspection without requiring full raw data.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "transformation": {
+          "$ref": "#/$defs/transformationRecord",
+          "description": "Transformation record when this evidence was produced from other evidence.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "generatedClaimId": {
+          "type": "string",
+          "description": "Claim identifier generated from this evidence, when applicable.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "relationship": {
+          "enum": ["descriptive", "correlational", "causal", "unknown"],
+          "description": "Strength and interpretation of the evidence-to-claim relationship.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "timeField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Name of the field carrying event time.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "value": {
+          "type": "string",
+          "description": "Event-time value represented by the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone used to interpret the event-time value.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "granularity": {
+          "type": "string",
+          "description": "Resolution at which event time is meaningful.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalSourceState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identifier for a temporal source or processing stage.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "kind": {
+          "enum": [
+            "stream",
+            "processing-job",
+            "quality-check",
+            "snapshot",
+            "publication"
+          ],
+          "description": "Kind of source or processing stage.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable source label.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "observedAt": {
+          "type": "string",
+          "description": "Most recent observation timestamp for this source.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version reported by this source or processing stage.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone used by this source.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "granularity": {
+          "type": "string",
+          "description": "Temporal resolution supplied by this source.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "freshness": {
+          "enum": ["fresh", "stale", "unknown"],
+          "description": "Freshness state reported for this source.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "completeness": {
+          "enum": ["partial", "provisional", "settled", "unknown"],
+          "description": "Completeness state reported for this source.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "enum": ["live", "historical", "mixed"],
+          "description": "How the interface presents the artifact's temporal state.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "label": {
+          "type": "string",
+          "description": "Audience-facing temporal-state label.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalFreshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["fresh", "stale", "unknown"],
+          "description": "Computed or declared freshness state.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "checkedAt": {
+          "type": "string",
+          "description": "Timestamp of the freshness evaluation.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "heartbeatAt": {
+          "type": "string",
+          "description": "Timestamp of the most recent source heartbeat.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "expiresAt": {
+          "type": "string",
+          "description": "Timestamp after which the artifact should be considered stale.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "basis": {
+          "type": "string",
+          "description": "Rule or observation used to determine freshness.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalWatermark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Latest event time known to be included under the stated policy.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "policy": {
+          "type": "string",
+          "description": "Watermark computation policy.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "allowedLateness": {
+          "type": "string",
+          "description": "Accepted lateness interval beyond the watermark.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "status"],
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "Inclusive start of the represented temporal window.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "end": {
+          "type": "string",
+          "description": "End of the represented temporal window.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "status": {
+          "enum": ["open", "provisional", "settled", "reopened", "corrected"],
+          "description": "Settlement or revision state of the represented window.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalCompleteness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["partial", "provisional", "settled", "unknown"],
+          "description": "Completeness state of the represented data.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "basis": {
+          "type": "string",
+          "description": "Rule or observation used to determine completeness.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "temporalRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "enum": ["original", "backfilled", "corrected", "superseded"],
+          "description": "Revision relationship to previously published data or artifacts.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "previousArtifactId": {
+          "type": "string",
+          "description": "Identifier of the earlier artifact affected by this revision.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "correctionId": {
+          "type": "string",
+          "description": "Identifier of the correction record governing this revision.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Explanation for the revision.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "temporalSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Snapshot identifier.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "format": {
+          "enum": ["iceberg", "delta", "other"],
+          "description": "Snapshot storage format.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "description": "Schema version associated with the snapshot.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "catalogRef": {
+          "type": "string",
+          "description": "Catalog reference used to locate the snapshot.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        }
+      }
+    },
+    "temporalContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "eventTime": {
+          "$ref": "#/$defs/timeField",
+          "description": "Field and value used as event time.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "observedAt": {
+          "type": "string",
+          "description": "Timestamp at which the represented event or condition was observed.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "ingestedAt": {
+          "type": "string",
+          "description": "Timestamp at which data entered the processing system.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "processedAt": {
+          "type": "string",
+          "description": "Timestamp at which processing completed.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "Timestamp at which the artifact was published.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "snapshotAt": {
+          "type": "string",
+          "description": "Timestamp represented by a static snapshot.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "presentation": {
+          "$ref": "#/$defs/temporalPresentation",
+          "description": "How temporal state is communicated to the audience.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "freshness": {
+          "$ref": "#/$defs/temporalFreshness",
+          "description": "Freshness evaluation for the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "watermark": {
+          "$ref": "#/$defs/temporalWatermark",
+          "description": "Event-time watermark and lateness policy.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "window": {
+          "$ref": "#/$defs/temporalWindow",
+          "description": "Time window summarized by the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "completeness": {
+          "$ref": "#/$defs/temporalCompleteness",
+          "description": "Completeness evaluation for the represented data.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "revision": {
+          "$ref": "#/$defs/temporalRevision",
+          "description": "Revision state relative to earlier artifacts or data.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/temporalSnapshot",
+          "description": "Storage snapshot that can reproduce the represented state.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/temporalSourceState" },
+          "description": "Source-specific temporal states.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "receptionChannelContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel"],
+      "properties": {
+        "channel": {
+          "enum": [
+            "visual",
+            "screen-reader",
+            "sonified",
+            "agent",
+            "print",
+            "low-bandwidth"
+          ],
+          "description": "Interface channel governed by these reception requirements.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "disclosure": {
+          "enum": ["summary", "standard", "detailed"],
+          "description": "Level of supporting context the channel should disclose.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "navigation": {
+          "type": "boolean",
+          "description": "Whether the channel must provide navigable structure.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "interactionInstructions": {
+          "type": "boolean",
+          "description": "Whether the channel must explain available interactions.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "rawData": {
+          "enum": ["deny", "bounded", "allow"],
+          "description": "Raw-data access allowed through this channel.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "tokenBudget": {
+          "type": "number",
+          "description": "Approximate total serialized grounding-payload budget for this channel, using four characters per token and a 256-token minimum for identity, safety, and omission metadata.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "privacyNotes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Privacy constraints or disclosures for the channel.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "receptionContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channels"],
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/receptionChannelContract" },
+          "description": "Requirements for each supported reception channel.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "audience": {
+          "type": "string",
+          "description": "Intended audience and relevant context.",
+          "x-semiotic-supplied-by": ["author", "model-proposal", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        },
+        "strengths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ways this artifact supports audience understanding.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Audience-specific risks of misunderstanding or misuse.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        },
+        "scaffolds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explanations or aids required for interpretation.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "description": {
+          "type": "string",
+          "description": "Accessible prose description of the artifact.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "dataFallback": {
+          "type": "boolean",
+          "description": "Whether a structured data fallback is required.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "manualChecks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Reception checks that require human judgment.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "rejectedAlternative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["representation", "reason"],
+      "properties": {
+        "representation": {
+          "type": "string",
+          "description": "Alternative representation that was considered.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason the alternative was not selected.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "designContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chartFamily": {
+          "type": "string",
+          "description": "Chart or presentation family chosen for the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "whyThisForm": {
+          "type": "string",
+          "description": "Reason the selected form fits the purpose and evidence.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "rejectedAlternatives": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rejectedAlternative" },
+          "description": "Other representations considered and rejected.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Interpretive risks introduced by the chosen form.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        },
+        "misuse": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Foreseeable misuses of the chosen form.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "claimChallenge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "claimId", "status", "reason"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable challenge identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "claimId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of the challenged claim.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "status": {
+          "enum": ["open", "accepted", "declined", "resolved"],
+          "description": "Current handling state of the challenge.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Substantive reason for raising the challenge.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "raisedBy": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor that raised the challenge.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "raisedAt": {
+          "type": "string",
+          "description": "Timestamp at which the challenge was raised.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "counterclaimId": {
+          "type": "string",
+          "description": "Claim identifier offering an alternative interpretation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Documented resolution of the challenge.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "correctionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "affectedClaimIds", "reason"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable correction identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "affectedClaimIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Claim identifiers affected by the correction.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "replacementClaimIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Claim identifiers replacing corrected claims.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason the correction was issued.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp at which the correction was recorded.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "createdBy": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor responsible for the correction.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "alternativeView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable alternative-view identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable alternative-view label.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Reason this alternative view is useful.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    },
+    "editorialException": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "rationale"],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of the rule receiving an exception.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Human-approved reason for the exception.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Actor or team accountable for the exception.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reviewAt": {
+          "type": "string",
+          "description": "Timestamp at which the exception should be reviewed.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "contestabilityContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceRequestsAllowed": {
+          "type": "boolean",
+          "description": "Whether recipients may request underlying sources.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "alternativeViews": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/alternativeView" },
+          "description": "Available alternative representations or interpretations.",
+          "x-semiotic-supplied-by": [
+            "author",
+            "system",
+            "model-proposal",
+            "import"
+          ],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": true,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "challenges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/claimChallenge" },
+          "description": "Recorded challenges to claims.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "corrections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/correctionRecord" },
+          "description": "Corrections issued for claims in this artifact lineage.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "editorialExceptions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/editorialException" },
+          "description": "Documented exceptions to editorial or policy rules.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "reviewRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable review identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "status": {
+          "enum": ["pending", "approved", "changes-requested", "rejected"],
+          "description": "Current outcome of the review.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor responsible for the review decision.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "reviewedAt": {
+          "type": "string",
+          "description": "Timestamp at which the review decision was recorded.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Reviewer-authored explanation for the outcome.",
+          "x-semiotic-supplied-by": ["author", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "policyId": {
+          "type": "string",
+          "description": "Policy identifier under which the review occurred.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "actionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action", "claimIds"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable downstream-action identifier.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "action": {
+          "type": "string",
+          "description": "Action proposed or taken in response to the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "actor": {
+          "$ref": "#/$defs/actorRef",
+          "description": "Actor responsible for the action.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "actedAt": {
+          "type": "string",
+          "description": "Timestamp at which the action was recorded.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "claimIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Claims on which the action depended.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "artifactId": {
+          "type": "string",
+          "description": "Artifact identifier consulted for the action when the surrounding collection is ambiguous.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "artifactRevision": {
+          "type": "string",
+          "description": "Artifact revision consulted for the action.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "policyId": {
+          "type": "string",
+          "description": "Policy identifier governing the action.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "status": {
+          "enum": ["proposed", "taken", "reversed", "invalidated"],
+          "description": "Lifecycle state of the action.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "invalidatedByClaimId": {
+          "type": "string",
+          "description": "Claim identifier that invalidated the action.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "accountabilityContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/actorRef" },
+          "description": "Actors responsible for authoring the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "generatedBy": {
+          "type": "string",
+          "description": "Tool or process that generated the artifact.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "dataSources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source identifiers used by the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "codeRef": {
+          "type": "string",
+          "description": "Code, build, or deployment reference for reproducing the artifact.",
+          "x-semiotic-supplied-by": ["system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "never"
+        },
+        "reviews": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reviewRecord" },
+          "description": "Recorded review decisions for the artifact.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/actionRecord" },
+          "description": "Downstream actions tied to specific claims and revisions.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        }
+      }
+    },
+    "inheritanceContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requiredPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Contract paths that must be retained in derived artifacts.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "prohibitedExports": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Export formats or destinations that are not allowed.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": false,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "privacy": {
+          "enum": ["public", "restricted", "confidential", "unknown"],
+          "description": "Privacy classification that must survive handoff.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "rawDataDefault": {
+          "enum": ["exclude", "bounded", "include"],
+          "description": "Default raw-data handling for derived outputs.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "required"
+        },
+        "preservation": {
+          "enum": [
+            "full-fidelity",
+            "claim-evidence-preserved",
+            "visual-only",
+            "lossy",
+            "unknown"
+          ],
+          "description": "Semantic preservation class for export or transformation.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        },
+        "sourceArtifactIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Source artifact identifiers from which this artifact inherits obligations.",
+          "x-semiotic-supplied-by": ["author", "system", "import"],
+          "x-semiotic-derivable": true,
+          "x-semiotic-model-may-propose": false,
+          "x-semiotic-human-review": "policy-dependent"
+        }
+      }
+    }
+  }
+}

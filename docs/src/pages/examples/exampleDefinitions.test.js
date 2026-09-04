@@ -154,7 +154,7 @@ describe("validateExampleDefinitions", () => {
       id: "watermarks",
       contract: {
         assessment: "declared",
-        data: { states: ["snapshot"] },
+        data: { states: ["live", "snapshot"] },
         performance: { status: "unmeasured" },
       },
     })

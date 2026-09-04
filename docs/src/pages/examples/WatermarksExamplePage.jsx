@@ -4,6 +4,12 @@ import CodeBlock from "../../components/CodeBlock"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { PhysicsArcStatus, usePhysicsExampleConversationArc } from "./PhysicsExampleConversationArc"
+import {
+  buildWatermarkTemporalRecord,
+  describeWatermarkTemporalStage,
+  replaySeconds,
+  temporalDurationSeconds,
+} from "./watermarksTemporalRecord"
 import "./WatermarksExamplePage.css"
 
 const CHART_HEIGHT = 400
@@ -87,14 +93,42 @@ const SCENARIOS = [
   },
 ]
 
-const implementationCode = `import { EventDropChart } from "semiotic/physics"
+const implementationCode = `import {
+  adaptStreamTopicMetadata,
+  auditTemporalContext,
+  updateTemporalContext,
+} from "semiotic/artifact"
+import { EventDropChart } from "semiotic/physics"
 
-// Current event time and the watermark strategy decide which windows are still
-// open. Color marks event timeliness; the angled lid alone decides whether an
-// event settles into its bin or rolls to the late gutter.
-const classify = (event) => {
-  return event.timeliness === "late" ? "late" : "in-window"
-}
+// One portable time record drives the visible labels and inspectable JSON.
+const liveTime = adaptStreamTopicMetadata({
+  id: "orders",
+  eventTime: { field: "eventTime", value: latestEventTime, timezone: "UTC" },
+  ingestedAt: arrivalFrontier,
+  watermark: { value: watermark, allowedLateness: "PT18S" },
+  window: { start: windowStart, end: windowEnd, status: "open" },
+  completeness: { status: "provisional" },
+})
+
+const correctedTime = updateTemporalContext(liveTime, {
+  window: { start: windowStart, end: windowEnd, status: "corrected" },
+  completeness: { status: "settled" },
+  revision: {
+    status: "backfilled",
+    previousArtifactId: "orders-before-late-rows",
+    reason: "Late rows changed the window",
+  },
+  sources: [{
+    id: "orders",
+    kind: "stream",
+    freshness: "fresh",
+    completeness: "settled",
+  }],
+})
+
+const timeAudit = auditTemporalContext(correctedTime, {
+  referenceTime: arrivalFrontier,
+})
 
 <EventDropChart
   ref={chartRef}
@@ -221,7 +255,7 @@ function buildModel(
 // opaque background, so a true backdrop can't show through). Marks are kept thin
 // and washes faint so the big, bright bodies stay legible underneath: window
 // bands, per-window ledger, closed-window lids, and the sweeping watermark.
-function WatermarkOverlay({ width, height, model }) {
+function WatermarkOverlay({ width, height, model, time }) {
   const plot = chartArea(width, height)
   const metadata = model.metadata ?? {}
   const layoutPlot = metadata.plot ?? plot
@@ -237,14 +271,18 @@ function WatermarkOverlay({ width, height, model }) {
   const floorY = layoutPlot.y + layoutPlot.height
   const gutterTop = (metadata.lidSegments ?? [])[0]?.y1 ?? bandTop
   const domainEnd = model.windowStart + model.windowCount * model.windowSize
+  const arrivalFrontier = replaySeconds(time?.ingestedAt) ?? model.currentTime
+  const watermarkFrontier = replaySeconds(time?.watermark?.value) ?? model.watermarkFrontier
+  const allowedLateness =
+    temporalDurationSeconds(time?.watermark?.allowedLateness) ?? model.watermarkStrategy
   const frontierRatio =
     domainEnd === model.windowStart
       ? 0
-      : (model.watermarkFrontier - model.windowStart) / (domainEnd - model.windowStart)
+      : (watermarkFrontier - model.windowStart) / (domainEnd - model.windowStart)
   const currentRatio =
     domainEnd === model.windowStart
       ? 0
-      : (model.currentTime - model.windowStart) / (domainEnd - model.windowStart)
+      : (arrivalFrontier - model.windowStart) / (domainEnd - model.windowStart)
   const frontierX = clamp(
     windowPlot.x + frontierRatio * windowPlot.width,
     windowPlot.x,
@@ -255,7 +293,7 @@ function WatermarkOverlay({ width, height, model }) {
     windowPlot.x,
     windowPlot.x + windowPlot.width,
   )
-  const ruleLabel = `open if bin end + ${seconds(model.watermarkStrategy)} >= ${seconds(model.currentTime)}`
+  const ruleLabel = `open if bin end + ${seconds(allowedLateness)} >= ${seconds(arrivalFrontier)}`
   return (
     <svg
       className="watermarks-example__overlay"
@@ -293,8 +331,8 @@ function WatermarkOverlay({ width, height, model }) {
       ) : null}
       {model.rows.map((row, index) => {
         const x = windowPlot.x + index * rowWidth
-        const closesAt = row.end + model.watermarkStrategy
-        const closed = closesAt < model.currentTime
+        const closesAt = row.end + allowedLateness
+        const closed = closesAt < arrivalFrontier
         return (
           <g key={row.id}>
             <rect
@@ -376,7 +414,7 @@ function WatermarkOverlay({ width, height, model }) {
         y={layoutPlot.y + 16}
         className="watermarks-example__watermark-label"
       >
-        closes before {seconds(model.watermarkFrontier)}
+        closes before {seconds(watermarkFrontier)}
       </text>
       <line
         x1={currentX}
@@ -390,12 +428,87 @@ function WatermarkOverlay({ width, height, model }) {
         y={layoutPlot.y + 32}
         className="watermarks-example__current-time-label"
       >
-        current {seconds(model.currentTime)}
+        arrival {seconds(arrivalFrontier)}
       </text>
       <text x={windowPlot.x + 8} y={layoutPlot.y - 7} className="watermarks-example__rule-label">
         {ruleLabel}
       </text>
     </svg>
+  )
+}
+
+function TemporalStateLedger({ record }) {
+  return (
+    <section className="watermarks-example__time-ledger" aria-labelledby="watermark-time-heading">
+      <div className="watermarks-example__time-intro">
+        <h2 id="watermark-time-heading">One declared time model</h2>
+        <p>
+          The replay, these explanations, and the JSON payload use the same Artifact Contract time
+          and claim records. Event time says when a row happened; the arrival frontier says what the
+          pipeline has seen; the watermark determines which windows can settle.
+        </p>
+      </div>
+      <div className="watermarks-example__time-states">
+        {record.stages.map((stage) => {
+          const correction = stage.contract.contestability?.corrections?.[0]
+          return (
+            <article
+              className="watermarks-example__time-state"
+              key={stage.id}
+              data-state={stage.id}
+            >
+              <h3>{stage.label}</h3>
+              <p>{describeWatermarkTemporalStage(stage)}</p>
+              <dl>
+                <div>
+                  <dt>Window</dt>
+                  <dd>{stage.time.window?.status ?? "unknown"}</dd>
+                </div>
+                <div>
+                  <dt>Completeness</dt>
+                  <dd>{stage.time.completeness?.status ?? "unknown"}</dd>
+                </div>
+                <div>
+                  <dt>Time audit</dt>
+                  <dd>
+                    {stage.audit.summary.fail} failing · {stage.audit.summary.unknown} unknown
+                  </dd>
+                </div>
+                <div>
+                  <dt>Claim audit</dt>
+                  <dd>
+                    {stage.claimAudit.summary.fail} failing · {stage.claimAudit.summary.warn}{" "}
+                    warning
+                  </dd>
+                </div>
+              </dl>
+              <h4>Claim state</h4>
+              <ul className="watermarks-example__claims">
+                {stage.contract.claims.map((claim) => (
+                  <li key={claim.id}>
+                    <strong>{claim.status}</strong>
+                    <span>{claim.text}</span>
+                  </li>
+                ))}
+              </ul>
+              {correction ? (
+                <p className="watermarks-example__correction">
+                  Correction <code>{correction.id}</code> preserves{" "}
+                  <code>{correction.affectedClaimIds.join(", ")}</code> and links it to{" "}
+                  <code>{correction.replacementClaimIds?.join(", ")}</code>.
+                </p>
+              ) : null}
+            </article>
+          )
+        })}
+      </div>
+      <details className="watermarks-example__time-payload">
+        <summary>Inspect the machine-readable time payload</summary>
+        <pre data-testid="watermark-temporal-payload">
+          {JSON.stringify(record.payload, null, 2)}
+        </pre>
+      </details>
+    </section>
   )
 }
 
@@ -501,6 +614,20 @@ export default function WatermarksExamplePage() {
       watermarkStrategy,
     ],
   )
+  const temporalRecord = useMemo(
+    () =>
+      buildWatermarkTemporalRecord({
+        scenarioId,
+        events,
+        arrivedEvents,
+        currentTime,
+        windowSize: committed.window,
+        allowedLateness: watermarkStrategy,
+      }),
+    [arrivedEvents, committed.window, currentTime, events, scenarioId, watermarkStrategy],
+  )
+  const declaredTime = temporalRecord.current?.time
+  const declaredArrival = replaySeconds(temporalRecord.payload.referenceTime) ?? currentTime
   // The board rebuilds when the time controls change because lids are physical
   // colliders, not just a live color classification.
   const chartKey = [
@@ -709,8 +836,15 @@ export default function WatermarksExamplePage() {
   const selectedClass = selected ? classify(selected) : ONTIME_KEY
 
   const watermarkForegroundGraphics = useMemo(
-    () => <WatermarkOverlay width={chartSize[0]} height={chartSize[1]} model={model} />,
-    [chartSize, model],
+    () => (
+      <WatermarkOverlay
+        width={chartSize[0]}
+        height={chartSize[1]}
+        model={model}
+        time={declaredTime}
+      />
+    ),
+    [chartSize, declaredTime, model],
   )
   const eventDropFrameProps = useMemo(
     () => ({
@@ -751,7 +885,7 @@ export default function WatermarksExamplePage() {
         paused={paused}
         showProjection={false}
         title="Watermark replay"
-        description={`Event-drop watermark replay: ${model.onTime} on time, ${model.late} late with a ${seconds(model.watermarkStrategy)} watermark strategy`}
+        description={`Event-drop watermark replay: ${model.onTime} on time and ${model.late} late. The declared window is ${declaredTime?.window?.status ?? "unknown"} with ${declaredTime?.completeness?.status ?? "unknown"} completeness.`}
         frameProps={eventDropFrameProps}
       />
     </div>
@@ -772,9 +906,8 @@ export default function WatermarksExamplePage() {
             <a href="https://flink-watermarks.wtf/" target="_blank" rel="noopener noreferrer">
               flink-watermarks.wtf
             </a>
-            , using Semiotic&apos;s{" "}
-            <a href="/charts/event-drop-chart">EventDropChart</a> so you can still inspect the
-            settled bins and runtime state.
+            , using Semiotic&apos;s <a href="/charts/event-drop-chart">EventDropChart</a> so you can
+            still inspect the settled bins and runtime state.
           </div>
         </section>
 
@@ -798,7 +931,7 @@ export default function WatermarksExamplePage() {
             </div>
 
             <label className="watermarks-example__control-group watermarks-example__control-group--live">
-              <span>Current event time</span>
+              <span>Arrival frontier</span>
               <input
                 type="range"
                 min={timeline.arrivalMin}
@@ -812,7 +945,7 @@ export default function WatermarksExamplePage() {
                   setPaused(false)
                 }}
               />
-              <strong>{seconds(currentTime)}</strong>
+              <strong>{seconds(declaredArrival)}</strong>
             </label>
 
             <label className="watermarks-example__control-group watermarks-example__control-group--live">
@@ -923,12 +1056,34 @@ export default function WatermarksExamplePage() {
             <span>sent to gutter</span>
           </div>
           <div className="watermarks-example__metric">
-            <strong>{seconds(model.watermarkStrategy)}</strong>
+            <strong>
+              {seconds(temporalDurationSeconds(declaredTime?.watermark?.allowedLateness))}
+            </strong>
             <span>late allowance</span>
           </div>
           <div className="watermarks-example__metric">
-            <strong>{seconds(currentTime)}</strong>
-            <span>current event time</span>
+            <strong>{seconds(replaySeconds(declaredTime?.eventTime?.value))}</strong>
+            <span>
+              {declaredTime?.window?.status === "open"
+                ? "open-window event time"
+                : "declared event time"}
+            </span>
+          </div>
+          <div className="watermarks-example__metric">
+            <strong>{seconds(declaredArrival)}</strong>
+            <span>arrival frontier</span>
+          </div>
+          <div className="watermarks-example__metric">
+            <strong>{seconds(replaySeconds(declaredTime?.watermark?.value))}</strong>
+            <span>watermark</span>
+          </div>
+          <div className="watermarks-example__metric">
+            <strong>{declaredTime?.window?.status ?? "unknown"}</strong>
+            <span>window state</span>
+          </div>
+          <div className="watermarks-example__metric">
+            <strong>{declaredTime?.completeness?.status ?? "unknown"}</strong>
+            <span>completeness</span>
           </div>
           <div className="watermarks-example__metric">
             <strong>
@@ -941,6 +1096,8 @@ export default function WatermarksExamplePage() {
             <span>{seconds(runtime.elapsed)} sim time</span>
           </div>
         </section>
+
+        <TemporalStateLedger record={temporalRecord} />
 
         <section className="watermarks-example__details">
           <div>
@@ -982,11 +1139,11 @@ export default function WatermarksExamplePage() {
           <div>
             <h2>How it maps to Semiotic</h2>
             <p>
-              Data rows carry an event time and an arrival time. Current event time and the
-              watermark strategy decide which windows have lids; bodies drop over their event-time
-              x-position, and closed windows add angled physics colliders. The runtime state comes
-              from <code>frameProps.onTick</code> &mdash; the same numbers an agent or test would
-              read.
+              Data rows carry an event time and an arrival time. The Artifact Contract adapter turns
+              the replay controls into one deterministic time record; its audited window, watermark,
+              completeness, claim, and correction fields drive the labels and inspectable payload.
+              Bodies still drop over their event-time x-position, and closed windows add angled
+              physics colliders. Runtime motion comes from <code>frameProps.onTick</code>.
             </p>
           </div>
           <CodeBlock language="jsx">{implementationCode}</CodeBlock>

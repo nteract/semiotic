@@ -1,0 +1,3459 @@
+{
+  "benchmarkVersion": "0.2",
+  "fixtureVersion": "0.2",
+  "mutationVersion": "0.1",
+  "summary": {
+    "cases": 40,
+    "measured": 40,
+    "partial": 0,
+    "notCurrentlyMeasurable": 0,
+    "expectedFindings": {
+      "matched": 63,
+      "total": 63
+    },
+    "expectedUnknownPaths": {
+      "matched": 60,
+      "total": 60
+    },
+    "positiveControls": {
+      "matched": 4,
+      "total": 4
+    },
+    "refusalEvaluation": {
+      "labeledControls": 4,
+      "unlabeledMutations": 40,
+      "confusionMatrix": {
+        "expectedRefuse": {
+          "observedRefuse": 0,
+          "observedNotRefuse": 0
+        },
+        "expectedNotRefuse": {
+          "observedRefuse": 0,
+          "observedNotRefuse": 4
+        }
+      },
+      "falseRefusalRate": {
+        "falseRefusals": 0,
+        "expectedNotRefuse": 4,
+        "rate": 0
+      },
+      "refusalPrecision": null,
+      "precisionReason": "Mutated cases have declared finding expectations but not complete should-refuse labels, so refusal precision is not reported."
+    },
+    "pairedMutationDetection": {
+      "detected": 40,
+      "total": 40,
+      "rate": 1,
+      "criterion": "Every declared finding prefix appeared only after applying the paired mutation set."
+    }
+  },
+  "trackCoverage": [
+    {
+      "track": "operational",
+      "cases": 10,
+      "measured": 10,
+      "partial": 0,
+      "notCurrentlyMeasurable": 0
+    },
+    {
+      "track": "editorial-news",
+      "cases": 10,
+      "measured": 10,
+      "partial": 0,
+      "notCurrentlyMeasurable": 0
+    },
+    {
+      "track": "agent-authoring-reading",
+      "cases": 10,
+      "measured": 10,
+      "partial": 0,
+      "notCurrentlyMeasurable": 0
+    },
+    {
+      "track": "public-science-literacy",
+      "cases": 10,
+      "measured": 10,
+      "partial": 0,
+      "notCurrentlyMeasurable": 0
+    }
+  ],
+  "relationCoverage": [
+    {
+      "relation": "claim-support",
+      "cases": 31,
+      "measuredCases": 31
+    },
+    {
+      "relation": "representation-fit",
+      "cases": 7,
+      "measuredCases": 7
+    },
+    {
+      "relation": "reception",
+      "cases": 12,
+      "measuredCases": 12
+    },
+    {
+      "relation": "time",
+      "cases": 14,
+      "measuredCases": 14
+    },
+    {
+      "relation": "challenge-and-correction",
+      "cases": 6,
+      "measuredCases": 6
+    },
+    {
+      "relation": "accountability",
+      "cases": 20,
+      "measuredCases": 20
+    },
+    {
+      "relation": "abstention",
+      "cases": 17,
+      "measuredCases": 17
+    },
+    {
+      "relation": "preservation",
+      "cases": 14,
+      "measuredCases": 14
+    }
+  ],
+  "mutationCoverage": [
+    {
+      "mutationId": "unsupported-headline",
+      "cases": 6,
+      "casesWithDetectedExpectation": 6
+    },
+    {
+      "mutationId": "missing-denominator",
+      "cases": 4,
+      "casesWithDetectedExpectation": 4
+    },
+    {
+      "mutationId": "truncated-window",
+      "cases": 5,
+      "casesWithDetectedExpectation": 5
+    },
+    {
+      "mutationId": "unit-mismatch",
+      "cases": 3,
+      "casesWithDetectedExpectation": 3
+    },
+    {
+      "mutationId": "source-version-removal",
+      "cases": 4,
+      "casesWithDetectedExpectation": 4
+    },
+    {
+      "mutationId": "stale-snapshot",
+      "cases": 2,
+      "casesWithDetectedExpectation": 2
+    },
+    {
+      "mutationId": "late-event-collapse",
+      "cases": 6,
+      "casesWithDetectedExpectation": 6
+    },
+    {
+      "mutationId": "uncertainty-removal",
+      "cases": 5,
+      "casesWithDetectedExpectation": 5
+    },
+    {
+      "mutationId": "category-overlap",
+      "cases": 1,
+      "casesWithDetectedExpectation": 1
+    },
+    {
+      "mutationId": "inaccessible-interaction",
+      "cases": 2,
+      "casesWithDetectedExpectation": 2
+    },
+    {
+      "mutationId": "generated-text-prompt-injection",
+      "cases": 1,
+      "casesWithDetectedExpectation": 1
+    },
+    {
+      "mutationId": "provenance-laundering",
+      "cases": 2,
+      "casesWithDetectedExpectation": 2
+    }
+  ],
+  "positiveControls": [
+    {
+      "baseId": "agent-reviewed",
+      "expected": "not-refuse",
+      "observed": "not-refuse",
+      "evaluationStatus": "conditional",
+      "matched": true
+    },
+    {
+      "baseId": "editorial-history",
+      "expected": "not-refuse",
+      "observed": "not-refuse",
+      "evaluationStatus": "conditional",
+      "matched": true
+    },
+    {
+      "baseId": "operational-live",
+      "expected": "not-refuse",
+      "observed": "not-refuse",
+      "evaluationStatus": "conditional",
+      "matched": true
+    },
+    {
+      "baseId": "public-observation",
+      "expected": "not-refuse",
+      "observed": "not-refuse",
+      "evaluationStatus": "conditional",
+      "matched": true
+    }
+  ],
+  "cases": [
+    {
+      "id": "operational-late-payment-events",
+      "track": "operational",
+      "title": "Late payment events alter a settled hourly fraud rate",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "time",
+        "challenge-and-correction",
+        "abstention"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:bd:cc:59:81:1e:b0:4c:02:fc:d0:11:6c:66:df:e3:d0:79:f5:40:e9:52:8a:21:c4:56:85:56:de:74:ec:b4:d6"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.status-mismatch"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-wrong-currency",
+      "track": "operational",
+      "title": "Schema-valid input uses the wrong currency",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unit-mismatch"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:c1:28:8b:9c:53:9b:15:c8:7d:83:3b:f0:71:49:f6:04:8e:3e:4e:de:95:71:7b:29:22:95:64:d9:2a:9e:05:9d"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-comparison"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "representation.no-comparison",
+          "collection.metric-unit"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.references-valid.mutation-unit-claim",
+            "relation": "claim-support",
+            "status": "pass",
+            "path": "claims[1].evidenceIds"
+          },
+          {
+            "id": "collection.metric-definition.service total",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.service total",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "representation.no-comparison",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "representation.no-comparison",
+        "collection.metric-unit"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-processing-time-claim",
+      "track": "operational",
+      "title": "Processing-time aggregation is presented as event time",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "time",
+        "abstention"
+      ],
+      "mutationIds": [
+        "truncated-window"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:1f:8d:a3:ea:7f:1f:18:d7:26:ee:be:2e:5d:1f:f4:9a:26:7f:68:90:85:4f:79:c9:58:e8:0f:37:ce:0c:61:43"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "time.presentation.final-mismatch"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.window-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.window"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.presentation.final-mismatch",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.presentation.label"
+          },
+          {
+            "id": "time.window.provisional-as-settled",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.completeness.status"
+          },
+          {
+            "id": "time.window.settlement-required",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.window.provisional-as-settled",
+        "time.presentation.final-mismatch"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-lagging-table",
+      "track": "operational",
+      "title": "Table snapshot lags a live visualization",
+      "baseId": "operational-live",
+      "relations": [
+        "reception",
+        "time",
+        "accountability"
+      ],
+      "mutationIds": [
+        "stale-snapshot"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:eb:39:1b:21:c2:74:15:8a:b2:5e:fe:f5:85:04:4b:18:e2:f1:b8:0e:b5:91:c2:22:a6:07:7e:7b:5a:5b:2b:1e"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "collection.stale-panel",
+          "collection.snapshot-skew"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.snapshot-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.snapshot.id"
+          },
+          {
+            "id": "collection.stale-panel",
+            "relation": "time",
+            "status": "fail",
+            "path": "artifacts[].time.freshness"
+          },
+          {
+            "id": "field.time.snapshot.semanticCurrency",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.snapshot.semanticCurrency"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.clock.order.observation-snapshot",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.snapshotAt"
+          },
+          {
+            "id": "time.quality.predates-data.stale-quality-check",
+            "relation": "time",
+            "status": "warn",
+            "path": "time.sources[1].observedAt"
+          },
+          {
+            "id": "time.quality.stale.stale-quality-check",
+            "relation": "time",
+            "status": "warn",
+            "path": "time.sources[1].freshness"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "collection.stale-panel",
+        "collection.snapshot-skew"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "time.snapshot.semanticCurrency"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-old-quality-check",
+      "track": "operational",
+      "title": "Quality check is older than the current data",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "time",
+        "accountability"
+      ],
+      "mutationIds": [
+        "stale-snapshot"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:eb:39:1b:21:c2:74:15:8a:b2:5e:fe:f5:85:04:4b:18:e2:f1:b8:0e:b5:91:c2:22:a6:07:7e:7b:5a:5b:2b:1e"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.quality.stale",
+          "time.quality.predates-data"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.snapshot-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.snapshot.id"
+          },
+          {
+            "id": "collection.stale-panel",
+            "relation": "time",
+            "status": "fail",
+            "path": "artifacts[].time.freshness"
+          },
+          {
+            "id": "field.time.snapshot.semanticCurrency",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.snapshot.semanticCurrency"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.clock.order.observation-snapshot",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.snapshotAt"
+          },
+          {
+            "id": "time.quality.predates-data.stale-quality-check",
+            "relation": "time",
+            "status": "warn",
+            "path": "time.sources[1].observedAt"
+          },
+          {
+            "id": "time.quality.stale.stale-quality-check",
+            "relation": "time",
+            "status": "warn",
+            "path": "time.sources[1].freshness"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.quality.stale",
+        "time.quality.predates-data"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "time.snapshot.semanticCurrency"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-backfill-normalized",
+      "track": "operational",
+      "title": "Backfill anomaly is normalized without reopening the window",
+      "baseId": "operational-live",
+      "relations": [
+        "time",
+        "challenge-and-correction",
+        "accountability"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:bd:cc:59:81:1e:b0:4c:02:fc:d0:11:6c:66:df:e3:d0:79:f5:40:e9:52:8a:21:c4:56:85:56:de:74:ec:b4:d6"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.status-mismatch",
+        "time.revision.claim-propagation"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-old-schema-panel",
+      "track": "operational",
+      "title": "One dashboard panel uses an older source schema",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "source-version-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:e3:d4:f5:7e:e5:5f:3d:55:2a:da:8c:52:00:f3:78:43:77:f6:9a:65:f9:09:26:04:9b:f6:8a:1e:f5:da:1c:9a"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "evidence.identity.operational-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          },
+          {
+            "id": "representation.chart",
+            "relation": "representation-fit",
+            "status": "warn",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-open-window-action",
+      "track": "operational",
+      "title": "An agent acts on an open reporting window",
+      "baseId": "operational-live",
+      "relations": [
+        "time",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "truncated-window"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:1f:8d:a3:ea:7f:1f:18:d7:26:ee:be:2e:5d:1f:f4:9a:26:7f:68:90:85:4f:79:c9:58:e8:0f:37:ce:0c:61:43"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "representation.wait-for-settlement"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.window-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.window"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.presentation.final-mismatch",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.presentation.label"
+          },
+          {
+            "id": "time.window.provisional-as-settled",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.completeness.status"
+          },
+          {
+            "id": "time.window.settlement-required",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.window.provisional-as-settled",
+        "representation.wait-for-settlement"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-sensor-silence",
+      "track": "operational",
+      "title": "Sensor silence is reported as zero demand",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "time",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:60:3e:51:ff:c1:1c:33:f6:1f:93:5a:1d:95:e7:f6:2b:3f:06:7e:ed:e9:34:a3:af:65:e1:8c:03:24:e7:ec:df"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.operational-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.operational-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.operational-sensor-silence-after-candidate.claims.unsourced-supported.operational-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[operational-sensor-silence-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported",
+        "representation.no-claim"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "operational-gross-net-metric",
+      "track": "operational",
+      "title": "The same metric label alternates between gross and net",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "accountability"
+      ],
+      "mutationIds": [
+        "missing-denominator"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:af:4e:12:4b:3a:d4:27:32:8a:6d:7a:e3:db:e3:95:38:9a:01:dc:a2:cc:dd:1d:49:1b:2f:8f:f6:1b:bb:bf:0a",
+        "mutated": "sha256-bytes:f0:6e:2c:ac:82:93:9e:8c:17:0c:42:2a:05:64:c3:42:6f:de:0a:04:fd:a8:ae:2b:f7:ce:85:17:b4:b5:41:d6"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.denominator"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "claims[0].scope.denominator"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.denominator.operational-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.artifact-contract.operational-gross-net-metric-after-candidate.claims.denominator.operational-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[operational-gross-net-metric-after-candidate].claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.metric-definition.service total",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.service total",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "field.claims[0].scope.denominator",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "claims[0].scope.denominator"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.denominator"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.humanReview",
+        "claims[0].scope.denominator"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-partial-vote-final",
+      "track": "editorial-news",
+      "title": "A partial vote count is labeled final",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "time",
+        "abstention"
+      ],
+      "mutationIds": [
+        "truncated-window"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:6c:e2:87:25:44:f3:93:bf:a1:85:0b:b3:b6:58:bd:6f:ea:d8:38:36:2b:37:60:50:34:77:4d:2c:09:bd:85:9c"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "time.presentation.final-mismatch"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.window-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.window"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.presentation.final-mismatch",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.presentation.label"
+          },
+          {
+            "id": "time.window.provisional-as-settled",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.completeness.status"
+          },
+          {
+            "id": "time.window.settlement-required",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.window.provisional-as-settled",
+        "time.presentation.final-mismatch"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-estimate-observed",
+      "track": "editorial-news",
+      "title": "A modeled estimate is described as directly observed",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "reception",
+        "preservation"
+      ],
+      "mutationIds": [
+        "uncertainty-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:b1:19:aa:b1:5a:89:9a:bb:81:b8:9f:0c:e9:2f:c8:2f:cf:d3:ed:64:d4:a6:d7:83:e4:95:1b:26:89:0d:4a:60"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.forecast-ranges.editorial-claim",
+            "relation": "time",
+            "status": "warn",
+            "path": "claims[0].scope"
+          },
+          {
+            "id": "claims.forecast-uncertainty.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].uncertainty"
+          },
+          {
+            "id": "collection.artifact-contract.editorial-estimate-observed-after-candidate.claims.forecast-uncertainty.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[editorial-estimate-observed-after-candidate].claims[0].uncertainty"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.forecast-uncertainty"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-overlapping-categories",
+      "track": "editorial-news",
+      "title": "Overlapping categories are summed as exclusive groups",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "reception"
+      ],
+      "mutationIds": [
+        "category-overlap"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:40:a6:20:ee:06:04:e3:92:cf:21:e0:c3:9e:a6:f9:de:a9:9a:c5:10:18:47:83:40:82:3a:8b:7b:fe:fb:ac:e7"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.category-overlap"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "claims[0].scope.categoryMembership"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.category-overlap.editorial-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "claims[0].scope.exclusiveCategories"
+          },
+          {
+            "id": "field.claims[0].scope.categoryMembership",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "claims[0].scope.categoryMembership"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "claims[0].scope.categoryMembership",
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.category-overlap"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement",
+        "claims[0].scope.categoryMembership"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-revised-history",
+      "track": "editorial-news",
+      "title": "A source revises historical values after publication",
+      "baseId": "editorial-history",
+      "relations": [
+        "time",
+        "challenge-and-correction",
+        "preservation"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:72:94:80:de:72:82:d2:c5:59:a3:99:12:56:c4:d4:15:a0:eb:e4:e6:ad:f7:73:cf:c1:28:90:83:be:b8:60:49"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.status-mismatch",
+        "time.revision.claim-propagation"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-changing-denominator",
+      "track": "editorial-news",
+      "title": "The denominator changes between reported years",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "accountability"
+      ],
+      "mutationIds": [
+        "missing-denominator"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:9c:48:a7:7e:8e:68:56:d5:39:eb:18:34:c0:16:11:a1:5f:b4:24:79:e5:6c:2c:a0:37:5d:8b:19:d8:bb:ef:5d"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.denominator"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "claims[0].scope.denominator"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.denominator.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.artifact-contract.editorial-changing-denominator-after-candidate.claims.denominator.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[editorial-changing-denominator-after-candidate].claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.metric-definition.published estimate",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.published estimate",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "field.claims[0].scope.denominator",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "claims[0].scope.denominator",
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.denominator"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement",
+        "claims[0].scope.denominator"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-forecast-band-removed",
+      "track": "editorial-news",
+      "title": "A forecast band is removed from the published view",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "reception",
+        "preservation"
+      ],
+      "mutationIds": [
+        "uncertainty-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:b1:19:aa:b1:5a:89:9a:bb:81:b8:9f:0c:e9:2f:c8:2f:cf:d3:ed:64:d4:a6:d7:83:e4:95:1b:26:89:0d:4a:60"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty",
+          "claims.forecast-ranges"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.forecast-ranges.editorial-claim",
+            "relation": "time",
+            "status": "warn",
+            "path": "claims[0].scope"
+          },
+          {
+            "id": "claims.forecast-uncertainty.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].uncertainty"
+          },
+          {
+            "id": "collection.artifact-contract.editorial-forecast-band-removed-after-candidate.claims.forecast-uncertainty.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[editorial-forecast-band-removed-after-candidate].claims[0].uncertainty"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.forecast-uncertainty",
+        "claims.forecast-ranges"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-correlation-causal",
+      "track": "editorial-news",
+      "title": "A correlation is promoted to a causal headline",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:b8:b9:a5:e5:08:8f:da:62:8f:b8:4d:bc:90:1d:c5:94:82:50:3b:ee:f0:1e:5b:19:63:d6:d1:3b:65:bd:84:99"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.editorial-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.editorial-correlation-causal-after-candidate.claims.unsourced-supported.editorial-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[editorial-correlation-causal-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported",
+        "representation.no-claim"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-contrary-window-omitted",
+      "track": "editorial-news",
+      "title": "A comparison window omits a contrary period",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "time",
+        "abstention"
+      ],
+      "mutationIds": [
+        "truncated-window"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:6c:e2:87:25:44:f3:93:bf:a1:85:0b:b3:b6:58:bd:6f:ea:d8:38:36:2b:37:60:50:34:77:4d:2c:09:bd:85:9c"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "collection.window-skew"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.window-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.window"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.presentation.final-mismatch",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.presentation.label"
+          },
+          {
+            "id": "time.window.provisional-as-settled",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.completeness.status"
+          },
+          {
+            "id": "time.window.settlement-required",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.window.provisional-as-settled",
+        "collection.window-skew"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-correction-prose-only",
+      "track": "editorial-news",
+      "title": "A correction appears in prose but not in chart context",
+      "baseId": "editorial-history",
+      "relations": [
+        "time",
+        "challenge-and-correction",
+        "reception"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:72:94:80:de:72:82:d2:c5:59:a3:99:12:56:c4:d4:15:a0:eb:e4:e6:ad:f7:73:cf:c1:28:90:83:be:b8:60:49"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.claim-propagation"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "editorial-syndicated-source-loss",
+      "track": "editorial-news",
+      "title": "A syndicated image loses its source and as-of identity",
+      "baseId": "editorial-history",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "source-version-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:01:b7:73:84:f5:c1:91:18:77:cf:f7:2b:3c:67:0b:3f:63:0a:58:6d:15:d2:84:c1:25:b1:30:32:60:f8:7e:2c",
+        "mutated": "sha256-bytes:7f:66:f5:0a:02:03:f9:08:7b:d1:f2:7a:7b:ee:2d:59:20:31:ba:51:76:b1:33:12:a3:5e:dd:2d:fb:ba:ef:e0"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "evidence.identity.editorial-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.sourceAgreement",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-render-fit",
+      "track": "agent-authoring-reading",
+      "title": "A component renders but does not fit the comparison",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "representation-fit",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unit-mismatch"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:fd:96:e6:73:66:06:c5:1d:90:88:4e:1c:71:b4:67:73:52:d3:82:03:7e:14:8f:8f:b7:fa:a5:9c:11:6e:ec:85"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-comparison"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "representation.no-comparison",
+          "collection.metric-unit"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.references-valid.mutation-unit-claim",
+            "relation": "claim-support",
+            "status": "pass",
+            "path": "claims[1].evidenceIds"
+          },
+          {
+            "id": "collection.metric-definition.reviewed measure",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.reviewed measure",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "representation.no-comparison",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "representation.no-comparison",
+        "collection.metric-unit"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-invented-reason",
+      "track": "agent-authoring-reading",
+      "title": "A generated summary invents a reason for a spike",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:9b:17:b4:d1:31:5b:61:cf:5a:11:a3:64:21:67:8d:7c:45:fb:9c:64:53:4f:54:91:37:07:d4:d8:d0:f5:31:74"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.agent-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.agent-invented-reason-after-candidate.claims.unsourced-supported.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-invented-reason-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported",
+        "representation.no-claim"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-source-label-injection",
+      "track": "agent-authoring-reading",
+      "title": "Untrusted generated text contains a prompt injection",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "reception",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "generated-text-prompt-injection"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:45:c7:67:93:bd:69:76:4b:e0:15:30:d6:2f:9b:ae:32:d1:2e:1d:79:f7:22:87:09:4e:9e:25:e1:98:d8:eb:f4"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "conditional",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "grounding.boundary.neutralized"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "grounding.boundary.neutralized",
+            "relation": "reception",
+            "status": "pass",
+            "path": "grounding.text"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "grounding.boundary.neutralized"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-provisional-upgrade",
+      "track": "agent-authoring-reading",
+      "title": "A handoff upgrades provisional material to supported",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "time",
+        "accountability"
+      ],
+      "mutationIds": [
+        "truncated-window"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:b2:15:1f:0e:4b:0c:8e:65:4d:98:3c:08:0a:7e:0f:d8:43:fd:05:14:ce:58:22:23:15:8e:83:5c:56:1a:ad:40"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.presentation.final-mismatch",
+          "representation.wait-for-settlement"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "collection.window-skew",
+            "relation": "time",
+            "status": "warn",
+            "path": "artifacts[].time.window"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.presentation.final-mismatch",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.presentation.label"
+          },
+          {
+            "id": "time.window.provisional-as-settled",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.completeness.status"
+          },
+          {
+            "id": "time.window.settlement-required",
+            "relation": "time",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.presentation.final-mismatch",
+        "representation.wait-for-settlement"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-claim-changing-repair",
+      "track": "agent-authoring-reading",
+      "title": "A repair changes the claim while describing itself as styling",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:9b:17:b4:d1:31:5b:61:cf:5a:11:a3:64:21:67:8d:7c:45:fb:9c:64:53:4f:54:91:37:07:d4:d8:d0:f5:31:74"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.agent-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.agent-claim-changing-repair-after-candidate.claims.unsourced-supported.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-claim-changing-repair-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-noncomparable-units",
+      "track": "agent-authoring-reading",
+      "title": "An agent compares measures with non-comparable units",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unit-mismatch"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:fd:96:e6:73:66:06:c5:1d:90:88:4e:1c:71:b4:67:73:52:d3:82:03:7e:14:8f:8f:b7:fa:a5:9c:11:6e:ec:85"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-comparison"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "representation.no-comparison"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.references-valid.mutation-unit-claim",
+            "relation": "claim-support",
+            "status": "pass",
+            "path": "claims[1].evidenceIds"
+          },
+          {
+            "id": "collection.metric-definition.reviewed measure",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.reviewed measure",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "representation.no-comparison",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "representation.no-comparison"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-token-budget-uncertainty",
+      "track": "agent-authoring-reading",
+      "title": "Uncertainty is omitted to meet a token budget",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "reception",
+        "preservation"
+      ],
+      "mutationIds": [
+        "uncertainty-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:12:ef:fe:fe:17:c4:a3:68:8b:df:9d:dc:b9:ee:e2:b4:80:d2:44:74:da:34:1a:58:00:ad:5d:40:ed:45:be:3e"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.forecast-ranges.agent-claim",
+            "relation": "time",
+            "status": "warn",
+            "path": "claims[0].scope"
+          },
+          {
+            "id": "claims.forecast-uncertainty.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].uncertainty"
+          },
+          {
+            "id": "collection.artifact-contract.agent-token-budget-uncertainty-after-candidate.claims.forecast-uncertainty.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-token-budget-uncertainty-after-candidate].claims[0].uncertainty"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.forecast-uncertainty"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-screenshot-conflict",
+      "track": "agent-authoring-reading",
+      "title": "A screenshot conflicts with structured evidence",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "source-version-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:93:ce:52:60:be:e6:4b:6d:d7:da:94:f7:ce:ec:bc:6e:bf:c0:c0:44:33:85:5b:d7:77:0e:c7:5d:66:86:57:2c"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "evidence.identity.agent-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          },
+          {
+            "id": "representation.chart",
+            "relation": "representation-fit",
+            "status": "warn",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-generated-annotation-source",
+      "track": "agent-authoring-reading",
+      "title": "A generated annotation is cited as its own source",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "provenance-laundering"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:59:f9:9d:b7:3e:0b:36:db:0f:c5:3e:cc:52:66:35:65:5a:42:a5:bf:da:1e:fd:e3:39:0f:17:c1:6f:84:3b:dd"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.self-evidence",
+          "claims.model-review",
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.model-only-support.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "claims.model-review.agent-claim",
+            "relation": "accountability",
+            "status": "fail",
+            "path": "claims[0].review"
+          },
+          {
+            "id": "claims.no-independent-basis.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "claims.self-evidence.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.agent-generated-annotation-source-after-candidate.claims.model-only-support.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-generated-annotation-source-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.agent-generated-annotation-source-after-candidate.claims.no-independent-basis.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-generated-annotation-source-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.agent-generated-annotation-source-after-candidate.claims.self-evidence.agent-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[agent-generated-annotation-source-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "evidence.identity.agent-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.self-evidence",
+        "claims.model-review",
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "agent-dropped-correction",
+      "track": "agent-authoring-reading",
+      "title": "A receiving system drops a correction during handoff",
+      "baseId": "agent-reviewed",
+      "relations": [
+        "time",
+        "challenge-and-correction",
+        "preservation"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:a0:65:ee:55:b2:3f:12:be:82:30:4c:a6:bf:59:54:fc:46:25:ce:43:2f:38:63:f7:a7:ad:36:f8:ab:f9:0d:74",
+        "mutated": "sha256-bytes:16:5d:e1:88:5d:31:9e:0e:bb:09:48:cd:db:4a:a3:e0:2b:79:e2:04:58:67:57:5d:89:53:45:7d:43:cc:7c:de"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.claim-propagation"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "accountability.releaseOwner",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-sensor-replacement",
+      "track": "public-science-literacy",
+      "title": "A sensor is replaced in the middle of a series",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "source-version-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:0e:cb:48:ba:15:10:ee:78:9e:9f:64:d9:49:2b:55:6b:43:c6:ca:a1:99:ac:3b:69:d7:2f:38:35:1c:7a:b5:9e"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "evidence.identity.public-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          },
+          {
+            "id": "representation.chart",
+            "relation": "representation-fit",
+            "status": "warn",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-delayed-uploads",
+      "track": "public-science-literacy",
+      "title": "Delayed uploads create a false sudden increase",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "time",
+        "challenge-and-correction"
+      ],
+      "mutationIds": [
+        "late-event-collapse"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:47:73:92:05:52:55:68:42:86:8b:18:75:de:1c:cd:94:d8:52:b6:6f:94:39:1f:77:c5:ca:0e:b3:fb:ee:8e:d9"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "wait-for-settlement"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "time.lateEventsRemaining"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "field.time.lateEventsRemaining",
+            "relation": "time",
+            "status": "unknown",
+            "path": "time.lateEventsRemaining"
+          },
+          {
+            "id": "representation.wait-for-settlement",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          },
+          {
+            "id": "time.revision.claim-propagation",
+            "relation": "challenge-and-correction",
+            "status": "manual",
+            "path": "claims"
+          },
+          {
+            "id": "time.revision.correction-link",
+            "relation": "challenge-and-correction",
+            "status": "unknown",
+            "path": "time.revision.correctionId"
+          },
+          {
+            "id": "time.revision.status-mismatch",
+            "relation": "challenge-and-correction",
+            "status": "fail",
+            "path": "time.window.status"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "time.lateEventsRemaining",
+          "time.revision.correctionId"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "time.revision.status-mismatch",
+        "time.revision.claim-propagation"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "time.lateEventsRemaining"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-cluster-generalization",
+      "track": "public-science-literacy",
+      "title": "Clustered observations are generalized to a whole region",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:31:d6:74:3e:b0:2b:f8:f0:ac:d3:6f:3b:23:2d:68:f0:c3:8d:d0:ce:a4:3c:21:cd:f4:8c:65:a3:a6:9d:59:d3"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.public-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.public-cluster-generalization-after-candidate.claims.unsourced-supported.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-cluster-generalization-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported",
+        "representation.no-claim"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-missing-as-zero",
+      "track": "public-science-literacy",
+      "title": "Missing readings are treated as zero observations",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "representation-fit",
+        "abstention"
+      ],
+      "mutationIds": [
+        "missing-denominator"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:86:d0:e5:fd:d7:e2:6d:9f:d0:49:3b:5d:b1:21:87:d0:ca:e9:8f:dc:92:28:36:cf:4e:79:10:60:b2:cd:34:7b"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.denominator"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "claims[0].scope.denominator"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.denominator.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.artifact-contract.public-missing-as-zero-after-candidate.claims.denominator.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-missing-as-zero-after-candidate].claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.metric-definition.community observation",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.community observation",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "field.claims[0].scope.denominator",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "claims[0].scope.denominator",
+          "evidence.populationCoverage"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.denominator"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "claims[0].scope.denominator"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-modeled-as-observed",
+      "track": "public-science-literacy",
+      "title": "Modeled interpolation is presented as observation",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "preservation"
+      ],
+      "mutationIds": [
+        "provenance-laundering"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:54:3a:2a:a3:7d:a4:97:99:a4:42:2b:fa:a2:b3:a0:c3:7d:1f:83:33:90:b2:10:94:d2:df:8d:3e:3d:da:8b:c8"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.self-evidence",
+          "evidence.identity"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "evidence[0]"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.model-only-support.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "claims.model-review.public-claim",
+            "relation": "accountability",
+            "status": "fail",
+            "path": "claims[0].review"
+          },
+          {
+            "id": "claims.no-independent-basis.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "claims.self-evidence.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.public-modeled-as-observed-after-candidate.claims.model-only-support.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-modeled-as-observed-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.public-modeled-as-observed-after-candidate.claims.no-independent-basis.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-modeled-as-observed-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "collection.artifact-contract.public-modeled-as-observed-after-candidate.claims.self-evidence.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-modeled-as-observed-after-candidate].claims[0].evidenceIds"
+          },
+          {
+            "id": "evidence.identity.public-source",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "field.evidence[0]",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "evidence[0]"
+          },
+          {
+            "id": "policy.evidence-identity-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "evidence"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "evidence[0]"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.self-evidence",
+        "evidence.identity"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "evidence[0]"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-calibration-uncertainty",
+      "track": "public-science-literacy",
+      "title": "Calibration uncertainty is omitted",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "reception",
+        "preservation"
+      ],
+      "mutationIds": [
+        "uncertainty-removal"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:a1:cc:77:41:8b:8e:33:58:ed:8a:6a:b2:2d:02:11:a3:89:1f:0b:eb:6b:2a:76:3b:c8:24:d3:5a:e8:67:1f:5e"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.forecast-ranges.public-claim",
+            "relation": "time",
+            "status": "warn",
+            "path": "claims[0].scope"
+          },
+          {
+            "id": "claims.forecast-uncertainty.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].uncertainty"
+          },
+          {
+            "id": "collection.artifact-contract.public-calibration-uncertainty-after-candidate.claims.forecast-uncertainty.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-calibration-uncertainty-after-candidate].claims[0].uncertainty"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.forecast-uncertainty"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-threshold-harm",
+      "track": "public-science-literacy",
+      "title": "Crossing a threshold is described as proof of harm",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "unsupported-headline"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:31:d6:74:3e:b0:2b:f8:f0:ac:d3:6f:3b:23:2d:68:f0:c3:8d:d0:ce:a4:3c:21:cd:f4:8c:65:a3:a6:9d:59:d3"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.causal-language.public-claim",
+            "relation": "claim-support",
+            "status": "warn",
+            "path": "claims[0].text"
+          },
+          {
+            "id": "claims.unsourced-supported.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].status"
+          },
+          {
+            "id": "collection.artifact-contract.public-threshold-harm-after-candidate.claims.unsourced-supported.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-threshold-harm-after-candidate].claims[0].status"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.unsourced-supported",
+        "representation.no-claim"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-small-sample-precision",
+      "track": "public-science-literacy",
+      "title": "A small sample is shown with false precision",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "reception",
+        "abstention"
+      ],
+      "mutationIds": [
+        "missing-denominator"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:86:d0:e5:fd:d7:e2:6d:9f:d0:49:3b:5d:b1:21:87:d0:ca:e9:8f:dc:92:28:36:cf:4e:79:10:60:b2:cd:34:7b"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.denominator"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "claims[0].scope.denominator"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "claims.denominator.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.artifact-contract.public-small-sample-precision-after-candidate.claims.denominator.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-small-sample-precision-after-candidate].claims[0].scope.denominator"
+          },
+          {
+            "id": "collection.metric-definition.community observation",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "collection.metric-unit.community observation",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "metrics"
+          },
+          {
+            "id": "field.claims[0].scope.denominator",
+            "relation": "claim-support",
+            "status": "unknown",
+            "path": "claims[0].scope.denominator"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "claims[0].scope.denominator",
+          "evidence.populationCoverage"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.denominator"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "claims[0].scope.denominator"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-household-location",
+      "track": "public-science-literacy",
+      "title": "An interactive map exposes household-level location",
+      "baseId": "public-observation",
+      "relations": [
+        "reception",
+        "accountability",
+        "abstention"
+      ],
+      "mutationIds": [
+        "inaccessible-interaction"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:54:e7:21:83:63:f0:54:76:1c:d1:dc:26:4b:f2:fe:79:e2:db:e8:55:4a:31:6e:f7:36:c0:47:ca:cd:47:97:92"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "chart"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "chart.perceivable.content-only-visual",
+          "chart.compromising.table"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "inheritance.householdPrivacyReview"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "chart.assistive.features-described",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.assistive.skippable-navigation",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.compromising.table",
+            "relation": "reception",
+            "status": "fail"
+          },
+          {
+            "id": "chart.operable.interaction-cues",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.perceivable.content-only-visual",
+            "relation": "reception",
+            "status": "fail"
+          },
+          {
+            "id": "chart.understandable.explain-purpose",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.validation.1",
+            "relation": "representation-fit",
+            "status": "fail"
+          },
+          {
+            "id": "field.inheritance.householdPrivacyReview",
+            "relation": "preservation",
+            "status": "unknown",
+            "path": "inheritance.householdPrivacyReview"
+          },
+          {
+            "id": "field.reception.interactionEquivalence",
+            "relation": "reception",
+            "status": "unknown",
+            "path": "reception.interactionEquivalence"
+          },
+          {
+            "id": "policy.render-evidence-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "render"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "inheritance.householdPrivacyReview",
+          "reception.interactionEquivalence"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "chart.perceivable.content-only-visual",
+        "chart.compromising.table"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage",
+        "inheritance.householdPrivacyReview"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    },
+    {
+      "id": "public-table-caveat-loss",
+      "track": "public-science-literacy",
+      "title": "An accessible table loses uncertainty and caveat context",
+      "baseId": "public-observation",
+      "relations": [
+        "claim-support",
+        "reception",
+        "preservation"
+      ],
+      "mutationIds": [
+        "uncertainty-removal",
+        "inaccessible-interaction"
+      ],
+      "fingerprints": {
+        "base": "sha256-bytes:9c:d0:1d:52:6d:b2:f1:5f:f0:ab:eb:c2:61:7a:e6:a5:8e:ed:91:c2:20:7d:f0:a9:a4:81:00:6c:68:d1:ea:b6",
+        "mutated": "sha256-bytes:b4:4a:ae:1a:77:b2:98:2a:8c:0c:8e:1a:e8:83:f4:a3:0f:15:69:4f:64:38:55:e3:50:f8:5f:29:f5:86:56:bb"
+      },
+      "evaluation": {
+        "before": "conditional",
+        "after": "refuse",
+        "recommendation": "no-claim"
+      },
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty",
+          "chart.perceivable.content-only-visual"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage"
+        ]
+      },
+      "observed": {
+        "newFindings": [
+          {
+            "id": "chart.assistive.features-described",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.assistive.skippable-navigation",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.compromising.table",
+            "relation": "reception",
+            "status": "fail"
+          },
+          {
+            "id": "chart.operable.interaction-cues",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.perceivable.content-only-visual",
+            "relation": "reception",
+            "status": "fail"
+          },
+          {
+            "id": "chart.understandable.explain-purpose",
+            "relation": "reception",
+            "status": "warn"
+          },
+          {
+            "id": "chart.validation.1",
+            "relation": "representation-fit",
+            "status": "fail"
+          },
+          {
+            "id": "claims.forecast-ranges.public-claim",
+            "relation": "time",
+            "status": "warn",
+            "path": "claims[0].scope"
+          },
+          {
+            "id": "claims.forecast-uncertainty.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "claims[0].uncertainty"
+          },
+          {
+            "id": "collection.artifact-contract.public-table-caveat-loss-after-candidate.claims.forecast-uncertainty.public-claim",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "artifacts[public-table-caveat-loss-after-candidate].claims[0].uncertainty"
+          },
+          {
+            "id": "field.inheritance.householdPrivacyReview",
+            "relation": "preservation",
+            "status": "unknown",
+            "path": "inheritance.householdPrivacyReview"
+          },
+          {
+            "id": "field.reception.interactionEquivalence",
+            "relation": "reception",
+            "status": "unknown",
+            "path": "reception.interactionEquivalence"
+          },
+          {
+            "id": "policy.render-evidence-required",
+            "relation": "claim-support",
+            "status": "fail",
+            "path": "render"
+          },
+          {
+            "id": "representation.no-claim",
+            "relation": "representation-fit",
+            "status": "fail",
+            "path": "representation.selected.kind"
+          }
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "inheritance.householdPrivacyReview",
+          "reception.interactionEquivalence"
+        ]
+      },
+      "matchedFindingPrefixes": [
+        "claims.forecast-uncertainty",
+        "chart.perceivable.content-only-visual"
+      ],
+      "missingFindingPrefixes": [],
+      "matchedUnknownPaths": [
+        "evidence.populationCoverage"
+      ],
+      "missingUnknownPaths": [],
+      "measurement": "measured"
+    }
+  ]
+}

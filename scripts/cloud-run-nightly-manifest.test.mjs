@@ -12,6 +12,7 @@ function read(relativePath) {
 
 function deployment(overrides = {}) {
   return {
+    packageJson: JSON.parse(read("package.json")),
     dockerfile: read("deploy/cloud-run-nightly/Dockerfile"),
     cloudbuild: read("deploy/cloud-run-nightly/cloudbuild.yaml"),
     verifier: read("deploy/cloud-run-nightly/verify-runtime.mjs"),
@@ -46,6 +47,34 @@ describe("nightly Cloud Run deployment configuration", () => {
     )
   })
 
+  it("rejects coupling the nightly image build to the AI surface test suite", () => {
+    const dockerfile = deployment().dockerfile.replace(
+      "npm run check:ai-surface-manifest",
+      "npm run check:ai-surface"
+    )
+    const report = validateNightlyCloudRunDeployment(deployment({ dockerfile }))
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes("generated-only AI surface check")
+      ),
+      true
+    )
+  })
+
+  it("requires separate generated-only and test-coupled AI surface scripts", () => {
+    const packageJson = structuredClone(deployment().packageJson)
+    delete packageJson.scripts["check:ai-surface-manifest"]
+    const report = validateNightlyCloudRunDeployment(
+      deployment({ packageJson })
+    )
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes("check:ai-surface-manifest")
+      ),
+      true
+    )
+  })
+
   it("rejects a Dockerfile that omits transitive build helpers", () => {
     const dockerfile = deployment().dockerfile.replace(
       "COPY scripts/lib ./scripts/lib\n",
@@ -54,6 +83,36 @@ describe("nightly Cloud Run deployment configuration", () => {
     const report = validateNightlyCloudRunDeployment(deployment({ dockerfile }))
     assert.equal(
       report.errors.some((error) => error.includes("scripts/lib")),
+      true
+    )
+  })
+
+  it("requires the standalone contract schema in both image stages", () => {
+    for (const copyInstruction of [
+      "COPY spec ./spec\n",
+      "COPY --from=build /app/spec ./spec\n"
+    ]) {
+      const dockerfile = deployment().dockerfile.replace(copyInstruction, "")
+      const report = validateNightlyCloudRunDeployment(
+        deployment({ dockerfile })
+      )
+      assert.equal(
+        report.errors.some((error) => error.includes(copyInstruction.trim())),
+        true
+      )
+    }
+  })
+
+  it("requires runtime validation of the standalone contract schema", () => {
+    const verifier = deployment().verifier.replaceAll(
+      '"invalid-artifact-contract-schema"',
+      '"unchecked-artifact-contract-schema"'
+    )
+    const report = validateNightlyCloudRunDeployment(deployment({ verifier }))
+    assert.equal(
+      report.errors.some((error) =>
+        error.includes("invalid-artifact-contract-schema")
+      ),
       true
     )
   })
@@ -183,11 +242,15 @@ describe("nightly Cloud Run deployment configuration", () => {
 
   it("rejects active references to the retired health alias", () => {
     const retiredHealthPath = "/health" + "z"
-    const report = validateNightlyCloudRunDeployment(deployment({
-      activeHealthAliasReferences: [`src/example.ts:1 (${retiredHealthPath})`]
-    }))
+    const report = validateNightlyCloudRunDeployment(
+      deployment({
+        activeHealthAliasReferences: [`src/example.ts:1 (${retiredHealthPath})`]
+      })
+    )
     assert.equal(
-      report.errors.some((error) => error.includes("unsupported legacy health endpoint")),
+      report.errors.some((error) =>
+        error.includes("unsupported legacy health endpoint")
+      ),
       true
     )
   })

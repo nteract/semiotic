@@ -89,6 +89,7 @@ const DOCS = `## Docs
 - [Charts](/charts): All chart types with live examples, prop tables, and grounding panels
 - [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API
 - [Features](/features): Axes, tooltips, interaction, responsive, composition, accessibility
+- [Artifact Contracts](/artifacts/overview): Optional sidecars for purpose, claims, evidence, time, correction, policy evaluation, and transfer
 - [Theming](/theming/theme-provider): ThemeProvider, presets, semantic colors, serialization
 - [Cookbook](/cookbook): Advanced patterns and recipes
 - [Playground](/playground): Interactive, shareable prop exploration for every chart type`

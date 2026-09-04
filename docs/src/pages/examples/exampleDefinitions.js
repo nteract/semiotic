@@ -1179,15 +1179,21 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     id: "watermarks",
     path: "/examples/watermarks",
     sourceFile: "WatermarksExamplePage.jsx",
+    sourceFiles: [
+      "WatermarksExamplePage.jsx",
+      "WatermarksExamplePage.css",
+      "watermarksClaimContracts.js",
+      "watermarksTemporalRecord.js",
+    ],
     isPilot: true,
     title: "Watermarks, Made Physical",
     eyebrow: "Late events, closing windows",
     description:
       "Push out-of-order events through closing windows and watch the watermark separate accepted history from visibly quarantined late arrivals.",
     contract: {
-      publicImports: ["semiotic/physics"],
+      publicImports: ["semiotic/artifact", "semiotic/physics"],
       data: {
-        states: ["snapshot"],
+        states: ["live", "snapshot"],
         fixture: {
           kind: "deterministic-local-scenarios",
           replay: true,
@@ -1201,8 +1207,8 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
         reviewCadence: "release",
       },
       accessibility: {
-        summary: "Narrative explanation and settled-window readouts",
-        navigation: "Scenario controls and selected-event detail",
+        summary: "Narrative explanation, audited time-and-claim cards, and inspectable JSON",
+        navigation: "Scenario controls, selected-event detail, and an expandable time payload",
         keyboard: "Native buttons, range inputs, and select controls",
         forcedColors: "not-reviewed",
       },

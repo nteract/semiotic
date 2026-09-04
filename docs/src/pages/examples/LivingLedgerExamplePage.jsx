@@ -9,7 +9,6 @@ import {
   REPLAY_WINDOW,
   SERVICE_SYSTEMS,
   SOURCE_MANIFEST,
-  THRESHOLDS,
   deriveSnapshot,
   ledgerRowsFor,
   networksFor,
@@ -36,6 +35,10 @@ import {
   systemLabel,
   systemRiskLevel,
 } from "./living-ledger/LivingLedgerViews"
+import {
+  buildLivingLedgerArtifact,
+  inspectLivingLedgerArtifact,
+} from "./living-ledger/livingLedgerArtifact"
 import "./LivingLedgerExamplePage.css"
 
 const REPLAY_LENGTH = REPLAY_WINDOW?.days ?? REPLAY_DATES?.length ?? 180
@@ -344,8 +347,8 @@ export function LivingLedgerObservatory() {
     [selectedSystem],
   )
   const selectedThresholds = useMemo(
-    () => selectedPulse?.thresholds ?? thresholdsForSystem(selectedSystem),
-    [selectedPulse, selectedSystem],
+    () => selectedPulse?.thresholds ?? [],
+    [selectedPulse],
   )
   const currentEvents =
     snapshot.events ??
@@ -354,7 +357,6 @@ export function LivingLedgerObservatory() {
         Number(event.arrivalDay ?? event.observedDay ?? event.dayIndex ?? event.day ?? 0) <=
         dayIndex,
     )
-  const selectedSources = useMemo(() => sourcesForSystem(selectedSystem), [selectedSystem])
   const activeGraph =
     networkMode === "evidence"
       ? (selectedNetworks.evidence ?? selectedNetworks.howWeKnow ?? { nodes: [], edges: [] })
@@ -362,6 +364,24 @@ export function LivingLedgerObservatory() {
         selectedNetworks.dependencies ??
         selectedNetworks.whatDepends ?? { nodes: [], edges: [] })
   const currentDate = REPLAY_DATES?.[dayIndex] ?? snapshot.date ?? ""
+  const selectedArtifact = useMemo(
+    () =>
+      buildLivingLedgerArtifact({
+        system: selectedSystem,
+        pulse: selectedPulse,
+        thresholds: selectedThresholds,
+        events: currentEvents,
+        manifest: SOURCE_MANIFEST_VALUE,
+        replayDate: currentDate,
+        dayIndex,
+      }),
+    [currentDate, currentEvents, dayIndex, selectedPulse, selectedSystem, selectedThresholds],
+  )
+  const selectedInspection = useMemo(
+    () => inspectLivingLedgerArtifact(selectedArtifact.contract),
+    [selectedArtifact],
+  )
+  const selectedSources = selectedInspection.sources
   const attentionCount = allSystems.filter((system) =>
     ["watch", "warning", "action", "critical"].includes(systemRiskLevel(system)),
   ).length
@@ -638,31 +658,23 @@ export function LivingLedgerObservatory() {
         <div className="ll-selected-copy">
           <span>{AUDIENCE_COPY[audience].selectedEyebrow}</span>
           <h3 id="ll-selected-title">{systemLabel(selectedSystem)}</h3>
-          <p>{claimForAudience(selectedSystem, audience)}</p>
+          <p>{claimForAudience(selectedInspection.claim, selectedSystem, audience)}</p>
         </div>
         <dl className="ll-claim-facts">
           <div>
             <dt>Where</dt>
-            <dd>
-              {selectedSystem.bioregionName ??
-                selectedSystem.regionName ??
-                selectedSystem.bioregion}
-            </dd>
+            <dd>{selectedInspection.claim?.scope?.bioregion ?? "not supplied"}</dd>
           </div>
           <div>
             <dt>Evidence</dt>
             <dd>
               {selectedSystem.warningKindLabel ??
-                formatIdentifier(
-                  selectedSystem.alert?.warningKind ??
-                    selectedSystem.warningKind ??
-                    selectedSystem.alert?.kind,
-                )}
+                formatIdentifier(selectedInspection.claim?.scope?.signalKind)}
             </dd>
           </div>
           <div>
             <dt>Confidence</dt>
-            <dd>{selectedSystem.risk?.confidence ?? selectedSystem.confidence ?? "unknown"}</dd>
+            <dd>{selectedInspection.claim?.scope?.confidence ?? "unknown"}</dd>
           </div>
           <div>
             <dt>Exposed</dt>
@@ -856,24 +868,12 @@ export function LivingLedgerObservatory() {
 
       <section className="ll-method-grid">
         <details className="ll-provenance" open={audience === "science"}>
-          <summary>Inspect the claim</summary>
+          <summary>Inspect the Artifact Contract</summary>
           <div className="ll-provenance-body">
-            <div>
-              <span>{AUDIENCE_COPY[audience].methodLabel}</span>
-              <h3>
-                {selectedSystem.alert?.claim ??
-                  selectedSystem.explanation ??
-                  selectedSystem.claim ??
-                  "This warning has a bounded evidence claim."}
-              </h3>
-              <p>
-                {selectedSystem.alert?.caution ??
-                  selectedSystem.caveat ??
-                  "The replay keeps observed, modeled, and inferred links separate. It is illustrative, not a report of current conditions."}
-              </p>
-            </div>
-            <ThresholdProvenance thresholds={selectedThresholds} />
-            <SourceProvenance sources={selectedSources} />
+            <ArtifactContractProvenance
+              contract={selectedArtifact.contract}
+              methodLabel={AUDIENCE_COPY[audience].methodLabel}
+            />
           </div>
         </details>
 
@@ -888,16 +888,20 @@ export function LivingLedgerObservatory() {
 
         <div className="ll-download-row">
           <div>
-            <span>Snapshot {SOURCE_MANIFEST_VALUE.snapshot ?? "living-ledger-2026-07"}</span>
+            <span>
+              Artifact Contract {selectedArtifact.contract.contractVersion} · revision{" "}
+              {selectedArtifact.contract.artifact.revision}
+            </span>
             <p>
-              Every source declares its role. A pressure does not get quietly renamed as an outcome.
+              The selected claim, evidence transformation, time basis, uncertainty, and source path
+              travel together in one portable record.
             </p>
           </div>
           <a
-            href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(SOURCE_MANIFEST_VALUE, null, 2))}`}
-            download="living-ledger-source-manifest.json"
+            href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(selectedArtifact.contract, null, 2))}`}
+            download={`${selectedArtifact.contract.artifact.id}.json`}
           >
-            Download source manifest
+            Download Artifact Contract
           </a>
         </div>
       </section>
@@ -1122,81 +1126,119 @@ function PulseKey({ audience = "public" }) {
   )
 }
 
-function ThresholdProvenance({ thresholds }) {
-  if (!thresholds.length) {
-    return (
-      <div className="ll-provenance-section">
-        <span>Threshold registry</span>
-        <p>
-          No transferable hard threshold is registered for this system. Critical is unavailable
-          here.
-        </p>
-      </div>
-    )
-  }
+export function ArtifactContractProvenance({ contract, methodLabel = "Decision basis" }) {
+  const inspection = inspectLivingLedgerArtifact(contract)
+  const eventTime = inspection.time?.eventTime?.value ?? inspection.time?.observedAt
+  const correctionPath = [
+    ...inspection.correctionPath,
+    ...inspection.claimCorrections.map((correction) => ({
+      id: correction.id,
+      label: correction.reason,
+      scope: { correctionStep: "claim-correction" },
+    })),
+  ]
+
   return (
-    <div className="ll-provenance-section">
-      <span>Threshold registry</span>
-      {thresholds.map((threshold) => (
-        <dl key={threshold.id}>
+    <>
+      <div className="ll-provenance-section" data-contract-id={contract.artifact.id}>
+        <span>{methodLabel}</span>
+        <h3>{inspection.claim?.text ?? "No selected claim is recorded."}</h3>
+        <dl>
           <div>
-            <dt>Definition</dt>
-            <dd>{threshold.label ?? threshold.id}</dd>
+            <dt>Claim state</dt>
+            <dd>
+              {inspection.claim?.status ?? "unknown"} · {inspection.claim?.kind ?? "unknown kind"}
+            </dd>
           </div>
           <div>
-            <dt>Authority</dt>
-            <dd>{threshold.provenance?.authority ?? "not supplied"}</dd>
+            <dt>Uncertainty</dt>
+            <dd>
+              {inspection.uncertainty?.description ?? "No uncertainty statement was supplied."}
+            </dd>
           </div>
           <div>
             <dt>Scope</dt>
             <dd>
-              {threshold.scope?.ecosystemType ?? threshold.appliesTo?.ecosystemType ?? "local"}
+              {inspection.claim?.scope?.bioregion ?? "not supplied"} ·{" "}
+              {inspection.claim?.scope?.evidenceRole ?? "role not supplied"}
             </dd>
-          </div>
-          <div>
-            <dt>Aggregation</dt>
-            <dd>
-              {threshold.scope?.temporalAggregation ??
-                threshold.appliesTo?.temporalAggregation ??
-                "not supplied"}
-            </dd>
-          </div>
-          <div>
-            <dt>Transferable</dt>
-            <dd>{threshold.provenance?.nonTransferable === false ? "yes" : "no, by default"}</dd>
           </div>
         </dl>
-      ))}
-    </div>
-  )
-}
+      </div>
 
-function SourceProvenance({ sources }) {
-  return (
-    <div className="ll-provenance-section">
-      <span>Evidence sources</span>
-      <ul>
-        {sources.length ? (
-          sources.map((source) => (
+      <div className="ll-provenance-section">
+        <span>Evidence boundary and time basis</span>
+        <dl>
+          <div>
+            <dt>Boundary</dt>
+            <dd>{inspection.transformation?.label ?? "No transformation is recorded."}</dd>
+          </div>
+          <div>
+            <dt>Transform</dt>
+            <dd>
+              {inspection.transformation?.transformation?.description ??
+                "No transformation description is recorded."}
+            </dd>
+          </div>
+          <div>
+            <dt>Event time</dt>
+            <dd>{eventTime ?? "not supplied"}</dd>
+          </div>
+          <div>
+            <dt>Snapshot</dt>
+            <dd>{inspection.time?.snapshotAt ?? "not supplied"}</dd>
+          </div>
+          <div>
+            <dt>Window</dt>
+            <dd>
+              {inspection.time?.window
+                ? `${inspection.time.window.start} through ${inspection.time.window.end}`
+                : "not supplied"}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="ll-provenance-section">
+        <span>Source and correction path</span>
+        <ul>
+          {inspection.sources.map((source) => (
             <li key={source.id}>
-              {source.url ? (
-                <a href={source.url} target="_blank" rel="noreferrer noopener">
-                  {source.name ?? source.id}
+              {source.source?.uri ? (
+                <a href={source.source.uri} target="_blank" rel="noreferrer noopener">
+                  {source.label ?? source.id}
                 </a>
               ) : (
-                <strong>{source.name ?? source.id}</strong>
+                <strong>{source.label ?? source.id}</strong>
               )}
               <small>
-                {source.role ?? source.evidenceRole ?? source.evidenceRoles?.join(", ") ?? "source"}{" "}
-                · {source.cadence ?? "bundled snapshot"}
+                source · {source.scope?.cadence ?? "bundled snapshot"} ·{" "}
+                {source.scope?.replayValueStatus ?? "status not supplied"}
               </small>
             </li>
-          ))
-        ) : (
-          <li>No external source is assigned to this illustrative system.</li>
-        )}
-      </ul>
-    </div>
+          ))}
+          {inspection.thresholds.map((threshold) => (
+            <li key={threshold.id}>
+              <strong>{threshold.label ?? threshold.id}</strong>
+              <small>
+                registered rule · {threshold.source?.name ?? "authority not supplied"} ·{" "}
+                {threshold.scope?.nonTransferable ? "not transferable by default" : "transferable"}
+              </small>
+            </li>
+          ))}
+          {correctionPath.map((correction) => (
+            <li key={correction.id}>
+              <strong>{correction.label ?? correction.id}</strong>
+              <small>{formatIdentifier(correction.scope?.correctionStep)}</small>
+            </li>
+          ))}
+          {inspection.sources.length === 0 ? <li>No source is recorded for this claim.</li> : null}
+        </ul>
+        {correctionPath.length === 0 ? (
+          <p>No source-data or claim correction is recorded for this selected claim.</p>
+        ) : null}
+      </div>
+    </>
   )
 }
 
@@ -1298,53 +1340,8 @@ function filterServiceSystems(systems, filters) {
   })
 }
 
-function thresholdsForSystem(system) {
-  const ids = new Set([
-    ...(system?.thresholdIds ?? []),
-    ...(system?.thresholds ?? []).map((threshold) =>
-      typeof threshold === "string" ? threshold : threshold.id,
-    ),
-    ...(system?.thresholdEvaluations ?? []).map((evaluation) => evaluation.thresholdId),
-  ])
-  const serviceId = system?.serviceId
-  return THRESHOLDS.filter(
-    (threshold) =>
-      ids.has(threshold.id) ||
-      threshold.serviceSystemId === serviceSystemId(system) ||
-      threshold.serviceId === serviceId ||
-      threshold.indicatorId === system?.indicatorId,
-  )
-}
-
-function sourcesForSystem(system) {
-  const rolesBySource = new Map()
-  const estimates = [
-    system?.ecosystemCondition,
-    ...Object.values(system?.eesv ?? {}),
-    system?.risk?.exposure,
-    system?.risk?.velocity,
-  ].filter(Boolean)
-  for (const estimate of estimates) {
-    for (const sourceId of estimate.sourceIds ?? []) {
-      const roles = rolesBySource.get(sourceId) ?? new Set()
-      roles.add(estimate.evidenceRole)
-      rolesBySource.set(sourceId, roles)
-    }
-  }
-  return (SOURCE_MANIFEST_VALUE.sources ?? [])
-    .filter((source) =>
-      rolesBySource.size
-        ? rolesBySource.has(source.id)
-        : (source.serviceSystemIds ?? []).includes(serviceSystemId(system)),
-    )
-    .map((source) => ({
-      ...source,
-      evidenceRoles: [...(rolesBySource.get(source.id) ?? source.evidenceRoles ?? [])],
-    }))
-}
-
-function claimForAudience(system, audience) {
-  const claim = system.alert?.claim ?? system.claim ?? system.explanation
+function claimForAudience(claimRecord, system, audience) {
+  const claim = claimRecord?.text
   if (audience === "science") {
     return (
       system.scientistClaim ??

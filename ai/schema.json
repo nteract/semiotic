@@ -31012,6 +31012,7 @@
         "x-semiotic-renderer": "ChartRecipe",
         "x-semiotic-layout": {
           "id": "semiotic.parallel-coordinates",
+          "version": "1",
           "importPath": "semiotic/recipes",
           "exportName": "parallelCoordinatesLayout"
         }
@@ -31136,6 +31137,7 @@
         "x-semiotic-renderer": "ChartRecipe",
         "x-semiotic-layout": {
           "id": "semiotic.calendar-heatmap",
+          "version": "1",
           "importPath": "semiotic/recipes",
           "exportName": "calendarLayout"
         }

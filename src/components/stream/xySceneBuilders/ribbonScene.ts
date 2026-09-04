@@ -16,6 +16,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
  */
 import type { AreaSceneNode, Style } from "../types"
 import type { XYSceneContext } from "./types"
+import { buildSeriesGeometry } from "../seriesGeometry"
 
 /**
  * One ribbon worth of geometry + style. The PipelineStore owns the
@@ -83,7 +84,7 @@ function pickStyle(
  *
  * Iterates the data once, evaluates `getTop`/`getBottom` per datum, and
  * collects coordinate pairs. Any datum with non-finite x, top, or bottom
- * is skipped (gap semantics — equivalent to `gapStrategy: "break"`).
+ * is omitted. Remaining vertices stay connected; this is not a gap break.
  * Returns `null` when fewer than two valid points remain (a single
  * point can't form a visible ribbon).
  */
@@ -94,28 +95,13 @@ export function buildRibbonForGroup(
   ribbon: ResolvedRibbon
 ): AreaSceneNode | null {
   if (!ctx.scales) return null
-  const topPath: [number, number][] = []
-  const bottomPath: [number, number][] = []
-  for (const d of data) {
-    const x = ctx.getX(d)
-    // `Number.isFinite` catches null, undefined, NaN, and ±Infinity in
-    // one check — the previous `Number.isNaN` test let Infinity through
-    // and downstream scale calls could then emit non-finite pixels.
-    if (!Number.isFinite(x)) continue
-    const top = ribbon.getTop(d)
-    const bottom = ribbon.getBottom(d)
-    if (!Number.isFinite(top) || !Number.isFinite(bottom)) continue
-    const px = ctx.scales.x(x)
-    const pyTop = ctx.scales.y(top)
-    const pyBottom = ctx.scales.y(bottom)
-    // Belt-and-suspenders: even with finite input values, a degenerate
-    // scale (e.g. log domain collapsing to a single value) can emit
-    // non-finite pixels. Drop those datums so the canvas/SVG renderers
-    // never see NaN coordinates.
-    if (!Number.isFinite(px) || !Number.isFinite(pyTop) || !Number.isFinite(pyBottom)) continue
-    topPath.push([px, pyTop])
-    bottomPath.push([px, pyBottom])
-  }
+  const { topPath, bottomPath, datum } = buildSeriesGeometry(
+    data,
+    ctx.scales,
+    ctx.getX,
+    ribbon.getTop,
+    ribbon.getBottom
+  )
   if (topPath.length < 2) return null
   return {
     type: "area",
@@ -124,11 +110,12 @@ export function buildRibbonForGroup(
     // Honor the chart's curve so the band's top/bottom edges follow the same
     // interpolation as the line/area they sit under (mirrors areaScene). Without
     // this the envelope drew straight segments beneath a curved line.
-    ...(ctx.config.curve && ctx.config.curve !== "linear" && { curve: ctx.config.curve }),
+    ...(ctx.config.curve &&
+      ctx.config.curve !== "linear" && { curve: ctx.config.curve }),
     style: pickStyle(ctx, ribbon, group, data[0]),
-    datum: data,
+    datum,
     group,
-    interactive: ribbon.interactive,
+    interactive: ribbon.interactive
   }
 }
 

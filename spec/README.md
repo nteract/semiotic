@@ -1,15 +1,18 @@
 # The IDID Portability Spec
 
-**Version 0.1 — library-neutral JSON Schemas for three chart-metadata primitives.**
+**Version 0.1 — library-neutral JSON Schemas for four information-artifact
+contracts.**
 
-These schemas describe three pieces of metadata that make a chart *legible to an agent* and
-*receivable by a real audience*, independent of any rendering library:
+These schemas describe portable metadata that makes a chart inspectable by
+software and understandable by its intended audience, independent of any
+rendering library:
 
 | Primitive | Schema | Answers |
 |---|---|---|
 | **Chart Capability** | [`v0.1/chart-capability.schema.json`](./v0.1/chart-capability.schema.json) | *What is this chart good at, and how does it survive mobile?* — declaratively, so a heuristic or an LLM can rank it against a dataset, goal, audience, and phone viewport without running a chart library. |
 | **Audience Profile** | [`v0.1/audience-profile.schema.json`](./v0.1/audience-profile.schema.json) | *Who is reading, and what is the org trying to grow?* — so a suggestion is calibrated to a real audience, not a generic baseline. |
 | **Annotation Provenance & Lifecycle** | [`v0.1/annotation-provenance.schema.json`](./v0.1/annotation-provenance.schema.json) | *Where did this note come from, how much do we trust it, and how does it age?* — so a claim *on* a chart carries its own evidence and expiry. |
+| **Artifact Contract** | [`v0.1/artifact-contract.schema.json`](./v0.1/artifact-contract.schema.json) | *What does this artifact claim, what supports it, when is it valid, and what must survive transfer?* — so charts, dashboards, alerts, stories, and agent answers retain explicit interpretation and review requirements. |
 
 ## Why a spec, and not just a library API
 
@@ -103,6 +106,7 @@ The exact npm resource paths are:
 semiotic/spec/v0.1/chart-capability.schema.json
 semiotic/spec/v0.1/audience-profile.schema.json
 semiotic/spec/v0.1/annotation-provenance.schema.json
+semiotic/spec/v0.1/artifact-contract.schema.json
 semiotic/spec/v0.1/examples/<example-name>.json
 semiotic/spec/bindings/vega-lite.mjs
 ```
@@ -139,6 +143,7 @@ dependency-free structural validator.
 | Chart Capability | [`chart-capability-bar-comparison.json`](./v0.1/examples/chart-capability-bar-comparison.json) — a familiar categorical comparison with a ranked variant and mobile contract | [`chart-capability-service-flow.json`](./v0.1/examples/chart-capability-service-flow.json) — an operational flow view with accessible interaction alternatives and a namespaced domain extension |
 | Audience Profile | [`audience-profile-executive-review.json`](./v0.1/examples/audience-profile-executive-review.json) — visual executive readers with inspectable adoption targets | [`audience-profile-incident-operators.json`](./v0.1/examples/audience-profile-incident-operators.json) — screen-reader reception plus namespaced role, literacy, and decision context |
 | Annotation Provenance & Lifecycle | [`annotation-provenance-watcher-threshold.json`](./v0.1/examples/annotation-provenance-watcher-threshold.json) — a proposed watcher threshold with semantic anchoring | [`annotation-provenance-reviewed-revision.json`](./v0.1/examples/annotation-provenance-reviewed-revision.json) — a human-reviewed accepted note that supersedes an earlier claim |
+| Artifact Contract | [`artifact-contract-full.json`](./v0.1/examples/artifact-contract-full.json) — a complete chart contract with claims, evidence, review, and transfer requirements | [`artifact-contract-unknown-state.json`](./v0.1/examples/artifact-contract-unknown-state.json) — an explicit record of unknown, manual, and not-applicable fields |
 
 ## The Vega-Lite binding (carrying IDID metadata on a portable spec)
 

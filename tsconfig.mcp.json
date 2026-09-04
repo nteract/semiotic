@@ -17,6 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "semiotic/ai": ["./dist/semiotic-ai.d.ts"],
+      "semiotic/artifact": ["./dist/semiotic-artifact.d.ts"],
       "semiotic/geo": ["./dist/semiotic-geo.d.ts"],
       "semiotic/physics": ["./dist/semiotic-physics.d.ts"],
       "semiotic/access": ["./dist/semiotic-access.d.ts"],

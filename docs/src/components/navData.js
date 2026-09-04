@@ -223,6 +223,15 @@ const navData = [
     ],
   },
   {
+    title: "Artifact Contracts",
+    path: "/artifacts",
+    children: [
+      { title: "Overview", path: "/artifacts/overview" },
+      { title: "Benchmark", path: "/artifacts/benchmark" },
+      { title: "Policy and Contributions", path: "/artifacts/governance" },
+    ],
+  },
+  {
     title: "Accessibility",
     path: "/accessibility",
     children: [

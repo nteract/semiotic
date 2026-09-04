@@ -74,7 +74,8 @@ import {
   toURL,
   fromURL,
   copyConfig,
-  configToJSX
+  configToJSX,
+  configToJSXWithReport
 } from "./export/chartConfig"
 import {
   serializeSelections,
@@ -202,6 +203,7 @@ export {
   fromURL,
   copyConfig,
   configToJSX,
+  configToJSXWithReport,
   serializeSelections,
   deserializeSelections,
   // Vega-Lite translator
@@ -602,7 +604,11 @@ export type { ObservationReadoutProps } from "./ObservationReadout"
 
 export type {
   ChartConfig,
+  ChartArtifactTransferStatus,
   ToConfigOptions,
+  FromConfigResult,
+  ToURLOptions,
+  JSXProjectionResult,
   CopyFormat
 } from "./export/chartConfig"
 export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"

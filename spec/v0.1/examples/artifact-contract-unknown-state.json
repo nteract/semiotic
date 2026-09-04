@@ -1,0 +1,46 @@
+{
+  "contractVersion": "0.1",
+  "artifact": {
+    "id": "exploratory-view",
+    "kind": "chart",
+    "title": "Exploratory view"
+  },
+  "purpose": {
+    "intents": [
+      {
+        "id": "explore-distribution",
+        "strength": "primary",
+        "source": "author"
+      }
+    ],
+    "stakes": "exploratory"
+  },
+  "claims": [],
+  "evidence": [],
+  "fieldStatus": {
+    "time.freshness": {
+      "status": "unknown",
+      "reason": "The source does not publish a freshness signal.",
+      "suppliedBy": "import",
+      "derived": false
+    },
+    "reception.manualChecks": {
+      "status": "manual",
+      "reason": "Keyboard and screen-reader behavior require a person to verify them.",
+      "suppliedBy": "system",
+      "derived": false
+    },
+    "contestability.corrections": {
+      "status": "not-applicable",
+      "reason": "No claims have been published from this exploratory artifact.",
+      "suppliedBy": "author",
+      "derived": false,
+      "reviewedBy": "research-owner"
+    }
+  },
+  "extensions": {
+    "com.example.experiment": {
+      "session": "trial-42"
+    }
+  }
+}

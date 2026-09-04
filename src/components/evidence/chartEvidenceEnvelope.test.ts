@@ -9,6 +9,7 @@ import {
   toEvidenceEnvelope
 } from "./chartEvidenceEnvelope"
 import { evaluateEvidenceGate } from "./evidenceGate"
+import { buildArtifactContract } from "../artifact/contract"
 
 const lineData = [
   { date: "2026-01-01", value: 12 },
@@ -22,6 +23,11 @@ const lineProps = {
   yAccessor: "value",
   title: "Weekly active users",
   description: "Daily active users with a February peak."
+}
+
+interface MutableEnvelopeArtifact {
+  contract: { artifact: { id: string } }
+  transfer: { omittedPaths: string[] }
 }
 
 describe("ChartEvidenceEnvelope@1", () => {
@@ -60,6 +66,157 @@ describe("ChartEvidenceEnvelope@1", () => {
     const accessibilityAudit = envelope.audit.accessibility as
       { ok?: boolean } | undefined
     expect(accessibilityAudit?.ok).toBe(true)
+  })
+
+  it("preserves an artifact contract beside the evidence with version status", () => {
+    const contract = buildArtifactContract("LineChart", lineProps, {
+      id: "weekly-users",
+      intents: ["trend"],
+      evidence: [
+        {
+          id: "rows",
+          role: "source-data",
+          sample: { rowCount: 1, values: [{ privateValue: 12 }] }
+        }
+      ]
+    })
+    const envelope = toEvidenceEnvelope("LineChart", lineProps, {
+      artifactContract: contract
+    })
+    const restored = fromEvidenceEnvelope(JSON.parse(JSON.stringify(envelope)))
+
+    expect(JSON.stringify(restored.artifact?.contract)).not.toContain(
+      "privateValue"
+    )
+    expect(restored.artifact?.transfer.status).toBe("excluded")
+    expect(restored.artifact?.transfer.omittedPaths).toEqual([
+      "$.evidence[0].sample"
+    ])
+    expect(restored.artifact?.transferBindingVersion).toBe(2)
+    expect(restored.artifact?.transferFingerprint).toMatch(/^[a-f0-9]{64}$/)
+    expect(restored.artifact?.identityBinding).toEqual({
+      status: "match",
+      mismatchPaths: [],
+      unknownPaths: []
+    })
+  })
+
+  it("restores legacy artifact transfer bindings without claiming identity", () => {
+    const contract = buildArtifactContract("LineChart", lineProps, {
+      id: "weekly-users-legacy-binding",
+      intents: ["trend"]
+    })
+    const legacy = JSON.parse(
+      JSON.stringify(
+        toEvidenceEnvelope("LineChart", lineProps, {
+          artifactContract: contract
+        })
+      )
+    )
+    legacy.artifact.transferBindingVersion = 1
+    delete legacy.artifact.identityBinding
+    legacy.artifact.transferFingerprint = stableEvidenceHash({
+      kind: "semiotic.chart-evidence.artifact-transfer",
+      envelopeVersion: CHART_EVIDENCE_ENVELOPE_VERSION,
+      transferBindingVersion: 1,
+      contract: legacy.artifact.contract,
+      transfer: legacy.artifact.transfer
+    })
+
+    expect(fromEvidenceEnvelope(legacy).artifact).not.toHaveProperty(
+      "identityBinding"
+    )
+  })
+
+  it("binds an attached contract to the envelope chart input", () => {
+    const contract = buildArtifactContract("LineChart", lineProps, {
+      id: "weekly-users-binding",
+      intents: ["trend"]
+    })
+    const mismatch = structuredClone(contract)
+    mismatch.artifact.dataFingerprint = "sha256:not-the-rendered-data"
+    const mismatched = toEvidenceEnvelope("LineChart", lineProps, {
+      artifactContract: mismatch
+    })
+    const unknown = structuredClone(contract)
+    delete unknown.artifact.component
+    const undeclared = toEvidenceEnvelope("LineChart", lineProps, {
+      artifactContract: unknown
+    })
+
+    expect(mismatched.artifact?.identityBinding).toMatchObject({
+      status: "mismatch",
+      mismatchPaths: ["artifact.dataFingerprint"]
+    })
+    expect(undeclared.artifact?.identityBinding).toMatchObject({
+      status: "unknown",
+      unknownPaths: ["artifact.component"]
+    })
+  })
+
+  it("rejects an excluded artifact report forged as preserved", () => {
+    const contract = buildArtifactContract("LineChart", lineProps, {
+      id: "weekly-users-forged-transfer",
+      intents: ["trend"],
+      evidence: [
+        {
+          id: "rows",
+          role: "source-data",
+          sample: { rowCount: 1, values: [{ privateValue: 12 }] }
+        }
+      ]
+    })
+    const envelope = toEvidenceEnvelope("LineChart", lineProps, {
+      artifactContract: contract
+    })
+    const forged = JSON.parse(JSON.stringify(envelope))
+    forged.artifact.transfer = {
+      status: "preserved",
+      omittedPaths: [],
+      warnings: []
+    }
+
+    expect(() => fromEvidenceEnvelope(forged)).toThrow(
+      "transfer fingerprint does not match its payload"
+    )
+  })
+
+  it.each([
+    [
+      "projected contract",
+      (artifact: MutableEnvelopeArtifact) => {
+        artifact.contract.artifact.id = "substituted-artifact"
+      }
+    ],
+    [
+      "omission report",
+      (artifact: MutableEnvelopeArtifact) => {
+        artifact.transfer.omittedPaths.push("$.claims")
+      }
+    ],
+    [
+      "identity binding",
+      (artifact: MutableEnvelopeArtifact) => {
+        const boundArtifact = artifact as MutableEnvelopeArtifact & {
+          identityBinding: { status: string }
+        }
+        boundArtifact.identityBinding.status = "unknown"
+      }
+    ]
+  ])("rejects artifact %s tampering", (_label, mutate) => {
+    const contract = buildArtifactContract("LineChart", lineProps, {
+      id: "weekly-users-bound-transfer",
+      intents: ["trend"]
+    })
+    const envelope = toEvidenceEnvelope("LineChart", lineProps, {
+      artifactContract: contract
+    })
+    const forged = JSON.parse(JSON.stringify(envelope))
+    mutate(forged.artifact)
+
+    expect(() => fromEvidenceEnvelope(forged)).toThrow(
+      "transfer fingerprint does not match its payload"
+    )
   })
 
   it("redacts raw records from profile samples and navigation trees", () => {

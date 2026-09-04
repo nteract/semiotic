@@ -1,4 +1,13 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import {
+  serializeArtifactContract,
+  type PortableArtifactContract
+} from "../artifact/serialization"
+import {
+  ARTIFACT_CONTRACT_VERSION,
+  type ArtifactContract
+} from "../artifact/types"
+import { compareArtifactIdentity } from "../artifact/identity"
 import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
 import { applySemanticViability } from "../ai/semanticViability"
 import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
@@ -123,6 +132,8 @@ export interface RenderChartOptions {
    * Values are clamped to the practical 0–8 range.
    */
   precision?: number
+  /** Preserve an interpretation contract in machine-readable render evidence. */
+  artifactContract?: PortableArtifactContract
 }
 
 const PRECISION_ATTRIBUTES = new Set([
@@ -358,6 +369,26 @@ export function renderChartWithEvidence(
     })
   evidence.component = component
   applySemanticViability(evidence, component, props)
+  if (options?.artifactContract) {
+    const artifact = serializeArtifactContract(options.artifactContract, {
+      excludeEvidenceSamples: true
+    })
+    if (artifact.contract) evidence.artifactContract = artifact.contract
+    evidence.artifactTransfer = artifact.transfer
+    evidence.artifactBinding =
+      artifact.contract?.contractVersion === ARTIFACT_CONTRACT_VERSION &&
+      artifact.transfer.status !== "invalid"
+        ? compareArtifactIdentity(
+            artifact.contract as ArtifactContract,
+            props,
+            component
+          )
+        : {
+            status: "unknown",
+            mismatchPaths: [],
+            unknownPaths: ["artifactContract"]
+          }
+  }
   return { svg, evidence }
 }
 
