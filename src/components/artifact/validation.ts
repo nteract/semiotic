@@ -33,6 +33,23 @@ import {
 export function validateArtifactContract(
   value: unknown
 ): ArtifactContractValidation {
+  try {
+    return inspectArtifactContract(value)
+  } catch {
+    return {
+      valid: false,
+      errors: [
+        {
+          path: "$",
+          message: "Artifact contract could not be inspected safely."
+        }
+      ],
+      warnings: []
+    }
+  }
+}
+
+function inspectArtifactContract(value: unknown): ArtifactContractValidation {
   const errors: ArtifactContractValidation["errors"] = []
   const warnings: ArtifactContractValidation["warnings"] = []
   if (!isRecord(value)) {

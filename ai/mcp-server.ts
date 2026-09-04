@@ -80,6 +80,7 @@ import {
   truncateUtf8
 } from "./mcp-render-output-limits"
 import { renderHOCToSVG } from "./renderHOCToSVG"
+import { applySvgTheme } from "./svg-theme"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { renderChartWithEvidence } from "semiotic/server"
 import { toEvidenceEnvelope, evaluateEvidenceGate } from "semiotic/evidence"
@@ -1915,24 +1916,7 @@ async function renderChartHandler(
         "theme application",
         limits.maxRenderWorkMs,
         signal,
-        () => {
-          const isUnsafeCssValue = (v: string) =>
-            /<|>|{|}|@|expression\(|javascript:|url\(|\*\//i.test(v)
-          const validVars = Object.entries(theme)
-            .filter(
-              ([k, v]) =>
-                k.startsWith("--semiotic-") &&
-                typeof v === "string" &&
-                !isUnsafeCssValue(v)
-            )
-            .map(([k, v]) => `${k}: ${v}`)
-            .join("; ")
-          if (!validVars) return svg
-          return svg.replace(
-            /<svg([^>]*)>/,
-            `<svg$1><style>:root { ${validVars} }</style>`
-          )
-        }
+        () => applySvgTheme(svg, theme)
       )
     } catch (err) {
       if (isRenderExecutionError(err)) {

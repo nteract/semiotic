@@ -366,7 +366,7 @@
     "docs:ai-instructions": "node scripts/sync-ai-instructions.mjs",
     "docs:ai-surface": "node scripts/generate-ai-surface-manifest.mjs",
     "check:ai-reference-coverage": "node scripts/check-ai-reference-coverage.js",
-    "check:context7": "node scripts/check-context7.mjs",
+    "check:context7": "node --test scripts/context7-subpaths.test.mjs && node scripts/check-context7.mjs",
     "check:mcp-registry": "node scripts/check-mcp-registry.mjs",
     "check:mcp-registry-live": "node scripts/check-mcp-registry-live.mjs",
     "check:surface": "node scripts/check-surface-parity.js",

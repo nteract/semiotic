@@ -501,6 +501,17 @@ export function createArtifactPacket(
 export function validateArtifactPacket(
   value: unknown
 ): ArtifactPacketValidation {
+  try {
+    return inspectArtifactPacket(value)
+  } catch {
+    return {
+      valid: false,
+      errors: ["Artifact packet could not be inspected safely."]
+    }
+  }
+}
+
+function inspectArtifactPacket(value: unknown): ArtifactPacketValidation {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { valid: false, errors: ["Artifact packet must be an object."] }
   }

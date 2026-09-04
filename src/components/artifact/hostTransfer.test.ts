@@ -58,7 +58,7 @@ describe("artifact host transfers", () => {
   })
 
   it("embeds a complete, escaped packet in SVG metadata", () => {
-    const contract = hostContract('svg"><unsafe')
+    const contract = hostContract('svg"><unsafe\t\n\r')
     contract.claims[0].text = "</metadata><script>alert(1)</script> & context"
     const packet = createArtifactPacket(contract, { format: "svg" })
     const svg = embedArtifactPacketInSvg(
@@ -75,6 +75,41 @@ describe("artifact host transfers", () => {
     expect(JSON.parse(metadata?.textContent ?? "null")).toEqual(packet)
     expect(svg).not.toContain("</metadata><script>")
     expect(svg).toContain('<path d="M0 0" />')
+  })
+
+  it.each([
+    '<svg xmlns="http://www.w3.org/2000/svg" aria-label="A > B" width="400"></svg>',
+    "<svg xmlns='http://www.w3.org/2000/svg' aria-label='A > B' width='400'/>",
+    '<?xml version="1.0"?><!-- <svg aria-label="decoy"> --><svg xmlns="http://www.w3.org/2000/svg"/>',
+    '<!DOCTYPE svg [<!ENTITY decoy "<svg>">]><svg xmlns="http://www.w3.org/2000/svg"/>',
+    '<s:svg xmlns:s="http://www.w3.org/2000/svg" aria-label="A > B"/>'
+  ])("inserts metadata inside the actual SVG root: %s", (host) => {
+    const packet = createArtifactPacket(hostContract(), { format: "svg" })
+    const svg = embedArtifactPacketInSvg(host, packet)
+    const document = new DOMParser().parseFromString(svg, "image/svg+xml")
+    expect(document.querySelector("parsererror")).toBeNull()
+    const metadata = document.getElementsByTagNameNS(
+      "http://www.w3.org/2000/svg",
+      "metadata"
+    )[0]
+    expect(metadata.parentNode).toBe(document.documentElement)
+    expect(JSON.parse(metadata.textContent!)).toEqual(packet)
+    if (host.includes("A > B"))
+      expect(document.documentElement.getAttribute("aria-label")).toBe("A > B")
+  })
+
+  it.each([
+    "<svg-icon></svg-icon>",
+    "<html><svg></svg></html>",
+    "<!-- <svg> -->",
+    '<svg aria-label="unterminated>'
+  ])("rejects a decoy or malformed SVG root: %s", (host) => {
+    expect(() =>
+      embedArtifactPacketInSvg(
+        host,
+        createArtifactPacket(hostContract(), { format: "svg" })
+      )
+    ).toThrow("svg root element")
   })
 
   it.each([

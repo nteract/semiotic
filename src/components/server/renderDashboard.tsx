@@ -4,6 +4,11 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { RenderChartName } from "./renderToStaticSVG"
 import type { FrameType, StaticFrameProps } from "./staticSVGChrome"
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
+import {
+  renderedSvgDimensions,
+  fitSvgToBox,
+  type SVGDimensions
+} from "./svgSizing"
 
 export interface DashboardChart {
   /** Frame type or HOC component name */
@@ -34,52 +39,9 @@ export interface RenderDashboardOptions {
   format?: "svg"
 }
 
-interface SVGDimensions {
-  width: number
-  height: number
-}
-
 interface DashboardRenderers {
   chart: (component: RenderChartName, props: Datum) => string
   frame: (frameType: FrameType, props: StaticFrameProps) => string
-}
-
-function renderedSvgDimensions(
-  svg: string,
-  fallback: SVGDimensions
-): SVGDimensions {
-  const openingTag = svg.match(/^<svg\b[^>]*>/)?.[0]
-  if (!openingTag) return fallback
-
-  const readDimension = (name: "width" | "height", fallbackValue: number) => {
-    const match = openingTag.match(
-      new RegExp(
-        `\\b${name}=(?:"([0-9]+(?:\\.[0-9]+)?)"|'([0-9]+(?:\\.[0-9]+)?)')`
-      )
-    )
-    const value = Number(match?.[1] ?? match?.[2])
-    return Number.isFinite(value) && value > 0 ? value : fallbackValue
-  }
-
-  return {
-    width: readDimension("width", fallback.width),
-    height: readDimension("height", fallback.height)
-  }
-}
-
-function fitSvgToBox(svg: string, dimensions: SVGDimensions): string {
-  return svg.replace(/^<svg\b([^>]*)>/, (_match, attributes: string) => {
-    const withoutDimensions = attributes
-      .replace(/\swidth=(?:"[^"]*"|'[^']*')/, "")
-      .replace(/\sheight=(?:"[^"]*"|'[^']*')/, "")
-    const viewBox = /\sviewBox=/.test(withoutDimensions)
-      ? ""
-      : ` viewBox="0 0 ${dimensions.width} ${dimensions.height}"`
-    const preserveAspectRatio = /\spreserveAspectRatio=/.test(withoutDimensions)
-      ? ""
-      : ' preserveAspectRatio="xMidYMid meet"'
-    return `<svg${withoutDimensions} width="100%" height="100%"${viewBox}${preserveAspectRatio}>`
-  })
 }
 
 /** Compose multiple charts into a single SVG. */

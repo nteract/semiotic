@@ -104,13 +104,32 @@ export function buildArtifactCollectionLineage(
         source.kind === "processing-job"
           ? source.kind
           : "source"
-      const sourceId = lineageId(kind, source.id)
-      addNode({ id: sourceId, kind, label: source.label })
+      const sourceId =
+        kind === "source"
+          ? lineageId(kind, artifact.artifact.id, source.kind, source.id)
+          : lineageId(kind, artifact.artifact.id, source.id)
+      addNode({
+        id: sourceId,
+        kind,
+        label: source.label,
+        artifactId: artifact.artifact.id
+      })
       registerSourceNode(source.id, sourceId, artifact.artifact.id)
       addEdge({ source: sourceId, target: artifactId, relation: "produces" })
       if (source.version) {
-        const schemaId = lineageId("schema", source.id, source.version)
-        addNode({ id: schemaId, kind: "schema", label: source.version })
+        const schemaId = lineageId(
+          "schema",
+          artifact.artifact.id,
+          source.kind,
+          source.id,
+          source.version
+        )
+        addNode({
+          id: schemaId,
+          kind: "schema",
+          label: source.version,
+          artifactId: artifact.artifact.id
+        })
         addEdge({ source: schemaId, target: sourceId, relation: "contains" })
       }
     }

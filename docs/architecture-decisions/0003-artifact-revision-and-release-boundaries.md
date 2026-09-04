@@ -48,3 +48,50 @@ obligations.
 - [Revision regressions](../../src/components/artifact/artifactRevision.test.ts)
 - [CLI parity](../../scripts/artifact-cli.test.mjs)
 - [MCP parity](../../ai/mcp-artifact-contract.integration.test.ts)
+
+## Review follow-up: identity and untrusted transfer boundaries
+
+Evidence IDs remain artifact-local. Collection impact accepts explicit references:
+
+```ts
+import { affectedCollectionClaims } from "semiotic/artifact"
+
+const affected = affectedCollectionClaims(collection, [
+  { artifactId: "panel-a", evidenceId: "rows" },
+])
+```
+
+Unique legacy string IDs remain supported; ambiguous strings throw instead of marking unrelated
+panels affected. Unknown legacy IDs remain no-ops. Explicit references must resolve, and duplicate
+artifact identities are rejected. Propagation follows transformation inputs within the selected
+artifact and terminates on cycles. No serialized contract field or version changes.
+
+The related-surface audit also found temporal source/schema nodes merging across panels. Local
+lineage IDs now include the artifact and, where needed, source kind; collection-registry sources
+remain shared. Consumers should use returned node IDs and edges together, not construct local-source
+IDs themselves. Claim/evidence nodes, correction scopes, and action targets already qualify local
+identity; existing regressions retain that behavior.
+
+SVG metadata, dashboard sizing, precision rounding, raster-export styling, and MCP theme insertion
+share dependency-free root-tag lexer. It respects quoted attributes, XML preambles/comments, and
+empty elements. Exact attribute handling avoids treating label text or `data-width` as geometry;
+precision rounding preserves comments, CDATA, and XML preambles. MCP theme values are XML-escaped
+and inserted without replacement-string expansion. This lexer is not an SVG sanitizer or a complete
+XML validator. MCP's no-emit typecheck includes this one shared runtime helper; esbuild still emits
+the standalone MCP executable.
+
+Contract, collection, and packet validators fail closed on reflection/property-access errors.
+Serializers and migration also report invalid input instead of leaking proxy exceptions. Descriptor
+inspection does not invoke accessors and cleans up ancestor tracking on failure. These guards do not
+provide a resource sandbox for executable proxies; network callers should supply parsed JSON.
+
+Package-guidance checks now compare exact Context7 tokens (including nested subpaths) and compare
+README entry counts with the canonical export inventory. The similarly named experimental-prefix
+case is covered separately so a stable sibling cannot disappear from compatibility checks.
+
+Regression evidence: [collection impact](../../src/components/artifact/collectionImpact.test.ts),
+[local-source lineage](../../src/components/artifact/collectionLineage.test.ts),
+[untrusted JSON boundaries](../../src/components/artifact/jsonCompatibility.test.ts),
+[host transfer](../../src/components/artifact/hostTransfer.test.ts),
+[SVG sizing](../../src/components/server/svgSizing.test.tsx),
+[MCP themes](../../ai/svg-theme.test.ts), and the entry-inventory tests in `scripts/`.

@@ -46,6 +46,12 @@ export interface CollectionClaimReference {
   claimId: string
 }
 
+/** Evidence IDs are artifact-local, even when panels share a collection. */
+export interface CollectionEvidenceReference {
+  artifactId: string
+  evidenceId: string
+}
+
 /**
  * Optional exact targets for a correction whose claim identifiers are not
  * unique across a collection. The unqualified CorrectionRecord fields remain

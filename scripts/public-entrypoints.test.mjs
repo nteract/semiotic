@@ -6,6 +6,35 @@ import {
   stableApiEntrypoints
 } from "./lib/public-entrypoints.mjs"
 
+test("README entry counts agree with the canonical stable package inventory", () => {
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8")
+  const counts = readme.match(
+    /Semiotic ships (\d+) stable JavaScript entry points \((\d+) subpaths plus the root\)/
+  )
+  assert.ok(counts, "README must document both stable entry counts")
+  const entries = stableApiEntrypoints()
+  assert.equal(Number(counts[1]), entries.length)
+  assert.equal(
+    Number(counts[2]),
+    entries.filter((entry) => entry.subpath !== ".").length
+  )
+})
+
+test("only the experimental namespace is excluded, not similarly named stable entries", () => {
+  const entries = publicJavaScriptEntrypoints({
+    name: "semiotic",
+    exports: Object.fromEntries(
+      ["./experimental", "./experimental/nested", "./experimental-tools"].map(
+        (subpath) => [subpath, "./dist/example.js"]
+      )
+    )
+  })
+  assert.deepEqual(
+    entries.map((entry) => entry.stableApi),
+    [false, false, true]
+  )
+})
+
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
   assert.equal(entries.length, 36)

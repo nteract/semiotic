@@ -3,6 +3,7 @@ import {
   type ArtifactPacket,
   type ArtifactTransferFormat
 } from "./inheritance"
+import { escapeXmlAttribute, insertSvgRootContent } from "../shared/svgRoot"
 
 export type ArtifactSidecarFormat =
   "png-sidecar" | "notebook" | "static-package"
@@ -34,14 +35,6 @@ function packetJson(packet: ArtifactPacket): string {
     .replace(/\u2029/g, "\\u2029")
 }
 
-function attributeValue(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-}
-
 /** Embed a complete SVG-format packet as machine-readable XML metadata. */
 export function embedArtifactPacketInSvg(
   svg: string,
@@ -51,11 +44,8 @@ export function embedArtifactPacketInSvg(
   if (packet.transfer.format !== "svg") {
     throw new TypeError("SVG metadata requires an SVG-format artifact packet.")
   }
-  const root = /<svg\b[^>]*>/i.exec(svg)
-  if (!root) throw new TypeError("SVG host must contain an svg root element.")
-  const offset = root.index + root[0].length
-  const metadata = `<metadata data-semiotic-artifact="${attributeValue(packet.artifactId)}">${packetJson(packet).replace(/&/g, "&amp;")}</metadata>`
-  return `${svg.slice(0, offset)}${metadata}${svg.slice(offset)}`
+  const metadata = `<metadata xmlns="http://www.w3.org/2000/svg" data-semiotic-artifact="${escapeXmlAttribute(packet.artifactId)}">${packetJson(packet).replace(/&/g, "&amp;")}</metadata>`
+  return insertSvgRootContent(svg, metadata)
 }
 
 /** Prepare an inspectable JSON file to be written beside a static host. */

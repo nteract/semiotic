@@ -111,6 +111,25 @@ function validateActorRef(
 export function validateArtifactCollection(
   value: unknown
 ): ArtifactCollectionValidation {
+  try {
+    return inspectArtifactCollection(value)
+  } catch {
+    return {
+      valid: false,
+      errors: [
+        {
+          path: "$",
+          message: "Artifact collection could not be inspected safely."
+        }
+      ],
+      warnings: []
+    }
+  }
+}
+
+function inspectArtifactCollection(
+  value: unknown
+): ArtifactCollectionValidation {
   const errors: ArtifactCollectionValidation["errors"] = []
   const warnings: ArtifactCollectionValidation["warnings"] = []
   if (!isRecord(value)) {
@@ -435,6 +454,23 @@ export function validateArtifactCollection(
 
 /** Preserve a collection as deterministic JSON and report validation loss. */
 export function serializeArtifactCollection(
+  value: unknown
+): SerializedArtifactCollection {
+  try {
+    return serializeInspectedCollection(value)
+  } catch {
+    const paths = nonJsonValuePaths(value)
+    return {
+      transfer: {
+        status: "invalid",
+        omittedPaths: paths.length ? paths : ["$"],
+        warnings: ["Artifact collection could not be inspected safely."]
+      }
+    }
+  }
+}
+
+function serializeInspectedCollection(
   value: unknown
 ): SerializedArtifactCollection {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

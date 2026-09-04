@@ -220,6 +220,17 @@ describe("PNG generation (end-to-end)", () => {
     expect(isValidPNG(png)).toBe(true)
   })
 
+  it("rasterizes a background without duplicating the root's existing style", async () => {
+    const png = await renderToImage("LineChart", {
+      data: lineData, xAccessor: "x", yAccessor: "y",
+      title: "A > B", width: 200, height: 150,
+      theme: { typography: { fontFamily: "'A & B', sans-serif" } },
+    }, { background: "rgb(240 240 240)", format: "png" })
+
+    expect(isValidPNG(png)).toBe(true)
+    expect(pngDimensions(png)).toEqual([200, 150])
+  })
+
   it("renderToImage produces valid JPEG buffer", async () => {
     const jpg = await renderToImage("BarChart", {
       data: barData, categoryAccessor: "category", valueAccessor: "value",

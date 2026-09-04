@@ -13,7 +13,7 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "react-jsx",
     "declaration": false,
-    "rootDir": "./ai",
+    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
       "semiotic/ai": ["./dist/semiotic-ai.d.ts"],

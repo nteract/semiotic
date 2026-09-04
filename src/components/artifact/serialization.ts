@@ -73,6 +73,24 @@ export function serializeArtifactContract(
   value: unknown,
   options: SerializeArtifactContractOptions = {}
 ): SerializedArtifactContract {
+  try {
+    return serializeInspectedContract(value, options)
+  } catch {
+    const paths = nonJsonValuePaths(value)
+    return {
+      transfer: {
+        status: "invalid",
+        omittedPaths: paths.length ? paths : ["$"],
+        warnings: ["Artifact contract could not be inspected safely."]
+      }
+    }
+  }
+}
+
+function serializeInspectedContract(
+  value: unknown,
+  options: SerializeArtifactContractOptions
+): SerializedArtifactContract {
   if (!isRecord(value)) {
     return {
       transfer: {
@@ -94,7 +112,7 @@ export function serializeArtifactContract(
   const exclusionWarnings = requestedExclusions.length
     ? ["Bounded evidence samples were excluded by the transfer policy."]
     : []
-  const version = value.contractVersion
+  const version = contract?.contractVersion
   if (typeof version !== "string" || !version) {
     return {
       contract,
@@ -174,8 +192,8 @@ export function migrateArtifactContract(
 ): ArtifactContractMigrationResult {
   const serialized = serializeArtifactContract(value)
   const fromVersion =
-    isRecord(value) && typeof value.contractVersion === "string"
-      ? value.contractVersion
+    typeof serialized.contract?.contractVersion === "string"
+      ? serialized.contract.contractVersion
       : undefined
   if (!serialized.contract || serialized.transfer.status === "invalid") {
     return {

@@ -155,7 +155,7 @@ function adaptHistoricalSnapshotMetadata(metadata: HistoricalSnapshotMetadata): 
 function adaptProcessingJobMetadata(metadata: ProcessingJobMetadata): TemporalContext
 function adaptQualityCheckMetadata(metadata: QualityCheckMetadata): TemporalContext
 function adaptStreamTopicMetadata(metadata: StreamTopicMetadata): TemporalContext
-function affectedCollectionClaims(collection: ArtifactCollectionContract, changedEvidenceIds: readonly string[]): {artifactId: string; claimId: string;}[]
+function affectedCollectionClaims(collection: ArtifactCollectionContract, changedEvidenceIds: readonly (CollectionEvidenceReference | string)[]): {artifactId: string; claimId: string;}[]
 function annotationFreshnessFor<T>(annotation: Annotated<T>, nowMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function annotationStableId(annotation: Datum): string | undefined
 function applyAnnotationLifecycle<T>(annotations: readonly Annotated<T>[], options?: ApplyAnnotationLifecycleOptions | undefined): Annotated<T>[]
@@ -472,6 +472,7 @@ interface ClickObservation extends ObservationBase
 interface CollectionClaimReference
 interface CollectionCorrectionRecord extends CorrectionRecord
 interface CollectionCorrectionScope
+interface CollectionEvidenceReference
 interface CollectionFilterState
 interface CompactInheritancePacket
 interface ComputeAnnotationFreshnessOptions
@@ -1398,6 +1399,8 @@ interface-member CollectionClaimReference::property::claimId = required claimId:
 interface-member CollectionCorrectionRecord::property::scope = optional scope: CollectionCorrectionScope | undefined
 interface-member CollectionCorrectionScope::property::affectedClaims = optional affectedClaims: CollectionClaimReference[] | undefined
 interface-member CollectionCorrectionScope::property::replacementClaims = optional replacementClaims: CollectionClaimReference[] | undefined
+interface-member CollectionEvidenceReference::property::artifactId = required artifactId: string
+interface-member CollectionEvidenceReference::property::evidenceId = required evidenceId: string
 interface-member CollectionFilterState::property::appliesToArtifactIds = required appliesToArtifactIds: string[]
 interface-member CollectionFilterState::property::id = required id: string
 interface-member CollectionFilterState::property::label = optional label: string | undefined

@@ -12,6 +12,17 @@ function isArrayIndexKey(key: string, length: number): boolean {
   return Number.isSafeInteger(index) && index >= 0 && index < length
 }
 
+function ownDescriptor(
+  value: object,
+  key: string
+): PropertyDescriptor | undefined {
+  try {
+    return Object.getOwnPropertyDescriptor(value, key)
+  } catch {
+    return undefined
+  }
+}
+
 /** Find values that cannot survive a strict JSON round trip unchanged. */
 export function nonJsonValuePaths(
   value: unknown,
@@ -24,19 +35,19 @@ export function nonJsonValuePaths(
     return Number.isFinite(value) && !Object.is(value, -0) ? [] : [path]
   }
   if (typeof value !== "object") return [path]
-  if (value instanceof Date) return [path]
   if (ancestors.has(value)) return [path]
   let prototype: object | null
   let ownKeys: Array<string | symbol>
+  let array: boolean
   try {
+    array = Array.isArray(value)
     prototype = Object.getPrototypeOf(value)
     ownKeys = Reflect.ownKeys(value)
   } catch {
     return [path]
   }
   if (
-    !Array.isArray(value) &&
-    prototype !== Object.prototype &&
+    prototype !== (array ? Array.prototype : Object.prototype) &&
     prototype !== null
   ) {
     return [path]
@@ -44,46 +55,50 @@ export function nonJsonValuePaths(
 
   ancestors.add(value)
   const paths: string[] = []
-  if (Array.isArray(value)) {
-    for (const key of ownKeys) {
-      if (
-        key === "length" ||
-        (typeof key === "string" && isArrayIndexKey(key, value.length))
-      ) {
-        continue
+  try {
+    if (array) {
+      const length = ownDescriptor(value, "length")?.value
+      if (!Number.isSafeInteger(length) || length < 0)
+        return [childPath(path, "length")]
+      for (const key of ownKeys) {
+        if (
+          key === "length" ||
+          (typeof key === "string" && isArrayIndexKey(key, length))
+        ) {
+          continue
+        }
+        paths.push(
+          typeof key === "symbol" ? symbolPath(path, key) : childPath(path, key)
+        )
       }
-      paths.push(
-        typeof key === "symbol" ? symbolPath(path, key) : childPath(path, key)
-      )
+      for (let index = 0; index < length; index += 1) {
+        const itemPath = childPath(path, index)
+        const descriptor = ownDescriptor(value, String(index))
+        if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
+          paths.push(itemPath)
+          continue
+        }
+        paths.push(...nonJsonValuePaths(descriptor.value, itemPath, ancestors))
+      }
+    } else {
+      for (const key of ownKeys) {
+        if (typeof key === "symbol") {
+          paths.push(symbolPath(path, key))
+          continue
+        }
+        const entryPath = childPath(path, key)
+        const descriptor = ownDescriptor(value, key)
+        if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
+          paths.push(entryPath)
+          continue
+        }
+        paths.push(...nonJsonValuePaths(descriptor.value, entryPath, ancestors))
+      }
     }
-    for (let index = 0; index < value.length; index += 1) {
-      const itemPath = childPath(path, index)
-      if (!(index in value)) {
-        paths.push(itemPath)
-        continue
-      }
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index))
-      if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
-        paths.push(itemPath)
-        continue
-      }
-      paths.push(...nonJsonValuePaths(descriptor.value, itemPath, ancestors))
-    }
-  } else {
-    for (const key of ownKeys) {
-      if (typeof key === "symbol") {
-        paths.push(symbolPath(path, key))
-        continue
-      }
-      const entryPath = childPath(path, key)
-      const descriptor = Object.getOwnPropertyDescriptor(value, key)
-      if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
-        paths.push(entryPath)
-        continue
-      }
-      paths.push(...nonJsonValuePaths(descriptor.value, entryPath, ancestors))
-    }
+    return paths
+  } catch {
+    return [path]
+  } finally {
+    ancestors.delete(value)
   }
-  ancestors.delete(value)
-  return paths
 }

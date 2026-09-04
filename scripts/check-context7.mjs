@@ -31,6 +31,7 @@
 import { readFileSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { context7SubpathDrift } from "./lib/context7-subpaths.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -126,20 +127,8 @@ if (subpathRules.length === 0) {
       "consider documenting them in `rules` so agents see the import boundary"
   )
 } else {
-  const subpathRule = subpathRules.join(",")
-  const missingFromRule = exportedSubpaths.filter(
-    (sp) => !subpathRule.includes(`/${sp}`)
-  )
-  const phantomInRule = []
-  // Pull `/word` and nested `/word/word` tokens out of the rule text and compare against the
-  // exported set. The rule format is loose ("`semiotic/xy`, `/ordinal`,
-  // …") so we look for `/<sub-path>` occurrences.
-  const ruleTokens = [
-    ...subpathRule.matchAll(/\/([a-z][a-z-]*(?:\/[a-z][a-z-]*)*)/g)
-  ].map((m) => m[1])
-  for (const tok of ruleTokens) {
-    if (!exportedSubpaths.includes(tok)) phantomInRule.push(tok)
-  }
+  const { missing: missingFromRule, phantom: phantomInRule } =
+    context7SubpathDrift(exportedSubpaths, subpathRules)
   if (missingFromRule.length) {
     fail(
       `sub-path rule is missing entries that package.json exports: ${missingFromRule.join(
