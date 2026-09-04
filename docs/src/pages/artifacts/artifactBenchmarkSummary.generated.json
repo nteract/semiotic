@@ -1,0 +1,40 @@
+{
+  "benchmarkVersion": "0.2",
+  "fixtureVersion": "0.2",
+  "mutationVersion": "0.1",
+  "downloadPath": "/artifact-contract-benchmark.json",
+  "corpus": {
+    "cases": 40,
+    "tracks": 4,
+    "relations": 8,
+    "mutations": 12,
+    "rendererScope": "LineChart static frame"
+  },
+  "measurements": {
+    "pairedMutationDetection": {
+      "detected": 40,
+      "total": 40,
+      "rate": 1,
+      "criterion": "Every declared finding prefix appeared only after applying the paired mutation set."
+    },
+    "positiveControls": {
+      "matched": 4,
+      "total": 4,
+      "falseRefusals": 0,
+      "expectedNotRefuse": 4,
+      "falseRefusalRate": 0
+    },
+    "refusalPrecision": {
+      "value": null,
+      "reason": "Mutated cases have declared finding expectations but not complete should-refuse labels, so refusal precision is not reported."
+    },
+    "expectedFindings": {
+      "matched": 63,
+      "total": 63
+    },
+    "expectedUnknownPaths": {
+      "matched": 60,
+      "total": 60
+    }
+  }
+}

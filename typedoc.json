@@ -12,6 +12,8 @@
     "src/components/semiotic-realtime.ts",
     "src/components/semiotic-recipes.ts",
     "src/components/semiotic-server.ts",
+    "src/components/semiotic-artifact.ts",
+    "src/components/semiotic-artifact-react.ts",
     "src/components/semiotic-ai.ts"
   ],
   "entryPointStrategy": "expand",

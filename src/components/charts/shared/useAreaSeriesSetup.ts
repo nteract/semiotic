@@ -41,10 +41,18 @@ import { wrapStyleWithSelection } from "./selectionUtils"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
-import { buildDefaultTooltip, accessorName, bandTooltipFields } from "./tooltipUtils"
+import {
+  buildDefaultTooltip,
+  accessorName,
+  bandTooltipFields
+} from "./tooltipUtils"
 import type { HoverData } from "../../stream/types"
 import type { BandConfig } from "../../stream/types"
-import { resolveStyleRules, type StyleRule, type StyleRuleContext } from "./styleRules"
+import {
+  resolveStyleRules,
+  type StyleRule,
+  type StyleRuleContext
+} from "./styleRules"
 import type { HatchFill } from "./hatchFill"
 
 /** Values a resolved area/line style may carry (`fill` can be a HatchFill). */
@@ -95,7 +103,11 @@ export interface AreaSeriesSetupOptions<TDatum extends Datum = Datum> {
   yLabel?: string
   /** Tooltip-side x formatter — same signature as `AxisConfig.xFormat`
    *  so the HOC can forward the prop verbatim. ReactNode return is OK. */
-  xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | ReactNode
+  xFormat?: (
+    d: number | Date | string,
+    index?: number,
+    allTicks?: number[]
+  ) => string | ReactNode
   yFormat?: (d: number | Date | string) => string | ReactNode
   /** Field used to label the series row in the default tooltip.
    *  Typically `areaBy ?? colorBy`. */
@@ -134,7 +146,7 @@ export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {
  * verbatim before extraction.
  */
 export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
-  options: AreaSeriesSetupOptions<TDatum>,
+  options: AreaSeriesSetupOptions<TDatum>
 ): AreaSeriesSetupResult<TDatum> {
   const {
     safeData,
@@ -162,7 +174,7 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     yFormat,
     groupField,
     styleRules,
-    ruleContext,
+    ruleContext
   } = options
 
   // Normalize flat/grouped and pre-grouped object data through the same pure
@@ -202,30 +214,55 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
       baseStyle.fillOpacity = areaOpacity
       // Declarative style rules merge on top of the resolved area fill/stroke.
       if (styleRules && styleRules.length > 0) {
-        Object.assign(baseStyle, resolveStyleRules(d, styleRules, ruleContext ? ruleContext(d) : { value: undefined }))
+        Object.assign(
+          baseStyle,
+          resolveStyleRules(
+            d,
+            styleRules,
+            ruleContext ? ruleContext(d) : { value: undefined }
+          )
+        )
       }
       return baseStyle
     }
-  }, [colorBy, colorScale, color, areaOpacity, showLine, lineWidth, styleRules, ruleContext])
+  }, [
+    colorBy,
+    colorScale,
+    color,
+    areaOpacity,
+    showLine,
+    lineWidth,
+    styleRules,
+    ruleContext
+  ])
 
   // 4 — primitive overlay + selection wrap
   const baseLineStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
-    [baseLineStyle, stroke, strokeWidth, opacity],
+    [baseLineStyle, stroke, strokeWidth, opacity]
   )
 
   const lineStyle = useMemo(
-    () => wrapStyleWithSelection(baseLineStyleWithPrimitives, effectiveSelectionHook ?? null, resolvedSelection),
-    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection],
+    () =>
+      wrapStyleWithSelection(
+        baseLineStyleWithPrimitives,
+        effectiveSelectionHook ?? null,
+        resolvedSelection
+      ),
+    [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
   // 5 — optional point style
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
     return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { r: pointRadius, fillOpacity: 1 }
+      const baseStyle: Record<string, string | number> = {
+        r: pointRadius,
+        fillOpacity: 1
+      }
       if (colorBy) {
-        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
+        if (colorScale)
+          baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
       } else {
         baseStyle.fill = color || DEFAULT_COLOR
       }
@@ -234,12 +271,43 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
   }, [showPoints, pointRadius, colorBy, colorScale, color])
 
   // 6 — default tooltip content
-  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
-    ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
-    ...bandTooltipFields(options.band, yFormat),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat, options.band])
+  const defaultTooltipContent = useMemo(
+    () =>
+      buildDefaultTooltip([
+        {
+          label: xLabel || accessorName(xAccessor),
+          accessor: xAccessor,
+          role: "x",
+          format: xFormat
+        },
+        {
+          label: yLabel || accessorName(yAccessor),
+          accessor: yAccessor,
+          role: "y",
+          format: yFormat
+        },
+        ...(groupField
+          ? [
+              {
+                label: accessorName(groupField),
+                accessor: groupField,
+                role: "group" as const
+              }
+            ]
+          : []),
+        ...bandTooltipFields(options.band, yFormat)
+      ]),
+    [
+      xAccessor,
+      yAccessor,
+      xLabel,
+      yLabel,
+      groupField,
+      xFormat,
+      yFormat,
+      options.band
+    ]
+  )
 
   return { flattenedData, lineStyle, pointStyle, defaultTooltipContent }
 }

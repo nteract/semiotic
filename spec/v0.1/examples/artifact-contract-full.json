@@ -1,0 +1,369 @@
+{
+  "contractVersion": "0.1",
+  "artifact": {
+    "id": "weekly-orders-v3",
+    "kind": "chart",
+    "component": "XYFrame",
+    "title": "Weekly orders and fulfillment range",
+    "createdAt": "2026-08-31T16:00:00Z",
+    "configFingerprint": "sha256:config-example",
+    "dataFingerprint": "sha256:data-example",
+    "revision": "3"
+  },
+  "purpose": {
+    "intents": [
+      {
+        "id": "compare-change-over-time",
+        "strength": "primary",
+        "source": "author",
+        "rationale": "Operators need to see changes relative to the preceding weeks."
+      },
+      {
+        "id": "show-uncertainty",
+        "strength": "secondary",
+        "source": "derived",
+        "rationale": "Recent fulfillment totals are not yet settled."
+      }
+    ],
+    "communicativeAct": "Show the recent increase while keeping the provisional range visible.",
+    "decisionContext": "Weekly staffing review",
+    "stakes": "operational",
+    "allowedUses": ["Adjust the next week's review queue"],
+    "prohibitedUses": ["Use as an audited financial total"]
+  },
+  "claims": [
+    {
+      "id": "claim-orders-v2",
+      "text": "The earlier estimate placed weekly orders at 1080.",
+      "kind": "aggregation",
+      "status": "superseded",
+      "evidenceIds": ["evidence-source"],
+      "asOf": "2026-08-30T23:59:59Z",
+      "authoredBy": {
+        "id": "analytics-team",
+        "name": "Analytics team",
+        "kind": "human"
+      },
+      "tags": ["orders", "weekly"]
+    },
+    {
+      "id": "claim-orders-v3",
+      "text": "Weekly orders increased to 1120, with an expected settled range from 1090 to 1150.",
+      "kind": "aggregation",
+      "status": "provisional",
+      "evidenceIds": ["evidence-aggregate"],
+      "scope": {
+        "region": "north",
+        "includedChannels": ["web", "store"],
+        "returnsExcluded": true
+      },
+      "uncertainty": {
+        "kind": "interval",
+        "lower": 1090,
+        "upper": 1150,
+        "confidence": 0.9,
+        "unit": "orders",
+        "description": "The interval accounts for late-arriving fulfillment events."
+      },
+      "asOf": "2026-08-31T23:59:59Z",
+      "supersedes": ["claim-orders-v2"],
+      "authoredBy": {
+        "id": "pipeline",
+        "name": "Weekly aggregation job",
+        "kind": "system"
+      },
+      "review": {
+        "status": "reviewed",
+        "reviewer": {
+          "id": "reviewer-17",
+          "name": "Operations reviewer",
+          "kind": "human"
+        },
+        "reviewedAt": "2026-09-01T15:30:00Z",
+        "rationale": "Source coverage and the provisional interval were checked."
+      },
+      "tags": ["orders", "weekly", "provisional"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-source",
+      "role": "source-data",
+      "label": "Order event snapshot",
+      "source": {
+        "name": "Orders warehouse",
+        "uri": "warehouse://orders/events",
+        "version": "snapshot-2026-08-31",
+        "retrievedAt": "2026-09-01T14:55:00Z",
+        "publisher": "Commerce data platform"
+      },
+      "fingerprint": "sha256:source-example",
+      "dataVersion": "2026-08-31.2",
+      "observedAt": "2026-08-31T23:59:59Z",
+      "scope": {
+        "region": "north",
+        "dateRange": {
+          "start": "2026-08-25",
+          "end": "2026-08-31"
+        }
+      },
+      "sample": {
+        "rowCount": 1120,
+        "fields": ["day", "orders"],
+        "values": [
+          { "day": "2026-08-31", "orders": 176 },
+          { "day": "2026-08-30", "orders": 164 }
+        ],
+        "truncated": true
+      },
+      "relationship": "descriptive"
+    },
+    {
+      "id": "evidence-aggregate",
+      "role": "transformation",
+      "label": "Weekly order aggregation",
+      "fingerprint": "sha256:aggregate-example",
+      "observedAt": "2026-08-31T23:59:59Z",
+      "transformation": {
+        "id": "transform-weekly-orders",
+        "kind": "aggregation",
+        "description": "Group included order events by week and sum their order counts.",
+        "inputEvidenceIds": ["evidence-source"],
+        "parameters": {
+          "groupBy": "week",
+          "measure": "count",
+          "lateArrivalWindowHours": 48
+        },
+        "assumptions": ["Duplicate event identifiers have been removed"],
+        "implementation": "analytics/orders/weekly.sql@8d12a4f",
+        "performedAt": "2026-09-01T15:00:00Z",
+        "performedBy": {
+          "id": "pipeline",
+          "name": "Weekly aggregation job",
+          "kind": "system"
+        }
+      },
+      "generatedClaimId": "claim-orders-v3",
+      "relationship": "descriptive"
+    }
+  ],
+  "time": {
+    "eventTime": {
+      "field": "orderCreatedAt",
+      "value": "2026-08-31T23:59:59Z",
+      "timezone": "UTC",
+      "granularity": "day"
+    },
+    "observedAt": "2026-08-31T23:59:59Z",
+    "ingestedAt": "2026-09-01T14:50:00Z",
+    "processedAt": "2026-09-01T15:00:00Z",
+    "publishedAt": "2026-09-01T16:00:00Z",
+    "snapshotAt": "2026-09-01T14:45:00Z",
+    "presentation": {
+      "state": "mixed",
+      "label": "Provisional through August 31"
+    },
+    "freshness": {
+      "status": "fresh",
+      "checkedAt": "2026-09-01T15:55:00Z",
+      "heartbeatAt": "2026-09-01T15:54:00Z",
+      "expiresAt": "2026-09-02T16:00:00Z",
+      "basis": "Daily publication service-level objective"
+    },
+    "watermark": {
+      "value": "2026-08-31T22:00:00Z",
+      "policy": "Event time minus accepted source delay",
+      "allowedLateness": "PT48H"
+    },
+    "window": {
+      "start": "2026-08-25T00:00:00Z",
+      "end": "2026-09-01T00:00:00Z",
+      "status": "provisional"
+    },
+    "completeness": {
+      "status": "provisional",
+      "basis": "Late-arriving fulfillment events remain possible"
+    },
+    "revision": {
+      "status": "corrected",
+      "previousArtifactId": "weekly-orders-v2",
+      "correctionId": "correction-weekly-orders-v3",
+      "reason": "Late events changed the prior weekly total."
+    },
+    "snapshot": {
+      "id": "orders-snapshot-2026-08-31",
+      "format": "iceberg",
+      "schemaVersion": "12",
+      "catalogRef": "analytics.orders.events"
+    },
+    "sources": [
+      {
+        "id": "order-events",
+        "kind": "stream",
+        "label": "Order events",
+        "observedAt": "2026-09-01T15:54:00Z",
+        "version": "7",
+        "timezone": "UTC",
+        "granularity": "event",
+        "freshness": "fresh",
+        "completeness": "provisional"
+      }
+    ]
+  },
+  "reception": {
+    "channels": [
+      {
+        "channel": "visual",
+        "disclosure": "detailed",
+        "navigation": true,
+        "interactionInstructions": true,
+        "rawData": "bounded",
+        "privacyNotes": ["Do not expose order-level customer fields"]
+      },
+      {
+        "channel": "agent",
+        "disclosure": "standard",
+        "navigation": false,
+        "interactionInstructions": false,
+        "rawData": "bounded",
+        "tokenBudget": 2400,
+        "privacyNotes": ["Summaries may include only aggregate values"]
+      }
+    ],
+    "audience": "Regional operations leads",
+    "strengths": ["Shows trend and uncertainty together"],
+    "risks": ["The latest point may be mistaken for a settled total"],
+    "scaffolds": ["State the provisional window in the title and description"],
+    "description": "A weekly line chart with a shaded range around the most recent estimate.",
+    "dataFallback": true,
+    "manualChecks": [
+      "Confirm the shaded range remains distinguishable at high zoom"
+    ]
+  },
+  "form": {
+    "chartFamily": "time-series-line",
+    "whyThisForm": "A line preserves sequential change while an interval communicates unsettled values.",
+    "rejectedAlternatives": [
+      {
+        "representation": "single large number",
+        "reason": "It would hide the recent trajectory and provisional range."
+      }
+    ],
+    "risks": ["A smooth line can imply continuity between weekly observations"],
+    "misuse": ["Reading the interval as a prediction interval for future weeks"]
+  },
+  "contestability": {
+    "sourceRequestsAllowed": true,
+    "alternativeViews": [
+      {
+        "id": "weekly-orders-table",
+        "label": "Weekly values table",
+        "rationale": "Supports exact-value inspection and export."
+      }
+    ],
+    "challenges": [
+      {
+        "id": "challenge-late-events",
+        "claimId": "claim-orders-v2",
+        "status": "accepted",
+        "reason": "The earlier total excluded late-arriving order events.",
+        "raisedBy": {
+          "id": "reviewer-17",
+          "name": "Operations reviewer",
+          "kind": "human"
+        },
+        "raisedAt": "2026-09-01T15:10:00Z",
+        "counterclaimId": "claim-orders-v3",
+        "resolution": "Publish the corrected total with a provisional interval."
+      }
+    ],
+    "corrections": [
+      {
+        "id": "correction-weekly-orders-v3",
+        "affectedClaimIds": ["claim-orders-v2"],
+        "replacementClaimIds": ["claim-orders-v3"],
+        "reason": "Late events changed the weekly total.",
+        "createdAt": "2026-09-01T15:20:00Z",
+        "createdBy": {
+          "id": "analytics-team",
+          "name": "Analytics team",
+          "kind": "human"
+        }
+      }
+    ],
+    "editorialExceptions": [
+      {
+        "ruleId": "settled-window-only",
+        "rationale": "Operations needs a provisional view before the window settles.",
+        "owner": "operations-analytics",
+        "reviewAt": "2026-09-08T16:00:00Z"
+      }
+    ]
+  },
+  "accountability": {
+    "authors": [
+      {
+        "id": "analytics-team",
+        "name": "Analytics team",
+        "kind": "human"
+      }
+    ],
+    "generatedBy": "semiotic-report-service/3.4.0",
+    "dataSources": ["evidence-source"],
+    "codeRef": "reports/weekly-orders@8d12a4f",
+    "reviews": [
+      {
+        "id": "review-weekly-orders-v3",
+        "status": "approved",
+        "reviewer": {
+          "id": "reviewer-17",
+          "name": "Operations reviewer",
+          "kind": "human"
+        },
+        "reviewedAt": "2026-09-01T15:30:00Z",
+        "rationale": "Approved with the provisional disclosure.",
+        "policyId": "operational-report-review"
+      }
+    ],
+    "actions": [
+      {
+        "id": "action-review-queue",
+        "action": "Increase the next week's manual review capacity.",
+        "actor": {
+          "id": "ops-lead",
+          "name": "Operations lead",
+          "kind": "human"
+        },
+        "actedAt": "2026-09-01T17:00:00Z",
+        "claimIds": ["claim-orders-v3"],
+        "artifactRevision": "3",
+        "policyId": "staffing-review",
+        "status": "taken",
+        "invalidatedByClaimId": "claim-orders-v2"
+      }
+    ]
+  },
+  "inheritance": {
+    "requiredPaths": ["claims", "evidence", "time.freshness", "time.window"],
+    "prohibitedExports": ["customer-row-csv"],
+    "privacy": "restricted",
+    "rawDataDefault": "bounded",
+    "preservation": "claim-evidence-preserved",
+    "sourceArtifactIds": ["weekly-orders-v2"]
+  },
+  "fieldStatus": {
+    "time.freshness": {
+      "status": "known",
+      "reason": "Computed from the publication service-level objective.",
+      "suppliedBy": "system",
+      "derived": true,
+      "reviewedBy": "reviewer-17"
+    }
+  },
+  "extensions": {
+    "com.example.operations": {
+      "runbook": "staffing-review-v2",
+      "audienceTier": 2
+    }
+  }
+}

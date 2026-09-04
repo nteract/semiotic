@@ -33,6 +33,7 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import { waffleRecipeManifest } from "../custom-charts/waffleRecipeManifest"
 import ExamplePageLayout from "./ExamplePageLayout"
+import ArtifactInspector from "./what-the-machine-sees/ArtifactInspector"
 import { urineWheelRecipeManifest } from "./urineWheelRecipeManifest"
 import {
   WORLD_COUNTRIES,
@@ -477,6 +478,15 @@ export default function WhatTheMachineSeesExamplePage() {
           </div>
         </section>
       </div>
+
+      <ArtifactInspector
+        active={active}
+        data={data}
+        description={description}
+        enrichedProps={enrichedProps}
+        question={question}
+        suggestions={renderable}
+      />
 
       <section className="machine-custom-recipe">
         <div className="machine-section-heading machine-section-heading--custom">

@@ -17,8 +17,14 @@
  */
 
 import type { SemanticViabilityDiagnostic } from "../ai/chartCapabilityTypes"
+import type {
+  ArtifactTransferStatus,
+  PortableArtifactContract
+} from "../artifact/serialization"
+import type { ArtifactIdentityBinding } from "../artifact/identity"
 
-export type SemanticViabilityStatus = "meaningful" | "degraded" | "degenerate" | "not-assessed"
+export type SemanticViabilityStatus =
+  "meaningful" | "degraded" | "degenerate" | "not-assessed"
 
 export interface RenderEvidence {
   /** HOC component name as passed to renderChart. */
@@ -76,6 +82,12 @@ export interface RenderEvidence {
   margin?: { top: number; right: number; bottom: number; left: number }
   /** The plot rectangle after resolving `margin` against the outer `width`/`height`. */
   plot?: { x: number; y: number; width: number; height: number }
+  /** Optional interpretation contract carried beside the rendered scene. */
+  artifactContract?: PortableArtifactContract
+  /** Explicit preservation/version result for `artifactContract`. */
+  artifactTransfer?: ArtifactTransferStatus
+  /** Whether the attached contract identifies this rendered component/config/data. */
+  artifactBinding?: ArtifactIdentityBinding
 }
 
 /**
@@ -165,10 +177,7 @@ export function buildCompositeEvidence(
     ...(input.legendItems !== undefined
       ? { legendItems: input.legendItems }
       : {}),
-    annotationCount: parts.reduce(
-      (sum, part) => sum + part.annotationCount,
-      0
-    ),
+    annotationCount: parts.reduce((sum, part) => sum + part.annotationCount, 0),
     ariaLabel,
     warnings,
     semanticStatus: "not-assessed",
@@ -177,9 +186,10 @@ export function buildCompositeEvidence(
 }
 
 /** Tally scene nodes by their `type` field. */
-export function tallyByType(
-  nodes: ReadonlyArray<{ type?: string }>
-): { count: number; byType: Record<string, number> } {
+export function tallyByType(nodes: ReadonlyArray<{ type?: string }>): {
+  count: number
+  byType: Record<string, number>
+} {
   const byType: Record<string, number> = {}
   for (const n of nodes) {
     const t = typeof n?.type === "string" && n.type.length > 0 ? n.type : "node"
@@ -190,7 +200,8 @@ export function tallyByType(
 
 /** Coerce a d3 domain endpoint (number | Date | string) to a finite number, or null. */
 function toFiniteNumber(v: unknown): number | null {
-  const n = v instanceof Date ? v.getTime() : typeof v === "number" ? v : Number(v)
+  const n =
+    v instanceof Date ? v.getTime() : typeof v === "number" ? v : Number(v)
   return Number.isFinite(n) ? n : null
 }
 
@@ -251,7 +262,8 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
   const annotationInputCount = Array.isArray(input.annotations)
     ? input.annotations.length
     : 0
-  const annotationCount = input.annotationRender?.renderedCount ?? annotationInputCount
+  const annotationCount =
+    input.annotationRender?.renderedCount ?? annotationInputCount
   const ariaLabel =
     (typeof input.description === "string" && input.description) ||
     (typeof input.title === "string" && input.title) ||
@@ -262,7 +274,7 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
         x: margin.left,
         y: margin.top,
         width: input.width - margin.left - margin.right,
-        height: input.height - margin.top - margin.bottom,
+        height: input.height - margin.top - margin.bottom
       }
     : undefined
   return {
@@ -279,15 +291,20 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     ...(input.categories ? { categories: input.categories } : {}),
     ...(input.nodeCount !== undefined ? { nodeCount: input.nodeCount } : {}),
     ...(input.edgeCount !== undefined ? { edgeCount: input.edgeCount } : {}),
-    ...(input.legendItems !== undefined ? { legendItems: input.legendItems } : {}),
+    ...(input.legendItems !== undefined
+      ? { legendItems: input.legendItems }
+      : {}),
     annotationCount,
     ...(input.annotationRender
       ? {
           annotationInputCount: input.annotationRender.inputCount,
           unrenderedAnnotationCount: input.annotationRender.unrenderedCount,
           ...(input.annotationRender.unrenderedTypes.length > 0
-            ? { unrenderedAnnotationTypes: input.annotationRender.unrenderedTypes }
-            : {}),
+            ? {
+                unrenderedAnnotationTypes:
+                  input.annotationRender.unrenderedTypes
+              }
+            : {})
         }
       : {}),
     ariaLabel,
@@ -295,6 +312,6 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     semanticStatus: "not-assessed",
     semanticDiagnostics: [],
     ...(margin ? { margin } : {}),
-    ...(plot ? { plot } : {}),
+    ...(plot ? { plot } : {})
   }
 }

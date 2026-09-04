@@ -433,15 +433,19 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(toolNames).toEqual([
       "applyTheme",
       "auditAccessibility",
+      "auditArtifact",
       "auditMobileVisualization",
       "diagnoseConfig",
       "evaluateChart",
+      "explainRefusal",
       "getSchema",
       "groundChart",
       "interrogateChart",
       "proposeChartVariants",
+      "recommendRepresentation",
       "renderChart",
       "renderInteractiveChart",
+      "repairArtifact",
       "repairChartConfig",
       "reportIssue",
       "suggestChart",
@@ -459,6 +463,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(result.result).toBeDefined()
     const uris = result.result.resources.map((r: { uri: string }) => r.uri).sort()
     expect(uris).toEqual([
+      "semiotic://artifact-contract-schema",
       "semiotic://behavior-contracts",
       "semiotic://build-info",
       "semiotic://components",

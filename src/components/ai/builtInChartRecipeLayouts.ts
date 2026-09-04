@@ -16,7 +16,10 @@ export function isBuiltInChartRecipeLayoutId(layoutId: string): boolean {
 export function registerBuiltInChartRecipeLayouts(): void {
   registerRecipeLayout(
     PARALLEL_COORDINATES_LAYOUT_ID,
-    parallelCoordinatesLayout
+    parallelCoordinatesLayout,
+    { version: "1" }
   )
-  registerRecipeLayout(CALENDAR_HEATMAP_LAYOUT_ID, calendarLayout)
+  registerRecipeLayout(CALENDAR_HEATMAP_LAYOUT_ID, calendarLayout, {
+    version: "1"
+  })
 }

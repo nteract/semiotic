@@ -17,7 +17,7 @@ function routeDocumentHash(document) {
 describe("documentation prerender determinism", () => {
   it("emits stable machine-readable content for stateful documentation routes", async () => {
     const renderRoute = await createStaticRouteRenderer()
-    const routes = ["", "intelligence/serialization", "server/studio"]
+    const routes = ["", "artifacts/overview", "intelligence/serialization", "server/studio"]
 
     for (const route of routes) {
       const first = sanitizeRouteHtml(await renderRoute(route), route)

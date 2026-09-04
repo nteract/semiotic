@@ -1,0 +1,1246 @@
+{
+  "fixtureVersion": "0.2",
+  "description": "Deterministic artifact-contract benchmark scenarios spanning operational, editorial, agent-mediated, and public-information work.",
+  "bases": {
+    "operational-live": {
+      "component": "LineChart",
+      "policy": "operational-streaming",
+      "controlExpectation": { "evaluation": "not-refuse" },
+      "config": {
+        "data": [
+          { "period": 1, "value": 4 },
+          { "period": 2, "value": 7 },
+          { "period": 3, "value": 6 }
+        ],
+        "xAccessor": "period",
+        "yAccessor": "value",
+        "title": "Settled hourly service total",
+        "description": "Three settled hourly observations from the monitored service.",
+        "summary": "The total rose and then eased during the settled window.",
+        "accessibleTable": true
+      },
+      "contract": {
+        "id": "operational-live-base",
+        "kind": "dashboard",
+        "title": "Settled hourly service total",
+        "intents": ["monitor"],
+        "purpose": {
+          "stakes": "operational",
+          "communicativeAct": "Support monitored triage from a settled reporting window.",
+          "allowedUses": ["triage"],
+          "prohibitedUses": ["automated enforcement"]
+        },
+        "claims": [
+          {
+            "id": "operational-claim",
+            "text": "The settled hourly total rose and then eased.",
+            "kind": "aggregation",
+            "status": "supported",
+            "evidenceIds": ["operational-source"],
+            "scope": {
+              "metric": "service total",
+              "metricType": "count",
+              "unit": "events",
+              "direction": "mixed"
+            },
+            "asOf": "2026-09-02T12:00:00Z",
+            "authoredBy": { "id": "operations-team", "kind": "human" }
+          }
+        ],
+        "evidence": [
+          {
+            "id": "operational-source",
+            "role": "source-data",
+            "label": "Settled service events",
+            "source": {
+              "name": "Service event stream",
+              "uri": "urn:benchmark:operational:events",
+              "version": "2026-09-02.1",
+              "retrievedAt": "2026-09-02T12:02:00Z"
+            },
+            "fingerprint": "sha256:operational-source-v1",
+            "dataVersion": "2026-09-02.1",
+            "observedAt": "2026-09-02T12:00:00Z",
+            "scope": { "unit": "events" }
+          }
+        ],
+        "time": {
+          "eventTime": {
+            "field": "occurredAt",
+            "value": "2026-09-02T12:00:00Z",
+            "timezone": "UTC",
+            "granularity": "hour"
+          },
+          "observedAt": "2026-09-02T12:00:00Z",
+          "ingestedAt": "2026-09-02T12:00:20Z",
+          "processedAt": "2026-09-02T12:01:00Z",
+          "publishedAt": "2026-09-02T12:02:00Z",
+          "snapshotAt": "2026-09-02T12:01:30Z",
+          "presentation": {
+            "state": "mixed",
+            "label": "Live stream settled through 12:00 UTC with historical snapshot"
+          },
+          "freshness": {
+            "status": "fresh",
+            "checkedAt": "2026-09-02T12:02:00Z",
+            "heartbeatAt": "2026-09-02T12:01:50Z",
+            "expiresAt": "2026-09-02T12:10:00Z",
+            "basis": "stream heartbeat and settled watermark"
+          },
+          "watermark": {
+            "value": "2026-09-02T12:00:00Z",
+            "policy": "ten-minute lateness allowance",
+            "allowedLateness": "PT10M"
+          },
+          "window": {
+            "start": "2026-09-02T09:00:00Z",
+            "end": "2026-09-02T12:00:00Z",
+            "status": "settled"
+          },
+          "completeness": { "status": "settled", "basis": "watermark" },
+          "revision": { "status": "original" },
+          "snapshot": {
+            "id": "operational-snapshot-current",
+            "format": "other",
+            "schemaVersion": "1"
+          },
+          "sources": [
+            {
+              "id": "operational-stream",
+              "kind": "stream",
+              "observedAt": "2026-09-02T12:00:00Z",
+              "version": "1",
+              "timezone": "UTC",
+              "granularity": "hour",
+              "freshness": "fresh",
+              "completeness": "settled"
+            },
+            {
+              "id": "operational-quality",
+              "kind": "quality-check",
+              "observedAt": "2026-09-02T12:01:20Z",
+              "version": "1",
+              "timezone": "UTC",
+              "granularity": "hour",
+              "freshness": "fresh",
+              "completeness": "settled"
+            }
+          ]
+        },
+        "reception": {
+          "channels": [
+            {
+              "channel": "visual",
+              "disclosure": "standard",
+              "navigation": true
+            },
+            {
+              "channel": "screen-reader",
+              "disclosure": "detailed",
+              "rawData": "bounded"
+            },
+            { "channel": "agent", "disclosure": "standard", "rawData": "deny" }
+          ],
+          "audience": "On-call service operators",
+          "description": "A keyboard-accessible trend with a data-table fallback.",
+          "dataFallback": true
+        },
+        "form": {
+          "chartFamily": "time-series",
+          "whyThisForm": "Position over time supports monitored change detection.",
+          "risks": ["A live label can be mistaken for an unsettled window."]
+        },
+        "contestability": {
+          "sourceRequestsAllowed": true,
+          "alternativeViews": [
+            { "id": "operational-table", "label": "Settled event table" }
+          ]
+        },
+        "accountability": {
+          "authors": [{ "id": "operations-team", "kind": "human" }],
+          "dataSources": ["operational-source"],
+          "codeRef": "benchmark:operational-live"
+        },
+        "inheritance": {
+          "requiredPaths": ["claims", "evidence", "time"],
+          "prohibitedExports": ["evidence[].sample"],
+          "privacy": "restricted",
+          "rawDataDefault": "exclude",
+          "preservation": "claim-evidence-preserved"
+        },
+        "fieldStatus": {
+          "accountability.humanReview": {
+            "status": "unknown",
+            "reason": "The current shift reviewer is not represented in the source metadata.",
+            "suppliedBy": "import"
+          }
+        }
+      }
+    },
+    "editorial-history": {
+      "component": "LineChart",
+      "policy": "editorial",
+      "controlExpectation": { "evaluation": "not-refuse" },
+      "config": {
+        "data": [
+          { "period": 2023, "value": 42 },
+          { "period": 2024, "value": 47 },
+          { "period": 2025, "value": 45 }
+        ],
+        "xAccessor": "period",
+        "yAccessor": "value",
+        "title": "Published annual estimate",
+        "description": "Three annual estimates from a versioned public release.",
+        "summary": "The estimate increased in 2024 and eased in 2025.",
+        "accessibleTable": true
+      },
+      "contract": {
+        "id": "editorial-history-base",
+        "kind": "story",
+        "title": "Published annual estimate",
+        "intents": ["trend", "explain"],
+        "purpose": {
+          "stakes": "informational",
+          "communicativeAct": "Describe a bounded change in a published series.",
+          "allowedUses": ["public explanation"],
+          "prohibitedUses": ["causal attribution"]
+        },
+        "claims": [
+          {
+            "id": "editorial-claim",
+            "text": "The published estimate increased in 2024 and eased in 2025.",
+            "kind": "observation",
+            "status": "supported",
+            "evidenceIds": ["editorial-source"],
+            "scope": {
+              "metric": "published estimate",
+              "metricType": "count",
+              "unit": "estimated cases",
+              "direction": "mixed"
+            },
+            "asOf": "2026-08-31T18:00:00Z",
+            "authoredBy": { "id": "data-desk", "kind": "human" }
+          }
+        ],
+        "evidence": [
+          {
+            "id": "editorial-source",
+            "role": "external-source",
+            "label": "Versioned annual release",
+            "source": {
+              "name": "Public statistics office",
+              "uri": "urn:benchmark:editorial:annual-release",
+              "version": "2026.08",
+              "retrievedAt": "2026-08-31T18:00:00Z",
+              "publisher": "Public statistics office"
+            },
+            "fingerprint": "sha256:editorial-source-v1",
+            "dataVersion": "2026.08",
+            "observedAt": "2026-08-31T17:00:00Z",
+            "scope": { "unit": "estimated cases" },
+            "relationship": "descriptive"
+          }
+        ],
+        "time": {
+          "eventTime": {
+            "field": "year",
+            "value": "2025-12-31T23:59:59Z",
+            "timezone": "UTC",
+            "granularity": "year"
+          },
+          "observedAt": "2026-08-31T17:00:00Z",
+          "processedAt": "2026-08-31T17:30:00Z",
+          "publishedAt": "2026-08-31T18:00:00Z",
+          "snapshotAt": "2026-08-31T17:45:00Z",
+          "presentation": {
+            "state": "historical",
+            "label": "Final published release"
+          },
+          "freshness": {
+            "status": "fresh",
+            "checkedAt": "2026-08-31T18:00:00Z",
+            "expiresAt": "2027-08-31T18:00:00Z",
+            "basis": "release version"
+          },
+          "window": {
+            "start": "2023-01-01T00:00:00Z",
+            "end": "2026-01-01T00:00:00Z",
+            "status": "settled"
+          },
+          "completeness": { "status": "settled", "basis": "published release" },
+          "revision": { "status": "original" },
+          "snapshot": {
+            "id": "editorial-snapshot-current",
+            "format": "other",
+            "schemaVersion": "2026.08"
+          },
+          "sources": [
+            {
+              "id": "editorial-publication",
+              "kind": "publication",
+              "observedAt": "2026-08-31T18:00:00Z",
+              "version": "2026.08",
+              "timezone": "UTC",
+              "granularity": "year",
+              "freshness": "fresh",
+              "completeness": "settled"
+            }
+          ]
+        },
+        "reception": {
+          "channels": [
+            { "channel": "visual", "disclosure": "standard" },
+            {
+              "channel": "screen-reader",
+              "disclosure": "detailed",
+              "rawData": "bounded"
+            },
+            { "channel": "print", "disclosure": "standard" }
+          ],
+          "audience": "General news readers",
+          "description": "A described trend with exact values in a fallback table.",
+          "dataFallback": true
+        },
+        "form": {
+          "chartFamily": "time-series",
+          "whyThisForm": "A line makes the bounded annual sequence explicit.",
+          "rejectedAlternatives": [
+            {
+              "representation": "single headline number",
+              "reason": "It would hide the sequence."
+            }
+          ]
+        },
+        "contestability": {
+          "sourceRequestsAllowed": true,
+          "corrections": []
+        },
+        "accountability": {
+          "authors": [{ "id": "data-desk", "kind": "human" }],
+          "dataSources": ["editorial-source"],
+          "codeRef": "benchmark:editorial-history",
+          "reviews": [
+            {
+              "id": "editorial-review",
+              "status": "approved",
+              "reviewedAt": "2026-08-31T18:10:00Z"
+            }
+          ]
+        },
+        "inheritance": {
+          "requiredPaths": ["claims", "evidence", "time", "contestability"],
+          "privacy": "public",
+          "rawDataDefault": "bounded",
+          "preservation": "full-fidelity"
+        },
+        "fieldStatus": {
+          "evidence.sourceAgreement": {
+            "status": "unknown",
+            "reason": "Independent agreement with the published release was not measured.",
+            "suppliedBy": "author"
+          }
+        }
+      }
+    },
+    "agent-reviewed": {
+      "component": "LineChart",
+      "policy": "agent-generated",
+      "controlExpectation": { "evaluation": "not-refuse" },
+      "config": {
+        "data": [
+          { "period": 1, "value": 11 },
+          { "period": 2, "value": 14 },
+          { "period": 3, "value": 13 }
+        ],
+        "xAccessor": "period",
+        "yAccessor": "value",
+        "title": "Reviewed generated summary",
+        "description": "A reviewed summary grounded in a versioned bounded dataset.",
+        "summary": "The series rose and then eased.",
+        "accessibleTable": true
+      },
+      "contract": {
+        "id": "agent-reviewed-base",
+        "kind": "agent-answer",
+        "title": "Reviewed generated summary",
+        "intents": ["explain"],
+        "purpose": {
+          "stakes": "informational",
+          "communicativeAct": "Provide a bounded generated reading for human review.",
+          "allowedUses": ["draft explanation"],
+          "prohibitedUses": ["unreviewed publication", "automated action"]
+        },
+        "claims": [
+          {
+            "id": "agent-claim",
+            "text": "The measured series rose and then eased.",
+            "kind": "observation",
+            "status": "supported",
+            "evidenceIds": ["agent-source"],
+            "scope": {
+              "metric": "reviewed measure",
+              "metricType": "count",
+              "unit": "records",
+              "direction": "mixed"
+            },
+            "asOf": "2026-09-01T16:00:00Z",
+            "authoredBy": { "id": "summary-agent", "kind": "agent" },
+            "review": {
+              "status": "approved",
+              "reviewer": { "id": "human-reviewer", "kind": "human" },
+              "reviewedAt": "2026-09-01T16:10:00Z",
+              "rationale": "The claim matches the bounded evidence."
+            }
+          }
+        ],
+        "evidence": [
+          {
+            "id": "agent-source",
+            "role": "source-data",
+            "label": "Reviewed bounded input",
+            "source": {
+              "name": "Versioned analysis extract",
+              "uri": "urn:benchmark:agent:input",
+              "version": "4",
+              "retrievedAt": "2026-09-01T16:00:00Z"
+            },
+            "fingerprint": "sha256:agent-source-v4",
+            "dataVersion": "4",
+            "observedAt": "2026-09-01T15:50:00Z",
+            "scope": { "unit": "records" }
+          }
+        ],
+        "time": {
+          "observedAt": "2026-09-01T15:50:00Z",
+          "processedAt": "2026-09-01T15:55:00Z",
+          "publishedAt": "2026-09-01T16:10:00Z",
+          "snapshotAt": "2026-09-01T15:55:00Z",
+          "presentation": {
+            "state": "historical",
+            "label": "Reviewed through 16:00 UTC"
+          },
+          "freshness": {
+            "status": "fresh",
+            "checkedAt": "2026-09-01T16:00:00Z",
+            "expiresAt": "2026-09-08T16:00:00Z",
+            "basis": "versioned extract"
+          },
+          "window": {
+            "start": "2026-08-01T00:00:00Z",
+            "end": "2026-09-01T00:00:00Z",
+            "status": "settled"
+          },
+          "completeness": { "status": "settled", "basis": "bounded extract" },
+          "revision": { "status": "original" },
+          "snapshot": {
+            "id": "agent-snapshot-current",
+            "format": "other",
+            "schemaVersion": "4"
+          }
+        },
+        "reception": {
+          "channels": [
+            {
+              "channel": "agent",
+              "disclosure": "detailed",
+              "rawData": "deny",
+              "tokenBudget": 3000
+            },
+            {
+              "channel": "screen-reader",
+              "disclosure": "detailed",
+              "rawData": "bounded"
+            },
+            { "channel": "visual", "disclosure": "standard" }
+          ],
+          "audience": "An analyst reviewing generated material",
+          "description": "Structured evidence remains separate from untrusted prose.",
+          "dataFallback": true
+        },
+        "form": {
+          "chartFamily": "time-series",
+          "whyThisForm": "The chart is a review aid paired with structured evidence.",
+          "misuse": ["Treating generated explanation as independent evidence."]
+        },
+        "contestability": {
+          "sourceRequestsAllowed": true,
+          "alternativeViews": [
+            { "id": "agent-source-table", "label": "Source rows" }
+          ]
+        },
+        "accountability": {
+          "authors": [{ "id": "summary-agent", "kind": "agent" }],
+          "generatedBy": "benchmark-summary-agent@1",
+          "dataSources": ["agent-source"],
+          "reviews": [
+            {
+              "id": "agent-human-review",
+              "status": "approved",
+              "reviewer": { "id": "human-reviewer", "kind": "human" },
+              "reviewedAt": "2026-09-01T16:10:00Z"
+            }
+          ]
+        },
+        "inheritance": {
+          "requiredPaths": ["claims", "evidence", "accountability.reviews"],
+          "prohibitedExports": ["evidence[].sample"],
+          "privacy": "restricted",
+          "rawDataDefault": "exclude",
+          "preservation": "claim-evidence-preserved"
+        },
+        "fieldStatus": {
+          "accountability.releaseOwner": {
+            "status": "unknown",
+            "reason": "The eventual publication owner is outside the generation record.",
+            "suppliedBy": "author"
+          }
+        }
+      }
+    },
+    "public-observation": {
+      "component": "LineChart",
+      "policy": "public-civic",
+      "controlExpectation": { "evaluation": "not-refuse" },
+      "config": {
+        "data": [
+          { "period": 1, "value": 8 },
+          { "period": 2, "value": 9 },
+          { "period": 3, "value": 10 }
+        ],
+        "xAccessor": "period",
+        "yAccessor": "value",
+        "title": "Community observation series",
+        "description": "Three aggregated observation periods with source and uncertainty notes.",
+        "summary": "The recorded aggregate increased across the three periods.",
+        "accessibleTable": true
+      },
+      "contract": {
+        "id": "public-observation-base",
+        "kind": "chart",
+        "title": "Community observation series",
+        "intents": ["trend", "educate"],
+        "purpose": {
+          "stakes": "informational",
+          "communicativeAct": "Explain a bounded public observation without generalizing beyond coverage.",
+          "allowedUses": ["public learning"],
+          "prohibitedUses": ["household inference", "individual decisions"]
+        },
+        "claims": [
+          {
+            "id": "public-claim",
+            "text": "The recorded aggregate increased across the three observed periods.",
+            "kind": "observation",
+            "status": "supported",
+            "evidenceIds": ["public-source"],
+            "scope": {
+              "metric": "community observation",
+              "metricType": "count",
+              "unit": "observations",
+              "direction": "increase",
+              "geography": "published aggregate only"
+            },
+            "uncertainty": {
+              "kind": "qualitative",
+              "description": "Coverage varies by reporting period."
+            },
+            "asOf": "2026-08-30T12:00:00Z",
+            "authoredBy": { "id": "science-team", "kind": "human" }
+          }
+        ],
+        "evidence": [
+          {
+            "id": "public-source",
+            "role": "human-observation",
+            "label": "Aggregated community observations",
+            "source": {
+              "name": "Community observation program",
+              "uri": "urn:benchmark:public:observations",
+              "version": "2026-08",
+              "retrievedAt": "2026-08-30T12:00:00Z",
+              "publisher": "Community science office"
+            },
+            "fingerprint": "sha256:public-source-v1",
+            "dataVersion": "2026-08",
+            "observedAt": "2026-08-30T11:00:00Z",
+            "scope": { "unit": "observations", "privacy": "aggregate" },
+            "relationship": "descriptive"
+          }
+        ],
+        "time": {
+          "eventTime": {
+            "field": "period",
+            "value": "2026-08-30T11:00:00Z",
+            "timezone": "UTC",
+            "granularity": "month"
+          },
+          "observedAt": "2026-08-30T11:00:00Z",
+          "processedAt": "2026-08-30T11:30:00Z",
+          "publishedAt": "2026-08-30T12:00:00Z",
+          "snapshotAt": "2026-08-30T11:45:00Z",
+          "presentation": {
+            "state": "historical",
+            "label": "Published monthly aggregate"
+          },
+          "freshness": {
+            "status": "fresh",
+            "checkedAt": "2026-08-30T12:00:00Z",
+            "expiresAt": "2026-09-30T12:00:00Z",
+            "basis": "monthly publication"
+          },
+          "window": {
+            "start": "2026-06-01T00:00:00Z",
+            "end": "2026-09-01T00:00:00Z",
+            "status": "settled"
+          },
+          "completeness": {
+            "status": "settled",
+            "basis": "published monthly extract"
+          },
+          "revision": { "status": "original" },
+          "snapshot": {
+            "id": "public-snapshot-current",
+            "format": "other",
+            "schemaVersion": "2026-08"
+          }
+        },
+        "reception": {
+          "channels": [
+            { "channel": "visual", "disclosure": "standard" },
+            {
+              "channel": "screen-reader",
+              "disclosure": "detailed",
+              "rawData": "bounded"
+            },
+            {
+              "channel": "low-bandwidth",
+              "disclosure": "summary",
+              "rawData": "deny"
+            }
+          ],
+          "audience": "Public learners and community participants",
+          "strengths": ["Exact aggregate values remain available in a table."],
+          "risks": [
+            "Uneven participation can be mistaken for population coverage."
+          ],
+          "scaffolds": ["Explain observation coverage before interpretation."],
+          "description": "A clear aggregate with uncertainty and privacy boundaries.",
+          "dataFallback": true
+        },
+        "form": {
+          "chartFamily": "time-series",
+          "whyThisForm": "A simple sequence supports basic trend literacy.",
+          "risks": ["The aggregate is not a census."]
+        },
+        "contestability": {
+          "sourceRequestsAllowed": true,
+          "alternativeViews": [
+            { "id": "public-methods", "label": "Methods and coverage" }
+          ]
+        },
+        "accountability": {
+          "authors": [{ "id": "science-team", "kind": "human" }],
+          "dataSources": ["public-source"],
+          "codeRef": "benchmark:public-observation"
+        },
+        "inheritance": {
+          "requiredPaths": ["claims", "evidence", "time", "reception.risks"],
+          "prohibitedExports": ["evidence[].sample", "chart.structure[].datum"],
+          "privacy": "public",
+          "rawDataDefault": "bounded",
+          "preservation": "full-fidelity"
+        },
+        "fieldStatus": {
+          "evidence.populationCoverage": {
+            "status": "unknown",
+            "reason": "Participation coverage cannot be inferred from the submitted observations alone.",
+            "suppliedBy": "import"
+          }
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "operational-late-payment-events",
+      "track": "operational",
+      "title": "Late payment events alter a settled hourly fraud rate",
+      "baseId": "operational-live",
+      "relations": [
+        "claim-support",
+        "time",
+        "challenge-and-correction",
+        "abstention"
+      ],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": ["time.revision.status-mismatch"],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining"
+        ]
+      }
+    },
+    {
+      "id": "operational-wrong-currency",
+      "track": "operational",
+      "title": "Schema-valid input uses the wrong currency",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "representation-fit", "abstention"],
+      "mutationIds": ["unit-mismatch"],
+      "expected": {
+        "findingPrefixes": [
+          "representation.no-comparison",
+          "collection.metric-unit"
+        ],
+        "unknownPaths": ["accountability.humanReview"]
+      }
+    },
+    {
+      "id": "operational-processing-time-claim",
+      "track": "operational",
+      "title": "Processing-time aggregation is presented as event time",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "time", "abstention"],
+      "mutationIds": ["truncated-window"],
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "time.presentation.final-mismatch"
+        ],
+        "unknownPaths": ["accountability.humanReview"]
+      }
+    },
+    {
+      "id": "operational-lagging-table",
+      "track": "operational",
+      "title": "Table snapshot lags a live visualization",
+      "baseId": "operational-live",
+      "relations": ["reception", "time", "accountability"],
+      "mutationIds": ["stale-snapshot"],
+      "expected": {
+        "findingPrefixes": [
+          "collection.stale-panel",
+          "collection.snapshot-skew"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      }
+    },
+    {
+      "id": "operational-old-quality-check",
+      "track": "operational",
+      "title": "Quality check is older than the current data",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "time", "accountability"],
+      "mutationIds": ["stale-snapshot"],
+      "expected": {
+        "findingPrefixes": ["time.quality.stale", "time.quality.predates-data"],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.snapshot.semanticCurrency"
+        ]
+      }
+    },
+    {
+      "id": "operational-backfill-normalized",
+      "track": "operational",
+      "title": "Backfill anomaly is normalized without reopening the window",
+      "baseId": "operational-live",
+      "relations": ["time", "challenge-and-correction", "accountability"],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "time.lateEventsRemaining"
+        ]
+      }
+    },
+    {
+      "id": "operational-old-schema-panel",
+      "track": "operational",
+      "title": "One dashboard panel uses an older source schema",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["source-version-removal"],
+      "expected": {
+        "findingPrefixes": ["evidence.identity"],
+        "unknownPaths": ["accountability.humanReview", "evidence[0]"]
+      }
+    },
+    {
+      "id": "operational-open-window-action",
+      "track": "operational",
+      "title": "An agent acts on an open reporting window",
+      "baseId": "operational-live",
+      "relations": ["time", "accountability", "abstention"],
+      "mutationIds": ["truncated-window"],
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "representation.wait-for-settlement"
+        ],
+        "unknownPaths": ["accountability.humanReview"]
+      }
+    },
+    {
+      "id": "operational-sensor-silence",
+      "track": "operational",
+      "title": "Sensor silence is reported as zero demand",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "time", "abstention"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": ["accountability.humanReview"]
+      }
+    },
+    {
+      "id": "operational-gross-net-metric",
+      "track": "operational",
+      "title": "The same metric label alternates between gross and net",
+      "baseId": "operational-live",
+      "relations": ["claim-support", "representation-fit", "accountability"],
+      "mutationIds": ["missing-denominator"],
+      "expected": {
+        "findingPrefixes": ["claims.denominator"],
+        "unknownPaths": [
+          "accountability.humanReview",
+          "claims[0].scope.denominator"
+        ]
+      }
+    },
+    {
+      "id": "editorial-partial-vote-final",
+      "track": "editorial-news",
+      "title": "A partial vote count is labeled final",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "time", "abstention"],
+      "mutationIds": ["truncated-window"],
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "time.presentation.final-mismatch"
+        ],
+        "unknownPaths": ["evidence.sourceAgreement"]
+      }
+    },
+    {
+      "id": "editorial-estimate-observed",
+      "track": "editorial-news",
+      "title": "A modeled estimate is described as directly observed",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "reception", "preservation"],
+      "mutationIds": ["uncertainty-removal"],
+      "expected": {
+        "findingPrefixes": ["claims.forecast-uncertainty"],
+        "unknownPaths": ["evidence.sourceAgreement"]
+      }
+    },
+    {
+      "id": "editorial-overlapping-categories",
+      "track": "editorial-news",
+      "title": "Overlapping categories are summed as exclusive groups",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "representation-fit", "reception"],
+      "mutationIds": ["category-overlap"],
+      "expected": {
+        "findingPrefixes": ["claims.category-overlap"],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "claims[0].scope.categoryMembership"
+        ]
+      }
+    },
+    {
+      "id": "editorial-revised-history",
+      "track": "editorial-news",
+      "title": "A source revises historical values after publication",
+      "baseId": "editorial-history",
+      "relations": ["time", "challenge-and-correction", "preservation"],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": ["evidence.sourceAgreement", "time.lateEventsRemaining"]
+      }
+    },
+    {
+      "id": "editorial-changing-denominator",
+      "track": "editorial-news",
+      "title": "The denominator changes between reported years",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "representation-fit", "accountability"],
+      "mutationIds": ["missing-denominator"],
+      "expected": {
+        "findingPrefixes": ["claims.denominator"],
+        "unknownPaths": [
+          "evidence.sourceAgreement",
+          "claims[0].scope.denominator"
+        ]
+      }
+    },
+    {
+      "id": "editorial-forecast-band-removed",
+      "track": "editorial-news",
+      "title": "A forecast band is removed from the published view",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "reception", "preservation"],
+      "mutationIds": ["uncertainty-removal"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty",
+          "claims.forecast-ranges"
+        ],
+        "unknownPaths": ["evidence.sourceAgreement"]
+      }
+    },
+    {
+      "id": "editorial-correlation-causal",
+      "track": "editorial-news",
+      "title": "A correlation is promoted to a causal headline",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "accountability", "abstention"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": ["evidence.sourceAgreement"]
+      }
+    },
+    {
+      "id": "editorial-contrary-window-omitted",
+      "track": "editorial-news",
+      "title": "A comparison window omits a contrary period",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "time", "abstention"],
+      "mutationIds": ["truncated-window"],
+      "expected": {
+        "findingPrefixes": [
+          "time.window.provisional-as-settled",
+          "collection.window-skew"
+        ],
+        "unknownPaths": ["evidence.sourceAgreement"]
+      }
+    },
+    {
+      "id": "editorial-correction-prose-only",
+      "track": "editorial-news",
+      "title": "A correction appears in prose but not in chart context",
+      "baseId": "editorial-history",
+      "relations": ["time", "challenge-and-correction", "reception"],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": ["time.revision.claim-propagation"],
+        "unknownPaths": ["evidence.sourceAgreement", "time.lateEventsRemaining"]
+      }
+    },
+    {
+      "id": "editorial-syndicated-source-loss",
+      "track": "editorial-news",
+      "title": "A syndicated image loses its source and as-of identity",
+      "baseId": "editorial-history",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["source-version-removal"],
+      "expected": {
+        "findingPrefixes": ["evidence.identity"],
+        "unknownPaths": ["evidence.sourceAgreement", "evidence[0]"]
+      }
+    },
+    {
+      "id": "agent-render-fit",
+      "track": "agent-authoring-reading",
+      "title": "A component renders but does not fit the comparison",
+      "baseId": "agent-reviewed",
+      "relations": ["representation-fit", "accountability", "abstention"],
+      "mutationIds": ["unit-mismatch"],
+      "expected": {
+        "findingPrefixes": [
+          "representation.no-comparison",
+          "collection.metric-unit"
+        ],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-invented-reason",
+      "track": "agent-authoring-reading",
+      "title": "A generated summary invents a reason for a spike",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "accountability", "abstention"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-source-label-injection",
+      "track": "agent-authoring-reading",
+      "title": "Untrusted generated text contains a prompt injection",
+      "baseId": "agent-reviewed",
+      "relations": ["reception", "accountability", "abstention"],
+      "mutationIds": ["generated-text-prompt-injection"],
+      "expected": {
+        "findingPrefixes": ["grounding.boundary.neutralized"],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-provisional-upgrade",
+      "track": "agent-authoring-reading",
+      "title": "A handoff upgrades provisional material to supported",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "time", "accountability"],
+      "mutationIds": ["truncated-window"],
+      "expected": {
+        "findingPrefixes": [
+          "time.presentation.final-mismatch",
+          "representation.wait-for-settlement"
+        ],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-claim-changing-repair",
+      "track": "agent-authoring-reading",
+      "title": "A repair changes the claim while describing itself as styling",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": ["claims.unsourced-supported"],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-noncomparable-units",
+      "track": "agent-authoring-reading",
+      "title": "An agent compares measures with non-comparable units",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "representation-fit", "abstention"],
+      "mutationIds": ["unit-mismatch"],
+      "expected": {
+        "findingPrefixes": ["representation.no-comparison"],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-token-budget-uncertainty",
+      "track": "agent-authoring-reading",
+      "title": "Uncertainty is omitted to meet a token budget",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "reception", "preservation"],
+      "mutationIds": ["uncertainty-removal"],
+      "expected": {
+        "findingPrefixes": ["claims.forecast-uncertainty"],
+        "unknownPaths": ["accountability.releaseOwner"]
+      }
+    },
+    {
+      "id": "agent-screenshot-conflict",
+      "track": "agent-authoring-reading",
+      "title": "A screenshot conflicts with structured evidence",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["source-version-removal"],
+      "expected": {
+        "findingPrefixes": ["evidence.identity"],
+        "unknownPaths": ["accountability.releaseOwner", "evidence[0]"]
+      }
+    },
+    {
+      "id": "agent-generated-annotation-source",
+      "track": "agent-authoring-reading",
+      "title": "A generated annotation is cited as its own source",
+      "baseId": "agent-reviewed",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["provenance-laundering"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.self-evidence",
+          "claims.model-review",
+          "evidence.identity"
+        ],
+        "unknownPaths": ["accountability.releaseOwner", "evidence[0]"]
+      }
+    },
+    {
+      "id": "agent-dropped-correction",
+      "track": "agent-authoring-reading",
+      "title": "A receiving system drops a correction during handoff",
+      "baseId": "agent-reviewed",
+      "relations": ["time", "challenge-and-correction", "preservation"],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": ["time.revision.claim-propagation"],
+        "unknownPaths": [
+          "accountability.releaseOwner",
+          "time.lateEventsRemaining"
+        ]
+      }
+    },
+    {
+      "id": "public-sensor-replacement",
+      "track": "public-science-literacy",
+      "title": "A sensor is replaced in the middle of a series",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["source-version-removal"],
+      "expected": {
+        "findingPrefixes": ["evidence.identity"],
+        "unknownPaths": ["evidence.populationCoverage", "evidence[0]"]
+      }
+    },
+    {
+      "id": "public-delayed-uploads",
+      "track": "public-science-literacy",
+      "title": "Delayed uploads create a false sudden increase",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "time", "challenge-and-correction"],
+      "mutationIds": ["late-event-collapse"],
+      "expected": {
+        "findingPrefixes": [
+          "time.revision.status-mismatch",
+          "time.revision.claim-propagation"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "time.lateEventsRemaining"
+        ]
+      }
+    },
+    {
+      "id": "public-cluster-generalization",
+      "track": "public-science-literacy",
+      "title": "Clustered observations are generalized to a whole region",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "reception", "abstention"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": ["evidence.populationCoverage"]
+      }
+    },
+    {
+      "id": "public-missing-as-zero",
+      "track": "public-science-literacy",
+      "title": "Missing readings are treated as zero observations",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "representation-fit", "abstention"],
+      "mutationIds": ["missing-denominator"],
+      "expected": {
+        "findingPrefixes": ["claims.denominator"],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "claims[0].scope.denominator"
+        ]
+      }
+    },
+    {
+      "id": "public-modeled-as-observed",
+      "track": "public-science-literacy",
+      "title": "Modeled interpolation is presented as observation",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "accountability", "preservation"],
+      "mutationIds": ["provenance-laundering"],
+      "expected": {
+        "findingPrefixes": ["claims.self-evidence", "evidence.identity"],
+        "unknownPaths": ["evidence.populationCoverage", "evidence[0]"]
+      }
+    },
+    {
+      "id": "public-calibration-uncertainty",
+      "track": "public-science-literacy",
+      "title": "Calibration uncertainty is omitted",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "reception", "preservation"],
+      "mutationIds": ["uncertainty-removal"],
+      "expected": {
+        "findingPrefixes": ["claims.forecast-uncertainty"],
+        "unknownPaths": ["evidence.populationCoverage"]
+      }
+    },
+    {
+      "id": "public-threshold-harm",
+      "track": "public-science-literacy",
+      "title": "Crossing a threshold is described as proof of harm",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "accountability", "abstention"],
+      "mutationIds": ["unsupported-headline"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.unsourced-supported",
+          "representation.no-claim"
+        ],
+        "unknownPaths": ["evidence.populationCoverage"]
+      }
+    },
+    {
+      "id": "public-small-sample-precision",
+      "track": "public-science-literacy",
+      "title": "A small sample is shown with false precision",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "reception", "abstention"],
+      "mutationIds": ["missing-denominator"],
+      "expected": {
+        "findingPrefixes": ["claims.denominator"],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "claims[0].scope.denominator"
+        ]
+      }
+    },
+    {
+      "id": "public-household-location",
+      "track": "public-science-literacy",
+      "title": "An interactive map exposes household-level location",
+      "baseId": "public-observation",
+      "relations": ["reception", "accountability", "abstention"],
+      "mutationIds": ["inaccessible-interaction"],
+      "expected": {
+        "findingPrefixes": [
+          "chart.perceivable.content-only-visual",
+          "chart.compromising.table"
+        ],
+        "unknownPaths": [
+          "evidence.populationCoverage",
+          "inheritance.householdPrivacyReview"
+        ]
+      }
+    },
+    {
+      "id": "public-table-caveat-loss",
+      "track": "public-science-literacy",
+      "title": "An accessible table loses uncertainty and caveat context",
+      "baseId": "public-observation",
+      "relations": ["claim-support", "reception", "preservation"],
+      "mutationIds": ["uncertainty-removal", "inaccessible-interaction"],
+      "expected": {
+        "findingPrefixes": [
+          "claims.forecast-uncertainty",
+          "chart.perceivable.content-only-visual"
+        ],
+        "unknownPaths": ["evidence.populationCoverage"]
+      }
+    }
+  ]
+}

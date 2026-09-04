@@ -86,6 +86,7 @@ export const parallelCoordinatesRecipe = defineChartRecipe({
   portability: "portable",
   layout: {
     id: PARALLEL_COORDINATES_LAYOUT_ID,
+    version: "1",
     importPath: "semiotic/recipes",
     exportName: "parallelCoordinatesLayout"
   },
@@ -248,6 +249,7 @@ export const calendarHeatmapRecipe = defineChartRecipe({
   portability: "portable",
   layout: {
     id: CALENDAR_HEATMAP_LAYOUT_ID,
+    version: "1",
     importPath: "semiotic/recipes",
     exportName: "calendarLayout"
   },

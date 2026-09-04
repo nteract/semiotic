@@ -112,6 +112,16 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   { exportKey: "./ai", symbol: "suggestCharts", platform: "browser" },
   { exportKey: "./ai/core", symbol: "suggestCharts", platform: "browser" },
   {
+    exportKey: "./artifact",
+    symbol: "buildArtifactContract",
+    platform: "browser"
+  },
+  {
+    exportKey: "./artifact/react",
+    symbol: "ArtifactInspector",
+    platform: "browser"
+  },
+  {
     exportKey: "./access",
     symbol: "createChartAccessContract",
     platform: "browser"

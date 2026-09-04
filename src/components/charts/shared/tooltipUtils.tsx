@@ -3,12 +3,19 @@ import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { HoverData } from "../../realtime/types"
 import type { Datum } from "./datumTypes"
 
-export type TooltipValue = string | number | boolean | Date | Datum | Datum[] | null | undefined
-type TooltipAccessor = string | {
-  bivarianceHack(datum: Datum): TooltipValue
-}["bivarianceHack"]
+export type TooltipValue =
+  string | number | boolean | Date | Datum | Datum[] | null | undefined
+type TooltipAccessor =
+  | string
+  | {
+      bivarianceHack(datum: Datum): TooltipValue
+    }["bivarianceHack"]
 type TooltipFormatter = {
-  bivarianceHack(value: TooltipValue, index?: number, allTicks?: number[]): React.ReactNode
+  bivarianceHack(
+    value: TooltipValue,
+    index?: number,
+    allTicks?: number[]
+  ): React.ReactNode
 }["bivarianceHack"]
 
 export interface TooltipFieldConfig {
@@ -18,7 +25,7 @@ export interface TooltipFieldConfig {
   // Datum, so a `(TDatum) => X` function isn't assignable to a `(Datum) => X`
   // slot (wider-param rule). The `any` here is a typed escape hatch at the
   // tooltip-field boundary, not a data-shape declaration.
-   
+
   accessor: TooltipAccessor
   role?: "title" | "x" | "y" | "color" | "size" | "group" | "value"
   /** Per-field formatter. HOCs pass `xFormat`/`yFormat`/`valueFormat` here so
@@ -54,7 +61,10 @@ export function formatVal(v: unknown): string {
  *  `valueFormat` from breaking the entire tooltip render. Returns
  *  `ReactNode` so HOCs that supply ReactNode-returning axis formatters
  *  (see the `xFormat`/`yFormat` pitfall in the AI reference) render naturally. */
-function applyFormat(value: TooltipValue, fmt?: TooltipFormatter): React.ReactNode {
+function applyFormat(
+  value: TooltipValue,
+  fmt?: TooltipFormatter
+): React.ReactNode {
   if (!fmt) return formatVal(value)
   try {
     const out = fmt(value)
@@ -85,7 +95,11 @@ export type { SmartTooltipEntry, SmartTooltipResult } from "./smartTooltip"
  * the call site is a no-op for the common case.
  */
 export function bandTooltipFields(
-  band: { y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor } | Array<{ y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor }> | null | undefined,
+  band:
+    | { y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor }
+    | Array<{ y0Accessor?: TooltipAccessor; y1Accessor?: TooltipAccessor }>
+    | null
+    | undefined,
   valueFormat?: TooltipFormatter
 ): TooltipFieldConfig[] {
   if (!band) return []
@@ -101,13 +115,15 @@ export function bandTooltipFields(
     // single-band field made it through.
     fields.push({
       label: y0Label,
-      accessor: (d: Datum) => d.bands?.[i]?.y0 ?? (i === 0 ? d.band?.y0 : undefined),
-      format: valueFormat,
+      accessor: (d: Datum) =>
+        d.bands?.[i]?.y0 ?? (i === 0 ? d.band?.y0 : undefined),
+      format: valueFormat
     })
     fields.push({
       label: y1Label,
-      accessor: (d: Datum) => d.bands?.[i]?.y1 ?? (i === 0 ? d.band?.y1 : undefined),
-      format: valueFormat,
+      accessor: (d: Datum) =>
+        d.bands?.[i]?.y1 ?? (i === 0 ? d.band?.y1 : undefined),
+      format: valueFormat
     })
   })
   return fields
@@ -121,8 +137,8 @@ export function bandTooltipFields(
 export function buildDefaultTooltip(
   fields: TooltipFieldConfig[]
 ): (hover: HoverData) => React.ReactNode {
-  const titleField = fields.find(f => f.role === "title")
-  const bodyFields = fields.filter(f => f.role !== "title")
+  const titleField = fields.find((f) => f.role === "title")
+  const bodyFields = fields.filter((f) => f.role !== "title")
 
   return (hover: HoverData) => {
     const d = hover.data
@@ -135,12 +151,21 @@ export function buildDefaultTooltip(
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
         {titleValue != null && (
-          <div style={{ fontWeight: "bold", marginBottom: bodyFields.length > 0 ? 4 : 0 }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: bodyFields.length > 0 ? 4 : 0
+            }}
+          >
             {titleValue}
           </div>
         )}
         {bodyFields.map((field, i) => {
-          const raw = resolveValue(d, field.accessor)
+          // Stacked vertices can represent several source rows at one x.
+          const raw =
+            field.role === "y" && d.__aggregateValue != null
+              ? d.__aggregateValue
+              : resolveValue(d, field.accessor)
           const display = applyFormat(raw, field.format)
           return (
             <div key={i} style={i > 0 ? { marginTop: 2 } : undefined}>
@@ -167,7 +192,7 @@ export function buildOrdinalTooltip({
   groupAccessor,
   groupLabel,
   pieData = false,
-  valueFormat,
+  valueFormat
 }: {
   categoryAccessor: TooltipAccessor
   valueAccessor: TooltipAccessor
@@ -180,9 +205,7 @@ export function buildOrdinalTooltip({
   valueFormat?: TooltipFormatter
 }): (d: Datum) => React.ReactNode {
   return (d: Datum) => {
-    const datum = pieData
-      ? (d.data?.[0] || d.data || d)
-      : (d.data || d)
+    const datum = pieData ? d.data?.[0] || d.data || d : d.data || d
 
     const cat = resolveValue(datum, categoryAccessor)
     const val = resolveValue(datum, valueAccessor)

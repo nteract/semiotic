@@ -56,6 +56,11 @@ export const REQUIRED_DOCS_ROUTES = [
     title: "Custom Charts \u2014 Intelligence \u2014 Semiotic",
     canonicalUrl: `${SITE_URL}/custom-charts/intelligence`,
   },
+  {
+    routePath: "artifacts/overview",
+    title: "Artifact Contracts \u2014 Semiotic",
+    canonicalUrl: `${SITE_URL}/artifacts/overview`,
+  },
   ...REQUIRED_EXAMPLE_DOCS_ROUTES,
 ]
 
@@ -88,6 +93,10 @@ export const REQUIRED_MACHINE_READABLE_ROUTES = [
   {
     routePath: "blog/release-3-7-0",
     keyword: "receivability release",
+  },
+  {
+    routePath: "artifacts/overview",
+    keyword: "opt-in, versioned interpretation sidecar",
   },
   ...EXAMPLE_DEFINITIONS.map((definition) => ({
     routePath: definition.path.replace(/^\/+/, ""),

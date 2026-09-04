@@ -4,8 +4,9 @@
  *
  * Run after merging an intentional perf change. Writes
  * `benchmarks/setup/baseline.json` with one row per benchmark name and
- * its observed mean (ms) and sample count. Commit the file alongside the perf change so
- * `npm run bench:compare` has something to compare against in CI.
+ * its observed mean (ms) and sample count. Commit it alongside the perf change
+ * for `npm run bench:compare:committed` on comparable local hardware.
+ * CI does not read this file: `bench:pr-vs-main` measures origin/main afresh.
  */
 import { execSync } from "node:child_process"
 import { writeFileSync, readFileSync, rmSync } from "node:fs"

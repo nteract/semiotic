@@ -82,6 +82,15 @@ export default function Example() {
     expect(loaders.every(({ load }) => typeof load === "function")).toBe(true)
   })
 
+  it("includes the watermarks time model with the interactive example source", () => {
+    const definition = EXAMPLE_DEFINITIONS.find(({ path }) => path === "/examples/watermarks")
+    const loaders = getExampleSourceLoaders("/examples/watermarks")
+
+    expect(loaders.map(({ file }) => file)).toEqual(definition.sourceFiles)
+    expect(loaders.map(({ file }) => file)).toContain("watermarksClaimContracts.js")
+    expect(loaders.map(({ file }) => file)).toContain("watermarksTemporalRecord.js")
+  })
+
   it("includes the How a Hit Travels page, recipe, generated data, and build source", () => {
     const definition = EXAMPLE_DEFINITIONS.find(
       ({ path }) => path === "/examples/how-a-hit-travels",

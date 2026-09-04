@@ -27,6 +27,7 @@ interface EvidenceGateResult
 interface ModalityConflict
 interface ModalityObservation
 interface-member ChartEvidenceEnvelope::property::access = required access: ChartAccessContract
+interface-member ChartEvidenceEnvelope::property::artifact = optional artifact: (SerializedArtifactContract & {transferBindingVersion: typeof ARTIFACT_TRANSFER_BINDING_VERSION | typeof LEGACY_ARTIFACT_TRANSFER_BINDING_VERSION; transferFingerprint: string; identityBinding?: ArtifactIdentityBinding;}) | undefined
 interface-member ChartEvidenceEnvelope::property::audit = required audit: EnvelopeAuditSection
 interface-member ChartEvidenceEnvelope::property::chart = required chart: EnvelopeChartSection
 interface-member ChartEvidenceEnvelope::property::input = required input: EnvelopeInputSection
@@ -75,6 +76,7 @@ interface-member EnvelopeTransformOperation::property::options = optional option
 interface-member EnvelopeTransformSection::property::hash = optional hash: string | undefined
 interface-member EnvelopeTransformSection::property::operations = required operations: EnvelopeTransformOperation[]
 interface-member EvidenceEnvelopeOptions::property::accessContract = optional accessContract: ChartAccessContract | undefined
+interface-member EvidenceEnvelopeOptions::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
 interface-member EvidenceEnvelopeOptions::property::audits = optional audits: Omit<EnvelopeAuditSection, "accessibility"> | undefined
 interface-member EvidenceEnvelopeOptions::property::chartId = optional chartId: string | undefined
 interface-member EvidenceEnvelopeOptions::property::claims = optional claims: EnvelopeMeaningClaim[] | undefined

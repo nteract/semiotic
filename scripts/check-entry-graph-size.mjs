@@ -66,7 +66,9 @@ const ENTRY_GRAPHS = [
   // LineChart moved into the primary identity graph so providers from
   // `semiotic/themes/react` and `LinkedCharts` share store instances with it.
   // This costs the family ~3 KiB but removes a split-instance correctness bug.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 159 },
+  // Bumped 159→160 (3.9.2): shared XY frame title/accessibility defaults
+  // add a sub-KiB shared-graph increase.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 160 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -83,7 +85,29 @@ const ENTRY_GRAPHS = [
   // adds its reusable color-evidence normalization here. CI measures 50.1 KiB
   // gzip, so retain a narrow one-KiB guard band rather than the inherited
   // 180 KiB ceiling that could not detect accidental runtime coupling.
+  // Its isolated neutral build now measures 46.4 KiB, so restore the original
+  // 51 KiB ceiling instead of carrying forward shared-chunk inflation.
   { entry: "semiotic-evidence.module.min.js", label: "evidence", limitKb: 51 },
+  // New renderer-independent interpretation-contract boundary. This includes
+  // claims, time, policy, grounding, collection, and loss-aware transfer
+  // utilities without React or a chart renderer. The initial surface measured
+  // 107.6 KiB gzip.
+  // Closed structural validation, bound identity/time checks, correction
+  // lineage, and collection-scoped transfer audits complete that public
+  // contract. Its isolated graph measures 113.4 KiB gzip; keep a reviewable
+  // 3.6 KiB guard band.
+  // Bumped 117→118→119 (3.9.2): policy telemetry sidecar support adds a
+  // light metadata path on this shared chart contract boundary.
+  {
+    entry: "semiotic-artifact.module.min.js",
+    label: "artifact",
+    limitKb: 119
+  },
+  {
+    entry: "semiotic-artifact-react.module.min.js",
+    label: "artifact/react",
+    limitKb: 8
+  },
   { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
@@ -180,12 +204,27 @@ const ENTRY_GRAPHS = [
   // evidence normalization join the canonical AI catalog. Linux CI measures
   // 543.5 KiB gzip; retain 1.5 KiB of reviewable headroom for that accepted
   // public analysis surface.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 545 },
+  // Bumped 545→570: the AI compatibility surface re-exports the renderer-
+  // independent contract evaluator, claim/time audits, refusal outcomes, and
+  // safe grounding helpers. Production measures 567.2 KiB gzip; chart-family
+  // entries do not inherit this opt-in tooling graph.
+  // Bumped 570→579: the completed contract hardening above is also exported
+  // from this compatibility surface. Production measures 577.5 KiB gzip;
+  // retain 1.5 KiB of headroom without widening chart-family entries.
+  // Chart-config reports now bind component/recipe identity, the full
+  // contract, and serialized payload, while a missing report fails closed.
+  // Focused policy/hash boundaries leave the compatibility graph at 576.2 KiB
+  // without widening chart families; retain 3.8 KiB of review headroom.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 580 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
   // runway for this accepted public API growth.
   { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 101 },
+  // Config serialization preserves and validates the optional interpretation
+  // sidecar. Isolating the neutral utility graph removes unrelated shared
+  // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB
+  // ceiling rather than retaining transient graph-inflation allowances.
   { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]

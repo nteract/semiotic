@@ -138,6 +138,68 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./artifact",
+      "path": "dist/semiotic-artifact.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-artifact.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-artifact.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-artifact.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-artifact.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-artifact.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./artifact/react",
+      "path": "dist/semiotic-artifact-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-artifact-react.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-artifact-react.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-artifact-react.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-artifact-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-artifact-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./controls",
       "path": "dist/controls.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1183,6 +1245,20 @@
         "path": "dist/semiotic-ai.d.ts",
         "exports": [
           "./ai"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-artifact-react.d.ts",
+        "exports": [
+          "./artifact/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-artifact.d.ts",
+        "exports": [
+          "./artifact"
         ],
         "reason": "Public type entry from `exports` map"
       },

@@ -35,6 +35,7 @@ const requiredFiles = [
   "ai/surface-manifest.json",
   "ai/system-prompt.md",
   "ai/examples.md",
+  "spec/v0.1/artifact-contract.schema.json",
 ]
 
 const failures = []
@@ -58,6 +59,24 @@ try {
   }
 } catch {
   failures.push("invalid-package-json")
+}
+
+try {
+  const artifactContractSchema = JSON.parse(
+    readFileSync(
+      resolve(root, "spec/v0.1/artifact-contract.schema.json"),
+      "utf8"
+    )
+  )
+  if (
+    artifactContractSchema.$schema !==
+      "https://json-schema.org/draft/2020-12/schema" ||
+    artifactContractSchema.properties?.contractVersion?.const !== "0.1"
+  ) {
+    failures.push("invalid-artifact-contract-schema")
+  }
+} catch {
+  failures.push("invalid-artifact-contract-schema")
 }
 
 try {

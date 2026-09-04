@@ -17,6 +17,7 @@ RUN npm ci --include=dev
 # library build, MCP bundle, generated AI resources, and artifact verifier.
 COPY src ./src
 COPY ai ./ai
+COPY spec ./spec
 COPY scripts/build.mjs scripts/build-mcp.mjs scripts/generate-ai-surface-manifest.mjs ./scripts/
 # Build/check entry scripts share small transitive helpers here. Copy the
 # helper directory as one allowlisted build input so a new helper import
@@ -27,7 +28,7 @@ COPY deploy/cloud-run-nightly ./deploy/cloud-run-nightly
 
 # build:mcp externalizes the package self-imports, so the library artifacts
 # must be built first. A standalone MCP build is insufficient for rendering.
-RUN npm run check:ai-surface \
+RUN npm run check:ai-surface-manifest \
   && npm run dist:prod \
   && npm run build:mcp
 
@@ -43,6 +44,7 @@ COPY --from=build /app/package.json /app/package-lock.json /app/.npmrc ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/ai ./ai
+COPY --from=build /app/spec ./spec
 COPY --from=build /app/deploy/cloud-run-nightly/verify-runtime.mjs ./deploy/cloud-run-nightly/verify-runtime.mjs
 
 # Cloud Build supplies immutable build identity. Values are intentionally

@@ -9,11 +9,11 @@ import type {
   HeatcellSceneNode,
   Style,
   StreamScales,
-
   CurveType
 } from "./types"
 import type { SymbolName } from "./symbolPath"
 import type { Datum } from "../charts/shared/datumTypes"
+import { buildSeriesGeometry } from "./seriesGeometry"
 
 // ── Scene node builders ────────────────────────────────────────────────
 
@@ -25,30 +25,12 @@ export function buildLineNode(
   style: Style,
   group?: string
 ): LineSceneNode {
-  // Build indexed entries so we can sort by x while keeping datum alignment
-  const entries: { px: number; py: number; rawY: number; d: Datum }[] = []
-  for (const d of data) {
-    const xVal = xGet(d)
-    const yVal = yGet(d)
-    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
-    // IncrementalExtent + the stacked-area pipeline's filter so all
-    // builders agree on which datums count.
-    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
-    entries.push({ px: scales.x(xVal), py: scales.y(yVal), rawY: yVal, d })
-  }
-  // Sort by x pixel coordinate to guarantee binary search correctness
-  entries.sort((a, b) => a.px - b.px)
-
-  const path: [number, number][] = new Array(entries.length)
-  const rawValues: number[] = new Array(entries.length)
-  const sortedData: Datum[] = new Array(entries.length)
-  for (let i = 0; i < entries.length; i++) {
-    const e = entries[i]
-    path[i] = [e.px, e.py]
-    rawValues[i] = e.rawY
-    sortedData[i] = e.d
-  }
-  return { type: "line", path, rawValues, style, datum: sortedData, group }
+  const {
+    topPath: path,
+    rawValues,
+    datum
+  } = buildSeriesGeometry(data, scales, xGet, yGet)
+  return { type: "line", path, rawValues, style, datum, group }
 }
 
 export function buildAreaNode(
@@ -61,32 +43,18 @@ export function buildAreaNode(
   group?: string,
   y0Get?: (d: Datum) => number
 ): AreaSceneNode {
-  // Build indexed entries so we can sort by x for binary search correctness
-  const entries: { px: number; topY: number; botY: number; rawY: number }[] = []
-  for (const d of data) {
-    const xVal = xGet(d)
-    const yVal = yGet(d)
-    // `Number.isFinite` rejects NaN, ±Infinity, and non-numbers — matches
-    // IncrementalExtent + the stacked-area pipeline's filter so all
-    // builders agree on which datums count.
-    if (!Number.isFinite(xVal) || !Number.isFinite(yVal)) continue
-    const px = scales.x(xVal)
-    const bottomY = y0Get ? y0Get(d) : baselineY
-    entries.push({ px, topY: scales.y(yVal), botY: scales.y(bottomY), rawY: yVal })
+  return {
+    type: "area",
+    ...buildSeriesGeometry(
+      data,
+      scales,
+      xGet,
+      yGet,
+      y0Get ?? (() => baselineY)
+    ),
+    style,
+    group
   }
-  // Sort by x pixel coordinate
-  entries.sort((a, b) => a.px - b.px)
-
-  const topPath: [number, number][] = new Array(entries.length)
-  const bottomPath: [number, number][] = new Array(entries.length)
-  const rawValues: number[] = new Array(entries.length)
-  for (let i = 0; i < entries.length; i++) {
-    const e = entries[i]
-    topPath[i] = [e.px, e.topY]
-    bottomPath[i] = [e.px, e.botY]
-    rawValues[i] = e.rawY
-  }
-  return { type: "area", topPath, bottomPath, rawValues, style, datum: data, group }
 }
 
 /** Per-group-per-x stacked top values, keyed by group then x */
@@ -211,27 +179,35 @@ export function buildStackedAreaNodes(
   // disagree on which rows count and the yDomain doesn't match what
   // gets drawn.
   const xSet = new Set<number>()
-  for (const g of groups) {
-    for (const d of g.data) {
-      const x = xGet(d)
-      if (Number.isFinite(x)) xSet.add(x)
-    }
+  type StackedValue = {
+    value: number
+    datum: Datum
+    sources?: Datum[]
   }
-  const xValues = Array.from(xSet).sort((a, b) => a - b)
-
-  // Build value lookup per group per x
-  const valueMaps: Map<string, Map<number, number>> = new Map()
+  // Keep the value and its source together. Most group/x pairs have a single
+  // row; only duplicates need a contributor array. Collect x in the same pass
+  // but retain finite-x/invalid-y positions so they still break the path.
+  const valueMaps = new Map<string, Map<number, StackedValue>>()
   for (const g of groups) {
-    const m = new Map<number, number>()
+    const m = new Map<number, StackedValue>()
     for (const d of g.data) {
       const x = xGet(d)
       const y = yGet(d)
-      if (Number.isFinite(x) && Number.isFinite(y)) {
-        m.set(x, (m.get(x) || 0) + y)
+      if (!Number.isFinite(x)) continue
+      xSet.add(x)
+      if (!Number.isFinite(y)) continue
+      const existing = m.get(x)
+      if (existing) {
+        existing.value += y
+        if (existing.sources) existing.sources.push(d)
+        else existing.sources = [existing.datum, d]
+      } else {
+        m.set(x, { value: y, datum: d })
       }
     }
     valueMaps.set(g.key, m)
   }
+  const xValues = Array.from(xSet).sort((a, b) => a - b)
 
   // Compute totals per x for normalization
   let totals: Map<number, number> | undefined
@@ -240,14 +216,14 @@ export function buildStackedAreaNodes(
     for (const x of xValues) {
       let sum = 0
       for (const g of groups) {
-        sum += valueMaps.get(g.key)?.get(x) || 0
+        sum += valueMaps.get(g.key)?.get(x)?.value || 0
       }
       totals.set(x, sum || 1) // avoid div by 0
     }
   }
 
   const groupKeys = groups.map((g) => g.key)
-  const valueAt = (k: string, x: number) => valueMaps.get(k)?.get(x) || 0
+  const valueAt = (k: string, x: number) => valueMaps.get(k)?.get(x)?.value || 0
 
   // Compute per-x baseline offset (shared with PipelineStore's extent pass).
   // Diverging stacks ignore the single-cursor offset and use dual bases.
@@ -276,15 +252,33 @@ export function buildStackedAreaNodes(
     // don't draw a flat line along the axis for inactive series.
     let topPath: [number, number][] = []
     let bottomPath: [number, number][] = []
+    let rawValues: number[] = []
+    let datums: Datum[] = []
+    let accessibleDatums: Datum[] = []
+    let needsSort = false
 
     const flushSegment = () => {
+      if (topPath.length === 0) return
       if (topPath.length >= 2) {
+        // xValues are already sorted. Only reversed/non-monotonic projections
+        // need a permutation; apply the SAME permutation to every channel.
+        const order = needsSort
+          ? topPath
+              .map((_, index) => index)
+              .sort((a, b) => topPath[a][0] - topPath[b][0])
+          : undefined
         const areaNode: AreaSceneNode = {
           type: "area",
-          topPath,
-          bottomPath,
+          topPath: order ? order.map((index) => topPath[index]) : topPath,
+          bottomPath: order
+            ? order.map((index) => bottomPath[index])
+            : bottomPath,
+          rawValues: order ? order.map((index) => rawValues[index]) : rawValues,
           style: styleFn(g.key, g.data[0]),
-          datum: g.data,
+          datum: order ? order.map((index) => datums[index]) : datums,
+          accessibleDatum: order
+            ? order.map((index) => accessibleDatums[index])
+            : accessibleDatums,
           group: g.key
         }
         if (curve) areaNode.curve = curve
@@ -292,11 +286,16 @@ export function buildStackedAreaNodes(
       }
       topPath = []
       bottomPath = []
+      rawValues = []
+      datums = []
+      accessibleDatums = []
+      needsSort = false
     }
 
     for (const x of xValues) {
-      const hasValue = vMap.has(x)
-      let rawY = hasValue ? (vMap.get(x) as number) : 0
+      const entry = vMap.get(x)
+      const hasValue = entry !== undefined
+      let rawY = entry?.value ?? 0
       if (normalize && hasValue) {
         const total = totals!.get(x)!
         rawY = rawY / total
@@ -331,9 +330,44 @@ export function buildStackedAreaNodes(
       }
 
       const px = scales.x(x)
-      // Area fill spans [base, stackedY] regardless of sign.
-      bottomPath.push([px, scales.y(base)])
-      topPath.push([px, scales.y(stackedY)])
+      const bottomY = scales.y(base)
+      const topY = scales.y(stackedY)
+      if (
+        !Number.isFinite(px) ||
+        !Number.isFinite(bottomY) ||
+        !Number.isFinite(topY)
+      ) {
+        flushSegment()
+        continue
+      }
+      const sources = entry!.sources
+      const aggregate = entry!.value
+      const datum = !sources
+        ? entry!.datum
+        : {
+            ...sources[0],
+            __aggregateValue: aggregate,
+            __aggregateCount: sources.length,
+            __aggregateRows: sources
+          }
+      if (topPath.length > 0 && px < topPath[topPath.length - 1][0])
+        needsSort = true
+      // Write directly into the final buffers without a temporary vertex object.
+      topPath.push([px, topY])
+      bottomPath.push([px, bottomY])
+      datums.push(datum)
+      rawValues.push(aggregate)
+      // An aggregate is not one arbitrarily selected source row.
+      accessibleDatums.push(
+        !sources
+          ? datum
+          : {
+              x,
+              value: aggregate,
+              group: g.key,
+              observations: sources.length
+            }
+      )
       groupTops.set(x, stackedY)
     }
 
@@ -415,7 +449,11 @@ export function buildHeatcellNode(
   h: number,
   fill: string,
   datum: Datum,
-  options?: { value?: number; showValues?: boolean; valueFormat?: (v: number) => string }
+  options?: {
+    value?: number
+    showValues?: boolean
+    valueFormat?: (v: number) => string
+  }
 ): HeatcellSceneNode {
   const node: HeatcellSceneNode = { type: "heatcell", x, y, w, h, fill, datum }
   if (options?.value !== undefined) node.value = options.value

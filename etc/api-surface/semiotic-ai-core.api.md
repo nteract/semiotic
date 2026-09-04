@@ -5,6 +5,9 @@ _Edit dist/semiotic-ai-core.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 const AESTHETICS_OFF_PROFILE: Readonly<AestheticProfile>
+const ARTIFACT_CONTRACT_VERSION: "0.1"
+const ARTIFACT_FIELD_POLICIES: Readonly<Record<string, ArtifactFieldPolicy>>
+const ARTIFACT_POLICIES: Readonly<Record<BuiltInArtifactPolicyId, ArtifactPolicy>>
 const BUILT_IN_CHART_RECIPES: readonly [ChartRecipe<Datum, Record<string, unknown>>, ChartRecipe<Datum, Record<string, unknown>>]
 const BUILT_IN_INTENT_IDS: ReadonlySet<BuiltInIntentId>
 const CALENDAR_HEATMAP_CONFIG_SCHEMA: SerializableSchema
@@ -19,33 +22,67 @@ const PARALLEL_COORDINATES_RECIPE_ID: "ParallelCoordinatesRecipe"
 const calendarHeatmapRecipe: ChartRecipe<Datum, Record<string, unknown>>
 const parallelCoordinatesRecipe: ChartRecipe<Datum, Record<string, unknown>>
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
+function activePolicyRules(policy: ArtifactPolicy, exceptions?: readonly ArtifactPolicyException[] | undefined, now?: string | undefined): {rules: ArtifactPolicyRules; appliedExceptions: ArtifactPolicyException[]; rejectedExceptions: ArtifactPolicyException[];}
+function adaptHistoricalSnapshotMetadata(metadata: HistoricalSnapshotMetadata): TemporalContext
+function adaptProcessingJobMetadata(metadata: ProcessingJobMetadata): TemporalContext
+function adaptQualityCheckMetadata(metadata: QualityCheckMetadata): TemporalContext
+function adaptStreamTopicMetadata(metadata: StreamTopicMetadata): TemporalContext
+function affectedCollectionClaims(collection: ArtifactCollectionContract, changedEvidenceIds: readonly (CollectionEvidenceReference | string)[]): {artifactId: string; claimId: string;}[]
+function applyCollectionCorrection(collection: ArtifactCollectionContract, correction: CollectionCorrectionRecord): ArtifactCollectionContract
+function artifactContractScriptTag(packet: ArtifactPacket): string
 function auditAccessibility(component: string, props: Datum, options?: AuditAccessibilityOptions | undefined): AccessibilityAuditResult
+function auditArtifactCollection(collection: ArtifactCollectionContract, options?: ArtifactCollectionAuditOptions | undefined): ArtifactCollectionAudit
+function auditClaims(contract: Partial<Pick<ArtifactContract, "artifact">> & Pick<ArtifactContract, "accountability" | "claims" | "contestability" | "evidence">, options?: ClaimAuditOptions | undefined): ClaimAudit
+function auditDashboard(collection: ArtifactCollectionContract, options?: ArtifactCollectionAuditOptions | undefined): ArtifactCollectionAudit
 function auditData(component: string, props: Datum, data?: readonly Datum[] | undefined, options?: AuditDataOptions | undefined): DataAuditResult
 function auditMobileVisualization(component: string, props?: Datum | undefined, options?: AuditMobileVisualizationOptions | undefined): MobileVisualizationAuditResult
+function auditTemporalContext(context: TemporalContext | undefined, options?: TemporalAuditOptions | undefined): TemporalAudit
 function auditVisualHierarchy(input: VisualHierarchyInput): VisualHierarchyAuditResult
+function boundedEvidenceSample(rows: readonly unknown[], options?: undefined | {maxRows?: number; maxFields?: number; maxFieldLength?: number; maxCharacters?: number; fields?: ReadonlyArray<string>;}): {rowCount: number; fields: string[]; values: JsonValue[]; truncated: boolean;}
+function buildArtifactCollectionLineage(collection: ArtifactCollectionContract): ArtifactCollectionLineage
+function buildArtifactContract(component: string, props?: Datum | undefined, input?: ArtifactContractInput | undefined): ArtifactContract
+function buildArtifactGrounding(component: string, props: Datum, contract: ArtifactContract, options: BuildArtifactGroundingOptions): ArtifactGrounding
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function buildReaderGrounding(component: string, props: Datum, options?: ChartReaderGroundingOptions | undefined): ChartReaderGrounding
+function canonicalJson(input: unknown): CanonicalJsonResult
+function challengeClaim(contract: ArtifactContract, challenge: ClaimChallenge): ArtifactContract
 function chartGenerationTool(options?: ChartToolOptions | undefined): ChartToolDefinition
+function claimsFromAnnotations(annotations: readonly Datum[], options?: AnnotationClaimOptions | undefined): AnnotationClaimProjection
+function claimsFromDescription(description: DescribeChartResult, options?: DescriptionClaimOptions | undefined): Claim[]
 function communicativeActForIntent(intent: IntentId): CommunicativeAct | undefined
+function compactInheritancePacket(contract: ArtifactContract, options?: undefined | {maxClaims?: number; maxEvidence?: number;}): CompactInheritancePacket
 function configToJSX(config: ChartConfig): string
+function configToJSXWithReport(config: ChartConfig): JSXProjectionResult
 function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promise<void>
 function countNodes(root: NavTreeNode): number
+function createAdjacentArtifactSidecar(packet: ArtifactPacket, hostPath: string): AdjacentArtifactSidecar
+function createArtifactPacket(contract: ArtifactContract, options?: CreateArtifactPacketOptions | undefined): ArtifactPacket
 function createChartToolHandler(optionsFor?: ((input: PrepareChartInput) => PrepareChartOptions) | undefined): (input: PrepareChartInput) => PrepareChartResult
 function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo
 function defineChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): ChartRecipe<TDatum, TConfig>
 function deriveProfileFields(data: readonly Datum[], candidates: {x: import("./chartCapabilityTypes").FieldCandidate[]; y: import("./chartCapabilityTypes").FieldCandidate[]; size: import("./chartCapabilityTypes").FieldCandidate[]; category: import("./chartCapabilityTypes").FieldCandidate[]; series: import("./chartCapabilityTypes").FieldCandidate[]; time: import("./chartCapabilityTypes").FieldCandidate[];}, roles: Readonly<Record<string, readonly import("./fieldRoles").ProfileFieldRole[]>>, options?: ReprofileFieldsOptions | undefined): DerivedProfileFields
 function describeChart(component: string, props: Datum, options?: DescribeChartOptions | undefined): DescribeChartResult
 function diagnoseConfig(componentName: string, props: Datum): DiagnosisResult
+function diffArtifactContracts(before: ArtifactContract, after: ArtifactContract): ArtifactContractChange[]
+function embedArtifactPacketInSvg(svg: string, packet: ArtifactPacket): string
 function evaluateAesthetics(component: string, props: Datum, options?: EvaluateAestheticsOptions | undefined): AestheticEvaluationResult
+function evaluateArtifact(component: string, props: Datum, contract: ArtifactContract, options?: EvaluateArtifactOptions | undefined): ArtifactEvaluation
 function evaluateChart(component: string, props?: Datum | undefined, data?: readonly Datum[] | undefined, options?: EvaluateChartOptions | undefined): EvaluateChartResult
 function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataProfile, audience?: AudienceProfile | undefined, options?: EvaluateVariantProposalOptions | undefined): VariantScore
+function eventTimePresentationFinding(context: TemporalContext, referenceTime?: string | undefined): ObligationResult | undefined
+function explainArtifactRefusal(evaluation: ArtifactEvaluation): string
 function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
+function fingerprintArtifactCollection(collection: ArtifactCollectionContract): string
+function fingerprintValue(input: unknown): ValueFingerprint
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
 function formatAccessibilityAudit(result: AccessibilityAuditResult): string
+function formatArtifactContract(contract: ArtifactContract, options?: FormatArtifactContractOptions | undefined): string
 function formatDataAudit(result: DataAuditResult): string
 function formatEvaluateChart(result: EvaluateChartResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
-function fromConfig(config: ChartConfig): {componentName: string; props: Datum;}
+function formatObligations(findings: readonly ObligationResult[]): string
+function fromConfig(config: ChartConfig): FromConfigResult
+function fromIntentManifest(manifest: IntentManifest): ArtifactContract
 function fromURL(urlString: string): ChartConfig
 function getChartRecipe(recipeId: string): ChartRecipe<Datum, Record<string, unknown>> | undefined
 function getIntent(id: IntentId): IntentDescriptor | undefined
@@ -57,46 +94,104 @@ function isJsonSafe(value: unknown, seen?: Set<object> | undefined): boolean
 function isRegisteredRecipeLayout(layout: unknown): boolean
 function listChartRecipes(): ChartRecipe<Datum, Record<string, unknown>>[]
 function listIntents(): IntentDescriptor[]
+function mergeTemporalContexts(...contexts: readonly (TemporalContext | undefined)[]): TemporalContext
+function migrateArtifactContract(value: unknown): ArtifactContractMigrationResult
 function mobileVisualizationCaveats(): string[]
+function prepareArtifactRevision(component: string, currentProps: Datum, currentContract: ArtifactContract, options: PrepareArtifactRevisionOptions): PreparedArtifactRevision
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: null | readonly Datum[] | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
 function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function proposeVariant(component: string, capability: ChartCapability, context: VariantDiscoveryContext): readonly VariantProposal[]
+function recommendRepresentation(data: null | readonly Datum[] | undefined, contract: ArtifactContract, options?: RecommendRepresentationOptions | undefined): RepresentationRecommendation
 function rederiveProfile(profile: ChartDataProfile, options?: ReprofileFieldsOptions | undefined): ChartDataProfile
 function refreshChartDiagnostics(component: string, props: Datum): Diagnosis[]
 function registerBuiltInChartRecipeManifests(): void
 function registerChartRecipe(recipe: ChartRecipe<Datum, Record<string, unknown>>): void
 function registerIntent(intent: IntentDescriptor): void
+function repairArtifact(component: string, props: Datum, contract: ArtifactContract, options?: RepairArtifactOptions | undefined): ArtifactRepairResult
 function repairChartConfig(component: string, data: null | readonly Datum[] | undefined, options?: RepairOptions | undefined): RepairResult
+function requireSerializableArtifactContract(value: ArtifactContract): SerializedArtifactContract & {contract: ArtifactContract;}
+function resolveArtifactPolicy(policy: ArtifactPolicyInput): ArtifactPolicy
 function resolveChartRecipe(value: unknown): ChartRecipe<Datum, Record<string, unknown>> | undefined
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
+function retractClaim(contract: ArtifactContract, claimId: string, correction: Omit<CorrectionRecord, "affectedClaimIds">): ArtifactContract
 function scoreChart(component: string, data: null | readonly Datum[] | undefined, options?: ScoreChartOptions | undefined): ScoreChartResult
+function serializeArtifactCollection(value: unknown): SerializedArtifactCollection
+function serializeArtifactContract(value: unknown, options?: SerializeArtifactContractOptions | undefined): SerializedArtifactContract
 function suggestCharts(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
 function suggestChartsGrouped(data: null | readonly Datum[] | undefined, options?: (SuggestChartsOptions & {maxPerBand?: number;}) | undefined): ScaledSuggestionGroups
 function suggestDashboard(data: null | readonly Datum[] | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
 function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): StreamSuggestion[]
 function suggestStretchCharts(data: null | readonly Datum[] | undefined, options?: SuggestStretchChartsOptions | undefined): StretchSuggestion[]
 function summarizeData(data: null | readonly Datum[] | undefined, options?: SummarizeOptions | undefined): DataSummary
+function summarizeObligations(findings: readonly ObligationResult[]): ObligationSummary
+function supersedeClaim(contract: ArtifactContract, previousClaimId: string, replacement: Claim, correction?: Omit<CorrectionRecord, "affectedClaimIds" | "replacementClaimIds"> | undefined): ArtifactContract
 function toAnthropicTool(def: ChartToolDefinition): {name: string; description: string; input_schema: Record<string, unknown>;}
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
 function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNotificationOptions | undefined): DataAuditChartNotification[]
 function toEvaluateChartNotifications(findings: readonly EvaluateChartFinding[], max?: number | undefined): EvaluateChartNotification[]
+function toIntentManifest(contract: ArtifactContract): IntentManifestProjection
 function toOpenAIResponsesTool(def: ChartToolDefinition, options?: OpenAIResponsesToolOptions | undefined): OpenAIResponsesTool
 function toOpenAITool(def: ChartToolDefinition): {type: "function"; function: {name: string; description: string; parameters: Record<string, unknown>;};}
-function toURL(config: ChartConfig): string
+function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function unregisterChartRecipe(recipeId: string): void
+function updateTemporalContext(current: TemporalContext, update: TemporalContext): TemporalContext
+function validateArtifactCollection(value: unknown): ArtifactCollectionValidation
+function validateArtifactContract(value: unknown): ArtifactContractValidation
+function validateArtifactPacket(value: unknown): ArtifactPacketValidation
 function validateChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): void
 function validateProps(componentName: string, props: Datum): ValidationResult
 interface A11yFinding
 interface AccessibilityAuditResult
+interface AccountabilityContract
+interface ActionRecord
+interface ActorRef
+interface AdjacentArtifactSidecar
 interface AestheticEvaluationResult
 interface AestheticFeatureResult
 interface AestheticProfile
 interface AestheticThresholds
+interface AnnotationClaimOptions
+interface AnnotationClaimProjection
+interface ArtifactBuildInput
+interface ArtifactCollectionAudit
+interface ArtifactCollectionAuditOptions
+interface ArtifactCollectionContract
+interface ArtifactCollectionLineage
+interface ArtifactCollectionTransfer
+interface ArtifactCollectionValidation
+interface ArtifactContract
+interface ArtifactContractChange
+interface ArtifactContractInput
+interface ArtifactContractMigrationResult
+interface ArtifactContractValidation
+interface ArtifactEvaluation
+interface ArtifactFieldPolicy
+interface ArtifactFieldState
+interface ArtifactGrounding
+interface ArtifactGroundingBudget
+interface ArtifactIdentity
+interface ArtifactLineageEdge
+interface ArtifactLineageNode
+interface ArtifactPacket
+interface ArtifactPacketValidation
+interface ArtifactPolicy
+interface ArtifactPolicyException
+interface ArtifactPolicyRules
+interface ArtifactRepairLedgerEntry
+interface ArtifactRepairResult
+interface ArtifactRevisionPresentation
+interface ArtifactTransferReport
+interface ArtifactTransferStatus
+interface ArtifactViewState
 interface AuditAccessibilityOptions
 interface AuditDataOptions
 interface AuditMobileVisualizationOptions
+interface BoundedEvidenceSample
+interface BuildArtifactGroundingOptions
 interface BuildNavigationTreeOptions
+interface CanonicalJsonResult
+interface ChartArtifactTransferStatus extends ArtifactTransferStatus
 interface ChartClinicBundleGuidance
 interface ChartClinicInput
 interface ChartClinicOptions
@@ -112,6 +207,22 @@ interface ChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Rec
 interface ChartToolDefinition
 interface ChartToolOptions
 interface CheckedNumericContract
+interface Claim
+interface ClaimAudit
+interface ClaimAuditOptions
+interface ClaimChallenge
+interface ClaimDependency
+interface ClaimReview
+interface ClaimUncertainty
+interface CollectionClaimReference
+interface CollectionCorrectionRecord extends CorrectionRecord
+interface CollectionCorrectionScope
+interface CollectionEvidenceReference
+interface CollectionFilterState
+interface CompactInheritancePacket
+interface ContestabilityContract
+interface CorrectionRecord
+interface CreateArtifactPacketOptions
 interface DashboardPanel
 interface DashboardSuggestion
 interface DataAuditChartNotification
@@ -124,47 +235,81 @@ interface DerivedProfileFields
 interface DescribeCapabilityContext
 interface DescribeChartOptions
 interface DescribeChartResult
+interface DescriptionClaimOptions
+interface DesignContract
 interface Diagnosis
 interface DiagnosisResult
 interface EncodingDefinition
 interface EvaluateAestheticsOptions
+interface EvaluateArtifactOptions extends EvaluateChartOptions
 interface EvaluateChartFinding
 interface EvaluateChartNotification
 interface EvaluateChartOptions extends AuditAccessibilityOptions
 interface EvaluateChartResult
 interface EvaluateChartSummary
 interface EvaluateVariantProposalOptions
+interface EvidenceRef
+interface EvidenceSource
 interface ExplainCapabilityFitResult
+interface FormatArtifactContractOptions
+interface FromConfigResult
+interface HistoricalSnapshotMetadata extends TemporalMetadataBase
 interface InferIntentField
 interface InferIntentOptions
 interface InferIntentResult
+interface InheritanceContract
 interface IntentDescriptor
+interface IntentManifestProjection
 interface IntentSignals
+interface JSXProjectionResult
+interface JsonObject
+interface MetricDefinition
 interface MobileVisualizationAuditResult
 interface NavTreeNode
 interface NumericAggregateContract
 interface NumericContracts
 interface NumericFieldContract
 interface NumericFieldProfile
+interface ObligationResult
+interface ObligationSummary
 interface OpenAIResponsesTool
 interface OpenAIResponsesToolOptions
+interface PrepareArtifactRevisionOptions extends Omit<EvaluateArtifactOptions, "data">
 interface PrepareChartInput
 interface PrepareChartOptions
 interface PrepareChartResult
+interface PreparedArtifactRevision
+interface ProcessingJobMetadata extends TemporalMetadataBase
 interface ProfileDataOptions
 interface ProfileNumericFieldsOptions
 interface ProfilePrimaryFields
+interface PurposeContract
+interface PurposeIntent
+interface QualityCheckMetadata extends TemporalMetadataBase
+interface ReceptionChannelContract
+interface ReceptionContract
+interface RecommendRepresentationOptions
 interface RejectedCapability
+interface RejectedRepresentation extends RepresentationCandidate
 interface RenderEvidenceMemo
+interface RepairArtifactOptions extends EvaluateArtifactOptions
 interface RepairOptions extends ProfileDataOptions
+interface RepairProposal
+interface RepresentationCandidate
+interface RepresentationRecommendation
 interface ReprofileFieldsOptions
+interface ReviewRecord
 interface ScoreChartOptions extends ProfileDataOptions
 interface ScoreChartRejected
 interface SemanticRenderEvidence
 interface SemanticViabilityDiagnostic
 interface SemanticViabilityRule
+interface SerializeArtifactContractOptions
+interface SerializedArtifactCollection
+interface SerializedArtifactContract
 interface StreamSchema
 interface StreamSuggestion
+interface StreamTopicMetadata extends TemporalMetadataBase
 interface StretchSuggestion
 interface SuggestChartsOptions extends ProfileDataOptions
 interface SuggestDashboardOptions extends ProfileDataOptions
@@ -172,8 +317,18 @@ interface SuggestStreamChartsOptions
 interface SuggestStretchChartsOptions extends ProfileDataOptions
 interface SuggestionPropContract
 interface SummarizeOptions
+interface TemporalAudit
+interface TemporalAuditOptions
+interface TemporalContext
+interface TemporalMetadataBase
+interface TemporalSourceState
+interface TimeField
 interface ToConfigOptions
+interface ToURLOptions
+interface TransformationRecord
+interface UnknownArtifactContract extends JsonObject
 interface ValidationResult
+interface ValueFingerprint extends CanonicalJsonResult
 interface VariantProposal
 interface VariantScore
 interface VisualHierarchyAuditResult
@@ -191,6 +346,30 @@ interface-member AccessibilityAuditResult::property::findings = required finding
 interface-member AccessibilityAuditResult::property::ok = required ok: boolean
 interface-member AccessibilityAuditResult::property::reference = required reference: string
 interface-member AccessibilityAuditResult::property::summary = required summary: {criticalsPassed: number; criticalsEvaluated: number; fails: number; warnings: number; manual: number; passes: number;}
+interface-member AccountabilityContract::property::actions = optional actions: ActionRecord[] | undefined
+interface-member AccountabilityContract::property::authors = optional authors: ActorRef[] | undefined
+interface-member AccountabilityContract::property::codeRef = optional codeRef: string | undefined
+interface-member AccountabilityContract::property::dataSources = optional dataSources: string[] | undefined
+interface-member AccountabilityContract::property::generatedBy = optional generatedBy: string | undefined
+interface-member AccountabilityContract::property::reviews = optional reviews: ReviewRecord[] | undefined
+interface-member ActionRecord::property::actedAt = optional actedAt: string | undefined
+interface-member ActionRecord::property::action = required action: string
+interface-member ActionRecord::property::actor = optional actor: ActorRef | undefined
+interface-member ActionRecord::property::artifactId = optional artifactId: string | undefined
+interface-member ActionRecord::property::artifactRevision = optional artifactRevision: string | undefined
+interface-member ActionRecord::property::claimIds = required claimIds: string[]
+interface-member ActionRecord::property::id = required id: string
+interface-member ActionRecord::property::invalidatedByClaimId = optional invalidatedByClaimId: string | undefined
+interface-member ActionRecord::property::policyId = optional policyId: string | undefined
+interface-member ActionRecord::property::status = optional status: "invalidated" | "proposed" | "reversed" | "taken" | undefined
+interface-member ActorRef::property::id = optional id: string | undefined
+interface-member ActorRef::property::kind = required kind: "agent" | "human" | "system" | "watcher" | (string & {})
+interface-member ActorRef::property::name = optional name: string | undefined
+interface-member AdjacentArtifactSidecar::property::content = required content: string
+interface-member AdjacentArtifactSidecar::property::format = required format: ArtifactSidecarFormat
+interface-member AdjacentArtifactSidecar::property::hostPath = required hostPath: string
+interface-member AdjacentArtifactSidecar::property::mediaType = required mediaType: "application/json"
+interface-member AdjacentArtifactSidecar::property::sidecarPath = required sidecarPath: string
 interface-member AestheticEvaluationResult::property::component = required readonly component: string
 interface-member AestheticEvaluationResult::property::features = required readonly features: readonly AestheticFeatureResult[]
 interface-member AestheticEvaluationResult::property::method = required readonly method: "weighted-machine-visible-features"
@@ -221,6 +400,212 @@ interface-member AestheticThresholds::property::hierarchyRatio = optional hierar
 interface-member AestheticThresholds::property::scaffoldContrastMax = optional scaffoldContrastMax: number | undefined
 interface-member AestheticThresholds::property::scaffoldContrastMin = optional scaffoldContrastMin: number | undefined
 interface-member AestheticThresholds::property::titleScaleRatio = optional titleScaleRatio: number | undefined
+interface-member AnnotationClaimOptions::property::defaultKind = optional defaultKind: ClaimKind | undefined
+interface-member AnnotationClaimOptions::property::prefix = optional prefix: string | undefined
+interface-member AnnotationClaimProjection::property::claims = required claims: Claim[]
+interface-member AnnotationClaimProjection::property::evidence = required evidence: EvidenceRef[]
+interface-member AnnotationClaimProjection::property::unknownAnnotationIndexes = required unknownAnnotationIndexes: number[]
+interface-member ArtifactBuildInput::property::component = required component: string
+interface-member ArtifactBuildInput::property::contract = optional contract: ArtifactContractInput | undefined
+interface-member ArtifactBuildInput::property::props = optional props: Datum | undefined
+interface-member ArtifactCollectionAudit::property::findings = required findings: ObligationResult[]
+interface-member ArtifactCollectionAudit::property::ok = required ok: boolean
+interface-member ArtifactCollectionAudit::property::policy = optional policy: undefined | {id: string; version: string;}
+interface-member ArtifactCollectionAudit::property::summary = required summary: ObligationSummary
+interface-member ArtifactCollectionAuditOptions::property::now = optional now: string | undefined
+interface-member ArtifactCollectionAuditOptions::property::renderEvidenceByArtifactId = optional renderEvidenceByArtifactId: Readonly<Record<string, ArtifactCollectionRenderEvidence>> | undefined
+interface-member ArtifactCollectionContract::property::actions = optional actions: ActionRecord[] | undefined
+interface-member ArtifactCollectionContract::property::artifacts = required artifacts: ArtifactContract[]
+interface-member ArtifactCollectionContract::property::claimDependencies = optional claimDependencies: ClaimDependency[] | undefined
+interface-member ArtifactCollectionContract::property::collectionVersion = required collectionVersion: "0.1"
+interface-member ArtifactCollectionContract::property::corrections = optional corrections: CollectionCorrectionRecord[] | undefined
+interface-member ArtifactCollectionContract::property::extensions = optional extensions: JsonObject | undefined
+interface-member ArtifactCollectionContract::property::filters = optional filters: CollectionFilterState[] | undefined
+interface-member ArtifactCollectionContract::property::id = required id: string
+interface-member ArtifactCollectionContract::property::metrics = optional metrics: MetricDefinition[] | undefined
+interface-member ArtifactCollectionContract::property::policyId = optional policyId: string | undefined
+interface-member ArtifactCollectionContract::property::sourceRegistry = optional sourceRegistry: undefined | {id: string; label?: string; version?: string; fingerprint?: string;}[]
+interface-member ArtifactCollectionContract::property::title = optional title: string | undefined
+interface-member ArtifactCollectionContract::property::views = optional views: ArtifactViewState[] | undefined
+interface-member ArtifactCollectionLineage::property::edges = required edges: ArtifactLineageEdge[]
+interface-member ArtifactCollectionLineage::property::nodes = required nodes: ArtifactLineageNode[]
+interface-member ArtifactCollectionTransfer::property::omittedPaths = required omittedPaths: string[]
+interface-member ArtifactCollectionTransfer::property::status = required status: "invalid" | "preserved" | "unsupported-version"
+interface-member ArtifactCollectionTransfer::property::warnings = required warnings: string[]
+interface-member ArtifactCollectionValidation::property::errors = required errors: {path: string; message: string;}[]
+interface-member ArtifactCollectionValidation::property::valid = required valid: boolean
+interface-member ArtifactCollectionValidation::property::warnings = required warnings: {path: string; message: string;}[]
+interface-member ArtifactContract::property::accountability = optional accountability: AccountabilityContract | undefined
+interface-member ArtifactContract::property::artifact = required artifact: ArtifactIdentity
+interface-member ArtifactContract::property::claims = required claims: Claim[]
+interface-member ArtifactContract::property::contestability = optional contestability: ContestabilityContract | undefined
+interface-member ArtifactContract::property::contractVersion = required contractVersion: "0.1"
+interface-member ArtifactContract::property::evidence = required evidence: EvidenceRef[]
+interface-member ArtifactContract::property::extensions = optional extensions: JsonObject | undefined
+interface-member ArtifactContract::property::fieldStatus = optional fieldStatus: Record<string, ArtifactFieldState> | undefined
+interface-member ArtifactContract::property::form = optional form: DesignContract | undefined
+interface-member ArtifactContract::property::inheritance = optional inheritance: InheritanceContract | undefined
+interface-member ArtifactContract::property::purpose = required purpose: PurposeContract
+interface-member ArtifactContract::property::reception = optional reception: ReceptionContract | undefined
+interface-member ArtifactContract::property::time = optional time: TemporalContext | undefined
+interface-member ArtifactContractChange::property::after = optional after: unknown
+interface-member ArtifactContractChange::property::before = optional before: unknown
+interface-member ArtifactContractChange::property::kind = required kind: "added" | "changed" | "removed"
+interface-member ArtifactContractChange::property::path = required path: string
+interface-member ArtifactContractInput::property::accountability = optional accountability: AccountabilityContract | undefined
+interface-member ArtifactContractInput::property::claims = optional claims: Claim[] | undefined
+interface-member ArtifactContractInput::property::contestability = optional contestability: ContestabilityContract | undefined
+interface-member ArtifactContractInput::property::createdAt = optional createdAt: string | undefined
+interface-member ArtifactContractInput::property::evidence = optional evidence: EvidenceRef[] | undefined
+interface-member ArtifactContractInput::property::extensions = optional extensions: JsonObject | undefined
+interface-member ArtifactContractInput::property::fieldStatus = optional fieldStatus: Record<string, ArtifactFieldState> | undefined
+interface-member ArtifactContractInput::property::form = optional form: DesignContract | undefined
+interface-member ArtifactContractInput::property::id = optional id: string | undefined
+interface-member ArtifactContractInput::property::inheritance = optional inheritance: InheritanceContract | undefined
+interface-member ArtifactContractInput::property::intents = optional intents: PurposeIntent[] | string | string[] | undefined
+interface-member ArtifactContractInput::property::kind = optional kind: ArtifactKind | undefined
+interface-member ArtifactContractInput::property::purpose = optional purpose: Partial<PurposeContract> | undefined
+interface-member ArtifactContractInput::property::reception = optional reception: ReceptionContract | undefined
+interface-member ArtifactContractInput::property::revision = optional revision: string | undefined
+interface-member ArtifactContractInput::property::time = optional time: TemporalContext | undefined
+interface-member ArtifactContractInput::property::title = optional title: string | undefined
+interface-member ArtifactContractMigrationResult::property::changes = required changes: string[]
+interface-member ArtifactContractMigrationResult::property::contract = optional contract: PortableArtifactContract | undefined
+interface-member ArtifactContractMigrationResult::property::fromVersion = optional fromVersion: string | undefined
+interface-member ArtifactContractMigrationResult::property::status = required status: "current" | "invalid" | "unsupported-version"
+interface-member ArtifactContractMigrationResult::property::toVersion = required toVersion: "0.1"
+interface-member ArtifactContractMigrationResult::property::warnings = required warnings: string[]
+interface-member ArtifactContractValidation::property::errors = required errors: {path: string; message: string;}[]
+interface-member ArtifactContractValidation::property::valid = required valid: boolean
+interface-member ArtifactContractValidation::property::warnings = required warnings: {path: string; message: string;}[]
+interface-member ArtifactEvaluation::property::accessibility = required accessibility: import("../semiotic-ai-audits").AccessibilityAuditResult
+interface-member ArtifactEvaluation::property::alternatives = required alternatives: RepresentationCandidate[]
+interface-member ArtifactEvaluation::property::claims = required claims: ClaimAudit
+interface-member ArtifactEvaluation::property::data = required data: import("../semiotic-ai-core").DataAuditResult
+interface-member ArtifactEvaluation::property::design = required design: readonly import("../semiotic-ai-audits").Diagnosis[]
+interface-member ArtifactEvaluation::property::manualChecks = required manualChecks: string[]
+interface-member ArtifactEvaluation::property::obligations = required obligations: ObligationResult[]
+interface-member ArtifactEvaluation::property::policy = required policy: {id: string; version: string; appliedExceptions: ArtifactPolicyException[]; rejectedExceptions: ArtifactPolicyException[];}
+interface-member ArtifactEvaluation::property::recommendation = optional recommendation: RepresentationRecommendation | undefined
+interface-member ArtifactEvaluation::property::render = optional render: import("../semiotic-server-edge").RenderEvidence | undefined
+interface-member ArtifactEvaluation::property::repairs = required repairs: RepairProposal[]
+interface-member ArtifactEvaluation::property::status = required status: "acceptable" | "conditional" | "refuse"
+interface-member ArtifactEvaluation::property::temporal = required temporal: TemporalAudit
+interface-member ArtifactEvaluation::property::validation = required validation: {artifact: ArtifactContractValidation; chart: EvaluateChartResult["validation"];}
+interface-member ArtifactFieldPolicy::property::derivable = required derivable: boolean
+interface-member ArtifactFieldPolicy::property::humanReview = required humanReview: "never" | "policy-dependent" | "required"
+interface-member ArtifactFieldPolicy::property::modelMayPropose = required modelMayPropose: boolean
+interface-member ArtifactFieldPolicy::property::suppliedBy = required suppliedBy: readonly ("author" | "import" | "model-proposal" | "system")[]
+interface-member ArtifactFieldState::property::derived = optional derived: boolean | undefined
+interface-member ArtifactFieldState::property::reason = optional reason: string | undefined
+interface-member ArtifactFieldState::property::reviewedBy = optional reviewedBy: string | undefined
+interface-member ArtifactFieldState::property::status = required status: FieldKnowledgeStatus
+interface-member ArtifactFieldState::property::suppliedBy = optional suppliedBy: "author" | "import" | "model-proposal" | "system" | undefined
+interface-member ArtifactGrounding::property::accountability = optional accountability: import("./types").AccountabilityContract | undefined
+interface-member ArtifactGrounding::property::artifact = required artifact: {id: string; kind: ArtifactContract["artifact"]["kind"]; component?: string; title?: string; revision?: string;}
+interface-member ArtifactGrounding::property::budget = required budget: import("./groundingBudget").ArtifactGroundingBudget
+interface-member ArtifactGrounding::property::channel = required channel: ReceptionChannel
+interface-member ArtifactGrounding::property::chart = optional chart: ChartReaderGrounding | undefined
+interface-member ArtifactGrounding::property::claims = required claims: Claim[]
+interface-member ArtifactGrounding::property::contestability = optional contestability: import("./types").ContestabilityContract | undefined
+interface-member ArtifactGrounding::property::corrections = required corrections: CorrectionRecord[]
+interface-member ArtifactGrounding::property::disclosureLevel = required disclosureLevel: "detailed" | "standard" | "summary"
+interface-member ArtifactGrounding::property::evidence = required evidence: EvidenceRef[]
+interface-member ArtifactGrounding::property::form = optional form: import("./types").DesignContract | undefined
+interface-member ArtifactGrounding::property::groundingVersion = required groundingVersion: "0.1"
+interface-member ArtifactGrounding::property::omittedPaths = required omittedPaths: string[]
+interface-member ArtifactGrounding::property::purpose = required purpose: import("./types").PurposeContract
+interface-member ArtifactGrounding::property::security = required security: {contentClassification: "untrusted-data"; instructionBoundary: string; rawDataIncluded: boolean; evidenceSamplesIncluded: boolean;}
+interface-member ArtifactGrounding::property::text = required text: string
+interface-member ArtifactGrounding::property::time = optional time: TemporalContext | undefined
+interface-member ArtifactGrounding::property::truncated = required truncated: boolean
+interface-member ArtifactGrounding::property::uncertainty = required uncertainty: string[]
+interface-member ArtifactGroundingBudget::property::effectiveTokens = required effectiveTokens: number
+interface-member ArtifactGroundingBudget::property::minimumEnvelopeApplied = required minimumEnvelopeApplied: boolean
+interface-member ArtifactGroundingBudget::property::requestedTokens = required requestedTokens: number
+interface-member ArtifactGroundingBudget::property::serializedCharacters = required serializedCharacters: number
+interface-member ArtifactIdentity::property::component = optional component: string | undefined
+interface-member ArtifactIdentity::property::configFingerprint = optional configFingerprint: string | undefined
+interface-member ArtifactIdentity::property::createdAt = optional createdAt: string | undefined
+interface-member ArtifactIdentity::property::dataFingerprint = optional dataFingerprint: string | undefined
+interface-member ArtifactIdentity::property::id = required id: string
+interface-member ArtifactIdentity::property::kind = required kind: ArtifactKind
+interface-member ArtifactIdentity::property::revision = optional revision: string | undefined
+interface-member ArtifactIdentity::property::title = optional title: string | undefined
+interface-member ArtifactLineageEdge::property::relation = required relation: "acts-on" | "contains" | "produces" | "supersedes" | "supports"
+interface-member ArtifactLineageEdge::property::source = required source: string
+interface-member ArtifactLineageEdge::property::target = required target: string
+interface-member ArtifactLineageNode::property::artifactId = optional artifactId: string | undefined
+interface-member ArtifactLineageNode::property::id = required id: string
+interface-member ArtifactLineageNode::property::kind = required kind: ArtifactLineageNodeKind
+interface-member ArtifactLineageNode::property::label = optional label: string | undefined
+interface-member ArtifactPacket::property::artifactId = required artifactId: string
+interface-member ArtifactPacket::property::contract = required contract: ArtifactContract
+interface-member ArtifactPacket::property::contractFingerprint = required contractFingerprint: string
+interface-member ArtifactPacket::property::packetVersion = required packetVersion: "0.1"
+interface-member ArtifactPacket::property::transfer = required transfer: ArtifactTransferReport
+interface-member ArtifactPacket::property::transferFingerprint = required transferFingerprint: string
+interface-member ArtifactPacketValidation::property::errors = required errors: string[]
+interface-member ArtifactPacketValidation::property::packet = optional packet: ArtifactPacket | undefined
+interface-member ArtifactPacketValidation::property::valid = required valid: boolean
+interface-member ArtifactPolicy::property::description = required description: string
+interface-member ArtifactPolicy::property::id = required id: (string & {}) | BuiltInArtifactPolicyId
+interface-member ArtifactPolicy::property::label = required label: string
+interface-member ArtifactPolicy::property::minimumStakes = optional minimumStakes: ArtifactStakes | undefined
+interface-member ArtifactPolicy::property::requiredRelations = required requiredRelations: ArtifactRelation[]
+interface-member ArtifactPolicy::property::rules = required rules: ArtifactPolicyRules
+interface-member ArtifactPolicy::property::version = required version: string
+interface-member ArtifactPolicyException::property::expiresAt = optional expiresAt: string | undefined
+interface-member ArtifactPolicyException::property::owner = required owner: string
+interface-member ArtifactPolicyException::property::rationale = required rationale: string
+interface-member ArtifactPolicyException::property::reviewAt = optional reviewAt: string | undefined
+interface-member ArtifactPolicyException::property::rule = required rule: (string & {}) | keyof ArtifactPolicyRules
+interface-member ArtifactPolicyRules::property::allowExceptions = required allowExceptions: boolean
+interface-member ArtifactPolicyRules::property::allowManualChecks = required allowManualChecks: boolean
+interface-member ArtifactPolicyRules::property::refuseChartErrors = required refuseChartErrors: boolean
+interface-member ArtifactPolicyRules::property::refuseCriticalAccessibilityFailures = required refuseCriticalAccessibilityFailures: boolean
+interface-member ArtifactPolicyRules::property::refuseUnknownClaims = required refuseUnknownClaims: boolean
+interface-member ArtifactPolicyRules::property::refuseUnknownTime = required refuseUnknownTime: boolean
+interface-member ArtifactPolicyRules::property::refuseUnsupportedClaims = required refuseUnsupportedClaims: boolean
+interface-member ArtifactPolicyRules::property::requireClaims = required requireClaims: boolean
+interface-member ArtifactPolicyRules::property::requireEvidenceIdentity = required requireEvidenceIdentity: boolean
+interface-member ArtifactPolicyRules::property::requireFreshnessForLive = required requireFreshnessForLive: boolean
+interface-member ArtifactPolicyRules::property::requireRenderEvidence = required requireRenderEvidence: boolean
+interface-member ArtifactPolicyRules::property::requireReviewForModelClaims = required requireReviewForModelClaims: boolean
+interface-member ArtifactPolicyRules::property::requireSettledTime = required requireSettledTime: boolean
+interface-member ArtifactRepairLedgerEntry::property::action = required action: string
+interface-member ArtifactRepairLedgerEntry::property::applied = required applied: boolean
+interface-member ArtifactRepairLedgerEntry::property::category = optional category: "configuration" | "contract" | "identity" | undefined
+interface-member ArtifactRepairLedgerEntry::property::changesClaim = required changesClaim: boolean
+interface-member ArtifactRepairLedgerEntry::property::id = required id: string
+interface-member ArtifactRepairLedgerEntry::property::path = required path: string
+interface-member ArtifactRepairLedgerEntry::property::reason = required reason: string
+interface-member ArtifactRepairLedgerEntry::property::suggestedComponent = optional suggestedComponent: string | undefined
+interface-member ArtifactRepairLedgerEntry::property::suggestedVariant = optional suggestedVariant: string | undefined
+interface-member ArtifactRepairResult::property::after = required after: ArtifactEvaluation
+interface-member ArtifactRepairResult::property::before = required before: ArtifactEvaluation
+interface-member ArtifactRepairResult::property::component = required component: string
+interface-member ArtifactRepairResult::property::contract = required contract: ArtifactContract
+interface-member ArtifactRepairResult::property::ledger = required ledger: ArtifactRepairLedgerEntry[]
+interface-member ArtifactRepairResult::property::props = required props: Datum
+interface-member ArtifactRepairResult::property::status = required status: "repaired" | "requires-input" | "unchanged"
+interface-member ArtifactRevisionPresentation::property::description = optional description: string | undefined
+interface-member ArtifactRevisionPresentation::property::summary = optional summary: string | undefined
+interface-member ArtifactRevisionPresentation::property::title = optional title: string | undefined
+interface-member ArtifactTransferReport::property::format = required format: ArtifactTransferFormat
+interface-member ArtifactTransferReport::property::omittedPaths = required omittedPaths: string[]
+interface-member ArtifactTransferReport::property::preservation = required preservation: PreservationClass
+interface-member ArtifactTransferReport::property::preservedPaths = required preservedPaths: string[]
+interface-member ArtifactTransferReport::property::warnings = required warnings: string[]
+interface-member ArtifactTransferStatus::property::omittedPaths = required omittedPaths: string[]
+interface-member ArtifactTransferStatus::property::status = required status: "excluded" | "invalid" | "preserved" | "unsupported-version"
+interface-member ArtifactTransferStatus::property::warnings = required warnings: string[]
+interface-member ArtifactViewState::property::artifactId = required artifactId: string
+interface-member ArtifactViewState::property::filterIds = optional filterIds: string[] | undefined
+interface-member ArtifactViewState::property::metricIds = optional metricIds: string[] | undefined
+interface-member ArtifactViewState::property::selectionFingerprint = optional selectionFingerprint: string | undefined
+interface-member ArtifactViewState::property::status = optional status: "failed" | "ready" | "stale" | "unknown" | undefined
+interface-member ArtifactViewState::property::summarySelectionFingerprint = optional summarySelectionFingerprint: string | undefined
 interface-member AuditAccessibilityOptions::property::describe = optional describe: boolean | undefined
 interface-member AuditAccessibilityOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
 interface-member AuditAccessibilityOptions::property::navigable = optional navigable: boolean | undefined
@@ -229,9 +614,24 @@ interface-member AuditDataOptions::property::contracts = optional readonly contr
 interface-member AuditMobileVisualizationOptions::property::inChartContainer = optional inChartContainer: boolean | undefined
 interface-member AuditMobileVisualizationOptions::property::targetSize = optional targetSize: number | undefined
 interface-member AuditMobileVisualizationOptions::property::viewportWidth = optional viewportWidth: number | undefined
+interface-member BoundedEvidenceSample::property::fields = optional fields: string[] | undefined
+interface-member BoundedEvidenceSample::property::rowCount = optional rowCount: number | undefined
+interface-member BoundedEvidenceSample::property::truncated = optional truncated: boolean | undefined
+interface-member BoundedEvidenceSample::property::values = optional values: JsonValue[] | undefined
+interface-member BuildArtifactGroundingOptions::property::channel = required channel: ReceptionChannel
+interface-member BuildArtifactGroundingOptions::property::disclosureLevel = optional disclosureLevel: "detailed" | "standard" | "summary" | undefined
+interface-member BuildArtifactGroundingOptions::property::includeRawData = optional includeRawData: boolean | undefined
+interface-member BuildArtifactGroundingOptions::property::maxNavigationLeaves = optional maxNavigationLeaves: number | undefined
+interface-member BuildArtifactGroundingOptions::property::tokenBudget = optional tokenBudget: number | undefined
 interface-member BuildNavigationTreeOptions::property::locale = optional locale: string | undefined
 interface-member BuildNavigationTreeOptions::property::maxLeaves = optional maxLeaves: number | undefined
 interface-member BuildNavigationTreeOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
+interface-member CanonicalJsonResult::property::excludedPaths = required excludedPaths: string[]
+interface-member CanonicalJsonResult::property::text = required text: string
+interface-member CanonicalJsonResult::property::value = required value: JsonValue
+interface-member ChartArtifactTransferStatus::property::serializedConfigFingerprint = optional serializedConfigFingerprint: string | undefined
+interface-member ChartArtifactTransferStatus::property::serializedDataFingerprint = optional serializedDataFingerprint: null | string | undefined
+interface-member ChartArtifactTransferStatus::property::transferFingerprint = optional transferFingerprint: string | undefined
 interface-member ChartClinicBundleGuidance::property::category = optional readonly category: ChartCategory | undefined
 interface-member ChartClinicBundleGuidance::property::docsRoute = optional readonly docsRoute: string | undefined
 interface-member ChartClinicBundleGuidance::property::note = required readonly note: string
@@ -269,9 +669,11 @@ interface-member ChartClinicSceneSummary::property::semanticStatus = optional re
 interface-member ChartClinicSceneSummary::property::status = required readonly status: "empty" | "ok"
 interface-member ChartClinicSceneSummary::property::xDomain = optional readonly xDomain: readonly [number, number] | undefined
 interface-member ChartClinicSceneSummary::property::yDomain = optional readonly yDomain: readonly [number, number] | undefined
+interface-member ChartConfig::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member ChartConfig::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
 interface-member ChartConfig::property::component = required component: string
 interface-member ChartConfig::property::createdAt = required createdAt: string
-interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string;}
+interface-member ChartConfig::property::manifest = optional manifest: undefined | {name: string; intents: string[]; audience?: string[]; frameFamily: string; recipeVersion?: string; definitionFingerprint?: string; layoutId?: string; layoutVersion?: string; layoutFingerprint?: string;}
 interface-member ChartConfig::property::portable = optional portable: boolean | undefined
 interface-member ChartConfig::property::props = required props: Datum
 interface-member ChartConfig::property::reason = optional reason: string | undefined
@@ -331,6 +733,86 @@ interface-member CheckedNumericContract::property::domain = required readonly do
 interface-member CheckedNumericContract::property::missingValue = optional readonly missingValue: number | undefined
 interface-member CheckedNumericContract::property::requirements = required readonly requirements: readonly NumericRequirement[]
 interface-member CheckedNumericContract::property::role = required readonly role: NumericFieldRole
+interface-member Claim::property::asOf = optional asOf: string | undefined
+interface-member Claim::property::authoredBy = optional authoredBy: ActorRef | undefined
+interface-member Claim::property::evidenceIds = required evidenceIds: string[]
+interface-member Claim::property::id = required id: string
+interface-member Claim::property::kind = required kind: ClaimKind
+interface-member Claim::property::review = optional review: ClaimReview | undefined
+interface-member Claim::property::scope = optional scope: JsonObject | undefined
+interface-member Claim::property::status = required status: ClaimStatus
+interface-member Claim::property::supersedes = optional supersedes: string[] | undefined
+interface-member Claim::property::tags = optional tags: string[] | undefined
+interface-member Claim::property::text = optional text: string | undefined
+interface-member Claim::property::uncertainty = optional uncertainty: ClaimUncertainty | undefined
+interface-member ClaimAudit::property::claims = required claims: number
+interface-member ClaimAudit::property::evidence = required evidence: number
+interface-member ClaimAudit::property::findings = required findings: ObligationResult[]
+interface-member ClaimAudit::property::ok = required ok: boolean
+interface-member ClaimAudit::property::summary = required summary: ObligationSummary
+interface-member ClaimAuditOptions::property::data = optional data: readonly Datum[] | undefined
+interface-member ClaimAuditOptions::property::maxFutureReviewSkewMs = optional maxFutureReviewSkewMs: number | undefined
+interface-member ClaimAuditOptions::property::now = optional now: string | undefined
+interface-member ClaimAuditOptions::property::requireEvidenceIdentity = optional requireEvidenceIdentity: boolean | undefined
+interface-member ClaimAuditOptions::property::requireReviewForModelClaims = optional requireReviewForModelClaims: boolean | undefined
+interface-member ClaimChallenge::property::claimId = required claimId: string
+interface-member ClaimChallenge::property::counterclaimId = optional counterclaimId: string | undefined
+interface-member ClaimChallenge::property::id = required id: string
+interface-member ClaimChallenge::property::raisedAt = optional raisedAt: string | undefined
+interface-member ClaimChallenge::property::raisedBy = optional raisedBy: ActorRef | undefined
+interface-member ClaimChallenge::property::reason = required reason: string
+interface-member ClaimChallenge::property::resolution = optional resolution: string | undefined
+interface-member ClaimChallenge::property::status = required status: "accepted" | "declined" | "open" | "resolved"
+interface-member ClaimDependency::property::artifactId = required artifactId: string
+interface-member ClaimDependency::property::claimId = required claimId: string
+interface-member ClaimDependency::property::evidenceIds = required evidenceIds: string[]
+interface-member ClaimDependency::property::sourceIds = optional sourceIds: string[] | undefined
+interface-member ClaimReview::property::rationale = optional rationale: string | undefined
+interface-member ClaimReview::property::reviewedAt = optional reviewedAt: string | undefined
+interface-member ClaimReview::property::reviewer = optional reviewer: ActorRef | undefined
+interface-member ClaimReview::property::status = required status: "approved" | "proposed" | "rejected" | "reviewed"
+interface-member ClaimUncertainty::property::confidence = optional confidence: number | undefined
+interface-member ClaimUncertainty::property::description = optional description: string | undefined
+interface-member ClaimUncertainty::property::kind = required kind: "distribution" | "interval" | "qualitative" | "unknown"
+interface-member ClaimUncertainty::property::lower = optional lower: number | undefined
+interface-member ClaimUncertainty::property::unit = optional unit: string | undefined
+interface-member ClaimUncertainty::property::upper = optional upper: number | undefined
+interface-member CollectionClaimReference::property::artifactId = required artifactId: string
+interface-member CollectionClaimReference::property::claimId = required claimId: string
+interface-member CollectionCorrectionRecord::property::scope = optional scope: CollectionCorrectionScope | undefined
+interface-member CollectionCorrectionScope::property::affectedClaims = optional affectedClaims: CollectionClaimReference[] | undefined
+interface-member CollectionCorrectionScope::property::replacementClaims = optional replacementClaims: CollectionClaimReference[] | undefined
+interface-member CollectionEvidenceReference::property::artifactId = required artifactId: string
+interface-member CollectionEvidenceReference::property::evidenceId = required evidenceId: string
+interface-member CollectionFilterState::property::appliesToArtifactIds = required appliesToArtifactIds: string[]
+interface-member CollectionFilterState::property::id = required id: string
+interface-member CollectionFilterState::property::label = optional label: string | undefined
+interface-member CollectionFilterState::property::value = optional value: JsonValue | undefined
+interface-member CompactInheritancePacket::property::accountability = optional accountability: import("./types").AccountabilityContract | undefined
+interface-member CompactInheritancePacket::property::artifact = required artifact: import("./types").ArtifactIdentity
+interface-member CompactInheritancePacket::property::claims = required claims: Claim[]
+interface-member CompactInheritancePacket::property::corrections = optional corrections: CorrectionRecord[] | undefined
+interface-member CompactInheritancePacket::property::evidence = required evidence: EvidenceRef[]
+interface-member CompactInheritancePacket::property::fieldStatus = optional fieldStatus: Record<string, import("./types").ArtifactFieldState> | undefined
+interface-member CompactInheritancePacket::property::inheritance = optional inheritance: import("./types").InheritanceContract | undefined
+interface-member CompactInheritancePacket::property::omittedPaths = required omittedPaths: string[]
+interface-member CompactInheritancePacket::property::purpose = required purpose: import("./types").PurposeContract
+interface-member CompactInheritancePacket::property::time = optional time: TemporalContext | undefined
+interface-member ContestabilityContract::property::alternativeViews = optional alternativeViews: undefined | {id: string; label: string; rationale?: string;}[]
+interface-member ContestabilityContract::property::challenges = optional challenges: ClaimChallenge[] | undefined
+interface-member ContestabilityContract::property::corrections = optional corrections: CorrectionRecord[] | undefined
+interface-member ContestabilityContract::property::editorialExceptions = optional editorialExceptions: undefined | {ruleId: string; rationale: string; owner?: string; reviewAt?: string;}[]
+interface-member ContestabilityContract::property::sourceRequestsAllowed = optional sourceRequestsAllowed: boolean | undefined
+interface-member CorrectionRecord::property::affectedClaimIds = required affectedClaimIds: string[]
+interface-member CorrectionRecord::property::createdAt = optional createdAt: string | undefined
+interface-member CorrectionRecord::property::createdBy = optional createdBy: ActorRef | undefined
+interface-member CorrectionRecord::property::id = required id: string
+interface-member CorrectionRecord::property::reason = required reason: string
+interface-member CorrectionRecord::property::replacementClaimIds = optional replacementClaimIds: string[] | undefined
+interface-member CreateArtifactPacketOptions::property::format = optional format: ArtifactTransferFormat | undefined
+interface-member CreateArtifactPacketOptions::property::includeEvidenceSamples = optional includeEvidenceSamples: boolean | undefined
+interface-member CreateArtifactPacketOptions::property::maxClaims = optional maxClaims: number | undefined
+interface-member CreateArtifactPacketOptions::property::maxEvidenceRecords = optional maxEvidenceRecords: number | undefined
 interface-member DashboardPanel::property::intent = required intent: IntentId
 interface-member DashboardPanel::property::suggestion = required suggestion: Suggestion
 interface-member DashboardSuggestion::property::intentsCovered = required intentsCovered: IntentId[]
@@ -392,6 +874,15 @@ interface-member DescribeChartResult::property::annotations = optional annotatio
 interface-member DescribeChartResult::property::caveats = optional caveats: string[] | undefined
 interface-member DescribeChartResult::property::levels = required levels: {l1?: string; l2?: string; l3?: string; l4?: string;}
 interface-member DescribeChartResult::property::text = required text: string
+interface-member DescriptionClaimOptions::property::asOf = optional asOf: string | undefined
+interface-member DescriptionClaimOptions::property::authoredBy = optional authoredBy: ActorRef | undefined
+interface-member DescriptionClaimOptions::property::evidenceIds = optional evidenceIds: Partial<Record<DescribeLevel, readonly string[]>> | undefined
+interface-member DescriptionClaimOptions::property::prefix = optional prefix: string | undefined
+interface-member DesignContract::property::chartFamily = optional chartFamily: string | undefined
+interface-member DesignContract::property::misuse = optional misuse: string[] | undefined
+interface-member DesignContract::property::rejectedAlternatives = optional rejectedAlternatives: undefined | {representation: string; reason: string;}[]
+interface-member DesignContract::property::risks = optional risks: string[] | undefined
+interface-member DesignContract::property::whyThisForm = optional whyThisForm: string | undefined
 interface-member Diagnosis::property::code = required code: string
 interface-member Diagnosis::property::count = optional count: number | undefined
 interface-member Diagnosis::property::domain = optional domain: "accessibility" | "configuration" | "data" | "render" | undefined
@@ -409,6 +900,11 @@ interface-member EncodingDefinition::property::redundantWith = optional redundan
 interface-member EncodingDefinition::property::role = required role: string | string[]
 interface-member EvaluateAestheticsOptions::property::profile = optional readonly profile: AestheticProfile | undefined
 interface-member EvaluateAestheticsOptions::property::theme = optional readonly theme: SemioticTheme | undefined
+interface-member EvaluateArtifactOptions::property::data = optional data: readonly Datum[] | undefined
+interface-member EvaluateArtifactOptions::property::exceptions = optional exceptions: readonly ArtifactPolicyException[] | undefined
+interface-member EvaluateArtifactOptions::property::now = optional now: string | undefined
+interface-member EvaluateArtifactOptions::property::policy = optional policy: ArtifactPolicyInput
+interface-member EvaluateArtifactOptions::property::recommendRepresentation = optional recommendRepresentation: boolean | undefined
 interface-member EvaluateChartFinding::property::code = required readonly code: string
 interface-member EvaluateChartFinding::property::count = optional readonly count: number | undefined
 interface-member EvaluateChartFinding::property::critical = optional readonly critical: boolean | undefined
@@ -450,9 +946,39 @@ interface-member EvaluateChartSummary::property::notifications = required readon
 interface-member EvaluateChartSummary::property::warnings = required readonly warnings: number
 interface-member EvaluateVariantProposalOptions::property::baselineComponent = optional baselineComponent: string | undefined
 interface-member EvaluateVariantProposalOptions::property::intent = optional intent: IntentId | readonly IntentId[] | undefined
+interface-member EvidenceRef::property::dataVersion = optional dataVersion: string | undefined
+interface-member EvidenceRef::property::fingerprint = optional fingerprint: string | undefined
+interface-member EvidenceRef::property::generatedClaimId = optional generatedClaimId: string | undefined
+interface-member EvidenceRef::property::id = required id: string
+interface-member EvidenceRef::property::label = optional label: string | undefined
+interface-member EvidenceRef::property::observedAt = optional observedAt: string | undefined
+interface-member EvidenceRef::property::relationship = optional relationship: "causal" | "correlational" | "descriptive" | "unknown" | undefined
+interface-member EvidenceRef::property::role = required role: EvidenceRole
+interface-member EvidenceRef::property::sample = optional sample: BoundedEvidenceSample | undefined
+interface-member EvidenceRef::property::scope = optional scope: JsonObject | undefined
+interface-member EvidenceRef::property::source = optional source: EvidenceSource | undefined
+interface-member EvidenceRef::property::transformation = optional transformation: TransformationRecord | undefined
+interface-member EvidenceSource::property::name = optional name: string | undefined
+interface-member EvidenceSource::property::publisher = optional publisher: string | undefined
+interface-member EvidenceSource::property::retrievedAt = optional retrievedAt: string | undefined
+interface-member EvidenceSource::property::uri = optional uri: string | undefined
+interface-member EvidenceSource::property::version = optional version: string | undefined
 interface-member ExplainCapabilityFitResult::property::fitting = required fitting: Suggestion[]
 interface-member ExplainCapabilityFitResult::property::profile = required profile: ChartDataProfile
 interface-member ExplainCapabilityFitResult::property::rejected = required rejected: RejectedCapability[]
+interface-member FormatArtifactContractOptions::property::includeFieldStatus = optional includeFieldStatus: boolean | undefined
+interface-member FormatArtifactContractOptions::property::lineSeparator = optional lineSeparator: string | undefined
+interface-member FromConfigResult::property::artifactContract = optional artifactContract: PortableArtifactContract | undefined
+interface-member FromConfigResult::property::artifactTransfer = optional artifactTransfer: ChartArtifactTransferStatus | undefined
+interface-member FromConfigResult::property::componentName = required componentName: string
+interface-member FromConfigResult::property::props = required props: Datum
+interface-member HistoricalSnapshotMetadata::property::catalogRef = optional catalogRef: string | undefined
+interface-member HistoricalSnapshotMetadata::property::dataObservedAt = optional dataObservedAt: string | undefined
+interface-member HistoricalSnapshotMetadata::property::format = optional format: "delta" | "iceberg" | "other" | undefined
+interface-member HistoricalSnapshotMetadata::property::presentationLabel = optional presentationLabel: string | undefined
+interface-member HistoricalSnapshotMetadata::property::revision = optional revision: undefined | {status: "backfilled" | "corrected" | "original" | "superseded"; previousArtifactId?: string; correctionId?: string; reason?: string;}
+interface-member HistoricalSnapshotMetadata::property::schemaVersion = optional schemaVersion: string | undefined
+interface-member HistoricalSnapshotMetadata::property::snapshotAt = optional snapshotAt: string | undefined
 interface-member InferIntentField::property::kind = optional kind: (string & {}) | IntentFieldKind | undefined
 interface-member InferIntentField::property::name = required name: string
 interface-member InferIntentField::property::role = optional role: string | undefined
@@ -463,6 +989,12 @@ interface-member InferIntentResult::property::alternates = required alternates: 
 interface-member InferIntentResult::property::confidence = required confidence: number
 interface-member InferIntentResult::property::intent = required intent: IntentId
 interface-member InferIntentResult::property::source = optional source: "combined" | "data-shape" | "field-name" | "prose" | undefined
+interface-member InheritanceContract::property::preservation = optional preservation: PreservationClass | undefined
+interface-member InheritanceContract::property::privacy = optional privacy: "confidential" | "public" | "restricted" | "unknown" | undefined
+interface-member InheritanceContract::property::prohibitedExports = optional prohibitedExports: string[] | undefined
+interface-member InheritanceContract::property::rawDataDefault = optional rawDataDefault: "bounded" | "exclude" | "include" | undefined
+interface-member InheritanceContract::property::requiredPaths = optional requiredPaths: string[] | undefined
+interface-member InheritanceContract::property::sourceArtifactIds = optional sourceArtifactIds: string[] | undefined
 interface-member IntentDescriptor::property::composes = optional composes: readonly IntentId[] | undefined
 interface-member IntentDescriptor::property::description = required description: string
 interface-member IntentDescriptor::property::familyHint = optional familyHint: "categorical" | "distribution" | "flow" | "geo" | "hierarchy" | "network" | "relationship" | "time-series" | undefined
@@ -470,9 +1002,21 @@ interface-member IntentDescriptor::property::id = required id: IntentId
 interface-member IntentDescriptor::property::label = required label: string
 interface-member IntentDescriptor::property::signals = optional signals: IntentSignals | undefined
 interface-member IntentDescriptor::property::weights = optional weights: Readonly<Partial<Record<IntentId, number>>> | undefined
+interface-member IntentManifestProjection::property::manifest = required manifest: IntentManifest
+interface-member IntentManifestProjection::property::omittedPaths = required omittedPaths: string[]
 interface-member IntentSignals::property::dataShape = optional dataShape: undefined | {minNumericFields?: number; minCategoricalFields?: number; minDateFields?: number; minBooleanFields?: number; confidence?: number;}
 interface-member IntentSignals::property::fieldNames = optional fieldNames: readonly string[] | undefined
 interface-member IntentSignals::property::minimumFieldMatches = optional minimumFieldMatches: number | undefined
+interface-member JSXProjectionResult::property::jsx = required jsx: string
+interface-member JSXProjectionResult::property::omittedPaths = required omittedPaths: string[]
+interface-member JSXProjectionResult::property::warnings = required warnings: string[]
+interface-member JsonObject::index::%24index = required (key: string): JsonValue
+interface-member MetricDefinition::property::definition = required definition: string
+interface-member MetricDefinition::property::denominator = optional denominator: string | undefined
+interface-member MetricDefinition::property::id = required id: string
+interface-member MetricDefinition::property::label = required label: string
+interface-member MetricDefinition::property::unit = optional unit: string | undefined
+interface-member MetricDefinition::property::version = optional version: string | undefined
 interface-member MobileVisualizationAuditResult::property::component = required component: string
 interface-member MobileVisualizationAuditResult::property::findings = required findings: MobileVisualizationFinding[]
 interface-member MobileVisualizationAuditResult::property::ok = required ok: boolean
@@ -519,12 +1063,35 @@ interface-member NumericFieldProfile::property::observedCount = required readonl
 interface-member NumericFieldProfile::property::q1 = optional readonly q1: number | undefined
 interface-member NumericFieldProfile::property::q3 = optional readonly q3: number | undefined
 interface-member NumericFieldProfile::property::zeroCount = required readonly zeroCount: number
+interface-member ObligationResult::property::evidenceIds = optional evidenceIds: string[] | undefined
+interface-member ObligationResult::property::id = required id: string
+interface-member ObligationResult::property::message = required message: string
+interface-member ObligationResult::property::path = optional path: string | undefined
+interface-member ObligationResult::property::relation = required relation: ArtifactRelation
+interface-member ObligationResult::property::repair = optional repair: string | undefined
+interface-member ObligationResult::property::status = required status: ObligationStatus
+interface-member ObligationSummary::property::fail = required fail: number
+interface-member ObligationSummary::property::manual = required manual: number
+interface-member ObligationSummary::property::notApplicable = required notApplicable: number
+interface-member ObligationSummary::property::pass = required pass: number
+interface-member ObligationSummary::property::unknown = required unknown: number
+interface-member ObligationSummary::property::warn = required warn: number
 interface-member OpenAIResponsesTool::property::description = required description: string
 interface-member OpenAIResponsesTool::property::name = required name: string
 interface-member OpenAIResponsesTool::property::parameters = required parameters: Record<string, unknown>
 interface-member OpenAIResponsesTool::property::strict = required strict: boolean
 interface-member OpenAIResponsesTool::property::type = required type: "function"
 interface-member OpenAIResponsesToolOptions::property::strict = optional strict: boolean | undefined
+interface-member PrepareArtifactRevisionOptions::property::artifactId = optional artifactId: string | undefined
+interface-member PrepareArtifactRevisionOptions::property::claimTransitions = optional claimTransitions: readonly ArtifactClaimTransition[] | undefined
+interface-member PrepareArtifactRevisionOptions::property::data = optional data: readonly Datum[] | undefined
+interface-member PrepareArtifactRevisionOptions::property::evidence = optional evidence: readonly EvidenceRef[] | undefined
+interface-member PrepareArtifactRevisionOptions::property::grounding = optional grounding: Omit<BuildArtifactGroundingOptions, "channel"> | undefined
+interface-member PrepareArtifactRevisionOptions::property::groundingChannels = optional groundingChannels: readonly ReceptionChannel[] | undefined
+interface-member PrepareArtifactRevisionOptions::property::presentation = optional presentation: ArtifactRevisionPresentation | undefined
+interface-member PrepareArtifactRevisionOptions::property::propUpdates = optional propUpdates: Datum | undefined
+interface-member PrepareArtifactRevisionOptions::property::revision = required revision: string
+interface-member PrepareArtifactRevisionOptions::property::time = required time: TemporalContext
 interface-member PrepareChartInput::property::component = required component: string
 interface-member PrepareChartInput::property::props = optional props: Datum | undefined
 interface-member PrepareChartOptions::property::data = optional data: readonly Datum[] | undefined
@@ -545,6 +1112,21 @@ interface-member PrepareChartResult::property::reasons = required reasons: strin
 interface-member PrepareChartResult::property::repair = optional repair: RepairResult | undefined
 interface-member PrepareChartResult::property::svg = optional svg: string | undefined
 interface-member PrepareChartResult::property::validation = required validation: ValidationResult
+interface-member PreparedArtifactRevision::property::changedClaimIds = required changedClaimIds: string[]
+interface-member PreparedArtifactRevision::property::component = required component: string
+interface-member PreparedArtifactRevision::property::contract = required contract: ArtifactContract
+interface-member PreparedArtifactRevision::property::evaluation = required evaluation: ArtifactEvaluation
+interface-member PreparedArtifactRevision::property::grounding = required grounding: Partial<Record<ReceptionChannel, ArtifactGrounding>>
+interface-member PreparedArtifactRevision::property::props = required props: Datum
+interface-member PreparedArtifactRevision::property::publishable = required publishable: boolean
+interface-member ProcessingJobMetadata::property::eventTime = optional eventTime: TimeField | undefined
+interface-member ProcessingJobMetadata::property::observedAt = optional observedAt: string | undefined
+interface-member ProcessingJobMetadata::property::presentationLabel = optional presentationLabel: string | undefined
+interface-member ProcessingJobMetadata::property::presentationState = optional presentationState: TemporalPresentationState | undefined
+interface-member ProcessingJobMetadata::property::processedAt = optional processedAt: string | undefined
+interface-member ProcessingJobMetadata::property::revision = optional revision: undefined | {status: "backfilled" | "corrected" | "original" | "superseded"; previousArtifactId?: string; correctionId?: string; reason?: string;}
+interface-member ProcessingJobMetadata::property::watermark = optional watermark: undefined | {value: string; policy?: string; allowedLateness?: string;}
+interface-member ProcessingJobMetadata::property::window = optional window: undefined | {start: string; end: string; status: import("./types").WindowStatus;}
 interface-member ProfileDataOptions::property::fieldRoles = optional fieldRoles: Readonly<Record<string, import("./fieldRoles").ProfileFieldRoleHint>> | undefined
 interface-member ProfileDataOptions::property::identifiers = optional identifiers: readonly string[] | undefined
 interface-member ProfileDataOptions::property::rawInput = optional rawInput: unknown
@@ -556,18 +1138,84 @@ interface-member ProfilePrimaryFields::property::size = optional size: string | 
 interface-member ProfilePrimaryFields::property::time = optional time: string | undefined
 interface-member ProfilePrimaryFields::property::x = optional x: string | undefined
 interface-member ProfilePrimaryFields::property::y = optional y: string | undefined
+interface-member PurposeContract::property::allowedUses = optional allowedUses: string[] | undefined
+interface-member PurposeContract::property::communicativeAct = optional communicativeAct: string | undefined
+interface-member PurposeContract::property::decisionContext = optional decisionContext: string | undefined
+interface-member PurposeContract::property::intents = required intents: PurposeIntent[]
+interface-member PurposeContract::property::prohibitedUses = optional prohibitedUses: string[] | undefined
+interface-member PurposeContract::property::stakes = optional stakes: ArtifactStakes | undefined
+interface-member PurposeIntent::property::id = required id: string
+interface-member PurposeIntent::property::rationale = optional rationale: string | undefined
+interface-member PurposeIntent::property::source = optional source: "author" | "derived" | "import" | "model-proposal" | undefined
+interface-member PurposeIntent::property::strength = optional strength: "primary" | "secondary" | undefined
+interface-member QualityCheckMetadata::property::appliesToObservedAt = optional appliesToObservedAt: string | undefined
+interface-member QualityCheckMetadata::property::basis = optional basis: string | undefined
+interface-member QualityCheckMetadata::property::checkedAt = optional checkedAt: string | undefined
+interface-member QualityCheckMetadata::property::expiresAt = optional expiresAt: string | undefined
+interface-member QualityCheckMetadata::property::heartbeatAt = optional heartbeatAt: string | undefined
+interface-member ReceptionChannelContract::property::channel = required channel: ReceptionChannel
+interface-member ReceptionChannelContract::property::disclosure = optional disclosure: "detailed" | "standard" | "summary" | undefined
+interface-member ReceptionChannelContract::property::interactionInstructions = optional interactionInstructions: boolean | undefined
+interface-member ReceptionChannelContract::property::navigation = optional navigation: boolean | undefined
+interface-member ReceptionChannelContract::property::privacyNotes = optional privacyNotes: string[] | undefined
+interface-member ReceptionChannelContract::property::rawData = optional rawData: "allow" | "bounded" | "deny" | undefined
+interface-member ReceptionChannelContract::property::tokenBudget = optional tokenBudget: number | undefined
+interface-member ReceptionContract::property::audience = optional audience: string | undefined
+interface-member ReceptionContract::property::channels = required channels: ReceptionChannelContract[]
+interface-member ReceptionContract::property::dataFallback = optional dataFallback: boolean | undefined
+interface-member ReceptionContract::property::description = optional description: string | undefined
+interface-member ReceptionContract::property::manualChecks = optional manualChecks: string[] | undefined
+interface-member ReceptionContract::property::risks = optional risks: string[] | undefined
+interface-member ReceptionContract::property::scaffolds = optional scaffolds: string[] | undefined
+interface-member ReceptionContract::property::strengths = optional strengths: string[] | undefined
+interface-member RecommendRepresentationOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member RecommendRepresentationOptions::property::exceptions = optional exceptions: readonly ArtifactPolicyException[] | undefined
+interface-member RecommendRepresentationOptions::property::identifiers = optional identifiers: readonly string[] | undefined
+interface-member RecommendRepresentationOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member RecommendRepresentationOptions::property::maxChartCandidates = optional maxChartCandidates: number | undefined
+interface-member RecommendRepresentationOptions::property::now = optional now: string | undefined
+interface-member RecommendRepresentationOptions::property::policy = optional policy: ArtifactPolicyInput
+interface-member RecommendRepresentationOptions::property::preferredComponent = optional preferredComponent: string | undefined
 interface-member RejectedCapability::property::component = required component: string
 interface-member RejectedCapability::property::family = required family: import("./chartCapabilityTypes").ChartFamily
 interface-member RejectedCapability::property::importPath = required importPath: import("./chartCapabilityTypes").ChartImportPath
 interface-member RejectedCapability::property::reason = required reason: string
+interface-member RejectedRepresentation::property::rejectedBecause = required rejectedBecause: string
 interface-member RenderEvidenceMemo::property::clear = required clear: () => void
 interface-member RenderEvidenceMemo::property::render = required render: RenderFn
+interface-member RepairArtifactOptions::property::applySafeIdentityRepairs = optional applySafeIdentityRepairs: boolean | undefined
 interface-member RepairOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member RepairOptions::property::maxAlternatives = optional maxAlternatives: number | undefined
 interface-member RepairOptions::property::observedSceneAudit = optional observedSceneAudit: ObservedSceneAuditResult | undefined
 interface-member RepairOptions::property::profile = optional profile: ChartDataProfile | undefined
 interface-member RepairOptions::property::props = optional props: Datum | undefined
+interface-member RepairProposal::property::action = required action: string
+interface-member RepairProposal::property::category = optional category: "configuration" | "contract" | "identity" | undefined
+interface-member RepairProposal::property::changesClaim = required changesClaim: boolean
+interface-member RepairProposal::property::id = required id: string
+interface-member RepairProposal::property::path = optional path: string | undefined
+interface-member RepairProposal::property::reason = required reason: string
+interface-member RepresentationCandidate::property::caveats = optional caveats: string[] | undefined
+interface-member RepresentationCandidate::property::component = optional component: string | undefined
+interface-member RepresentationCandidate::property::id = required id: string
+interface-member RepresentationCandidate::property::kind = required kind: RepresentationKind
+interface-member RepresentationCandidate::property::label = required label: string
+interface-member RepresentationCandidate::property::props = optional props: Record<string, unknown> | undefined
+interface-member RepresentationCandidate::property::reasons = required reasons: string[]
+interface-member RepresentationCandidate::property::score = optional score: number | undefined
+interface-member RepresentationRecommendation::property::alternatives = required alternatives: RepresentationCandidate[]
+interface-member RepresentationRecommendation::property::policy = required policy: {id: string; version: string; appliedExceptions?: ArtifactPolicyException[]; rejectedExceptions?: ArtifactPolicyException[];}
+interface-member RepresentationRecommendation::property::reasons = required reasons: string[]
+interface-member RepresentationRecommendation::property::rejected = required rejected: RejectedRepresentation[]
+interface-member RepresentationRecommendation::property::selected = required selected: RepresentationCandidate
+interface-member RepresentationRecommendation::property::status = required status: "conditional" | "recommended" | "refuse"
 interface-member ReprofileFieldsOptions::property::primary = optional primary: Partial<ProfilePrimaryFields> | undefined
+interface-member ReviewRecord::property::id = required id: string
+interface-member ReviewRecord::property::policyId = optional policyId: string | undefined
+interface-member ReviewRecord::property::rationale = optional rationale: string | undefined
+interface-member ReviewRecord::property::reviewedAt = optional reviewedAt: string | undefined
+interface-member ReviewRecord::property::reviewer = optional reviewer: ActorRef | undefined
+interface-member ReviewRecord::property::status = required status: "approved" | "changes-requested" | "pending" | "rejected"
 interface-member ScoreChartOptions::property::audience = optional audience: AudienceProfile | undefined
 interface-member ScoreChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member ScoreChartOptions::property::portability = optional portability: "local" | "portable" | undefined
@@ -593,6 +1241,11 @@ interface-member SemanticViabilityDiagnostic::property::message = required reado
 interface-member SemanticViabilityDiagnostic::property::metrics = optional readonly metrics: Readonly<Record<string, boolean | number | string>> | undefined
 interface-member SemanticViabilityDiagnostic::property::severity = required readonly severity: "error" | "warning"
 interface-member SemanticViabilityRule::property::kind = required readonly kind: "rank-competition"
+interface-member SerializeArtifactContractOptions::property::excludeEvidenceSamples = optional excludeEvidenceSamples: boolean | undefined
+interface-member SerializedArtifactCollection::property::collection = optional collection: ArtifactCollectionContract | JsonObject | undefined
+interface-member SerializedArtifactCollection::property::transfer = required transfer: ArtifactCollectionTransfer
+interface-member SerializedArtifactContract::property::contract = optional contract: PortableArtifactContract | undefined
+interface-member SerializedArtifactContract::property::transfer = required transfer: ArtifactTransferStatus
 interface-member StreamSchema::property::fields = required fields: readonly StreamFieldSchema[]
 interface-member StreamSchema::property::retention = optional retention: "cumulative" | "windowed" | undefined
 interface-member StreamSchema::property::throughput = optional throughput: "high" | "low" | "medium" | undefined
@@ -606,6 +1259,13 @@ interface-member StreamSuggestion::property::reasons = required reasons: readonl
 interface-member StreamSuggestion::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamSuggestion::property::rubric = required rubric: ChartRubric
 interface-member StreamSuggestion::property::score = required score: number
+interface-member StreamTopicMetadata::property::eventTime = optional eventTime: TimeField | undefined
+interface-member StreamTopicMetadata::property::ingestedAt = optional ingestedAt: string | undefined
+interface-member StreamTopicMetadata::property::observedAt = optional observedAt: string | undefined
+interface-member StreamTopicMetadata::property::presentationLabel = optional presentationLabel: string | undefined
+interface-member StreamTopicMetadata::property::revision = optional revision: undefined | {status: "backfilled" | "corrected" | "original" | "superseded"; previousArtifactId?: string; correctionId?: string; reason?: string;}
+interface-member StreamTopicMetadata::property::watermark = optional watermark: undefined | {value: string; policy?: string; allowedLateness?: string;}
+interface-member StreamTopicMetadata::property::window = optional window: undefined | {start: string; end: string; status: import("./types").WindowStatus;}
 interface-member StretchSuggestion::property::familiarity = required familiarity: number
 interface-member StretchSuggestion::property::rationale = required rationale: string
 interface-member StretchSuggestion::property::replacing = optional replacing: string | undefined
@@ -652,10 +1312,69 @@ interface-member SuggestionPropContract::property::modeValues = required readonl
 interface-member SummarizeOptions::property::keyScanRows = optional keyScanRows: number | undefined
 interface-member SummarizeOptions::property::maxDistinct = optional maxDistinct: number | undefined
 interface-member SummarizeOptions::property::sampleSize = optional sampleSize: number | undefined
+interface-member TemporalAudit::property::findings = required findings: ObligationResult[]
+interface-member TemporalAudit::property::ok = required ok: boolean
+interface-member TemporalAudit::property::sources = required sources: number
+interface-member TemporalAudit::property::summary = required summary: ObligationSummary
+interface-member TemporalAuditOptions::property::claims = optional claims: readonly Claim[] | undefined
+interface-member TemporalAuditOptions::property::corrections = optional corrections: readonly CorrectionRecord[] | undefined
+interface-member TemporalAuditOptions::property::maxQualityAgeMs = optional maxQualityAgeMs: number | undefined
+interface-member TemporalAuditOptions::property::referenceTime = optional referenceTime: string | undefined
+interface-member TemporalAuditOptions::property::requireFreshnessForLive = optional requireFreshnessForLive: boolean | undefined
+interface-member TemporalAuditOptions::property::requireSettled = optional requireSettled: boolean | undefined
+interface-member TemporalContext::property::completeness = optional completeness: undefined | {status: "partial" | "provisional" | "settled" | "unknown"; basis?: string;}
+interface-member TemporalContext::property::eventTime = optional eventTime: TimeField | undefined
+interface-member TemporalContext::property::freshness = optional freshness: undefined | {status: "fresh" | "stale" | "unknown"; checkedAt?: string; heartbeatAt?: string; expiresAt?: string; basis?: string;}
+interface-member TemporalContext::property::ingestedAt = optional ingestedAt: string | undefined
+interface-member TemporalContext::property::observedAt = optional observedAt: string | undefined
+interface-member TemporalContext::property::presentation = optional presentation: undefined | {state?: "historical" | "live" | "mixed"; label?: string;}
+interface-member TemporalContext::property::processedAt = optional processedAt: string | undefined
+interface-member TemporalContext::property::publishedAt = optional publishedAt: string | undefined
+interface-member TemporalContext::property::revision = optional revision: undefined | {status: "backfilled" | "corrected" | "original" | "superseded"; previousArtifactId?: string; correctionId?: string; reason?: string;}
+interface-member TemporalContext::property::snapshot = optional snapshot: undefined | {id?: string; format?: "delta" | "iceberg" | "other"; schemaVersion?: string; catalogRef?: string;}
+interface-member TemporalContext::property::snapshotAt = optional snapshotAt: string | undefined
+interface-member TemporalContext::property::sources = optional sources: TemporalSourceState[] | undefined
+interface-member TemporalContext::property::watermark = optional watermark: undefined | {value: string; policy?: string; allowedLateness?: string;}
+interface-member TemporalContext::property::window = optional window: undefined | {start: string; end: string; status: WindowStatus;}
+interface-member TemporalMetadataBase::property::completeness = optional completeness: undefined | {status: "partial" | "provisional" | "settled" | "unknown"; basis?: string;}
+interface-member TemporalMetadataBase::property::freshness = optional freshness: undefined | {status: "fresh" | "stale" | "unknown"; checkedAt?: string; heartbeatAt?: string; expiresAt?: string; basis?: string;}
+interface-member TemporalMetadataBase::property::granularity = optional granularity: string | undefined
+interface-member TemporalMetadataBase::property::id = required id: string
+interface-member TemporalMetadataBase::property::label = optional label: string | undefined
+interface-member TemporalMetadataBase::property::timezone = optional timezone: string | undefined
+interface-member TemporalMetadataBase::property::version = optional version: string | undefined
+interface-member TemporalSourceState::property::completeness = optional completeness: "partial" | "provisional" | "settled" | "unknown" | undefined
+interface-member TemporalSourceState::property::freshness = optional freshness: "fresh" | "stale" | "unknown" | undefined
+interface-member TemporalSourceState::property::granularity = optional granularity: string | undefined
+interface-member TemporalSourceState::property::id = required id: string
+interface-member TemporalSourceState::property::kind = required kind: "processing-job" | "publication" | "quality-check" | "snapshot" | "stream"
+interface-member TemporalSourceState::property::label = optional label: string | undefined
+interface-member TemporalSourceState::property::observedAt = optional observedAt: string | undefined
+interface-member TemporalSourceState::property::timezone = optional timezone: string | undefined
+interface-member TemporalSourceState::property::version = optional version: string | undefined
+interface-member TimeField::property::field = optional field: string | undefined
+interface-member TimeField::property::granularity = optional granularity: string | undefined
+interface-member TimeField::property::timezone = optional timezone: string | undefined
+interface-member TimeField::property::value = optional value: string | undefined
+interface-member ToConfigOptions::property::artifactContract = optional artifactContract: ArtifactContract | undefined
 interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
 interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
+interface-member ToURLOptions::property::maxLength = optional maxLength: number | undefined
+interface-member TransformationRecord::property::assumptions = optional assumptions: string[] | undefined
+interface-member TransformationRecord::property::description = optional description: string | undefined
+interface-member TransformationRecord::property::id = required id: string
+interface-member TransformationRecord::property::implementation = optional implementation: string | undefined
+interface-member TransformationRecord::property::inputEvidenceIds = required inputEvidenceIds: string[]
+interface-member TransformationRecord::property::kind = required kind: TransformationKind
+interface-member TransformationRecord::property::parameters = optional parameters: JsonObject | undefined
+interface-member TransformationRecord::property::performedAt = optional performedAt: string | undefined
+interface-member TransformationRecord::property::performedBy = optional performedBy: ActorRef | undefined
+interface-member UnknownArtifactContract::property::contractVersion = required contractVersion: string
 interface-member ValidationResult::property::errors = required errors: string[]
 interface-member ValidationResult::property::valid = required valid: boolean
+interface-member ValueFingerprint::property::algorithm = required algorithm: "sha256"
+interface-member ValueFingerprint::property::digest = required digest: string
+interface-member ValueFingerprint::property::fingerprint = required fingerprint: string
 interface-member VariantProposal::property::baseComponent = required baseComponent: string
 interface-member VariantProposal::property::buildProps = optional buildProps: ((profile: ChartDataProfile, audience?: AudienceProfile) => Record<string, unknown>) | undefined
 interface-member VariantProposal::property::id = required id: string
@@ -693,32 +1412,63 @@ type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type AestheticFeatureId = "editorial-emphasis" | "mark-scaffold-hierarchy" | "palette-authorship" | "palette-economy" | "theme-coherence" | "typographic-hierarchy"
 type AestheticFeatureStatus = "disabled" | "manual" | "pass" | "warn"
 type AestheticFeatureWeights = Partial<Record<AestheticFeatureId, number>>
+type ArtifactClaimTransition = {action: "retract"; claimId: string; correction: Omit<CorrectionRecord, "affectedClaimIds" | "replacementClaimIds">;} | {action: "supersede"; previousClaimId: string; replacement: Claim; correction: Omit<CorrectionRecord, "affectedClaimIds" | "replacementClaimIds">;}
+type ArtifactContractVersion = typeof ARTIFACT_CONTRACT_VERSION
+type ArtifactKind = "agent-answer" | "alert" | "chart" | "dashboard" | "story"
+type ArtifactLineageNodeKind = "action" | "artifact" | "claim" | "evidence" | "processing-job" | "quality-check" | "schema" | "snapshot" | "source"
+type ArtifactPolicyInput = ArtifactPolicy | BuiltInArtifactPolicyId | undefined
+type ArtifactRelation = "abstention" | "accountability" | "challenge-and-correction" | "claim-support" | "preservation" | "reception" | "representation-fit" | "time"
+type ArtifactSidecarFormat = "notebook" | "png-sidecar" | "static-package"
+type ArtifactStakes = "exploratory" | "high" | "informational" | "operational"
+type ArtifactTransferFormat = "html" | "mcp" | "notebook" | "png-sidecar" | "portable-recipe" | "semiotic-config" | "static-package" | "svg" | "vega-lite"
+type BuiltInArtifactPolicyId = "agent-generated" | "editorial" | "exploratory" | "operational-streaming" | "public-civic"
 type BuiltInIntentId = "change-detection" | "compare-categories" | "compare-series" | "composition-over-time" | "correlation" | "distribution" | "flow" | "geo" | "hierarchy" | "outlier-detection" | "part-to-whole" | "rank" | "trend"
 type ChartClinicConfig = Omit<ChartConfig, "createdAt">
 type ChartRecipeFrameFamily = "GeoCustomChart" | "GeoFrame" | "NetworkCustomChart" | "NetworkFrame" | "OrdinalCustomChart" | "OrdinalFrame" | "Other" | "XYCustomChart" | "XYFrame"
 type ChartRecipePortability = "local" | "portable"
+type ClaimKind = "aggregation" | "alert" | "description" | "forecast" | "inference" | "normative" | "observation" | "recommendation" | "simulation"
+type ClaimStatus = "disputed" | "provisional" | "retracted" | "superseded" | "supported" | "unknown" | "unsupported"
 type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "comparing" | "locating" | "nesting" | "presenting" | "ranking" | "relating" | "tracing" | "tracking"
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type EvaluateChartSeverity = "error" | "manual" | "warning"
 type EvaluateChartStage = "accessibility" | "data" | "deception" | "render"
+type EvidenceRole = "external-source" | "human-observation" | "model-output" | "policy-rule" | "quality-check" | "source-data" | "statistical-test" | "transformation"
+type FieldKnowledgeStatus = "known" | "manual" | "not-applicable" | "unknown"
 type FieldSummary = CategoricalFieldSummary | DateFieldSummary | NumericFieldSummary | UnknownFieldSummary
 type FieldType = "categorical" | "date" | "numeric" | "unknown"
+type GroundedClaim = Claim
+type GroundedEvidence = EvidenceRef
 type IntentFieldKind = "boolean" | "categorical" | "date" | "numeric" | "unknown"
 type IntentId = (string & {}) | BuiltInIntentId
+type JsonPrimitive = boolean | null | number | string
+type JsonValue = JsonObject | JsonPrimitive | JsonValue[]
 type NavTreeRole = "annotation" | "axis" | "chart" | "datum" | "series"
 type NormalizedProfileFieldRoles = Readonly<Record<string, ReadonlyArray<ProfileFieldRole>>>
 type NumericFieldRole = "close" | "count" | "high" | "low" | "lower" | "opacity" | "open" | "size" | "time" | "upper" | "value" | "x" | "y" | (string & {})
 type NumericRequirement = "finite" | "integer" | "non-negative" | "positive" | "unit-interval"
+type ObligationStatus = "fail" | "manual" | "not-applicable" | "pass" | "unknown" | "warn"
+type PortableArtifactContract = ArtifactContract | UnknownArtifactContract
+type PreservationClass = "claim-evidence-preserved" | "full-fidelity" | "lossy" | "unknown" | "visual-only"
 type ProfileFieldRole = "category" | "dimension" | "identifier" | "ignore" | "measure" | "series" | "size" | "temporal" | "time" | "x" | "y"
 type ProfileFieldRoleHint = ProfileFieldRole | ReadonlyArray<ProfileFieldRole>
 type ProfileFieldRoleHints = Readonly<Record<string, ProfileFieldRoleHint>>
+type ReceptionChannel = "agent" | "low-bandwidth" | "print" | "screen-reader" | "sonified" | "visual"
 type RenderFn = (component: string, props: Datum) => {svg: string; evidence: RenderEvidence;}
 type RepairResult = RepairAlternativeResult | RepairOkResult | RepairUnknownResult
+type RepresentationKind = "chart" | "collect-more-data" | "custom-recipe" | "no-action" | "no-claim" | "no-comparison" | "small-multiples" | "table" | "text" | "wait-for-settlement"
 type ScoreChartResult = ScoreChartRejected | ScoreChartSuggestion
 type ScoreChartSuggestion = Suggestion & {status: "ok";}
 type SemanticViabilityCallback = (props: Readonly<Datum>, evidence: SemanticRenderEvidence) => ReadonlyArray<SemanticViabilityDiagnostic>
 type SemanticViabilityCheck = SemanticViabilityCallback | SemanticViabilityRule
 type SerializableSchema = Record<string, unknown>
+type TemporalCompleteness = NonNullable<TemporalContext["completeness"]>
+type TemporalFreshness = NonNullable<TemporalContext["freshness"]>
+type TemporalPresentationState = NonNullable<NonNullable<TemporalContext["presentation"]>["state"]>
+type TemporalRevision = NonNullable<TemporalContext["revision"]>
+type TemporalWatermark = NonNullable<TemporalContext["watermark"]>
+type TemporalWindow = NonNullable<TemporalContext["window"]>
+type TransformationKind = "aggregation" | "binning" | "filter" | "forecasting" | "join" | "normalization" | "other" | "simulation" | "smoothing"
 type VisualHierarchyStatus = "manual" | "pass" | "warn"
+type WindowStatus = "corrected" | "open" | "provisional" | "reopened" | "settled"
 ```
