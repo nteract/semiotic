@@ -4,6 +4,7 @@ import * as path from "path"
 import { evaluateArtifact } from "../src/components/artifact/evaluateArtifact"
 import { buildArtifactContract } from "../src/components/artifact/contract"
 import { renderChartWithEvidence } from "../src/components/server/renderToStaticSVG"
+import { toEvidenceEnvelope, evaluateEvidenceGate } from "../src/components/semiotic-evidence"
 import type {
   ArtifactContract,
   ObligationResult,
@@ -1077,4 +1078,35 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP artifact contract integration", () => {
     },
     MCP_PROCESS_TEST_TIMEOUT_MS
   )
+
+  it("preserves a binding failure from MCP render evidence through the publication gate", async () => {
+    const process = spawnServer("developer")
+    try {
+      await initialize(process, "developer-binding")
+      const props = chartProps()
+      const contract = buildArtifactContract("LineChart", props)
+      contract.artifact.dataFingerprint = "sha256:other-input"
+      const rendered = await sendRequest(process, "tools/call", {
+        name: "renderChart",
+        arguments: { component: "LineChart", props, contract }
+      }, "render-mismatched-contract")
+      expect(rendered.result.isError).not.toBe(true)
+      const evidenceText = rendered.result.content.find(
+        (item: { type: string; text?: string }) => item.type === "text" && item.text?.startsWith("Render evidence:\n")
+      ).text
+      const evidence = JSON.parse(evidenceText.slice("Render evidence:\n".length))
+      expect(evidence).toMatchObject({
+        sceneHashVersion: 2,
+        artifactBinding: { status: "mismatch", mismatchPaths: ["artifact.dataFingerprint"] }
+      })
+      expect(evaluateEvidenceGate(toEvidenceEnvelope("LineChart", props, { ssrEvidence: evidence })).ok).toBe(false)
+      const audited = await sendRequest(process, "tools/call", {
+        name: "auditArtifact",
+        arguments: { component: "LineChart", props, contract, policyId: "exploratory" }
+      }, "audit-mismatched-contract")
+      expect(audited.result.structuredContent.status).toBe("refuse")
+    } finally {
+      process.kill()
+    }
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 })

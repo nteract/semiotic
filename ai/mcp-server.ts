@@ -3084,7 +3084,7 @@ async function createChartHandler(
   // Keep capability-built data shapes (for example hierarchy roots or
   // nodes/edges) and explicit caller overrides. args.data is the profiling
   // input, not necessarily the final component's `data` prop shape.
-  const props = { data: args.data, ...selected.props, ...args.props }
+  const props: Record<string, unknown> = { data: args.data, ...selected.props, ...args.props }
   const publicProps = compactPublicChartProps(props)
   const publicSuggestion = compactPublicSuggestion(selected)
   const diagnosis = diagnoseConfig(selected.component, props)
@@ -3109,6 +3109,17 @@ async function createChartHandler(
         diagnostics: diagnosis.diagnoses
       })
     }
+  }
+  // Supply the supported text route before rendering and auditing a proposal.
+  // Preserve explicitly authored text, including empty text that needs repair.
+  if (
+    props.description === undefined &&
+    schemaAccessibilityGuidance(schemaByComponent[selected.component]).directProps.description
+  ) {
+    props.description = buildReaderGrounding(selected.component, props, {
+      capability: getCapability(selected.component)
+    }).description.levels.l1
+    publicProps.description = props.description
   }
   const renderedStatic = await renderChartHandler(
     {
@@ -3168,29 +3179,6 @@ async function createChartHandler(
     requireRenderEvidence: true,
     allowAccessibilityWarnings: true
   })
-  // The generic gate treats any non-passing audit as blocking. For MCP
-  // proposals, authored title/summary belongs to the host page; only critical
-  // data/encoding failures found by the audit block publication.
-  gate.ok = !gate.findings.some(
-    (finding) => finding.id !== "audit.accessibility-blocking"
-  )
-  gate.status = gate.ok ? "pass" : "fail"
-  gate.findings = gate.findings.filter(
-    (finding) => finding.id !== "audit.accessibility-blocking"
-  )
-  const accessibilityAudit = evidenceEnvelope.audit.accessibility as {
-    findings?: Array<{ critical?: boolean; status?: string; id?: string }>
-  }
-  const criticalAccessibilityOnly = (accessibilityAudit.findings ?? []).filter(
-    (finding) => finding.critical === true && finding.status === "fail"
-  )
-  if (criticalAccessibilityOnly.length > 0) {
-    gate.findings.push({
-      id: "audit.accessibility-critical",
-      severity: "error",
-      message: `Accessibility audit contains ${criticalAccessibilityOnly.length} critical failure(s): ${criticalAccessibilityOnly.map((finding) => finding.id).join(", ")}.`
-    })
-  }
   if (!gate.ok) {
     return {
       content: [

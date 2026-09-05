@@ -11,6 +11,7 @@ import { spawnSync } from "node:child_process"
 
 const code = `
 import { renderChartWithEvidence } from "semiotic/server"
+import { buildArtifactContract, evaluateArtifact } from "semiotic/artifact"
 import {
   toEvidenceEnvelope,
   evaluateEvidenceGate,
@@ -73,7 +74,19 @@ const conflictEnvelope = toEvidenceEnvelope("LineChart", props, {
 })
 if (evaluateEvidenceGate(conflictEnvelope).ok) process.exit(4)
 
-console.log("evidence publication gate passed: healthy pass; empty, inaccessible, and conflicted fixtures fail")
+const contract = buildArtifactContract("LineChart", props)
+contract.artifact.dataFingerprint = "sha256:other-data"
+const mismatched = toEvidenceEnvelope("LineChart", props, {
+  ssrEvidence: healthy.evidence,
+  artifactContract: contract,
+})
+if (evaluateEvidenceGate(mismatched).ok) process.exit(5)
+if (evaluateArtifact("LineChart", props, contract).status !== "refuse") process.exit(6)
+const reversedProps = { ...props, data: [...props.data].reverse().map((row, index) => ({ ...row, date: props.data[index].date })) }
+const reversed = renderChartWithEvidence("LineChart", { ...reversedProps, width: 240, height: 140 })
+if (healthy.evidence.sceneHashVersion !== 2 || healthy.evidence.sceneHash === reversed.evidence.sceneHash) process.exit(7)
+
+console.log("evidence publication gate passed: healthy pass; empty, inaccessible, conflicted, and identity-mismatched fixtures fail; geometry hashes differ")
 `
 
 const result = spawnSync(process.execPath, ["--input-type=module", "-e", code], {

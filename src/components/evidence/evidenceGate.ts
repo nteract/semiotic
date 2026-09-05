@@ -4,7 +4,12 @@
  * This is deliberately conservative: it fails on provable publication risks
  * and records uncertainty rather than inventing semantic or visual agreement.
  */
-import type { ChartEvidenceEnvelope } from "./chartEvidenceEnvelope"
+import {
+  fromEvidenceEnvelope,
+  type ChartEvidenceEnvelope,
+  type EnvelopeLimitsSection
+} from "./chartEvidenceEnvelope"
+import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
 
 export type EvidenceGateStatus = "pass" | "fail"
 
@@ -18,6 +23,8 @@ export interface EvidenceGateResult {
   status: EvidenceGateStatus
   ok: boolean
   findings: EvidenceGateFinding[]
+  /** Derived limits for valid envelopes; the caller's envelope is never edited. */
+  limits?: EnvelopeLimitsSection
 }
 
 export interface EvidenceGateOptions {
@@ -43,6 +50,56 @@ export function evaluateEvidenceGate(
   options: EvidenceGateOptions = {}
 ): EvidenceGateResult {
   const findings: EvidenceGateFinding[] = []
+  try {
+    fromEvidenceEnvelope(envelope)
+  } catch (error) {
+    return {
+      status: "fail",
+      ok: false,
+      findings: [finding(
+        "envelope.invalid",
+        "error",
+        error instanceof Error ? error.message : "The evidence envelope is invalid."
+      )]
+    }
+  }
+  const limits: EnvelopeLimitsSection = {
+    ...envelope.limits,
+    knownGaps: [...envelope.limits.knownGaps],
+    unsupportedClaims: [...new Set(envelope.limits.unsupportedClaims)],
+    privacyScope: Object.fromEntries(
+      Object.entries(envelope.limits.privacyScope).map(([key, values]) => [key, [...values]])
+    )
+  }
+  const attachments = [
+    {
+      prefix: "",
+      contract: envelope.artifact?.contract,
+      transfer: envelope.artifact?.transfer,
+      binding: envelope.artifact?.identityBinding
+    },
+    {
+      prefix: "render.",
+      contract: envelope.render.evidence?.artifactContract,
+      transfer: envelope.render.evidence?.artifactTransfer,
+      binding: envelope.render.evidence?.artifactBinding
+    }
+  ]
+  for (const attachment of attachments) {
+    for (const issue of artifactAttachmentIssues(attachment)) {
+      findings.push(finding(`${attachment.prefix}${issue.id}`, "error", issue.message))
+    }
+  }
+  if (
+    envelope.render.evidence &&
+    envelope.render.evidence.component !== envelope.chart.component
+  ) {
+    findings.push(finding(
+      "render.component-mismatch",
+      "error",
+      "The render evidence names a different chart component."
+    ))
+  }
   const requireRenderEvidence = options.requireRenderEvidence !== false
   const requireAccessTable = options.requireAccessTable !== false
   const failOnConflicts = options.failOnCrossModalConflicts !== false
@@ -124,11 +181,10 @@ export function evaluateEvidenceGate(
     | undefined
   if (audit && typeof audit === "object") {
     const blockingAccessibility =
-      audit.ok === false &&
-      (options.allowAccessibilityWarnings !== true ||
-        (audit.findings ?? []).some(
-          (item) => item.critical === true && item.status === "fail"
-        ))
+      (audit.findings ?? []).some(
+        (item) => item.critical === true && item.status === "fail"
+      ) ||
+      (audit.ok === false && options.allowAccessibilityWarnings !== true)
     if (blockingAccessibility) {
       findings.push(
         finding(
@@ -157,6 +213,9 @@ export function evaluateEvidenceGate(
     }
   }
 
+  for (const claim of limits.unsupportedClaims) {
+    findings.push(finding("claim.unsupported", "error", `Claim is explicitly unsupported: ${claim}`))
+  }
   for (const claim of envelope.meaning.claims ?? []) {
     const unsupported =
       claim.supported === false ||
@@ -164,9 +223,8 @@ export function evaluateEvidenceGate(
       !claim.evidenceIds?.length
 
     if (unsupported) {
-      if (!envelope.limits.unsupportedClaims.includes(claim.claim)) {
-        envelope.limits.unsupportedClaims.push(claim.claim)
-      }
+      if (limits.unsupportedClaims.includes(claim.claim)) continue
+      limits.unsupportedClaims.push(claim.claim)
       findings.push(
         finding(
           "claim.unsupported",
@@ -184,6 +242,7 @@ export function evaluateEvidenceGate(
       ? "fail"
       : "pass",
     ok: !findings.some((item) => item.severity === "error"),
-    findings
+    findings,
+    limits
   }
 }

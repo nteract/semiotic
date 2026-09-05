@@ -17,7 +17,8 @@ import { nonJsonValuePaths } from "./jsonCompatibility"
 import {
   artifactConfigurationValue,
   artifactDataFingerprint,
-  artifactDataValue
+  artifactDataValue,
+  compareArtifactIdentity
 } from "./identity"
 import { summarizeObligations } from "./obligations"
 import { configurationRepairLedgerEntries } from "./configurationRepair"
@@ -131,28 +132,23 @@ function artifactIdentityObligations(
     component === "ChartRecipe" && typeof props.recipeId === "string"
       ? props.recipeId
       : component
-  const expectedConfigFingerprint = fingerprintValue(
-    artifactConfigurationValue(props)
-  ).fingerprint
+  const binding = compareArtifactIdentity(contract, props, component, suppliedData)
+  const identityStatus = (path: string) =>
+    binding.mismatchPaths.includes(path)
+      ? "fail" as const
+      : binding.unknownPaths.includes(path)
+        ? "unknown" as const
+        : "pass" as const
   const configurationIsSerializable =
     nonJsonValuePaths(artifactConfigurationValue(props)).length === 0
   const dataValue = suppliedData ?? artifactDataValue(props)
   const dataIsSerializable =
     dataValue === undefined || nonJsonValuePaths(dataValue).length === 0
-  const expectedDataFingerprint = artifactDataFingerprint(
-    dataValue,
-    contract.evidence
-  )
 
   findings.push({
     id: "identity.component",
     relation: "accountability",
-    status:
-      contract.artifact.component === undefined
-        ? "unknown"
-        : contract.artifact.component === evaluatedComponent
-          ? "pass"
-          : "fail",
+    status: identityStatus("artifact.component"),
     path: "artifact.component",
     message:
       contract.artifact.component === undefined
@@ -169,46 +165,35 @@ function artifactIdentityObligations(
   findings.push({
     id: "identity.configuration",
     relation: "accountability",
-    status:
-      !configurationIsSerializable ||
-      contract.artifact.configFingerprint === undefined
-        ? "unknown"
-        : contract.artifact.configFingerprint === expectedConfigFingerprint
-          ? "pass"
-          : "fail",
+    status: identityStatus("artifact.configFingerprint"),
     path: "artifact.configFingerprint",
     message: !configurationIsSerializable
       ? "The evaluated configuration contains runtime-only values and cannot be verified by a portable fingerprint."
       : contract.artifact.configFingerprint === undefined
         ? "The contract is not bound to the evaluated chart configuration."
-        : contract.artifact.configFingerprint === expectedConfigFingerprint
+        : identityStatus("artifact.configFingerprint") === "pass"
           ? "The configuration fingerprint matches the evaluated chart."
           : "The configuration fingerprint does not match the evaluated chart.",
-    ...(contract.artifact.configFingerprint !== expectedConfigFingerprint
+    ...(identityStatus("artifact.configFingerprint") !== "pass"
       ? {
           repair:
             "Reassess claims in an explicit revision before rebinding configuration."
         }
       : {})
   })
-  if (expectedDataFingerprint && dataIsSerializable) {
+  if (dataValue !== undefined && dataIsSerializable) {
     findings.push({
       id: "identity.data",
       relation: "claim-support",
-      status:
-        contract.artifact.dataFingerprint === undefined
-          ? "unknown"
-          : contract.artifact.dataFingerprint === expectedDataFingerprint
-            ? "pass"
-            : "fail",
+      status: identityStatus("artifact.dataFingerprint"),
       path: "artifact.dataFingerprint",
       message:
         contract.artifact.dataFingerprint === undefined
           ? "The contract is not bound to the evaluated data."
-          : contract.artifact.dataFingerprint === expectedDataFingerprint
+          : identityStatus("artifact.dataFingerprint") === "pass"
             ? "The data fingerprint matches the evaluated data."
             : "The data fingerprint does not match the evaluated data.",
-      ...(contract.artifact.dataFingerprint !== expectedDataFingerprint
+      ...(identityStatus("artifact.dataFingerprint") !== "pass"
         ? {
             repair:
               "Reassess claims in an explicit revision before rebinding data."
@@ -529,7 +514,8 @@ export function evaluateArtifact(
   )
   const identityFailure = obligations.some(
     ({ id, status: obligationStatus }) =>
-      id.startsWith("identity.") && obligationStatus === "fail"
+      (id.startsWith("identity.") || id.startsWith("chart.render.artifact.")) &&
+      obligationStatus === "fail"
   )
   const manualCheckFailure =
     !active.rules.allowManualChecks &&
@@ -537,7 +523,7 @@ export function evaluateArtifact(
       ({ status: obligationStatus }) => obligationStatus === "manual"
     )
   const renderEvidenceFailure =
-    active.rules.requireRenderEvidence === true &&
+    (chart.evidence !== undefined || active.rules.requireRenderEvidence === true) &&
     chart.evidence?.component !== chart.component
   const refused =
     structuralFailure ||

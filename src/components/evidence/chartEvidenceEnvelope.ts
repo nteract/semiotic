@@ -66,7 +66,11 @@ export interface EnvelopeTransformSection {
 
 export interface EnvelopeRenderSection {
   mode: "svg" | "canvas" | "png" | "not-rendered"
+  /** Version 2 identifies rendered SVG and coordinates; unversioned legacy hashes count marks only. */
   sceneHash?: string
+  sceneHashVersion?: 2
+  /** SHA-256 of markCountByType only; this does not identify rendered geometry. */
+  markInventoryHash?: string
   imageHash?: string
   marksIntended?: number
   marksObserved?: number
@@ -389,7 +393,7 @@ export function toEvidenceEnvelope(
     ) as ChartReaderGrounding["structure"]
     grounding.structure = redacted
   }
-  const access =
+  const sourceAccess =
     options.accessContract ??
     createChartAccessContract({
       component,
@@ -402,10 +406,14 @@ export function toEvidenceEnvelope(
         ssrEvidence: options.ssrEvidence
       }
     })
-  if (access.navigation.tree) {
-    access.navigation.tree = redactNavigationTree(
-      access.navigation.tree
-    ) as never
+  const access = {
+    ...sourceAccess,
+    navigation: {
+      ...sourceAccess.navigation,
+      ...(sourceAccess.navigation.tree
+        ? { tree: redactNavigationTree(sourceAccess.navigation.tree) as NonNullable<ChartAccessContract["navigation"]["tree"]> }
+        : {})
+    }
   }
   const intendedMarks = countIntendedMarks(props)
   const observedMarks = observedMarkCount(options.ssrEvidence)
@@ -421,8 +429,9 @@ export function toEvidenceEnvelope(
     conflicts: []
   }
   const transformOperations = options.transformOperations ?? []
-  const serializedArtifact = options.artifactContract
-    ? serializeArtifactContract(options.artifactContract, {
+  const attachedContract = options.artifactContract ?? options.ssrEvidence?.artifactContract
+  const serializedArtifact = attachedContract
+    ? serializeArtifactContract(attachedContract, {
         excludeEvidenceSamples: true
       })
     : undefined
@@ -453,7 +462,10 @@ export function toEvidenceEnvelope(
     },
     render: {
       mode: options.ssrEvidence ? "svg" : "not-rendered",
-      sceneHash: options.ssrEvidence
+      ...(options.ssrEvidence?.sceneHashVersion === 2 && options.ssrEvidence.sceneHash
+        ? { sceneHash: options.ssrEvidence.sceneHash, sceneHashVersion: 2 as const }
+        : {}),
+      markInventoryHash: options.ssrEvidence
         ? stableEvidenceHash(options.ssrEvidence.markCountByType)
         : undefined,
       imageHash: undefined,
@@ -573,6 +585,21 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   }
   if (!["svg", "canvas", "png", "not-rendered"].includes(render.mode)) {
     throw new TypeError("Evidence envelope render requires mode")
+  }
+  if (
+    render.sceneHashVersion !== undefined &&
+    (render.sceneHashVersion !== 2 ||
+      typeof render.sceneHash !== "string" ||
+      !/^[a-f0-9]{64}$/.test(render.sceneHash))
+  ) {
+    throw new TypeError("Evidence envelope requires a supported scene hash version and SHA-256 digest")
+  }
+  if (
+    render.sceneHashVersion === 2 &&
+    render.evidence?.sceneHashVersion === 2 &&
+    render.sceneHash !== render.evidence.sceneHash
+  ) {
+    throw new TypeError("Evidence envelope scene hash does not match its render evidence")
   }
   const modality =
     envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
@@ -720,9 +747,15 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
   if (
     !Array.isArray(limits.knownGaps) ||
+    !limits.knownGaps.every((gap) => typeof gap === "string") ||
     !Array.isArray(limits.unsupportedClaims) ||
+    !limits.unsupportedClaims.every((claim) => typeof claim === "string") ||
     !limits.privacyScope ||
-    typeof limits.privacyScope !== "object"
+    typeof limits.privacyScope !== "object" ||
+    Array.isArray(limits.privacyScope) ||
+    !Object.values(limits.privacyScope).every(
+      (scope) => Array.isArray(scope) && scope.every((value) => typeof value === "string")
+    )
   ) {
     throw new TypeError(
       "Evidence envelope limits require arrays and privacy scope"
