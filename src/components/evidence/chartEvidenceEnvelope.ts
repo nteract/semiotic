@@ -555,11 +555,6 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       )
     }
     const artifact = envelope.artifact as EnvelopeArtifactSection
-    validateEnvelopeArtifactAttachment({
-      contract: artifact.contract,
-      transfer: artifact.transfer,
-      binding: artifact.identityBinding
-    }, "artifact")
     const currentBinding =
       artifact.transferBindingVersion === ARTIFACT_TRANSFER_BINDING_VERSION
     if (
@@ -581,12 +576,18 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
         "Evidence envelope artifact requires a supported transfer binding"
       )
     }
+    // Report payload tampering before interpreting the report's consistency.
     const expectedTransferFingerprint = artifactTransferFingerprint(artifact)
     if (artifact.transferFingerprint !== expectedTransferFingerprint) {
       throw new TypeError(
         "Evidence envelope artifact transfer fingerprint does not match its payload"
       )
     }
+    validateEnvelopeArtifactAttachment({
+      contract: artifact.contract,
+      transfer: artifact.transfer,
+      binding: artifact.identityBinding
+    }, "artifact")
   }
   for (const conflict of modality.tandem.conflicts) {
     if (
