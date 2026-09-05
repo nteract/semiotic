@@ -111,11 +111,29 @@ describe("serialized scene hash validation", () => {
     })
   })
 
+  it("rejects v2 hashes when both version fields are removed", () => {
+    const input = envelope()
+    delete input.render.sceneHashVersion
+    delete input.render.evidence!.sceneHashVersion
+    expectInvalid(input)
+  })
+
+  it("rejects a rendered-scene hash disguised as an outer-only legacy hash", () => {
+    const input = envelope()
+    delete input.render.sceneHashVersion
+    delete input.render.evidence!.sceneHashVersion
+    delete input.render.evidence!.sceneHash
+    delete input.render.markInventoryHash
+    expectInvalid(input)
+  })
+
   it("retains legacy envelopes with neither version advertised", () => {
     const input = envelope()
     delete input.render.sceneHashVersion
     delete input.render.evidence!.sceneHashVersion
     input.render.sceneHash = input.render.markInventoryHash
+    // Legacy envelopes stored the inventory digest only in sceneHash.
+    delete input.render.markInventoryHash
     delete input.render.evidence!.sceneHash
     const restored = JSON.parse(JSON.stringify(input)) as ChartEvidenceEnvelope
     expect(fromEvidenceEnvelope(restored)).toBe(restored)
