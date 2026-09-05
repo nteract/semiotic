@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 /**
- * Run the provider-neutral Semiotic evaluation queues against OpenAI models.
+ * Run the provider-neutral Semiotic evaluation queues against an
+ * OpenAI-Responses-compatible provider (OpenAI by default).
  *
- * Secrets are read from OPENAI_API_KEY or a macOS Keychain generic-password
- * item. Reports contain scored content, hashes, token usage, and estimated
- * standard-tier cost, but never credentials, project IDs, prompts, or raw
- * response bodies.
+ * The `openai` provider preserves the original hardcoded behavior: secrets are
+ * read from OPENAI_API_KEY or a macOS Keychain generic-password item, and runs
+ * are scoped by OPENAI_PROJECT_ID. Other registered providers (see
+ * `scripts/lib/ai-eval-providers.mjs`), such as the OpenAI-compatible
+ * `orcarouter` gateway, reuse the same request shapes, retries, and result
+ * schemas. Providers with a locked per-model price table enforce a
+ * `--max-usd` spend ceiling and record estimated USD cost; providers without
+ * one (the `orcarouter` gateway) treat cost as unknown (`null`), record no
+ * USD estimates, and require only `--confirm-spend` because no spend ceiling
+ * can be enforced. Reports contain scored content, hashes, and token usage,
+ * but never credentials, project IDs, prompts, or raw response bodies.
  */
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
@@ -19,46 +27,20 @@ import { dirname, join, resolve } from "node:path"
 import process from "node:process"
 import { setTimeout as delay } from "node:timers/promises"
 import { fileURLToPath } from "node:url"
+import { AI_EVAL_PROVIDERS } from "./lib/ai-eval-providers.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const apiUrl = "https://api.openai.com/v1/responses"
-const clientVersion = "semiotic-openai-eval/1"
-const defaultModels = [
-  "gpt-5.6-sol",
-  "gpt-5.6-terra",
-  "gpt-5.6-luna",
-]
-const priceRevision = "openai-standard-2026-07-26"
-const pricesPerMillion = {
-  "gpt-5.6-sol": {
-    input: 5,
-    cachedInput: 0.5,
-    cacheWriteInput: 6.25,
-    output: 30,
-  },
-  "gpt-5.6-terra": {
-    input: 2.5,
-    cachedInput: 0.25,
-    cacheWriteInput: 3.125,
-    output: 15,
-  },
-  "gpt-5.6-luna": {
-    input: 1,
-    cachedInput: 0.1,
-    cacheWriteInput: 1.25,
-    output: 6,
-  },
-}
+const defaultOpenAIPrices = AI_EVAL_PROVIDERS.openai.pricesPerMillion
 
 const digest = (value) =>
   createHash("sha256").update(value).digest("hex")
-const argValue = (name) =>
-  process.argv
+const argValue = (argv, name) =>
+  argv
     .find((argument) => argument.startsWith(`--${name}=`))
     ?.slice(name.length + 3)
-const hasArg = (name) => process.argv.includes(`--${name}`)
-const argSet = (name) => {
-  const value = argValue(name)
+const hasArg = (argv, name) => argv.includes(`--${name}`)
+const argSet = (argv, name) => {
+  const value = argValue(argv, name)
   if (!value) return null
   return new Set(
     value.split(",").map((entry) => entry.trim()).filter(Boolean)
@@ -82,8 +64,13 @@ export function validateFilterValues(name, values, knownValues) {
   }
 }
 
-export function calculateResponseCost(model, usage = {}) {
-  const rates = pricesPerMillion[model]
+export function calculateResponseCost(
+  model,
+  usage = {},
+  prices = defaultOpenAIPrices,
+) {
+  if (!prices) return null
+  const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const cached = usage.input_tokens_details?.cached_tokens ?? 0
   const cacheWrite = usage.input_tokens_details?.cache_write_tokens ?? 0
@@ -101,8 +88,9 @@ export function calculateResponseCost(model, usage = {}) {
   )
 }
 
-export function requestUpperBoundCost(model, request) {
-  const rates = pricesPerMillion[model]
+export function requestUpperBoundCost(model, request, prices = defaultOpenAIPrices) {
+  if (!prices) return null
+  const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const serialized = JSON.stringify(request)
   const imageCount = (
@@ -169,6 +157,7 @@ export function publicRequestRecord({
   response,
   rawOutput,
   latencyMs,
+  prices = defaultOpenAIPrices,
 }) {
   return {
     model,
@@ -178,17 +167,18 @@ export function publicRequestRecord({
     responseId: response.id,
     status: response.status,
     usage: response.usage,
-    estimatedUsd: calculateResponseCost(model, response.usage),
+    estimatedUsd: calculateResponseCost(model, response.usage, prices),
     latencyMs,
     rawOutputSha256: digest(rawOutput),
   }
 }
 
-function keychainApiKey(service, account) {
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY.trim()
+function keychainApiKey(service, account, apiKeyEnv = "OPENAI_API_KEY", env = process.env) {
+  const envApiKey = env[apiKeyEnv]
+  if (envApiKey) return envApiKey.trim()
   if (process.platform !== "darwin") {
     throw new Error(
-      "OPENAI_API_KEY is required outside macOS; the key is never read from a repository file"
+      `${apiKeyEnv} is required outside macOS; the key is never read from a repository file`
     )
   }
   const argumentsList = [
@@ -228,15 +218,18 @@ async function existingJson(path, fallback) {
 
 async function apiRequest({
   apiKey,
+  apiUrl,
+  apiErrorPrefix,
   body,
   idempotencyKey,
   retries = 6,
+  fetchImpl = globalThis.fetch,
 }) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const startedAt = Date.now()
     let response
     try {
-      response = await globalThis.fetch(apiUrl, {
+      response = await fetchImpl(apiUrl, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -263,7 +256,7 @@ async function apiRequest({
       (response.status >= 500 && response.status <= 504)
     if (!retryable || attempt === retries) {
       throw new Error(
-        `OpenAI API ${response.status}: ${sanitizedApiError(
+        `${apiErrorPrefix} ${response.status}: ${sanitizedApiError(
           errorText
         ).slice(0, 1_000)}`
       )
@@ -279,11 +272,11 @@ async function apiRequest({
   throw new Error("Unreachable API retry state")
 }
 
-function firstTryRequest(model, job, contextText) {
+function firstTryRequest(model, job, contextText, requestReasoning) {
   return {
     model,
     store: false,
-    reasoning: { effort: "none" },
+    ...(requestReasoning ? { reasoning: { effort: "none" } } : {}),
     max_output_tokens: 1_200,
     text: { format: { type: "json_object" } },
     instructions: [
@@ -317,7 +310,7 @@ function firstTryRequest(model, job, contextText) {
   }
 }
 
-async function groundingRequest(model, job) {
+async function groundingRequest(model, job, requestReasoning) {
   const content = [
     {
       type: "input_text",
@@ -351,7 +344,7 @@ async function groundingRequest(model, job) {
   return {
     model,
     store: false,
-    reasoning: { effort: "none" },
+    ...(requestReasoning ? { reasoning: { effort: "none" } } : {}),
     max_output_tokens: 96,
     text: {
       format: {
@@ -370,7 +363,7 @@ async function groundingRequest(model, job) {
   }
 }
 
-function submissionMetadata(model, fixtureRevision) {
+function submissionMetadata(model, fixtureRevision, clientVersion) {
   return {
     modelId: model,
     clientVersion,
@@ -416,12 +409,12 @@ async function loadContext(paths) {
   return sections.join("\n\n")
 }
 
-async function validateOnly({ apiKey, project, model }) {
+async function validateOnly({ apiKey, apiUrl, apiErrorPrefix, project, model, prices, requestReasoning, credentialCheckMaxTokens = 32, fetchImpl = globalThis.fetch, stdout = process.stdout }) {
   const body = {
     model,
     store: false,
-    reasoning: { effort: "none" },
-    max_output_tokens: 32,
+    ...(requestReasoning ? { reasoning: { effort: "none" } } : {}),
+    max_output_tokens: credentialCheckMaxTokens,
     text: {
       format: {
         type: "json_schema",
@@ -439,15 +432,19 @@ async function validateOnly({ apiKey, project, model }) {
   }
   const { response, latencyMs } = await apiRequest({
     apiKey,
+    apiUrl,
+    apiErrorPrefix,
     body,
     idempotencyKey: digest(
       `semiotic-evals/credential-check/${project}/${model}`
     ),
+    fetchImpl,
   })
   const rawOutput = extractOutputText(response)
   const parsed = JSON.parse(rawOutput)
   if (parsed.ok !== true) throw new Error("Credential check returned false")
-  process.stdout.write(
+  const estimatedUsd = calculateResponseCost(model, response.usage, prices)
+  stdout.write(
     `${JSON.stringify(
       {
         ok: true,
@@ -456,7 +453,7 @@ async function validateOnly({ apiKey, project, model }) {
         responseId: response.id,
         latencyMs,
         usage: response.usage,
-        estimatedUsd: calculateResponseCost(model, response.usage),
+        estimatedUsd,
       },
       null,
       2
@@ -464,52 +461,87 @@ async function validateOnly({ apiKey, project, model }) {
   )
 }
 
-async function main() {
-  const project = argValue("project") ?? process.env.OPENAI_PROJECT_ID
-  const keychainService = argValue("keychain-service") ?? "semiotic-evals"
-  const keychainAccount = argValue("keychain-account")
-  const models = (argValue("models") ?? defaultModels.join(","))
+export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = process.stderr }) {
+  const provider = AI_EVAL_PROVIDERS[argValue(argv, "provider") ?? "openai"]
+  if (!provider) {
+    throw new Error(
+      `Unknown --provider; expected one of: ${Object.keys(AI_EVAL_PROVIDERS).join(", ")}`
+    )
+  }
+  const prices = provider.pricesPerMillion
+  const project =
+    argValue(argv, "project") ?? env[provider.projectEnv ?? ""] ?? null
+  const keychainService = argValue(argv, "keychain-service") ?? provider.keychainService
+  const keychainAccount = argValue(argv, "keychain-account")
+  const models = (argValue(argv, "models") ?? provider.defaultModels.join(","))
     .split(",")
     .map((model) => model.trim())
     .filter(Boolean)
-  const maxUsd = Number(argValue("max-usd") ?? 0)
-  const suites = argSet("suites")
-  const firstTryFixtureIds = argSet("first-try-fixtures")
-  const firstTryContext = argValue("first-try-context") ?? "llms"
-  const groundingFixtureIds = argSet("grounding-fixtures")
-  const groundingConditions = argSet("grounding-conditions")
-  const trialId = argValue("trial-id") ?? "primary"
+  const maxUsd = Number(argValue(argv, "max-usd") ?? 0)
+  const suites = argSet(argv, "suites")
+  const firstTryFixtureIds = argSet(argv, "first-try-fixtures")
+  const firstTryContext = argValue(argv, "first-try-context") ?? "llms"
+  const groundingFixtureIds = argSet(argv, "grounding-fixtures")
+  const groundingConditions = argSet(argv, "grounding-conditions")
+  const trialId = argValue(argv, "trial-id") ?? "primary"
   const concurrency = Math.max(
     1,
-    Math.min(8, Number(argValue("concurrency") ?? 4))
+    Math.min(8, Number(argValue(argv, "concurrency") ?? 4))
   )
   const outputDirectory = resolve(
-    argValue("output-dir") ??
+    argValue(argv, "output-dir") ??
       join(
         root,
         "evals/reports",
-        `openai-gpt-5.6-${new Date().toISOString().slice(0, 10)}`
+        `${provider.reportPrefix}-${new Date().toISOString().slice(0, 10)}`
       )
   )
-  const validate = hasArg("validate-only")
-  if (!project) throw new Error("--project or OPENAI_PROJECT_ID is required")
-  if (models.some((model) => !pricesPerMillion[model])) {
+  const validate = hasArg(argv, "validate-only")
+  const hasPriceTable = provider.hasPriceTable === true
+  if (provider.projectEnv && !project) {
+    throw new Error("--project or OPENAI_PROJECT_ID is required")
+  }
+  if (prices && models.some((model) => !prices[model])) {
     throw new Error(
-      `Models must have a locked price table: ${Object.keys(
-        pricesPerMillion
-      ).join(", ")}`
+      `Models must have a locked price table: ${Object.keys(prices).join(", ")}`
     )
   }
-  if (!validate && (!hasArg("confirm-spend") || maxUsd <= 0)) {
-    throw new Error(
-      "Paid evaluation requires --confirm-spend and a positive --max-usd"
-    )
+  if (!validate) {
+    if (!hasArg(argv, "confirm-spend")) {
+      throw new Error(
+        "Paid evaluation requires --confirm-spend"
+      )
+    }
+    if (hasPriceTable && maxUsd <= 0) {
+      throw new Error(
+        `${provider.label} uses a locked price table, so a positive --max-usd is required`
+      )
+    }
+    if (hasPriceTable && Number.isNaN(maxUsd)) {
+      throw new Error("--max-usd must be a number")
+    }
   }
 
-  const apiKey = keychainApiKey(keychainService, keychainAccount)
-  if (!apiKey) throw new Error("OpenAI API key was empty")
+  const apiKey = keychainApiKey(
+    keychainService,
+    keychainAccount,
+    provider.apiKeyEnv,
+    env,
+  )
+  if (!apiKey) throw new Error(`${provider.apiKeyEnv} was empty`)
   if (validate) {
-    await validateOnly({ apiKey, project, model: models[0] })
+    await validateOnly({
+      apiKey,
+      apiUrl: provider.apiUrl,
+      apiErrorPrefix: `${provider.label} API`,
+      project,
+      model: models[0],
+      prices,
+      requestReasoning: provider.requestReasoning,
+      credentialCheckMaxTokens: provider.credentialCheckMaxTokens,
+      fetchImpl,
+      stdout,
+    })
     return
   }
 
@@ -550,8 +582,9 @@ async function main() {
   const manifestPath = join(outputDirectory, "run-manifest.json")
   const manifest = await existingJson(manifestPath, {
     version: 1,
-    clientVersion,
-    priceRevision,
+    provider: provider.id,
+    clientVersion: provider.clientVersion,
+    priceRevision: provider.priceRevision,
     models,
     trialId,
     firstTryContext,
@@ -561,27 +594,31 @@ async function main() {
       groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
       groundingConditions: groundingConditions ? [...groundingConditions] : null,
     },
-    projectFingerprint: digest(project).slice(0, 12),
+    projectFingerprint: digest(project ?? provider.id).slice(0, 12),
     maxUsd,
     startedAt: new Date().toISOString(),
     completedAt: null,
     requests: [],
   })
   if (
-    manifest.projectFingerprint !== digest(project).slice(0, 12) ||
-    manifest.priceRevision !== priceRevision ||
+    manifest.projectFingerprint !== digest(project ?? provider.id).slice(0, 12) ||
+    manifest.priceRevision !== provider.priceRevision ||
     manifest.trialId !== trialId
     || manifest.firstTryContext !== firstTryContext
+    || (manifest.provider ?? "openai") !== provider.id
   ) {
     throw new Error("Existing output directory belongs to another run")
   }
+  // Manifests written before the provider field existed resume under the
+  // openai provider; persist that default so a later resume stays stable.
+  manifest.provider ??= "openai"
   const completedRequestKeys = new Set(
     manifest.requests.map(
       ({ model, suite, fixtureId }) => `${model}/${suite}/${fixtureId}`
     )
   )
   let spentUsd = manifest.requests.reduce(
-    (total, request) => total + request.estimatedUsd,
+    (total, request) => total + (request.estimatedUsd ?? 0),
     0
   )
 
@@ -592,13 +629,21 @@ async function main() {
     const groundingPath = join(modelDirectory, "grounding-results.json")
     const firstTrySubmission = await existingJson(firstTryPath, {
       metadata: {
-        ...submissionMetadata(model, firstTryJobs.fixtureRevision),
+        ...submissionMetadata(
+          model,
+          firstTryJobs.fixtureRevision,
+          provider.clientVersion,
+        ),
         context: firstTryContextPaths[firstTryContext],
       },
       results: [],
     })
     const groundingSubmission = await existingJson(groundingPath, {
-      metadata: submissionMetadata(model, groundingJobs.fixtureRevision),
+      metadata: submissionMetadata(
+        model,
+        groundingJobs.fixtureRevision,
+        provider.clientVersion,
+      ),
       responses: [],
     })
     for (const job of groundingJobs.jobs) {
@@ -639,10 +684,19 @@ async function main() {
     for (const candidate of candidates) {
       const body =
         candidate.suite === "first-try"
-          ? firstTryRequest(candidate.model, candidate.job, contextText)
-          : await groundingRequest(candidate.model, candidate.job)
-      const upperBound = requestUpperBoundCost(candidate.model, body)
-      if (spentUsd + upperBound > maxUsd) {
+          ? firstTryRequest(
+              candidate.model,
+              candidate.job,
+              contextText,
+              provider.requestReasoning,
+            )
+          : await groundingRequest(
+              candidate.model,
+              candidate.job,
+              provider.requestReasoning,
+            )
+      const upperBound = requestUpperBoundCost(candidate.model, body, prices)
+      if (prices && spentUsd + upperBound > maxUsd) {
         if (prepared.length === 0) {
           throw new Error(
             `Spend ceiling would be exceeded before ${candidate.model}/${candidate.suite}/${candidate.fixtureId}: spent $${spentUsd.toFixed(
@@ -655,7 +709,7 @@ async function main() {
         break
       }
       prepared.push({ ...candidate, body, upperBound })
-      spentUsd += upperBound
+      spentUsd += upperBound ?? 0
     }
 
     const completed = await Promise.all(
@@ -673,8 +727,11 @@ async function main() {
         )
         const { response, latencyMs } = await apiRequest({
           apiKey,
+          apiUrl: provider.apiUrl,
+          apiErrorPrefix: `${provider.label} API`,
           body: candidate.body,
           idempotencyKey,
+          fetchImpl,
         })
         const rawOutput = extractOutputText(response)
         return {
@@ -689,14 +746,15 @@ async function main() {
             response,
             rawOutput,
             latencyMs,
+            prices,
           }),
         }
       })
     )
 
     for (const entry of completed) {
-      spentUsd -= entry.upperBound
-      spentUsd += entry.record.estimatedUsd
+      spentUsd -= entry.upperBound ?? 0
+      spentUsd += entry.record.estimatedUsd ?? 0
       manifest.requests.push(entry.record)
       if (entry.suite === "first-try") {
         entry.submission.results.push({
@@ -716,18 +774,24 @@ async function main() {
     }
     await atomicWriteJson(manifestPath, manifest)
     offset += completed.length
-    process.stderr.write(
-      `OpenAI eval ${offset}/${pending.length} pending requests completed · $${spentUsd.toFixed(
-        4
-      )}/$${maxUsd.toFixed(2)}\n`
-    )
+    if (hasPriceTable) {
+      stderr.write(
+        `${provider.label} eval ${offset}/${pending.length} pending requests completed · $${spentUsd.toFixed(
+          4
+        )}/$${maxUsd.toFixed(2)}\n`
+      )
+    } else {
+      stderr.write(
+        `${provider.label} eval ${offset}/${pending.length} pending requests completed · ${offset} requests\n`
+      )
+    }
   }
 
   manifest.completedAt = new Date().toISOString()
-  manifest.estimatedUsd = roundCost(spentUsd)
+  manifest.estimatedUsd = hasPriceTable ? roundCost(spentUsd) : null
   manifest.requestCount = manifest.requests.length
   await atomicWriteJson(manifestPath, manifest)
-  process.stdout.write(
+  stdout.write(
     `${JSON.stringify(
       {
         completed: true,
@@ -741,6 +805,15 @@ async function main() {
       2
     )}\n`
   )
+}
+
+async function main() {
+  await runEvalRun({
+    argv: process.argv,
+    env: process.env,
+    fetchImpl: globalThis.fetch,
+    stdout: process.stdout,
+  })
 }
 
 const isMain =
