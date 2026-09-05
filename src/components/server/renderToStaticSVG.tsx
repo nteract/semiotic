@@ -15,7 +15,7 @@ import {
   type ArtifactContract
 } from "../artifact/types"
 import { compareArtifactIdentity } from "../artifact/identity"
-import { stableEvidenceHash } from "../evidence/stableJsonHash"
+import { renderedSceneHash } from "../evidence/renderedSceneHash"
 import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
 import { applySemanticViability } from "../ai/semanticViability"
 import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
@@ -373,19 +373,7 @@ export function renderChartWithEvidence(
     })
   evidence.component = component
   evidence.sceneHashVersion = 2
-  evidence.sceneHash = stableEvidenceHash({
-    kind: "semiotic.rendered-svg-scene",
-    version: evidence.sceneHashVersion,
-    svg,
-    frameType: evidence.frameType,
-    width: evidence.width,
-    height: evidence.height,
-    margin: evidence.margin,
-    plot: evidence.plot,
-    xDomain: evidence.xDomain,
-    yDomain: evidence.yDomain,
-    categories: evidence.categories
-  })
+  evidence.sceneHash = renderedSceneHash(svg, evidence)
   applySemanticViability(evidence, component, props)
   if (options?.artifactContract) {
     const artifact = serializeArtifactContract(options.artifactContract, {

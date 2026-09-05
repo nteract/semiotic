@@ -1,11 +1,11 @@
 "use client"
-import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode, StreamGeoFrameHandle, StreamGeoFrameProps } from "./geoTypes"
 import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
+import { useGeoFrameHandle } from "./useGeoFrameHandle"
 import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
@@ -430,100 +430,14 @@ const StreamGeoFrame = memo(
 
     // ── Push API ──────────────────────────────────────────────────────
 
-    // Drop sparse entries before they reach `GeoPipelineStore` —
-    // mirrors the bounded-ingest hardening. `ref.push(null)` or
-    // `ref.pushMany([null, valid])` would otherwise crash extent /
-    // accessor reads inside the store.
-    const pushPoint = useCallback(
-      (datum: Datum) => {
-        if (datum == null || typeof datum !== "object") return
-        storeRef.current?.pushPoint(datum)
-        dirtyRef.current = true
-        scheduleRender()
-      },
-      [scheduleRender]
-    )
-
-    const pushMany = useCallback(
-      (data: Datum[]) => {
-        const safe = filterSparseArray(data)
-        if (safe.length === 0) return
-        storeRef.current?.pushMany(safe)
-        dirtyRef.current = true
-        scheduleRender()
-      },
-      [scheduleRender]
-    )
-
-    const pushLine = useCallback(
-      (line: Datum) => {
-        if (line == null || typeof line !== "object") return
-        storeRef.current?.pushLine(line)
-        dirtyRef.current = true
-        scheduleRender()
-      },
-      [scheduleRender]
-    )
-
-    const pushManyLines = useCallback(
-      (lines: Datum[]) => {
-        const safe = filterSparseArray(lines)
-        if (safe.length === 0) return
-        storeRef.current?.pushManyLines(safe)
-        dirtyRef.current = true
-        scheduleRender()
-      },
-      [scheduleRender]
-    )
-
-    const clearAll = useCallback(() => {
-      storeRef.current?.clear()
-      dirtyRef.current = true
-      scheduleRender()
-    }, [scheduleRender])
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        push: pushPoint,
-        pushMany,
-        removePoint: (id: string | string[]) => {
-          const removed = storeRef.current?.removePoint(id) ?? []
-          if (removed.length > 0) {
-            dirtyRef.current = true
-            scheduleRender()
-          }
-          return removed
-        },
-        pushLine,
-        pushManyLines,
-        removeLine: (id: string | string[]) => {
-          const removed = storeRef.current?.removeLine(id) ?? []
-          if (removed.length > 0) {
-            dirtyRef.current = true
-            scheduleRender()
-          }
-          return removed
-        },
-        getLines: () => storeRef.current?.getLines() ?? [],
-        clear: clearAll,
-        getProjection: () => storeRef.current?.scales?.projection ?? null,
-        getGeoPath: () => storeRef.current?.scales?.geoPath ?? null,
-        getCartogramLayout: () => storeRef.current?.cartogramLayout ?? null,
-        getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
-        getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null,
-        getZoom: () => zoomTransformRef.current.k,
-        resetZoom: () => {
-          const container = containerRef.current
-          if (container && zoomBehaviorRef.current) {
-            // Reset zoom transform — immediate (no d3-transition dependency)
-            select(container).call(zoomBehaviorRef.current.transform, zoomIdentity)
-          }
-        },
-        getData: () => storeRef.current?.getPoints() ?? []
-      }),
-      [pushPoint, pushMany, pushLine, pushManyLines, clearAll, scheduleRender]
-    )
+    useGeoFrameHandle(ref, {
+      storeRef,
+      dirtyRef,
+      scheduleRender,
+      zoomTransformRef,
+      containerRef,
+      zoomBehaviorRef
+    })
 
     // ── Hover handler ─────────────────────────────────────────────────
     // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all

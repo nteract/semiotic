@@ -87,11 +87,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +67 (2026-07-11): line-object input now stamps a synthetic series-identity field onto flattened points so string/function lineBy and default per-line grouping all survive coordinate flattening. +21 (2026-07-15): styleRules prop + memoized XY rule-context wired into useXYLineStyle for cross-family threshold styling. +13 (2026-07-17): minor follow-on touch, ceiling ratcheted to match \u2014 split plan unchanged: extract the forecast/anomaly segment-aware lazy-load block + direct-label layout into hooks (useLineForecastStyle / useLineDirectLabels) to drop back under 800. +6 (2026-07-23): top-legend reservation below the chart title plus the legend side-gutter/distance layout refactor. +2 (2026-07-27): axisChrome wired into useChartSetup via resolveXYAxisChrome so the bottom-legend gutter reserves the same band the SSR path already computed \u2014 one import plus one prop, part of the repo-wide client/SSR legend-parity sweep; split plan unchanged."
     },
     {
-      "path": "src/components/charts/xy/ScatterplotMatrix.tsx",
-      "maxLines": 931,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."
-    },
-    {
       "path": "src/components/recipes/packedClusterMatrix.tsx",
       "maxLines": 1031,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."

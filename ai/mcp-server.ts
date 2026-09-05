@@ -81,6 +81,7 @@ import {
 } from "./mcp-render-output-limits"
 import { renderHOCToSVG } from "./renderHOCToSVG"
 import { applySvgTheme } from "./svg-theme"
+import { renderedSceneHash } from "../src/components/evidence/renderedSceneHash"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
 import { renderChartWithEvidence } from "semiotic/server"
 import { toEvidenceEnvelope, evaluateEvidenceGate } from "semiotic/evidence"
@@ -1869,6 +1870,7 @@ async function renderChartHandler(
   // renderHOCToSVG above — which also already ran prop validation — and
   // simply omit the evidence block.
   let evidenceBlock: ToolTextContent | null = null
+  let renderedEvidence: ReturnType<typeof renderChartWithEvidence>["evidence"] | undefined
   try {
     const renderWithContractEvidence = renderChartWithEvidence as unknown as (
       component: never,
@@ -1887,10 +1889,7 @@ async function renderChartHandler(
         )
     )
     svg = evidenceSvg
-    evidenceBlock = {
-      type: "text" as const,
-      text: `Render evidence:\n${JSON.stringify(evidence, null, 2)}`
-    }
+    renderedEvidence = evidence
   } catch (err) {
     if (isRenderExecutionError(err)) {
       return capRenderChartResult(
@@ -1925,6 +1924,17 @@ async function renderChartHandler(
         )
       }
       throw err
+    }
+  }
+
+  // Bind evidence only after the last SVG transformation, before either
+  // returning it or using that same SVG as the PNG rasterization input.
+  if (renderedEvidence) {
+    renderedEvidence.sceneHashVersion = 2
+    renderedEvidence.sceneHash = renderedSceneHash(svg, renderedEvidence)
+    evidenceBlock = {
+      type: "text" as const,
+      text: `Render evidence:\n${JSON.stringify(renderedEvidence, null, 2)}`
     }
   }
 
