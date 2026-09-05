@@ -742,6 +742,19 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "grocery-bill",
+    shortLabel: "Grocery receipt",
+    note: "A pinned BLS average-price snapshot supplies fixed-quantity receipts, item contributions, and monthly comparisons. One pure preparation adapter preserves exact values, missingness, and saved state across the page, accessible tables, image exports, and an independent package consumer.",
+    uses: [
+      "input-static",
+      "hoc-bar",
+      "feature-accessors",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "machine-semiosphere",
     shortLabel: "Machine Semiosphere",
     note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",

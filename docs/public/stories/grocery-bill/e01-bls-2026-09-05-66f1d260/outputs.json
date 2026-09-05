@@ -1,0 +1,170 @@
+{
+  "editionId": "e01-bls-2026-09-05-66f1d260",
+  "inventory": [
+    {
+      "file": "default.packet.json",
+      "sha256": "cdf7bf9c305d387b0ffa0999e07fdbad982794a88a0a23d48150660a35e5809e",
+      "bytes": 238012
+    },
+    {
+      "file": "default.html",
+      "sha256": "8016ecd54bc882e28382453f6a84cc5f7f002b8eae046a7b06c027950c20fc1a",
+      "bytes": 10917
+    },
+    {
+      "file": "default.phone.svg",
+      "sha256": "8144f2cf3dd136f8d2a2d3e4c202dd538fc09ed594c5c91f00ed05e63b6259ad",
+      "bytes": 9512
+    },
+    {
+      "file": "default.phone.png",
+      "sha256": "73adf0ca75c416720979d49d5615f8cd26f88cdd0c4776fec8d9bca18aeb26ed",
+      "bytes": 199559
+    },
+    {
+      "file": "default.print.svg",
+      "sha256": "80b756e9291257f0870b6fec2c44f00cd18355e36c2c2849cf11735949fec411",
+      "bytes": 9470
+    },
+    {
+      "file": "default.print.png",
+      "sha256": "3c2e562375edcbf34cf56e0f3afcbc75572ae132665eaed8aeebcde682863aa3",
+      "bytes": 258055
+    },
+    {
+      "file": "meat-free.packet.json",
+      "sha256": "40eb33a776dfd08f9c30d94953cc6ada3e576a929286d7b9a1cbc1be12e69b35",
+      "bytes": 236362
+    },
+    {
+      "file": "meat-free.html",
+      "sha256": "039c355861bcbddaab70b74d0473f8c0a36e7c0e4f8d67c76a5556dbfa8f7f09",
+      "bytes": 10764
+    },
+    {
+      "file": "meat-free.phone.svg",
+      "sha256": "da90b3ac93dfe65b388a8b47f1890cc3faf1d206d912085d0b8004b5c1141f74",
+      "bytes": 9309
+    },
+    {
+      "file": "meat-free.phone.png",
+      "sha256": "4fd4c6231e4e53fed44a25c1c558f40b1fb0a2898a40d26bbf98ea7480a1bc9c",
+      "bytes": 193828
+    },
+    {
+      "file": "meat-free.print.svg",
+      "sha256": "628f95689a3598cc3f297402e3fcede34feebbdbe8da5943b59effeb28844674",
+      "bytes": 9267
+    },
+    {
+      "file": "meat-free.print.png",
+      "sha256": "4f915992a6b405eea8aae321eb40d516f12ee8dfe8b77bb84da95313848564b0",
+      "bytes": 252679
+    },
+    {
+      "file": "high-egg.packet.json",
+      "sha256": "b4df0778cc8e300fe34a353972d28b0446f2f8df3200ddf88604e911c2378a01",
+      "bytes": 238037
+    },
+    {
+      "file": "high-egg.html",
+      "sha256": "577ee160444a6ae3933a39a0cb43206ec1121a1dbe28633e4539021ff0176735",
+      "bytes": 10921
+    },
+    {
+      "file": "high-egg.phone.svg",
+      "sha256": "4699e6d0267dbf6295f3773f7190ee5b75ca5a62e07a1cb6891e1891dab2fa74",
+      "bytes": 9516
+    },
+    {
+      "file": "high-egg.phone.png",
+      "sha256": "87e6618e3e542ca3568309a86a475019e60a79a7ebd47de7df03764521744bc4",
+      "bytes": 200150
+    },
+    {
+      "file": "high-egg.print.svg",
+      "sha256": "94b9ca8b8020acd7c84b05f5b3040b329b88e4f9217f88d4c73d2b24e16b649d",
+      "bytes": 9474
+    },
+    {
+      "file": "high-egg.print.png",
+      "sha256": "7bdf312deca063e93e7c1532f99a3a737069b816718ced0019d853bdbf365505",
+      "bytes": 258682
+    },
+    {
+      "file": "missing-price.packet.json",
+      "sha256": "baeffa256ca11f86ed8d6a9ee1c5b1f54f65f75bc3f8340bec6705ce5a4e7853",
+      "bytes": 237816
+    },
+    {
+      "file": "missing-price.html",
+      "sha256": "cda21372a03d456e3887f8343957f74d622e4a2464c38855c5ce0861a993504a",
+      "bytes": 10982
+    },
+    {
+      "file": "missing-price.phone.svg",
+      "sha256": "14f223e909c959910202bbf2a47dc3ad341dccbb3e38384374e4c2023dea0b30",
+      "bytes": 9551
+    },
+    {
+      "file": "missing-price.phone.png",
+      "sha256": "4ae755e6265d040f2fa1bc2b4612fce2180aa0dcfdaa2db25edb49117b77eb43",
+      "bytes": 204039
+    },
+    {
+      "file": "missing-price.print.svg",
+      "sha256": "fdf230e14d5877b8ca5bd43c8b4ef482cb1ccddd5eb0c7ebd6c0a7284fcb639e",
+      "bytes": 9509
+    },
+    {
+      "file": "missing-price.print.png",
+      "sha256": "534bd92989214ea27a340cf125a7804806ab98935b36113a40e00271b618d894",
+      "bytes": 263645
+    },
+    {
+      "file": "comparable-subset.packet.json",
+      "sha256": "3ac7d38bf17989c7eee641556f339a22bd684200df54e53b73be2372636bd3a1",
+      "bytes": 237730
+    },
+    {
+      "file": "comparable-subset.html",
+      "sha256": "4104c59c59130f4a4f9c4e52eaa58ea0d018ebd190e7b64c8ee9f72841eff83e",
+      "bytes": 11024
+    },
+    {
+      "file": "comparable-subset.phone.svg",
+      "sha256": "0ca6fbb4757213d1282b6b0d1d128971f38ce551e79a47d8b77ebed371786b0b",
+      "bytes": 9574
+    },
+    {
+      "file": "comparable-subset.phone.png",
+      "sha256": "5369eee851720c1ce1602f90ef82b524fec1b4f5c299b802c32ed5ab6431a56f",
+      "bytes": 202003
+    },
+    {
+      "file": "comparable-subset.print.svg",
+      "sha256": "f6264db2d746496e629ca4a4859e58e2c59b829a3d650b3521a2b5075f697555",
+      "bytes": 9532
+    },
+    {
+      "file": "comparable-subset.print.png",
+      "sha256": "b0d9182ddbd1c36ab73730a90476fc15fe07b5b551795f8c6a225ae7d637cee3",
+      "bytes": 260770
+    },
+    {
+      "file": "adapter.mjs",
+      "sha256": "6e048485a32157d5982c83abc0d3d4f544137410ceae301e010cbf9b01e0f48a",
+      "bytes": 27784
+    },
+    {
+      "file": "consumer.mjs",
+      "sha256": "9f30586027ae404e4b7233d54d7cd53e7fb461e7b878b718d679c12ff4be3fc7",
+      "bytes": 2270
+    },
+    {
+      "file": "README.md",
+      "sha256": "2ed844623a290120bce2a453bf17c16f546cd529f3e809de1b275550f3b8c17e",
+      "bytes": 3136
+    }
+  ]
+}
