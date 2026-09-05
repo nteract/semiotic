@@ -130,6 +130,12 @@ test.describe("mobile visualization preview harness", () => {
       await page.goto("/mobile-visualization-examples/")
       await waitForAllChartsReady(page)
 
+      const harness = page.locator('[data-testid="mobile-harness"]')
+      // Painted canvases do not guarantee stable container geometry. Complete
+      // Playwright's scroll/stability check before measuring layout so WebKit
+      // does not spend the screenshot assertion's budget on initial settling.
+      await harness.scrollIntoViewIfNeeded({ timeout: 15_000 })
+
       const summary = await page.evaluate(inspectMobileHarness)
 
       expect(pageErrors).toEqual([])
@@ -145,7 +151,7 @@ test.describe("mobile visualization preview harness", () => {
       expect(summary.labelOverlapFailures).toEqual([])
       expect(summary.touchTargetFailures).toEqual([])
 
-      await expect(page.locator('[data-testid="mobile-harness"]')).toHaveScreenshot(
+      await expect(harness).toHaveScreenshot(
         `mobile-visualization-${width}.png`,
         { maxDiffPixels: width === 768 ? 900 : 700 }
       )
