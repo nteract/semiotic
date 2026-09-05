@@ -755,6 +755,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "plane-day",
+    shortLabel: "Aircraft-day story",
+    note: "Pinned BTS flight sequences use checked local-time conversion, a timetable ribbon and airport network, a phone itinerary, and identity-based reader notes. Historical source scope and unresolved continuity travel in the printable sheet and Artifact Contract packet.",
+    uses: ["input-static", "hoc-xy-custom", "hoc-network-custom", "hoc-bar", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+  },
+  {
     id: "machine-semiosphere",
     shortLabel: "Machine Semiosphere",
     note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",

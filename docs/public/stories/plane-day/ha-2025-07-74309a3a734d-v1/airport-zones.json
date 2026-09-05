@@ -1,0 +1,133 @@
+{
+  "version": "ha-airport-zones-v1",
+  "source": "https://data.iana.org/time-zones/tzdb-2025c/zone1970.tab",
+  "method": "Authored city-to-IANA mapping for the 21 BTS airport IDs in this cohort. Airport IDs and cities are taken from the raw rows; all scheduled and actual arrival clocks are independently checked against the resulting zones. This is not a worldwide airport registry.",
+  "airports": [
+    {
+      "id": "10299",
+      "code": "ANC",
+      "city": "Anchorage, AK",
+      "zone": "America/Anchorage"
+    },
+    {
+      "id": "10721",
+      "code": "BOS",
+      "city": "Boston, MA",
+      "zone": "America/New_York"
+    },
+    {
+      "id": "12173",
+      "code": "HNL",
+      "city": "Honolulu, HI",
+      "zone": "Pacific/Honolulu"
+    },
+    {
+      "id": "12402",
+      "code": "ITO",
+      "city": "Hilo, HI",
+      "zone": "Pacific/Honolulu"
+    },
+    {
+      "id": "12478",
+      "code": "JFK",
+      "city": "New York, NY",
+      "zone": "America/New_York"
+    },
+    {
+      "id": "12758",
+      "code": "KOA",
+      "city": "Kona, HI",
+      "zone": "Pacific/Honolulu"
+    },
+    {
+      "id": "12889",
+      "code": "LAS",
+      "city": "Las Vegas, NV",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "12892",
+      "code": "LAX",
+      "city": "Los Angeles, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "12954",
+      "code": "LGB",
+      "city": "Long Beach, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "12982",
+      "code": "LIH",
+      "city": "Lihue, HI",
+      "zone": "Pacific/Honolulu"
+    },
+    {
+      "id": "13796",
+      "code": "OAK",
+      "city": "Oakland, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "13830",
+      "code": "OGG",
+      "city": "Kahului, HI",
+      "zone": "Pacific/Honolulu"
+    },
+    {
+      "id": "14057",
+      "code": "PDX",
+      "city": "Portland, OR",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "14107",
+      "code": "PHX",
+      "city": "Phoenix, AZ",
+      "zone": "America/Phoenix"
+    },
+    {
+      "id": "14222",
+      "code": "PPG",
+      "city": "Pago Pago, TT",
+      "zone": "Pacific/Pago_Pago"
+    },
+    {
+      "id": "14679",
+      "code": "SAN",
+      "city": "San Diego, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "14747",
+      "code": "SEA",
+      "city": "Seattle, WA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "14771",
+      "code": "SFO",
+      "city": "San Francisco, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "14831",
+      "code": "SJC",
+      "city": "San Jose, CA",
+      "zone": "America/Los_Angeles"
+    },
+    {
+      "id": "14869",
+      "code": "SLC",
+      "city": "Salt Lake City, UT",
+      "zone": "America/Denver"
+    },
+    {
+      "id": "14893",
+      "code": "SMF",
+      "city": "Sacramento, CA",
+      "zone": "America/Los_Angeles"
+    }
+  ]
+}

@@ -3,8 +3,10 @@ import { Link } from "react-router-dom"
 import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 import GroceryPreview from "./grocery-receipt/GroceryPreview"
+import PlanePreview from "./plane-day/PlanePreview"
 
 const PREVIEW_COMPONENTS = {
+  "plane-day": PlanePreview,
   "grocery-bill": GroceryPreview,
   "machine-semiosphere": MiniMachineSemiospherePreview,
   "aesthetic-policy-studio": MiniAestheticPolicyStudioPreview,

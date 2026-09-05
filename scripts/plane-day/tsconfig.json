@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals", "vite/client"],
+    "paths": {
+      "semiotic/xy": ["../../src/components/semiotic-xy.ts"],
+      "semiotic/network": ["../../src/components/semiotic-network.ts"],
+      "semiotic/ordinal": ["../../src/components/semiotic-ordinal.ts"],
+      "semiotic/artifact": ["../../src/components/semiotic-artifact.ts"],
+      "semiotic/server": ["../../src/components/semiotic-server.ts"],
+      "semiotic/utils": ["../../src/components/semiotic-utils.ts"],
+      "semiotic/themes/react": ["../../src/components/semiotic-themes-react.ts"]
+    }
+  },
+  "include": [
+    "../../docs/src/pages/examples/PlaneDayExamplePage.tsx",
+    "../../docs/src/pages/examples/plane-day/**/*.ts",
+    "../../docs/src/pages/examples/plane-day/**/*.tsx"
+  ],
+  "exclude": []
+}

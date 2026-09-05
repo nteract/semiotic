@@ -1,0 +1,125 @@
+<HTML>
+<HEAD>
+	<TITLE> readme.html </TITLE>
+</HEAD>
+<BODY>
+	<TABLE><TR><TD COLSPAN=2><H4>BACKGROUND</H4></TD></TR>
+	<TR><TD COLSPAN=2>The data contained in the compressed file has been extracted from the 
+	Reporting Carrier On-Time Performance (1987-present) data table of the "On-Time" database from the TranStats data library. 
+	The time period is indicated in the name of the compressed file; 
+	for example, XXX_XXXXX_2001_1 contains data of the first month of the year 2001. </TD></TR>
+	<TR><TD COLSPAN=2>&nbsp;</TD></TR>
+	<TR><TD COLSPAN=2><H4>RECORD LAYOUT</H4></TD></TR>
+	<TR><TD COLSPAN=2>Below are fields in the order that they appear on the records:</TD></TR>
+	<TR><TD>Year</TD><TD>Year</TD></TR>
+	<TR><TD>Quarter</TD><TD>Quarter (1-4)</TD></TR>
+	<TR><TD>Month</TD><TD>Month</TD></TR>
+	<TR><TD>DayofMonth</TD><TD>Day of Month</TD></TR>
+	<TR><TD>DayOfWeek</TD><TD>Day of Week</TD></TR>
+	<TR><TD>FlightDate</TD><TD>Flight Date (yyyymmdd)</TD></TR>
+	<TR><TD>Reporting_Airline</TD><TD>Unique Carrier Code. When the same code has been used by multiple carriers, a numeric suffix is used for earlier users, for example, PA, PA(1), PA(2). Use this field for analysis across a range of years.</TD></TR>
+	<TR><TD>DOT_ID_Reporting_Airline</TD><TD>An identification number assigned by US DOT to identify a unique airline (carrier). A unique airline (carrier) is defined as one holding and reporting under the same DOT certificate regardless of its Code, Name, or holding company/corporation.</TD></TR>
+	<TR><TD>IATA_CODE_Reporting_Airline</TD><TD>Code assigned by IATA and commonly used to identify a carrier. As the same code may have been assigned to different carriers over time, the code is not always unique. For analysis, use the Unique Carrier Code.</TD></TR>
+	<TR><TD>Tail_Number</TD><TD>Tail Number</TD></TR>
+	<TR><TD>Flight_Number_Reporting_Airline</TD><TD>Flight Number</TD></TR>
+	<TR><TD>OriginAirportID</TD><TD>Origin Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused.</TD></TR>
+	<TR><TD>OriginAirportSeqID</TD><TD>Origin Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates, may change over time.</TD></TR>
+	<TR><TD>OriginCityMarketID</TD><TD>Origin Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market.</TD></TR>
+	<TR><TD>Origin</TD><TD>Origin Airport</TD></TR>
+	<TR><TD>OriginCityName</TD><TD>Origin Airport, City Name</TD></TR>
+	<TR><TD>OriginState</TD><TD>Origin Airport, State Code</TD></TR>
+	<TR><TD>OriginStateFips</TD><TD>Origin Airport, State Fips</TD></TR>
+	<TR><TD>OriginStateName</TD><TD>Origin Airport, State Name</TD></TR>
+	<TR><TD>OriginWac</TD><TD>Origin Airport, World Area Code</TD></TR>
+	<TR><TD>DestAirportID</TD><TD>Destination Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport.  Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused.</TD></TR>
+	<TR><TD>DestAirportSeqID</TD><TD>Destination Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time.  Airport attributes, such as airport name or coordinates, may change over time.</TD></TR>
+	<TR><TD>DestCityMarketID</TD><TD>Destination Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market.  Use this field to consolidate airports serving the same city market.</TD></TR>
+	<TR><TD>Dest</TD><TD>Destination Airport</TD></TR>
+	<TR><TD>DestCityName</TD><TD>Destination Airport, City Name</TD></TR>
+	<TR><TD>DestState</TD><TD>Destination Airport, State Code</TD></TR>
+	<TR><TD>DestStateFips</TD><TD>Destination Airport, State Fips</TD></TR>
+	<TR><TD>DestStateName</TD><TD>Destination Airport, State Name</TD></TR>
+	<TR><TD>DestWac</TD><TD>Destination Airport, World Area Code</TD></TR>
+	<TR><TD>CRSDepTime</TD><TD>CRS Departure Time (local time: hhmm)</TD></TR>
+	<TR><TD>DepTime</TD><TD>Actual Departure Time (local time: hhmm)</TD></TR>
+	<TR><TD>DepDelay</TD><TD>Difference in minutes between scheduled and actual departure time. Early departures show negative numbers.</TD></TR>
+	<TR><TD>DepDelayMinutes</TD><TD>Difference in minutes between scheduled and actual departure time. Early departures set to 0.</TD></TR>
+	<TR><TD>DepDel15</TD><TD>Departure Delay Indicator, 15 Minutes or More (1=Yes)</TD></TR>
+	<TR><TD>DepartureDelayGroups</TD><TD>Departure Delay intervals, every (15 minutes from <-15 to >180)</TD></TR>
+	<TR><TD>DepTimeBlk</TD><TD>CRS Departure Time Block, Hourly Intervals</TD></TR>
+	<TR><TD>TaxiOut</TD><TD>Taxi Out Time, in Minutes</TD></TR>
+	<TR><TD>WheelsOff</TD><TD>Wheels Off Time (local time: hhmm)</TD></TR>
+	<TR><TD>WheelsOn</TD><TD>Wheels On Time (local time: hhmm)</TD></TR>
+	<TR><TD>TaxiIn</TD><TD>Taxi In Time, in Minutes</TD></TR>
+	<TR><TD>CRSArrTime</TD><TD>CRS Arrival Time (local time: hhmm)</TD></TR>
+	<TR><TD>ArrTime</TD><TD>Actual Arrival Time (local time: hhmm)</TD></TR>
+	<TR><TD>ArrDelay</TD><TD>Difference in minutes between scheduled and actual arrival time. Early arrivals show negative numbers.</TD></TR>
+	<TR><TD>ArrDelayMinutes</TD><TD>Difference in minutes between scheduled and actual arrival time. Early arrivals set to 0.</TD></TR>
+	<TR><TD>ArrDel15</TD><TD>Arrival Delay Indicator, 15 Minutes or More (1=Yes)</TD></TR>
+	<TR><TD>ArrivalDelayGroups</TD><TD>Arrival Delay intervals, every (15-minutes from <-15 to >180)</TD></TR>
+	<TR><TD>ArrTimeBlk</TD><TD>CRS Arrival Time Block, Hourly Intervals</TD></TR>
+	<TR><TD>Cancelled</TD><TD>Cancelled Flight Indicator (1=Yes)</TD></TR>
+	<TR><TD>CancellationCode</TD><TD>Specifies The Reason For Cancellation</TD></TR>
+	<TR><TD>Diverted</TD><TD>Diverted Flight Indicator (1=Yes)</TD></TR>
+	<TR><TD>CRSElapsedTime</TD><TD>CRS Elapsed Time of Flight, in Minutes</TD></TR>
+	<TR><TD>ActualElapsedTime</TD><TD>Elapsed Time of Flight, in Minutes</TD></TR>
+	<TR><TD>AirTime</TD><TD>Flight Time, in Minutes</TD></TR>
+	<TR><TD>Flights</TD><TD>Number of Flights</TD></TR>
+	<TR><TD>Distance</TD><TD>Distance between airports (miles)</TD></TR>
+	<TR><TD>DistanceGroup</TD><TD>Distance Intervals, every 250 Miles, for Flight Segment</TD></TR>
+	<TR><TD>CarrierDelay</TD><TD>Carrier Delay, in Minutes</TD></TR>
+	<TR><TD>WeatherDelay</TD><TD>Weather Delay, in Minutes</TD></TR>
+	<TR><TD>NASDelay</TD><TD>National Air System Delay, in Minutes</TD></TR>
+	<TR><TD>SecurityDelay</TD><TD>Security Delay, in Minutes</TD></TR>
+	<TR><TD>LateAircraftDelay</TD><TD>Late Aircraft Delay, in Minutes</TD></TR>
+	<TR><TD>FirstDepTime</TD><TD>First Gate Departure Time at Origin Airport</TD></TR>
+	<TR><TD>TotalAddGTime</TD><TD>Total Ground Time Away from Gate for Gate Return or Cancelled Flight</TD></TR>
+	<TR><TD>LongestAddGTime</TD><TD>Longest Time Away from Gate for Gate Return or Cancelled Flight</TD></TR>
+	<TR><TD>DivAirportLandings</TD><TD>Number of Diverted Airport Landings</TD></TR>
+	<TR><TD>DivReachedDest</TD><TD>Diverted Flight Reaching Scheduled Destination Indicator (1=Yes)</TD></TR>
+	<TR><TD>DivActualElapsedTime</TD><TD>Elapsed Time of Diverted Flight Reaching Scheduled Destination, in Minutes.  The ActualElapsedTime column remains NULL for all diverted flights.</TD></TR>
+	<TR><TD>DivArrDelay</TD><TD>Difference in minutes between scheduled and actual arrival time for a diverted flight reaching scheduled destination.  The ArrDelay column remains NULL for all diverted flights.</TD></TR>
+	<TR><TD>DivDistance</TD><TD>Distance between scheduled destination and final diverted airport (miles).  Value will be 0 for diverted flight reaching scheduled destination.</TD></TR>
+	<TR><TD>Div1Airport</TD><TD>Diverted Airport Code1</TD></TR>
+	<TR><TD>Div1AirportID</TD><TD>Airport ID of Diverted Airport 1. Airport ID is a Unique Key for an Airport</TD></TR>
+	<TR><TD>Div1AirportSeqID</TD><TD>Airport Sequence ID of Diverted Airport 1. Unique Key for Time Specific Information for an Airport</TD></TR>
+	<TR><TD>Div1WheelsOn</TD><TD>Wheels On Time (local time: hhmm) at Diverted Airport Code1</TD></TR>
+	<TR><TD>Div1TotalGTime</TD><TD>Total Ground Time Away from Gate at Diverted Airport Code1</TD></TR>
+	<TR><TD>Div1LongestGTime</TD><TD>Longest Ground Time Away from Gate at Diverted Airport Code1</TD></TR>
+	<TR><TD>Div1WheelsOff</TD><TD>Wheels Off Time (local time: hhmm) at Diverted Airport Code1</TD></TR>
+	<TR><TD>Div1TailNum</TD><TD>Aircraft Tail Number for Diverted Airport Code1</TD></TR>
+	<TR><TD>Div2Airport</TD><TD>Diverted Airport Code2</TD></TR>
+	<TR><TD>Div2AirportID</TD><TD>Airport ID of Diverted Airport 2. Airport ID is a Unique Key for an Airport</TD></TR>
+	<TR><TD>Div2AirportSeqID</TD><TD>Airport Sequence ID of Diverted Airport 2. Unique Key for Time Specific Information for an Airport</TD></TR>
+	<TR><TD>Div2WheelsOn</TD><TD>Wheels On Time (local time: hhmm) at Diverted Airport Code2</TD></TR>
+	<TR><TD>Div2TotalGTime</TD><TD>Total Ground Time Away from Gate at Diverted Airport Code2</TD></TR>
+	<TR><TD>Div2LongestGTime</TD><TD>Longest Ground Time Away from Gate at Diverted Airport Code2</TD></TR>
+	<TR><TD>Div2WheelsOff</TD><TD>Wheels Off Time (local time: hhmm) at Diverted Airport Code2</TD></TR>
+	<TR><TD>Div2TailNum</TD><TD>Aircraft Tail Number for Diverted Airport Code2</TD></TR>
+	<TR><TD>Div3Airport</TD><TD>Diverted Airport Code3</TD></TR>
+	<TR><TD>Div3AirportID</TD><TD>Airport ID of Diverted Airport 3. Airport ID is a Unique Key for an Airport</TD></TR>
+	<TR><TD>Div3AirportSeqID</TD><TD>Airport Sequence ID of Diverted Airport 3. Unique Key for Time Specific Information for an Airport</TD></TR>
+	<TR><TD>Div3WheelsOn</TD><TD>Wheels On Time (local time: hhmm) at Diverted Airport Code3</TD></TR>
+	<TR><TD>Div3TotalGTime</TD><TD>Total Ground Time Away from Gate at Diverted Airport Code3</TD></TR>
+	<TR><TD>Div3LongestGTime</TD><TD>Longest Ground Time Away from Gate at Diverted Airport Code3</TD></TR>
+	<TR><TD>Div3WheelsOff</TD><TD>Wheels Off Time (local time: hhmm) at Diverted Airport Code3</TD></TR>
+	<TR><TD>Div3TailNum</TD><TD>Aircraft Tail Number for Diverted Airport Code3</TD></TR>
+	<TR><TD>Div4Airport</TD><TD>Diverted Airport Code4</TD></TR>
+	<TR><TD>Div4AirportID</TD><TD>Airport ID of Diverted Airport 4. Airport ID is a Unique Key for an Airport</TD></TR>
+	<TR><TD>Div4AirportSeqID</TD><TD>Airport Sequence ID of Diverted Airport 4. Unique Key for Time Specific Information for an Airport</TD></TR>
+	<TR><TD>Div4WheelsOn</TD><TD>Wheels On Time (local time: hhmm) at Diverted Airport Code4</TD></TR>
+	<TR><TD>Div4TotalGTime</TD><TD>Total Ground Time Away from Gate at Diverted Airport Code4</TD></TR>
+	<TR><TD>Div4LongestGTime</TD><TD>Longest Ground Time Away from Gate at Diverted Airport Code4</TD></TR>
+	<TR><TD>Div4WheelsOff</TD><TD>Wheels Off Time (local time: hhmm) at Diverted Airport Code4</TD></TR>
+	<TR><TD>Div4TailNum</TD><TD>Aircraft Tail Number for Diverted Airport Code4</TD></TR>
+	<TR><TD>Div5Airport</TD><TD>Diverted Airport Code5</TD></TR>
+	<TR><TD>Div5AirportID</TD><TD>Airport ID of Diverted Airport 5. Airport ID is a Unique Key for an Airport</TD></TR>
+	<TR><TD>Div5AirportSeqID</TD><TD>Airport Sequence ID of Diverted Airport 5. Unique Key for Time Specific Information for an Airport</TD></TR>
+	<TR><TD>Div5WheelsOn</TD><TD>Wheels On Time (local time: hhmm) at Diverted Airport Code5</TD></TR>
+	<TR><TD>Div5TotalGTime</TD><TD>Total Ground Time Away from Gate at Diverted Airport Code5</TD></TR>
+	<TR><TD>Div5LongestGTime</TD><TD>Longest Ground Time Away from Gate at Diverted Airport Code5</TD></TR>
+	<TR><TD>Div5WheelsOff</TD><TD>Wheels Off Time (local time: hhmm) at Diverted Airport Code5</TD></TR>
+	<TR><TD>Div5TailNum</TD><TD>Aircraft Tail Number for Diverted Airport Code5</TD></TR>
+	</TABLE>
+</BODY>
+</HTML>

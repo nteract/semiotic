@@ -118,7 +118,7 @@ export default function Example() {
     const pilotDefinitions = validation.definitions.filter((definition) => definition.isPilot)
 
     for (const definition of pilotDefinitions) {
-      expect(definition.sourceFile).toMatch(/\.jsx$/)
+      expect(definition.sourceFile).toMatch(/\.(jsx|tsx)$/)
       const loader = getExampleSourceLoader(definition.path)
       expect(loader).toBeTypeOf("function")
       const source = await loader()

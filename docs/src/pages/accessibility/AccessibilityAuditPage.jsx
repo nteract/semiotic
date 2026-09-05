@@ -237,6 +237,15 @@ console.log(formatAccessibilityAudit(result))`}
         credit the "downloadable table" and "shareable state" heuristics.
       </p>
 
+      <p>
+        The audit credits <code>title</code>, <code>description</code> and{" "}
+        <code>summary</code> on all four custom-chart components and registered
+        recipes rendered through them. Their text contract also applies to React
+        layouts that are outside the JSON prop schema. Unsupported props and
+        unknown renderers still require review; text checks do not establish
+        that a custom layout draws meaningful marks.
+      </p>
+
       <h2 id="cli">CLI</h2>
 
       <p>

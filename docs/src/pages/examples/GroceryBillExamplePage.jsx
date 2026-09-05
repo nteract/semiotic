@@ -217,7 +217,7 @@ export default function GroceryBillExamplePage() {
       showContractPanels={false}
     >
       <article className="grocery-story">
-        <header className="grocery-opening">
+        <header className="grocery-opening" data-server-opening>
           <div className="grocery-edition">
             <span>THE EVERYDAY ECONOMY / 01</span>
             <span>Saved BLS edition / 2019-2025</span>

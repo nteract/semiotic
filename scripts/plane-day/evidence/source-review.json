@@ -1,0 +1,128 @@
+{
+  "editionId": "ha-2025-07-74309a3a734d-v1",
+  "verifiedAt": "2026-09-05T20:00:16.347049+00:00",
+  "method": "Independent Python datetime/zoneinfo recalculation against exact raw CSV records; all four instants, signed arrival delay and local clocks checked",
+  "sourceSHA256": "2f57e03b221885e5fd57dfc84a1582c7bdf49a3d3a043b0f0d56189012a27eaf",
+  "featuredRowsChecked": 9,
+  "rows": [
+    {
+      "eventId": "2025-07-02~HA~33~12892~13830~0700",
+      "sourceRecordLine": 584596,
+      "tail": "N379HA",
+      "route": "LAX-OGG",
+      "date": "2025-07-02",
+      "scheduledDepartureLocal": "0700",
+      "actualDepartureLocal": "0656",
+      "departureDeviationMinutes": -4.0,
+      "arrivalDeviationMinutes": 4.0,
+      "actualArrivalUTC": "2025-07-02T19:39:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-02~HA~30~13830~14747~1115",
+      "sourceRecordLine": 584503,
+      "tail": "N379HA",
+      "route": "OGG-SEA",
+      "date": "2025-07-02",
+      "scheduledDepartureLocal": "1115",
+      "actualDepartureLocal": "1110",
+      "departureDeviationMinutes": -5.0,
+      "arrivalDeviationMinutes": -9.0,
+      "actualArrivalUTC": "2025-07-03T02:36:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-02~HA~697~14747~10299~2205",
+      "sourceRecordLine": 590691,
+      "tail": "N379HA",
+      "route": "SEA-ANC",
+      "date": "2025-07-02",
+      "scheduledDepartureLocal": "2205",
+      "actualDepartureLocal": "2214",
+      "departureDeviationMinutes": 9.0,
+      "arrivalDeviationMinutes": -13.0,
+      "actualArrivalUTC": "2025-07-03T08:37:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-10~HA~11~14771~12173~0935",
+      "sourceRecordLine": 584013,
+      "tail": "N393HA",
+      "route": "SFO-HNL",
+      "date": "2025-07-10",
+      "scheduledDepartureLocal": "0935",
+      "actualDepartureLocal": "1205",
+      "departureDeviationMinutes": 150.0,
+      "arrivalDeviationMinutes": 154.0,
+      "actualArrivalUTC": "2025-07-11T00:34:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-10~HA~465~12173~14222~1630",
+      "sourceRecordLine": 589260,
+      "tail": "N393HA",
+      "route": "HNL-PPG",
+      "date": "2025-07-10",
+      "scheduledDepartureLocal": "1630",
+      "actualDepartureLocal": "1641",
+      "departureDeviationMinutes": 11.0,
+      "arrivalDeviationMinutes": -1.0,
+      "actualArrivalUTC": "2025-07-11T08:09:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-10~HA~466~14222~12173~2310",
+      "sourceRecordLine": 589274,
+      "tail": "N393HA",
+      "route": "PPG-HNL",
+      "date": "2025-07-10",
+      "scheduledDepartureLocal": "2310",
+      "actualDepartureLocal": "2322",
+      "departureDeviationMinutes": 12.0,
+      "arrivalDeviationMinutes": -2.0,
+      "actualArrivalUTC": "2025-07-11T15:38:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-07~HA~628~12173~14679~0800",
+      "sourceRecordLine": 590332,
+      "tail": "N213HA",
+      "route": "HNL-SAN",
+      "date": "2025-07-07",
+      "scheduledDepartureLocal": "0800",
+      "actualDepartureLocal": "0758",
+      "departureDeviationMinutes": -2.0,
+      "arrivalDeviationMinutes": -8.0,
+      "actualArrivalUTC": "2025-07-07T23:22:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-07~HA~627~14679~12173~1745",
+      "sourceRecordLine": 590309,
+      "tail": "N213HA",
+      "route": "SAN-HNL",
+      "date": "2025-07-07",
+      "scheduledDepartureLocal": "1745",
+      "actualDepartureLocal": "1847",
+      "departureDeviationMinutes": 62.0,
+      "arrivalDeviationMinutes": 57.0,
+      "actualArrivalUTC": "2025-07-08T07:42:00+00:00",
+      "result": "matched"
+    },
+    {
+      "eventId": "2025-07-07~HA~612~12173~14679~2230",
+      "sourceRecordLine": 590246,
+      "tail": "N213HA",
+      "route": "HNL-SAN",
+      "date": "2025-07-07",
+      "scheduledDepartureLocal": "2230",
+      "actualDepartureLocal": "2305",
+      "departureDeviationMinutes": 35.0,
+      "arrivalDeviationMinutes": 21.0,
+      "actualArrivalUTC": "2025-07-08T14:21:00+00:00",
+      "result": "matched"
+    }
+  ],
+  "limitation": "An automated independent arithmetic audit, not an external human editorial review."
+}
+
