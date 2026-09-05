@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload local docs example contract evidence
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-docs-example-local-contract-evidence
           path: test-results/**/docs-example-local-contract-evidence.v2.json
@@ -108,7 +108,7 @@ jobs:
 
       - name: Upload docs example test artifacts
         if: failure()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-playwright-report-docs-examples
           path: |
@@ -259,7 +259,7 @@ jobs:
           echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
 
       - name: Upload immutable release evidence
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: semiotic-${{ env.RELEASE_TAG }}-release-artifact
           path: ${{ steps.release-artifact.outputs.directory }}
@@ -432,7 +432,7 @@ jobs:
 
       - name: Upload exact stable Cloud Run source
         if: steps.dist-tag.outputs.tag == 'latest'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: semiotic-${{ env.RELEASE_TAG }}-cloud-run-source
           path: ${{ steps.cloud-run-source.outputs.directory }}
