@@ -515,6 +515,37 @@ export function toEvidenceEnvelope(
   }
 }
 
+/** Validate the accessibility fields consumed by the publication gate. */
+function validateEnvelopeAccessibilityAudit(value: unknown, path: string): void {
+  if (value === undefined) return
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(`${path} must be an accessibility audit object`)
+  }
+  const audit = value as Record<string, unknown>
+  if (audit.ok !== undefined && typeof audit.ok !== "boolean") {
+    throw new TypeError(`${path}.ok must be boolean`)
+  }
+  if (audit.findings === undefined) return
+  if (!Array.isArray(audit.findings)) {
+    throw new TypeError(`${path}.findings must be an array`)
+  }
+  for (const [index, finding] of audit.findings.entries()) {
+    const findingPath = `${path}.findings[${index}]`
+    if (!finding || typeof finding !== "object" || Array.isArray(finding)) {
+      throw new TypeError(`${findingPath} must be a finding object`)
+    }
+    if (finding.critical !== undefined && typeof finding.critical !== "boolean") {
+      throw new TypeError(`${findingPath}.critical must be boolean`)
+    }
+    if (
+      finding.status !== undefined &&
+      !["pass", "fail", "warn", "manual", "not-applicable"].includes(finding.status)
+    ) {
+      throw new TypeError(`${findingPath}.status must be an accessibility finding status`)
+    }
+  }
+}
+
 /** Validate and restore an envelope without silently trusting malformed input. */
 export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -564,6 +595,14 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (typeof access.table.enabled !== "boolean") {
     throw new TypeError("Evidence envelope access table state must be boolean")
   }
+  validateEnvelopeAccessibilityAudit(
+    envelope.audit?.accessibility,
+    "audit.accessibility"
+  )
+  validateEnvelopeAccessibilityAudit(
+    access.evidence.audit,
+    "access.evidence.audit"
+  )
   const chart = envelope.chart as ChartEvidenceEnvelope["chart"]
   const input = envelope.input as ChartEvidenceEnvelope["input"]
   const transform = envelope.transform as ChartEvidenceEnvelope["transform"]
@@ -586,18 +625,22 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!["svg", "canvas", "png", "not-rendered"].includes(render.mode)) {
     throw new TypeError("Evidence envelope render requires mode")
   }
-  if (
-    render.sceneHashVersion !== undefined &&
-    (render.sceneHashVersion !== 2 ||
-      typeof render.sceneHash !== "string" ||
-      !/^[a-f0-9]{64}$/.test(render.sceneHash))
-  ) {
-    throw new TypeError("Evidence envelope requires a supported scene hash version and SHA-256 digest")
+  for (const section of [render, render.evidence]) {
+    if (
+      section?.sceneHashVersion !== undefined &&
+      (section.sceneHashVersion !== 2 ||
+        typeof section.sceneHash !== "string" ||
+        !/^[a-f0-9]{64}$/.test(section.sceneHash))
+    ) {
+      throw new TypeError("Evidence envelope requires a supported scene hash version and SHA-256 digest")
+    }
   }
   if (
-    render.sceneHashVersion === 2 &&
-    render.evidence?.sceneHashVersion === 2 &&
-    render.sceneHash !== render.evidence.sceneHash
+    render.evidence &&
+    (render.sceneHashVersion === 2 || render.evidence.sceneHashVersion === 2) &&
+    (render.sceneHashVersion !== 2 ||
+      render.evidence.sceneHashVersion !== 2 ||
+      render.sceneHash !== render.evidence.sceneHash)
   ) {
     throw new TypeError("Evidence envelope scene hash does not match its render evidence")
   }
