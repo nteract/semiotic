@@ -359,7 +359,7 @@ describe("immutable evidence construction and evaluation", () => {
     })
   })
 
-  it("retains a malformed nested mismatch as a failure without throwing", () => {
+  it("rejects a malformed nested mismatch as an invalid envelope without throwing", () => {
     const envelope = toEvidenceEnvelope("LineChart", props, {
       ssrEvidence: renderChartWithEvidence("LineChart", props).evidence
     })
@@ -372,7 +372,7 @@ describe("immutable evidence construction and evaluation", () => {
     } as RenderEvidence["artifactBinding"]
     expect(evaluateEvidenceGate(envelope)).toMatchObject({
       ok: false,
-      findings: [expect.objectContaining({ id: "render.artifact.identity-mismatch" })]
+      findings: [expect.objectContaining({ id: "envelope.invalid" })]
     })
   })
 
