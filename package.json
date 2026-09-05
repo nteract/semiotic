@@ -509,7 +509,7 @@
     "ajv": "^8.20.0",
     "d3-dsv": "^3.0.1",
     "d3-flextree-v4": "^1.0.1",
-    "esbuild": "0.28.1",
+    "esbuild": "0.28.2",
     "eslint": "^10.8.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -600,7 +600,7 @@
     "node": "22.22.1"
   },
   "overrides": {
-    "esbuild": "0.28.1",
+    "esbuild": "0.28.2",
     "flatted": "3.4.2",
     "minimatch": ">=9.0.7"
   }
