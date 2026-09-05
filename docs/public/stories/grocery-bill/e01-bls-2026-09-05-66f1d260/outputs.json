@@ -8,58 +8,58 @@
     },
     {
       "file": "default.html",
-      "sha256": "8016ecd54bc882e28382453f6a84cc5f7f002b8eae046a7b06c027950c20fc1a",
+      "sha256": "81668860bf2a8ed7b94db76fe64587f439f7da97d44fa9603bb21832f6a78ad4",
       "bytes": 10917
     },
     {
       "file": "default.phone.svg",
-      "sha256": "8144f2cf3dd136f8d2a2d3e4c202dd538fc09ed594c5c91f00ed05e63b6259ad",
+      "sha256": "0be795dafa750b50aaafc662b0c69646ce0a1fadee33f820ba792dc93f0b815c",
       "bytes": 9512
     },
     {
       "file": "default.phone.png",
-      "sha256": "73adf0ca75c416720979d49d5615f8cd26f88cdd0c4776fec8d9bca18aeb26ed",
-      "bytes": 199559
+      "sha256": "4925f2b093afd697cd4506e927e46ffe44c54f1267c83fb65595b38c9cec8e44",
+      "bytes": 199828
     },
     {
       "file": "default.print.svg",
-      "sha256": "80b756e9291257f0870b6fec2c44f00cd18355e36c2c2849cf11735949fec411",
+      "sha256": "c2d2879e461b4ff2b2d9f1bf911dbec8a7efc35fc5629db408fc7727f8d9743a",
       "bytes": 9470
     },
     {
       "file": "default.print.png",
-      "sha256": "3c2e562375edcbf34cf56e0f3afcbc75572ae132665eaed8aeebcde682863aa3",
-      "bytes": 258055
+      "sha256": "7b9926b2659dc4446423676e07519660a01d2e975042c94e1b38ce6e56b3d6e1",
+      "bytes": 258396
     },
     {
       "file": "meat-free.packet.json",
-      "sha256": "40eb33a776dfd08f9c30d94953cc6ada3e576a929286d7b9a1cbc1be12e69b35",
+      "sha256": "afe7ae7d469d216674b5fc388b389a9a7bfd83f0424b8f1d70888fe592d16550",
       "bytes": 236362
     },
     {
       "file": "meat-free.html",
-      "sha256": "039c355861bcbddaab70b74d0473f8c0a36e7c0e4f8d67c76a5556dbfa8f7f09",
+      "sha256": "e39790729f746aab23c64bf316eef2a76c6928e0ffca2c93e51b45cefc863e09",
       "bytes": 10764
     },
     {
       "file": "meat-free.phone.svg",
-      "sha256": "da90b3ac93dfe65b388a8b47f1890cc3faf1d206d912085d0b8004b5c1141f74",
+      "sha256": "a12e0afe48c4b0a9fb98fde3461026f97e3b1c86f705fed1ce82242fb6cb3110",
       "bytes": 9309
     },
     {
       "file": "meat-free.phone.png",
-      "sha256": "4fd4c6231e4e53fed44a25c1c558f40b1fb0a2898a40d26bbf98ea7480a1bc9c",
-      "bytes": 193828
+      "sha256": "16c3f34a73740f3d0762d9d70a15e1c757e39e4a8d930c1d230a34ce7260ca4f",
+      "bytes": 193978
     },
     {
       "file": "meat-free.print.svg",
-      "sha256": "628f95689a3598cc3f297402e3fcede34feebbdbe8da5943b59effeb28844674",
+      "sha256": "8886e1f0ee71e5cd49b11ce35ba2018e217c71072aa6c5844a8a9774d0ad8af1",
       "bytes": 9267
     },
     {
       "file": "meat-free.print.png",
-      "sha256": "4f915992a6b405eea8aae321eb40d516f12ee8dfe8b77bb84da95313848564b0",
-      "bytes": 252679
+      "sha256": "220e277c14066e19658c8acb6b7a89c561c6cce54f4688d798a239916a5baaa0",
+      "bytes": 252836
     },
     {
       "file": "high-egg.packet.json",
@@ -68,28 +68,28 @@
     },
     {
       "file": "high-egg.html",
-      "sha256": "577ee160444a6ae3933a39a0cb43206ec1121a1dbe28633e4539021ff0176735",
+      "sha256": "48b8234f7596f350d0da3397e959ae59b4870a19f30e12b3518ef56f5d0a3a21",
       "bytes": 10921
     },
     {
       "file": "high-egg.phone.svg",
-      "sha256": "4699e6d0267dbf6295f3773f7190ee5b75ca5a62e07a1cb6891e1891dab2fa74",
+      "sha256": "e822f92a6f50d6e1b99a9b1ee90823a5bb801ee2c48c84915c3d09c9564ccf8a",
       "bytes": 9516
     },
     {
       "file": "high-egg.phone.png",
-      "sha256": "87e6618e3e542ca3568309a86a475019e60a79a7ebd47de7df03764521744bc4",
-      "bytes": 200150
+      "sha256": "15d86c2605461faee692259089ce14c45708853156c984972e9e89230000a263",
+      "bytes": 200258
     },
     {
       "file": "high-egg.print.svg",
-      "sha256": "94b9ca8b8020acd7c84b05f5b3040b329b88e4f9217f88d4c73d2b24e16b649d",
+      "sha256": "7d22e6f9ba518c61895218be72bf306a68320abe51d7c02cdc1c0189ff8b4918",
       "bytes": 9474
     },
     {
       "file": "high-egg.print.png",
-      "sha256": "7bdf312deca063e93e7c1532f99a3a737069b816718ced0019d853bdbf365505",
-      "bytes": 258682
+      "sha256": "3bfb833c7411f9ad60acfd1324976a3a0773398f22cdf13c5248cfec86cca0e0",
+      "bytes": 258794
     },
     {
       "file": "missing-price.packet.json",
@@ -153,8 +153,8 @@
     },
     {
       "file": "adapter.mjs",
-      "sha256": "6e048485a32157d5982c83abc0d3d4f544137410ceae301e010cbf9b01e0f48a",
-      "bytes": 27784
+      "sha256": "12c0fe592befea14d2d2c30eddceea257d260c68d5baabd28b598087f7a21d4c",
+      "bytes": 28420
     },
     {
       "file": "consumer.mjs",
@@ -163,8 +163,8 @@
     },
     {
       "file": "README.md",
-      "sha256": "2ed844623a290120bce2a453bf17c16f546cd529f3e809de1b275550f3b8c17e",
-      "bytes": 3136
+      "sha256": "0510d054f9ff2b5e008ca9d0e0cd3b91c80cf5741ef567a7ff018fdbe69220bd",
+      "bytes": 3225
     }
   ]
 }

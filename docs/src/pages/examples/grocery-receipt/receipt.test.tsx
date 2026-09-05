@@ -17,6 +17,7 @@ import {
   verifyReceiptPacket,
 } from "./packet"
 import { contributionChartProps, historySeries } from "./chart-config"
+import { money, signedMoney } from "./format"
 import type { BasketState, GrocerySnapshot } from "./types"
 
 vi.mock("../ExamplePageLayout", () => ({
@@ -45,6 +46,11 @@ function deepFreeze(value: unknown) {
 }
 
 describe("E01 exact basket arithmetic and source scope", () => {
+  it("rounds exact accounting-unit ties to the nearest displayed cent", () => {
+    expect(money(3.775)).toBe("$3.78")
+    expect(signedMoney(0.975)).toBe("+$0.98")
+    expect(signedMoney(-0.975)).toBe("-$0.98")
+  })
   it("matches independently calculated default line costs and differences", () => {
     const result = prepareBasket(snapshot, initial)
     expect(result.rows.map((row) => row.beforeUSD)).toEqual([

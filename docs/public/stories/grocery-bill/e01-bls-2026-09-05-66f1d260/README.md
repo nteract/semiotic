@@ -51,7 +51,9 @@ by BLS series ID and observation month, never array position.
 
 The five prepared states are default, meat-free, high-egg, missing-price, and
 comparable-subset. Each has exact packet values, accessible HTML, phone and
-print SVG, and PNG. PNG is rasterized from its SVG and contains visible source,
-edition, scope, and correction text; the packet preserves machine-readable
-precision. A saved image cannot update itself. No edition claims human review,
-real-phone performance, screen-reader usability, or reader-study completion.
+print SVG, and PNG. SVG uses the named 390px phone or 760px print layout width;
+PNG is rasterized at 2x, producing 780px or 1520px output. Each contains visible
+source, edition, scope, and correction text; the packet preserves
+machine-readable precision. A saved image cannot update itself. No edition
+claims human review, real-phone performance, screen-reader usability, or
+reader-study completion.

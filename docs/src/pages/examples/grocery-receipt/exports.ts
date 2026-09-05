@@ -3,6 +3,8 @@ import { QUALIFICATION, STORY_URL } from "./items"
 import { receiptSearch } from "./state"
 import type { GrocerySnapshot, PreparedBasket } from "./types"
 
+export const PNG_EXPORT_SCALE = 2
+
 export function escapeMarkup(value: unknown): string {
   return String(value).replace(
     /[&<>"']/g,
@@ -112,8 +114,8 @@ export async function receiptPNG(svg: string): Promise<Blob> {
       image.src = url
     })
     const canvas = document.createElement("canvas")
-    canvas.width = image.naturalWidth * 2
-    canvas.height = image.naturalHeight * 2
+    canvas.width = image.naturalWidth * PNG_EXPORT_SCALE
+    canvas.height = image.naturalHeight * PNG_EXPORT_SCALE
     const context = canvas.getContext("2d")
     if (!context)
       throw new Error(

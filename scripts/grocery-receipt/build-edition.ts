@@ -7,6 +7,7 @@ import { ingest, writeImmutable } from "./ingest"
 import { defaultState } from "../../docs/src/pages/examples/grocery-receipt/state"
 import { prepareBasket } from "../../docs/src/pages/examples/grocery-receipt/prepare"
 import {
+  PNG_EXPORT_SCALE,
   renderReceiptSVG,
   renderReceiptHTML
 } from "../../docs/src/pages/examples/grocery-receipt/exports"
@@ -82,10 +83,16 @@ async function main() {
     for (const size of ["phone", "print"] as const) {
       const svg = renderReceiptSVG(receipt, snapshot, size)
       await emit(`${name}.${size}.svg`, svg)
-      await emit(
-        `${name}.${size}.png`,
-        await sharp(Buffer.from(svg), { density: 144 }).png().toBuffer()
-      )
+      const png = await sharp(Buffer.from(svg), { density: 144 })
+        .png()
+        .toBuffer()
+      const metadata = await sharp(png).metadata()
+      const expectedWidth = (size === "phone" ? 390 : 760) * PNG_EXPORT_SCALE
+      if (metadata.width !== expectedWidth)
+        throw new Error(
+          `${name}.${size}.png is ${metadata.width}px wide; expected ${expectedWidth}px`
+        )
+      await emit(`${name}.${size}.png`, png)
     }
   }
   const portable = await build({

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import sharp from "sharp"
 
 test("grocery receipt reopens state, handles missing prices, and downloads all formats", async ({
   page
@@ -21,6 +22,7 @@ test("grocery receipt reopens state, handles missing prices, and downloads all f
     .click()
   await page.reload()
   await expect(page.getByTestId("after-total")).toHaveText("$38.61")
+  await page.getByLabel("Receipt size", { exact: true }).selectOption("print")
   for (const name of [
     "Download SVG",
     "Download PNG",
@@ -29,7 +31,13 @@ test("grocery receipt reopens state, handles missing prices, and downloads all f
   ]) {
     const download = page.waitForEvent("download")
     await page.getByRole("button", { name, exact: true }).click()
-    expect(await (await download).failure()).toBeNull()
+    const completed = await download
+    expect(await completed.failure()).toBeNull()
+    if (name === "Download PNG") {
+      const path = await completed.path()
+      expect(path).not.toBeNull()
+      expect((await sharp(path!).metadata()).width).toBe(1520)
+    }
   }
   await page
     .getByRole("button", { name: "A month with missing chicken prices" })

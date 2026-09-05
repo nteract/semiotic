@@ -586,6 +586,7 @@ export default function GroceryBillExamplePage() {
                   <option value="print">Print, 760 pixels wide</option>
                 </select>
               </label>
+              <p>SVG uses the selected width. PNG exports at 2x: 780px phone or 1520px print.</p>
               <div className="grocery-downloads">
                 {[
                   ["svg", "Download SVG"],

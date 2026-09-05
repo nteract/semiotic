@@ -7258,7 +7258,7 @@
       "yearChangePct": -11.758514397413729
     }
   ],
-  "summary": "June 2019 to June 2025: $7.96 becomes $12.84, a change of +$4.88 (+61.2%). Fixed basket: 2 lb Bananas, 2 lb White pan bread, 1 dozen Large grade-A eggs, 1 gallon Whole fortified milk. Illustrative basket using national average prices.",
+  "summary": "June 2019 to June 2025: $7.97 becomes $12.84, a change of +$4.88 (+61.2%). Fixed basket: 2 lb Bananas, 2 lb White pan bread, 1 dozen Large grade-A eggs, 1 gallon Whole fortified milk. Illustrative basket using national average prices.",
   "qualification": "Illustrative basket using national average prices",
   "correctionURL": "https://semiotic.nteract.io/examples/grocery-bill#sources",
   "chart": {
@@ -7299,7 +7299,7 @@
       },
       "title": "What changed the receipt",
       "description": "Large grade-A eggs has the largest contribution by absolute dollar amount: +$2.57. Quantities matter as well as unit-price changes.",
-      "summary": "June 2019 to June 2025: $7.96 becomes $12.84, a change of +$4.88 (+61.2%). Fixed basket: 2 lb Bananas, 2 lb White pan bread, 1 dozen Large grade-A eggs, 1 gallon Whole fortified milk. Illustrative basket using national average prices.",
+      "summary": "June 2019 to June 2025: $7.97 becomes $12.84, a change of +$4.88 (+61.2%). Fixed basket: 2 lb Bananas, 2 lb White pan bread, 1 dozen Large grade-A eggs, 1 gallon Whole fortified milk. Illustrative basket using national average prices.",
       "accessibleTable": true,
       "sort": false,
       "enableHover": false
@@ -7319,7 +7319,7 @@
       },
       "artifact": {
         "component": "BarChart",
-        "configFingerprint": "sha256:d23fc31d483b5bb8d3e10b958e1f961d0422221e5ae0f2a0d20534095999f83e",
+        "configFingerprint": "sha256:76698563c05f93d925c9a5a0452643212abfb499e984b0ffb28266235d1cff04",
         "createdAt": "2026-09-05T02:23:24.206Z",
         "dataFingerprint": "sha256:265fa4da232cc872c12cd4dd58e54d4b93092223397d3614c829836633d1efbf",
         "id": "E01-receipt-contributions",

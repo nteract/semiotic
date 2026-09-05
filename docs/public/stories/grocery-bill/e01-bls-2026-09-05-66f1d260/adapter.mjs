@@ -247,11 +247,28 @@ function prepareBasket(snapshot, input) {
 }
 
 // docs/src/pages/examples/grocery-receipt/format.ts
+var ACCOUNTING_UNITS_PER_DOLLAR = 4e3;
+function fixedMoney(value, digits) {
+  const decimalScale = 10 ** digits;
+  const accountingUnits = Math.round(
+    Math.abs(value) * ACCOUNTING_UNITS_PER_DOLLAR
+  );
+  const displayUnits = Math.floor(
+    (accountingUnits * decimalScale + ACCOUNTING_UNITS_PER_DOLLAR / 2) / ACCOUNTING_UNITS_PER_DOLLAR
+  );
+  const whole = Math.floor(displayUnits / decimalScale);
+  if (digits === 0) return String(whole);
+  return `${whole}.${String(displayUnits % decimalScale).padStart(digits, "0")}`;
+}
 function money(value, digits = 2) {
-  return value === null ? "Unavailable" : `$${value.toFixed(digits)}`;
+  if (value === null) return "Unavailable";
+  return `$${value < 0 ? "-" : ""}${fixedMoney(value, digits)}`;
 }
 function signedMoney(value) {
-  return value === null ? "Unavailable" : `${value < 0 ? "-" : value > 0 ? "+" : ""}$${Math.abs(value).toFixed(2)}`;
+  if (value === null) return "Unavailable";
+  const formatted = fixedMoney(value, 2);
+  const sign = formatted === "0.00" ? "" : value < 0 ? "-" : "+";
+  return `${sign}$${formatted}`;
 }
 function percent(value) {
   return value === null ? "Unavailable" : `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;

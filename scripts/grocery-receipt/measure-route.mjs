@@ -1,12 +1,13 @@
 import { chromium, expect } from "@playwright/test"
 import { writeFile } from "node:fs/promises"
-import { cpus, platform, release, arch } from "node:os"
+import { cpus, platform, release, arch, tmpdir } from "node:os"
+import { join } from "node:path"
 import { gzipSync } from "node:zlib"
 
 // A desktop proxy baseline, not the real-Android acceptance test in G07.
 // Run against `vite preview` after the complete production build.
 const url = process.argv[2] || "http://127.0.0.1:4173/examples/grocery-bill"
-const output = process.argv[3] || "/private/tmp/e01-route-measurement.json"
+const output = process.argv[3] || join(tmpdir(), "e01-route-measurement.json")
 const browser = await chromium.launch({ headless: true })
 try {
   const context = await browser.newContext({
