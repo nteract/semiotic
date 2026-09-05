@@ -587,6 +587,8 @@ describe("versioned rendered-scene hashes", () => {
         sceneHash: envelope.render.markInventoryHash
       }
     }
+    // Legacy envelopes stored the inventory digest only in sceneHash.
+    delete legacy.render.markInventoryHash
     expect(fromEvidenceEnvelope(legacy).render.sceneHashVersion).toBeUndefined()
   })
 
