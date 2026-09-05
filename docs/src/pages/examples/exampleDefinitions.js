@@ -84,6 +84,33 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "grocery-bill",
+    path: "/examples/grocery-bill",
+    sourceFile: "GroceryBillExamplePage.jsx",
+    sourceFiles: [
+      "GroceryBillExamplePage.jsx", "GroceryBillExamplePage.css",
+      "grocery-receipt/types.ts", "grocery-receipt/items.ts",
+      "grocery-receipt/state.ts", "grocery-receipt/prepare.ts",
+      "grocery-receipt/format.ts", "grocery-receipt/chart-config.ts",
+      "grocery-receipt/GroceryCharts.tsx", "grocery-receipt/exports.ts",
+      "grocery-receipt/packet.ts", "grocery-receipt/portable.ts",
+    ],
+    isPilot: true,
+    title: "Your grocery bill has a memory",
+    eyebrow: "Six items / one fixed basket",
+    description: "Compare a familiar basket at real BLS average prices, follow each item's contribution, and save the same receipt across formats.",
+    contract: {
+      publicImports: ["semiotic/xy", "semiotic/ordinal", "semiotic/artifact"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "pinned-BLS-average-prices-with-real-missing-observations", replay: false, schemaVersion: "1", inventory: { series: 6, sourceMonthPositions: 576, displayMonthPositions: 504, missingPricePositions: 7 } } },
+      provenance: { source: "BLS public API, ap.series and ap.item dictionaries, and selected-item average-price table; checksummed raw inputs accompany the edition", capturedAt: "2026-09-05", freshnessOwner: "Unassigned; required before release", reviewCadence: "Monthly source review proposed; historical editions remain immutable" },
+      accessibility: { summary: "Server-readable authored comparison, receipt amounts, source links, and missing-price explanation; accessible tables and downloadable HTML", navigation: "Linear article with native date selectors, quantity controls, ranked contributions, and saved comparisons", keyboard: "Native controls target 44 CSS pixels; keyboard and assistive-technology acceptance evidence tracked in the E01 implementation record", forcedColors: "Explicit system-color styles; manual assistive-technology and forced-colors acceptance remains pending" },
+      motion: { reducedMotion: "No authored animation or replay; the reading path is static", visibility: "No polling, streaming, or workers; receipt downloads are reader initiated" },
+      responsive: { status: "implemented; acceptance tracked separately", viewports: [320, 390, 768, 1280], selectionIdentity: "Versioned edition, named item/unit quantities, baseline/comparison months, and explicit comparable-subset mode" },
+      ssr: { status: "implemented; acceptance tracked separately", hydration: "Opening totals, source notes, and native receipts render from the pinned snapshot; charts and exports enhance the page" },
+      performance: { status: "unmeasured", budgets: { bundle: "unmeasured", interaction: "unmeasured", memory: "unmeasured", hiddenPage: "unmeasured" } },
+    },
+  },
+  {
     id: "machine-semiosphere",
     path: "/examples/machine-semiosphere",
     sourceFile: "MachineSemiosphereExamplePage.jsx",
@@ -1870,6 +1897,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "Your grocery bill has a memory",
+    path: "/examples/grocery-bill",
+    publishedAt: "2026-09-05T02:23:24.206Z",
+    eyebrow: "Six items / one fixed basket",
+    description: "Rebuild a familiar basket at real BLS average prices, see which items explain the difference, and save a receipt that remembers your comparison.",
+    preview: "grocery-bill",
+    badges: ["BLS price snapshot", "Interactive receipt", "Portable comparison"],
+    frames: ["xy", "ordinal"],
+    topics: ["civic", "design", "accessibility"],
+  },
   {
     title: "The Machine Semiosphere",
     path: "/examples/machine-semiosphere",

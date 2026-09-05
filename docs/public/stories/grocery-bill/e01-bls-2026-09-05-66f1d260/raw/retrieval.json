@@ -1,0 +1,42 @@
+[
+  {
+    "file": "ap.series",
+    "url": "https://download.bls.gov/pub/time.series/ap/ap.series",
+    "retrievedAt": "2026-09-05T02:23:23.289Z",
+    "sha256": "33773a8e108c07b070fea3ff0bde717c5bc61ef87f448fadb9045c4716c93383",
+    "bytes": 231046
+  },
+  {
+    "file": "ap.item",
+    "url": "https://download.bls.gov/pub/time.series/ap/ap.item",
+    "retrievedAt": "2026-09-05T02:23:23.412Z",
+    "sha256": "4e96f3bca741f65692971fdec8053a44f7ee20f47a02eace4c4d3d9a1dd148f6",
+    "bytes": 9242
+  },
+  {
+    "file": "prices.json",
+    "url": "https://api.bls.gov/publicAPI/v1/timeseries/data/",
+    "retrievedAt": "2026-09-05T02:23:24.030Z",
+    "sha256": "66f1d26084cd3668350444a9c871a6ec2dacbae1639e3c089abba2d8c4f2ad61",
+    "bytes": 50302,
+    "request": {
+      "seriesid": [
+        "APU0000711211",
+        "APU0000702111",
+        "APU0000708111",
+        "APU0000709112",
+        "APU0000706111",
+        "APU0000703111"
+      ],
+      "startyear": "2018",
+      "endyear": "2025"
+    }
+  },
+  {
+    "file": "selected-items.html",
+    "url": "https://www.bls.gov/charts/consumer-price-index/consumer-price-index-average-price-data.htm",
+    "retrievedAt": "2026-09-05T02:23:24.206Z",
+    "sha256": "a49268e85daeeb04e9ef1d28096db0e402ba46a52e4bd728b5af7812e632c2be",
+    "bytes": 364713
+  }
+]

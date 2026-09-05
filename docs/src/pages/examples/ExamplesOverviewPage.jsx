@@ -2,8 +2,10 @@ import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
+import GroceryPreview from "./grocery-receipt/GroceryPreview"
 
 const PREVIEW_COMPONENTS = {
+  "grocery-bill": GroceryPreview,
   "machine-semiosphere": MiniMachineSemiospherePreview,
   "aesthetic-policy-studio": MiniAestheticPolicyStudioPreview,
   "bad-chart-autopsy": MiniBadChartAutopsyPreview,

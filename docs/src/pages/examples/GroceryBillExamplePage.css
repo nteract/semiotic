@@ -1,0 +1,578 @@
+.grocery-story {
+  --grocery-paper: #fffdf5;
+  --grocery-ink: #23372c;
+  --grocery-green: #36644c;
+  --grocery-red: #a3462e;
+  --grocery-rule: #b9bfad;
+  background:
+    radial-gradient(ellipse at 85% 0, #dce4cb 0, transparent 42%),
+    repeating-linear-gradient(0deg, #eeeade 0, #eeeade 3px, #efecdf 3px, #efecdf 4px);
+  color: var(--grocery-ink);
+  margin: -12px;
+  padding: 32px clamp(18px, 5vw, 70px) 60px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  color-scheme: light;
+}
+.grocery-story * {
+  box-sizing: border-box;
+}
+.grocery-story a {
+  color: var(--grocery-green);
+  text-underline-offset: 4px;
+}
+.grocery-story :is(button, select, input) {
+  font:
+    14px/1.3 "Courier New",
+    monospace;
+  color: var(--grocery-ink);
+  border: 1px solid var(--grocery-rule);
+  border-radius: 2px;
+  background: var(--grocery-paper);
+  min-height: 44px;
+}
+.grocery-story :is(button, select) {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.grocery-story button:hover {
+  background: #e1e8d4;
+  border-color: var(--grocery-green);
+}
+.grocery-story button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.grocery-story :focus-visible {
+  outline: 3px solid var(--grocery-red);
+  outline-offset: 4px;
+}
+.grocery-story p {
+  margin: 0 0 1.3em;
+}
+.grocery-story h2 {
+  font:
+    400 clamp(30px, 3.8vw, 46px)/1.12 "Baskerville",
+    "Palatino Linotype",
+    Georgia,
+    serif;
+  letter-spacing: -0.025em;
+  margin: 0 0 24px;
+  color: var(--grocery-ink);
+}
+.grocery-edition {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  border-top: 3px solid var(--grocery-ink);
+  border-bottom: 1px solid var(--grocery-rule);
+  padding: 13px 0;
+  font:
+    11px/1.5 "Courier New",
+    monospace;
+  letter-spacing: 0.09em;
+}
+.grocery-opening {
+  max-width: 1000px;
+  margin: auto;
+  padding-bottom: 55px;
+}
+.grocery-kicker {
+  margin-top: 65px !important;
+  font-style: italic;
+  font-size: 21px;
+}
+.grocery-story h1 {
+  font:
+    400 clamp(49px, 7.5vw, 102px)/0.98 "Baskerville",
+    "Palatino Linotype",
+    Georgia,
+    serif;
+  letter-spacing: -0.055em;
+  margin: 16px 0 34px;
+  color: var(--grocery-ink);
+}
+.grocery-story h1 em {
+  color: var(--grocery-red);
+}
+.grocery-deck {
+  max-width: 610px;
+  font-size: clamp(20px, 2.5vw, 26px);
+  line-height: 1.5;
+}
+.grocery-opening-fact {
+  max-width: 640px;
+}
+.grocery-jump {
+  display: inline-block;
+  border-bottom: 2px solid;
+  padding: 9px 0;
+  margin: 0 0 22px;
+  text-decoration: none;
+  font-weight: bold;
+}
+.grocery-jump span {
+  margin-left: 18px;
+}
+.grocery-qualification,
+.grocery-small {
+  font:
+    13px/1.7 "Courier New",
+    monospace;
+}
+.grocery-section {
+  max-width: 1000px;
+  margin: auto;
+  padding: 45px 0;
+  border-top: 1px solid var(--grocery-rule);
+  scroll-margin-top: 25px;
+}
+.grocery-section > p {
+  max-width: 730px;
+}
+.grocery-chapter {
+  font:
+    bold 11px/1.5 "Courier New",
+    monospace;
+  letter-spacing: 0.14em;
+  color: var(--grocery-green);
+  margin-bottom: 23px !important;
+}
+.grocery-date-controls {
+  display: flex;
+  align-items: end;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+.grocery-date-controls label,
+.grocery-export-size {
+  display: grid;
+  gap: 7px;
+  font:
+    13px/1.5 "Courier New",
+    monospace;
+}
+.grocery-receipt-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(12px, 3vw, 36px);
+  padding: 10px 0 28px;
+}
+.grocery-receipt {
+  background: var(--grocery-paper);
+  padding: clamp(16px, 3vw, 30px);
+  box-shadow: 0 14px 22px #23372c12;
+  position: relative;
+  border-top: 4px solid var(--grocery-green);
+}
+.grocery-receipt::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -8px;
+  height: 10px;
+  background:
+    linear-gradient(135deg, var(--grocery-paper) 25%, transparent 25%) -8px 0,
+    linear-gradient(225deg, var(--grocery-paper) 25%, transparent 25%) -8px 0;
+  background-size: 16px 16px;
+}
+.grocery-receipt--after {
+  border-color: var(--grocery-red);
+}
+.grocery-mono,
+.grocery-receipt-note {
+  font:
+    10px/1.6 "Courier New",
+    monospace;
+}
+.grocery-receipt h2 {
+  font-size: clamp(25px, 2.8vw, 35px);
+  margin: 16px 0 8px;
+}
+.grocery-receipt ol {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+  border-top: 1px dashed var(--grocery-rule);
+}
+.grocery-receipt li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  border-bottom: 1px dashed var(--grocery-rule);
+  padding: 17px 0;
+  min-height: 89px;
+  font:
+    12px/1.5 "Courier New",
+    monospace;
+}
+.grocery-receipt li small {
+  display: block;
+  font-size: 10px;
+  margin-top: 5px;
+}
+.grocery-row-note {
+  grid-column: 1/-1;
+  color: var(--grocery-red);
+}
+.grocery-receipt-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font:
+    bold 15px/1.5 "Courier New",
+    monospace;
+  margin: 22px 0 10px;
+}
+.grocery-receipt-total strong {
+  font-size: 25px;
+}
+.grocery-current-answer {
+  border-top: 2px solid var(--grocery-green);
+  padding: 25px 0 0;
+  margin: 25px 0;
+}
+.grocery-current-answer > span {
+  font:
+    11px "Courier New",
+    monospace;
+  letter-spacing: 0.1em;
+  display: block;
+}
+.grocery-current-answer > strong {
+  display: block;
+  color: var(--grocery-red);
+  font-size: 55px;
+  line-height: 1.4;
+  font-weight: normal;
+}
+.grocery-current-answer p {
+  font-size: 15px;
+}
+.grocery-quantities {
+  border: 1px solid var(--grocery-rule);
+  padding: 10px 20px;
+  margin: 30px 0 20px;
+  min-width: 0;
+}
+.grocery-quantities legend {
+  font-size: 15px;
+  padding: 0 10px;
+}
+.grocery-quantity-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 13px 0;
+  align-items: center;
+  border-bottom: 1px solid var(--grocery-rule);
+}
+.grocery-quantity-row:last-child {
+  border: 0;
+}
+.grocery-quantity-row label {
+  font-size: 16px;
+}
+.grocery-quantity-row small {
+  display: block;
+  font:
+    10px/1.6 "Courier New",
+    monospace;
+}
+.grocery-stepper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font:
+    12px "Courier New",
+    monospace;
+}
+.grocery-stepper button {
+  width: 44px;
+  padding: 6px;
+  font-size: 20px;
+}
+.grocery-stepper input {
+  width: 58px;
+  text-align: center;
+  padding: 6px 2px;
+  appearance: textfield;
+}
+.grocery-stepper input::-webkit-inner-spin-button {
+  appearance: none;
+}
+.grocery-stepper > span {
+  margin-left: 6px;
+  min-width: 44px;
+}
+.grocery-presets,
+.grocery-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.grocery-presets > span {
+  width: 100%;
+  font-size: 14px;
+}
+.grocery-notice {
+  border: 1px solid var(--grocery-red);
+  border-left: 5px solid var(--grocery-red);
+  padding: 22px;
+  background: #fff4e5;
+  margin: 25px 0;
+  font-size: 15px;
+}
+.grocery-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+.grocery-checkbox input {
+  width: 24px;
+  min-width: 24px;
+  accent-color: var(--grocery-green);
+}
+.grocery-ranked {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0 16px;
+}
+.grocery-ranked li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--grocery-rule);
+  font:
+    14px/1.6 "Courier New",
+    monospace;
+}
+.grocery-ranked a {
+  min-height: 24px;
+}
+.grocery-story details {
+  border-top: 1px dashed var(--grocery-rule);
+  margin-top: 25px;
+  padding: 10px 0;
+}
+.grocery-story summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 0;
+  font-size: 15px;
+}
+.grocery-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.grocery-story table {
+  border-collapse: collapse;
+  width: 100%;
+  font:
+    12px/1.6 "Courier New",
+    monospace;
+}
+.grocery-story :is(th, td) {
+  text-align: left;
+  padding: 12px 9px;
+  border-bottom: 1px solid var(--grocery-rule);
+}
+.grocery-story caption {
+  text-align: left;
+  padding: 15px 0;
+  min-width: 250px;
+}
+.grocery-history-charts,
+.grocery-contribution-chart {
+  min-width: 0;
+  width: 100%;
+}
+.grocery-history-charts figure {
+  margin: 30px 0;
+}
+.grocery-history-charts figcaption {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.grocery-pullquote {
+  font-size: 23px;
+  line-height: 1.5;
+  color: var(--grocery-green);
+  border-left: 3px solid;
+  padding-left: 22px;
+}
+.grocery-limits {
+  max-width: 730px;
+}
+.grocery-save {
+  border-top: 3px solid var(--grocery-green);
+}
+.grocery-permalink {
+  display: inline-block;
+  background: var(--grocery-green);
+  color: var(--grocery-paper) !important;
+  padding: 13px 20px;
+  margin: 4px 0 23px;
+}
+.grocery-export-size {
+  max-width: 280px;
+  margin-bottom: 16px;
+}
+.grocery-downloads {
+  margin-bottom: 24px;
+}
+.grocery-feedback {
+  max-width: 1000px;
+  margin: 0 auto 15px !important;
+  font:
+    14px/1.6 "Courier New",
+    monospace;
+}
+.grocery-sources {
+  font-size: 14px;
+}
+.grocery-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+.grocery-source-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.grocery-mobile-comparison {
+  display: none;
+}
+@media (max-width: 600px) {
+  .grocery-story {
+    margin: -8px;
+    padding: 22px 15px 35px;
+    font-size: 17px;
+  }
+  .grocery-kicker {
+    margin-top: 40px !important;
+    font-size: 17px;
+  }
+  .grocery-opening {
+    padding-bottom: 30px;
+  }
+  .grocery-section {
+    padding: 32px 0;
+  }
+  .grocery-receipt-pair,
+  .grocery-contribution-chart {
+    display: none;
+  }
+  .grocery-mobile-comparison {
+    display: block;
+    background: var(--grocery-paper);
+    padding: 14px 10px;
+    border-top: 3px solid var(--grocery-green);
+  }
+  .grocery-mobile-dates,
+  .grocery-mobile-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 5px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--grocery-rule);
+    font:
+      11px/1.6 "Courier New",
+      monospace;
+  }
+  .grocery-mobile-row small {
+    display: block;
+  }
+  .grocery-mobile-row strong {
+    text-align: right;
+  }
+  .grocery-mobile-dates span:not(:first-child) {
+    text-align: right;
+  }
+  .grocery-quantities {
+    padding: 8px 12px;
+  }
+  .grocery-quantity-row {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .grocery-stepper {
+    justify-content: flex-start;
+  }
+  .grocery-ranked li {
+    gap: 8px;
+    font-size: 12px;
+  }
+  .grocery-pullquote {
+    font-size: 20px;
+    padding-left: 14px;
+  }
+  .grocery-date-controls {
+    align-items: stretch;
+  }
+  .grocery-date-controls label {
+    flex: 1 1 120px;
+  }
+  .grocery-date-controls select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 4px;
+  }
+}
+@media (forced-colors: active) {
+  .grocery-story {
+    background: Canvas;
+    color: CanvasText;
+    --grocery-ink: CanvasText;
+    --grocery-green: LinkText;
+    --grocery-red: CanvasText;
+    --grocery-rule: CanvasText;
+    --grocery-paper: Canvas;
+  }
+  .grocery-receipt,
+  .grocery-notice,
+  .grocery-mobile-comparison {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .grocery-permalink {
+    border: 2px solid LinkText;
+    color: LinkText !important;
+  }
+}
+@media print {
+  .grocery-story {
+    padding: 0;
+    margin: 0;
+    background: white;
+    font-size: 11pt;
+  }
+  .grocery-story h1 {
+    font-size: 44pt;
+  }
+  .grocery-receipt {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .grocery-date-controls,
+  .grocery-quantities,
+  .grocery-presets,
+  .grocery-downloads,
+  .grocery-export-size,
+  .grocery-jump {
+    display: none;
+  }
+  .grocery-receipt-pair {
+    display: grid;
+  }
+  .grocery-mobile-comparison {
+    display: none;
+  }
+}
