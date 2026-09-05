@@ -95,10 +95,11 @@ const visualCommand = missingOnly
       .join(" ")}`
   : `npx playwright test ${playwrightArgs.map(shellArgument).join(" ")}`
 
+// Browsers and OS dependencies are already baked into the pinned image.
+// Avoid an APT-backed reinstall so bootstrap and CI use the same image contents.
 const command = [
   "npm ci",
   "npm run dist",
-  "npx playwright install --with-deps chromium firefox webkit",
   visualCommand,
 ].join(" && ")
 
