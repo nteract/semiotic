@@ -1,0 +1,487 @@
+.plane-story {
+  --plane-ink: #193449;
+  --plane-paper: #f7f3e9;
+  --plane-muted: #50606b;
+  --plane-teal: #256f6e;
+  --plane-rust: #9e4229;
+  --plane-rule: #b9bcb6;
+  background: var(--plane-paper);
+  color: var(--plane-ink);
+  margin: 24px 0 50px;
+  font:
+    17px/1.75 system-ui,
+    sans-serif;
+  --semiotic-text: #193449;
+  --semiotic-bg: #f7f3e9;
+  --semiotic-text-secondary: #50606b;
+  --semiotic-border: #b9bcb6;
+  --text-primary: #193449;
+  --text-secondary: #50606b;
+  overflow-wrap: anywhere;
+}
+.plane-story * {
+  box-sizing: border-box;
+}
+.plane-story h1,
+.plane-story h2,
+.plane-story h3 {
+  color: var(--plane-ink);
+}
+.plane-story p {
+  margin: 0 0 1.25em;
+}
+.plane-story a {
+  color: var(--plane-teal);
+  text-underline-offset: 4px;
+}
+.plane-story button,
+.plane-story select,
+.plane-story textarea,
+.plane-file {
+  font: inherit;
+  color: var(--plane-ink);
+  background: var(--plane-paper);
+  border: 1px solid var(--plane-rule);
+  border-radius: 3px;
+  min-height: 44px;
+  padding: 10px 14px;
+  max-width: 100%;
+}
+.plane-story button {
+  cursor: pointer;
+  line-height: 1.45;
+}
+.plane-story button:hover {
+  border-color: var(--plane-ink);
+}
+.plane-story button[aria-pressed="true"] {
+  border-color: var(--plane-ink);
+  box-shadow: inset 0 -3px var(--plane-ink);
+}
+.plane-story button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.plane-story :focus-visible {
+  outline: 3px solid var(--plane-rust);
+  outline-offset: 4px;
+}
+.plane-story label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
+}
+.plane-story select {
+  width: 100%;
+}
+.plane-story summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.plane-story details p {
+  font-size: 14px;
+}
+.plane-story code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  background: transparent;
+  color: inherit;
+}
+.plane-opening {
+  padding: 56px 6% 44px;
+  border-top: 7px solid var(--plane-ink);
+  position: relative;
+}
+.plane-kicker,
+.plane-chapter {
+  font:
+    11px/1.6 ui-monospace,
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.plane-opening h1 {
+  font:
+    600 clamp(3rem, 8vw, 6.8rem)/0.97 Georgia,
+    serif;
+  letter-spacing: -0.055em;
+  margin: 30px 0;
+}
+.plane-opening h1 em {
+  font-weight: 400;
+  color: var(--plane-teal);
+}
+.plane-deck {
+  max-width: 630px;
+  font:
+    21px/1.6 Georgia,
+    serif;
+}
+.plane-opening-numbers {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 30px 0 16px;
+  border-top: 1px solid var(--plane-rule);
+  margin-top: 32px;
+}
+.plane-opening-numbers div {
+  flex: 1;
+}
+.plane-opening-numbers div > span {
+  display: block;
+  font:
+    12px/1.8 ui-monospace,
+    monospace;
+}
+.plane-opening-numbers strong {
+  font:
+    500 clamp(2.1rem, 6vw, 4.5rem)/1.4 Georgia,
+    serif;
+  font-variant-numeric: tabular-nums;
+}
+.plane-opening-numbers div:first-child strong {
+  color: var(--plane-rust);
+}
+.plane-opening-numbers small {
+  font: 12px system-ui;
+  margin-left: 5px;
+}
+.plane-caption,
+.plane-story .plane-caption {
+  color: var(--plane-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.plane-jump {
+  display: inline-block;
+  min-height: 44px;
+  padding: 12px 0;
+  font-weight: 700;
+}
+.plane-section {
+  border-top: 1px solid var(--plane-rule);
+  padding: 42px 6%;
+}
+.plane-section > p {
+  max-width: 760px;
+}
+.plane-section h2 {
+  font:
+    500 clamp(1.8rem, 4vw, 2.7rem)/1.15 Georgia,
+    serif;
+  letter-spacing: -0.025em;
+  margin: 12px 0 26px;
+  max-width: 750px;
+}
+.plane-cases {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  margin: 35px 0;
+}
+.plane-cases > div {
+  border-top: 2px solid var(--plane-ink);
+  padding-top: 18px;
+}
+.plane-case-index {
+  font:
+    12px ui-monospace,
+    monospace;
+}
+.plane-cases h3 {
+  font:
+    600 23px/1.2 Georgia,
+    serif;
+}
+.plane-cases p {
+  font-size: 14px;
+}
+.plane-cases button {
+  font-size: 13px;
+  width: 100%;
+}
+.plane-controls {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 25px 0 16px;
+}
+.plane-controls label {
+  flex: 1 1 200px;
+}
+.plane-current-summary {
+  font-size: 15px;
+}
+.plane-charts {
+  margin: 0 -10px 26px;
+  color: var(--plane-ink);
+}
+.plane-itinerary ol {
+  padding: 0;
+  list-style: none;
+}
+.plane-itinerary li {
+  margin: 0;
+}
+.plane-flight-card {
+  border: 1px solid var(--plane-rule);
+  padding: 0 22px 4px;
+  background: #fffdf7;
+}
+.plane-itinerary [data-selected="true"] .plane-flight-card {
+  border: 2px solid var(--plane-ink);
+}
+.plane-story .plane-pin {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  text-align: left;
+  padding: 20px 0 13px;
+  border: 0;
+  background: transparent;
+}
+.plane-pin > span:nth-child(2) {
+  flex: 1;
+}
+.plane-leg-number {
+  color: var(--plane-muted);
+  font:
+    15px ui-monospace,
+    monospace;
+}
+.plane-pin strong {
+  font:
+    600 24px/1.3 Georgia,
+    serif;
+  display: block;
+}
+.plane-pin small {
+  display: block;
+  font:
+    12px/1.8 ui-monospace,
+    monospace;
+}
+.plane-deviation {
+  font-size: 14px;
+}
+.plane-clock-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 12px 0;
+}
+.plane-clock-pair small {
+  display: block;
+  color: var(--plane-muted);
+  font-size: 11px;
+}
+.plane-clock-pair b {
+  display: block;
+  font:
+    13px/1.7 ui-monospace,
+    monospace;
+}
+.plane-ground {
+  border-left: 2px dotted var(--plane-rule);
+  padding: 12px 20px;
+  margin: 0 0 0 28px !important;
+  font:
+    12px/1.7 ui-monospace,
+    monospace;
+}
+.plane-boundary {
+  font-size: 13px;
+  color: var(--plane-muted);
+  border-left: 2px dashed var(--plane-rule);
+  padding-left: 20px;
+  margin-top: 20px !important;
+}
+.plane-break {
+  padding: 16px;
+  border: 2px dashed var(--plane-rust);
+  font-size: 14px;
+}
+.plane-observation {
+  margin-top: 30px;
+  padding: 26px;
+  background: #e3ece7;
+  border-left: 5px solid var(--plane-teal);
+}
+.plane-observation h3 {
+  margin: 10px 0;
+  font:
+    600 23px/1.3 Georgia,
+    serif;
+}
+.plane-observation textarea {
+  width: 100%;
+  margin: 8px 0;
+  resize: vertical;
+}
+.plane-observation blockquote {
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--plane-rule);
+  white-space: pre-wrap;
+}
+.plane-observation blockquote footer {
+  font-size: 12px;
+}
+.plane-pattern-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+.plane-pattern-counts strong {
+  font:
+    500 32px/1.4 Georgia,
+    serif;
+  display: block;
+}
+.plane-pattern-counts small {
+  font:
+    13px ui-monospace,
+    monospace;
+}
+.plane-pattern-counts span {
+  font-size: 12px;
+  display: block;
+}
+.plane-cohort-filter {
+  margin: 24px 0;
+}
+.plane-limits {
+  border-top: 3px solid var(--plane-teal);
+}
+.plane-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+}
+.plane-downloads > a {
+  display: block;
+  padding: 14px;
+  background: var(--plane-ink);
+  color: var(--plane-paper);
+  font-size: 14px;
+}
+.plane-downloads button {
+  font-size: 14px;
+}
+.plane-file input {
+  width: 100%;
+  font-size: 13px;
+  min-height: 44px;
+  padding-top: 8px;
+}
+.plane-message {
+  margin-top: 20px !important;
+  font-size: 14px;
+}
+.plane-sources {
+  font-size: 14px;
+}
+.plane-source-links {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0;
+}
+.plane-source-links a {
+  min-height: 44px;
+  padding: 8px 0;
+}
+@media (max-width: 700px) {
+  .plane-opening,
+  .plane-section {
+    padding: 30px 5%;
+  }
+  .plane-cases {
+    grid-template-columns: 1fr;
+  }
+  .plane-cases h3 {
+    margin: 10px 0;
+  }
+  .plane-cases button {
+    width: auto;
+  }
+  .plane-wide-ribbon {
+    display: none;
+  }
+  .plane-pattern-counts {
+    grid-template-columns: 1fr 1fr;
+  }
+  .plane-opening-numbers {
+    gap: 10px;
+  }
+  .plane-opening-numbers > span {
+    display: none;
+  }
+  .plane-deck {
+    font-size: 19px;
+  }
+  .plane-pin {
+    flex-wrap: wrap;
+  }
+  .plane-deviation {
+    width: 100%;
+    margin-left: 32px;
+  }
+  .plane-flight-card {
+    padding: 0 12px;
+  }
+  .plane-story .plane-pin {
+    gap: 12px;
+  }
+  .plane-observation {
+    padding: 18px;
+  }
+}
+@media (forced-colors: active) {
+  .plane-story {
+    --plane-ink: CanvasText;
+    --plane-paper: Canvas;
+    --plane-muted: CanvasText;
+    --plane-teal: LinkText;
+    --plane-rust: CanvasText;
+    --plane-rule: CanvasText;
+    --semiotic-text: CanvasText;
+    --semiotic-text-secondary: CanvasText;
+    --semiotic-bg: Canvas;
+    --semiotic-border: CanvasText;
+    --text-primary: CanvasText;
+    --text-secondary: CanvasText;
+  }
+  .plane-flight-card,
+  .plane-observation {
+    background: Canvas;
+  }
+}
+@media print {
+  .plane-story {
+    margin: 0;
+    font-size: 11pt;
+  }
+  .plane-opening h1 {
+    font-size: 40pt;
+  }
+  .plane-controls,
+  .plane-save,
+  .plane-charts,
+  .plane-cases button,
+  .plane-observation label,
+  .plane-observation textarea,
+  .plane-observation button {
+    display: none;
+  }
+  .plane-section {
+    padding: 20px 0;
+  }
+}

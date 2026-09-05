@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "plane-day",
+    path: "/examples/plane-day",
+    sourceFile: "PlaneDayExamplePage.tsx",
+    sourceFiles: ["PlaneDayExamplePage.tsx", "PlaneDayExamplePage.css", "plane-day/types.ts", "plane-day/time.ts", "plane-day/prepare.ts", "plane-day/state.ts", "plane-day/format.ts", "plane-day/chart-config.ts", "plane-day/layouts.tsx", "plane-day/PlaneCharts.tsx", "plane-day/Itinerary.tsx", "plane-day/packet.ts", "plane-day/exports.ts", "plane-day/portable.ts"],
+    isPilot: true,
+    title: "Your plane has had a day",
+    eyebrow: "One aircraft / a sequence of schedules",
+    description: "Follow three real aircraft-days through BTS flight records, inspect recovery and persistent delays, and carry the same pinned flight and reader note across layouts.",
+    contract: {
+      publicImports: ["semiotic/xy", "semiotic/network", "semiotic/ordinal", "semiotic/artifact", "semiotic/themes/react"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "pinned-BTS-reporting-carrier-HA-July-2025", replay: false, schemaVersion: "1", inventory: { carrierRows: 7066, aircraftDays: 1627, eligibleDays: 660, authoredCases: 3 } } },
+      provenance: { source: "BTS Reporting Carrier On-Time Performance July 2025 archive; exact HA CSV records, row references, checksums and IANA airport mapping accompany the edition", capturedAt: "2026-09-05", freshnessOwner: "Unassigned; required before release", reviewCadence: "Historical snapshot; a refresh creates a new immutable edition" },
+      accessibility: { summary: "Server-readable three-case article, native itinerary and source notes; printable accessible HTML", navigation: "Native flight buttons, view/clock/cohort selectors and local notes", keyboard: "All essential selection and note actions use native controls targeting 44 CSS pixels", forcedColors: "System-color styles and text labels; manual assistive-technology acceptance pending" },
+      motion: { reducedMotion: "No authored animation or replay", visibility: "No polling or workers; cohort fetches cancel on selection change and unmount" },
+      responsive: { status: "implemented; acceptance tracked separately", viewports: [320, 390, 768, 1280], selectionIdentity: "Versioned edition plus aircraft-day and composite BTS flight ID; annotations target identities, never row indices or pixels" },
+      ssr: { status: "implemented; acceptance tracked separately", hydration: "Opening story and default itinerary render from the pinned snapshot; charts enhance the reading path" },
+      performance: { status: "Desktop proxy measured; real Android pending", budgets: { bundle: "Full route transfer and dependencies recorded in scripts/plane-day/evidence/route-measurement.json", interaction: "30 completed actions each for flight, clock and view; real Android pending", memory: "not measured", hiddenPage: "no background refresh" } },
+    },
+  },
+  {
     id: "grocery-bill",
     path: "/examples/grocery-bill",
     sourceFile: "GroceryBillExamplePage.jsx",
@@ -1898,6 +1918,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Your plane has had a day",
+    path: "/examples/plane-day",
+    publishedAt: "2026-09-05T19:26:56.853Z",
+    eyebrow: "One aircraft / a sequence of schedules",
+    description: "Follow real July 2025 flight sequences, compare delays, and share a note that stays attached to the same flight on another screen.",
+    preview: "plane-day",
+    badges: ["BTS flight records", "Portable flight notes", "Phone itinerary"],
+    frames: ["xy", "network", "ordinal"],
+    topics: ["civic", "design", "accessibility"],
+  },
+  {
     title: "Your grocery bill has a memory",
     path: "/examples/grocery-bill",
     publishedAt: "2026-09-05T02:23:24.206Z",
@@ -3166,9 +3197,9 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
     }
 
     if (isNonEmptyString(sourceFile)) {
-      if (!sourceFile.endsWith(".jsx") || sourceFile.includes("/") || sourceFile.includes("\\")) {
+      if (!/\.(jsx|tsx)$/.test(sourceFile) || sourceFile.includes("/") || sourceFile.includes("\\")) {
         errors.push(
-          `ExampleDefinition sourceFile "${sourceFile}" should be a local JSX source file (e.g. "ExamplePage.jsx")`,
+          `ExampleDefinition sourceFile "${sourceFile}" should be a local JSX or TSX source file (e.g. "ExamplePage.tsx")`,
         )
       }
       if (seenSourceFiles.has(sourceFile)) {

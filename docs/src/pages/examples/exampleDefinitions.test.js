@@ -9,6 +9,11 @@ import {
 } from "./exampleDefinitions"
 
 describe("validateExampleDefinitions", () => {
+  it("accepts TypeScript example pages and rejects paths outside the page directory", () => {
+    const plane = getExampleDefinition("/examples/plane-day")
+    expect(validateExampleDefinitions([plane]).ok).toBe(true)
+    expect(validateExampleDefinitions([{ ...plane, sourceFile: "../PlaneDayExamplePage.tsx" }]).ok).toBe(false)
+  })
   it("requires every definition to declare a contract", () => {
     const result = validateExampleDefinitions([
       {
@@ -78,7 +83,7 @@ describe("validateExampleDefinitions", () => {
     expect(result.ok).toBe(false)
     expect(result.errors).toContain('Duplicate ExampleDefinition id "duplicate-id"')
     expect(result.errors).toContain(
-      'ExampleDefinition sourceFile "SecondExamplePage.notjsx" should be a local JSX source file (e.g. "ExamplePage.jsx")',
+      'ExampleDefinition sourceFile "SecondExamplePage.notjsx" should be a local JSX or TSX source file (e.g. "ExamplePage.tsx")',
     )
   })
 

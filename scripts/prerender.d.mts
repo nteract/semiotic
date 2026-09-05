@@ -38,6 +38,7 @@ export interface MachineReadableRouteDoc {
   route: string
   url: string
   html: string
+  openingHtml?: string
   text: string
   headings?: Array<{ level: number; text: string }>
   codeBlocks?: string[]

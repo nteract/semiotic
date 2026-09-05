@@ -321,7 +321,7 @@ export function auditAccessibility(
   const isValue = VALUE.has(component)
   const isHierarchy = HIERARCHY.has(component)
   const { hasTitle, hasDescription, hasSummary, unsupportedFinding } =
-    assessAccessibilityText(component, props)
+    assessAccessibilityText(component, props, recipe?.frameFamily)
   const tableEnabled = props.accessibleTable !== false && !isValue
   const hasAnyText = hasTitle || hasDescription || hasSummary
   const interactive = isInteractive(props)
@@ -1214,7 +1214,7 @@ export function auditAccessibility(
     }
     if (
       recipe.accessibility.description === "required" &&
-      !isNonEmptyString(props.description)
+      !hasDescription
     ) {
       f.push({
         id: "understandable.recipe-description",

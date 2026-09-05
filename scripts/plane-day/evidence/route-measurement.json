@@ -1,0 +1,971 @@
+{
+  "measuredAt": "2026-09-05T21:15:22.354Z",
+  "url": "http://127.0.0.1:4173/examples/plane-day/",
+  "serverRenderedOpening": true,
+  "openingChecks": [
+    {
+      "route": "plane-day",
+      "scriptsBlocked": true,
+      "openingVisible": true
+    },
+    {
+      "route": "grocery-bill",
+      "scriptsBlocked": true,
+      "openingVisible": true
+    }
+  ],
+  "failedRequests": [],
+  "initialNetworkTransferBytes": 630665,
+  "environment": {
+    "hardware": "Apple M3 Pro",
+    "os": "darwin 25.6.0",
+    "arch": "arm64",
+    "browser": "149.0.7827.55",
+    "node": "v22.22.1"
+  },
+  "profile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "downloadBitsPerSecond": 4000000,
+    "latencyMilliseconds": 150,
+    "cache": "cold, disabled",
+    "sourceFlightRows": 7066,
+    "eligibleAircraftDays": 660,
+    "controls": "warm; 30 completed actions per class"
+  },
+  "limitations": [
+    "Desktop Chromium with a phone viewport, not a real Android device.",
+    "Only one cold navigation; this does not establish navigation p95.",
+    "Interaction timings include Playwright automation and two animation frames; they are a proxy, not physical input-to-paint latency.",
+    "Gzip figures are estimates from separately compressing decoded responses; actual server transfer is reported separately.",
+    "Failed requests are listed explicitly; their unavailable response sizes are not included in transfer totals."
+  ],
+  "initialTiming": {
+    "openingContentReadyMilliseconds": 171.0999999642372,
+    "paint": [
+      {
+        "name": "first-paint",
+        "startTime": 428
+      },
+      {
+        "name": "first-contentful-paint",
+        "startTime": 428
+      }
+    ],
+    "resourceTransferBytes": 546574,
+    "documentTransferBytes": 8389
+  },
+  "initialScriptDecodedBytes": 1699143,
+  "initialScriptEstimatedGzipBytes": 490586,
+  "controls": {
+    "flight": {
+      "samples": [
+        57.49120800000037,
+        41.743209000000206,
+        41.57958299999973,
+        41.6969169999993,
+        42.89995799999997,
+        40.42591700000048,
+        41.825042000000394,
+        41.58754200000021,
+        41.689667000000554,
+        41.59229199999936,
+        41.66612499999974,
+        33.41858299999967,
+        33.29512499999964,
+        33.38774999999987,
+        41.537624999999935,
+        41.61608399999932,
+        41.797583000000486,
+        41.59979199999998,
+        41.61124999999993,
+        41.69512499999928,
+        41.72624999999971,
+        41.62487499999952,
+        41.27070800000001,
+        41.6494160000002,
+        41.78937499999938,
+        41.567833000000064,
+        41.711207999999715,
+        42.157874999999876,
+        41.12629100000049,
+        33.44475000000057
+      ],
+      "p95Milliseconds": 42.89995799999997
+    },
+    "clock": {
+      "samples": [
+        24.734666999999718,
+        25.025249999999687,
+        24.997207999999773,
+        25.334249999999884,
+        24.70274999999947,
+        25.08179199999995,
+        25.12091699999928,
+        24.77216700000008,
+        16.764374999999745,
+        16.642166999999972,
+        16.69958299999962,
+        15.80566699999963,
+        17.47175000000061,
+        16.748458000000028,
+        16.58562499999971,
+        16.63837500000045,
+        16.71454199999971,
+        16.70770899999934,
+        16.568083000000115,
+        24.91374999999971,
+        16.776499999999942,
+        16.837541999999303,
+        16.47191699999985,
+        24.967208000000028,
+        16.726000000000568,
+        16.648709000000053,
+        14.281624999999622,
+        16.90241700000024,
+        15.515374999999949,
+        16.15666600000077
+      ],
+      "p95Milliseconds": 25.12091699999928
+    },
+    "view": {
+      "samples": [
+        24.809374999999818,
+        24.905416999999943,
+        16.733165999999983,
+        24.733334000000468,
+        25.05699999999979,
+        24.88520900000003,
+        24.96587499999987,
+        24.95024999999987,
+        25.134917000000314,
+        25.07129099999929,
+        24.84545900000012,
+        25.00354200000038,
+        25.053625000000466,
+        25.125500000000102,
+        24.834915999999794,
+        24.995875000000524,
+        25.041957999999795,
+        24.975749999999607,
+        24.908166999999594,
+        25.03241700000035,
+        25.011457999999948,
+        25.00812499999938,
+        24.87958399999934,
+        25.024625000000015,
+        24.986667000000125,
+        24.93566600000031,
+        16.716458999999304,
+        24.892249999999876,
+        25.23291700000027,
+        24.84637500000008
+      ],
+      "p95Milliseconds": 25.134917000000314
+    }
+  },
+  "responses": [
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/examples/plane-day/",
+      "type": "document",
+      "status": 200,
+      "decodedBytes": 33272,
+      "estimatedGzipBytes": 8089
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/index-Dh4E_cPA.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 22268,
+      "estimatedGzipBytes": 6033
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/prism.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 20346,
+      "estimatedGzipBytes": 5758
+    },
+    {
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 12459,
+      "estimatedGzipBytes": 889
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/index-HzTxhhhD.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 559740,
+      "estimatedGzipBytes": 150714
+    },
+    {
+      "origin": "https://fonts.gstatic.com",
+      "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 48432,
+      "estimatedGzipBytes": 48442
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ExamplesLayout-CBDYrmS2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2771,
+      "estimatedGzipBytes": 1098
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useElementSize-Dx9Jufp5.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 669,
+      "estimatedGzipBytes": 400
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useMediaPreferences-B3Z_rXzS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4766,
+      "estimatedGzipBytes": 1907
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ThemeProvider-vhet_gZW.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 13550,
+      "estimatedGzipBytes": 3666
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/examplesManifest-C0XpAHH3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 749,
+      "estimatedGzipBytes": 362
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/PlaneDayExamplePage-BJqa4PuI.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 7197,
+      "estimatedGzipBytes": 2092
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/BlocksView-aH3RApsf.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 8815,
+      "estimatedGzipBytes": 1801
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/CodeBlock-DcJcrKC2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3421,
+      "estimatedGzipBytes": 1418
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ExamplePageLayout-DSnqTLgA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 48134,
+      "estimatedGzipBytes": 10009
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/format-BvNB_EV-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3082,
+      "estimatedGzipBytes": 1550
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/state-Bz__z14r.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2104,
+      "estimatedGzipBytes": 981
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/semiotic-darkmode-X-YrYas7.png",
+      "type": "image",
+      "status": 200,
+      "decodedBytes": 12398,
+      "estimatedGzipBytes": 9435
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/PlaneDayExamplePage-CB32WX7t.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 424599,
+      "estimatedGzipBytes": 104625
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/PlaneCharts-CXblhbBT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5387,
+      "estimatedGzipBytes": 2447
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/LineChart-DTHjoZtK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 9672,
+      "estimatedGzipBytes": 3999
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/colorUtils-DjjkJuIC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7986,
+      "estimatedGzipBytes": 3608
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/quadtree-ILdsOlH2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12320,
+      "estimatedGzipBytes": 5058
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/StreamXYFrame-BL4VOIuS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47188,
+      "estimatedGzipBytes": 15577
+    },
+    {
+      "origin": "https://fonts.gstatic.com",
+      "path": "/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOlOVk6OThhvA.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 21212,
+      "estimatedGzipBytes": 21240
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/semanticInteractions-Dg2F5IQJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 94432,
+      "estimatedGzipBytes": 31150
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/glyphDef-MxYw_eeX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6737,
+      "estimatedGzipBytes": 2875
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationDensity-CxUggBzK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1577,
+      "estimatedGzipBytes": 783
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationTypes-BI8D4yOx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 416,
+      "estimatedGzipBytes": 230
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameLegendOptions-y32WKJlU.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3859,
+      "estimatedGzipBytes": 1132
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ribbonScene-Bs-9ajAK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5249,
+      "estimatedGzipBytes": 1891
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/gradient-D5mp64Xd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7818,
+      "estimatedGzipBytes": 2640
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/motionEncoding-DZfpmIvs.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2114,
+      "estimatedGzipBytes": 1003
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/renderBackend-w7s8iYYI.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6102,
+      "estimatedGzipBytes": 2615
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/lifecycleBands-DNvEeDEn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 305,
+      "estimatedGzipBytes": 211
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/normalizeXYData-DN3NzmAS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47989,
+      "estimatedGzipBytes": 12657
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/accessorUtils-DP7Jc8GA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 468,
+      "estimatedGzipBytes": 206
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/temporalStrings-Cj6br8hi.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 542,
+      "estimatedGzipBytes": 341
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/symlog-D6pH4yvi.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2074,
+      "estimatedGzipBytes": 976
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/nice--vROP43K.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 151,
+      "estimatedGzipBytes": 138
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/time-C9las-jR.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 14254,
+      "estimatedGzipBytes": 4530
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/Tooltip-BTnC1mVd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47586,
+      "estimatedGzipBytes": 15218
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameCursorInteraction-CELmU-DB.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 11038,
+      "estimatedGzipBytes": 3594
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationStatusFilter-Cx_K-dut.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 340,
+      "estimatedGzipBytes": 218
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/LinkedCrosshairStore-B2dRzPQK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1057,
+      "estimatedGzipBytes": 423
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/SceneToSVG-BFafLVpN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12560,
+      "estimatedGzipBytes": 3532
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/paintNeeds-B7n9YpIP.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 167,
+      "estimatedGzipBytes": 142
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameKeyboardNavigation-DI0dmHbY.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3671,
+      "estimatedGzipBytes": 1463
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/sceneUtils-DWgkAoc0.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 303,
+      "estimatedGzipBytes": 195
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameDefaultMargins-Cut1gdC2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 224,
+      "estimatedGzipBytes": 174
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/tooltipUtils-Dr9uw_6g.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1915,
+      "estimatedGzipBytes": 869
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/withChartWrapper-Dt_ROaZK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3188,
+      "estimatedGzipBytes": 1376
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/streamPropsHelpers-axVx2M7c.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1116,
+      "estimatedGzipBytes": 594
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/hooks-C4QXsKVY.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 24723,
+      "estimatedGzipBytes": 8404
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/selectionProvenance-C8MuQmXN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 155
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/validateChartData-Bp_59AF1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2600,
+      "estimatedGzipBytes": 1123
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useXYBrush-DVeUxdE5.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 892,
+      "estimatedGzipBytes": 497
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useChartSetup-CUn4kCWE.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2908,
+      "estimatedGzipBytes": 1301
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useResolvedSelection-CEQ6QC1l.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 321,
+      "estimatedGzipBytes": 243
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useFrameImperativeHandle-Bot3tO_n.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2313,
+      "estimatedGzipBytes": 705
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/styleRules-DabqLBjT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1730,
+      "estimatedGzipBytes": 727
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useSeriesFeatures-Bh6S7C03.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1841,
+      "estimatedGzipBytes": 919
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useXYLineStyle-BlkxlMpJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 923,
+      "estimatedGzipBytes": 475
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/mergeShapeStyle-ChJbq-yw.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 357,
+      "estimatedGzipBytes": 191
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/linePlugin-C5xSXZ0R.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1118,
+      "estimatedGzipBytes": 598
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/pointCanvasRenderer-wvbIm6vc.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1371,
+      "estimatedGzipBytes": 635
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/renderPulse-hwidGfzN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 659,
+      "estimatedGzipBytes": 319
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/emitPointNodes-B9UdCHi3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 354,
+      "estimatedGzipBytes": 266
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaCanvasRenderer-vYesTcqw.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3509,
+      "estimatedGzipBytes": 1262
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/lineCanvasRenderer-R2m6E2jN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2704,
+      "estimatedGzipBytes": 1107
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaPlugin-CVPIPSVe.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 233,
+      "estimatedGzipBytes": 174
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaScene-BnDJcYBA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2909,
+      "estimatedGzipBytes": 1272
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaGradient-CI1BTG_-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 79,
+      "estimatedGzipBytes": 96
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/mixedPlugin-CVz9GXhJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1322,
+      "estimatedGzipBytes": 610
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/xyLineStyle-CS_hJQ2b.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 510,
+      "estimatedGzipBytes": 371
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/XYCustomChart-BGX2M4FE.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2951,
+      "estimatedGzipBytes": 1256
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/customPlugin-yIDVVYjD.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 717,
+      "estimatedGzipBytes": 349
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/barCanvasRenderer-DKuUcFE8.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2502,
+      "estimatedGzipBytes": 1034
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/symbolCanvasRenderer-Bvb4xv_I.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1069,
+      "estimatedGzipBytes": 557
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/glyphCanvasRenderer-DGWG3D2g.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1048,
+      "estimatedGzipBytes": 562
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/heatmapCanvasRenderer-Csb3oicy.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1134,
+      "estimatedGzipBytes": 694
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/candlestickCanvasRenderer-CNRPQie6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 947,
+      "estimatedGzipBytes": 499
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/swarmCanvasRenderer-C_g6B6IH.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 72,
+      "estimatedGzipBytes": 88
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/waterfallCanvasRenderer-LvVqynVz.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 553,
+      "estimatedGzipBytes": 390
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useCustomChartSetup-Dh_eTy2O.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1648,
+      "estimatedGzipBytes": 736
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/marginType-DJCAAiW4.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 295,
+      "estimatedGzipBytes": 162
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/BarChart-fGdmk2lc.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4934,
+      "estimatedGzipBytes": 1969
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/StreamOrdinalFrame-BcV2aJJv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 42269,
+      "estimatedGzipBytes": 13117
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ordinalSceneSVG-xDRq8lMZ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 50301,
+      "estimatedGzipBytes": 14918
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/min-DKkL9U9e.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 381,
+      "estimatedGzipBytes": 163
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/range-EplFIxc7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 164
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/customLayoutPalette-TlJsW2Bn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 359,
+      "estimatedGzipBytes": 271
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/regressionUtils-baCYpvp3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 414,
+      "estimatedGzipBytes": 217
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalStreaming-DjEqp2V0.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 511,
+      "estimatedGzipBytes": 301
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalPieceStyle-C90wUICt.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1104,
+      "estimatedGzipBytes": 634
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalBrush-Bwic_fuP.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 640,
+      "estimatedGzipBytes": 422
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/NetworkCustomChart-BD0J1a5T.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2804,
+      "estimatedGzipBytes": 1219
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/forceLayoutNodeSize-CRDrHIYA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1451,
+      "estimatedGzipBytes": 700
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/StreamNetworkFrame-CMKr_A_V.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 73384,
+      "estimatedGzipBytes": 21729
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/chart-config-nnxBTQaN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1378,
+      "estimatedGzipBytes": 831
+    }
+  ]
+}

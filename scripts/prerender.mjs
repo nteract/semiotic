@@ -6,6 +6,7 @@
  * - Correct <title> for SEO
  * - <noscript> fallback with page title, navigation, and links to
  *   machine-readable AI docs (the full reference, schema.json, etc.)
+ * - An opt-in story opening visible while JavaScript enhancements load
  * - <link rel="canonical"> for the route
  * - sitemap.txt for crawlers
  *
@@ -674,6 +675,9 @@ export function sanitizeRouteHtml(renderedHtml, routePath) {
     sources[0] ||
     doc.body
   const root = source.cloneNode(true)
+  // Authored stories may opt in to a readable opening while their JS loads.
+  // Keep this node reference through the same sanitization as the fallback.
+  const opening = root.querySelector("[data-server-opening]")
 
   root.querySelectorAll([
     "script",
@@ -750,6 +754,7 @@ export function sanitizeRouteHtml(renderedHtml, routePath) {
     route: routePath || "/",
     url: routePath ? `${SITE_URL}/${routePath}` : SITE_URL,
     html,
+    ...(opening ? { openingHtml: normalizeMachineHtml(opening.outerHTML) } : {}),
     text,
     headings,
     codeBlocks,
@@ -910,6 +915,15 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
     .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript>${navHtml}</noscript>`)
     .replace(/<meta\b(?=[^>]*\bproperty=["']?og:url["']?)[^>]*>/, `<meta property="og:url" content="${canonicalUrl}" />`)
     .replace(/<link\s+rel=["']?canonical["']?[^>]*>/, `<link rel="canonical" href="${canonicalUrl}" />`)
+
+  if (machineDoc?.openingHtml) {
+    // Outside React's root so an early Suspense fallback cannot erase it.
+    // ExamplesRouteReady removes this only when the route itself commits.
+    const opening = `<section id="docs-server-opening" aria-label="Story opening" style="max-width:800px;margin:32px auto;padding:24px;font-family:system-ui,sans-serif;font-size:18px;line-height:1.6;color:#17212d;background:#fff">${machineDoc.openingHtml}</section>`
+    html = html
+      .replace(/<div\s+id=["']root["']\s*>/, `${opening}<div id="root">`)
+      .replace("<noscript>", "<noscript><style>#docs-server-opening{display:none}</style>")
+  }
 
   // Per-entry / per-section meta enrichment. Both blog entries and
   // ROUTE_META-mapped section pages need the same shape: drop the

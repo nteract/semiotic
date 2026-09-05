@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => ({
     docsDevEntrypoint(),
     react({
       include: [
-        /docs\/src\/.*\.jsx$/,
+        /docs\/src\/.*\.[jt]sx$/,
         /src\/components\/.*\.tsx$/,
       ],
       exclude: [/dist\//, /node_modules\//],
