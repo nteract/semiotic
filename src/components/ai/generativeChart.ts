@@ -31,6 +31,7 @@ import { repairChartConfig } from "./repairChartConfig"
 import type { IntentId } from "./intents"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { semanticFailureReasons } from "./semanticEvidence"
+import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
 
 /**
  * A renderer that turns a validated config into SVG + render evidence. Inject
@@ -325,6 +326,7 @@ export function prepareChart(
   // Prove it paints, if a renderer was injected.
   let evidence: RenderEvidence | undefined
   let svg: string | undefined
+  let identityFailure = false
   if (
     options.render &&
     known &&
@@ -334,6 +336,16 @@ export function prepareChart(
     const rendered = options.render(component, props)
     svg = rendered.svg
     evidence = rendered.evidence
+    const attachmentFailures = artifactAttachmentIssues({
+      contract: evidence.artifactContract,
+      transfer: evidence.artifactTransfer,
+      binding: evidence.artifactBinding
+    }).filter((issue) => issue.status === "fail")
+    identityFailure = evidence.component !== component || attachmentFailures.length > 0
+    if (evidence.component !== component) {
+      reasons.push("The render evidence names a different chart component.")
+    }
+    reasons.push(...attachmentFailures.map(({ message }) => message))
     if (evidence.empty) {
       reasons.push("Rendered to an empty scene (no marks) — the data or accessors produce nothing to draw.")
     }
@@ -346,7 +358,8 @@ export function prepareChart(
     validation.valid &&
     (!treatErrorsAsBlocking || errorDiagnostics.length === 0) &&
     (!repair || repair.status === "ok") &&
-    (!evidence || (!evidence.empty && evidence.semanticStatus !== "degenerate"))
+    (!evidence || (!evidence.empty && evidence.semanticStatus !== "degenerate")) &&
+    !identityFailure
 
   return {
     ok,

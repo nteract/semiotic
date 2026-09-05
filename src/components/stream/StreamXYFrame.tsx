@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import { forwardRef, memo, useCallback, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react"
+import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type {
   HoverAnnotationConfig,
   HoverData,
@@ -14,6 +14,7 @@ import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/themeCore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { useXYFrameHandle } from "./useXYFrameHandle"
 import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -539,61 +540,14 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Push API (ref handle) ────────────────────────────────────────────
 
-    const pushPoint = useCallback((datum: Datum) => {
-      adapterRef.current?.push(datum)
-    }, [])
-
-    const pushManyPoints = useCallback((data: Datum[]) => {
-      adapterRef.current?.pushMany(data)
-    }, [])
-
-    const clearAll = useCallback(() => {
-      adapterRef.current?.clear()
-      storeRef.current?.clear()
-      dirtyRef.current = true
-      // emitLegendCategories runs after computeScene in the render loop.
-      scheduleRender()
-    }, [scheduleRender])
-
-    useImperativeHandle(ref, () => ({
-      push: pushPoint,
-      pushMany: pushManyPoints,
-      remove: (id: string | string[]) => {
-        adapterRef.current?.flush()
-        const removed = storeRef.current?.remove(id) ?? []
-        if (removed.length > 0) {
-          // Clear hover if the removed datum was being hovered
-          if (hoverRef.current && removed.some(d => d === hoverRef.current?.data)) {
-            hoverRef.current = null
-            setHoverPoint(null)
-          }
-          dirtyRef.current = true
-          // Legend emit deferred to post-computeScene render path.
-          scheduleRender()
-        }
-        return removed
-      },
-      update: (id: string | string[], updater: (d: Datum) => Datum) => {
-        adapterRef.current?.flush()
-        const previous = storeRef.current?.update(id, updater) ?? []
-        if (previous.length > 0) {
-          dirtyRef.current = true
-          // Legend emit deferred to post-computeScene render path.
-          scheduleRender()
-        }
-        return previous
-      },
-      clear: clearAll,
-      getData: () => {
-        // Flush any buffered push data so getData() always returns up-to-date results
-        adapterRef.current?.flush()
-        return storeRef.current?.getData() ?? []
-      },
-      getScales: () => storeRef.current?.scales ?? null,
-      getExtents: () => storeRef.current?.getExtents() ?? null,
-      getCustomLayout: () => storeRef.current?.lastCustomLayoutResult ?? null,
-      getLayoutFailure: () => storeRef.current?.lastCustomLayoutFailure ?? null
-    }), [pushPoint, pushManyPoints, clearAll, scheduleRender])
+    useXYFrameHandle(ref, {
+      storeRef,
+      adapterRef,
+      dirtyRef,
+      scheduleRender,
+      hoverRef,
+      setHoverPoint
+    })
 
     // ── Controlled data prop ─────────────────────────────────────────────
 

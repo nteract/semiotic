@@ -26,6 +26,7 @@ import {
 import type { RenderEvidence } from "../server/renderEvidence"
 import type { RenderFn } from "./generativeChart"
 import { semanticEvidenceDiagnostics } from "./semanticEvidence"
+import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
 
 export type EvaluateChartStage =
   "data" | "deception" | "accessibility" | "render"
@@ -178,9 +179,34 @@ function sortFindings(
 }
 
 function renderFindings(
-  evidence: RenderEvidence
+  evidence: RenderEvidence,
+  component: string
 ): Array<Omit<EvaluateChartFinding, "rank">> {
   const findings: Array<Omit<EvaluateChartFinding, "rank">> = []
+  if (evidence.component !== component) {
+    findings.push({
+      id: "render.component-mismatch",
+      stage: "render",
+      severity: "error",
+      code: "RENDER_COMPONENT_MISMATCH",
+      message: "The render evidence names a different chart component.",
+      source: "renderChartWithEvidence"
+    })
+  }
+  for (const issue of artifactAttachmentIssues({
+    contract: evidence.artifactContract,
+    transfer: evidence.artifactTransfer,
+    binding: evidence.artifactBinding
+  })) {
+    findings.push({
+      id: `render.${issue.id}`,
+      stage: "render",
+      severity: issue.status === "fail" ? "error" : "manual",
+      code: issue.id.toUpperCase().replace(/[.-]/g, "_"),
+      message: issue.message,
+      source: "artifactAttachmentIssues"
+    })
+  }
   if (evidence.empty) {
     findings.push({
       id: "render.empty-scene",
@@ -332,7 +358,7 @@ export function evaluateChart(
   if (options.render && validation.valid && !hasBlockingPreRenderFinding) {
     try {
       evidence = options.render(component, effectiveProps).evidence
-      rawFindings.push(...renderFindings(evidence))
+      rawFindings.push(...renderFindings(evidence, component))
     } catch {
       rawFindings.push({
         id: "render.failed",

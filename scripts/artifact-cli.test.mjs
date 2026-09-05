@@ -35,6 +35,27 @@ function loadBuiltRuntime() {
   return runtime
 }
 
+it("refuses input identity mismatches through the CLI and built evidence gate", () => {
+  const runtime = loadBuiltRuntime()
+  const { renderChartWithEvidence } = require(resolve(ROOT, "dist/server.min.js"))
+  const { toEvidenceEnvelope, evaluateEvidenceGate } = require(resolve(ROOT, "dist/semiotic-evidence.min.js"))
+  const props = chartProps()
+  for (const [key, value] of [
+    ["component", "Scatterplot"],
+    ["configFingerprint", "sha256:other-config"],
+    ["dataFingerprint", "sha256:other-data"]
+  ]) {
+    const contract = explicitContract(runtime, props)
+    contract.artifact[key] = value
+    const output = runCli("--audit-artifact", { component: "LineChart", props, contract, policyId: "exploratory" }, { json: true })
+    const result = JSON.parse(output.stdout)
+    assert.equal(result.status, "refuse", output.stdout)
+    const evidence = renderChartWithEvidence("LineChart", props, { artifactContract: contract }).evidence
+    const envelope = toEvidenceEnvelope("LineChart", props, { ssrEvidence: evidence })
+    assert.equal(evaluateEvidenceGate(envelope).ok, false)
+  }
+})
+
 function chartProps(data = undefined) {
   return {
     data: data ?? [

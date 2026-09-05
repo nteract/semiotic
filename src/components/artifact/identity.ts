@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { fingerprintValue } from "./fingerprint"
+import { nonJsonValuePaths } from "./jsonCompatibility"
 import type { ArtifactContract, EvidenceRef } from "./types"
 
 const DATA_KEYS: ReadonlyArray<string> = [
@@ -68,26 +69,35 @@ export interface ArtifactIdentityBinding {
 export function compareArtifactIdentity(
   contract: ArtifactContract,
   props: Datum,
-  component?: string
+  component?: string,
+  suppliedData: unknown = artifactDataValue(props)
 ): ArtifactIdentityBinding {
-  const expectedConfiguration = fingerprintValue(
-    artifactConfigurationValue(props)
-  ).fingerprint
-  const expectedData = artifactDataFingerprint(
-    artifactDataValue(props),
-    contract.evidence
-  )
+  const configuration = artifactConfigurationValue(props)
+  const expectedConfiguration = nonJsonValuePaths(configuration).length === 0
+    ? fingerprintValue(configuration).fingerprint
+    : undefined
+  const expectedData =
+    suppliedData !== undefined && nonJsonValuePaths(suppliedData).length === 0
+      ? artifactDataFingerprint(suppliedData, contract.evidence)
+      : undefined
+  const evaluatedComponent =
+    component === "ChartRecipe" && typeof props.recipeId === "string"
+      ? props.recipeId
+      : component
   const mismatchPaths: string[] = []
   const unknownPaths: string[] = []
 
-  if (component !== undefined) {
+  if (evaluatedComponent !== undefined) {
     if (contract.artifact.component === undefined) {
       unknownPaths.push("artifact.component")
-    } else if (contract.artifact.component !== component) {
+    } else if (contract.artifact.component !== evaluatedComponent) {
       mismatchPaths.push("artifact.component")
     }
   }
-  if (contract.artifact.configFingerprint === undefined) {
+  if (
+    contract.artifact.configFingerprint === undefined ||
+    expectedConfiguration === undefined
+  ) {
     unknownPaths.push("artifact.configFingerprint")
   } else if (contract.artifact.configFingerprint !== expectedConfiguration) {
     mismatchPaths.push("artifact.configFingerprint")

@@ -27,6 +27,10 @@ export type SemanticViabilityStatus =
   "meaningful" | "degraded" | "degenerate" | "not-assessed"
 
 export interface RenderEvidence {
+  /** SHA-256 of the final serialized SVG plus resolved coordinate context, including chart chrome. */
+  sceneHash?: string
+  /** Version 2 replaces the evidence envelope's legacy mark-count-only hash. */
+  sceneHashVersion?: 2
   /** HOC component name as passed to renderChart. */
   component: string
   frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"

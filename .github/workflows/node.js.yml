@@ -427,9 +427,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
+      # The pinned Playwright image supplies browsers and OS dependencies.
+      # Reinstalling them adds an unnecessary APT mirror dependency.
       - name: Run docs example source tests
         run: npm run test:examples:source
 
@@ -495,9 +494,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
-
+      # Use the browsers and OS dependencies baked into the pinned image;
+      # an APT-backed reinstall can fail during an Ubuntu mirror sync.
       - name: Build library
         run: npm run dist
 

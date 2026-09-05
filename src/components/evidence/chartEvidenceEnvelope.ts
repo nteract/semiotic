@@ -35,6 +35,16 @@ import {
 } from "../artifact/types"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { stableEvidenceHash } from "./stableJsonHash"
+import {
+  normalizeSourceRecords,
+  redactNavigationTree,
+  redactProfileForEnvelope
+} from "./evidenceEnvelopeInput"
+import {
+  validateEnvelopeAccessibilityAudit,
+  validateEnvelopeArtifactAttachment,
+  validateEnvelopeSceneHash
+} from "./evidenceEnvelopeValidation"
 export { stableEvidenceHash } from "./stableJsonHash"
 
 export const CHART_EVIDENCE_ENVELOPE_VERSION = 1 as const
@@ -66,7 +76,11 @@ export interface EnvelopeTransformSection {
 
 export interface EnvelopeRenderSection {
   mode: "svg" | "canvas" | "png" | "not-rendered"
+  /** Version 2 identifies rendered SVG and coordinates; unversioned legacy hashes count marks only. */
   sceneHash?: string
+  sceneHashVersion?: 2
+  /** SHA-256 of markCountByType only; this does not identify rendered geometry. */
+  markInventoryHash?: string
   imageHash?: string
   marksIntended?: number
   marksObserved?: number
@@ -261,111 +275,6 @@ function inferRenderParity(input: {
   return input.observed === input.intended ? "match" : "unknown"
 }
 
-/**
- * Remove raw row/network/hierarchy/geo payloads from a data profile before
- * placing it in a portable envelope. Shape and aggregate evidence remain;
- * caller-owned source records do not.
- */
-const PRIVATE_PROFILE_KEYS = new Set([
-  "data",
-  "rawInput",
-  "sample",
-  "numericFields",
-  "network",
-  "hierarchy",
-  "geo",
-  "topValues",
-  "distinctValues"
-])
-
-function redactProfileForEnvelope(profile: unknown): unknown {
-  if (Array.isArray(profile)) return profile.map(redactProfileForEnvelope)
-  if (!profile || typeof profile !== "object") return profile
-  const output: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(
-    profile as Record<string, unknown>
-  )) {
-    if (value === undefined || PRIVATE_PROFILE_KEYS.has(key)) continue
-    output[key] = redactProfileForEnvelope(value)
-  }
-  return output
-}
-
-/** Recursively remove raw source records from a navigation tree. */
-function redactNavigationTree(tree: unknown): unknown {
-  if (Array.isArray(tree)) return tree.map(redactNavigationTree)
-  if (!tree || typeof tree !== "object") return tree
-  const output = { ...(tree as Record<string, unknown>) }
-  delete output.datum
-  if (Array.isArray(output.children)) {
-    output.children = output.children.map(redactNavigationTree)
-  }
-  return output
-}
-
-/**
- * Normalize the chart's primary source records across supported data shapes.
- * Used for count and integrity hashing only; records are never stored.
- */
-function normalizeSourceRecords(
-  component: string,
-  props: Record<string, unknown>
-): ReadonlyArray<unknown> {
-  if (Array.isArray(props.data)) return props.data
-  if (
-    component === "ForceDirectedGraph" ||
-    component === "SankeyDiagram" ||
-    component === "ProcessSankey" ||
-    component === "ChordDiagram"
-  ) {
-    return [
-      ...(Array.isArray(props.nodes) ? props.nodes : []),
-      ...(Array.isArray(props.edges) ? props.edges : [])
-    ]
-  }
-  if (component === "ChoroplethMap") {
-    if (Array.isArray(props.areas)) return props.areas
-    if (
-      props.areas &&
-      typeof props.areas === "object" &&
-      Array.isArray((props.areas as Record<string, unknown>).features)
-    ) {
-      return (props.areas as { features: unknown[] }).features
-    }
-    return typeof props.areas === "string"
-      ? [{ geographyReference: props.areas }]
-      : []
-  }
-  if (component === "ProportionalSymbolMap") {
-    return Array.isArray(props.points) ? props.points : []
-  }
-  if (component === "FlowMap") {
-    return [
-      ...(Array.isArray(props.nodes) ? props.nodes : []),
-      ...(Array.isArray(props.flows) ? props.flows : [])
-    ]
-  }
-  if (component === "DistanceCartogram") {
-    return [
-      ...(Array.isArray(props.points) ? props.points : []),
-      ...(Array.isArray(props.lines) ? props.lines : [])
-    ]
-  }
-  if (
-    component === "TreeDiagram" ||
-    component === "Treemap" ||
-    component === "CirclePack" ||
-    component === "OrbitDiagram"
-  ) {
-    return props.data && typeof props.data === "object" ? [props.data] : []
-  }
-  if (component === "BigNumber" || component === "GaugeChart") {
-    const value = props.value
-    return value === undefined ? [] : [{ value }]
-  }
-  return []
-}
-
 /** Assemble a versioned evidence envelope from existing Semiotic payloads. */
 export function toEvidenceEnvelope(
   component: string,
@@ -389,7 +298,7 @@ export function toEvidenceEnvelope(
     ) as ChartReaderGrounding["structure"]
     grounding.structure = redacted
   }
-  const access =
+  const sourceAccess =
     options.accessContract ??
     createChartAccessContract({
       component,
@@ -402,10 +311,14 @@ export function toEvidenceEnvelope(
         ssrEvidence: options.ssrEvidence
       }
     })
-  if (access.navigation.tree) {
-    access.navigation.tree = redactNavigationTree(
-      access.navigation.tree
-    ) as never
+  const access = {
+    ...sourceAccess,
+    navigation: {
+      ...sourceAccess.navigation,
+      ...(sourceAccess.navigation.tree
+        ? { tree: redactNavigationTree(sourceAccess.navigation.tree) as NonNullable<ChartAccessContract["navigation"]["tree"]> }
+        : {})
+    }
   }
   const intendedMarks = countIntendedMarks(props)
   const observedMarks = observedMarkCount(options.ssrEvidence)
@@ -421,8 +334,9 @@ export function toEvidenceEnvelope(
     conflicts: []
   }
   const transformOperations = options.transformOperations ?? []
-  const serializedArtifact = options.artifactContract
-    ? serializeArtifactContract(options.artifactContract, {
+  const attachedContract = options.artifactContract ?? options.ssrEvidence?.artifactContract
+  const serializedArtifact = attachedContract
+    ? serializeArtifactContract(attachedContract, {
         excludeEvidenceSamples: true
       })
     : undefined
@@ -453,7 +367,10 @@ export function toEvidenceEnvelope(
     },
     render: {
       mode: options.ssrEvidence ? "svg" : "not-rendered",
-      sceneHash: options.ssrEvidence
+      ...(options.ssrEvidence?.sceneHashVersion === 2 && options.ssrEvidence.sceneHash
+        ? { sceneHash: options.ssrEvidence.sceneHash, sceneHashVersion: 2 as const }
+        : {}),
+      markInventoryHash: options.ssrEvidence
         ? stableEvidenceHash(options.ssrEvidence.markCountByType)
         : undefined,
       imageHash: undefined,
@@ -552,6 +469,14 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (typeof access.table.enabled !== "boolean") {
     throw new TypeError("Evidence envelope access table state must be boolean")
   }
+  validateEnvelopeAccessibilityAudit(
+    envelope.audit?.accessibility,
+    "audit.accessibility"
+  )
+  validateEnvelopeAccessibilityAudit(
+    access.evidence.audit,
+    "access.evidence.audit"
+  )
   const chart = envelope.chart as ChartEvidenceEnvelope["chart"]
   const input = envelope.input as ChartEvidenceEnvelope["input"]
   const transform = envelope.transform as ChartEvidenceEnvelope["transform"]
@@ -574,6 +499,12 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   if (!["svg", "canvas", "png", "not-rendered"].includes(render.mode)) {
     throw new TypeError("Evidence envelope render requires mode")
   }
+  validateEnvelopeSceneHash(render)
+  validateEnvelopeArtifactAttachment({
+    contract: render.evidence?.artifactContract,
+    transfer: render.evidence?.artifactTransfer,
+    binding: render.evidence?.artifactBinding
+  }, "render.evidence.artifact")
   const modality =
     envelope.modalityChecks as ChartEvidenceEnvelope["modalityChecks"]
   for (const section of ["structured", "vision", "tandem"] as const) {
@@ -624,33 +555,11 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       )
     }
     const artifact = envelope.artifact as EnvelopeArtifactSection
-    const transfer = artifact.transfer
-    const binding = artifact.identityBinding
-    if (
-      !["preserved", "unsupported-version", "invalid", "excluded"].includes(
-        transfer.status
-      ) ||
-      !Array.isArray(transfer.omittedPaths) ||
-      !transfer.omittedPaths.every((path) => typeof path === "string") ||
-      !Array.isArray(transfer.warnings) ||
-      !transfer.warnings.every((warning) => typeof warning === "string")
-    ) {
-      throw new TypeError(
-        "Evidence envelope artifact has an invalid transfer report"
-      )
-    }
     const currentBinding =
       artifact.transferBindingVersion === ARTIFACT_TRANSFER_BINDING_VERSION
-    const validIdentityBinding =
-      binding &&
-      ["match", "mismatch", "unknown"].includes(binding.status) &&
-      Array.isArray(binding.mismatchPaths) &&
-      binding.mismatchPaths.every((path) => typeof path === "string") &&
-      Array.isArray(binding.unknownPaths) &&
-      binding.unknownPaths.every((path) => typeof path === "string")
     if (
-      (currentBinding && !validIdentityBinding) ||
-      (!currentBinding && binding !== undefined)
+      (currentBinding && artifact.identityBinding === undefined) ||
+      (!currentBinding && artifact.identityBinding !== undefined)
     ) {
       throw new TypeError(
         "Evidence envelope artifact has an invalid identity binding"
@@ -667,28 +576,18 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
         "Evidence envelope artifact requires a supported transfer binding"
       )
     }
+    // Report payload tampering before interpreting the report's consistency.
     const expectedTransferFingerprint = artifactTransferFingerprint(artifact)
     if (artifact.transferFingerprint !== expectedTransferFingerprint) {
       throw new TypeError(
         "Evidence envelope artifact transfer fingerprint does not match its payload"
       )
     }
-    if (envelope.artifact.contract !== undefined) {
-      const restored = serializeArtifactContract(envelope.artifact.contract)
-      const declaredStatus = transfer.status
-      const compatibleExcludedStatus =
-        declaredStatus === "excluded" &&
-        restored.transfer.status === "preserved" &&
-        transfer.omittedPaths.length > 0
-      if (
-        restored.transfer.status !== declaredStatus &&
-        !compatibleExcludedStatus
-      ) {
-        throw new TypeError(
-          "Evidence envelope artifact transfer status does not match its contract"
-        )
-      }
-    }
+    validateEnvelopeArtifactAttachment({
+      contract: artifact.contract,
+      transfer: artifact.transfer,
+      binding: artifact.identityBinding
+    }, "artifact")
   }
   for (const conflict of modality.tandem.conflicts) {
     if (
@@ -720,9 +619,15 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
   const limits = envelope.limits as ChartEvidenceEnvelope["limits"]
   if (
     !Array.isArray(limits.knownGaps) ||
+    !limits.knownGaps.every((gap) => typeof gap === "string") ||
     !Array.isArray(limits.unsupportedClaims) ||
+    !limits.unsupportedClaims.every((claim) => typeof claim === "string") ||
     !limits.privacyScope ||
-    typeof limits.privacyScope !== "object"
+    typeof limits.privacyScope !== "object" ||
+    Array.isArray(limits.privacyScope) ||
+    !Object.values(limits.privacyScope).every(
+      (scope) => Array.isArray(scope) && scope.every((value) => typeof value === "string")
+    )
   ) {
     throw new TypeError(
       "Evidence envelope limits require arrays and privacy scope"

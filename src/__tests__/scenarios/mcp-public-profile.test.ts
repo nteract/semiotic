@@ -165,6 +165,18 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
       expect(created.result.structuredContent).toMatchObject({ status: "render-proven", dataRowCount: 2 })
       expect(created.result.structuredContent.props.data).toBeUndefined()
       expect(created.result.structuredContent.suggestion.props.data).toBeUndefined()
+      expect(created.result.structuredContent.props.description).toMatch(/\S/)
+      expect(created.result.structuredContent.evidenceEnvelope.access.text.description).toBe(
+        created.result.structuredContent.props.description,
+      )
+      expect(created.result.structuredContent.evidenceEnvelope.render).toMatchObject({
+        sceneHashVersion: 2,
+        sceneHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        markInventoryHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      })
+      expect(created.result.structuredContent.evidenceGate).toMatchObject({
+        ok: true, status: "pass",
+      })
       const trendRows = [{ time: 1, value: 2 }, { time: 2, value: 4 }, { time: 3, value: 3 }]
       const incompatibleValueCard = await sendRequest(publicProc, "tools/call", { name: "createChart", arguments: { data: trendRows, intent: "trend", component: "BigNumber" } }, "public-create-incompatible-value-card")
       expect(incompatibleValueCard.result.isError).toBe(true)
@@ -175,6 +187,35 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
       })
       expect(incompatibleValueCard.result.structuredContent.props.data).toBeUndefined()
       expect(incompatibleValueCard.result.structuredContent.suggestion.props.data).toBeUndefined()
+    } finally {
+      publicProc.kill()
+    }
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
+
+  it("does not turn a critical accessibility failure into a passing creation gate", async () => {
+    const publicProc = spawnPublicServer()
+    try {
+      await initializePublicServer(publicProc, "semiotic-public-gate-test", "public-gate-initialize")
+      const result = await sendRequest(publicProc, "tools/call", {
+        name: "createChart",
+        arguments: {
+          data: [{ category: "A", value: 2 }, { category: "B", value: 3 }],
+          component: "BarChart",
+          intent: "compare-categories",
+          props: { title: "", description: "", summary: "" },
+        },
+      }, "public-create-critical-accessibility")
+      expect(result.result.isError).toBe(true)
+      expect(result.result.structuredContent).toMatchObject({
+        status: "blocked",
+        evidenceGate: {
+          ok: false,
+          status: "fail",
+          findings: expect.arrayContaining([
+            expect.objectContaining({ id: "audit.accessibility-blocking", severity: "error" }),
+          ]),
+        },
+      })
     } finally {
       publicProc.kill()
     }

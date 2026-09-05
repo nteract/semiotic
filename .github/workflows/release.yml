@@ -92,9 +92,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-
+      # The pinned Playwright image supplies browsers and OS dependencies.
+      # Keep release validation independent of Ubuntu package mirror updates.
       - name: Run docs example source tests
         run: npm run test:examples:source
 

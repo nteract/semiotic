@@ -485,7 +485,8 @@ describe("ChartEvidenceEnvelope@1", () => {
     expect(gate.findings.map((item) => item.id)).toContain(
       "modality.unresolved-conflicts"
     )
-    expect(envelope.limits.unsupportedClaims).toContain("Revenue will double")
+    expect(gate.limits?.unsupportedClaims).toContain("Revenue will double")
+    expect(envelope.limits.unsupportedClaims).not.toContain("Revenue will double")
   })
 
   it("produces deterministic hashes for identical envelopes", () => {
