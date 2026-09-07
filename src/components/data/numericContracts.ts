@@ -284,6 +284,11 @@ export const BUILT_IN_NUMERIC_CONTRACTS: Readonly<
   BubbleChart: BUBBLE_CONTRACT,
   StackedAreaChart: STACKED_AREA_CONTRACT,
   DifferenceChart: DIFFERENCE_CONTRACT,
+  // Waterfalls place named steps by row order. Only their signed deltas are
+  // numeric inputs; equal deltas still produce distinct cumulative endpoints.
+  WaterfallChart: {
+    fields: [{ role: "y", accessor: "yAccessor", defaultAccessor: "y" }]
+  },
   CandlestickChart: CANDLESTICK_CONTRACT,
   Heatmap: HEATMAP_CONTRACT,
 

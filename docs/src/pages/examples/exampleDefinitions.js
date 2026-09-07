@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "jobs-report",
+    path: "/examples/jobs-report",
+    sourceFile: "JobsReportExamplePage.tsx",
+    sourceFiles: ["JobsReportExamplePage.tsx", "JobsReportExamplePage.css", "jobs-report/model.ts", "jobs-report/chart-config.ts", "jobs-report/BriefingDesk.tsx", "jobs-report/packet.ts", "jobs-report/exports.ts", "jobs-report/export-runtime.ts"],
+    isPilot: true,
+    title: "The jobs report has a second draft",
+    eyebrow: "Twenty-four months / the revision desk",
+    description: "Read the first jobs estimate alongside later drafts, follow revisions across zero, and carry a dated briefing into the next edition.",
+    contract: {
+      publicImports: ["semiotic/xy", "semiotic/ordinal", "semiotic/artifact", "semiotic/server", "semiotic/themes/react"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "BLS-CES-via-ALFRED-dated-exports", replay: false, schemaVersion: "1", inventory: { referenceMonths: 24, vintages: 25, canonicalRows: 677 } } },
+      provenance: { source: "BLS CES levels distributed by ALFRED; dated headers, retrieval checksums and independent BLS release-table checks. Direct workbook admission pending.", capturedAt: "2026-09-07", freshnessOwner: "Semiotic maintainers", reviewCadence: "Historical edition; a new capture and review are required for updates" },
+      accessibility: { summary: "Static article, dated estimate cards, full comparison table, accessible SVG and ordinary email HTML", navigation: "Native month and publication-date selectors; downloads and packet reopening", keyboard: "Essential controls target 44 CSS pixels; no hover-only values", forcedColors: "System-color outlines and exact text values; manual assistive-technology reception pending" },
+      motion: { reducedMotion: "No authored animation or replay", visibility: "No polling, background requests or accumulating history" },
+      responsive: { status: "container-responsive with phone estimate cards", viewports: [320, 390, 768, 1280], selectionIdentity: "Reference month, publication date and captured source identity" },
+      ssr: { status: "Static article and generated graphics", hydration: "The complete reading precedes the optional briefing desk" },
+      performance: { status: "Desktop production proxy measured; real Android pending", budgets: { bundle: "450 KiB estimated gzip for all initial scripts; 320 KiB additional SVG export scripts. Resource ledger: scripts/jobs-report/evidence/route-measurement.json", interaction: "80 ms p95 ceiling for 30 warm actions per control in the documented desktop proxy", memory: "Bounded history; heap delta not measured", hiddenPage: "No polling or replay" } },
+    },
+  },
+  {
     id: "superpersuasion",
     path: "/examples/superpersuasion",
     sourceFile: "SuperpersuasionExamplePage.tsx",
@@ -1957,6 +1977,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "The jobs report has a second draft",
+    path: "/examples/jobs-report",
+    publishedAt: "2026-09-07T22:00:00Z",
+    eyebrow: "Twenty-four months / the revision desk",
+    description: "Read successive jobs estimates, see a revision cross zero, and build a briefing that keeps its evidence and dates attached.",
+    preview: "jobs-report",
+    badges: ["Employment vintages", "Revision waterfall", "Portable briefings"],
+    frames: ["xy", "ordinal"],
+    topics: ["civic", "design", "accessibility"],
+  },
   {
     title: "The art of being worth choosing",
     path: "/examples/superpersuasion",

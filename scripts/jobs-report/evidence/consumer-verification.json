@@ -1,0 +1,37 @@
+{
+  "verifiedAt": "2026-09-07T22:44:19.061Z",
+  "node": "v22.22.1",
+  "packageVersion": "3.9.2",
+  "packageTarballSha256": "c00fbda6a37f4bab66144aaafbd3e8b84d81b9fa41a3281f769021c3f05e63c3",
+  "authority": "Automated clean-consumer exercise, not an independent human maintainer or editorial sign-off",
+  "publicImports": [
+    "semiotic/artifact",
+    "semiotic/server"
+  ],
+  "results": [
+    {
+      "check": "rebuilt-a canonical values and six output formats reproduce",
+      "passed": true
+    },
+    {
+      "check": "rebuilt-b canonical values and six output formats reproduce",
+      "passed": true
+    },
+    {
+      "check": "Public CLI JSON and terminal both distinguish conditional exit zero; mismatched chart refused",
+      "passed": true
+    },
+    {
+      "check": "Pending, incomplete and other-edition receipts block; complete demo receipt succeeds without asserting publishability",
+      "passed": true
+    },
+    {
+      "check": "Two-edition comparison names affected claims; altered raw bytes are refused",
+      "passed": true
+    },
+    {
+      "check": "Editorial-only change keeps numerical values but replaces its interpretation claim",
+      "passed": true
+    }
+  ]
+}

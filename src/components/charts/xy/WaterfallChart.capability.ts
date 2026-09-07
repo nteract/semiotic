@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
 const DELTA_FIELD_HINT = /(?:delta|change|increase|decrease|impact|variance|net)/i
 
@@ -6,6 +7,7 @@ export const WaterfallChartCapability: ChartCapability = {
   component: "WaterfallChart",
   family: "flow",
   importPath: "semiotic/xy",
+  numericContracts: BUILT_IN_NUMERIC_CONTRACTS.WaterfallChart,
   rubric: { familiarity: 4, accuracy: 4, precision: 4 },
 
   fits: (profile) => {

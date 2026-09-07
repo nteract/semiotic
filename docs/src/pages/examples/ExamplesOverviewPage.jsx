@@ -6,9 +6,11 @@ import GroceryPreview from "./grocery-receipt/GroceryPreview"
 import PlanePreview from "./plane-day/PlanePreview"
 import ReservoirPreview from "./reservoir-guide/ReservoirPreview"
 import SuperpersuasionPreview from "./superpersuasion/SuperpersuasionPreview"
+import JobsReportPreview from "./jobs-report/JobsReportPreview"
 
 const PREVIEW_COMPONENTS = {
   superpersuasion: SuperpersuasionPreview,
+  "jobs-report": JobsReportPreview,
   "plane-day": PlanePreview,
   "reservoir-guide": ReservoirPreview,
   "grocery-bill": GroceryPreview,

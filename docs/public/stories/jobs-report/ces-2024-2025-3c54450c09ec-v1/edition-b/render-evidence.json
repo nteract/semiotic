@@ -1,0 +1,215 @@
+{
+  "component": "WaterfallChart",
+  "frameType": "xy",
+  "status": "ok",
+  "empty": false,
+  "markCount": 3,
+  "markCountByType": {
+    "rect": 3
+  },
+  "width": 760,
+  "height": 340,
+  "xDomain": [
+    -0.5,
+    2.5
+  ],
+  "yDomain": [
+    -36700,
+    163700
+  ],
+  "annotationCount": 0,
+  "ariaLabel": "Each floating bar adds or subtracts a revision. Its endpoint is the running estimate, in jobs; bar length is the change between drafts, not another month's employment.",
+  "warnings": [],
+  "semanticStatus": "not-assessed",
+  "semanticDiagnostics": [],
+  "margin": {
+    "top": 36,
+    "right": 25,
+    "bottom": 56,
+    "left": 80
+  },
+  "plot": {
+    "x": 80,
+    "y": 36,
+    "width": 655,
+    "height": 248
+  },
+  "sceneHashVersion": 2,
+  "sceneHash": "b9d034cf76b9f4e8ad3a7d22aee41d182f7aa77cb2e6f2c250171f52e2c79120",
+  "artifactContract": {
+    "accountability": {
+      "authors": [
+        {
+          "kind": "system",
+          "name": "Semiotic jobs-briefing adapter"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "editorial-review",
+          "status": "pending"
+        }
+      ]
+    },
+    "artifact": {
+      "component": "WaterfallChart",
+      "configFingerprint": "sha256:e959c87ca96d1b370952200e0bac91ea2d5ee7b659357dd5ba7bd663f6d540e9",
+      "dataFingerprint": "sha256:1881497621f04500cc9a3ba3181afcf0b707f57abc6faadfd42c527335525e78",
+      "id": "jobs-report-2025-06",
+      "kind": "chart",
+      "revision": "2026-03-06-2025-06-v1",
+      "title": "June 2025: revisions"
+    },
+    "claims": [
+      {
+        "asOf": "2026-03-06",
+        "authoredBy": {
+          "kind": "system",
+          "name": "Deterministic jobs-briefing adapter"
+        },
+        "evidenceIds": [
+          "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+        ],
+        "id": "estimate-2026-03-06-2025-06-v1",
+        "kind": "observation",
+        "review": {
+          "status": "proposed"
+        },
+        "scope": {
+          "coverage": "June 2025",
+          "metric": "Seasonally adjusted U.S. nonfarm payroll employment change",
+          "unit": "jobs"
+        },
+        "status": "supported",
+        "text": "June 2025 employment change: first +147,000; third −13,000; Mar 6, 2026 vintage −20,000 jobs."
+      },
+      {
+        "asOf": "2026-03-06",
+        "authoredBy": {
+          "kind": "system",
+          "name": "Deterministic jobs-briefing adapter"
+        },
+        "evidenceIds": [
+          "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+        ],
+        "id": "interpretation-2026-03-06-2025-06-v1",
+        "kind": "inference",
+        "review": {
+          "status": "proposed"
+        },
+        "scope": {
+          "coverage": "June 2025",
+          "metric": "Seasonally adjusted U.S. nonfarm payroll employment change",
+          "unit": "jobs"
+        },
+        "status": "supported",
+        "text": "The estimated monthly change switched sign between the first and named dated estimate. This alone does not establish a recession or a cause."
+      }
+    ],
+    "contestability": {
+      "corrections": [],
+      "sourceRequestsAllowed": true
+    },
+    "contractVersion": "0.1",
+    "evidence": [
+      {
+        "dataVersion": "ces-2024-2025-3c54450c09ec-v1",
+        "fingerprint": "sha256:3c54450c09ec5d6ce2f70b0542bb85e6ed67f7db99bcc05e15969817e6d98820",
+        "id": "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06",
+        "label": "BLS CES via dated ALFRED exports",
+        "role": "source-data",
+        "source": {
+          "retrievedAt": "2026-09-07T20:08:09.733Z",
+          "uri": "https://alfred.stlouisfed.org/series?seid=PAYEMS",
+          "version": "2026-03-06"
+        }
+      }
+    ],
+    "fieldStatus": {
+      "accountability.reviews": {
+        "reason": "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception.",
+        "status": "manual",
+        "suppliedBy": "system"
+      }
+    },
+    "form": {
+      "chartFamily": "waterfall",
+      "whyThisForm": "Floating signed revisions show how the running estimate changes; exact labeled estimates travel alongside."
+    },
+    "inheritance": {
+      "preservation": "claim-evidence-preserved",
+      "privacy": "public",
+      "rawDataDefault": "exclude",
+      "requiredPaths": [
+        "claims",
+        "evidence",
+        "time",
+        "accountability"
+      ]
+    },
+    "purpose": {
+      "communicativeAct": "Compare successive estimates of one employment month.",
+      "intents": [
+        {
+          "id": "comparison",
+          "source": "author",
+          "strength": "primary"
+        }
+      ],
+      "prohibitedUses": [
+        "Investment advice",
+        "A causal or recession claim from a revision alone"
+      ],
+      "stakes": "informational"
+    },
+    "reception": {
+      "channels": [
+        {
+          "channel": "visual"
+        },
+        {
+          "channel": "screen-reader"
+        },
+        {
+          "channel": "agent"
+        }
+      ],
+      "dataFallback": true,
+      "description": "Each floating bar adds or subtracts a revision. Its endpoint is the running estimate, in jobs; bar length is the change between drafts, not another month's employment."
+    },
+    "time": {
+      "completeness": {
+        "basis": "Employment estimates remain revisable; October 2025 has no first estimate.",
+        "status": "provisional"
+      },
+      "freshness": {
+        "basis": "Pinned historical vintage checked on retrieval; not a claim of current labor-market conditions.",
+        "checkedAt": "2026-09-07T20:08:09.733Z",
+        "status": "fresh"
+      },
+      "observedAt": "2026-03-06",
+      "presentation": {
+        "label": "Estimates published by Mar 6, 2026",
+        "state": "historical"
+      },
+      "revision": {
+        "status": "original"
+      },
+      "snapshot": {
+        "format": "other",
+        "id": "ces-2024-2025-3c54450c09ec-v1"
+      },
+      "snapshotAt": "2026-09-07T20:08:09.733Z"
+    }
+  },
+  "artifactTransfer": {
+    "status": "preserved",
+    "omittedPaths": [],
+    "warnings": []
+  },
+  "artifactBinding": {
+    "status": "match",
+    "mismatchPaths": [],
+    "unknownPaths": []
+  }
+}

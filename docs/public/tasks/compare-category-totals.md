@@ -5,7 +5,7 @@
 Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.
 
 Source package: semiotic@3.9.2. Channel: source.
-Source revision: sha256:50e44656b1e17407ddafb6f64b051443a1a314a5f679e35a52cb1c975131d0c2. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:e9085f3c8c18a0d304e31e04aff6138d4240982556178f981f679c63901dc46c. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -124,7 +124,7 @@ npx vitest run docs/src/pages/tasks/examples/category-comparison.test.ts
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts
 ```
 
-Recorded execution: 2026-09-07T19:35:59.815Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-09-07T22:35:07.287Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 

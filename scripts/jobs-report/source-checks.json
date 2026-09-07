@@ -1,0 +1,220 @@
+{
+  "kind": "Authored transcription of independently read BLS HTML tables; not downloaded workbook bytes or human approval",
+  "checkedAt": "2026-09-07T21:05:27.545002+00:00",
+  "unit": "thousand jobs",
+  "revisionSource": "https://www.bls.gov/web/empsit/cesnaicsrev.htm",
+  "benchmarkSource": "https://www.bls.gov/news.release/archives/empsit_02112026.htm",
+  "firstThird": [
+    {
+      "month": "2024-01",
+      "first": 353,
+      "third": 256
+    },
+    {
+      "month": "2024-02",
+      "first": 275,
+      "third": 236
+    },
+    {
+      "month": "2024-03",
+      "first": 303,
+      "third": 310
+    },
+    {
+      "month": "2024-04",
+      "first": 175,
+      "third": 108
+    },
+    {
+      "month": "2024-05",
+      "first": 272,
+      "third": 216
+    },
+    {
+      "month": "2024-06",
+      "first": 206,
+      "third": 118
+    },
+    {
+      "month": "2024-07",
+      "first": 114,
+      "third": 144
+    },
+    {
+      "month": "2024-08",
+      "first": 142,
+      "third": 78
+    },
+    {
+      "month": "2024-09",
+      "first": 254,
+      "third": 255
+    },
+    {
+      "month": "2024-10",
+      "first": 12,
+      "third": 43
+    },
+    {
+      "month": "2024-11",
+      "first": 227,
+      "third": 261
+    },
+    {
+      "month": "2024-12",
+      "first": 256,
+      "third": 323
+    },
+    {
+      "month": "2025-01",
+      "first": 143,
+      "third": 111
+    },
+    {
+      "month": "2025-02",
+      "first": 151,
+      "third": 102
+    },
+    {
+      "month": "2025-03",
+      "first": 228,
+      "third": 120
+    },
+    {
+      "month": "2025-04",
+      "first": 177,
+      "third": 158
+    },
+    {
+      "month": "2025-05",
+      "first": 139,
+      "third": 19
+    },
+    {
+      "month": "2025-06",
+      "first": 147,
+      "third": -13
+    },
+    {
+      "month": "2025-07",
+      "first": 73,
+      "third": 72
+    },
+    {
+      "month": "2025-08",
+      "first": 22,
+      "third": -26
+    },
+    {
+      "month": "2025-09",
+      "first": 119,
+      "third": 108
+    },
+    {
+      "month": "2025-10",
+      "first": null,
+      "third": -173
+    },
+    {
+      "month": "2025-11",
+      "first": 64,
+      "third": 41
+    },
+    {
+      "month": "2025-12",
+      "first": 50,
+      "third": -17
+    }
+  ],
+  "benchmark": [
+    {
+      "month": "2025-01",
+      "revisedLevel": 158268,
+      "previousLevel": 159053,
+      "revisedChange": -48,
+      "previousChange": 111
+    },
+    {
+      "month": "2025-02",
+      "revisedLevel": 158310,
+      "previousLevel": 159155,
+      "revisedChange": 42,
+      "previousChange": 102
+    },
+    {
+      "month": "2025-03",
+      "revisedLevel": 158377,
+      "previousLevel": 159275,
+      "revisedChange": 67,
+      "previousChange": 120
+    },
+    {
+      "month": "2025-04",
+      "revisedLevel": 158485,
+      "previousLevel": 159433,
+      "revisedChange": 108,
+      "previousChange": 158
+    },
+    {
+      "month": "2025-05",
+      "revisedLevel": 158498,
+      "previousLevel": 159452,
+      "revisedChange": 13,
+      "previousChange": 19
+    },
+    {
+      "month": "2025-06",
+      "revisedLevel": 158478,
+      "previousLevel": 159439,
+      "revisedChange": -20,
+      "previousChange": -13
+    },
+    {
+      "month": "2025-07",
+      "revisedLevel": 158542,
+      "previousLevel": 159511,
+      "revisedChange": 64,
+      "previousChange": 72
+    },
+    {
+      "month": "2025-08",
+      "revisedLevel": 158472,
+      "previousLevel": 159485,
+      "revisedChange": -70,
+      "previousChange": -26
+    },
+    {
+      "month": "2025-09",
+      "revisedLevel": 158548,
+      "previousLevel": 159593,
+      "revisedChange": 76,
+      "previousChange": 108
+    },
+    {
+      "month": "2025-10",
+      "revisedLevel": 158408,
+      "previousLevel": 159420,
+      "revisedChange": -140,
+      "previousChange": -173
+    },
+    {
+      "month": "2025-11",
+      "revisedLevel": 158449,
+      "previousLevel": 159476,
+      "revisedChange": 41,
+      "previousChange": 56
+    },
+    {
+      "month": "2025-12",
+      "revisedLevel": 158497,
+      "previousLevel": 159526,
+      "revisedChange": 48,
+      "previousChange": 50
+    }
+  ],
+  "notes": [
+    "Third November 2024 and December 2024 estimates incorporate the February 2025 benchmark.",
+    "August 2025 third estimate was delayed until December 16. October 2025 has no first preliminary estimate.",
+    "February 11 Table A previous values refer to January 9; revised values include benchmarking and seasonal adjustment."
+  ]
+}

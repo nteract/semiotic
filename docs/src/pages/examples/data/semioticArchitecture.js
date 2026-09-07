@@ -773,6 +773,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-network-flow", "hoc-ordinal-bars", "feature-accessors", "feature-axes", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
   },
   {
+    id: "jobs-report",
+    shortLabel: "Jobs revision desk",
+    note: "Dated BLS/ALFRED payroll estimates retain publication calendars, same-vintage arithmetic and missing first releases. Waterfall revisions, paired dots and a separate monthly line accompany immutable briefings and explicit review handoffs.",
+    uses: ["input-static", "hoc-xy-lines", "feature-accessors", "feature-axes", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+  },
+  {
     id: "machine-semiosphere",
     shortLabel: "Machine Semiosphere",
     note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",
