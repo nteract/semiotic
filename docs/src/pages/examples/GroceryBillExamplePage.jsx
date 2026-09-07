@@ -136,7 +136,11 @@ export default function GroceryBillExamplePage() {
   const [exporting, setExporting] = useState(false)
   const [exportSize, setExportSize] = useState("phone")
   const [reopened, setReopened] = useState("")
-  useEffect(() => setSelection(loadSelection(search)), [search])
+  useEffect(() => {
+    setSelection(loadSelection(search))
+    setReopened("")
+    setMessage("")
+  }, [search])
   const receipt = useMemo(
     () => (selection.state ? prepareBasket(snapshot, selection.state) : null),
     [selection.state],
@@ -149,6 +153,7 @@ export default function GroceryBillExamplePage() {
   }
   function reset() {
     setSelection({ state: defaultState(snapshot), error: null })
+    setReopened("")
     setMessage("Restored the authored basket and comparison months.")
   }
   function preset(name) {
@@ -165,6 +170,7 @@ export default function GroceryBillExamplePage() {
         quantity: row.itemId === "eggs" ? 4 : row.quantity,
       }))
     setSelection({ state: initial, error: null })
+    setReopened("")
     setMessage("Preset applied, including its comparison months.")
   }
   async function download(format) {
@@ -210,6 +216,8 @@ export default function GroceryBillExamplePage() {
   async function importReceipt(file) {
     if (!file) return
     setExporting(true)
+    setReopened("")
+    setMessage("")
     try {
       if (file.size > 2_000_000) throw new Error("This packet exceeds the 2 MB limit.")
       const { importReceiptPacket } = await import("./grocery-receipt/import")

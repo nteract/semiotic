@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process"
-import { promisify } from "node:util"
+import { parseArgs, promisify } from "node:util"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { resolve, join } from "node:path"
 import { createHash } from "node:crypto"
@@ -14,10 +14,15 @@ interface SourceFile {
 
 const execute = promisify(execFile)
 async function main() {
-  const directory = process.argv[2]
-  if (!directory)
+  const { positionals, values } = parseArgs({
+    options: { resume: { type: "boolean" } },
+    allowPositionals: true,
+    strict: true
+  })
+  const [directory] = positionals
+  if (positionals.length !== 1 || !directory)
     throw new Error(
-      "Usage: node --import tsx scripts/reservoir-guide/acquire.ts <new-raw-directory>"
+      "Usage: node --import tsx scripts/reservoir-guide/acquire.ts [--resume] <raw-directory>"
     )
   const output = resolve(directory)
   await mkdir(output, { recursive: true })
@@ -67,7 +72,7 @@ async function main() {
         url: "https://water.ca.gov/Conditions-of-Use"
       }
     ])
-  const sources: SourceFile[] = process.argv.includes("--resume")
+  const sources: SourceFile[] = values.resume
     ? JSON.parse(await readFile(join(output, "retrieval.json"), "utf8")).sources
     : []
   for (const job of jobs) {

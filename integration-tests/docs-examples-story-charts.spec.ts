@@ -71,6 +71,16 @@ test("a grocery month is inspectable and a saved basket restores its path in ano
       "restored and verified"
     )
     await painted(reopened.getByTestId("grocery-trajectory"))
+    // Selecting the same basket through a preset is not a packet verification.
+    await reopened.getByRole("button", { name: "Four dozen eggs" }).click()
+    await expect(reopened.getByTestId("after-total")).toHaveText("$38.61")
+    await expect(reopened.getByTestId("grocery-reopen-status")).toContainText(
+      "Current comparison:"
+    )
+    await reopened.getByLabel("Reopen a saved basket packet").setInputFiles(path)
+    await expect(reopened.getByTestId("grocery-reopen-status")).toContainText(
+      "restored and verified"
+    )
     const packet = JSON.parse(await readFile(path, "utf8"))
     packet.history[0].costUSD = 999
     await reopened
@@ -82,6 +92,9 @@ test("a grocery month is inspectable and a saved basket restores its path in ano
       })
     await expect(reopened.locator(".grocery-feedback")).toContainText(
       "Could not reopen"
+    )
+    await expect(reopened.getByTestId("grocery-reopen-status")).toContainText(
+      "Current comparison:"
     )
     await expect(reopened.getByTestId("after-total")).toHaveText("$38.61")
   } finally {
