@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react"
+import ExamplePageLayout from "./ExamplePageLayout"
 import { SEASON_DAYS, waterYear } from "./reservoir-guide/calendar"
 import {
   collectionSummary,
@@ -19,6 +20,22 @@ import { distributionDescription, distributionReferences } from "./reservoir-gui
 const GuideCharts = lazy(() => import("./reservoir-guide/GuideCharts"))
 
 export default function ReservoirGuideExamplePage() {
+  return (
+    <ExamplePageLayout
+      prevPage={undefined}
+      nextPage={undefined}
+      title="How full is full?"
+      showPageHeader={false}
+      showViewToggle={false}
+      showContractPanels={false}
+      useFullCodeFallback={false}
+    >
+      <ReservoirGuideStory />
+    </ExamplePageLayout>
+  )
+}
+
+function ReservoirGuideStory() {
   const host = useGuideHost()
   const { guide, header, state, snapshot } = host
   const editionRoot = `/stories/reservoir-guide/${header.editionId}`
