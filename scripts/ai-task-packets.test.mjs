@@ -6,6 +6,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync
 } from "node:fs"
 import { tmpdir } from "node:os"
@@ -310,16 +311,58 @@ for (const [label, change, error] of [
   })
 }
 
-test("source paths reject absolute and Windows-style traversal before reading", (t) => {
+test("source paths reject POSIX and Windows escapes before reading", (t) => {
   const root = fixture(t)
   for (const path of [
     "/etc/passwd",
+    "C:\\secret.txt",
+    "c:/secret.txt",
+    "C:secret.txt",
+    "\\\\server\\share\\secret.txt",
+    "\\secret.txt",
+    "\\\\?\\C:\\secret.txt",
+    "//server/share/secret.txt",
+    "../outside.ts",
     "..\\outside.ts",
     "docs\\..\\outside.ts",
+    "docs/../outside.ts",
+    "docs/secret\0.txt",
     "",
     null
   ]) {
     assert.throws(() => readSource(root, path), /Invalid task source path/)
+  }
+})
+
+test("source paths keep file and directory symlinks inside the checkout", (t) => {
+  const parent = mkdtempSync(resolve(tmpdir(), "semiotic-task-source-"))
+  t.after(() => rmSync(parent, { recursive: true, force: true }))
+  const root = resolve(parent, "checkout")
+  const outside = resolve(parent, "checkout-sibling")
+  put(root, "docs/example.ts", "export const total = 60\n")
+  put(outside, "secret.txt", "Do not embed outside files")
+  symlinkSync(resolve(outside, "secret.txt"), resolve(root, "external.ts"))
+  symlinkSync(outside, resolve(root, "external"), "junction")
+  for (const path of ["external.ts", "external/secret.txt"]) {
+    assert.throws(() => readSource(root, path), /Invalid task source path/)
+  }
+  symlinkSync(resolve(root, "docs/example.ts"), resolve(root, "internal.ts"))
+  symlinkSync(root, resolve(parent, "checkout-link"), "junction")
+  assert.equal(readSource(root, "docs/example.ts"), "export const total = 60\n")
+  assert.equal(readSource(root, "internal.ts"), "export const total = 60\n")
+  assert.equal(
+    readSource(resolve(parent, "checkout-link"), "docs/example.ts"),
+    "export const total = 60\n"
+  )
+})
+
+test("release and direct publish check generated task freshness", () => {
+  const { scripts } = JSON.parse(readSource(repository, "package.json"))
+  for (const lifecycle of ["release:check", "prepublishOnly"]) {
+    assert.ok(
+      scripts[lifecycle].split(" && ").includes("npm run check:ai-tasks"),
+      `${lifecycle} must refuse stale task packets`
+    )
   }
 })
 

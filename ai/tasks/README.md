@@ -46,6 +46,19 @@ installed-release migration. Older consumers should inspect their installed
 schema and retrieve matching guidance; version equality alone does not prove
 that a source checkout, website and tool service have identical contents.
 
+The task freshness check runs in both `release:check` and `prepublishOnly`, so a
+direct publish also refuses outdated packets. Regenerate after the final source
+edits, rerun `verify:ai-tasks` to refresh observed evidence, then regenerate the
+dependent adoption inventory. Changing a lifecycle script also changes the
+source identity because `package.json` is one of the inputs.
+
+The source-path audit covers POSIX and Windows absolute paths, drive-relative
+paths, traversal with either separator, and file or directory symlinks leaving
+the checkout. Legitimate internal links and a symlinked checkout remain readable.
+The installed MCP reader separately constrains IDs and resolved packet paths.
+Regression checks cover generation, installed reads, protocol discovery and
+packet delivery; the packed-consumer fixture exercises both MCP profiles.
+
 The public development evaluation scenarios live in `evals/adoption/`. They
 include hard negatives and stale-context handoffs. They contain no measured
 adoption result, paid run or protected holdout. Materialize isolated starting

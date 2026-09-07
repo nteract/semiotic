@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
-import { existsSync, readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs"
 import { createRequire } from "node:module"
-import { relative, resolve } from "node:path"
+import { isAbsolute, relative, resolve, sep, win32 } from "node:path"
 
 export const TASK_IDS = [
   "compare-category-totals",
@@ -19,12 +19,23 @@ export function readSource(root, path) {
     typeof path !== "string" ||
     !path ||
     path.startsWith("/") ||
+    win32.isAbsolute(path) ||
+    /^[a-z]:/i.test(path) ||
+    path.includes("\0") ||
     path.split(/[\\/]/).includes("..")
   )
     throw new Error(`Invalid task source path: ${path}`)
   const absolute = resolve(root, path)
   if (!existsSync(absolute)) throw new Error(`Missing task source: ${path}`)
-  return readFileSync(absolute, "utf8")
+  const source = realpathSync(absolute)
+  const fromRoot = relative(realpathSync(root), source)
+  if (
+    fromRoot === ".." ||
+    fromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(fromRoot)
+  )
+    throw new Error(`Invalid task source path: ${path}`)
+  return readFileSync(source, "utf8")
 }
 
 function walk(root, directory) {
