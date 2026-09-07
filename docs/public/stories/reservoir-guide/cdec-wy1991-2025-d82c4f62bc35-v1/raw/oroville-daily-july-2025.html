@@ -1,0 +1,2544 @@
+
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="timestamp">
+    <META HTTP-EQUIV="Expires" CONTENT="-1"></META>
+    <meta http-equiv="expires" content="timestamp" />  
+    <link rel="stylesheet" type="text/css" href="/dynamicapp/css/index.css" />
+    <link rel="stylesheet" type="text/css" href="/dynamicapp/css/queryDaily.css" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.datatables.net https://fonts.googleapis.com/ 'unsafe-inline';"> 
+<!--  <link rel="stylesheet" type="text/css" href="/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" type="text/css" href="/css/autoFill.dataTables.min.css" />
+  <link rel="stylesheet" type="text/css" href="/css/buttons.dataTables.min.css" />
+      <link href="/fonts/RobotoDisplay.css" rel="stylesheet"/>
+    <link href="/fonts/sourcesanspro-v14.woff2" rel="stylesheet"/>
+     <link href="/fonts/Material-icons.css" rel="stylesheet"/>
+  <script type="text/javascript" src="/cajs/jquery.min.js"></script> 
+  <script type="text/javascript" src="/cajs/jquery-ui.min.js"></script> 
+  <script type="text/javascript" src="/cajs/jquery.dataTables.min.js"></script>  
+  <script type="text/javascript" src="/cajs/dataTables.autoFill.min.js"></script>  
+  <script type="text/javascript" src="/cajs/dataTables.buttons.min.js"></script>  
+  <script type="text/javascript" src="/cajs/buttons.html5.min.js"></script> 
+  <script type="text/javascript" src="/cajs/buttons.print.min.js"></script> 
+-->
+    <script type="text/javascript" src="/dynamicapp/js/index.js"></script>   
+                                                                                                                                                           
+
+    <style>
+      table {
+        position: relative;
+        width: 100%;
+        margin: 0;    
+      }
+      body{
+        -webkit-print-color-adjust:exact;
+      }
+      th {
+        background-color: #e0e0e0;
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+      }
+      td {
+        padding: 0 !important;
+      }
+      .dataTables_filter {
+        padding: 9px;
+      }
+      .dataTables_info
+      {
+        padding-top: 9px !important;
+        padding-bottom: 9px !important;
+      }
+      div.dt-buttons{
+        padding: 9px;
+      }
+
+    </style>
+
+    <style>
+      table#tableComments{
+        width: 800px;
+      }
+    </style>
+
+<!--    <script type="text/javascript">
+
+
+      $(document).ready(function () {
+        var columns = ;
+        var rows = ;
+        $('#value_table').DataTable(
+                {
+                  data: rows,
+                  columnDefs: [{"className": "dt-left", "targets": "_all"}],
+                  columns: columns,
+                  dom: 'Bfrtip',
+                  buttons: [
+                    'copyHtml5',
+                    'excelHtml5',
+                    'csvHtml5',
+                    'pdfHtml5',
+                    'print'
+                  ],
+                  customize: function (win) {
+                    $('tr[id$=TestGrid]:nth-child(even)').css('background-color', '#f2f2f2');
+                    $('th').css('padding-top', '12px');
+                    $('th').css('text-align', 'center');
+                    $('th').css('background-color', '#E0E0E0');
+                    $('th').css('font-weight', 'bold');
+                    $(win.document.body).find('table').css('background-color', '#ff0000');
+                  },
+                  paging: false
+                }
+        );
+      });
+    </script>
+-->
+    <script type="text/javascript" src="/dynamicapp/js/index.js"></script>
+
+    <title>OROVILLE DAM (ORO)</title>
+    <base href="../">
+    
+   
+    
+    
+    
+      
+      
+      
+    <!doctype html>
+<!--
+California State Template
+Version 5.0
+
+Based on Twitter Bootstrap
+-->
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9 oldie" lang="en"> <![endif]-->
+<!--[if (gt IE 9)]><!-->
+<html class="no-js" lang="en">
+<!--<![endif]-->
+<head>
+    
+<!-- Google Tag Manager -->
+<script>
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KK6DT3F');</script>
+<!-- End Google Tag Manager -->
+<meta charset="utf-8">
+<title>CDEC Web Application</title>
+<meta name="Author" content="State of California" />
+<meta name="Description" content="State of California" />
+<meta name="Keywords" content="California, government" />
+
+<!-- Open graph properties -->
+<meta property="og:title" content="CDEC Web Applications" />
+<meta property="og:description" content="Water in California is a complex topic. Managing water resources sustainably requires an integrated approach, as water flows across many lines and impacts every Californian. Learn the water basics for better understanding of our programs and the issues related to our work." />
+<meta property="og:url" content="https://cdec.water.ca.gov" />
+<meta property="og:image" content="" />
+
+<!-- Use highest compatibility mode, enable Chrome Frame -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<!-- for Blackberry, AvantGo. -->
+<meta name="MobileOptimized" content="320"> 
+<!-- for Windows mobile -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=0">
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700" rel="stylesheet" type="text/css">
+
+
+<!-- Google Fonts -->
+
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/css/dwr.core.css">
+<link rel="stylesheet" href="/css/extras.css">
+<link rel="stylesheet" href="/css/colorscheme-oceanside.css">
+<link rel="stylesheet" href="/css/sitecore-extra.css">
+<link rel="stylesheet" href="/dynamicapp/css/header4.css" media="screen, projection, print, tv" type="text/css" />
+     
+
+    <link href="/fonts/RobotoDisplay.css" rel="stylesheet"/>
+    <link href="/fonts/sourcesanspro-v14.woff2" rel="stylesheet"/>
+    <link href="/fonts/Material-icons.css" rel="stylesheet"/>
+    
+<!-- modernizr.com, feature detection -->
+<script src="/js/libs/modernizr-2.0.6.min.js"></script>
+<script src="/js/libs/modernizr-extra.min.js"></script>
+
+
+<!-- For iPad 3-->
+<link rel="apple-touch-icon" sizes="144x144" href="/images/template2014/apple-touch-icon-144x144.png">
+<!-- For iPhone 4 -->
+<link rel="apple-touch-icon" sizes="114x114" href="/images/template2014/apple-touch-icon-114x114.png">
+<!-- For iPad 1-->
+<link rel="apple-touch-icon" sizes="72x72" href="/images/template2014/apple-touch-icon-72x72.png">
+<!-- For iPhone 3G, iPod Touch and Android -->
+<link rel="apple-touch-icon" href="/images/template2014/apple-touch-icon-57x57.png">
+<!-- For Nokia -->
+<link rel="shortcut icon" href="/images/template2014/apple-touch-icon-57x57.png">
+<!-- For everything else -->
+<link rel="shortcut icon" href="/favicon.ico">
+
+
+<!-- Microsoft. Activate ClearType. -->
+<!--[if IE]>
+<meta http-equiv="cleartype" content="on">
+<!--[endif]-->
+
+<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+  <script src="/js/libs/html5shiv.min.js"></script>
+  <script src="/js/libs/respond.min.js"></script>
+<!--[endif]-->
+
+<meta charset="utf-8">
+<meta name="VIcurrentDateTime" content="637335657390777277" />
+	<script type="text/javascript" src="/cajs/VisitorIdentification.js"></script>
+	<script src="/cajs/swfobject_modified.js" type="text/javascript"></script>
+    <script type="text/javascript" src="/js/index.js"></script>
+
+<!--
+	<script type="text/javascript" src="/cajs/jquery-3.6.0.js"></script> 
+  <script type="text/javascript" src="/cajs/jquery-ui.js"></script>
+-->
+<!--		<script src="/js/dwr.core.js"></script>    -->
+
+    <script type="text/javascript" src="/dynamicapp/js/jquery-3.5.1.min.js" charset="UTF-8"></script>
+<!--
+	<script type="text/javascript" src="/cajs/jquery-ui.js" charset="UTF-8"></script>
+-->
+    
+<!--
+<meta charset="utf-8">
+<meta name="VIcurrentDateTime" content="637335657390777277" />-->
+
+
+
+
+
+    <script type="text/javascript" src="/js/index.js"></script>
+<script type="text/javascript" src="/cajs/VisitorIdentification.js"></script>
+    <link href="/fonts/RobotoDisplay.css" rel="stylesheet"/>
+    <link href="/fonts/sourcesanspro-v14.woff2" rel="stylesheet"/>
+    <link href="/fonts/Material-icons.css" rel="stylesheet"/>
+ 
+<!--  <script type="text/javascript" src="/cajs/jquery.mask.min.js"></script>-->
+<!--  <script type="text/javascript" src="/cajs/autoFill.bootstrap4.js"></script>  -->
+<!--  <script type="text/javascript" language="javascript" src="/cajs/pdfmake.min.js"></script>-->
+<!--
+  <script type="text/javascript" src="/cajs/dataTables.buttons.min.js"></script>  
+  <script type="text/javascript" src="/cajs/buttons.bootstrap4.js"></script> 
+  <script type="text/javascript" src="/cajs/buttons.print.min.js"></script> 
+-->
+<!--    <script type="text/javascript" language="javascript" src="/cajs/jquery.dataTables.js" ></script>
+<script type="text/javascript" language="javascript" src="/cajs/jquery.mask.js" ></script>
+<script type="text/javascript" language="javascript" src="/cajs/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" language="javascript" src="/cajs/bootstrap.js"></script>
+<script type="text/javascript" language="javascript" src="/cajs/datatables.min.js" ></script> 
+-->
+<script type="text/javascript" language="javascript" src="/cajs/vfs_fonts.js"></script>
+<script type="text/javascript" language="javascript" src="/cajs/jszip.min.js"></script>
+<!--<script type="text/javascript" language="javascript" src="/cajs/dataTables.buttons.min.js"></script>-->
+
+
+<!-- modernizr.com, feature detection -->
+<!--- TemplateBeginEditable name="SetDefaultNavItem" --->
+<script src="/cajs/swfobject_modified.js" type="text/javascript"></script>
+<!--- variable is set on the Home portal page. Only load when Home page --->
+
+<script type="text/javascript" src="/cajs/modernizr-2.0.6.min.js"></script>
+<script type="text/javascript" src="/cajs/modernizr-extra.min.js"></script>
+
+
+</head>
+<body>
+<!-- Set thet  two-column-->
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KK6DT3F"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <header id="header" class="global-header fixed">
+        <div id="skip-to-content">
+            <a href="#main-content">Skip to Main Content</a>
+        </div>
+
+        <div class="location-settings section section-standout collapse collapsed " id="locationSettings">
+    <div class="container p-y">
+        <button type="button" class="close" data-toggle="collapse" data-target="#locationSettings" aria-expanded="false" aria-controls="locationSettings" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <div class="form-group form-inline">
+            <label for="locationZipCode">Saving your location allows us to provide you with more relevant information.</label>
+            <input type="text" class="form-control" id="locationZipCode" placeholder="Zip Code">
+            <button type="button" class="btn btn-primary">Set Location</button>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Alert Banner -->
+        
+
+
+        <!-- Utility Header-->
+        
+
+
+<div class="utility-header">
+    <div class="container">
+        <div class="group">
+            <div class="half">
+                <ul class="utility-links social-media-links">
+                    <li><a href="" aria-label="CA-Gov"><span class="ca-gov-icon-logo" aria-hidden="true"></span><span class="sr-only"></span></a></li>
+                    
+                    <li class="p-r-0">Share:</li>
+                    <li><a class="ca-gov-icon-share-facebook" title="Share via Facebook" tabindex="0"></a></li>
+                    <li><a class="ca-gov-icon-share-twitter" title="Share via Twitter" tabindex="0"></a></li>
+                    
+                    
+                </ul>
+            </div>
+            <div class="half settings-links">
+                <ul class="utility-links">
+                                <li>
+                                    <a href="https://water.ca.gov/About" >About</a>
+                                </li>
+                                <li>
+                                    <a href="https://water.ca.gov/Contact" >Contact</a>
+                                </li>
+                                <li>
+                                    <a href="https://water.ca.gov/Current-Conditions" >Current Conditions</a>
+                                </li>
+                   <li><a data-toggle="collapse" href="#siteSettings" aria-expanded="false" aria-controls="siteSettings">Settings</a></li>
+                       
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+        <!-- Settings Bar -->
+        <div class="site-settings section section-standout collapse collapsed" role="alert" id="siteSettings">
+    <div class="container  p-y">
+        <button type="button" class="close" data-toggle="collapse" data-target="#siteSettings" aria-expanded="false" aria-controls="siteSettings" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div class="btn-group btn-group-justified-sm" role="group" aria-label="contrastMode">
+            <div class="btn-group"><button type="button" class="btn btn-primary disableHighContrastMode">Default</button></div>
+            <div class="btn-group"><button type="button" class="btn btn-primary enableHighContrastMode">High Contrast</button></div>
+        </div>
+        <div class="btn-group" role="group" aria-label="textSizeMode">
+            <div class="btn-group"><button type="button" class="btn btn-primary resetTextSize">Reset</button></div>
+            <div class="btn-group"><button type="button" class="btn btn-primary increaseTextSize"><span class="hidden-xs">Increase Font Size</span><span class="visible-xs">Font <small class="ca-gov-icon-plus-line"></small></span></button></div>
+            <div class="btn-group"><button type="button" class="btn btn-primary decreaseTextSize"><span class="hidden-xs">Decrease Font Size</span><span class="visible-xs">Font <small class="ca-gov-icon-minus-line"></small></span></button></div>
+        </div>
+
+        <!-- <button type="button" class="btn btn-primary clipboard-activeonhover">Save links on hover</button> -->
+
+    </div>
+</div>
+
+        <div class="branding">
+            <div class="header-organization-banner">
+                <a href="/index.html"><img src="/images/dwr-logo-new1.png" width="290px;" alt="California Data Exchange Center" /></a>
+            </div>
+        </div>
+
+
+        <!-- Include Mobile Controls -->
+        <!-- mobile navigation controls. -->
+        <div class="mobile-controls">
+            
+            <span class="mobile-control toggle-menu"><span class="ca-gov-icon-menu" aria-hidden="true"></span><span class="sr-only">Menu</span></span>
+            <span class="mobile-control-group mobile-header-icons">
+                <span class="mobile-control contact-link"><span class="sr-only">Contact</span></span>
+                <!-- Add more mobile controls here. These will be on the right side of the mobile page header section -->
+            </span>
+            <span class="mobile-control toggle-search"><span class="ca-gov-icon-search" aria-hidden="true"></span><span class="sr-only">Search</span></span>
+            <span class="mobile-control-group mobile-menu-icons">
+                <!-- Add more mobile controls here. These will be on the top right section of the expanded mobile menu -->
+            </span>
+        </div>
+
+       <div class="navigation-search">
+
+
+            <div id="head-search" class="search-container  fade">
+                <form action="/api/sitecore/Search/Search" id="local_form" method="post">    <div class="textfield-container">
+        <label for="search_local_textfield" accesskey="s" class="sr-only">Search this site: </label>
+        <input type="hidden" id="quick-search-tab" name="tab" value="content" />
+        <input data-search-id="_quick" type="text" name="search_local_textfield" id="search_local_textfield" class="search-textfield" size="35" autocomplete="off" placeholder="Search Content, Documents and More..."/>
+    </div>
+    <div class="submit-container">
+        <button type="submit"><span class="ca-gov-icon-search"><span class="sr-only">Search</span></span></button>
+    </div>
+    <button type="button" class="close close-search" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">Ã</span></button>
+</form>
+            </div>
+
+
+            
+
+
+
+<nav id="navigation" class="main-navigation megadropdown auto-highlight mobile-closed">
+    <ul id="nav_list" class="top-level-nav">
+  
+        <li class="nav-item ">
+            <a href="/index.html" class="first-level-link"><span class="ca-gov-icon-home" aria-hidden="true"></span>Home</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="https://water.ca.gov" class="second-level-link">                          
+                                <span class="ca-gov-icon-home" aria-hidden="true"></span>Department of Water Resources
+                                    <div class="link-description">DWR Home page.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="https://water.ca.gov/Programs/Flood-Management" class="second-level-link">                          
+                                <span class="ca-gov-icon-home" aria-hidden="true"></span>Div. of Flood Management
+                                    <div class="link-description">DFM Home page.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="https://water.ca.gov/Programs/Flood-Management/Flood-Data/Climatology-and-Meteorology" class="second-level-link">                          
+                                <span class="ca-gov-icon-home" aria-hidden="true"></span>State Climatology and Meteorology
+                                    <div class="link-description">State Climatology and Meteorology.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/snow/" class="second-level-link">                          
+                                <span class="ca-gov-icon-home" aria-hidden="true"></span>California Cooperative Snow Surveys
+                                    <div class="link-description">California Cooperative Snow Surveys Website.</div>
+                        </a>
+                    </li>
+                                       
+                               
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+
+
+
+
+        <li class="nav-item ">
+            <a href="/queryTools.html" class="first-level-link"><span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Query Tools</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/dynamicapp/QueryF" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Real-Time Data
+                                    <div class="link-description">Single Station Real-Time data query. Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/QueryDaily" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Daily Data
+                                    <div class="link-description">Single Station Daily data query. Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/dynamicapp/QueryMonthly" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Monthly Data
+                                    <div class="link-description">Single Station Monthly data query. Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/queryGroup.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Real-Time Data Sensor Groups
+                                    <div class="link-description">Real-Time Data Sensor Groups data query. Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/queryDgroups.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Daily Data Sensor Groups
+                                    <div class="link-description">Daily Data Sensor Groups data query. Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/wsSensorData" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Historical Data JSON and CSV format
+                                    <div class="link-description">Web Service to download Historical Data JSON and CSV format (Hourly,Event,Daily,Monthly). </div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/selectQuery" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Historical Data
+                                    <div class="link-description">Historical Data Query (Hourly,Event,Daily,Monthly). Supports download data in CSV, PDF EXCEL Formats.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/groupform" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Sensor Group Data
+                                    <div class="link-description">Historical Data Sensor Group download (JSON and CSV format - Sensor Groups).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/sensorplots?dur_code=E" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Real-Time Station Plots
+                                    <div class="link-description">Single Station Real-Time Sensor Plots.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/sensorplots?dur_code=D" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Daily Station Plots
+                                    <div class="link-description">Single Station Daily Sensor Plots.</div>
+                        </a>
+                    </li> 
+                    <li class="unit2">
+                        <a href="/dynamicapp/groupplots?dur_code=E" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Real-Time Sensor Group Plots
+                                    <div class="link-description">Single Station Real-Time Sensor Plots.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/groupplots?dur_code=D" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Daily Sensor Group Plots
+                                    <div class="link-description">Daily Sensor Group Plots.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/staSearch" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Station Search
+                                    <div class="link-description">Station search. Supports many options.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/staMeta" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Station Meta Data Lookup
+                                    <div class="link-description">CDEC Station Meta Data lookup.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="https://cdec.water.ca.gov/webgis/?appid=cdecstation" class="second-level-link">                          
+                                <span class="ca-gov-icon-dwr-funding" aria-hidden="true"></span>Station Locator Map 
+                                    <div class="link-description">New CDEC Station Locator Map.</div>
+                        </a>
+                    </li>                    
+                    
+                               
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+        <li class="nav-item ">
+            <a href="/snow_rain.html" class="first-level-link"><span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Precipitation</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DLYPCP" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Daily 24-hour rainfall totals
+                                    <div class="link-description">Daily 24-hour rainfall totals for selected automatic-reporting rain gages.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PRECIPSUM" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Monthly precipitation summary
+                                    <div class="link-description">Monthly precipitation summary only (by hydrologic area.)</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PRECIPSUM.BSN" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Monthly precipitation summary
+                                    <div class="link-description">Monthly precipitation summary only (by hydrologic area/river basin).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PRECIPMON" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Listing of monthly precip
+                                    <div class="link-description">Listing of monthly precip data only (alphabetical order).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_FSI.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>San Joaquin 5 station precip index plot
+                                    <div class="link-description">San Joaquin 5 station precipitation index water year plot.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_ESI.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Northern Sierra 8 station precip index plot
+                                    <div class="link-description">Northern Sierra 8 station precipitation index water year plot.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_TSI.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Tulare Basin 6 station precip index plot
+                                    <div class="link-description">Tulare Basin 6 station precipitation index water year plot.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_FSI_HIST.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>San Joaquin 5 station El Nino Years
+                                    <div class="link-description">Precipitation Charts Including Historical Strong El Nino Years (PDF).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_ESI_HIST.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Northern Sierra 8 station El Nino Years
+                                    <div class="link-description">Precipitation Charts Including Historical Strong El Nino Years (PDF).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_TSI_HIST.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Tulare Basin 6 station El Nino Years
+                                    <div class="link-description">Precipitation Charts Including Historical Strong El Nino Years (PDF).</div>
+                        </a>
+                    </li>                    
+                    
+                               
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+        <li class="nav-item ">
+            <a href="/rivforecasts.html" class="first-level-link"><span class="ca-gov-icon-cal" aria-hidden="true"></span>River Forecast</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=TIDES" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Delta Tide Forecast Bulletin
+                                    <div class="link-description">Delta Tide Forecast Bulletin.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=USACBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Upper Sacramento River System
+                                    <div class="link-description">Upper Sacramento River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LSACBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Lower Sacramento River System
+                                    <div class="link-description">Lower Sacramento River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SANBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>San Joaquin River System
+                                    <div class="link-description">San Joaquin River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=NORBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>North Coast River System
+                                    <div class="link-description">North Coast River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=BAYBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Russian/Napa River System
+                                    <div class="link-description">Russian/Napa River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=CENBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Central Coast River System
+                                    <div class="link-description">Central Coast River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                                        
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SCALBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>Southern California River System
+                                    <div class="link-description">Southern California River System Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=EASTBUL" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>East Side Sierra Basins
+                                    <div class="link-description">East Side Sierra Basins Forecast Bulletin.</div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/rvrapp/getrvrabovestage.action" class="second-level-link">                          
+                                <span class="ca-gov-icon-cal" aria-hidden="true"></span>River Guidance Points Forecast Specified Stage Definitions
+                                    <div class="link-description">River Guidance Points Forecast Specified Stage Definitions.</div>
+                        </a>
+                    </li>                                                   
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+
+        <li class="nav-item ">
+            <a href="/riv_flows.html" class="first-level-link"><span class="ca-gov-icon-menu" aria-hidden="true"></span>River Stages</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/stage_maps/" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>River Stage Maps (Real-Time)
+                                    <div class="link-description">River Stage Maps (Real-Time).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/guidance_plots/" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>River Stage Guidance Plots
+                                    <div class="link-description">River Stage Guidance Plots. </div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/getAll" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Latest Real-Time Stage Data (by River Basin)
+                                    <div class="link-description">Latest Real-Time Stage Data (by River Basin).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/getAll?sens_num=1" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Latest Real-Time Stage Data (All Stations)
+                                    <div class="link-description">Latest Real-Time Stage Data (All Stations).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PAGE1" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Central Valley Rivers Summary
+                                    <div class="link-description">Central Valley Rivers Summary (as of 6AM).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PAGE4" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>North Coastal Rivers Summary (as of 6AM)
+                                    <div class="link-description">North Coastal Rivers Summary (as of 6AM).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/whatisarating.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>What is Rating
+                                    <div class="link-description">What is Rating?</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/rtables/" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Current Rating Table
+                                    <div class="link-description">Current Rating Table.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/getAll?sens_num=20" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Latest Real-time Flow Data (All Stations)
+                                    <div class="link-description">Latest Real-time Flow Data (All Stations).</div>
+                        </a>
+                    </li>
+
+                                                            
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=FLOWOUT" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Current Seasonal Flow Summary
+                                    <div class="link-description">Current Seasonal Flow Summary.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=FNFSUM" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Current Monthly Flow Summary
+                                    <div class="link-description">Current Monthly Flow Summary.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=FNF" class="second-level-link">                          
+                                <span class="ca-gov-icon-menu" aria-hidden="true"></span>Current Daily Flow Summary
+                                    <div class="link-description">Current Daily Flow Summary.</div>
+                        </a>
+                    </li>                    
+            
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+        <li class="nav-item active">
+            <a href="/reservoir.html" class="first-level-link"><span class="ca-gov-icon-dam" aria-hidden="true"></span>Reservoirs</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=STORAGE" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Statewide end of month reservoir storage
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=STORSUM" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Summary of statewide end of month reservoir storage
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=STORAGEW" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Multi-year regional summary of end-of-month major Reservoir Storage (By Hydrologic Region)
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>                    
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=STORAGEM" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Multi-year end-of-month major reservoir storage grouped by water supply project area
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>                        
+                    <li class="unit2">
+                        <a href="/dynamicapp/QueryRES" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Scheduled Releases from Reservoirs
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/QueryAllRES" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>All Scheduled Releases from Reservoirs
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/lastRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Most Recent Scheduled Releases from Reservoirs
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/getAll?sens_num=15" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Latest Real-time Reservoir Storage Data
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=HourlyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Hourly Reservoir Storage
+                                    <div class="link-description">Hourly Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DailyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Daily Reservoir Storage
+                                    <div class="link-description">Daily Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=MonthlyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-dam" aria-hidden="true"></span>Monthly Reservoir Storage
+                                    <div class="link-description">Monthly Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+            
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+
+        <li class="nav-item ">
+            <a href="/snow/current/snow/index.html" class="first-level-link"><span class="ca-gov-icon-science" aria-hidden="true"></span>Snow</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+        <ul class="second-level-nav">
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=COURSES" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Latest Snow Course Report
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PAGE6" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Daily Snow Sensor Summary
+                                    <div class="link-description">Daily summary of Snow Water Equivalent.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DLYSWEQ" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Daily Statewide Summary of Snow Water Content
+                                    <div class="link-description">Daily Statewide Summary of Snow Water Equivalents (inches).</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/snowapp/sweq.action" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Interactive
+                                    <div class="link-description">Daily Statewide Summary of Snow Water Content.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=PLOT_SWC.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Daily Regional Snowpack Plots
+                                    <div class="link-description">PDF - Daily Regional Snowpack Plots.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=swccond.pdf" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Daily Statewide Summary of SWC Map
+                                    <div class="link-description">PDF - Daily Statewide Summary of Snow Water Content Map.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DLYSNOWDP" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Daily Snow Depth Summary
+                                    <div class="link-description">Daily Snow Depth Summary Report.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/getAll?sens_num=3" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Latest Real-time SWC Data
+                                    <div class="link-description">Most Recent Snow ( Water Content ) Data.</div>
+                        </a>
+                    </li>                     
+
+                    <li class="unit2">
+                        <a href="/snow/info/ImportOfSnow.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>Importance of Snow
+                                    <div class="link-description">PDF - Daily Regional Snowpack Plots.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/snow/info/HistSnowSurvey.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>History
+                                    <div class="link-description">History of Snow Survey.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/snow/info/SnowSurveyors.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-science" aria-hidden="true"></span>The Snow Surveyor
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>                    
+            
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+
+
+
+            
+         <li class="nav-item ">
+            <a href="/staInfo.html" class="first-level-link"><span class="ca-gov-icon-tools" aria-hidden="true"></span>Stations</a>
+
+
+                <div class="sub-nav">           
+
+
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+                            <li class="unit2">
+                        <a href="/reportapp/javareports?name=HourlyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Hourly Reservoir Storage
+                                    <div class="link-description">Hourly Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DailyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Daily Reservoir Storage
+                                    <div class="link-description">Daily Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=MonthlyRes" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Monthly Reservoir Storage
+                                    <div class="link-description">Monthly Reservoir Storage, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=RealPrecip" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Hourly Precipitation
+                                    <div class="link-description">Hourly Precipitation, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DailyPrecip" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Daily Precipitation
+                                    <div class="link-description">Daily Precipitation, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=MonthlyPrecip" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Monthly Precipitation
+                                    <div class="link-description">Monthly Precipitation, updated daily.</div>
+                        </a>
+                    </li>
+
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=RealStations" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Hourly Stations
+                                    <div class="link-description">Hourly Active Stations, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=DailyStations" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Daily Stations
+                                    <div class="link-description">Daily Active Stations, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=MonthlyStations" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Monthly Stations
+                                    <div class="link-description">Monthly Active Stations, updated daily.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/staSearch" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Station Search
+                                    <div class="link-description">Station search. Supports many options.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/dynamicapp/staMeta" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Station Meta Data Lookup
+                                    <div class="link-description">CDEC Station Meta Data lookup.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="https://cdec.water.ca.gov/webgis/?appid=cdecstation" class="second-level-link">                          
+                                <span class="ca-gov-icon-tools" aria-hidden="true"></span>Station Locator Map 
+                                    <div class="link-description">New CDEC Station Locator Map.</div>
+                        </a>
+                    </li> 
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+        <li class="nav-item ">
+            <a href="/weather.html" class="first-level-link"><span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Weather</a>
+
+
+                <div class="sub-nav">
+                    
+
+
+  <div class="full">
+
+        <ul class="second-level-nav">
+        
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOZFPEKA" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Eureka
+                                    <div class="link-description">Zonal Forecast: Eureka.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOZFPSTO" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Sacramento
+                                    <div class="link-description">Zonal Forecast: Sacramento.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOZFPMTR" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Francisco
+                                    <div class="link-description">Zonal Forecast: San Francisco.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOZFPHNX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Joaquin
+                                    <div class="link-description">Zonal Forecast: San Joaquin.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXZFPLOX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Los Angeles
+                                    <div class="link-description">Zonal Forecast: Los Angeles.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXZFPSGX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Diego
+                                    <div class="link-description">Zonal Forecast: San Diego.</div>
+                        </a>
+                    </li>                   
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOAFDEKA" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Eureka
+                                    <div class="link-description">Area Forecast: Eureka.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOAFDSTO" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Sacramento
+                                    <div class="link-description">Area Forecast: Sacramento.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOAFDMTR" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Francisco
+                                    <div class="link-description">Area Forecast: San Francisco.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOAFDHNX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Joaquin
+                                    <div class="link-description">Area Forecast: San Joaquin.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXAFDLOX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Los Angeles
+                                    <div class="link-description">Area Forecast: Los Angeles.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXAFDSGX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Diego
+                                    <div class="link-description">Area Forecast: San Diego.</div>
+                        </a>
+                    </li>
+                     <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOCWFEKA" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Eureka
+                                    <div class="link-description">Coastal Forecast: Eureka.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=SFOCWFMTR" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Francisco
+                                    <div class="link-description">Coastal Forecast: San Francisco.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXCWFLOX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>Los Angeles
+                                    <div class="link-description">Coastal Forecast: Los Angeles.</div>
+                        </a>
+                    </li>
+                    <li class="unit2">
+                        <a href="/reportapp/javareports?name=LAXCWFSGX" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>San Diego
+                                    <div class="link-description">Coastal Forecast: San Diego.</div>
+                        </a>
+                    </li>                  
+                    <li class="unit2">
+                        <a href="/weather2.html" class="second-level-link">                          
+                                <span class="ca-gov-icon-cloud-upload" aria-hidden="true"></span>More...
+                                    <div class="link-description"></div>
+                        </a>
+                    </li>                  
+                                
+        </ul>
+    </div>
+                    
+                </div>
+
+        </li>
+
+<!--
+        <li class="nav-item ">
+   <a href="https://water.ca.gov/SearchResults?sort=relevance&search=cdec" class="first-level-link"><span class="ca-gov-icon-search-right" aria-hidden="true"></span>Search</a>
+
+
+        </li>
+
+    </ul>
+-->
+</nav>
+
+
+
+        </div>
+
+        <div class="header-decoration"></div>
+    </header>
+
+        <div id="main-content" class="main-content" role="main" >
+
+
+<div class="wrapper">
+
+    <div class="full-width">
+        <main class="main-primary">
+            <div class="row">                              
+    </div>
+	</body>
+	<html><body>
+<section>
+
+   
+
+  <h1>OROVILLE DAM <font color=red><em><b>(ORO)</b></em></font></h1>
+  Elevation: 900' &#183; FEATHER RIVER basin &#183; Operator: CA Dept of Water Resources/O&M Oroville Field Division<p>
+    
+
+  
+    <p>
+    <table>
+      Station comments:<br>
+      
+        <tr><td width=100><b>02/23/2017</b></td>
+          <td>Outflow from Oroville includes all releases from the Oroville Dam (i.e.:  Hyatt, spillway, low flow outlet), while River Release (RIV REL) pertains to the Oroville Complex as a whole which includes any releases from the Fish Barrier Dam, Fish Hatchery, and Thermalito Afterbay River Outlet.</td></tr>
+        
+        <tr><td width=100><b>01/10/2024</b></td>
+          <td>Daily FNF sensor (sensor number 8) was moved to station ID FTO.  FTO contains the monthly FNF sensor (sensor number 65).</td></tr>
+        
+        <tr><td width=100><b>07/01/2024</b></td>
+          <td>The reservoir capacity rating curve has been recalculated. Reservoir storage values starting on 7/1/2024 will be calculated using the new rating curve.</td></tr>
+        
+    </table>
+  </p>
+  <p/>
+
+
+
+<i>Query executed Saturday at 16:36:49 &nbsp;   </i><p />
+  <p> 
+  Provisional data, subject to change.<br>
+  Select a sensor type for a plot of data.<p>
+
+  
+<h2>DAILY DATA</h2>
+  
+  <p class="left">  
+  <hr><p class="left">  
+    <a class="no-print" href="/dynamicapp/QueryDaily?s=ORO&end=2025-06-30&span=30days">Earlier</a><p>
+  <table class="dt" id="daily_values" border=0 cellspacing=0 cellpadding=0>
+    <thead>
+      <tr>
+        <th class="time" align=right bgcolor=e0e0e0><font color=black> DATE</font></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3378&end=07/30/2025+00:00&geom=small&interval=30">RES ELE</a></i></font><br> <b>FEET</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3379&end=07/30/2025+00:00&geom=small&interval=30">STORAGE</a></i></font><br> <b>AF</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3380&end=07/30/2025+00:00&geom=small&interval=30">RES CHG</a></i></font><br> <b>AF</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=9570&end=07/30/2025+00:00&geom=small&interval=30">TOC STO</a></i></font><br> <b>AF</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=23843&end=07/30/2025+00:00&geom=small&interval=30">ABV TOC</a></i></font><br> <b>AF</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3381&end=07/30/2025+00:00&geom=small&interval=30">OUTFLOW</a></i></font><br> <b>CFS</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3382&end=07/30/2025+00:00&geom=small&interval=30">INFLOW</a></i></font><br> <b>CFS</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3386&end=07/30/2025+00:00&geom=small&interval=30">EVAP</a></i></font><br> <b>CFS</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=37237&end=07/30/2025+00:00&geom=small&interval=30">RIV REL</a></i></font><br> <b>CFS</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=3383&end=07/30/2025+00:00&geom=small&interval=30">PPT INC</a></i></font><br> <b>INCHES</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=11500&end=07/30/2025+00:00&geom=small&interval=30">RAIN</a></i></font><br> <b>INCHES</b></th>
+          <th bgcolor=e0e0e0></th>
+        
+          <th align=right bgcolor=e0e0e0><font color=black><i><a href="/cdecplotter/JspPlotServlet?sensor_no=26324&end=07/30/2025+00:00&geom=small&interval=30">PPTINC4</a></i></font><br> <b>INCHES</b></th>
+          <th bgcolor=e0e0e0></th>
+          
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td class="time" nowrap align=right>06/30/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">        --</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,232,243</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none">e</a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-10,662</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-192,757</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,725</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,503</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">190</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">6,478</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/01/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">886.26</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,216,265</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-15,978</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-208,735</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">11,201</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,430</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">171</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,492</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/02/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">886.02</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,212,708</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-3,557</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-212,292</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">4,640</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,046</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">200</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,490</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/03/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">885.14</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,199,677</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,031</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-225,323</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">9,060</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,542</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">127</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,478</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/04/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">883.50</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,175,487</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-24,190</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-249,513</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">15,181</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,181</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">195</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,511</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/05/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">881.86</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,151,426</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-24,061</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-273,574</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">15,254</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,300</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">176</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,514</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/06/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">880.20</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,127,195</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-24,231</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-297,805</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">15,666</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,625</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">175</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,499</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/07/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">879.23</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,113,096</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-14,098</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-311,904</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,453</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,469</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">196</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,484</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/08/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">878.08</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,096,441</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-16,656</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-328,559</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,375</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,238</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">187</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,224</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/09/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">876.97</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,080,419</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-16,022</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-344,581</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,648</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,770</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">199</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,991</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/10/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">875.86</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,064,450</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-15,968</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-360,550</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,551</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,686</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">185</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,996</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/11/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">874.73</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,048,251</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-16,200</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-376,749</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,605</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,619</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">180</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,981</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/12/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">872.90</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,022,138</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-26,112</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-402,862</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">15,463</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,483</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">184</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,978</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/13/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">871.05</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,995,888</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-26,251</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-429,112</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">17,381</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">4,402</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">183</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,979</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/14/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">870.06</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,981,903</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,985</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-443,097</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">9,781</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,947</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">216</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,994</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/15/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">869.09</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,968,242</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,660</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-456,758</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,380</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,678</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">186</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,983</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/16/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">868.05</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,953,644</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-14,599</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-471,356</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,486</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,227</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">172</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,737</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/17/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">866.95</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,938,257</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-15,387</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-486,743</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,587</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,989</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">159</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,483</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/18/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">865.81</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,922,369</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-15,888</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-502,631</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,716</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,932</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">156</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,490</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/19/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">864.26</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,900,858</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-21,511</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-524,142</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">13,036</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,348</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">157</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,496</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/20/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">862.78</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,880,425</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-20,433</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-544,575</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">12,601</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,456</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">156</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,491</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/21/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">861.87</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,867,908</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-12,517</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-557,092</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,639</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,510</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">181</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,491</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/22/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">860.82</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,853,511</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-14,397</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-571,489</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">9,917</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,771</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">113</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,515</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/23/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">859.80</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,839,571</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,940</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-585,429</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,086</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,200</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">142</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,525</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/24/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">858.78</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,825,677</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,894</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-599,323</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,098</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,219</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">125</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,513</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/25/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">857.73</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,811,422</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-14,255</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-613,578</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">10,094</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,049</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">141</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,260</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/26/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">856.28</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,791,812</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-19,610</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-633,188</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">12,791</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,169</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">129</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,025</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/27/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">855.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,774,581</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-17,231</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-650,419</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">11,655</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,956</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">124</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,021</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/28/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">854.33</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,765,586</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-8,995</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-659,414</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,735</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,412</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">144</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">7,039</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/29/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">853.60</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,755,816</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-9,770</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-669,184</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,034</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,204</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">164</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">6,756</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      <tr>
+        <td class="time" nowrap align=right>07/30/2025</td>
+        
+          <td align="right" style="background-color: #FFFFFF">852.61</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">2,742,600</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-13,216</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">3,425,000</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">-682,400</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">8,289</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">1,861</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">168</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">6,524</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">36.83</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+        
+          <td align="right" style="background-color: #FFFFFF">0.00</td><td align=left style="padding-left:5px"><a href="/misc/flaglist.html" style="text-decoration:none"> </a></td>
+          
+      </tr>
+    
+      </tbody>
+  </table><BR><BR>
+  <p class="left">  
+  <div class="no-print">
+    <a href="/dynamicapp/QueryDaily?s=ORO&end=2025-08-29&span=30days">Later</a> | 
+    <a href="/dynamicapp/QueryDaily?s=ORO&end=2026-09-05&span=30days">Latest</a><p>
+  </div>
+    
+  
+
+  
+    
+  <em>BRT</em> and <em>ART</em> signify discharge at stage below or above available rating table<br>
+  Warning! This data is preliminary and subject to revision.<p>
+  <a href="https://cdec.water.ca.gov/webgis/?appid=cdecstation&sta=ORO">Show ORO Map</a> |
+  <!--<a href="/dynamicapp/sensorplots?staid=ORO&end_date=07/30/2025+00:00">Plot ORO Data</a> |--> 
+  <a href="/cdecplotter/JspPlotAll?staid_id=ORO&end=07/30/2025+00:00">Plot all ORO Sensors</a> |
+  <a href="/dynamicapp/QueryDaily?s=ORO&end=2026-09-05&span=2months">2 Month ORO Data</a> |
+  <!--
+    <a href="/dynamicapp/QueryMonthly?s=ORO&end=2026-09-05">Monthly ORO Data</a> | 
+  -->
+  
+    <a href="/dynamicapp/QueryF?s=ORO&end=2026-09-05">Real-Time ORO Data</a> | 
+  
+  
+  <a href="/dynamicapp/staMeta?station_id=ORO">ORO Info</a> 
+  
+  
+  <style>
+    body{
+        -webkit-print-color-adjust:exact;
+    }
+    .dt th{
+        text-align: center;
+    }
+    @media print
+    {    
+        .dt-buttons, .no-print
+        {
+            display: none !important;
+        }
+        @page { 
+            size: landscape;
+        }
+    }
+    div.dt-buttons{
+        padding: 10px;
+    }
+</style>
+
+<c:set var="pageHeight" value="" />
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/datatables.min.js" ></script> 
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/jszip.min.js"></script>
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/pdfmake.min.js"></script>
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/vfs_fonts.js"></script>
+<script type="text/javascript" language="javascript" src="/dynamicapp/js/buttons.html5.min.js"></script>
+<script type="text/javascript" language="javascfipt" src="/dynamicapp/js/buttons.print.min.js"></script>
+
+
+
+
+
+<script type="text/javascript">
+    var pageWidth = '';
+    if (pageWidth === '') {
+        pageWidth = 612;
+    } else {
+        pageWidth = parseInt(pageWidth);
+    }
+    var breakFirst = '';
+    breakFirst = (breakFirst !== '');
+    var breakUnits = 'true';
+    breakUnits = (breakUnits !== '');
+
+    var title = "OROVILLE DAM (ORO)";
+    if (title === "") {
+        title = $(document).find("title").text();
+    }
+    var subtitle = "";
+    /**
+     * This function addresses the fact that <br> notations have been removed by the base tool.  If breakUnits is
+     * true, then this fix will place line breaks in the correct location with the assumption that units are used
+     * as the last part of the column header.  If breakFirst is used, then it assumes we need to have a line break after the first
+     * string.
+     * @param {String} text The String to insert <br> or line breaks into.
+     * @param {String} breakChar The String to insert as a break.  For instance "/n" or "<br>"
+     * @returns {String} The modified text string.
+     */
+    function addLineBreaks(text, breakChar) {
+        var index;
+        if (breakChar === null || breakChar === undefined) {
+            breakChar = "<br>";
+        }
+        if (breakUnits) {
+            if ((index = text.indexOf("DEG F")) < 0) {
+                if ((index = text.indexOf("DEG C")) < 0) {
+                    if ((index = text.indexOf("ml VOL")) < 0) {
+                        index = text.lastIndexOf(" ") + 1;
+                    }
+                }
+            }
+            text = text.substr(0, index - 1) + breakChar + text.substr(index);
+        }
+        if (breakFirst) {
+            var index = text.indexOf(" ");
+            text = text.substr(0, index) + breakChar + text.substr(index + 1);
+        }
+        return text;
+    }
+
+    $(document).ready(function () {
+        var table = $('.dt').DataTable(
+                {
+                    autoWidth: true,
+                    ordering: false,
+                    columnDefs: [{className: 'td-left', targets: [0]}, {type: 'num-html', targets: "_all"}],
+                    dom: 'rtipB',
+                    buttons: [
+                        'copyHtml5',
+                        {extend: 'excelHtml5',
+                            title: function () {
+                                var result = title;
+                                if (subtitle !== "") {
+                                    result += " " + subtitle;
+                                }
+                                return result;
+                            }
+                        },
+                        {extend: 'csvHtml5',
+                            title: function () {
+                                var result = title;
+                                if (subtitle !== "") {
+                                    result += " " + subtitle;
+                                }
+                                return result;
+                            }
+                        },
+
+                        {extend: 'print',
+                            customize: function (win) {
+                                $(win.document.body).find('tr:nth-child(even)').css('background-color', '#f2f2f2');
+                                $(win.document.body).find('th').css('background-color', '#E0E0E0');
+                                $(win.document.body).find('th').css('color', '#1F70A7');
+                                $(win.document.body).find('td').css('text-align', 'right');
+                                $(win.document.body).find('td').css('font-size', '10pt');
+                                $(win.document.body).find('td').css('border', 'none');
+                                $(win.document.body).find('th').css('font-size', '10pt');
+                                $(win.document.body).find('th').css('border', 'none');
+                                $(win.document.body).find('h1').css('text-align', 'center');
+                                $(win.document.body).find('table').css('border-collapse', 'collapse');
+                                if ("" !== "") {
+                                    var ti = $(win.document.body).find("H1").first();
+                                    ti.html(title + "<br>");
+                                }
+
+
+                                var h1 = $(win.document.body).find('th').first();
+                                h1.css('color', '#000');
+                                $(win.document.body).find('th').html(function (i, text) {
+                                    return addLineBreaks(text);
+                                });
+                            }
+                        },
+                        {extend: 'pdfHtml5',
+                            title: function () {
+                                var result = title;
+                                if ("" !== "") {
+                                    result += "\n" + "";
+                                }
+                                return result;
+                            },
+                            pageSize: {
+                                width: pageWidth, height: 792
+                            },
+                            orientation: 'landscape',
+                            text: 'PDF',
+                            titleAttr: 'PDF',
+                            customize: function (doc) {
+                                doc.styles.tableHeader.fillColor = "#E0E0E0";
+                                doc.styles.tableHeader.color = "#1F70A7";
+                                doc.styles.dateCol = {color: "#000", fillColor: "#E0E0E0", alignment: 'center'};
+                                doc.defaultStyle = {
+                                    fontSize: 10,
+                                    alignment: 'right'
+                                };
+                                for (var i = 0; i < doc.content.length; i++) {
+                                    var table = doc.content[i].table;
+                                    if (table === null || table === undefined) {
+                                        continue;
+                                    }
+                                    var headings = table.body[0];
+                                    headings[0].style = "dateCol";
+                                    for (var i = 0; i < headings.length; i++) {
+                                        headings[i].text = addLineBreaks(headings[i].text, "\n");
+                                    }
+                                }
+
+                            }
+                        }
+                    ],
+                    paging: false
+                }
+        );
+    });
+</script>
+
+
+
+
+  
+ 
+  
+    
+    
+    
+  <link rel="stylesheet" href="/css/dwr.core.css">
+<link rel="stylesheet" href="/css/dwr.font.css">
+<script src="/js/dwr.core.js"></script>
+</section>
+</body></html>
+                                </div>
+                                </div>
+                            </div>
+</div>
+</div>
+
+    <!-- Global Footer -->
+    <footer id="footer" class="global-footer">
+        <div class="container">
+            <div class="row">
+                <div class="three-quarters">
+                    <ul class="footer-links">
+                        <li><a href="#skip-to-content">Back to Top</a></li>
+                                    <li>
+                                        <a href="https://water.ca.gov/Contact" >Contact</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://water.ca.gov/Privacy-Policy" >Privacy Policy</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://water.ca.gov/Conditions-of-Use" >Conditions of Use</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://water.ca.gov/Accessibility" >Accessibility</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://water.ca.gov/FPPC-Disclosures" >FPPC Disclosures</a>
+                                    </li>
+                    </ul>
+                </div>
+                <div class="quarter text-right">
+                    <ul class="socialsharer-container">
+
+                                    <li><a href="https://www.facebook.com/CADWR" target="_blank"><span class="ca-gov-icon-facebook"></span><span class="sr-only">Facebook</span></a></li>
+                                    <li><a href="https://twitter.com/CA_DWR" target="_blank"><span class="ca-gov-icon-twitter"></span><span class="sr-only">Twitter</span></a></li>
+                                    <li><a href="https://www.instagram.com/cadepartmentofwaterresources" target="_blank"><span class="ca-gov-icon-instagram"></span><span class="sr-only">Instagram</span></a></li>
+                                    <li><a href="https://www.youtube.com/user/calwater" target="_blank"><span class="ca-gov-icon-youtube"></span><span class="sr-only">YouTube</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Copyright Statement -->
+        <div class="copyright">
+            <div class="container">
+                Copyright &copy; 2023 State of California
+            </div>
+        </div>
+    </footer>
+    <!-- Extra Decorative Content -->
+    <div class="decoration-last">&nbsp;</div>
+
+    <!-- Extra Decorative Content -->
+    <div class="decoration-last">&nbsp;</div>
+    <!-- Load jQuery from CDN with fallback to local copy -->
+<!--    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>-->
+    <script>
+        //Fall back to local copy if no jquery found
+        if (typeof jQuery == 'undefined') {
+            document.write(unescape("%3Cscript src='dynamicapp/js/libs/jquery-3.5.1.min.js' type='text/javascript'%3E%3C/script%3E"));
+        }
+    </script>
+    <!-- Load template core -->
+
+    <script src="/js/mapthat.dwr.core.js"></script>
+    <script src="/js/relatednews.dwr.core.js"></script>
+    <script src="/js/calculator.js"></script>
+    <script src="/js/blogfilters.js"></script>
+    <script src="/js/listfilters.js"></script>
+    <script src="/js/add-table-border.js"></script>
+
+
+
+    <!-- Set Location Endpoint-->
+    <script type="text/javascript">
+        var __getLocation = "/api/sitecore/ImageByLocation/GetGeo";
+        var __getImageByLocation = "/api/sitecore/ImageByLocation/GetLocationImageUrl";
+    </script>
+
+    
+        <script type="text/javascript">
+            //Google Analytics script for Tracking
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-112728183-1']);
+            _gaq.push(['_setDomainName', '.ca.gov']);
+            _gaq.push(['_trackPageview']);
+
+            _gaq.push(['b._setAccount', 'UA-3419582-2']); // statewide analytics - do not remove or change
+            _gaq.push(['_gat._anonymizeIp']);
+            _gaq.push(['b._setDomainName', '.ca.gov']);
+            _gaq.push(['b._trackPageview']);
+
+            (function () {
+                var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+                var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+    
+
+</body>
+
+</html>

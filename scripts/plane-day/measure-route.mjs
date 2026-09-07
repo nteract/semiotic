@@ -107,7 +107,7 @@ try {
         await page.getByLabel("Clock labels").selectOption(value)
         await expect(page.getByLabel("Clock labels")).toHaveValue(value)
       } else {
-        const value = index % 2 ? "timeline" : "network"
+        const value = ["time-space", "network", "timeline"][index % 3]
         await page.getByLabel("View", { exact: true }).selectOption(value)
         await expect(page.getByLabel("View", { exact: true })).toHaveValue(
           value

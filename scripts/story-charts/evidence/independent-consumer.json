@@ -1,0 +1,18 @@
+[
+  {
+    "route": "grocery-bill",
+    "sourceEdition": "e01-bls-2026-09-05-66f1d260",
+    "verifiedFiles": 5,
+    "identicalHTML": true,
+    "svgCount": 1,
+    "hatchPatterns": 0
+  },
+  {
+    "route": "plane-day",
+    "sourceEdition": "ha-2025-07-74309a3a734d-v1",
+    "verifiedFiles": 5,
+    "identicalHTML": true,
+    "svgCount": 2,
+    "hatchPatterns": 8
+  }
+]

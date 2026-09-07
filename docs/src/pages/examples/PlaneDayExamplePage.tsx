@@ -149,7 +149,7 @@ export default function PlaneDayExamplePage() {
       const body =
         format === "json"
           ? JSON.stringify(packet, null, 2)
-          : (await import("./plane-day/exports")).renderDayHTML(snapshot, day, state)
+          : (await import("./plane-day/export-runtime")).renderFlightHTML(snapshot, day, state)
       const url = URL.createObjectURL(
         new Blob([body], { type: format === "json" ? "application/json" : "text/html" }),
       )
@@ -337,6 +337,7 @@ export default function PlaneDayExamplePage() {
                       update({ ...state, view: event.target.value as PlaneState["view"] })
                     }
                   >
+                    <option value="time-space">Time–space diagram</option>
                     <option value="timeline">Timetable ribbon</option>
                     <option value="network">Airport network</option>
                   </select>
@@ -356,10 +357,22 @@ export default function PlaneDayExamplePage() {
                 </label>
               </div>
               <p className="plane-caption">
-                {state.view === "timeline"
-                  ? "Outline: scheduled flight interval. Solid: actual interval. The ribbon uses UTC; the itinerary below offers local clocks. On a phone, follow the vertical itinerary."
-                  : "Each curve is a reported leg; the thicker curve is pinned. Use the numbered flight buttons below for direction and sequence. This network is a route overview, not a geographic map."}
+                {state.view === "time-space"
+                  ? "Read left to right through airport lanes. Sloping bands are flights; horizontal stretches are ground intervals. Their separation shows where the schedule and reported day diverge or converge. Airport spacing does not encode distance or speed. Both paths use UTC; clock labels below can change independently."
+                  : state.view === "timeline"
+                    ? "Hatched: scheduled flight interval. Solid: actual interval. The ribbon uses UTC; the itinerary below offers local clocks. On a phone, follow the vertical itinerary."
+                    : "Each curve is a reported leg; the thicker curve is pinned. Use the numbered flight buttons below for direction and sequence. This network is a route overview, not a geographic map."}
               </p>
+              {state.view !== "network" && (
+                <p className="plane-interval-key">
+                  <span>
+                    <i className="plane-scheduled-swatch" aria-hidden="true" /> Scheduled · hatched
+                  </span>
+                  <span>
+                    <i className="plane-actual-swatch" aria-hidden="true" /> Actual · solid
+                  </span>
+                </p>
+              )}
               <Suspense
                 fallback={
                   <p>Loading the chart enhancement. All times are in the itinerary below.</p>
@@ -399,6 +412,44 @@ export default function PlaneDayExamplePage() {
                     <footer>Reader note · unreviewed · {note.createdAt.slice(0, 10)}</footer>
                   </blockquote>
                 ))}
+                <div className="plane-identity-demo" data-testid="plane-identity-demo">
+                  <h4>Try it: make the note travel</h4>
+                  <ol>
+                    <li>Attach your own note to the pinned flight above.</li>
+                    <li>
+                      Switch the view and clocks below. Check that the same flight and note remain
+                      pinned.
+                    </li>
+                    <li>
+                      <a href="#plane-save">Reopen the link or saved note packet</a> in another
+                      session.
+                    </li>
+                  </ol>
+                  <button
+                    onClick={() => {
+                      update({
+                        ...state,
+                        view: state.view === "network" ? "time-space" : "network",
+                        timeBasis: state.timeBasis === "utc" ? "local" : "utc",
+                      })
+                      setMessage(
+                        "Changed the layout and clock labels. The pinned flight and its attached notes kept their identities.",
+                      )
+                    }}
+                  >
+                    Switch view and clocks; keep this flight
+                  </button>
+                  <p>
+                    {activeNotes.length}{" "}
+                    {activeNotes.length === 1 ? "note attached" : "notes attached"} to{" "}
+                    {flightName(selectedFlight)}.
+                  </p>
+                  <details>
+                    <summary>The identity that stays with your note</summary>
+                    <code>{selectedFlight.id}</code>
+                    <p>Edition: {snapshot.editionId}</p>
+                  </details>
+                </div>
               </aside>
             </>
           )}
@@ -546,7 +597,7 @@ export default function PlaneDayExamplePage() {
 
         <section className="plane-section plane-save">
           <p className="plane-chapter">05 / TAKE THE FLIGHT WITH YOU</p>
-          <h2>Same flight. Your note. Another screen.</h2>
+          <h2 id="plane-save">Same flight. Your note. Another screen.</h2>
           <p>
             Pin a flight, attach a note, then reopen its link or import its packet in another
             browser session. Notes stay attached to the flight’s identity and edition. They remain
@@ -627,8 +678,11 @@ export default function PlaneDayExamplePage() {
             <a href={`${editionPath}/README.md`}>
               Reproduction and independent-reader instructions
             </a>
-            <a href={`${editionPath}/default.html`}>Authored printable day sheet</a>
-            <a href={`${editionPath}/default.packet.json`}>Authored note packet</a>
+            <a href="/stories/plane-day/reading-v2/default.html">Authored printable day sheet</a>
+            <a href="/stories/plane-day/reading-v2/default.packet.json">Authored note packet</a>
+            <a href="/stories/plane-day/reading-v2/README.md">
+              Chart revision and portable adapter instructions
+            </a>
           </div>
           <details>
             <summary>Method, acceptance evidence, and how this was made</summary>
@@ -656,8 +710,8 @@ export default function PlaneDayExamplePage() {
             <p>
               Automated checks compare the nine featured source rows with an independent time
               calculation and test flight identity, cross-session notes, chart evidence, keyboard
-              controls and four viewport widths. A reproducible production-route measurement uses
-              a throttled desktop phone viewport; it does not establish performance on a phone.
+              controls and four viewport widths. A reproducible production-route measurement uses a
+              throttled desktop phone viewport; it does not establish performance on a phone.
             </p>
             <p>
               This is E02’s first implementation. Editorial review, real Android performance,

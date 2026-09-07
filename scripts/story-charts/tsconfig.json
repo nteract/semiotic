@@ -1,0 +1,15 @@
+{
+  "extends": "../reservoir-guide/tsconfig.json",
+  "include": [
+    "../../docs/src/pages/examples/grocery-receipt/**/*.ts",
+    "../../docs/src/pages/examples/grocery-receipt/**/*.tsx",
+    "../../docs/src/pages/examples/PlaneDayExamplePage.tsx",
+    "../../docs/src/pages/examples/plane-day/**/*.ts",
+    "../../docs/src/pages/examples/plane-day/**/*.tsx",
+    "../../docs/src/pages/examples/ReservoirGuideExamplePage.tsx",
+    "../../docs/src/pages/examples/reservoir-guide/**/*.ts",
+    "../../docs/src/pages/examples/reservoir-guide/**/*.tsx",
+    "./*.ts"
+  ],
+  "exclude": ["../../docs/src/pages/examples/**/*.test.tsx"]
+}

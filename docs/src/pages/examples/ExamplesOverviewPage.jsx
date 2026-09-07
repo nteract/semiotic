@@ -4,9 +4,11 @@ import { EXAMPLE_FILTERS, EXAMPLES } from "./examplesManifest"
 import "./ExamplesOverviewPage.css"
 import GroceryPreview from "./grocery-receipt/GroceryPreview"
 import PlanePreview from "./plane-day/PlanePreview"
+import ReservoirPreview from "./reservoir-guide/ReservoirPreview"
 
 const PREVIEW_COMPONENTS = {
   "plane-day": PlanePreview,
+  "reservoir-guide": ReservoirPreview,
   "grocery-bill": GroceryPreview,
   "machine-semiosphere": MiniMachineSemiospherePreview,
   "aesthetic-policy-studio": MiniAestheticPolicyStudioPreview,

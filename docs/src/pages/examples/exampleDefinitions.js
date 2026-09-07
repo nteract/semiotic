@@ -84,10 +84,30 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "reservoir-guide",
+    path: "/examples/reservoir-guide",
+    sourceFile: "ReservoirGuideExamplePage.tsx",
+    sourceFiles: ["ReservoirGuideExamplePage.tsx", "ReservoirGuideExamplePage.css", "reservoir-guide/types.ts", "reservoir-guide/calendar.ts", "reservoir-guide/state.ts", "reservoir-guide/prepare.ts", "reservoir-guide/edition.ts", "reservoir-guide/format.ts", "reservoir-guide/chart-config.ts", "reservoir-guide/GuideCharts.tsx", "reservoir-guide/GuideDetails.tsx", "reservoir-guide/useGuideHost.ts", "reservoir-guide/host.ts", "reservoir-guide/offline-worker.ts", "reservoir-guide/offline-document.ts", "reservoir-guide/dictionary.ts", "reservoir-guide/exports.ts", "reservoir-guide/export-runtime.ts", "reservoir-guide/packet.ts", "reservoir-guide/portable.ts"],
+    isPilot: true,
+    title: "How full is full?",
+    eyebrow: "Six reservoirs / three different questions",
+    description: "Compare real CDEC storage histories, distinguish capacity from a seasonal mean and percentile, and keep a selected guide readable offline.",
+    contract: {
+      publicImports: ["semiotic/xy", "semiotic/ordinal", "semiotic/artifact", "semiotic/server", "semiotic/themes/react"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "pinned-CDEC-daily-storage-WY1991-2025", replay: false, schemaVersion: "1", inventory: { reservoirs: 6, dailyRows: 76704, authoredCases: 4 } } },
+      provenance: { source: "CDEC daily AF sensor 15, station metadata and archived July 30, 2025 capacity report; original dates, flags and source checksums retained", capturedAt: "2026-09-05", freshnessOwner: "Unassigned; required before release", reviewCadence: "Historical edition; explicit update offer preserves the old edition and compatible selection" },
+      accessibility: { summary: "Server-readable article, native controls, complete two-year table and self-contained offline HTML", navigation: "Reservoir, water-year and calendar-date selectors; native missing-value and leap-day examples", keyboard: "Essential controls target 44 CSS pixels; all values available without hover or map interaction", forcedColors: "System-color styles and text labels; manual assistive-technology acceptance pending" },
+      motion: { reducedMotion: "No authored animation or replay", visibility: "No background polling; bounded explicit refresh and a narrowly scoped offline worker" },
+      responsive: { status: "implemented; acceptance tracked separately", viewports: [320, 390, 768, 1280], selectionIdentity: "Versioned edition, station ID, two water years, calendar month/day and baseline ID" },
+      ssr: { status: "implemented; acceptance tracked separately", hydration: "Pinned opening and selected values render before history and chart enhancements load" },
+      performance: { status: "Desktop proxy measured; real Android pending", budgets: { bundle: "Full route wire transfer and dependencies recorded in scripts/reservoir-guide/evidence/route-measurement.json", interaction: "30 completed actions each for reservoir, selected year, comparison year and date; real Android pending", memory: "not measured", hiddenPage: "no background refresh" } },
+    },
+  },
+  {
     id: "plane-day",
     path: "/examples/plane-day",
     sourceFile: "PlaneDayExamplePage.tsx",
-    sourceFiles: ["PlaneDayExamplePage.tsx", "PlaneDayExamplePage.css", "plane-day/types.ts", "plane-day/time.ts", "plane-day/prepare.ts", "plane-day/state.ts", "plane-day/format.ts", "plane-day/chart-config.ts", "plane-day/layouts.tsx", "plane-day/PlaneCharts.tsx", "plane-day/Itinerary.tsx", "plane-day/packet.ts", "plane-day/exports.ts", "plane-day/portable.ts"],
+    sourceFiles: ["PlaneDayExamplePage.tsx", "PlaneDayExamplePage.css", "plane-day/types.ts", "plane-day/time.ts", "plane-day/prepare.ts", "plane-day/state.ts", "plane-day/format.ts", "plane-day/chart-config.ts", "plane-day/layouts.tsx", "plane-day/time-space.tsx", "plane-day/PlaneCharts.tsx", "plane-day/Itinerary.tsx", "plane-day/packet.ts", "plane-day/exports.ts", "plane-day/export-runtime.ts", "plane-day/portable.ts"],
     isPilot: true,
     title: "Your plane has had a day",
     eyebrow: "One aircraft / a sequence of schedules",
@@ -113,21 +133,21 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
       "grocery-receipt/state.ts", "grocery-receipt/prepare.ts",
       "grocery-receipt/format.ts", "grocery-receipt/chart-config.ts",
       "grocery-receipt/GroceryCharts.tsx", "grocery-receipt/exports.ts",
-      "grocery-receipt/packet.ts", "grocery-receipt/portable.ts",
+      "grocery-receipt/packet.ts", "grocery-receipt/portable.ts", "grocery-receipt/import.ts", "grocery-receipt/export-runtime.ts",
     ],
     isPilot: true,
     title: "Your grocery bill has a memory",
     eyebrow: "Six items / one fixed basket",
     description: "Compare a familiar basket at real BLS average prices, follow each item's contribution, and save the same receipt across formats.",
     contract: {
-      publicImports: ["semiotic/xy", "semiotic/ordinal", "semiotic/artifact"],
+      publicImports: ["semiotic/xy", "semiotic/ordinal", "semiotic/artifact", "semiotic/server", "semiotic/themes/react"],
       data: { states: ["snapshot", "error"], fixture: { kind: "pinned-BLS-average-prices-with-real-missing-observations", replay: false, schemaVersion: "1", inventory: { series: 6, sourceMonthPositions: 576, displayMonthPositions: 504, missingPricePositions: 7 } } },
       provenance: { source: "BLS public API, ap.series and ap.item dictionaries, and selected-item average-price table; checksummed raw inputs accompany the edition", capturedAt: "2026-09-05", freshnessOwner: "Unassigned; required before release", reviewCadence: "Monthly source review proposed; historical editions remain immutable" },
       accessibility: { summary: "Server-readable authored comparison, receipt amounts, source links, and missing-price explanation; accessible tables and downloadable HTML", navigation: "Linear article with native date selectors, quantity controls, ranked contributions, and saved comparisons", keyboard: "Native controls target 44 CSS pixels; keyboard and assistive-technology acceptance evidence tracked in the E01 implementation record", forcedColors: "Explicit system-color styles; manual assistive-technology and forced-colors acceptance remains pending" },
       motion: { reducedMotion: "No authored animation or replay; the reading path is static", visibility: "No polling, streaming, or workers; receipt downloads are reader initiated" },
       responsive: { status: "implemented; acceptance tracked separately", viewports: [320, 390, 768, 1280], selectionIdentity: "Versioned edition, named item/unit quantities, baseline/comparison months, and explicit comparable-subset mode" },
       ssr: { status: "implemented; acceptance tracked separately", hydration: "Opening totals, source notes, and native receipts render from the pinned snapshot; charts and exports enhance the page" },
-      performance: { status: "unmeasured", budgets: { bundle: "unmeasured", interaction: "unmeasured", memory: "unmeasured", hiddenPage: "unmeasured" } },
+      performance: { status: "Desktop proxy measured; real Android pending", budgets: { bundle: "Updated route measured in scripts/story-charts/evidence/grocery-route-measurement.json", interaction: "30 completed quantity and month actions; real Android pending", memory: "unmeasured", hiddenPage: "no background refresh" } },
     },
   },
   {
@@ -1917,6 +1937,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "How full is full?",
+    path: "/examples/reservoir-guide",
+    publishedAt: "2026-09-05T23:36:49.725Z",
+    eyebrow: "Six reservoirs / three different questions",
+    description: "Read California reservoir histories, compare two water years, and save a field guide that keeps its dates and qualifications offline.",
+    preview: "reservoir-guide",
+    badges: ["CDEC storage histories", "Offline field guide", "Seasonal comparisons"],
+    frames: ["xy", "ordinal"],
+    topics: ["civic", "design", "accessibility"],
+  },
   {
     title: "Your plane has had a day",
     path: "/examples/plane-day",

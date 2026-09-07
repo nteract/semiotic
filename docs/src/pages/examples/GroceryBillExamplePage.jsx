@@ -135,6 +135,7 @@ export default function GroceryBillExamplePage() {
   const [message, setMessage] = useState("")
   const [exporting, setExporting] = useState(false)
   const [exportSize, setExportSize] = useState("phone")
+  const [reopened, setReopened] = useState("")
   useEffect(() => setSelection(loadSelection(search)), [search])
   const receipt = useMemo(
     () => (selection.state ? prepareBasket(snapshot, selection.state) : null),
@@ -144,6 +145,7 @@ export default function GroceryBillExamplePage() {
   function update(changes) {
     setSelection((previous) => ({ state: { ...previous.state, ...changes }, error: null }))
     setMessage("")
+    setReopened("")
   }
   function reset() {
     setSelection({ state: defaultState(snapshot), error: null })
@@ -177,7 +179,10 @@ export default function GroceryBillExamplePage() {
           type: "application/json",
         })
       } else if (format === "html")
-        blob = new Blob([exports.renderReceiptHTML(receipt, snapshot)], { type: "text/html" })
+        blob = new Blob(
+          [(await import("./grocery-receipt/export-runtime")).renderBasketHTML(receipt, snapshot)],
+          { type: "text/html" },
+        )
       else {
         const svg = exports.renderReceiptSVG(receipt, snapshot, exportSize)
         blob =
@@ -198,6 +203,24 @@ export default function GroceryBillExamplePage() {
       )
     } catch (error) {
       setMessage(`Export failed: ${error.message}`)
+    } finally {
+      setExporting(false)
+    }
+  }
+  async function importReceipt(file) {
+    if (!file) return
+    setExporting(true)
+    try {
+      if (file.size > 2_000_000) throw new Error("This packet exceeds the 2 MB limit.")
+      const { importReceiptPacket } = await import("./grocery-receipt/import")
+      const packet = importReceiptPacket(await file.text(), snapshot)
+      setSelection({ state: packet.state, error: null })
+      setReopened(packet.receipt.stateId)
+      setMessage(
+        "Reopened and checked the saved quantities, dates, totals and monthly history against this source edition.",
+      )
+    } catch (error) {
+      setMessage(`Could not reopen the packet: ${error.message}`)
     } finally {
       setExporting(false)
     }
@@ -502,11 +525,11 @@ export default function GroceryBillExamplePage() {
                 comparisons, and all three can be true.
               </p>
               <p>
-                The first view below asks how many dollars the selected basket would cost in each
-                month. The second asks how much that cost changed from the same month one year
-                earlier. Its baseline moves every month. A smaller positive percentage means prices
-                rose more slowly; only a negative percentage means this basket costs less than a
-                year before. Neither says it returned to the 2019 price.
+                The connected scatterplot puts the basket’s cost and its annual change in the same
+                view, then traces the months in order. The annual baseline moves every month. A
+                smaller positive percentage means prices rose more slowly; only a negative
+                percentage means this basket costs less than a year before. Neither says it returned
+                to the 2019 price.
               </p>
               <Suspense
                 fallback={
@@ -581,7 +604,11 @@ export default function GroceryBillExamplePage() {
               </a>
               <label className="grocery-export-size">
                 Receipt size
-                <select aria-label="Receipt size" value={exportSize} onChange={(event) => setExportSize(event.target.value)}>
+                <select
+                  aria-label="Receipt size"
+                  value={exportSize}
+                  onChange={(event) => setExportSize(event.target.value)}
+                >
                   <option value="phone">Phone, 390 pixels wide</option>
                   <option value="print">Print, 760 pixels wide</option>
                 </select>
@@ -598,6 +625,38 @@ export default function GroceryBillExamplePage() {
                     {label}
                   </button>
                 ))}
+              </div>
+              <div className="grocery-reopen-demo">
+                <h3>Try it: change, save, reopen</h3>
+                <ol>
+                  <li>
+                    Change a quantity above and watch the receipts, contributions and monthly path
+                    recalculate.
+                  </li>
+                  <li>Download the data packet, then change your basket again.</li>
+                  <li>
+                    Reopen that file below. Its quantities and dates restore the same calculations.
+                  </li>
+                </ol>
+                <label>
+                  Reopen a saved basket packet
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    disabled={exporting}
+                    onChange={(event) => {
+                      void importReceipt(event.target.files?.[0])
+                      event.target.value = ""
+                    }}
+                  />
+                </label>
+                <p data-testid="grocery-reopen-status" role="status">
+                  {reopened === receipt.stateId
+                    ? "Saved basket restored and verified. "
+                    : "Current comparison: "}
+                  {monthName(receipt.state.before)} / {monthName(receipt.state.after)} ·{" "}
+                  {money(receipt.beforeUSD)} / {money(receipt.afterUSD)}.
+                </p>
               </div>
               <p className="grocery-small">
                 A saved image cannot update itself. Reopen the source link to see edition and
@@ -628,9 +687,14 @@ export default function GroceryBillExamplePage() {
           <div className="grocery-source-links">
             <a href={`${editionPath}/prices.csv`}>All six price series (CSV)</a>
             <a href={`${editionPath}/manifest.json`}>Source manifest and field dictionary</a>
-            <a href={`${editionPath}/default.html`}>Authored comparison as accessible HTML</a>
-            <a href={`${editionPath}/default.packet.json`}>Authored data packet</a>
+            <a href="/stories/grocery-bill/reading-v2/default.html">
+              Authored comparison as accessible HTML
+            </a>
+            <a href="/stories/grocery-bill/reading-v2/default.packet.json">Authored data packet</a>
             <a href={`${editionPath}/README.md`}>Reproduction instructions</a>
+            <a href="/stories/grocery-bill/reading-v2/README.md">
+              Chart revision and portable adapter instructions
+            </a>
           </div>
           <details>
             <summary>How this was made, and what remains to be checked</summary>

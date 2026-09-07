@@ -1,0 +1,45 @@
+{
+  "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+  "startTime": "2026-09-06T23:12:23.963Z",
+  "durationMs": 47383.305,
+  "passed": 7,
+  "failed": 0,
+  "flaky": 0,
+  "tests": [
+    {
+      "title": "reservoir guide supports native exploration and readable tables at 320px",
+      "status": "expected",
+      "durationMs": 4970
+    },
+    {
+      "title": "reservoir guide supports native exploration and readable tables at 390px",
+      "status": "expected",
+      "durationMs": 6463
+    },
+    {
+      "title": "reservoir guide supports native exploration and readable tables at 768px",
+      "status": "expected",
+      "durationMs": 4667
+    },
+    {
+      "title": "reservoir guide supports native exploration and readable tables at 1280px",
+      "status": "expected",
+      "durationMs": 4697
+    },
+    {
+      "title": "four real selections agree across browser values, full table and downloaded packets",
+      "status": "expected",
+      "durationMs": 15843
+    },
+    {
+      "title": "an explicitly saved selection survives a disconnected browser restart; unsaved addresses are unavailable",
+      "status": "expected",
+      "durationMs": 4245
+    },
+    {
+      "title": "refresh offers changed dates and values, preserves compatible selection, retains failures and identifies incompatible baselines",
+      "status": "expected",
+      "durationMs": 6023
+    }
+  ]
+}

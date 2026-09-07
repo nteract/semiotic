@@ -1,0 +1,423 @@
+[
+  {
+    "name": "default",
+    "state": {
+      "version": 1,
+      "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+      "stationId": "SHA",
+      "waterYear": 2025,
+      "comparisonYear": 2021,
+      "monthDay": "07-30",
+      "baselineId": "wy1991-2020-month-day-regime-v1"
+    },
+    "checks": [
+      {
+        "id": "capacity",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "seasonal-mean",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "historical-percentile",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "collection",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      }
+    ],
+    "renderer": {
+      "component": "LineChart",
+      "frameType": "xy",
+      "status": "ok",
+      "empty": false,
+      "markCount": 4,
+      "markCountByType": {
+        "line": 4
+      },
+      "width": 740,
+      "height": 340,
+      "xDomain": [
+        0,
+        365
+      ],
+      "yDomain": [
+        0,
+        4.8458432
+      ],
+      "annotationCount": 0,
+      "annotationInputCount": 0,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Shasta, July 30, 2025: 3,258,792 acre-feet. 71.6% of documented capacity. 104.6% of the mean of 30 eligible 1991–2020 observations for this month and day. Historical percentile 50.0; 15 of 30 values were lower, with 0 ties.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 30,
+        "bottom": 56,
+        "left": 64
+      },
+      "plot": {
+        "x": 64,
+        "y": 36,
+        "width": 646,
+        "height": 248
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "72e538f64324c9b3aec7f0b55202bf5541f2dedeeaa9eaea703c93d3c7d05874"
+    },
+    "distribution": {
+      "component": "SwarmPlot",
+      "frameType": "ordinal",
+      "status": "ok",
+      "empty": false,
+      "markCount": 30,
+      "markCountByType": {
+        "point": 30
+      },
+      "width": 740,
+      "height": 260,
+      "yDomain": [
+        0,
+        4.82512
+      ],
+      "categories": [
+        "1991–2020"
+      ],
+      "annotationCount": 3,
+      "annotationInputCount": 3,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Each dot is one of 30 eligible readings for Jul 30 in water years 1991–2020, using the selected measurement regime. Dots spread vertically only to avoid overlap; height has no numerical meaning. Reference lines mark the selected reading, compatible mean and capacity when available. 0 baseline years are excluded. 15 observations are lower and 0 tie the selected value.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 28,
+        "bottom": 58,
+        "left": 28
+      },
+      "plot": {
+        "x": 28,
+        "y": 36,
+        "width": 684,
+        "height": 166
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "b7a11fcc9af5ffb8a5591557f1afe9587ab4b69fa7f531965235d81c74099c2c"
+    }
+  },
+  {
+    "name": "changed-measurement",
+    "state": {
+      "version": 1,
+      "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+      "stationId": "ORO",
+      "waterYear": 2025,
+      "comparisonYear": 2021,
+      "monthDay": "07-30",
+      "baselineId": "wy1991-2020-month-day-regime-v1"
+    },
+    "checks": [
+      {
+        "id": "capacity",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "seasonal-mean",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "historical-percentile",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "collection",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      }
+    ],
+    "renderer": {
+      "component": "LineChart",
+      "frameType": "xy",
+      "status": "ok",
+      "empty": false,
+      "markCount": 4,
+      "markCountByType": {
+        "line": 4
+      },
+      "width": 740,
+      "height": 340,
+      "xDomain": [
+        0,
+        365
+      ],
+      "yDomain": [
+        0,
+        3.7636478
+      ],
+      "annotationCount": 0,
+      "annotationInputCount": 0,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Oroville, July 30, 2025: 2,742,600 acre-feet. 80.1% of documented capacity. A compatible seasonal average is unavailable. No eligible baseline years use the same documented measurement regime.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 30,
+        "bottom": 56,
+        "left": 64
+      },
+      "plot": {
+        "x": 64,
+        "y": 36,
+        "width": 646,
+        "height": 248
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "04983d5c8c09578df7b8a8f84a4982807256dad68f3726fc5a5d8e64dc93f863"
+    },
+    "distribution": null
+  },
+  {
+    "name": "missing-storage",
+    "state": {
+      "version": 1,
+      "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+      "stationId": "DNP",
+      "waterYear": 1993,
+      "comparisonYear": 2025,
+      "monthDay": "07-30",
+      "baselineId": "wy1991-2020-month-day-regime-v1"
+    },
+    "checks": [
+      {
+        "id": "capacity",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "seasonal-mean",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "historical-percentile",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "collection",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      }
+    ],
+    "renderer": {
+      "component": "LineChart",
+      "frameType": "xy",
+      "status": "ok",
+      "empty": false,
+      "markCount": 66,
+      "markCountByType": {
+        "line": 66
+      },
+      "width": 740,
+      "height": 340,
+      "xDomain": [
+        0,
+        365
+      ],
+      "yDomain": [
+        0,
+        2.2046695
+      ],
+      "annotationCount": 0,
+      "annotationInputCount": 0,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Don Pedro, July 30, 1993: Unavailable. Missing or estimated readings are not used in the comparisons.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 30,
+        "bottom": 56,
+        "left": 64
+      },
+      "plot": {
+        "x": 64,
+        "y": 36,
+        "width": 646,
+        "height": 248
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "ecfeb4f8cd672eeec03fee17438602489bb026265bf4405d6a2731d766b18a37"
+    },
+    "distribution": {
+      "component": "SwarmPlot",
+      "frameType": "ordinal",
+      "status": "ok",
+      "empty": false,
+      "markCount": 26,
+      "markCountByType": {
+        "point": 26
+      },
+      "width": 740,
+      "height": 260,
+      "yDomain": [
+        0,
+        2.1517999999999997
+      ],
+      "categories": [
+        "1991–2020"
+      ],
+      "annotationCount": 2,
+      "annotationInputCount": 2,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Each dot is one of 26 eligible readings for Jul 30 in water years 1991–2020, using the selected measurement regime. Dots spread vertically only to avoid overlap; height has no numerical meaning. Reference lines mark the selected reading, compatible mean and capacity when available. 4 baseline years are excluded. The selected storage observation is missing, estimated or unsupported.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 28,
+        "bottom": 58,
+        "left": 28
+      },
+      "plot": {
+        "x": 28,
+        "y": 36,
+        "width": 684,
+        "height": 166
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "8f8a2a28494bb9c3e6be342975861b19f65ff8c17c7c3e814bcd77c6e2136e8e"
+    }
+  },
+  {
+    "name": "leap-day",
+    "state": {
+      "version": 1,
+      "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+      "stationId": "SHA",
+      "waterYear": 2024,
+      "comparisonYear": 2025,
+      "monthDay": "02-29",
+      "baselineId": "wy1991-2020-month-day-regime-v1"
+    },
+    "checks": [
+      {
+        "id": "capacity",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "seasonal-mean",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      },
+      {
+        "id": "historical-percentile",
+        "status": "unknown",
+        "reason": "The required value, denominator or eligible history is unavailable"
+      },
+      {
+        "id": "collection",
+        "status": "pass",
+        "reason": "Recomputed from the declared numerator, denominator and source rows"
+      }
+    ],
+    "renderer": {
+      "component": "LineChart",
+      "frameType": "xy",
+      "status": "ok",
+      "empty": false,
+      "markCount": 4,
+      "markCountByType": {
+        "line": 4
+      },
+      "width": 740,
+      "height": 340,
+      "xDomain": [
+        0,
+        365
+      ],
+      "yDomain": [
+        0,
+        4.8458432
+      ],
+      "annotationCount": 0,
+      "annotationInputCount": 0,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Shasta, February 29, 2024: 3,748,969 acre-feet. 82.4% of the July 30, 2025 capacity reference. 111.5% of the mean of 7 eligible 1991–2020 observations for this month and day. Only 7 eligible baseline years; a percentile requires 20.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 30,
+        "bottom": 56,
+        "left": 64
+      },
+      "plot": {
+        "x": 64,
+        "y": 36,
+        "width": 646,
+        "height": 248
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "3fdc3cf4af3f89fc74e61a263c44259ea0b09363f0fd1b79799a5a05d160bf7c"
+    },
+    "distribution": {
+      "component": "SwarmPlot",
+      "frameType": "ordinal",
+      "status": "ok",
+      "empty": false,
+      "markCount": 7,
+      "markCountByType": {
+        "point": 7
+      },
+      "width": 740,
+      "height": 260,
+      "yDomain": [
+        0,
+        4.82512
+      ],
+      "categories": [
+        "1991–2020"
+      ],
+      "annotationCount": 3,
+      "annotationInputCount": 3,
+      "unrenderedAnnotationCount": 0,
+      "ariaLabel": "Each dot is one of 7 eligible readings for Feb 29 in water years 1991–2020, using the selected measurement regime. Dots spread vertically only to avoid overlap; height has no numerical meaning. Reference lines mark the selected reading, compatible mean and capacity when available. 23 baseline years are excluded. Only 7 eligible baseline years; a percentile requires 20.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 28,
+        "bottom": 58,
+        "left": 28
+      },
+      "plot": {
+        "x": 28,
+        "y": 36,
+        "width": 684,
+        "height": 166
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "ac6cc3043970ff0d8e3e97ff1460698b4a4be276f6877c76dce7afb9fe1fd6bf"
+    }
+  }
+]

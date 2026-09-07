@@ -440,6 +440,8 @@ export const boxPlot: ChartConfig = {
     data,
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
+    projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+    ...(rest.valueExtent && { rExtent: rest.valueExtent }),
     colorAccessor: colorBy,
     colorScheme,
     // staticOrdinal can pass showOutliers into the pipeline; without this
@@ -490,6 +492,9 @@ export const swarmPlot: ChartConfig = {
     data,
     oAccessor: rest.categoryAccessor || "category",
     rAccessor: rest.valueAccessor || "value",
+    projection: rest.orientation === "horizontal" ? "horizontal" : "vertical",
+    ...(rest.valueExtent && { rExtent: rest.valueExtent }),
+    barPadding: rest.categoryPadding ?? 20,
     colorAccessor: colorBy,
     // symbolBy → symbolAccessor is the HOC-level rename (mirrors SwarmPlot.tsx):
     // the field whose values become glyph shapes. Without this the SSR path

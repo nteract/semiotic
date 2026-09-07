@@ -47,7 +47,7 @@ export const ribbonLayout: CustomLayout<{ day: AircraftDay; selected: string }> 
           w: Math.max(1, geometry.x(end) - geometry.x(start)),
           h: 10,
           style: {
-            fill: kind === "scheduled" ? "none" : color,
+            fill: kind === "scheduled" ? scheduledFill : color,
             stroke: flight.id === config.selected ? theme.semantic.text : color,
             strokeWidth: flight.id === config.selected ? 2.5 : 1,
           },
@@ -97,7 +97,11 @@ export const ribbonLayout: CustomLayout<{ day: AircraftDay; selected: string }> 
 
 export function ribbonProps(day: AircraftDay, selected: string) {
   return {
-    data: day.flights.map((f) => ({ eventId: f.id })),
+    data: day.flights.flatMap((f) =>
+      ["scheduled", "actual"].map((kind) => ({ eventId: f.id, kind })),
+    ),
+    colorBy: "kind" as const,
+    showLegend: false,
     layout: ribbonLayout,
     layoutConfig: { day, selected },
     width: 850,
@@ -105,12 +109,22 @@ export function ribbonProps(day: AircraftDay, selected: string) {
     margin: { left: 150, right: 35, top: 20, bottom: 50 },
     title: "Scheduled and actual flight intervals",
     description:
-      "Outline: scheduled gate-to-gate interval. Solid: actual interval. Gaps between flights are ground time. Horizontal axis is UTC.",
+      "Hatched: scheduled gate-to-gate interval. Solid: actual interval. Gaps between flights are ground time. Horizontal axis is UTC.",
     summary: daySummary(day),
     accessibleTable: true,
     colorScheme: { scheduled: "#8d939c", actual: "#287a79" },
     enableHover: true,
   }
+}
+
+// One serializable fill works on browser canvas and the server SVG renderer.
+export const scheduledFill = {
+  type: "hatch" as const,
+  background: "#f2f0e9",
+  stroke: "#596674",
+  spacing: 5,
+  lineWidth: 1.5,
+  angle: 45,
 }
 
 export const airportLayout: NetworkCustomLayout<{ selected: string }> = ({

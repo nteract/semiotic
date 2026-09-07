@@ -17,10 +17,11 @@ export const escapeMarkup = (value: unknown) =>
     (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
   )
 
-export function renderDayHTML(snapshot: PlaneSnapshot, day: AircraftDay, state: PlaneState) {
+export function renderDayHTML(snapshot: PlaneSnapshot, day: AircraftDay, state: PlaneState, charts = "") {
   const values = dayValues(day)
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Your plane has had a day — ${escapeMarkup(day.tail)}</title><style>body{max-width:950px;margin:2rem auto;padding:1rem;font:18px/1.6 system-ui;color:#1e3346;background:#fff}a{color:inherit}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:12px;border-bottom:1px solid #bbb}section{overflow-x:auto}li{margin:1rem 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}tr[data-selected=true]{outline:2px solid #1e3346}code{overflow-wrap:anywhere}@media print{body{font-size:11pt;margin:0}table{font-size:8pt}section{overflow:visible}a{overflow-wrap:anywhere}}</style></head><body>
   <h1>Your plane has had a day</h1><p>${escapeMarkup(daySummary(day))}</p><p>${QUALIFICATION}</p>
+  ${charts}
   <p>Selected: ${escapeMarkup(flightName(day.flights.find((f) => f.id === state.selected.eventId)!))}. ${state.timeBasis === "utc" ? "All clocks use UTC." : "Departure clocks are origin-local; arrival clocks are destination-local, with dates and zone labels."}</p>
   <section tabindex="0" aria-label="Aircraft-day timetable"><table><caption>All ${day.flights.length} reported flights in this selected scheduled-date window. Unavailable means unresolved or excluded reporting fields.</caption><thead><tr><th>Flight</th><th>Scheduled departure</th><th>Actual departure</th><th>Scheduled arrival</th><th>Actual arrival</th><th>Departure / arrival deviation (min)</th></tr></thead><tbody>
   ${day.flights.map((flight, index) => `<tr data-event-id="${escapeMarkup(flight.id)}" data-selected="${flight.id === state.selected.eventId}"><th>${escapeMarkup(flightName(flight))}</th>${(["scheduledDeparture", "actualDeparture", "scheduledArrival", "actualArrival"] as const).map((field) => `<td>${escapeMarkup(timeLabel(flight, field, snapshot, state.timeBasis))}</td>`).join("")}<td>${signed(values[index].departureDeviationMinutes)} / ${signed(values[index].arrivalDeviationMinutes)}</td></tr>`).join("")}
