@@ -63,6 +63,45 @@ function signed(value: ReservoirSnapshot) {
 }
 const selectedIndex = dateIndex("2025-07-30", snapshot.startDate)
 
+// Metadata, fingerprint and update rules need only these three reported days.
+// Historical calculations and archive reproduction below still use all 76,704 rows.
+function threeDaySnapshot() {
+  const startDate = "2025-07-28"
+  const first = dateIndex(startDate, snapshot.startDate)
+  const ids = snapshot.reservoirs.map((reservoir) => reservoir.id)
+  return signed(
+    structuredClone({
+      ...snapshot,
+      editionId: "synthetic-three-day-edition",
+      startDate,
+      endDate: "2025-07-30",
+      series: Object.fromEntries(
+        ids.map((id) => [id, snapshot.series[id].slice(first, first + 3)])
+      ),
+      sourceLineOverrides: Object.fromEntries(
+        ids.map((id) => [
+          id,
+          Object.fromEntries(
+            Array.from({ length: 3 }, (_, index) => {
+              const date = addDays(startDate, index)
+              return [
+                date,
+                snapshot.sourceLineOverrides[id][date] ?? first + index + 2
+              ]
+            })
+          )
+        ])
+      ),
+      counts: Object.fromEntries(
+        ids.map((id) => [
+          id,
+          { rows: 3, missing: 0, estimated: 0, revised: 0, eligible: 3 }
+        ])
+      )
+    })
+  )
+}
+
 // Full ingestion parses 76,704 CSV rows and eight archived HTML documents.
 // Allow for V8 coverage and shared CI workers without changing other tests' limits.
 const SOURCE_INGEST_TIMEOUT = 20_000
@@ -215,7 +254,7 @@ describe("three comparisons and matched membership", () => {
     expect(prepareGuide(fixture, initial).collection.percent).toBeNull()
   })
   it("honors capacity intervals, labels reference-only dates and never clamps over-capacity observations", () => {
-    const fixture = mutable()
+    const fixture = threeDaySnapshot()
     fixture.capacities.push({
       ...fixture.capacities[0],
       id: "SHA-earlier-capacity-test",
@@ -295,7 +334,7 @@ describe("three comparisons and matched membership", () => {
 })
 
 describe("portable identity, honest updates and render parity", () => {
-  it("rejects changed units, baselines, inputs, expected values, packet versions and source metadata", () => {
+  it("rejects changed binding units, baselines, inputs and expected values", () => {
     const guide = prepareGuide(snapshot, initial)
     const bindings = numericalBindings(guide)
     for (const patch of [
@@ -308,28 +347,41 @@ describe("portable identity, honest updates and render parity", () => {
       Object.assign(wrong[0], patch)
       expect(evaluateBindings(guide, wrong)[0].status).toBe("fail")
     }
+  })
+  it.each(["in-memory", "JSON"])(
+    "restores the selection and values from %s packets",
+    (format) => {
+      const packet = buildGuidePacket(snapshot, initial)
+      const input =
+        format === "JSON" ? JSON.parse(JSON.stringify(packet)) : packet
+      expect(importGuidePacket(input, snapshot)).toEqual({
+        state: initial,
+        issue: null,
+        guide: packet.guide
+      })
+    }
+  )
+  it("rejects changed packet values and future packet versions", () => {
     const packet = buildGuidePacket(snapshot, initial)
-    expect(
-      importGuidePacket(JSON.parse(JSON.stringify(packet)), snapshot).guide!
-        .state
-    ).toEqual(initial)
-    expect(importGuidePacket(packet, snapshot).guide!.state).toEqual(initial)
     packet.guide.reading!.storageAcreFeet! += 1
     expect(() => importGuidePacket(packet, snapshot)).toThrow(/differ/)
     expect(() =>
       importGuidePacket({ ...packet, packetVersion: 2 }, snapshot)
     ).toThrow(/version/)
-    const corrupted = mutable()
-    corrupted.series.SHA[selectedIndex][0]! += 1
+  })
+  it("verifies an intact snapshot and rejects changed readings and overlapping capacity intervals", () => {
+    const corrupted = threeDaySnapshot()
+    expect(verifySnapshot(corrupted)).toBe(corrupted)
+    corrupted.series.SHA[dateIndex("2025-07-30", corrupted.startDate)][0]! += 1
     expect(() => verifySnapshot(corrupted)).toThrow(/fingerprint/)
-    const overlap = mutable()
+    const overlap = threeDaySnapshot()
     overlap.capacities.push({
       ...overlap.capacities[0],
       id: "duplicate-interval"
     })
     expect(() => verifySnapshot(signed(overlap))).toThrow(/Overlapping/)
   })
-  it("preserves an unavailable identity, round-trips URLs and describes changed values and compatibility", () => {
+  it("preserves an unavailable identity and round-trips URLs", () => {
     expect(readStateSearch(stateSearch(initial), snapshot)).toEqual(initial)
     const unavailable = { ...initial, stationId: "ZZZ" }
     expect(resolveState(unavailable, snapshot)).toMatch(
@@ -341,10 +393,14 @@ describe("portable identity, honest updates and render parity", () => {
         snapshot
       ).state
     ).toEqual(unavailable)
-    const next = mutable()
+  })
+  it("describes changed values and compatibility while retaining the selection", () => {
+    const before = threeDaySnapshot()
+    const state = { ...defaultState(before), comparisonYear: 2025 }
+    const next = structuredClone(before)
     next.editionId = "synthetic-test-edition"
-    next.series.SHA[selectedIndex][0]! += 10
-    const comparison = compareEditions(snapshot, signed(next), initial)
+    next.series.SHA[dateIndex("2025-07-30", next.startDate)][0]! += 10
+    const comparison = compareEditions(before, signed(next), state)
     expect(comparison.changes).toEqual([
       {
         stationId: "SHA",
@@ -354,15 +410,16 @@ describe("portable identity, honest updates and render parity", () => {
         detail: "Storage or coverage changed"
       }
     ])
+    expect(comparison.metadataChanged).toBe(false)
     expect(comparison.nextState).toEqual({
-      ...initial,
+      ...state,
       editionId: next.editionId
     })
     expect(comparison.selectionIssue).toBeNull()
     next.baseline.id = "synthetic-different-baseline"
-    expect(
-      compareEditions(snapshot, signed(next), initial).selectionIssue
-    ).toMatch(/baseline is unavailable/)
+    const incompatible = compareEditions(before, signed(next), state)
+    expect(incompatible.selectionIssue).toMatch(/baseline is unavailable/)
+    expect(incompatible.metadataChanged).toBe(true)
   })
   for (const patch of [
     {},
