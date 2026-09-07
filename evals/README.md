@@ -49,11 +49,28 @@ npm run eval:ai:openai -- \
   --confirm-spend
 ```
 
-Use `--validate-only` first for one minimal request. The live runner refuses
-paid work unless `--confirm-spend` and a positive `--max-usd` are both present.
-It never writes the credential, project ID, raw prompts, or raw API response
-bodies to its reports. Scoring inputs necessarily retain parsed chart proposals
-and grounding answer strings.
+The same runner accepts other registered OpenAI-compatible providers from
+`scripts/lib/ai-eval-providers.mjs`. The `orcarouter` provider points the
+Responses-API queue at the OrcaRouter AI gateway (`ORCAROUTER_API_KEY`, no
+project ID, no per-model price table). Cost is treated as unknown rather than
+estimated, so the runner records `null` USD and skips the `--max-usd` spend
+ceiling:
+
+```sh
+npm run eval:ai:orcarouter -- \
+  --models=orcarouter/auto \
+  --suites=first-try \
+  --output-dir=evals/reports/orcarouter/trial-a \
+  --confirm-spend
+```
+
+Use `--validate-only` first for one minimal request. The live runner always
+requires `--confirm-spend`. Providers with a locked price table also require a
+positive `--max-usd`; the `orcarouter` gateway has no price table, so no spend
+ceiling is enforced and `--max-usd` is optional. The runner never writes the
+credential, project ID, raw prompts, or raw API response bodies to its reports.
+Scoring inputs necessarily retain parsed chart proposals and grounding answer
+strings.
 
 Targeted follow-ups can select suites, fixtures, and grounding conditions:
 
