@@ -1,0 +1,939 @@
+{
+  "measuredAt": "2026-09-06T23:55:58.501Z",
+  "url": "http://127.0.0.1:4173/examples/reservoir-guide/",
+  "serverRenderedOpening": true,
+  "openingChecks": [
+    {
+      "route": "reservoir-guide",
+      "scriptsBlocked": true,
+      "openingVisible": true
+    },
+    {
+      "route": "plane-day",
+      "scriptsBlocked": true,
+      "openingVisible": true
+    },
+    {
+      "route": "grocery-bill",
+      "scriptsBlocked": true,
+      "openingVisible": true
+    }
+  ],
+  "failedRequests": [],
+  "initialNetworkTransferBytes": 773668,
+  "environment": {
+    "hardware": "Apple M3 Pro",
+    "os": "darwin 25.6.0",
+    "arch": "arm64",
+    "browser": "149.0.7827.55",
+    "node": "v22.22.1"
+  },
+  "profile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "downloadBitsPerSecond": 4000000,
+    "latencyMilliseconds": 150,
+    "cache": "cold, disabled",
+    "sourceStorageRows": 76704,
+    "reservoirs": 6,
+    "controls": "warm; 30 completed actions per class"
+  },
+  "limitations": [
+    "Desktop Chromium with a phone viewport, not a real Android device.",
+    "Only one cold navigation; this does not establish navigation p95.",
+    "Interaction timings include Playwright automation and two animation frames; they are a proxy, not physical input-to-paint latency.",
+    "Gzip figures are estimates from separately compressing decoded responses; actual server transfer is reported separately.",
+    "Failed requests are listed explicitly; their unavailable response sizes are not included in transfer totals."
+  ],
+  "initialTiming": {
+    "openingContentReadyMilliseconds": 173.70000004768372,
+    "paint": [
+      {
+        "name": "first-paint",
+        "startTime": 432
+      },
+      {
+        "name": "first-contentful-paint",
+        "startTime": 432
+      }
+    ],
+    "resourceTransferBytes": 688427,
+    "documentTransferBytes": 9959
+  },
+  "initialScriptDecodedBytes": 1253125,
+  "initialScriptEstimatedGzipBytes": 373141,
+  "controls": {
+    "reservoir": {
+      "samples": [
+        93.70029199999954,
+        91.64320899999984,
+        82.44795900000008,
+        84.26254100000006,
+        83.30733300000065,
+        82.68304199999966,
+        83.97320800000034,
+        91.62774999999965,
+        84.48591599999963,
+        82.2172499999997,
+        83.28329200000007,
+        83.37029199999961,
+        83.32166700000016,
+        83.34587499999998,
+        83.30241599999954,
+        91.71358299999974,
+        83.18495799999982,
+        91.75316600000042,
+        83.37904100000014,
+        83.30429200000071,
+        83.34362500000043,
+        91.65154199999961,
+        83.28999999999996,
+        83.35270899999978,
+        83.34541699999954,
+        83.28337499999998,
+        83.3739999999998,
+        83.33179199999995,
+        83.69883300000038,
+        82.96741699999984
+      ],
+      "p95Milliseconds": 91.75316600000042
+    },
+    "waterYear": {
+      "samples": [
+        91.58774999999969,
+        83.17708299999958,
+        83.320334,
+        83.30141600000024,
+        83.39850000000115,
+        83.27000000000044,
+        83.40779199999997,
+        83.32979200000045,
+        83.25204200000007,
+        83.3231250000008,
+        83.3497499999994,
+        83.3296250000003,
+        83.34449999999924,
+        83.2609999999986,
+        83.38708299999962,
+        83.27083399999901,
+        83.39770800000042,
+        83.31145899999865,
+        83.3427499999998,
+        91.6579580000016,
+        83.33916599999975,
+        83.34104099999968,
+        91.66133300000001,
+        83.3518329999988,
+        83.30379200000061,
+        83.36708400000134,
+        83.31941600000027,
+        83.32033299999966,
+        83.28941599999962,
+        83.36262499999975
+      ],
+      "p95Milliseconds": 91.6579580000016
+    },
+    "comparisonYear": {
+      "samples": [
+        92.74358299999949,
+        82.19887500000004,
+        83.43491600000016,
+        83.22254099999918,
+        83.4111670000002,
+        83.30570799999987,
+        294.3217919999988,
+        89.01479199999994,
+        91.55574999999953,
+        83.3471669999999,
+        83.40145800000028,
+        83.34337499999856,
+        83.29566599999998,
+        83.34258399999999,
+        83.34187500000007,
+        83.25658300000032,
+        83.39308300000084,
+        83.34541699999863,
+        83.30404100000123,
+        91.92562499999985,
+        83.15450000000055,
+        83.20837500000016,
+        83.39691699999821,
+        125.63475000000108,
+        82.6987079999999,
+        83.2766249999986,
+        83.3807080000006,
+        83.34879200000069,
+        83.3146659999984,
+        83.32012500000019
+      ],
+      "p95Milliseconds": 125.63475000000108
+    },
+    "calendarDate": {
+      "samples": [
+        83.34858400000121,
+        83.31370900000002,
+        83.3587920000009,
+        83.32749999999942,
+        83.3229169999995,
+        83.34620799999902,
+        117.56295800000044,
+        90.72841700000026,
+        83.43079100000068,
+        83.25637500000084,
+        83.34495799999968,
+        83.31329100000039,
+        83.36379099999976,
+        83.29812500000116,
+        83.3297079999993,
+        83.32574999999997,
+        83.33649999999943,
+        83.35529099999985,
+        111.34504100000049,
+        88.65237499999967,
+        83.3027089999996,
+        83.36216599999898,
+        83.31379199999901,
+        83.32958400000098,
+        83.3296250000003,
+        83.3305419999997,
+        83.34000000000015,
+        104.7622080000001,
+        86.88879199999974,
+        83.31999999999971
+      ],
+      "p95Milliseconds": 111.34504100000049
+    }
+  },
+  "responses": [
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/examples/reservoir-guide/",
+      "type": "document",
+      "status": 200,
+      "decodedBytes": 44125,
+      "estimatedGzipBytes": 9659
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/rolldown-runtime-QTnfLwEv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 694,
+      "estimatedGzipBytes": 422
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/index-Dh4E_cPA.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 22268,
+      "estimatedGzipBytes": 6033
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/prism.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 20346,
+      "estimatedGzipBytes": 5758
+    },
+    {
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 12459,
+      "estimatedGzipBytes": 889
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/index-DJEEoFQu.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 564366,
+      "estimatedGzipBytes": 151642
+    },
+    {
+      "origin": "https://fonts.gstatic.com",
+      "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 48432,
+      "estimatedGzipBytes": 48442
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ExamplesLayout-udGI_wkp.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2810,
+      "estimatedGzipBytes": 1122
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useElementSize-BrKDvt3e.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 713,
+      "estimatedGzipBytes": 424
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useMediaPreferences-DeRc55Jh.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4810,
+      "estimatedGzipBytes": 1933
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ThemeProvider-BJWhN-ID.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 13594,
+      "estimatedGzipBytes": 3689
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/calendar-Fgzz90B8.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 807,
+      "estimatedGzipBytes": 464
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/state-P1iB52Uw.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1775,
+      "estimatedGzipBytes": 826
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ReservoirGuideExamplePage-BF6FucOo.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 8243,
+      "estimatedGzipBytes": 2206
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/fingerprint-CxTwB46U.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5615,
+      "estimatedGzipBytes": 2284
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/chart-config-BfS1Mxs6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5772,
+      "estimatedGzipBytes": 2409
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ReservoirGuideExamplePage-DELFxYtT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 104953,
+      "estimatedGzipBytes": 20876
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/prepare-BGCVoHHX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4312,
+      "estimatedGzipBytes": 1925
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/dictionary-D2TvBkW4.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1967,
+      "estimatedGzipBytes": 1078
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/semiotic-darkmode-X-YrYas7.png",
+      "type": "image",
+      "status": 200,
+      "decodedBytes": 12398,
+      "estimatedGzipBytes": 9435
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/stories/reservoir-guide/cdec-wy1991-2025-d82c4f62bc35-v1/snapshot.json",
+      "type": "fetch",
+      "status": 200,
+      "decodedBytes": 977123,
+      "estimatedGzipBytes": 262281
+    },
+    {
+      "origin": "https://fonts.gstatic.com",
+      "path": "/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOlOVk6OThhvA.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 21212,
+      "estimatedGzipBytes": 21240
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/GuideCharts-cFhqng75.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 863,
+      "estimatedGzipBytes": 515
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/LineChart-Fgz1bG2Y.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 9716,
+      "estimatedGzipBytes": 4023
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/colorUtils-DYDIqwDQ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7986,
+      "estimatedGzipBytes": 3606
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/quadtree-ILdsOlH2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12320,
+      "estimatedGzipBytes": 5058
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/StreamXYFrame-Da3zAwTH.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47277,
+      "estimatedGzipBytes": 15606
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/semanticInteractions-sH_o8-UF.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 94476,
+      "estimatedGzipBytes": 31178
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/glyphDef-MxYw_eeX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6737,
+      "estimatedGzipBytes": 2875
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationDensity-CxUggBzK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1577,
+      "estimatedGzipBytes": 783
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationTypes-BI8D4yOx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 416,
+      "estimatedGzipBytes": 230
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameLegendOptions-D4EvJMpF.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3859,
+      "estimatedGzipBytes": 1134
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ribbonScene-Bs-9ajAK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5249,
+      "estimatedGzipBytes": 1891
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/gradient-D5mp64Xd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7818,
+      "estimatedGzipBytes": 2640
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/renderBackend-kqPdQbnc.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6146,
+      "estimatedGzipBytes": 2636
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/motionEncoding-DZfpmIvs.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2114,
+      "estimatedGzipBytes": 1003
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/lifecycleBands-DNvEeDEn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 305,
+      "estimatedGzipBytes": 211
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/normalizeXYData-DW7QbvbN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 48012,
+      "estimatedGzipBytes": 12675
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/accessorUtils-DP7Jc8GA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 468,
+      "estimatedGzipBytes": 206
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/temporalStrings-Cj6br8hi.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 542,
+      "estimatedGzipBytes": 341
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/symlog-BTIV-Q9z.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2074,
+      "estimatedGzipBytes": 976
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/nice--vROP43K.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 151,
+      "estimatedGzipBytes": 138
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/time-C8l6pWT3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 14254,
+      "estimatedGzipBytes": 4529
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/Tooltip-BNSDntxX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47665,
+      "estimatedGzipBytes": 15244
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameCursorInteraction-DOm3quCD.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 11082,
+      "estimatedGzipBytes": 3617
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/annotationStatusFilter-Cx_K-dut.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 340,
+      "estimatedGzipBytes": 218
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/LinkedCrosshairStore-41G56HSW.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1101,
+      "estimatedGzipBytes": 449
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/SceneToSVG-CIzBJ9TK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12604,
+      "estimatedGzipBytes": 3560
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/paintNeeds-B7n9YpIP.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 167,
+      "estimatedGzipBytes": 142
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameKeyboardNavigation-ChFdnkBy.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3715,
+      "estimatedGzipBytes": 1485
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/sceneUtils-DWgkAoc0.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 303,
+      "estimatedGzipBytes": 195
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/frameDefaultMargins-Cut1gdC2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 224,
+      "estimatedGzipBytes": 174
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/tooltipUtils-Kv_np1jh.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1954,
+      "estimatedGzipBytes": 895
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/withChartWrapper-Cyn18DRE.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3232,
+      "estimatedGzipBytes": 1403
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/streamPropsHelpers-C0tCxV3B.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1116,
+      "estimatedGzipBytes": 595
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/selectionProvenance-C8MuQmXN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 155
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/hooks-DDn2xZae.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 24767,
+      "estimatedGzipBytes": 8433
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/validateChartData-Bp_59AF1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2600,
+      "estimatedGzipBytes": 1123
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useXYBrush-D3xFytkx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 936,
+      "estimatedGzipBytes": 517
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useResolvedSelection-CxEbqo9R.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 365,
+      "estimatedGzipBytes": 262
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useChartSetup-C52tP77X.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2952,
+      "estimatedGzipBytes": 1324
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useFrameImperativeHandle-7PU_Yb_-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2357,
+      "estimatedGzipBytes": 729
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/styleRules-DabqLBjT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1730,
+      "estimatedGzipBytes": 727
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useSeriesFeatures-D0c4vS0I.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1920,
+      "estimatedGzipBytes": 950
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useXYLineStyle-YfJxtRZx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 967,
+      "estimatedGzipBytes": 499
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/mergeShapeStyle-ChJbq-yw.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 357,
+      "estimatedGzipBytes": 191
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/linePlugin-CjZ7Shx6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1118,
+      "estimatedGzipBytes": 598
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/pointCanvasRenderer-D3eITH0A.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1371,
+      "estimatedGzipBytes": 634
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/renderPulse-hwidGfzN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 659,
+      "estimatedGzipBytes": 319
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/emitPointNodes-B9UdCHi3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 354,
+      "estimatedGzipBytes": 266
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaCanvasRenderer-CvNJnGv7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3509,
+      "estimatedGzipBytes": 1264
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/lineCanvasRenderer-CxGdjDHY.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2704,
+      "estimatedGzipBytes": 1108
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaPlugin-Dl8pFIE-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 233,
+      "estimatedGzipBytes": 176
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaScene-BnDJcYBA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2909,
+      "estimatedGzipBytes": 1272
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/areaGradient-CI1BTG_-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 79,
+      "estimatedGzipBytes": 96
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/mixedPlugin-BP5HEqiv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1322,
+      "estimatedGzipBytes": 609
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/xyLineStyle-RGInjGpi.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 510,
+      "estimatedGzipBytes": 373
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/BarChart-CNN8_i5G.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4978,
+      "estimatedGzipBytes": 1993
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/StreamOrdinalFrame-RJE7d4Ds.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 42349,
+      "estimatedGzipBytes": 13137
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/min-DKkL9U9e.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 381,
+      "estimatedGzipBytes": 163
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/range-EplFIxc7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 164
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/ordinalSceneSVG-C41R4HYa.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 50345,
+      "estimatedGzipBytes": 14940
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/customLayoutPalette-CLRKwEBL.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 359,
+      "estimatedGzipBytes": 274
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/barCanvasRenderer-CjQ6Cxq1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2502,
+      "estimatedGzipBytes": 1033
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/symbolCanvasRenderer-o_yMzpyd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1069,
+      "estimatedGzipBytes": 556
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/glyphCanvasRenderer-Ak_hjgDd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1048,
+      "estimatedGzipBytes": 560
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/regressionUtils-baCYpvp3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 414,
+      "estimatedGzipBytes": 217
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalStreaming-BsG_BBSC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 555,
+      "estimatedGzipBytes": 327
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalPieceStyle-BOKQE_Jy.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1148,
+      "estimatedGzipBytes": 655
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/useOrdinalBrush-CT3F0gZn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 684,
+      "estimatedGzipBytes": 443
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "path": "/assets/SwarmPlot-wxbIJ4q7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4827,
+      "estimatedGzipBytes": 1971
+    }
+  ]
+}

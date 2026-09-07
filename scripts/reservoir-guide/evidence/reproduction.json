@@ -1,0 +1,7 @@
+{
+  "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+  "comparedFiles": 40,
+  "allBytesIdentical": true,
+  "rawChecksums": "Verified by ingestion and the independent consumer",
+  "method": "Rebuilt from public pinned raw inputs into an empty directory; compared every generated file byte-for-byte, including adapter, packet, SVG/HTML, dictionary and manifest."
+}

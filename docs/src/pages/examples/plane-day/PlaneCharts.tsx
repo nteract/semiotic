@@ -5,6 +5,7 @@ import { BarChart } from "semiotic/ordinal"
 import { ThemeProvider } from "semiotic/themes/react"
 import { delayProps, distributionProps } from "./chart-config"
 import { networkProps, ribbonProps } from "./layouts"
+import { timeSpaceProps } from "./time-space"
 import type { AircraftDay, Pattern, PlaneSnapshot, PlaneState } from "./types"
 
 function useWidth() {
@@ -31,7 +32,8 @@ export function FlightCharts({
   onSelect: (id: string) => void
 }) {
   const { ref, width } = useWidth()
-  const select = (datum: Record<string, unknown> | null) => {
+  const select = (value: Record<string, unknown> | null) => {
+    const datum = Array.isArray(value) ? value[0] : value
     if (datum && typeof datum.eventId === "string") onSelect(datum.eventId)
   }
   return (
@@ -42,7 +44,15 @@ export function FlightCharts({
         data-testid="flight-charts"
         data-selected-event={state.selected.eventId}
       >
-        {state.view === "timeline" ? (
+        {state.view === "time-space" ? (
+          <div data-testid="time-space-chart">
+            <XYCustomChart
+              {...timeSpaceProps(day, state.selected.eventId)}
+              width={width}
+              onClick={select}
+            />
+          </div>
+        ) : state.view === "timeline" ? (
           <div className="plane-wide-ribbon">
             <XYCustomChart
               {...ribbonProps(day, state.selected.eventId)}

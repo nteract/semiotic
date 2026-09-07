@@ -13,7 +13,7 @@ export function defaultState(snapshot: PlaneSnapshot): PlaneState {
   return {
     version: 1,
     selected: eventReference(snapshot, day, day.flights[1].id),
-    view: "timeline",
+    view: "time-space",
     timeBasis: "local",
     notes: [],
   }
@@ -47,7 +47,7 @@ export function validateState(input: unknown): PlaneState {
   if (value.version !== 1)
     throw new Error("Unsupported saved-state version. Open it with a compatible story version.")
   if (
-    !["timeline", "network"].includes(value.view as string) ||
+    !["timeline", "network", "time-space"].includes(value.view as string) ||
     !["local", "utc"].includes(value.timeBasis as string)
   )
     throw new Error("Unknown layout or time basis")

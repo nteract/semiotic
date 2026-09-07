@@ -1,0 +1,215 @@
+{
+  "method": "Independent Python standard-library CSV/HTML audit; no TypeScript formulas imported",
+  "editionId": "cdec-wy1991-2025-d82c4f62bc35-v1",
+  "sourceChecksumsVerified": 20,
+  "stations": {
+    "SHA": {
+      "counts": {
+        "rows": 12784,
+        "missing": 31,
+        "estimated": 4,
+        "revised": 5,
+        "eligible": 12749
+      },
+      "storageAF": 3258792,
+      "capacityAF": 4552000,
+      "percentCapacity": 71.59033391915642,
+      "baselineN": 30,
+      "baselineSumAF": 93465541,
+      "baselineMeanAF": 3115518.033333333,
+      "percentMean": 104.59872050598841,
+      "lower": 15,
+      "ties": 0,
+      "percentile": 50.0,
+      "eligibleLeapDates": [
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250730 0000",
+      "aboveJuly2025ReferenceCount": 0,
+      "maximumReportedAF": 4536624
+    },
+    "ORO": {
+      "counts": {
+        "rows": 12784,
+        "missing": 6,
+        "estimated": 24,
+        "revised": 281,
+        "eligible": 12754
+      },
+      "storageAF": 2742600,
+      "capacityAF": 3424753,
+      "percentCapacity": 80.08168764287527,
+      "baselineN": 0,
+      "baselineSumAF": 0,
+      "baselineMeanAF": null,
+      "percentMean": null,
+      "lower": 0,
+      "ties": 0,
+      "percentile": null,
+      "eligibleLeapDates": [
+        "19920229",
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250731 0000",
+      "aboveJuly2025ReferenceCount": 647,
+      "maximumReportedAF": 3578367
+    },
+    "FOL": {
+      "counts": {
+        "rows": 12784,
+        "missing": 31,
+        "estimated": 6,
+        "revised": 5,
+        "eligible": 12747
+      },
+      "storageAF": 582492,
+      "capacityAF": 977000,
+      "percentCapacity": 59.62047082906858,
+      "baselineN": 30,
+      "baselineSumAF": 18820469,
+      "baselineMeanAF": 627348.9666666667,
+      "percentMean": 92.84975841994161,
+      "lower": 12,
+      "ties": 0,
+      "percentile": 40.0,
+      "eligibleLeapDates": [
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250730 0000",
+      "aboveJuly2025ReferenceCount": 0,
+      "maximumReportedAF": 970487
+    },
+    "NML": {
+      "counts": {
+        "rows": 12784,
+        "missing": 14,
+        "estimated": 20,
+        "revised": 12,
+        "eligible": 12750
+      },
+      "storageAF": 1729032,
+      "capacityAF": 2400000,
+      "percentCapacity": 72.043,
+      "baselineN": 30,
+      "baselineSumAF": 43537791,
+      "baselineMeanAF": 1451259.7,
+      "percentMean": 119.14008223338662,
+      "lower": 18,
+      "ties": 0,
+      "percentile": 60.0,
+      "eligibleLeapDates": [
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250730 0000",
+      "aboveJuly2025ReferenceCount": 0,
+      "maximumReportedAF": 2367876
+    },
+    "DNP": {
+      "counts": {
+        "rows": 12784,
+        "missing": 1122,
+        "estimated": 32,
+        "revised": 101,
+        "eligible": 11630
+      },
+      "storageAF": 1763500,
+      "capacityAF": 2030000,
+      "percentCapacity": 86.87192118226601,
+      "baselineN": 26,
+      "baselineSumAF": 40762086,
+      "baselineMeanAF": 1567772.5384615385,
+      "percentMean": 112.48442977133212,
+      "lower": 17,
+      "ties": 0,
+      "percentile": 65.38461538461539,
+      "eligibleLeapDates": [
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250731 0000",
+      "aboveJuly2025ReferenceCount": 1,
+      "maximumReportedAF": 2045634
+    },
+    "CLE": {
+      "counts": {
+        "rows": 12784,
+        "missing": 47,
+        "estimated": 12,
+        "revised": 5,
+        "eligible": 12725
+      },
+      "storageAF": 2088281,
+      "capacityAF": 2447650,
+      "percentCapacity": 85.31779461932874,
+      "baselineN": 30,
+      "baselineSumAF": 52714363,
+      "baselineMeanAF": 1757145.4333333333,
+      "percentMean": 118.84508592089028,
+      "lower": 20,
+      "ties": 0,
+      "percentile": 66.66666666666667,
+      "eligibleLeapDates": [
+        "19960229",
+        "20000229",
+        "20040229",
+        "20080229",
+        "20120229",
+        "20160229",
+        "20200229"
+      ],
+      "sourceDateTime": "20250730 0000",
+      "sourceObservationDateTime": "20250730 0000",
+      "aboveJuly2025ReferenceCount": 16,
+      "maximumReportedAF": 2496779
+    }
+  },
+  "collection": {
+    "storageAF": 12164697,
+    "capacityAF": 15831403,
+    "percent": 76.83903315454732,
+    "unweightedMeanPercent": 75.92086803211583,
+    "membership": [
+      "SHA",
+      "ORO",
+      "FOL",
+      "NML",
+      "DNP",
+      "CLE"
+    ]
+  },
+  "aboveReferenceInterpretation": "These counts compare all historical reported volumes with July 30, 2025 reference capacities, not dated historical capacities. Different capacity/measurement conventions and storage above a nominal reference prevent treating such comparisons as errors or clamping them. Individual source records remain inspectable; this audit does not validate undocumented historical capacity changes."
+}

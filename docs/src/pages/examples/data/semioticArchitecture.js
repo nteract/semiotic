@@ -761,6 +761,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-xy-custom", "hoc-network-custom", "hoc-bar", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
+    id: "reservoir-guide",
+    shortLabel: "Reservoir field guide",
+    note: "Pinned CDEC daily storage separates capacity, seasonal means and percentiles. Calendar alignment, measurement changes and matched collection membership survive native phone controls, a two-year table, portable packets and an explicitly saved offline edition.",
+    uses: ["input-static", "hoc-xy-lines", "hoc-bar", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+  },
+  {
     id: "machine-semiosphere",
     shortLabel: "Machine Semiosphere",
     note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",

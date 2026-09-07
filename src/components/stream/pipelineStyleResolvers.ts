@@ -3,9 +3,22 @@
  * Accept a small context object so the store methods stay thin wrappers.
  */
 import type { Datum } from "../charts/shared/datumTypes"
-import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
+import {
+  STREAMING_PALETTE,
+  resolveCategoricalPalette,
+  resolveExplicitColor
+} from "../charts/shared/colorUtils"
 import type { PipelineConfig } from "./pipelineConfig"
 import type { Style } from "./types"
+
+function explicitPipelineColor(
+  scheme: PipelineConfig["colorScheme"],
+  group: string
+) {
+  return scheme && typeof scheme === "object" && !Array.isArray(scheme)
+    ? resolveExplicitColor(scheme, group)
+    : undefined
+}
 
 export interface PipelineColorMapCache {
   key: string
@@ -83,12 +96,18 @@ export function resolvePipelineColorMap(
     return { map: refreshed.map, cache: refreshed }
   }
 
-  const palette = Array.isArray(config.colorScheme)
-    ? config.colorScheme
-    : config.themeCategorical || STREAMING_PALETTE
+  const palette = resolveCategoricalPalette(
+    config.colorScheme,
+    config.themeCategorical,
+    STREAMING_PALETTE
+  )
   const colorMap = new Map<string, string>()
   for (let ci = 0; ci < sorted.length; ci++) {
-    colorMap.set(sorted[ci], palette[ci % palette.length])
+    colorMap.set(
+      sorted[ci],
+      explicitPipelineColor(config.colorScheme, sorted[ci]) ??
+        palette[ci % palette.length]
+    )
   }
   const next = { key: cacheKey, map: colorMap, version: ingestVersion }
   return { map: colorMap, cache: next }
@@ -106,6 +125,9 @@ export function resolvePipelineGroupColor(options: {
     options
   let { groupColorCounter } = options
 
+  const explicit = explicitPipelineColor(config.colorScheme, group)
+  if (explicit) return { color: explicit, groupColorCounter }
+
   if (colorMapCache) {
     const c = colorMapCache.map.get(group)
     if (c) return { color: c, groupColorCounter }
@@ -113,16 +135,11 @@ export function resolvePipelineGroupColor(options: {
   const existing = groupColorMap.get(group)
   if (existing) return { color: existing, groupColorCounter }
 
-  const userScheme =
-    Array.isArray(config.colorScheme) && config.colorScheme.length > 0
-      ? config.colorScheme
-      : null
-  const themePalette =
-    Array.isArray(config.themeCategorical) &&
-    config.themeCategorical.length > 0
-      ? config.themeCategorical
-      : null
-  const palette = userScheme || themePalette || STREAMING_PALETTE
+  const palette = resolveCategoricalPalette(
+    config.colorScheme,
+    config.themeCategorical,
+    STREAMING_PALETTE
+  )
   if (palette.length === 0) return { color: null, groupColorCounter }
 
   const color = palette[groupColorCounter % palette.length]
@@ -177,8 +194,7 @@ export function resolvePipelineAreaStyle(
     const style = config.areaStyle(sampleDatum || {})
     if (style && !style.fill && group) {
       const color = resolveGroupColor(group)
-      if (color)
-        return { ...style, fill: color, stroke: style.stroke || color }
+      if (color) return { ...style, fill: color, stroke: style.stroke || color }
     }
     return style
   }
@@ -187,8 +203,7 @@ export function resolvePipelineAreaStyle(
     const style = ls(sampleDatum || {}, group)
     if (style && !style.fill && group) {
       const color = resolveGroupColor(group)
-      if (color)
-        return { ...style, fill: color, stroke: style.stroke || color }
+      if (color) return { ...style, fill: color, stroke: style.stroke || color }
     }
     return style
   }

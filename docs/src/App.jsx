@@ -184,6 +184,7 @@ const IsotypeChartPage = lazy(() => import("./pages/cookbook/IsotypeChartPage"))
 const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOverviewPage"))
 const GroceryBillExamplePage = lazy(() => import("./pages/examples/GroceryBillExamplePage"))
 const PlaneDayExamplePage = lazy(() => import("./pages/examples/PlaneDayExamplePage"))
+const ReservoirGuideExamplePage = lazy(() => import("./pages/examples/ReservoirGuideExamplePage"))
 const MachineSemiosphereExamplePage = lazy(
   () => import("./pages/examples/MachineSemiosphereExamplePage"),
 )
@@ -337,6 +338,7 @@ const EqualPlacesAtlasExamplePage = lazy(
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "GroceryBillExamplePage.jsx": GroceryBillExamplePage,
   "PlaneDayExamplePage.tsx": PlaneDayExamplePage,
+  "ReservoirGuideExamplePage.tsx": ReservoirGuideExamplePage,
   "MachineSemiosphereExamplePage.jsx": MachineSemiosphereExamplePage,
   "AestheticPolicyStudioExamplePage.jsx": AestheticPolicyStudioExamplePage,
   "BadChartAutopsyExamplePage.jsx": BadChartAutopsyExamplePage,

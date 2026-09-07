@@ -73,7 +73,7 @@ export interface ReaderNote {
 export interface PlaneState {
   version: 1
   selected: EventReference
-  view: "timeline" | "network"
+  view: "timeline" | "network" | "time-space"
   timeBasis: "local" | "utc"
   notes: ReaderNote[]
 }

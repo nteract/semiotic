@@ -576,3 +576,9 @@
     display: none;
   }
 }
+.grocery-trajectory { margin: 0 0 28px; }
+.grocery-trajectory label, .grocery-reopen-demo label { display: grid; gap: 8px; }
+.grocery-trajectory select, .grocery-reopen-demo input { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; font: inherit; }
+.grocery-story h3 { color: var(--grocery-ink); }
+.grocery-story :is(code, pre) { color: var(--grocery-ink); background: transparent; }
+.grocery-reopen-demo { margin-top: 28px; border-top: 1px solid currentColor; }

@@ -10,7 +10,8 @@ import {
   PNG_EXPORT_SCALE,
   renderReceiptSVG,
   renderReceiptHTML
-} from "../../docs/src/pages/examples/grocery-receipt/exports"
+} from "./v1/exports"
+import { pinnedStorySources } from "../lib/pinned-story-sources"
 
 async function main() {
   const sourceIndex = process.argv.indexOf("--source")
@@ -30,6 +31,7 @@ async function main() {
     platform: "node",
     format: "esm",
     write: false,
+    plugins: [pinnedStorySources("grocery-receipt", ["exports.ts"])],
     alias: { "semiotic/artifact": artifactEntry }
   })
   const packetModule = await import(
@@ -103,6 +105,7 @@ async function main() {
     platform: "neutral",
     format: "esm",
     external: ["semiotic/artifact"],
+    plugins: [pinnedStorySources("grocery-receipt", ["exports.ts"])],
     write: false
   })
   await emit("adapter.mjs", portable.outputFiles[0].text)

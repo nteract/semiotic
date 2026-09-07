@@ -6,7 +6,8 @@ import { ingest, sha256, FIELDS } from "./ingest"
 import {
   defaultState,
   eventReference
-} from "../../docs/src/pages/examples/plane-day/state"
+} from "./v1/state"
+import { pinnedStorySources } from "../lib/pinned-story-sources"
 import { RULES } from "../../docs/src/pages/examples/plane-day/format"
 
 async function main() {
@@ -59,6 +60,7 @@ async function main() {
     platform: "neutral",
     format: "esm",
     write: false,
+    plugins: [pinnedStorySources("plane-day", ["state.ts", "exports.ts"])],
     external: ["semiotic/artifact"]
   })
   await emit("adapter.mjs", adapter.outputFiles[0].text)
@@ -68,6 +70,7 @@ async function main() {
     platform: "node",
     format: "esm",
     write: false,
+    plugins: [pinnedStorySources("plane-day", ["state.ts", "exports.ts"])],
     alias: {
       "semiotic/artifact": resolve("src/components/semiotic-artifact.ts")
     }

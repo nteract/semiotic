@@ -1,0 +1,651 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9 oldie" lang="en"> <![endif]-->
+<!--[if (gt IE 9)]><!-->
+<html class="no-js" lang="en-US">
+  <!--<![endif]-->
+
+  <head>
+    <!--
+  California State Template
+  Version 4.0
+
+  Based on Twitter Bootstrap
+    -->
+    <meta charset="utf-8">
+    <meta name="Author" content="State of California, Department of Water Resources, DWR" />
+    <meta name="Description" content="California Water Watch, Hydrology Update and Drought Status" />
+    <meta name="Keywords" content="California, Water Watch, State Hydrology Update, Drought Status, Drought Impacts Map, California Hydroclimate, Water Supply Conditions,Precipitation, Temperature, Reservoirs, Snowpack, Groundwater, Streamflow, Soil moisture, Vegetation conditions" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- http://t.co/dKP3o1e -->
+    <meta name="HandheldFriendly" content="True">
+    <!-- for Blackberry, AvantGo -->
+    <meta name="MobileOptimized" content="320">
+    <!-- for Windows mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>California Water Watch</title>
+
+    <!-- Google Fonts -->
+    <link href="/resources/css/googleapis.fonts.css" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" href="/resources/js/jquery/ui/1.12.1/jquery-ui.min.css" />
+    <!-- For iPad 3-->
+    <link rel="apple-touch-icon" sizes="144x144" href="/resources/images/apple-touch-icon-144x144.png" />
+    <!-- For iPhone 4 -->
+    <link rel="apple-touch-icon" sizes="114x114" href="/resources/images/apple-touch-icon-114x114.png" />
+    <!-- For iPad 1-->
+    <link rel="apple-touch-icon" sizes="72x72" href="/resources/images/apple-touch-icon-72x72.png" />
+    <!-- For iPhone 3G, iPod Touch and Android -->
+    <link rel="apple-touch-icon" href="/resources/images/apple-touch-icon-57x57.png" />
+    <!-- For Nokia -->
+    <link rel="shortcut icon" href="/resources/images/apple-touch-icon-57x57.png" />
+    <!-- For everything else -->
+    <link rel="shortcut icon" href="/resources/images/fav.ico">
+
+    <link rel="stylesheet" href="/resources/js/bootstrap/css/bootstrap.nomedia.min.css" />
+    
+    <!-- For all browsers -->
+    <link rel="stylesheet" href="/resources/css/colorscheme-oceanside.css?v=1.0.9" />
+    <link rel="stylesheet" href="https://js.arcgis.com/3.38/esri/themes/calcite/esri/esri.css?v=1.0.9">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.38/esri/themes/calcite/dijit/calcite.css?v=1.0.9">
+    <link rel="stylesheet" href="/resources/css/dwr.core.css?v=1.0.9" />
+    <link rel="stylesheet" href="/resources/css/cagov.core.css?v=1.0.9" />
+    <link rel="stylesheet" href="/resources/css/sitewide.css?v=1.0.9" />
+    <style>
+      .searchExpandContainer, .searchInputGroup, .searchInputGroup input {
+        width: 88%;
+      }
+      .searchInputGroup, .searchInputGroup input {
+        width: 100% !important;
+      }
+      .searchSubmit {
+        float: right;
+      }
+      #nav-item-search > div {
+        margin-top: 32px;
+        border: 1px solid #ccc;
+        box-shadow: none;
+      }
+      .calcite .arcgisSearch .searchGroup .searchInput::-webkit-input-placeholder {
+        color: #aaa;
+      }
+      .container-fluid {
+        padding: 0;
+      }
+      #search {
+        width: 70%;
+        display: inline-block !important;
+      }
+      #nav-item-search {
+        width: 80%;
+      }
+      
+      .nav-group {
+        width: 100%;
+        text-align: right;
+      }
+      .nav-group li {
+        width: 20%!important;  
+        flex: none !important;
+        display: inline-block!important;
+      }
+      
+      h2, .h2 {
+        font-size: 1.8rem;
+      }
+      
+    </style>
+    <style type="text/css">
+  </style><script src="/resources/js/libs/modernizr-2.0.6.min.js?v=1.0.9"></script>
+    <script src="/resources/js/libs/modernizr-extra.min.js?v=1.0.9"></script>
+    <script src="/resources/js/jquery/3.2.1/jquery.min.js?v=1.0.9" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="/resources/js/jquery/ui/1.12.1/jquery-ui.min.js?v=1.0.9" type="text/javascript"></script>
+    <script src="/resources/js/BaseApp.js?v=1.0.9"></script>
+    <script src="/resources/js/BSDialog.js?v=1.0.9"></script>
+    <script src="/resources/js/MyLoadMask.js?v=1.0.9"></script>
+    <script type="text/javascript" src="/resources/js/dialogs.js?v=1.0.9"></script>
+    <script src="/resources/js/cagov.core.js?v=1.0.9"></script>
+    <script src="/resources/js/html2canvas.js?v=1.0.9"></script>
+    <script defer src="https://alert.cdt.ca.gov"></script>
+    <script src="https://js.arcgis.com/3.38/"></script>
+    
+    <script type="text/javascript">
+      window.onloads = [];
+      window.SERVER_HOST = location.protocol + "//" + location.host;
+      window.SERVER_CONTEXT = "";
+      window.SERVER_URL = window.SERVER_HOST + window.SERVER_CONTEXT;
+      window.loadmask = new MyLoadMask();
+      
+      
+        require([
+          "esri/dijit/Search",
+          "dojo/i18n!esri/nls/jsapi",
+          "dojo/domReady!"
+        ], function (Search, bundle) {
+        bundle.widgets.Search.main.placeholder = "Find location by address";
+
+        window.esriSearch = new Search({
+          map: "",
+          enableInfoWindow: false,
+          autoNavigate: false,
+          autoSelect: false
+        }, "search");
+        esriSearch.startup();
+        
+        
+          window.searched = true;
+        
+        esriSearch.on('search-results', function(result){
+          if(window.searched) {
+            if(result && result.value) {
+              window.location.href = SERVER_URL + '/info?address=' + result.value;
+            }
+          }
+          window.searched = true;
+        })
+      });
+    
+      
+      $(document).ready(function() {
+        var width = 520;
+        var height = 400;
+        var winTop = window.parent.top.outerHeight / 2 + window.parent.top.screenY - ( height / 2);
+        var winLeft = window.parent.top.outerWidth / 2 + window.parent.top.screenX - ( width / 2);
+        $(".ca-gov-icon-facebook.share-icon").click(function() {
+          window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href)+'&t='+document.title, 'sharer', 
+          'toolbar=0,resizable=yes,scrollbars=yes,height=' + height + ',width=' + width + ',top=' + winTop + ',left=' + winLeft);
+        });
+        $(".ca-gov-icon-twitter.share-icon").click(function() {
+          window.open('https://twitter.com/intent/tweet?url='+encodeURIComponent(window.location.href)+'&text='+document.title, 'sharer', 
+          'toolbar=0,resizable=yes,scrollbars=yes,height=' + height + ',width=' + width + ',top=' + winTop + ',left=' + winLeft);
+        });
+        $(".ca-gov-icon-email.share-icon").click(function() {
+          $(this).attr("href", "mailto:?subject=" + document.title + "&body=" + window.location.href);
+        });
+      });
+    </script>
+    <script type="text/javascript">
+
+  </script></head>
+
+  <body class="calcite null">
+
+    <header role="banner" id="header" class="global-header fixed">
+  <div id="skip-to-content"><a href="#main-content">Skip to Main Content</a></div>
+  <!-- Location Bar -->
+  <div class="location-settings section section-standout collapse collapsed " id="locationSettings">
+  <div class="container p-y">
+    <button type="button" class="close" data-toggle="collapse" data-target="#locationSettings" aria-expanded="false" aria-controls="locationSettings" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+
+    <div class="form-group form-inline">
+      <label for="locationZipCode">Saving your location allows us to provide you with more relevant information.</label>
+      <input type="input" class="form-control" id="locationZipCode" placeholder="Zip Code" />
+      <button type="button" class="btn btn-primary">Set Location</button>
+    </div>
+  </div>
+</div>
+<!-- Settings Bar -->
+  <div class="site-settings section section-standout collapse collapsed" role="alert" id="siteSettings">
+  <div class="container  p-y">
+    <button type="button" class="close" data-toggle="collapse" data-target="#siteSettings" aria-expanded="false" aria-controls="siteSettings" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+    <div class="btn-group btn-group-justified-sm" role="group" aria-label="contrastMode">
+      <div class="btn-group"><button type="button" class="btn btn-standout disableHighContrastMode">Default</button></div>
+      <div class="btn-group"><button type="button" class="btn btn-standout enableHighContrastMode">High Contrast</button></div>
+    </div>
+
+    <div class="btn-group" role="group" aria-label="textSizeMode">
+      <div class="btn-group"><button type="button" class="btn btn-standout resetTextSize">Reset</button></div>
+      <div class="btn-group"><button type="button" class="btn btn-standout increaseTextSize"><span class="hidden-xs">Increase Font Size</span><span class="visible-xs">Font <small class="ca-gov-icon-plus-line"></small></span></button></div>
+      <div class="btn-group"><button type="button" class="btn btn-standout decreaseTextSize"><span class="hidden-xs">Decrease Font Size</span><span class="visible-xs">Font <small class="ca-gov-icon-minus-line"></small></span></button></div>
+    </div>
+  </div>
+</div><!-- Include Utility Header -->
+  <div class="utility-header hide-mobile">
+  <div class="container">
+    <div class="group">
+      <div class="half">
+
+        <ul class="utility-links social-media-links">
+          <li class="header-cagov-logo">
+            <a href="http://ca.gov" title="Go to ca.gov website"><span class="ca-gov-icon-logo" aria-hidden="true"></span></a>
+          </li>
+          <li>
+            <a href="/">
+              <span class="ca-gov-icon-home" aria-hidden="true"></span><span class="sr-only">Home</span>
+            </a>
+          </li>
+          <li><a href="javascript:void(0);" class="ca-gov-icon-facebook share-icon" title="Share via Facebook"><span class="sr-only">Facebook</span></a></li>
+          <li><a href="javascript:void(0);" class="ca-gov-icon-twitter share-icon" title="Share via Twitter"><span class="sr-only">Twitter</span></a></li>
+          <!--<li><a class="ca-gov-icon-google-plus" title="Share via Google+"><span class="sr-only">Google+</span></a></li>-->
+          <li><a href="javascript:void(0);" class="ca-gov-icon-email share-icon" title="Share via email"><span class="sr-only">Email</span></a></li>
+          
+        </ul>
+      </div>
+      <div class="half settings-links">
+        <ul class="utility-links ">
+          <li><a href="/cww_info#about" target="_blank">About</a></li>
+          <li><a href="https://www.water.ca.gov/Contact">Contact</a></li>
+          <!--<li><a href="https://www.surveymonkey.com/r/5DMFHCV">Feedback</a></li>-->
+          <li><a href="https://water.ca.gov/Current-Conditions">Current Conditions</a></li>
+<!--          <li><a role="button" 
+                 data-toggle="collapse"
+                 href="#siteSettings"
+                 aria-expanded="false"
+                 aria-controls="siteSettings">
+              <span class="ca-gov-icon-gear" aria-hidden="true"></span> Settings</a>
+          </li>-->
+          </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Include Branding -->
+  <!-- header branding -->
+<div class="branding">
+  <div class="header-organization-banner" style="height: inherit;">
+
+    <a href="/" style="max-width: 375px; height: inherit; display: flex; flex-direction: row; align-items: center; text-decoration: none; margin-top: 5px;">
+      <img src="/resources/images/dwrlogo.png"
+           alt="Department of Water Resources"
+           title="Department of Water Resources" style="vertical-align: middle; padding-right: 10px;"/>
+      <div style="display: flex; flex-direction: row;">
+        <h2 style="margin: 0; color: #257da4; font-size: 1.8rem;">California</h2>
+        <h2 style="margin: 0; margin-left: 5px; font-size: 1.8rem;"><span style="color: #3b1f16;">WATER</span> <span style="color: #c08774;">WATCH</span></h2>
+      </div>
+      <!--<h2 style="display: inline-block; color: black; vertical-align: middle;">California Water Watch</h2>-->
+    </a>
+  </div>
+</div><!-- Include Mobile Controls -->
+  <!-- mobile navigation controls -->
+<div class="mobile-controls">
+
+  <button class="mobile-control toggle-menu" aria-expanded="false" aria-controls="navigation"><span class="ca-gov-icon-menu" aria-hidden="true"></span><span class="sr-only">Menu</span></button>
+  <span class="mobile-control-group mobile-header-icons">
+
+    <!-- Add more mobile controls here. These will be on the right side of the mobile page header section -->
+  </span>
+  <span class="mobile-control toggle-search" style="visibility: hidden;"><span class="ca-gov-icon-search" aria-hidden="true"></span><span class="sr-only">Search</span></span>
+  <span class="mobile-control-group mobile-menu-icons">
+    <!-- Add more mobile controls here. These will be on the top right section of the expanded mobile menu -->
+  </span>
+</div><div class="navigation-search">
+    <div id="head-search" class="search-container"></div>
+    <nav id="navigation" class="main-navigation megadropdown">
+  <ul id="nav_list" class="top-level-nav" style="width: 40%; margin-left: auto;">
+    <!--        <li class="nav-item" style="margin-left:88%;">
+            <a href="javascript:void(0);" 
+               onclick="$('#').modal()"
+               class="first-level-link"><span class="ca-gov-icon-computer" aria-hidden="true"></span>Sign In</a>
+          </li>-->
+            <li class="nav-item active" id='nav-item-home'>
+              <a href="/" class="first-level-link">
+                <span class="ca-gov-icon-home" aria-hidden="true"></span>Home
+              </a>
+            </li>
+            <li class="nav-item " style="display: none !important;">
+              <a href="/maps" class="first-level-link"><span class="ca-gov-icon-globe" aria-hidden="true"></span>Map</a>
+            </li>
+  <!--          <li class="nav-item">
+              <a href="/resources/images/Latest_State_Hydrology_Update.pdf?_=2022-08-05" class="first-level-link" target="_blank"><span class="ca-gov-icon-pdf" aria-hidden="true"></span>Hydro Update</a>
+            </li>-->
+            <li class="nav-item">
+              <a href="/forecast" class="first-level-link"><span class="ca-gov-icon-severe-weather" aria-hidden="true"></span>Forecasting</a>
+            </li>
+            <li class="nav-item">
+              <a href="https://forms.office.com/r/p7WXkGcSpH" class="first-level-link" target="_blank"><span class="ca-gov-icon-page" aria-hidden="true"></span>Survey</a>
+            </li>
+            </ul>
+</nav></div>
+
+  <div class="header-decoration"></div>
+
+</header>
+<div id="main-content" class="main-content">
+      <div class="container">
+        <main class="main-primary m-b-md">
+          <div class="content-header">
+    <h3>About the Data</h3>
+  </div>
+  <div class='landing-section'>
+    <div class='description'>
+      <p>
+        California Water Watch brings together existing available data from various sources.  Most of this data is not physically collected by DWR although in 
+        some cases we are a compiler of data provided to us by others.  The data here thus vary in format, frequency of updates, and available statistical analyses. 
+        Specifics of individual datasets are described below.
+      </p>
+      <p>
+        As available from the original source of the data, statistics such as percent of average or percentile are used to characterize the current data.  
+        Since our different data sources have used different rankings to characterize their data, percentile categories vary among the datasets.  The U.S. 
+        Geological Survey (USGS), for example, shows the 10th and 90th percentiles but then uses categories other than tenths for the values in between those points. 
+        In contrast the reservoir page uniformly breaks down percentiles by tenths.  A percentile is a value below which a given percentage of the observations fall. 
+        For example, if an observation is in the 90th percentile it is higher than 90 percent of the other observations.
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Precipitation and Temperature</h4>
+    <div class="description">
+      <p>
+        DWR has acquired gridded precipitation and temperature data via a licensing agreement with Oregon State University for its 
+        <a href="https://prism.oregonstate.edu/" target="_blank">Parameter-elevation Regressions on Independent Slopes Model (PRISM) dataset</a>.
+        Using gridded data (spatial data that can be analyzed in a Geographic Information System) allows incorporation of many observations from multiple climate networks and permits 
+        calculation of statistics over broad areas such as watersheds.   
+      </p>
+      <p>
+        Entering an address or clicking on the map will bring up precipitation and temperature information for the corresponding HUC-8 watershed.  Point values of precipitation and 
+        temperature, such as observations collected at an individual weather station, can vary significantly over very short distances because of factors such as the immediate surroundings
+        of an individual station (e.g., the urban heat island effect), changes in ground surface elevation, or very localized thunderstorm activity.  Smoothing out these localized variations
+        over the scale of a watershed gives a more representative picture of hydrologic conditions. From the watershed page you can also select the option to see precipitation and temperature
+        statistics at the larger regional and statewide scale. 
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Reservoir Conditions</h4>
+    <div class="description">
+      <p>
+        Reservoir storage and elevation data come from DWR’s <a href="https://cdec.water.ca.gov/" target="_blank">California Data Exchange Center (CDEC)</a> website.  
+        CDEC contains information on 150-plus of the state’s largest reservoirs and compiles the reservoir conditions data provided to us by reservoir owners.  Not all the reservoirs on CDEC have daily data; 
+        California Water Watch only serves information for the reservoirs with daily data. Clicking on a reservoir on the map will open a text box with information on reservoir storage. 
+        A small subset of the reservoirs has additional information as indicated by the “more details” link in the pop-up, allowing viewers to see historical graphs of reservoir elevation.
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Streamflow</h4>
+    <div class="description">
+      <p>
+        Clicking on a dot on the map will open a pop-up window for a USGS stream gauge. There are more than 400 stations in California that provide daily data and more than 500 stations in
+        total available on California Water Watch.  We provide USGS’ information for the larger number of stations, but the pop-up box will have streamflow data and statistics only for those
+        serving daily data.  The information provided in the pop-up box is exactly <a href="https://waterwatch.usgs.gov/" target="_blank">as USGS provides it</a>. 
+        Links in the menu box on the left side of the screen direct the viewer to other sources of information, including a link to water 
+        temperature data where available.
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Groundwater</h4>
+    <div class="description">
+      <p>
+        Groundwater level data come from <a href="https://sgma.water.ca.gov/webgis/?appid=SGMADataViewer#currentconditions" target="_blank">DWR’s Sustainable Groundwater Management Act (SGMA) Data Viewer</a>.  
+        Most of the data on this site are provided by local agencies in response to requirements stemming from that legislation.  Some of the data comes from measurements performed 
+        by DWR, primarily in northern California, and some is provided by USGS.  The SGMA data are only required to be submitted for designated groundwater basins where most of the 
+        state’s groundwater use occurs.  Almost no water level data are available for wells drilled in fractured bedrock areas such as the Sierra Nevada foothills because these areas
+        are not covered by the SGMA data reporting requirement.  Water levels in wells relying on fractured rock sources are highly variable over very short distances, making it 
+        impractical to support monitoring programs in these areas. Most of the groundwater level data is only available twice a year (spring and fall, times commonly taken to represent 
+        the annual maximum and minimum water levels).  Simplified information on statewide water level conditions is available at 
+        <a href="https://storymaps.arcgis.com/stories/b3886b33b49c4fa8adf2ae8bdd8f16c3" target="_blank">DWR’s California Groundwater Live website </a> which summarizes information for more than 6,000 wells.  
+      </p>
+      <p>
+        Clicking on a dot on the California Water Watch website’s groundwater map will open a pop-up with available data for that well. Available data for individual wells varies widely. 
+        Some will have very few water level measurements while others may have sustained long-term measurements.
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Snowpack</h4>
+    <div class="description">
+      <p>
+        Snowpack water content is provided from snow sensors having daily data reported through DWR’s Cooperative Snow Surveys program and served on CDEC.  Clicking on a sensor
+        on the map will open a pop-up window providing the data on that sensor and comparing it to historical values. There are about 130 active sensors on CDEC. Owners of these sensors 
+        provide the data to DWR so that it can be widely distributed to people wishing to estimate the snowpack runoff that will contribute to local water supplies. Snowpack data are only
+        available during the months when there is snow on the ground. Other sources of snowpack information come from periodic manual measurements at snow courses and from periodic aircraft-based
+        and satellite-based remote sensing data collection and processing.  Viewers interested in these other sources are encouraged to check the snow pages on 
+        <a href="https://cdec.water.ca.gov/snow/current/snow/index.html" target="_blank">CDEC</a>.     
+      </p>
+    </div>
+  </div>
+  <div class="landing-section">
+    <h4 class="desc-header">Soil Moisture and Vegetation Conditions</h4>
+    <div class="description">
+      <p>
+        Soil moisture and vegetation conditions are very different from the other types of data shown on California Water Watch in that they are indirectly estimated from other types of measurements.
+        Although there are localized networks that directly measure soil moisture or some aspect of vegetation conditions, these sources are far too minimal to assess conditions over a state as large 
+        and climatically diverse as California. Instead, researchers have developed datasets through satellite-based measurements of factors that can be correlated to soil moisture or vegetation conditions. 
+        These datasets are mostly used for academic research and highly technical applications. Most California Water Watch viewers will want to use these maps only to gain a general understanding of 
+        relative conditions across the state.
+      </p>
+      <p>
+        The soil moisture data are from the  
+        <a href="https://www.drought.gov/data-maps-tools/nasa-sport-lis-soil-moisture-products" target="_blank">National Aeronautics and Space Administration (NASA)</a>
+        and are an estimation of moisture in the top 100 centimeters of the soil. NASA updates the data every six hours.  Vegetation conditions are represented by a 
+        <a href="https://www.drought.gov/data-maps-tools/evaporative-stress-index-esi" target="_blank">NASA daily dataset of the evaporative stress index</a>, 
+        a value that shows relative differences in the evapotranspiration of water by plants. The units of this index are the statistical measure of standard deviations from the mean.  
+      </p>
+    </div>
+  </div></main>
+      </div>
+    </div>
+    <!--</div>return-top-->
+
+    <!-- Global Footer -->
+<footer id="footer" class="global-footer">
+  <div class="container">
+    <div class="row">
+      <div class="three-quarters">
+        <ul class="footer-links">
+          <li><a href="#skip-to-content">Back to Top</a></li>
+          <li><a target="_blank" href="https://www.water.ca.gov/Conditions-of-Use">Conditions of Use</a></li>
+          <li><a target="_blank" href="https://www.water.ca.gov/Privacy-Policy">Privacy Policy</a></li>
+          <li><a target="_blank" href="https://www.water.ca.gov/Contact">Contact Us</a></li>
+          <li><a target="_blank" href="/cww_info#disclaimer">Disclaimer</a></li>
+          <li><a target="_blank" href="/cww_info#access-data">How to Access Data</a></li>
+        </ul>
+      </div>
+      <div class="quarter text-right">
+        <ul class="socialsharer-container">
+          <li><a target="_blank" href="https://pixel-ca-dwr.photoshelter.com/index"><img style="width: 24px; height: 24px; vertical-align: -3px;" src="/resources/images/pixel.png"><span class="sr-only">Pixel</span></a></li>
+          <li><a target="_blank" href="https://www.instagram.com/cadepartmentofwaterresources/"><span class="ca-gov-icon-instagram" aria-hidden="true"></span><span class="sr-only">Instagram</span></a></li>
+          <li><a target="_blank" href="https://twitter.com/CA_DWR"><span class="ca-gov-icon-twitter" aria-hidden="true"></span><span class="sr-only">Twitter</span></a></li>
+          <li><a target="_blank" href="https://www.youtube.com/@calwater"><span class="ca-gov-icon-youtube" aria-hidden="true"></span><span class="sr-only">YouTube</span></a></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Copyright Statement -->
+  <div class="copyright">
+    <div class="container">
+      Copyright &copy; <script>document.write(new Date().getFullYear())</script> State of California
+    </div>
+  </div>
+</footer>
+<!-- Extra Decorative Content -->
+<div class="decoration-last">&nbsp;</div>
+<script type="text/javascript" src="/resources/js/MyForm.js"></script>
+  <script type="text/javascript">
+    (function(){
+      setTimeout(function(){
+        window.signinform = new MyForm({
+          id:"sign-in-form"
+          ,listeners:{
+            onInit:function(){
+//              this.submitBtn.hide();
+//              this.formEl.modal({show:false});
+            }
+            ,onInitFields:function() {
+              try {
+                var formApp = this;
+                var enterPressedSubmit = function(e) {
+                  if (e.which == 13) {
+                    e.preventDefault();
+                    formApp.submit();
+                    return false;
+                  }
+                }
+                this.fields.username.keypress(enterPressedSubmit);
+                this.fields.password.keypress(enterPressedSubmit);
+
+                formApp.fields.rememberMe.change(function() {
+                  window.localStorage.setItem("pmmRememberMe", this.checked);
+                  if (this.checked) {
+                    var username = window.localStorage.getItem("pmmUsername");
+                    if (username) {
+                      // on load if username is already stored
+                      formApp.fields.username.val(username);
+                    } else if (formApp.fields.username.val().length > 0) { 
+                      // if username is already entered, then remember me is checked
+                      window.localStorage.setItem("pmmUsername", formApp.fields.username.val());
+                    }
+                    formApp.fields.username.blur(function() {
+                      window.localStorage.setItem("pmmUsername", $(this).val());
+                    });
+                  } else {
+                    window.localStorage.removeItem("pmmUsername");
+                    window.localStorage.removeItem("pmmRememberMe");
+                    formApp.fields.username.unbind("blur");
+                  }
+                });
+              } catch(ex) {
+                throw ex;
+              }
+            }
+            ,onSuccess:function(){
+              window.loadmask.hide();
+//              location.reload(true);
+              window.location.replace(window.SERVER_CONTEXT + "/admin/landing");
+            }
+            ,onSubmitError:function(r) {
+              window.loadmask.hide();
+              // new BSDialog() does not override existing dialog with the new config
+              if($("#error-dialog").length) {
+                $("#error-dialog").remove();
+              } 
+              
+              new BSDialog({
+                title:"Error"
+                ,id:"error-dialog"
+                ,message: r
+              }).show(); 
+            }
+            ,beforeSubmit:function(){
+              window.loadmask.show("Authenticating...");
+            }
+          }
+        });
+        
+        function initRememberMeEvents() {
+          try {
+            var $rememberMe = null;
+            if (($rememberMe = $("input[name='rememberMe']")).length == 0) {
+              throw "The system cannot find the remember checkbox!";
+            }
+
+            $rememberMe.change(function (evt,ui) {
+              var $form = null;
+              if (($form = $(this).parents("form")).length == 0) {
+                throw "The system cannot find the login form!";
+              }
+              var $username = null;
+              if (($username = $form.find("input[name='username']")).length == 0) {
+                throw "The system cannot find the username field!";
+              }
+
+              window.localStorage.setItem("pmmRememberMe", this.checked);
+
+              if (this.checked) {
+                var username = window.localStorage.getItem("pmmUsername");
+                if (username) {
+                  $username.val(username);
+                }
+                $username.blur(function () {
+                  window.localStorage.setItem("pmmUsername", $(this).val());
+                });
+              }
+              else {
+                window.localStorage.removeItem("pmmUsername");
+                window.localStorage.removeItem("pmmRememberMe");
+                $username.unbind("blur");
+              }
+            });
+
+            $rememberMe.each(function(){
+              var $this = $(this);
+              $this[0].checked = (window.localStorage.getItem("pmmRememberMe") == "true");
+              $this.trigger("change");
+            });
+          }
+          catch (e) {
+            window.errordialog.show("initRememberMeEvents() Error(s):\n" + e);
+          }
+        }
+
+        initRememberMeEvents();
+      },100)
+    })();
+  </script>
+  <!-- Trigger the modal with a button -->
+<!-- Modal -->
+<div id="sign-in-dialog" class="modal fade " role="dialog" data-backdrop="static">
+  <div class="modal-dialog ">
+    <!-- Modal content-->
+    <div class="modal-content ">
+      <div class="modal-header ">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title glyphicon glyphicon-lock">Secure Sign-In</h4>
+      </div>
+      <div class="modal-body " style="">
+        <form id="sign-in-form" action="/service/authenticate" method="POST">
+      <div Class="form-group"><label class="required">Email&nbsp;<input type="text" autocomplete="off" name="username" placeholder="eg. john@doe.com" required class="form-control input-sm" /></label></div><div Class="form-group"><label class="required">Password&nbsp;<input autocomplete="off" name="password" type="password" required class="form-control input-sm" /></label></div><div Class=""><label style="font-size:10pt;font-weight:normal;width:auto;"><input autocomplete="off" name="rememberMe" type="checkbox" style="width:inherit;" />&nbsp;Remember Email</label></div></form></div>
+      <div class="modal-footer">
+        <span class="required pull-left">Required Fields</span>
+    <a href="#" class="btn btn-link pull-right" data-dismiss="modal" data-target="#sign-in-dialog" tabindex="2">Cancel</a>
+    <a href="/mts/accounts/recovery" class="btn btn-link pull-right" data-target="#sign-in-dialog" tabindex="3">Password Recovery</a>
+    <button tabindex="1" 
+            class="btn btn-warning pull-right glyphicon glyphicon-send"
+            type="submit"
+            onclick="window.signinform.submit();return false;">Sign In</button></div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    (function(){
+      setTimeout(function(){
+        for (var i=0;i<window.onloads.length;++i) {
+          try {
+            window.onloads[i].call();
+          }
+          catch(e) {
+            if (console && console.error) {
+              console.error(e);
+            }
+          }
+        }
+      },1);
+    })();
+    </script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-221661194-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-222882229-1');
+    </script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-G9NNQTSS8V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-G9NNQTSS8V');
+</script>
+
+  </body>
+</html>

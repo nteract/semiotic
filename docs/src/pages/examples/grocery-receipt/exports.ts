@@ -85,7 +85,7 @@ export function renderReceiptSVG(
   </svg>`
 }
 
-export function renderReceiptHTML(receipt: PreparedBasket, snapshot: GrocerySnapshot): string {
+export function renderReceiptHTML(receipt: PreparedBasket, snapshot: GrocerySnapshot, trajectorySVG = ""): string {
   const rows = receipt.rows
     .map(
       (row) =>
@@ -98,6 +98,7 @@ export function renderReceiptHTML(receipt: PreparedBasket, snapshot: GrocerySnap
     <section tabindex="0" aria-label="Comparison table; scroll horizontally if needed"><table><caption>${escapeMarkup(monthName(receipt.state.before))} / ${escapeMarkup(monthName(receipt.state.after))}. Unit prices in USD per listed unit; line costs in USD. ${escapeMarkup(receipt.scope)} Missing required prices make the full comparison unavailable.</caption><thead><tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Before unit price</th><th scope="col">After unit price</th><th scope="col">Before cost</th><th scope="col">After cost</th><th scope="col">Contribution</th><th scope="col">Status</th></tr></thead><tbody>${rows}</tbody></table></section>
     <p>Total: ${money(receipt.beforeUSD)} / ${money(receipt.afterUSD)}. Difference: ${signedMoney(receipt.differenceUSD)} (${percent(receipt.percentageChange)}).</p>
     <p>Calculated at source precision; amounts rounded only for display. Individually rounded lines can differ from the rounded total.</p>
+    ${trajectorySVG}
     <p>Source retrieved ${snapshot.retrievedAt}. Edition ${escapeMarkup(snapshot.editionId)}. Saved editions cannot update themselves.</p>
     <p><a href="${escapeMarkup(STORY_URL + receiptSearch(receipt.state))}">Reopen this exact comparison</a> | <a href="${STORY_URL}#sources">Sources and corrections</a></p>
     <details><summary>Exact calculation values</summary><pre id="receipt-values">${escapeMarkup(JSON.stringify(receiptValues(receipt), null, 2))}</pre></details>

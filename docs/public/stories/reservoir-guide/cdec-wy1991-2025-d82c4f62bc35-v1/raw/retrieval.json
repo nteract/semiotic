@@ -1,0 +1,144 @@
+{
+  "sources": [
+    {
+      "file": "SHA.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:35.143Z",
+      "bytes": 751380,
+      "sha256": "4473cf2a5add3a64ced0ffe272a5dd1a60694da261cc8658eb5947a83e6ddaa9"
+    },
+    {
+      "file": "SHA-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=SHA",
+      "retrievedAt": "2026-09-05T23:31:35.430Z",
+      "bytes": 83537,
+      "sha256": "f672eab50ae5d76efb8ebbe946a12eac55d0ba2f607ecccd859a63c4563fa5bc"
+    },
+    {
+      "file": "ORO.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:35.990Z",
+      "bytes": 751138,
+      "sha256": "211a0d8037670137bdcbd864bb1643aa308e07b40cb0801f8d4624eed7731aa2"
+    },
+    {
+      "file": "ORO-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=ORO",
+      "retrievedAt": "2026-09-05T23:31:36.243Z",
+      "bytes": 86358,
+      "sha256": "d99455136b3b7cfec1e5fe0446be8b60dfae65e5fe021066cfb513dce537f783"
+    },
+    {
+      "file": "FOL.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:36.749Z",
+      "bytes": 738636,
+      "sha256": "b7f5e6ef507f363c9ac008d43c83d10e3fd70f97fe21da6d434c478e8a992c2c"
+    },
+    {
+      "file": "FOL-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=FOL",
+      "retrievedAt": "2026-09-05T23:31:36.986Z",
+      "bytes": 83148,
+      "sha256": "81385a763c1d42cf6e312e2097c956e938f7e41598b909625b86c0f140c535fa"
+    },
+    {
+      "file": "NML.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=NML&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:37.670Z",
+      "bytes": 748174,
+      "sha256": "a850a13d49cf4459391542599651bf5fe63c67b4cf198e01a680b87829a0fbbb"
+    },
+    {
+      "file": "NML-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=NML",
+      "retrievedAt": "2026-09-05T23:31:37.909Z",
+      "bytes": 84578,
+      "sha256": "0bca87222ab889f75cc0c56610d48ec50e5c6ec345d83112d0462a23b26873e5"
+    },
+    {
+      "file": "DNP.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=DNP&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:38.688Z",
+      "bytes": 746142,
+      "sha256": "c6dfb1e63403642a2e312e6d8fdb29fb8a3f5a6505583bde955bbd2b5fbd09c2"
+    },
+    {
+      "file": "DNP-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=DNP",
+      "retrievedAt": "2026-09-05T23:31:38.902Z",
+      "bytes": 81497,
+      "sha256": "968014569828c2d25c11961f48469231e2018f96629a92b24cabcc6e19ef3bb9"
+    },
+    {
+      "file": "CLE.csv",
+      "url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=CLE&SensorNums=15&dur_code=D&Start=1990-10-01&End=2025-09-30",
+      "retrievedAt": "2026-09-05T23:31:39.504Z",
+      "bytes": 749307,
+      "sha256": "5952bb93da5c8b524bc5a70de13d11920a9363c3a0c231c0a9e1568e2ce39dad"
+    },
+    {
+      "file": "CLE-metadata.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=CLE",
+      "retrievedAt": "2026-09-05T23:31:39.685Z",
+      "bytes": 80633,
+      "sha256": "e53aa31b10eac91c30417fde16f0e7f97a9ef50e6b2555ceede9f53d5973f939"
+    },
+    {
+      "file": "daily-reservoir-summary.html",
+      "url": "https://cdec.water.ca.gov/reportapp/javareports?name=RES&date=2025-07-30",
+      "retrievedAt": "2026-09-05T23:31:40.061Z",
+      "bytes": 114845,
+      "sha256": "29184d8824310f42ff81d34ef3f4ad22e7109917ff394de5ea6627812df947ce"
+    },
+    {
+      "file": "reservoir-information.html",
+      "url": "https://cdec.water.ca.gov/misc/resinfo.html",
+      "retrievedAt": "2026-09-05T23:31:40.275Z",
+      "bytes": 68041,
+      "sha256": "57507dea3c6e3f35d90e14dabac79de86827c3f52c61438e7cb90e1c4a7cf132"
+    },
+    {
+      "file": "webservice-guide.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/wsSensorData",
+      "retrievedAt": "2026-09-05T23:31:40.517Z",
+      "bytes": 79793,
+      "sha256": "f0a0bacf9d67e7ab1e8d6ee1757cae891df645929d3952f3e63329568be548a2"
+    },
+    {
+      "file": "water-watch-guide.html",
+      "url": "https://cww.water.ca.gov/about-the-data",
+      "retrievedAt": "2026-09-05T23:31:40.783Z",
+      "bytes": 34275,
+      "sha256": "aa6edd56f19a4272c3c3b05bb201126858d683b37858e5862f87f0777ae9e6cd"
+    },
+    {
+      "file": "conditions-of-use.html",
+      "url": "https://water.ca.gov/Conditions-of-Use",
+      "retrievedAt": "2026-09-05T23:31:41.615Z",
+      "bytes": 55116,
+      "sha256": "424e0354b0c73d2f219900d529dac7074bcc1594e3cf94eedde07c7b14be106a"
+    },
+    {
+      "file": "reference-capacities-2025.html",
+      "url": "https://cdec.water.ca.gov/reportapp/javareports?name=RES.20250731",
+      "retrievedAt": "2026-09-05T23:36:49.184Z",
+      "bytes": 114761,
+      "sha256": "1e2cd54a045dc1cc9e8bce70aa5ae92ea071a132b1d7e91a8ed44e49dab02a8c"
+    },
+    {
+      "file": "data-flags.html",
+      "url": "https://cdec.water.ca.gov/reportapp/javareports?name=FlagList",
+      "retrievedAt": "2026-09-05T23:36:49.464Z",
+      "bytes": 82433,
+      "sha256": "37362d516dfc3d2f337d3bb03176b58452ea9e7293553f71d6bbe9fce97736e8"
+    },
+    {
+      "file": "oroville-daily-july-2025.html",
+      "url": "https://cdec.water.ca.gov/dynamicapp/QueryDaily?s=ORO&end=2025-07-30",
+      "retrievedAt": "2026-09-05T23:36:49.725Z",
+      "bytes": 163080,
+      "sha256": "cd5030a712f84382e16b6836b9cd8932a6f5cedcf72e4eb3d0bc06fb0690cf2c"
+    }
+  ]
+}

@@ -485,3 +485,14 @@
     padding: 20px 0;
   }
 }
+.plane-interval-key { display: flex; flex-wrap: wrap; gap: 12px 24px; font: 14px/1.6 system-ui; }
+.plane-interval-key span { display: inline-flex; align-items: center; gap: 8px; }
+.plane-interval-key i { width: 38px; height: 13px; border: 1px solid #596674; }
+.plane-scheduled-swatch { background: repeating-linear-gradient(135deg, #f2f0e9 0 3px, #596674 3px 4.5px, #f2f0e9 4.5px 5px); }
+.plane-actual-swatch { background: #287a79; }
+.plane-identity-demo { margin-top: 24px; border-top: 1px solid currentColor; padding-top: 12px; }
+.plane-identity-demo code { overflow-wrap: anywhere; }
+@media (forced-colors: active) {
+  .plane-scheduled-swatch { forced-color-adjust: none; }
+  .plane-actual-swatch { background: CanvasText; }
+}

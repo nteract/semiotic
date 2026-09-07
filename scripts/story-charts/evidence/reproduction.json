@@ -1,0 +1,14 @@
+[
+  {
+    "route": "grocery-bill",
+    "identicalFiles": 6
+  },
+  {
+    "route": "plane-day",
+    "identicalFiles": 6
+  },
+  {
+    "route": "reservoir-guide",
+    "identicalFiles": 40
+  }
+]

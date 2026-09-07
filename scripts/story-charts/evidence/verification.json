@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-06",
+  "focusedAndRelatedUnitTests": 270,
+  "browserScenarios": 26,
+  "browserResult": "25 of 26 passed in the complete run; the offline-restart scenario then passed after replacing its obsolete single-SVG assertion with checks for both accessible charts.",
+  "browsers": "Chromium; 320, 390, 768 and 1280 pixel story coverage; new chart screenshots at 320, 390 and 1280.",
+  "checksPassed": [
+    "library TypeScript",
+    "story TypeScript",
+    "test TypeScript",
+    "scoped ESLint",
+    "custom lints",
+    "file-size gate",
+    "production library build",
+    "production website build and asset budgets",
+    "package entry and multi-import size budgets",
+    "52 byte-identical generated files",
+    "independent grocery/plane HTML reproduction",
+    "independent reservoir consumer: 20 source checksums, four packets and four HTML renders"
+  ],
+  "rendererAudit": {
+    "xy": "Explicit object keys, named schemes, empty-array fallback; XY pipeline and custom layout tests. Equivalent ordinal/network custom resolvers already supported these schemes.",
+    "distribution": "SwarmPlot and BoxPlot server orientation/value extents fixed; ViolinPlot equivalence covered; horizontal value reference coordinates verified.",
+    "hatching": "Scheduled area and rectangle canvas pixels; SVG pattern definitions and solid actual fill; both charts survive HTML export.",
+    "accessibility": "Axe on all three story pages, offline file/restart, native controls; no duplicate IDs in combined HTML exports."
+  },
+  "pending": [
+    "independent human source/editorial review",
+    "reader testing",
+    "manual assistive-technology acceptance",
+    "real Android measurement"
+  ]
+}
