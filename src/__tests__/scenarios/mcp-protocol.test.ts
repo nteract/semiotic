@@ -17,7 +17,7 @@ import type { JsonRpcResponse, ListedMcpTool } from "./mcpProtocolTypes"
  */
 
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import * as http from "http"
 import * as net from "net"
 import * as path from "path"
@@ -472,6 +472,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "semiotic://schema-index",
       "semiotic://surface-manifest",
       "semiotic://system-prompt",
+      "semiotic://tasks",
       "ui://semiotic/chart-widget.html",
     ])
   })
@@ -498,7 +499,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
     expect(text).toContain('"category": "ordinal"')
   })
 
-  it("resources/templates/list exposes per-component schema discovery", async () => {
+  it("resources/templates/list exposes component schemas and task packets", async () => {
     const result = await sendRequest(proc, "resources/templates/list", {}, "resource-templates-list")
 
     expect(result.result).toBeDefined()
@@ -508,7 +509,40 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
         uriTemplate: "semiotic://schema/{component}",
         mimeType: "application/json",
       }),
+      expect.objectContaining({
+        name: "semiotic-task-packet",
+        uriTemplate: "semiotic://tasks/{taskId}",
+        mimeType: "application/json",
+      }),
     ]))
+  })
+
+  it("resources/read discovers and delivers the installed task packets unchanged", async () => {
+    const result = await sendRequest(proc, "resources/read", {
+      uri: "semiotic://tasks",
+    }, "resources-read-tasks")
+    const index = JSON.parse(result.result.contents[0].text)
+    const taskIds = [
+      "compare-category-totals",
+      "update-live-chart",
+      "correct-published-chart",
+    ]
+    expect(index.tasks.map((task: { id: string }) => task.id)).toEqual(taskIds)
+    expect(index.delivery.versionCheck).toBe("match")
+    for (const id of taskIds) {
+      const entry = index.tasks.find((task: { id: string }) => task.id === id)
+      expect(entry.resourceUri).toBe(`semiotic://tasks/${id}`)
+      const response = await sendRequest(proc, "resources/read", {
+        uri: entry.resourceUri,
+      }, `resources-read-task-${id}`)
+      const packet = JSON.parse(response.result.contents[0].text)
+      const installed = JSON.parse(readFileSync(
+        path.resolve(__dirname, `../../../ai/task-packets/${id}.json`), "utf8"
+      ))
+      expect(packet).toEqual({ ...installed, delivery: index.delivery })
+      expect(packet.identity.sourceRevision).toBe(entry.sourceRevision)
+      expect(packet.identity.packageVersion).toBe(index.delivery.installedPackageVersion)
+    }
   })
 
   it("resources/read returns the compact schema discovery index", async () => {

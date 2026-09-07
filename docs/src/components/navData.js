@@ -12,6 +12,15 @@ const navData = [
     path: "/migration",
   },
   {
+    title: "Complete a Task",
+    path: "/tasks",
+    children: [
+      { title: "Compare category totals you can check", path: "/tasks/compare-category-totals" },
+      { title: "Update a live chart by record ID", path: "/tasks/update-live-chart" },
+      { title: "Correct a chart after its source changes", path: "/tasks/correct-published-chart" },
+    ],
+  },
+  {
     title: "Choose a Chart",
     path: "/choose",
   },

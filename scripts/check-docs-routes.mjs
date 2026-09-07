@@ -15,6 +15,7 @@ import { loadExampleDefinitions } from "./prerender.mjs"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_BUILD_DIR = resolve(__dirname, "../docs/build")
 const SITE_URL = "https://semiotic.nteract.io"
+const taskIndex = JSON.parse(readFileSync(resolve(__dirname, "../docs/public/tasks/index.json"), "utf8"))
 const EXAMPLE_DEFINITIONS = await loadExampleDefinitions()
 const REQUIRED_EXAMPLE_DOCS_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({
   routePath: definition.path.replace(/^\/+/, ""),
@@ -23,6 +24,16 @@ const REQUIRED_EXAMPLE_DOCS_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({
 }))
 
 export const REQUIRED_DOCS_ROUTES = [
+  {
+    routePath: "tasks",
+    title: "Complete a visualization task — Semiotic",
+    canonicalUrl: `${SITE_URL}/tasks`,
+  },
+  ...taskIndex.tasks.map((task) => ({
+    routePath: task.route.slice(1),
+    title: `${task.title} — Semiotic`,
+    canonicalUrl: `${SITE_URL}${task.route}`,
+  })),
   {
     routePath: "",
     title: "Semiotic \u2014 Data Visualization for React",
@@ -78,6 +89,11 @@ export const REQUIRED_API_ASSETS = [
 ]
 
 export const REQUIRED_MACHINE_READABLE_ROUTES = [
+  {
+    routePath: "tasks",
+    keyword: "These three source-checkout guides use existing Semiotic APIs.",
+  },
+  ...taskIndex.tasks.map((task) => ({ routePath: task.route.slice(1), keyword: task.summary })),
   {
     routePath: "",
     keyword: "Streaming-First Visualization for React",

@@ -1,0 +1,101 @@
+{
+  "id": "update-live-chart",
+  "title": "Update a live chart by record ID",
+  "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
+  "job": "Show incoming observations, keep the UI stable, and correct existing records without duplicates.",
+  "dataShape": "Synthetic observations with stable IDs, numeric event time and value; a four-record retained window.",
+  "fit": [
+    "Use when a React application needs ref-based updates and explicit record correction.",
+    "The host owns subscription lifecycle, replay and reconnection policy."
+  ],
+  "exclusions": [
+    "Static SVG cannot establish subscription cleanup, correct replay or browser lifecycle behavior.",
+    "This simulated feed is not a production network protocol, durable queue or live service."
+  ],
+  "component": "LineChart",
+  "importPath": "semiotic/line",
+  "usageMode": "push",
+  "props": [
+    "xAccessor",
+    "yAccessor",
+    "pointIdAccessor",
+    "title",
+    "description",
+    "summary",
+    "accessibleTable",
+    "height",
+    "responsiveWidth"
+  ],
+  "contracts": [
+    "accessibility.description-props",
+    "props.data-required-by-usage-mode",
+    "streaming.push-mode-data",
+    "streaming.ref-mutations-require-id-accessors",
+    "rendering.renderchart-static-props"
+  ],
+  "examples": [
+    {
+      "title": "Mounted browser lifecycle",
+      "environment": "React browser only",
+      "path": "docs/src/pages/tasks/examples/LiveChartExample.tsx"
+    },
+    {
+      "title": "Deterministic source and reconnect policy",
+      "environment": "Host-owned synthetic feed",
+      "path": "docs/src/pages/tasks/examples/live-chart.ts"
+    },
+    {
+      "title": "Example styles",
+      "environment": "Browser presentation",
+      "path": "docs/src/pages/tasks/examples/live-chart.css"
+    }
+  ],
+  "checks": {
+    "unit": "docs/src/pages/tasks/examples/live-chart.test.tsx",
+    "browser": "integration-tests/docs-examples-task-live.spec.ts",
+    "expected": [
+      "Corrections replace records by stable ID without increasing the retained count.",
+      "At most four records remain in the chart after new observations.",
+      "While disconnected, the displayed window remains unchanged; reconnect replaces it with the current source window.",
+      "Unmount and StrictMode cleanup leave no active subscription or playback timer.",
+      "After all five events, retained IDs obs-03 through obs-06 have values 17, 20, 16 and 19."
+    ],
+    "unassessed": [
+      "Real transport failures, server retention, clock synchronization and production backpressure.",
+      "Performance on physical devices or under a production event rate.",
+      "Assistive-technology reception and organic adoption."
+    ]
+  },
+  "recovery": [
+    {
+      "symptom": "Pushed rows disappear when React renders again.",
+      "contractId": "streaming.push-mode-data",
+      "action": "Omit data entirely in push mode. Push the initial window through the mounted ref; do not pass data={[]}.",
+      "recheck": "Change host UI state and confirm that the retained records survive."
+    },
+    {
+      "symptom": "A correction cannot find a record or creates duplicates.",
+      "contractId": "streaming.ref-mutations-require-id-accessors",
+      "action": "Set pointIdAccessor to id and use update(id, updater). On reconnect, replace the bounded window from the authoritative host snapshot.",
+      "recheck": "Inspect the chart handle's data after correction and reconnect, including IDs, values and count."
+    }
+  ],
+  "continuation": {
+    "rationale": "The host needs explicit correction and reconnect behavior over a bounded observation window.",
+    "recheck": [
+      "Cleanup, stable IDs, retention, data-prop omission and reconnect replacement after lifecycle or dependency changes."
+    ],
+    "loss": "A static export records one window. It does not carry an active subscription, prove cleanup or promise future updates."
+  },
+  "update": {
+    "status": "source-only",
+    "introducedIn": null,
+    "previousAssumption": "A static render or an empty data array demonstrates a working live chart.",
+    "action": "Omit data for push mode. Establish the subscription after the ref mounts, correct records by ID, clean up and reconcile from the authoritative window on reconnect.",
+    "recheck": [
+      "Retained records and actual canvas paint through correction, disconnect, reconnect and restart.",
+      "Subscriptions and replay timers after unmount and StrictMode cleanup."
+    ],
+    "remaining": "Production transport reliability and event-rate performance require their own environment-specific checks."
+  }
+}

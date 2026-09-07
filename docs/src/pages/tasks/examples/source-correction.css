@@ -1,0 +1,42 @@
+.source-correction-example {
+  min-width: 0;
+}
+
+.source-correction-example table {
+  border-collapse: collapse;
+  margin-block: 1rem;
+  width: 100%;
+}
+
+.source-correction-example th,
+.source-correction-example td {
+  border-bottom: 1px solid var(--border-color, #ccc);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.source-correction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.source-correction-actions button {
+  font: inherit;
+  padding: 0.45rem 0.7rem;
+}
+
+.source-correction-example label {
+  display: block;
+  margin-block: 0.6rem;
+}
+
+.source-correction-example pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.source-correction-example code {
+  overflow-wrap: anywhere;
+}

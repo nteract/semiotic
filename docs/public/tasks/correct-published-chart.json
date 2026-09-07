@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/generate-ai-task-packets.mjs",
+  "id": "correct-published-chart",
+  "title": "Correct a chart after its source changes",
+  "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
+  "route": "/tasks/correct-published-chart",
+  "identity": {
+    "packageName": "semiotic",
+    "packageVersion": "3.9.2",
+    "channel": "source",
+    "sourceRevision": "sha256:8383ba0b722d1dc1ca0b50b5fab406ba002a3342235de27fb63962385a793abb",
+    "revisionKind": "content-digest",
+    "runtime": {
+      "digest": "sha256:2800ee12b1396a918e8dd0b782b793ba342dbcc90ab665a7657aaca3e17c2ec2",
+      "fileCount": 1049
+    },
+    "taskSources": {
+      "digest": "sha256:b9125a6566dadd0eaa66be3d637ed3e41146959a7255e7c74bd5c323df339994",
+      "fileCount": 36
+    },
+    "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
+  },
+  "job": "A source value changed. Update the chart and identify conclusions that still need review.",
+  "dataShape": "Synthetic regional totals: North 12, South 30, West 18. Correct West to 36; the new total is 78 and West becomes largest.",
+  "fit": [
+    "Use when published chart claims and source identity must remain inspectable across revisions.",
+    "Artifact sidecars are optional; ordinary chart rendering remains available without project notes."
+  ],
+  "exclusions": [
+    "A matching hash does not authenticate the source or prove arbitrary prose true.",
+    "A generated revision or transfer report does not grant publication approval or record a human review."
+  ],
+  "api": {
+    "name": "BarChart",
+    "category": "ordinal",
+    "importPath": "semiotic/ordinal",
+    "schemaResourceUri": "semiotic://schema/BarChart",
+    "renderable": true,
+    "requiresLiveData": false,
+    "description": "Vertical or horizontal bars for categorical comparisons.",
+    "component": "BarChart",
+    "usageMode": "static",
+    "dataRequired": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "Array of data objects"
+        },
+        "categoryAccessor": {
+          "type": "string",
+          "description": "Key for category labels",
+          "default": "category",
+          "x-semiotic-runtime-types": [
+            "string",
+            "function"
+          ]
+        },
+        "valueAccessor": {
+          "type": "string",
+          "description": "Key for bar values",
+          "default": "value",
+          "x-semiotic-runtime-types": [
+            "string",
+            "function"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "Visible chart title and the chart's accessible name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Concise accessible description that overrides the chart's generated aria-label."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+        },
+        "accessibleTable": {
+          "type": [
+            "boolean",
+            "object"
+          ],
+          "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+          "default": true,
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "portalTarget"
+              ],
+              "properties": {
+                "portalTarget": {
+                  "type": "string",
+                  "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                }
+              }
+            }
+          ]
+        },
+        "height": {
+          "type": "number",
+          "default": 400
+        },
+        "responsiveWidth": {
+          "type": "boolean"
+        }
+      },
+      "requiredForStatic": [
+        "data"
+      ]
+    },
+    "schemaScope": "Selected properties copied from ai/schema.json; retrieve the component resource for the full schema. React push mode follows the included behavior contracts.",
+    "contracts": [
+      {
+        "id": "accessibility.description-props",
+        "title": "Accessible chart text uses direct chart props",
+        "summary": "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
+        "action": "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. If a consumer-owned role=img wraps the chart, use accessibleTable: { portalTarget: \"element-id\" } and render that target outside the image. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields."
+      },
+      {
+        "id": "props.data-required-by-usage-mode",
+        "title": "Data required by usage mode",
+        "summary": "Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.",
+        "action": "Pass usageMode=\"push\" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode=\"static\" or omit it for renderChart/MCP/static configs where data must be present."
+      },
+      {
+        "id": "rendering.renderchart-static-props",
+        "title": "renderChart uses static props only",
+        "summary": "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
+        "action": "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output."
+      }
+    ]
+  },
+  "examples": [
+    {
+      "title": "Correction and handoff controls",
+      "environment": "React browser",
+      "path": "docs/src/pages/tasks/examples/SourceCorrectionExample.tsx",
+      "source": "import { useMemo, useState } from \"react\"\nimport { BarChart } from \"semiotic/ordinal\"\nimport {\n  correctedRows,\n  inspectSourceHandoff,\n  originalRows,\n  originalSourceArtifact,\n  reviseSourceArtifact,\n  sourceChartProps,\n  sourceCorrectionNote,\n  sourceCorrectionSidecar,\n} from \"./source-correction\"\nimport \"./source-correction.css\"\n\nfunction downloadText(filename: string, content: string, type = \"application/json\") {\n  const url = URL.createObjectURL(new Blob([content], { type }))\n  const link = document.createElement(\"a\")\n  link.href = url\n  link.download = filename\n  link.click()\n  setTimeout(() => URL.revokeObjectURL(url), 0)\n}\n\nexport default function SourceCorrectionExample() {\n  const original = useMemo(originalSourceArtifact, [])\n  const [revised, setRevised] = useState<ReturnType<typeof reviseSourceArtifact>>()\n  const [message, setMessage] = useState(\"Original revision: total 60; South leads with 30 units.\")\n  const [includeSidecar, setIncludeSidecar] = useState(true)\n  const [includeNote, setIncludeNote] = useState(false)\n  const current = revised ?? original\n  const props = current.props as ReturnType<typeof sourceChartProps>\n  const sidecar = useMemo(() => sourceCorrectionSidecar(current.contract), [current.contract])\n  const handoff = useMemo(\n    () => inspectSourceHandoff(props, includeSidecar ? JSON.parse(sidecar.content) : undefined),\n    [props, includeSidecar, sidecar.content],\n  )\n\n  function attemptCorrection(reassess: boolean) {\n    try {\n      const result = reviseSourceArtifact(reassess)\n      setRevised(result)\n      setMessage(\n        \"Correction prepared: total 78; West leads with 36 units. Two previous claims were superseded. Human editorial review remains pending.\",\n      )\n    } catch (error) {\n      setMessage(`Correction refused: ${error instanceof Error ? error.message : String(error)}`)\n    }\n  }\n\n  return (\n    <section className=\"source-correction-example\" aria-label=\"Source correction demonstration\">\n      <p>\n        The source corrects West from 18 to 36 units. That changes the total and the leading region.\n        Updating the bars requires reviewing both conclusions. These are synthetic teaching values.\n      </p>\n      <table>\n        <caption>The source correction, in units</caption>\n        <thead>\n          <tr>\n            <th scope=\"col\">Region</th>\n            <th scope=\"col\">Original</th>\n            <th scope=\"col\">Corrected</th>\n          </tr>\n        </thead>\n        <tbody>\n          {originalRows.map((row, index) => (\n            <tr key={row.region}>\n              <th scope=\"row\">{row.region}</th>\n              <td>{row.total}</td>\n              <td>{correctedRows[index].total}</td>\n            </tr>\n          ))}\n          <tr>\n            <th scope=\"row\">Total</th>\n            <td>60</td>\n            <td>78</td>\n          </tr>\n        </tbody>\n      </table>\n      <div className=\"source-correction-actions\">\n        <button type=\"button\" disabled={Boolean(revised)} onClick={() => attemptCorrection(false)}>\n          Try changing data only\n        </button>\n        <button type=\"button\" disabled={Boolean(revised)} onClick={() => attemptCorrection(true)}>\n          Correct data and both claims\n        </button>\n        <button\n          type=\"button\"\n          onClick={() => {\n            setRevised(undefined)\n            setMessage(\"Original revision restored: total 60; South leads with 30 units.\")\n          }}\n        >\n          Reset example\n        </button>\n      </div>\n      <p role=\"status\" data-testid=\"source-correction-status\">\n        {message}\n      </p>\n      <BarChart {...props} />\n      <p>\n        <strong>Displayed revision {current.contract.artifact.revision}.</strong> {props.summary}\n      </p>\n      <ul aria-label=\"Claim history\">\n        {current.contract.claims.map((claim) => (\n          <li key={claim.id}>\n            <strong>{claim.status}</strong>: {claim.text}\n            {claim.supersedes?.length ? ` Replaces ${claim.supersedes.join(\", \")}.` : \"\"}\n          </li>\n        ))}\n      </ul>\n      <p>\n        Supported here means an authored claim about this fixture, with arithmetic checked in its\n        tests. The contract does not prove prose true. No human editorial approval is recorded.\n        {revised\n          ? ` The revision evaluation is ${revised.evaluation.status}; publishable is ${String(revised.publishable)}.`\n          : \"\"}\n      </p>\n      {revised && (\n        <details>\n          <summary>Inspect correction identities and open checks</summary>\n          <p>\n            Original data identity: <code>{original.contract.artifact.dataFingerprint}</code>\n          </p>\n          <p>\n            Revised data identity: <code>{revised.contract.artifact.dataFingerprint}</code>\n          </p>\n          <ul>\n            {revised.evaluation.manualChecks.map((check) => (\n              <li key={check}>{check}</li>\n            ))}\n          </ul>\n          <pre>{JSON.stringify(revised.contract.contestability?.corrections, null, 2)}</pre>\n        </details>\n      )}\n      <details>\n        <summary>Optional handoff: see what another reader receives</summary>\n        <p>\n          The chart configuration includes its values. The separate sidecar carries claims, evidence\n          identifiers and correction history. The optional note records project context. You can\n          keep the chart without either file.\n        </p>\n        <label>\n          <input\n            type=\"checkbox\"\n            checked={includeSidecar}\n            onChange={(event) => setIncludeSidecar(event.target.checked)}\n          />{\" \"}\n          Include correction sidecar\n        </label>\n        <label>\n          <input\n            type=\"checkbox\"\n            checked={includeNote}\n            onChange={(event) => setIncludeNote(event.target.checked)}\n          />{\" \"}\n          Include project maintenance note\n        </label>\n        <p role=\"status\" data-testid=\"source-handoff-status\">\n          {handoff.message}\n        </p>\n        <p>\n          An image alone cannot establish the source values, correction history or review status.\n        </p>\n        <div className=\"source-correction-actions\">\n          <button\n            type=\"button\"\n            onClick={() =>\n              downloadText(\n                \"regional-totals.config.json\",\n                JSON.stringify({ component: \"BarChart\", props }, null, 2),\n              )\n            }\n          >\n            Download chart configuration\n          </button>\n          {includeSidecar && (\n            <button\n              type=\"button\"\n              onClick={() => downloadText(sidecar.sidecarPath, sidecar.content)}\n            >\n              Download correction sidecar\n            </button>\n          )}\n          {includeNote && (\n            <button\n              type=\"button\"\n              onClick={() =>\n                downloadText(\n                  \"regional-totals-maintenance.md\",\n                  sourceCorrectionNote,\n                  \"text/markdown\",\n                )\n              }\n            >\n              Download maintenance note\n            </button>\n          )}\n        </div>\n        {includeNote && <pre>{sourceCorrectionNote}</pre>}\n      </details>\n    </section>\n  )\n}\n",
+      "digest": "sha256:d24f1f54777cbb533074ce9438f9e6ec3e681c187cc76610d336a6a12d6330c7"
+    },
+    {
+      "title": "Source correction and portable context",
+      "environment": "Host authoring and transfer",
+      "path": "docs/src/pages/tasks/examples/source-correction.ts",
+      "source": "import {\n  buildArtifactContract,\n  createAdjacentArtifactSidecar,\n  createArtifactPacket,\n  evaluateArtifact,\n  fingerprintValue,\n  prepareArtifactRevision,\n  validateArtifactPacket,\n  type ArtifactContract,\n  type Claim,\n  type EvidenceRef,\n  type PrepareArtifactRevisionOptions,\n} from \"semiotic/artifact\"\nimport type { BarChartProps } from \"semiotic/ordinal\"\n\nexport const originalRows = [\n  { region: \"North\", total: 12 },\n  { region: \"South\", total: 30 },\n  { region: \"West\", total: 18 },\n]\n\nexport const correctedRows = [\n  { region: \"North\", total: 12 },\n  { region: \"South\", total: 30 },\n  { region: \"West\", total: 36 },\n]\n\n// Fixed teaching-fixture times describe the example, not a verification run.\nconst originalAt = \"2026-08-01T12:00:00Z\"\nexport const correctionAt = \"2026-08-02T12:00:00Z\"\nconst reason = \"The source corrected West from 18 to 36 units.\"\n\nexport function sourceChartProps(data = originalRows) {\n  const sum = data.reduce((total, row) => total + row.total, 0)\n  const largest = data.reduce((winner, row) => (row.total > winner.total ? row : winner))\n  return {\n    data: data.map((row) => ({ ...row })),\n    categoryAccessor: \"region\",\n    valueAccessor: \"total\",\n    title: \"Regional totals\",\n    description: \"Three synthetic regional totals, measured in the same unit.\",\n    summary: `${largest.region} has the largest total: ${largest.total} units. All regions total ${sum} units.`,\n    accessibleTable: true,\n    height: 280,\n    responsiveWidth: true,\n  } satisfies BarChartProps<(typeof originalRows)[number]>\n}\n\nfunction sourceEvidence(revision: \"1\" | \"2\"): EvidenceRef {\n  return {\n    id: `regional-source-v${revision}`,\n    role: \"source-data\",\n    label: `Synthetic regional totals, revision ${revision}`,\n    source: { name: \"Authored teaching fixture\", version: revision },\n    dataVersion: revision,\n    fingerprint: fingerprintValue(revision === \"1\" ? originalRows : correctedRows).fingerprint,\n    observedAt: revision === \"1\" ? originalAt : correctionAt,\n  }\n}\n\nfunction claims(revision: \"1\" | \"2\"): Claim[] {\n  return [\n    {\n      id: `regional-total-v${revision}`,\n      text: revision === \"1\" ? \"The total is 60 units.\" : \"The total is 78 units.\",\n      kind: \"aggregation\",\n      status: \"supported\",\n      evidenceIds: [`regional-source-v${revision}`],\n      scope: { unit: \"units\", coverage: \"three synthetic regions\" },\n      authoredBy: { kind: \"system\", name: \"Deterministic teaching fixture\" },\n      review: { status: \"proposed\" },\n    },\n    {\n      id: `regional-largest-v${revision}`,\n      text:\n        revision === \"1\"\n          ? \"South has the largest total: 30 units.\"\n          : \"West has the largest total: 36 units.\",\n      kind: \"observation\",\n      status: \"supported\",\n      evidenceIds: [`regional-source-v${revision}`],\n      scope: { unit: \"units\", coverage: \"three synthetic regions\" },\n      authoredBy: { kind: \"system\", name: \"Deterministic teaching fixture\" },\n      review: { status: \"proposed\" },\n    },\n  ]\n}\n\nexport function originalSourceArtifact() {\n  const props = sourceChartProps()\n  const contract = buildArtifactContract(\"BarChart\", props, {\n    id: \"regional-totals\",\n    revision: \"1\",\n    intents: [\"comparison\"],\n    purpose: { stakes: \"informational\" },\n    claims: claims(\"1\"),\n    evidence: [sourceEvidence(\"1\")],\n    time: {\n      observedAt: originalAt,\n      presentation: { state: \"historical\", label: \"Original synthetic source\" },\n      revision: { status: \"original\" },\n    },\n    reception: {\n      channels: [{ channel: \"visual\" }, { channel: \"agent\" }],\n      description: props.description,\n      dataFallback: true,\n    },\n    form: {\n      chartFamily: \"ordinal\",\n      whyThisForm: \"Bar lengths compare totals in the same unit.\",\n    },\n    contestability: { sourceRequestsAllowed: true },\n    accountability: {\n      authors: [{ kind: \"system\", name: \"Semiotic documentation fixture\" }],\n      reviews: [{ id: \"editorial-review\", status: \"pending\" }],\n    },\n    inheritance: { privacy: \"public\", rawDataDefault: \"exclude\" },\n    fieldStatus: {\n      \"accountability.reviews\": {\n        status: \"manual\",\n        reason: \"This teaching example records no human editorial approval.\",\n        suppliedBy: \"system\",\n      },\n    },\n  })\n  return { props, contract }\n}\n\nexport function sourceCorrectionOptions(current: ArtifactContract): PrepareArtifactRevisionOptions {\n  return {\n    revision: \"2\",\n    data: correctedRows.map((row) => ({ ...row })),\n    evidence: [...current.evidence, sourceEvidence(\"2\")],\n    presentation: {\n      summary: sourceChartProps(correctedRows).summary,\n      description: \"Corrected synthetic regional totals; West changed from 18 to 36 units.\",\n    },\n    time: {\n      observedAt: correctionAt,\n      presentation: { state: \"historical\", label: \"Corrected synthetic source\" },\n      revision: { status: \"corrected\", reason, correctionId: \"regional-total-correction\" },\n    },\n    claimTransitions: claims(\"2\").map((replacement, index) => ({\n      action: \"supersede\",\n      previousClaimId: claims(\"1\")[index].id,\n      replacement,\n      correction: {\n        id: index === 0 ? \"regional-total-correction\" : \"regional-largest-correction\",\n        reason,\n        createdAt: correctionAt,\n        createdBy: { kind: \"system\", name: \"Deterministic teaching fixture\" },\n      },\n    })),\n    policy: \"exploratory\",\n    now: correctionAt,\n    recommendRepresentation: false,\n    groundingChannels: [\"agent\"],\n  }\n}\n\nexport function reviseSourceArtifact(reassessClaims = true) {\n  const original = originalSourceArtifact()\n  const options = sourceCorrectionOptions(original.contract)\n  return prepareArtifactRevision(\"BarChart\", original.props, original.contract, {\n    ...options,\n    claimTransitions: reassessClaims ? options.claimTransitions : [],\n  })\n}\n\nexport function sourceCorrectionSidecar(contract: ArtifactContract) {\n  return createAdjacentArtifactSidecar(\n    createArtifactPacket(contract, {\n      format: \"static-package\",\n      includeEvidenceSamples: false,\n    }),\n    \"regional-totals\",\n  )\n}\n\nexport const sourceCorrectionNote = `Regional totals: maintenance context\n\nPurpose: compare three synthetic totals in the same unit.\nComponent: BarChart from semiotic/ordinal.\nChoice rationale: React charting with exact values and explicit correction history.\nConstraint: preserve the project's dependency policy; changed requirements may justify another library.\nVersion: inspect the installed package and lockfile before editing.\nVerification: this optional note stores no execution result or human approval.\nRecheck: category/value mapping, arithmetic, summary, claim transitions and accessible route.\nLimits: a matching fingerprint does not authenticate the source or prove arbitrary prose.\nFiles: retain chart configuration/data separately from the artifact-contract sidecar.\nDocumentation: /tasks/correct-published-chart (check its build identity against your installation).\n`\n\n/** A missing sidecar carries no evidence of source identity or prior review. */\nexport function inspectSourceHandoff(props: ReturnType<typeof sourceChartProps>, packet?: unknown) {\n  if (packet === undefined) {\n    return {\n      status: \"unavailable\" as const,\n      message:\n        \"Correction context unavailable. Chart values remain available, but source identity, previous claims and review history were not transferred.\",\n    }\n  }\n  const validation = validateArtifactPacket(packet)\n  if (!validation.valid || !validation.packet) {\n    return {\n      status: \"refused\" as const,\n      message: `Sidecar refused: ${validation.errors.join(\"; \")}`,\n    }\n  }\n  const contract = validation.packet.contract\n  const evaluation = evaluateArtifact(\"BarChart\", props, contract, {\n    policy: \"exploratory\",\n    now: correctionAt,\n    recommendRepresentation: false,\n  })\n  if (\n    evaluation.obligations.some(({ id, status }) => id.startsWith(\"identity.\") && status !== \"pass\")\n  ) {\n    return {\n      status: \"refused\" as const,\n      message:\n        \"Sidecar refused: its identity does not establish a match with this chart configuration and data.\",\n    }\n  }\n  return {\n    status: \"available\" as const,\n    message: `Revision ${contract.artifact.revision} correction context matches this chart. Human editorial approval remains unrecorded.`,\n    contract,\n  }\n}\n",
+      "digest": "sha256:9e752f3abdc425222816dc8ae824f2c11e17da84f0bf67e3a254cc851bee9443"
+    },
+    {
+      "title": "Example styles",
+      "environment": "Browser presentation",
+      "path": "docs/src/pages/tasks/examples/source-correction.css",
+      "source": ".source-correction-example {\n  min-width: 0;\n}\n\n.source-correction-example table {\n  border-collapse: collapse;\n  margin-block: 1rem;\n  width: 100%;\n}\n\n.source-correction-example th,\n.source-correction-example td {\n  border-bottom: 1px solid var(--border-color, #ccc);\n  padding: 0.5rem;\n  text-align: left;\n}\n\n.source-correction-actions {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.5rem;\n  margin-block: 1rem;\n}\n\n.source-correction-actions button {\n  font: inherit;\n  padding: 0.45rem 0.7rem;\n}\n\n.source-correction-example label {\n  display: block;\n  margin-block: 0.6rem;\n}\n\n.source-correction-example pre {\n  white-space: pre-wrap;\n  overflow-wrap: anywhere;\n}\n\n.source-correction-example code {\n  overflow-wrap: anywhere;\n}\n",
+      "digest": "sha256:d900ca47c8923bb35ae01ac4a22979259203fab8af0fd4d8b831a48beb1eae34"
+    }
+  ],
+  "evidence": {
+    "claimId": "task.correct-published-chart",
+    "statement": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
+    "owner": "Semiotic repository maintainers",
+    "status": "supported-in-scope",
+    "observed": {
+      "verifiedAt": "2026-09-07T19:35:59.815Z",
+      "environment": {
+        "node": "v22.22.1",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "browser": "Playwright Chromium"
+      },
+      "runs": [
+        {
+          "kind": "unit",
+          "targets": [
+            "docs/src/pages/tasks/examples/category-comparison.test.ts",
+            "docs/src/pages/tasks/examples/live-chart.test.tsx",
+            "docs/src/pages/tasks/examples/source-correction.test.ts"
+          ],
+          "name": "Task source units",
+          "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
+          "exitCode": 0,
+          "passed": 14,
+          "skipped": 0,
+          "passedByFile": {
+            "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
+            "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
+            "docs/src/pages/tasks/examples/source-correction.test.ts": 5
+          }
+        },
+        {
+          "kind": "browser",
+          "targets": [
+            "integration-tests/docs-examples-task-live.spec.ts",
+            "integration-tests/docs-examples-tasks.spec.ts"
+          ],
+          "name": "Task browser behavior",
+          "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
+          "exitCode": 0,
+          "passed": 6,
+          "skipped": 0,
+          "passedByFile": {
+            "integration-tests/docs-examples-task-live.spec.ts": 2,
+            "integration-tests/docs-examples-tasks.spec.ts": 4
+          }
+        }
+      ],
+      "record": "ai/tasks/verification.json",
+      "authorship": "Agent-observed execution of repository tests; independent review is not recorded."
+    },
+    "validity": "Only the content digests and environment recorded here; not a release range or an adoption result.",
+    "invalidation": "Changes to runtime source, schemas, manifests, task examples, tests, verification tooling or this task definition invalidate the recorded result.",
+    "commands": [
+      "npx vitest run docs/src/pages/tasks/examples/source-correction.test.ts",
+      "npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts"
+    ],
+    "checks": {
+      "unit": "docs/src/pages/tasks/examples/source-correction.test.ts",
+      "browser": "integration-tests/docs-examples-tasks.spec.ts"
+    },
+    "expected": [
+      "Changing data without revisiting active claims is refused.",
+      "The original total 60 and South-largest claims are superseded; replacements describe total 78 and West 36.",
+      "The original chart and evidence remain intact while corrected identities change.",
+      "Exported context retains the revision history; image-only delivery reports missing context.",
+      "Publication and human-review obligations remain visible."
+    ],
+    "unassessed": [
+      "Authenticity of upstream data and the truth of arbitrary editorial statements.",
+      "Independent human review, publication policy and reader reception.",
+      "Benefits to fresh-agent maintenance: the offline study defines cases but measures no adoption outcome."
+    ]
+  },
+  "recovery": [
+    {
+      "symptom": "prepareArtifactRevision refuses a changed source.",
+      "action": "Supply explicit transitions for every affected active claim. Retain prior evidence and give the correction a distinct revision and new source identity.",
+      "recheck": "Inspect superseded claims, replacement IDs, correction history and remaining manual obligations."
+    },
+    {
+      "symptom": "A recipient has the image but cannot inspect source or review context.",
+      "action": "Provide chart config/data and an optional artifact packet or adjacent sidecar. The sidecar contains the contract and transfer report, not a complete dataset.",
+      "recheck": "Check the transfer's omissions. Treat unavailable context as unknown; do not manufacture approval."
+    }
+  ],
+  "continuation": {
+    "rationale": "A published regional comparison needs source and claim continuity through a correction.",
+    "recheck": [
+      "Affected arithmetic, ranking, source identity, claim transitions and review obligations after a change."
+    ],
+    "loss": "Removing a project note does not break the chart. Image-only transfer loses inspectable source/review context; retain config/data separately from the artifact sidecar."
+  },
+  "update": {
+    "status": "source-only",
+    "introducedIn": null,
+    "previousAssumption": "Updating source rows or matching an identity automatically refreshes all conclusions and approves publication.",
+    "action": "Use explicit claim transitions for the changed source, preserve old evidence and inspect correction history, transfer losses and outstanding human review.",
+    "recheck": [
+      "Both total and ranking claims must change in this fixture.",
+      "A matching version string does not establish deployed parity or source authenticity."
+    ],
+    "remaining": "This is current source guidance with no recorded release introduction or editorial approval."
+  },
+  "definition": "ai/tasks/correct-published-chart.json"
+}

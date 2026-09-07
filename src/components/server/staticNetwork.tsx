@@ -81,13 +81,18 @@ export function buildRealtimeEdges(
   const sourceFn = resolveAccessor(config.sourceAccessor, "source")
   const targetFn = resolveAccessor(config.targetAccessor, "target")
   const valueFn = resolveAccessor(config.valueAccessor, "value")
-  return propsEdges.map((d) => {
+  return propsEdges.map((d, index) => {
     const numericValue = Number(valueFn(d))
+    const source = String(sourceFn(d))
+    const target = String(targetFn(d))
     return {
-      source: String(sourceFn(d)),
-      target: String(targetFn(d)),
+      source,
+      target,
       value: Number.isFinite(numericValue) ? numericValue : 1,
-      y0: 0, y1: 0, sankeyWidth: 0, data: d
+      y0: 0, y1: 0, sankeyWidth: 0, data: d,
+      // Match bounded browser ingestion: distinct rows between the same
+      // endpoints need distinct layout identities, even without authored ids.
+      _edgeKey: `${source}\0${target}\0${index}`
     }
   })
 }

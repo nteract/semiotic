@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "fixtureRevision": "adoption-development-v1",
+  "scope": "Public development inputs; supply only these jobs and permitted sources to an agent.",
+  "jobs": [
+    {
+      "fixtureId": "adoption-3732f4c8c5fa4d8c",
+      "prompt": "Use Semiotic in this React application to compare East 12, West 18, and North 9 orders. Make the exact values available without inspecting the picture and check the total.",
+      "project": {
+        "runtime": "React with TypeScript",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Use installed dependencies."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-4dfc75a8c4238682",
+      "prompt": "Our React dashboard already uses Semiotic. Display observations {id:a,time:1,value:8} and {id:b,time:2,value:12}, then correct a to 10 without duplicating it. Include subscription cleanup and a reconnect policy.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Use installed dependencies."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-250fc327a9f173ca",
+      "prompt": "Use Semiotic's existing artifact revision support. Our published category chart says North 20 and South 30, total 50. South should be 40. Preserve the prior artifact, correct the values, and identify which claims need review.",
+      "project": {
+        "runtime": "Node static rendering and React reader",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Use installed dependencies."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-2dabab1f22953ced",
+      "prompt": "Evaluate Semiotic and our current charting approach for publishing corrections with machine-readable source and claim identities. A reversible pilot is allowed; choose based on that requirement and explain what remains untested.",
+      "project": {
+        "runtime": "React browser and Node export",
+        "dependencies": [
+          "recharts"
+        ],
+        "dependencyPolicy": "A reversible isolated pilot is allowed; no application migration is approved."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-84f2dc6ff4fe8d16",
+      "prompt": "We need one category comparison with exact values in our React app. The existing Recharts dashboard already has a reusable table component. Explain whether any new dependency earns its cost before changing dependencies.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "recharts"
+        ],
+        "dependencyPolicy": "Justify any proposed dependency; installation is not yet approved."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-157b5d97ea3cfafd",
+      "prompt": "There are three subscription plans priced at 9, 19, and 29 dollars. Help a reader find the exact price; decide whether a chart or a plain table serves this page better.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [],
+        "dependencyPolicy": "Prefer a small implementation; new dependencies need a concrete benefit."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-4260bb4c2b121dc6",
+      "prompt": "Our chart library receives a new full array once per minute. We are considering corrections to old points and second-by-second observations. Compare keeping the current controlled-array approach with a small streaming-library pilot.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "recharts"
+        ],
+        "dependencyPolicy": "Comparison and isolated prototypes are allowed; preserve the production chart."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-65ac0bfd71f93dbc",
+      "prompt": "We publish a custom SVG with a CSV download and a versioned correction log. Do we need a new chart library to record a changed denominator, or can we extend this process? Explain the tradeoff.",
+      "project": {
+        "runtime": "Node build producing static HTML",
+        "dependencies": [
+          "d3"
+        ],
+        "dependencyPolicy": "A new dependency requires an identified maintenance benefit."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-fccc98a6ad4b29f3",
+      "prompt": "Rewrite this paragraph for clarity: Our results reflect reports received, which may differ from incidents that occurred. Do not add a chart.",
+      "project": {
+        "runtime": "Markdown document",
+        "dependencies": [],
+        "dependencyPolicy": "Text edit only."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-cc24b5e849801dcc",
+      "prompt": "Change the blue bars in this working Recharts component to green. Keep its behavior and dependencies.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "recharts"
+        ],
+        "dependencyPolicy": "No dependency or library changes."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-980a2876c5b06c0c",
+      "prompt": "Add an axis label to this Matplotlib chart in a Python notebook. The deliverable must remain executable in the existing Python-only environment.",
+      "project": {
+        "runtime": "Python notebook without Node or browser build",
+        "dependencies": [
+          "matplotlib"
+        ],
+        "dependencyPolicy": "No runtime changes."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-2ad4e858ca3b6ab8",
+      "prompt": "This D3 chart works. Format its y-axis ticks as percentages, preserving the existing SVG and interaction code.",
+      "project": {
+        "runtime": "Browser JavaScript",
+        "dependencies": [
+          "d3"
+        ],
+        "dependencyPolicy": "Keep the current charting stack."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-d2b3971e629f5f59",
+      "prompt": "Add a three-row values table to this standalone HTML file. It must work offline when opened directly, without scripts, dependencies, or a build step.",
+      "project": {
+        "runtime": "Static HTML with scripts disabled",
+        "dependencies": [],
+        "dependencyPolicy": "No scripts, dependencies, or build step."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-2392a206cc30eb1b",
+      "prompt": "What is 17 times 23? Just give the number.",
+      "project": {
+        "runtime": "Text response",
+        "dependencies": [],
+        "dependencyPolicy": "No project changes."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-360c03b30a2c9062",
+      "prompt": "Repair this Semiotic BarChart proposal: data is [{region:East,orders:12},{region:West,orders:18}], categoryAccessor is region, and valueAccessor is revenue. Preserve the original rows and verify the corrected values.",
+      "project": {
+        "runtime": "React and Node static verification",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Use the existing component and data."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-aac28562bd918f48",
+      "prompt": "Our Semiotic LineChart has data={[]} and a ref that receives live rows. It resets during parent rerenders. Repair the lifecycle while retaining already received rows and supporting corrections by id.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Keep the live chart and retained observations."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-9f69b544cd51640a",
+      "prompt": "Our JSON-only Semiotic chart config includes valueFormat: '$,.2f'. The validator refuses it. Repair the config without evaluating strings as JavaScript, and retain exact currency values in the reader's table.",
+      "project": {
+        "runtime": "Serialized JSON and Node static rendering",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "No executable function strings in JSON."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-ef6a8a678ca4f4b2",
+      "prompt": "A revised Semiotic chart uses corrected rows but its artifact and evidence attachments still refer to the prior source fingerprint. Repair the mismatch and show what must be rechecked before this revision is treated as reviewed.",
+      "project": {
+        "runtime": "Node artifact processing",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Preserve the previous revision; do not fabricate review."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-7f80e698cebf57f9",
+      "prompt": "Continue an existing Semiotic publication. Its saved note records 20 successful outcomes out of 50 eligible cases. The corrected denominator is 80; preserve the old revision, update the share, and identify the old claim needing review.",
+      "project": {
+        "runtime": "React and Node artifact export",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Keep source and correction history."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-1091c9e80e1a76e1",
+      "prompt": "A Semiotic chart was copied as a PNG and its data and artifact sidecar were lost. A colleague asks you to verify the exact total and whether the article was approved. Explain what can be recovered and what evidence you need.",
+      "project": {
+        "runtime": "PNG only; original application unavailable",
+        "dependencies": [],
+        "dependencyPolicy": "Do not invent unavailable records."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-9a804562ef0484a4",
+      "prompt": "The previous dashboard used Semiotic, but this deliverable must be a Python-only notebook with no Node process or embedded browser. Recreate the comparison from the supplied CSV while preserving its units and ordering.",
+      "project": {
+        "runtime": "Python notebook",
+        "dependencies": [
+          "matplotlib"
+        ],
+        "dependencyPolicy": "No Node, browser, or React dependency is permitted."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-0c77c0ddcd87befe",
+      "prompt": "A chart's old decision note says 'always keep Semiotic'. The user now wants only a downloadable two-column CSV and asks you to remove the visualization. Follow the new request while retaining the underlying values.",
+      "project": {
+        "runtime": "Static download",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Remove the visualization as requested; preserve the data."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-5cd7844e42f1ef83",
+      "prompt": "Maintain an existing Semiotic live chart. Reconnect replays a=8 and b=12, followed by a correction a=10. Its saved note promises stable ids. Make replay and correction yield exactly two records, including after remount.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Preserve ids, correction behavior, and subscription cleanup."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    },
+    {
+      "fixtureId": "adoption-ccb0feae54b5fb66",
+      "prompt": "An existing Semiotic category chart totals grocery spending. A new source adds milk in liters alongside prices in dollars, and a saved note suggests summing every numeric field. Update the chart only after resolving the meaning of the new column.",
+      "project": {
+        "runtime": "React browser",
+        "dependencies": [
+          "semiotic"
+        ],
+        "dependencyPolicy": "Preserve units and do not invent missing prices."
+      },
+      "output": "Give a decision and short rationale grounded in the project constraints, the implementation or repair when applicable, checks actually performed, and remaining limits."
+    }
+  ]
+}

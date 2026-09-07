@@ -767,6 +767,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-xy-lines", "hoc-bar", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
+    id: "superpersuasion",
+    shortLabel: "Worth choosing",
+    note: "An editorial Sankey traces 24 authored decision cases; generated task guides retain their evidence scope, and a source correction preserves earlier conclusions and optional handoff context. Paired hatched bars retain a fixed comparison scale.",
+    uses: ["input-static", "hoc-network-flow", "hoc-ordinal-bars", "feature-accessors", "feature-axes", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
     id: "machine-semiosphere",
     shortLabel: "Machine Semiosphere",
     note: "Six scroll chapters follow the reported July 2026 Hugging Face incident through one authored vertical transit-style evidence map and fixed inline data visuals. Local fixtures, optional hover details, plain-language limitations, and accessible tables keep the full account available in document order.",

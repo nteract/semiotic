@@ -1,4 +1,4 @@
-import type { ChartSpec } from "./chartSpecCore"
+import type { ChartSpec, ChartPropSpec } from "./chartSpecCore"
 import {
   ORIENTATION_ENUM,
   HORIZONTAL_VERTICAL_ENUM,
@@ -6,6 +6,13 @@ import {
 } from "./chartSpecCore"
 import { DEFAULT_LIKERT_LEVELS } from "../ordinal/LikertChart.defaults"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
+
+// Numeric bounds can travel through JSON; React also permits undefined bounds.
+const VALUE_EXTENT_PROP: ChartPropSpec = {
+  type: "array",
+  description: "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+  schema: { minItems: 1, maxItems: 2, items: { type: "number" } }
+}
 
 export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
   BarChart: {
@@ -24,7 +31,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], default: false, description: "Sort bars: false, true, 'asc', 'desc', or comparator function" },
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: ["number", "function"], omitFromSchema: true, description: "Rounded bar-tip radius in pixels, or a function of rendered bar width." },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
       baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
@@ -63,7 +70,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
       barPadding: { type: "number", default: 40 },
       roundedTop: { type: ["number", "function"], omitFromSchema: true, description: "Rounded bar-tip radius in pixels, or a function of rendered bar width." },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
       baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
@@ -96,7 +103,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], omitFromSchema: true },
       barPadding: { type: "number", default: 60 },
       roundedTop: { type: ["number", "function"], omitFromSchema: true, description: "Rounded bar-tip radius in pixels, or a function of rendered bar width." },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
       baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
@@ -132,7 +139,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       pointRadius: { type: "number", default: 4 },
       pointOpacity: { type: "number", default: 0.7 },
       categoryPadding: { type: "number", default: 20 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       // Brush props are runtime-only — schema.json hides them from LLMs.
       brush: { type: "boolean", omitFromSchema: true },
@@ -164,7 +171,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       showOutliers: { type: "boolean", default: true, description: "Show outlier points" },
       outlierRadius: { type: "number", default: 3 },
       categoryPadding: { type: "number", default: 20 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
@@ -191,7 +198,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       bins: { type: "number", default: 25, description: "Number of bins for the histogram" },
       relative: { type: "boolean", default: false, description: "Normalize counts per category to show relative frequency" },
       categoryPadding: { type: "number", default: 20 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       brush: { type: "boolean", description: "Enable a value-axis brush overlay for range selection." },
       onBrush: { type: "function", omitFromSchema: true },
@@ -223,7 +230,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       curve: { type: "string", default: "catmullRom", description: "Interpolation curve for the violin shape" },
       showIQR: { type: "boolean", default: true, description: "Show interquartile range lines" },
       categoryPadding: { type: "number", default: 20 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       brush: { type: "boolean", omitFromSchema: true },
       onBrush: { type: "function", omitFromSchema: true },
@@ -254,7 +261,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       bins: { type: "number", description: "Number of bins for density estimation" },
       amplitude: { type: "number", default: 1.5, description: "Unitless multiplier of row height (>1 creates overlap)" },
       categoryPadding: { type: "number", omitFromSchema: true },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
@@ -282,7 +289,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       sort: { type: ["boolean", "string", "function"], default: true, description: "Sort dots: true, false, 'asc', 'desc'" },
       dotRadius: { type: "number", default: 5 },
       categoryPadding: { type: "number", default: 10 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
       // Canonical schema flags showGrid `true` for DotPlot — grid lines help
       // readers eyeball values along the value axis.
@@ -466,7 +473,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: { type: ["string", "function"], default: "value", description: "Magnitude along each axis." },
       seriesAccessor: { type: ["string", "function"], description: "Series identity; points with the same series are connected into a polygon. Defaults to colorBy." },
       pointRadius: { type: "number", default: 4 },
-      valueExtent: { type: "array", description: "Fixed value-axis domain; defaults to [0, data-max]." },
+      valueExtent: { ...VALUE_EXTENT_PROP, description: "Fixed value-axis domain [min, max]; defaults to [0, data-max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds." },
       styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {
@@ -494,7 +501,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       orientation: { type: "string", enum: HORIZONTAL_VERTICAL_ENUM, default: "horizontal", description: "Horizontal renders lanes as rows; vertical as columns." },
       barPadding: { type: "number", default: 40, description: "Padding between lanes in pixels" },
       roundedTop: { type: ["number", "function"], description: "Rounded corner radius (px), or a function of rendered lane width, applied to the outermost ends of each lane — left+right for horizontal, top+bottom for vertical. Middle segments stay square; single-segment lanes round all four corners." },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       trackFill: { type: ["string", "object"], omitFromSchema: true, description: "Lane background fill painted behind each swimlane. A color string, or { color, opacity? } for a translucent track." },
       gradientFill: { type: ["boolean", "object"], description: "Enable the default tip-to-base gradient or configure stops." },
       brush: { type: "boolean", description: "Enable value-axis brush selection" },
@@ -539,7 +546,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // passes; the schema test relies on schema's value being identical.
       orientation: { type: "string", enum: ORIENTATION_ENUM, default: "horizontal" },
       barPadding: { type: "number", default: 20 },
-      valueExtent: { type: "array", omitFromSchema: true },
+      valueExtent: VALUE_EXTENT_PROP,
       styleRules: STYLE_RULES_PROP_SPEC,
     },
     capabilities: {

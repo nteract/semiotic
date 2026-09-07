@@ -1,8 +1,8 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes twenty-three developer tools, eleven resources (ten fixed and one
- * template), and two prompts:
+ * Exposes twenty-three developer tools, thirteen resources (eleven fixed and
+ * two templates), and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
@@ -62,6 +62,7 @@ import {
   type McpToolProfile
 } from "./mcp-build-info"
 import { createMcpMetadataLogger, resolveMcpLoggingPolicy } from "./mcp-logging"
+import { createTaskResourceReader } from "./mcp-task-resources"
 import {
   createMcpRequestLimiter,
   resolveMcpRequestLimits
@@ -3731,6 +3732,10 @@ function createServer(
     description:
       "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation."
   })
+  const taskResources = createTaskResourceReader({
+    directory: aiFilePath("task-packets"),
+    packageVersion: PACKAGE_VERSION
+  })
 
   srv.registerResource(
     "semiotic-build-info",
@@ -3743,6 +3748,46 @@ function createServer(
     },
     (uri) =>
       textResource(uri, "application/json", JSON.stringify(buildInfo, null, 2))
+  )
+
+  srv.registerResource(
+    "semiotic-task-index",
+    "semiotic://tasks",
+    {
+      title: "Semiotic Task Guides",
+      description:
+        "Bounded implementation paths for category totals, live record updates, and source corrections. Includes fit, limits, installed version, and source identity.",
+      mimeType: "application/json"
+    },
+    (uri) =>
+      textResource(uri, "application/json", JSON.stringify(taskResources.index(), null, 2))
+  )
+
+  srv.registerResource(
+    "semiotic-task-packet",
+    new ResourceTemplate("semiotic://tasks/{taskId}", {
+      list: undefined,
+      complete: { taskId: (value) => taskResources.complete(value) }
+    }),
+    {
+      title: "Semiotic Task Packet",
+      description:
+        "One source-identified task with a compact schema, complete example, expected checks, repair guidance, and evidence limits. Refuses incompatible installed versions.",
+      mimeType: "application/json"
+    },
+    (uri, variables) => {
+      if (
+        typeof variables.taskId !== "string" ||
+        uri.href !== `semiotic://tasks/${variables.taskId}`
+      ) {
+        throw new Error("Invalid Semiotic task resource URI")
+      }
+      return textResource(
+        uri,
+        "application/json",
+        JSON.stringify(taskResources.read(variables.taskId), null, 2)
+      )
+    }
   )
 
   srv.registerResource(

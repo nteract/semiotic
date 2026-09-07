@@ -80,11 +80,13 @@ function chartCatalog() {
 
 const INTRO = `# Semiotic
 
-> React data visualization library designed for AI-assisted development. Charts, network graphs, streaming data, and coordinated dashboards with machine-readable schemas, an MCP server, and structured instruction files so LLMs generate correct code without examples.`
+> React data visualization library with charts, network graphs, streaming data, and coordinated dashboards. Machine-readable schemas, executable examples, diagnostics, and an MCP server support generating, checking, and repairing chart code.`
 
 const DOCS = `## Docs
 
 - [Getting Started](/getting-started): Installation, quick examples, and first chart
+- [Complete a Task](/tasks): Check category values, maintain a live chart, or correct a published claim
+- [Source Task Packets](/tasks/index.json): Generated task guidance with selected schemas, repairs, source identity and evidence limits; installed and deployed parity require separate checks
 - [Choose a Chart](/choose): Profile a dataset and rank charts by fit and communicative act
 - [Charts](/charts): All chart types with live examples, prop tables, and grounding panels
 - [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API

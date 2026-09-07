@@ -1,0 +1,222 @@
+.sp-correction {
+  margin: 3rem 0;
+  padding: clamp(1.1rem, 4vw, 2.5rem);
+  color: #172e34;
+  background: #f5f1e8;
+  border: 1px solid #d7cec0;
+  border-top: 4px solid #24766d;
+}
+.sp-correction .sp-correction-kicker,
+.sp-correction .sp-correction-label {
+  display: block;
+  font:
+    700 0.73rem/1.5 system-ui,
+    sans-serif;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.sp-correction .sp-correction-heading h3 {
+  margin: 0.65rem 0 1rem;
+  font:
+    500 clamp(1.8rem, 4vw, 2.65rem)/1.12 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+}
+.sp-correction .sp-correction-heading p {
+  max-width: 65ch;
+  font-size: 1.08rem;
+  line-height: 1.65;
+}
+.sp-correction .sp-correction-reading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 1.6rem 0 0;
+  padding: 1.4rem 0;
+  border-top: 1px solid #cfc5b7;
+  border-bottom: 1px solid #cfc5b7;
+}
+.sp-correction .sp-correction-conclusion {
+  margin: 0.4rem 0 0;
+  font:
+    1.3rem/1.45 Georgia,
+    serif;
+}
+.sp-correction .sp-correction-conclusion span {
+  display: block;
+}
+.sp-correction .sp-correction-conclusion strong {
+  color: #175f57;
+}
+.sp-correction .sp-correction-review {
+  padding: 0.3rem 0.65rem;
+  background: #e9dcc9;
+  border-radius: 2px;
+  font:
+    650 0.74rem/1.4 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
+.sp-correction .sp-correction-chart {
+  margin: 1.4rem 0;
+  min-width: 0;
+}
+.sp-correction .sp-correction-key {
+  display: flex;
+  gap: 1.3rem;
+  flex-wrap: wrap;
+}
+.sp-correction .sp-correction-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font:
+    0.8rem/1.4 system-ui,
+    sans-serif;
+}
+.sp-correction .sp-correction-key i {
+  width: 1.3rem;
+  height: 0.7rem;
+  display: inline-block;
+}
+.sp-correction .sp-correction-published {
+  border: 1px solid #915221;
+  background: repeating-linear-gradient(45deg, #f5e4d1 0px, #f5e4d1 3px, #915221 3px, #915221 4px);
+}
+.sp-correction .sp-correction-current {
+  background: #24766d;
+}
+.sp-correction .sp-correction-caption {
+  font:
+    0.78rem/1.55 system-ui,
+    sans-serif;
+  color: #4d5b5b;
+}
+.sp-correction .sp-correction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.sp-correction button {
+  padding: 0.7rem 1rem;
+  color: #172e34;
+  background: transparent;
+  border: 1px solid #74807b;
+  border-radius: 3px;
+  font:
+    600 0.86rem/1.4 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.sp-correction button:hover:not(:disabled) {
+  background: #e9e4d9;
+}
+.sp-correction button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.sp-correction button.sp-correction-primary {
+  background: #175f57;
+  color: #fffdf8;
+  border-color: #175f57;
+}
+.sp-correction button.sp-correction-primary:hover:not(:disabled) {
+  background: #104b45;
+}
+.sp-correction :is(button, summary, input):focus-visible {
+  outline: 3px solid #a14d48;
+  outline-offset: 4px;
+}
+.sp-correction .sp-correction-status {
+  min-height: 1.5em;
+  font:
+    0.88rem/1.55 system-ui,
+    sans-serif;
+}
+.sp-correction .sp-correction-footnotes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+}
+.sp-correction .sp-correction-footnotes details {
+  border-top: 1px solid #cfc5b7;
+  padding-top: 1rem;
+  min-width: 0;
+}
+.sp-correction .sp-correction-footnotes summary {
+  font:
+    650 0.92rem/1.5 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.sp-correction .sp-correction-footnotes p {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.sp-correction table {
+  border-collapse: collapse;
+  width: 100%;
+  font:
+    0.8rem/1.45 system-ui,
+    sans-serif;
+}
+.sp-correction caption {
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+.sp-correction th,
+.sp-correction td {
+  padding: 0.4rem;
+  text-align: right;
+  border-bottom: 1px solid #d7cec0;
+}
+.sp-correction th:first-child {
+  text-align: left;
+}
+.sp-correction .sp-correction-history {
+  padding: 0;
+  list-style: none;
+}
+.sp-correction .sp-correction-history li {
+  margin: 0.8rem 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.sp-correction .sp-correction-history li span {
+  display: block;
+  color: #5d6661;
+  font:
+    600 0.7rem/1.5 system-ui,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.sp-correction .sp-correction-checkbox {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font:
+    0.88rem/1.5 system-ui,
+    sans-serif;
+}
+.sp-correction input[type="checkbox"] {
+  margin-top: 0.2rem;
+  accent-color: #24766d;
+}
+.sp-correction .sp-correction-handoff {
+  border-left: 2px solid #24766d;
+  padding-left: 0.85rem;
+}
+@media (max-width: 600px) {
+  .sp-correction .sp-correction-reading {
+    flex-direction: column;
+  }
+  .sp-correction .sp-correction-footnotes {
+    grid-template-columns: 1fr;
+  }
+  .sp-correction .sp-correction-actions button {
+    width: 100%;
+  }
+}

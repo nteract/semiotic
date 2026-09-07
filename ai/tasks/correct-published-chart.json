@@ -1,0 +1,97 @@
+{
+  "id": "correct-published-chart",
+  "title": "Correct a chart after its source changes",
+  "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
+  "job": "A source value changed. Update the chart and identify conclusions that still need review.",
+  "dataShape": "Synthetic regional totals: North 12, South 30, West 18. Correct West to 36; the new total is 78 and West becomes largest.",
+  "fit": [
+    "Use when published chart claims and source identity must remain inspectable across revisions.",
+    "Artifact sidecars are optional; ordinary chart rendering remains available without project notes."
+  ],
+  "exclusions": [
+    "A matching hash does not authenticate the source or prove arbitrary prose true.",
+    "A generated revision or transfer report does not grant publication approval or record a human review."
+  ],
+  "component": "BarChart",
+  "importPath": "semiotic/ordinal",
+  "usageMode": "static",
+  "props": [
+    "data",
+    "categoryAccessor",
+    "valueAccessor",
+    "title",
+    "description",
+    "summary",
+    "accessibleTable",
+    "height",
+    "responsiveWidth"
+  ],
+  "contracts": [
+    "accessibility.description-props",
+    "props.data-required-by-usage-mode",
+    "rendering.renderchart-static-props"
+  ],
+  "examples": [
+    {
+      "title": "Correction and handoff controls",
+      "environment": "React browser",
+      "path": "docs/src/pages/tasks/examples/SourceCorrectionExample.tsx"
+    },
+    {
+      "title": "Source correction and portable context",
+      "environment": "Host authoring and transfer",
+      "path": "docs/src/pages/tasks/examples/source-correction.ts"
+    },
+    {
+      "title": "Example styles",
+      "environment": "Browser presentation",
+      "path": "docs/src/pages/tasks/examples/source-correction.css"
+    }
+  ],
+  "checks": {
+    "unit": "docs/src/pages/tasks/examples/source-correction.test.ts",
+    "browser": "integration-tests/docs-examples-tasks.spec.ts",
+    "expected": [
+      "Changing data without revisiting active claims is refused.",
+      "The original total 60 and South-largest claims are superseded; replacements describe total 78 and West 36.",
+      "The original chart and evidence remain intact while corrected identities change.",
+      "Exported context retains the revision history; image-only delivery reports missing context.",
+      "Publication and human-review obligations remain visible."
+    ],
+    "unassessed": [
+      "Authenticity of upstream data and the truth of arbitrary editorial statements.",
+      "Independent human review, publication policy and reader reception.",
+      "Benefits to fresh-agent maintenance: the offline study defines cases but measures no adoption outcome."
+    ]
+  },
+  "recovery": [
+    {
+      "symptom": "prepareArtifactRevision refuses a changed source.",
+      "action": "Supply explicit transitions for every affected active claim. Retain prior evidence and give the correction a distinct revision and new source identity.",
+      "recheck": "Inspect superseded claims, replacement IDs, correction history and remaining manual obligations."
+    },
+    {
+      "symptom": "A recipient has the image but cannot inspect source or review context.",
+      "action": "Provide chart config/data and an optional artifact packet or adjacent sidecar. The sidecar contains the contract and transfer report, not a complete dataset.",
+      "recheck": "Check the transfer's omissions. Treat unavailable context as unknown; do not manufacture approval."
+    }
+  ],
+  "continuation": {
+    "rationale": "A published regional comparison needs source and claim continuity through a correction.",
+    "recheck": [
+      "Affected arithmetic, ranking, source identity, claim transitions and review obligations after a change."
+    ],
+    "loss": "Removing a project note does not break the chart. Image-only transfer loses inspectable source/review context; retain config/data separately from the artifact sidecar."
+  },
+  "update": {
+    "status": "source-only",
+    "introducedIn": null,
+    "previousAssumption": "Updating source rows or matching an identity automatically refreshes all conclusions and approves publication.",
+    "action": "Use explicit claim transitions for the changed source, preserve old evidence and inspect correction history, transfer losses and outstanding human review.",
+    "recheck": [
+      "Both total and ranking claims must change in this fixture.",
+      "A matching version string does not establish deployed parity or source authenticity."
+    ],
+    "remaining": "This is current source guidance with no recorded release introduction or editorial approval."
+  }
+}

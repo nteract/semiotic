@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/generate-ai-task-packets.mjs",
+  "channel": "source",
+  "tasks": [
+    {
+      "id": "compare-category-totals",
+      "title": "Compare category totals you can check",
+      "summary": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
+      "route": "/tasks/compare-category-totals",
+      "packageVersion": "3.9.2",
+      "sourceRevision": "sha256:50e44656b1e17407ddafb6f64b051443a1a314a5f679e35a52cb1c975131d0c2",
+      "markdown": "/tasks/compare-category-totals.md",
+      "json": "/tasks/compare-category-totals.json",
+      "evidenceStatus": "supported-in-scope"
+    },
+    {
+      "id": "update-live-chart",
+      "title": "Update a live chart by record ID",
+      "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
+      "route": "/tasks/update-live-chart",
+      "packageVersion": "3.9.2",
+      "sourceRevision": "sha256:2a4bd7657b540055ebeb5fc6a7f0fba4c10e31df80fdceb815a6bce711570e92",
+      "markdown": "/tasks/update-live-chart.md",
+      "json": "/tasks/update-live-chart.json",
+      "evidenceStatus": "supported-in-scope"
+    },
+    {
+      "id": "correct-published-chart",
+      "title": "Correct a chart after its source changes",
+      "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
+      "route": "/tasks/correct-published-chart",
+      "packageVersion": "3.9.2",
+      "sourceRevision": "sha256:8383ba0b722d1dc1ca0b50b5fab406ba002a3342235de27fb63962385a793abb",
+      "markdown": "/tasks/correct-published-chart.md",
+      "json": "/tasks/correct-published-chart.json",
+      "evidenceStatus": "supported-in-scope"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+.task-live {
+  min-width: 0;
+}
+.task-live__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.task-live__controls button {
+  min-height: 40px;
+  padding: 0.4rem 0.8rem;
+}
+.task-live__table {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.task-live__table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.task-live__table caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.task-live__table th,
+.task-live__table td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #aaa);
+}
