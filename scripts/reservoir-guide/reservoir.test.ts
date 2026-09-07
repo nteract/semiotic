@@ -1,6 +1,6 @@
 import { auditAccessibility } from "semiotic/utils"
-import { describe, expect, it } from "vitest"
-import { readFileSync, cpSync, mkdtempSync, writeFileSync } from "node:fs"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { readFileSync, cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import { fingerprintValue } from "semiotic/artifact"
@@ -63,37 +63,64 @@ function signed(value: ReservoirSnapshot) {
 }
 const selectedIndex = dateIndex("2025-07-30", snapshot.startDate)
 
-describe("CDEC source admission and calendars", () => {
-  it("requires every source checksum and assigns a different identity to a new retrieval", () => {
-    const raw = mkdtempSync(resolve(tmpdir(), "e03-source-admission-"))
+// Full ingestion parses 76,704 CSV rows and eight archived HTML documents.
+// Allow for V8 coverage and shared CI workers without changing other tests' limits.
+const SOURCE_INGEST_TIMEOUT = 20_000
+
+describe("CDEC source admission", () => {
+  let raw: string
+  let inventoryPath: string
+  let original: { sources: ReservoirSnapshot["sources"] }
+
+  beforeEach(() => {
+    raw = mkdtempSync(resolve(tmpdir(), "e03-source-admission-"))
+    inventoryPath = resolve(raw, "retrieval.json")
     cpSync(resolve(directory, "raw"), raw, { recursive: true })
-    const inventoryPath = resolve(raw, "retrieval.json")
-    const original = JSON.parse(readFileSync(inventoryPath, "utf8"))
-    writeFileSync(
-      inventoryPath,
-      JSON.stringify({ ...original, sources: [...original.sources].reverse() })
+    original = JSON.parse(readFileSync(inventoryPath, "utf8"))
+  })
+  afterEach(() => {
+    rmSync(raw, { recursive: true, force: true })
+  })
+
+  it("requires every source inventory entry", () => {
+    original.sources = original.sources.filter(
+      (item) => item.file !== "SHA.csv"
     )
-    expect(ingest(raw)).toEqual(snapshot)
-    const missing = structuredClone(original)
-    missing.sources = missing.sources.filter(
-      (item: { file: string }) => item.file !== "SHA.csv"
-    )
-    writeFileSync(inventoryPath, JSON.stringify(missing))
-    expect(() => ingest(raw)).toThrow(/source inventory/)
-    original.sources[0].retrievedAt = "2026-09-08T00:00:00.000Z"
     writeFileSync(inventoryPath, JSON.stringify(original))
-    expect(ingest(raw).editionId).not.toBe(snapshot.editionId)
+    expect(() => ingest(raw)).toThrow(/source inventory/)
+  })
+  it("requires every source checksum", () => {
     writeFileSync(resolve(raw, "SHA.csv"), "corrupted synthetic test input")
     expect(() => ingest(raw)).toThrow(/checksum mismatch/)
   })
-  it("rebuilds all canonical values and identities from pinned source checksums", () => {
-    expect(ingest(resolve(directory, "raw"))).toEqual(snapshot)
-    expect(
-      Object.values(snapshot.counts).reduce((sum, c) => sum + c.rows, 0)
-    ).toBe(76704)
-    expect(snapshot.counts.DNP.missing).toBe(1122)
-    expect(verifySnapshot(snapshot)).toBe(snapshot)
-  })
+  it(
+    "assigns a different identity to a new retrieval",
+    () => {
+      original.sources[0].retrievedAt = "2026-09-08T00:00:00.000Z"
+      writeFileSync(inventoryPath, JSON.stringify(original))
+      expect(ingest(raw).editionId).not.toBe(snapshot.editionId)
+    },
+    SOURCE_INGEST_TIMEOUT
+  )
+  it(
+    "rebuilds all canonical values and identities regardless of source inventory order",
+    () => {
+      writeFileSync(
+        inventoryPath,
+        JSON.stringify({ ...original, sources: [...original.sources].reverse() })
+      )
+      expect(ingest(raw)).toEqual(snapshot)
+      expect(
+        Object.values(snapshot.counts).reduce((sum, c) => sum + c.rows, 0)
+      ).toBe(76704)
+      expect(snapshot.counts.DNP.missing).toBe(1122)
+      expect(verifySnapshot(snapshot)).toBe(snapshot)
+    },
+    SOURCE_INGEST_TIMEOUT
+  )
+})
+
+describe("CDEC calendars and records", () => {
   it("rejects invalid and duplicate source records, unsupported units and dates", () => {
     const header =
       "STATION_ID,DURATION,SENSOR_NUMBER,SENSOR_TYPE,DATE TIME,OBS DATE,VALUE,DATA_FLAG,UNITS\n"
