@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "owner": "Semiotic maintainers",
+  "developmentCases": 24,
+  "holdout": {
+    "status": "not-authored",
+    "authoredCases": 0,
+    "plannedCases": 48,
+    "allocation": { "strong-fit": 16, "ambiguous-fit": 8, "negative-fit": 8, "recovery": 8, "handoff": 8 },
+    "requirement": "Author separately after freezing the treatment; keep prompts and scoring outside development workspaces. Public development fixtures are not a holdout."
+  },
+  "offlineBudget": {
+    "providerCalls": 0,
+    "billedUSD": 0,
+    "networkAccess": false
+  },
+  "proposedPilot": {
+    "status": "not-authorized-or-run",
+    "tasks": 6,
+    "conditions": 2,
+    "models": 1,
+    "repetitions": 1,
+    "maxToolCallsPerRun": 20,
+    "maxInputTokensPerRun": 20000,
+    "maxOutputTokensPerRun": 5000,
+    "maxWallSecondsPerRun": 300,
+    "maxBilledUSD": null,
+    "prerequisites": [
+      "Materialize each scenario's starting application or artifact in an isolated fixture and record its hashes; the current public bank contains scenario definitions, not complete project snapshots.",
+      "Approve model identity, current pricing, total spend cap, and task-level limits before any provider calls.",
+      "Use a harness that enforces cumulative token, tool-call, wall-time, and billed-cost limits across each agent session.",
+      "Freeze the implementation and source pool; randomize condition and option order in fresh project workspaces.",
+      "Provide jobs and allowed source files only; exclude fixtures, expected answers, scorer code, and this study's baseline.",
+      "Prespecify accepted choices and evidence obligations with a reviewer separate from the treatment author when available."
+    ]
+  }
+}

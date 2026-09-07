@@ -9,9 +9,16 @@
 
 A React data visualization library designed for AI-assisted development.
 
-Simple charts in 5 lines. Network graphs, streaming data, and coordinated
-dashboards when you need them. Structured schemas and an MCP server so
-AI coding assistants generate correct chart code on the first try.
+Start with a small chart component. Add network graphs, streaming data and
+coordinated views when the task needs them. Structured schemas, diagnostics
+and rendering evidence help coding assistants implement, check and repair
+chart configurations.
+
+Work through a complete task: [check category totals](https://semiotic.nteract.io/tasks/compare-category-totals),
+[maintain a live chart](https://semiotic.nteract.io/tasks/update-live-chart), or
+[correct a published chart](https://semiotic.nteract.io/tasks/correct-published-chart).
+The [source task packets](ai/task-packets/index.json) identify their build and
+evidence scope; source availability does not establish installed or deployed parity.
 
 <!-- semiotic-readme-dashboard:start -->
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
@@ -46,15 +53,17 @@ surfaces while tightening browser/server parity and production entry graphs:
 ## Why Semiotic
 
 Semiotic is a data visualization library for React that combines broad chart
-coverage with first-class AI tooling. It handles the chart types that most
-libraries skip — network graphs, streaming data, statistical distributions,
-coordinated views — and ships with machine-readable schemas so LLMs can
-generate correct code without examples.
+coverage with AI tooling. It supports network graphs, streaming data,
+statistical distributions and coordinated views, with schemas, examples and
+diagnostics for implementing and checking each task. Check the project's
+existing dependencies first: extending its current charting library may be
+the best fit for a small change.
 
 ### Built for AI-assisted development
 
-Semiotic ships with everything an AI coding assistant needs to generate
-correct visualizations without trial and error:
+Semiotic provides a workflow for generating, checking and repairing chart
+configurations. The [July 27, 2026 evaluation](evals/reports/openai-gpt-5.6-2026-07-27/README.md)
+reports model- and task-specific results; it does not guarantee first-try correctness.
 
 - **`semiotic/ai`** — a single import with the schema-backed chart capability catalog (XY, ordinal, network, realtime, geo, value, and portable recipes), optimized for LLM code generation. See `ai/surface-manifest.json` for the generated current inventory. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
 - **`ai/schema.json`** — machine-readable prop schemas for every component

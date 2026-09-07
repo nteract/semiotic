@@ -5872,6 +5872,15 @@
               "type": "number",
               "default": 40
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -6438,6 +6447,15 @@
               "type": "number",
               "default": 40
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -7002,6 +7020,15 @@
               "type": "number",
               "default": 20
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -7529,6 +7556,15 @@
             "barPadding": {
               "type": "number",
               "default": 60
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "styleRules": {
               "type": "array",
@@ -8099,6 +8135,15 @@
               "type": "number",
               "default": 20
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -8629,6 +8674,15 @@
               "type": "number",
               "default": 20
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -9151,6 +9205,15 @@
             "categoryPadding": {
               "type": "number",
               "default": 20
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "styleRules": {
               "type": "array",
@@ -9699,6 +9762,15 @@
               "type": "number",
               "default": 20
             },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
             "styleRules": {
               "type": "array",
               "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
@@ -10224,6 +10296,15 @@
               "type": "number",
               "description": "Unitless multiplier of row height (>1 creates overlap)",
               "default": 1.5
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "styleRules": {
               "type": "array",
@@ -10762,6 +10843,15 @@
             "categoryPadding": {
               "type": "number",
               "default": 10
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "styleRules": {
               "type": "array",
@@ -19631,6 +19721,15 @@
                 "number",
                 "function"
               ]
+            },
+            "valueExtent": {
+              "type": "array",
+              "description": "Fixed value-axis domain [min, max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "gradientFill": {
               "type": [
@@ -30314,7 +30413,12 @@
             },
             "valueExtent": {
               "type": "array",
-              "description": "Fixed value-axis domain; defaults to [0, data-max]."
+              "description": "Fixed value-axis domain [min, max]; defaults to [0, data-max]. Use [min] to leave the upper bound data-derived; React also accepts undefined bounds.",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             },
             "styleRules": {
               "type": "array",

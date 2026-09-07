@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals", "vite/client"],
+    "paths": {
+      "semiotic/line": ["../../src/components/semiotic-line.ts"],
+      "semiotic/ordinal": ["../../src/components/semiotic-ordinal.ts"],
+      "semiotic/artifact": ["../../src/components/semiotic-artifact.ts"],
+      "semiotic/ai/core": ["../../src/components/semiotic-ai-core.ts"],
+      "semiotic/server": ["../../src/components/semiotic-server.ts"]
+    }
+  },
+  "include": [
+    "../../docs/src/pages/tasks/**/*.ts",
+    "../../docs/src/pages/tasks/**/*.tsx",
+    "../../integration-tests/docs-examples-tasks.spec.ts",
+    "../../integration-tests/docs-examples-task-live.spec.ts",
+    "../../src/setupTests.ts"
+  ],
+  "exclude": []
+}

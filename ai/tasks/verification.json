@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "scope": "source-only",
+  "verifiedAt": "2026-09-07T04:19:20.012Z",
+  "environment": {
+    "node": "v22.22.1",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "browser": "Playwright Chromium"
+  },
+  "taskRevisions": {
+    "compare-category-totals": "sha256:8e55ca7b017389a424c055ffc69ac71aa4a7f2ef4ea32fcd71d631c18d3eb057",
+    "update-live-chart": "sha256:779d5d4e7b5b8b234b1c8ff21cbb18487229158e589283e4e837e4f6c4422817",
+    "correct-published-chart": "sha256:5fc2d3836ff0e91cdcd7409cbf9c3d18bb9c9bccb98973ad0225b03e8b26e9b1"
+  },
+  "runs": [
+    {
+      "kind": "unit",
+      "targets": [
+        "docs/src/pages/tasks/examples/category-comparison.test.ts",
+        "docs/src/pages/tasks/examples/live-chart.test.tsx",
+        "docs/src/pages/tasks/examples/source-correction.test.ts"
+      ],
+      "name": "Task source units",
+      "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
+      "exitCode": 0,
+      "passed": 14,
+      "skipped": 0,
+      "passedByFile": {
+        "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
+        "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
+        "docs/src/pages/tasks/examples/source-correction.test.ts": 5
+      }
+    },
+    {
+      "kind": "browser",
+      "targets": [
+        "integration-tests/docs-examples-task-live.spec.ts",
+        "integration-tests/docs-examples-tasks.spec.ts"
+      ],
+      "name": "Task browser behavior",
+      "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
+      "exitCode": 0,
+      "passed": 6,
+      "skipped": 0,
+      "passedByFile": {
+        "integration-tests/docs-examples-task-live.spec.ts": 2,
+        "integration-tests/docs-examples-tasks.spec.ts": 4
+      }
+    }
+  ],
+  "limits": [
+    "No paid model runs or measured adoption improvement.",
+    "No published package/deployment or independent human review is established."
+  ]
+}

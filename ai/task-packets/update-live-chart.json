@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/generate-ai-task-packets.mjs",
+  "id": "update-live-chart",
+  "title": "Update a live chart by record ID",
+  "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
+  "route": "/tasks/update-live-chart",
+  "identity": {
+    "packageName": "semiotic",
+    "packageVersion": "3.9.2",
+    "channel": "source",
+    "sourceRevision": "sha256:779d5d4e7b5b8b234b1c8ff21cbb18487229158e589283e4e837e4f6c4422817",
+    "revisionKind": "content-digest",
+    "runtime": {
+      "digest": "sha256:18b7fe0dbc1cb0c9981a2b05e359beb098e8b69eaf4ec5f29ab4809cefb2b387",
+      "fileCount": 1049
+    },
+    "taskSources": {
+      "digest": "sha256:73b420962248e03d2fdce39a5a75b3337e37d96bed3b3e574474b8c777f3932b",
+      "fileCount": 36
+    },
+    "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
+  },
+  "job": "Show incoming observations, keep the UI stable, and correct existing records without duplicates.",
+  "dataShape": "Synthetic observations with stable IDs, numeric event time and value; a four-record retained window.",
+  "fit": [
+    "Use when a React application needs ref-based updates and explicit record correction.",
+    "The host owns subscription lifecycle, replay and reconnection policy."
+  ],
+  "exclusions": [
+    "Static SVG cannot establish subscription cleanup, correct replay or browser lifecycle behavior.",
+    "This simulated feed is not a production network protocol, durable queue or live service."
+  ],
+  "api": {
+    "name": "LineChart",
+    "category": "xy",
+    "importPath": "semiotic/line",
+    "schemaResourceUri": "semiotic://schema/LineChart",
+    "renderable": true,
+    "requiresLiveData": false,
+    "description": "Line traces with curve interpolation, area fill, and point markers. Use for time series, trends, and continuous data.",
+    "component": "LineChart",
+    "usageMode": "push",
+    "dataRequired": false,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "xAccessor": {
+          "type": "string",
+          "description": "Key or accessor function for x-axis values. Functions can derive a value, e.g. `d => d.timestamp`.",
+          "default": "x",
+          "x-semiotic-runtime-types": [
+            "string",
+            "function"
+          ]
+        },
+        "yAccessor": {
+          "type": "string",
+          "description": "Key or accessor function for y-axis values. Functions support dynamic lookups, e.g. `d => d[d.metricLabel]`.",
+          "default": "y",
+          "x-semiotic-runtime-types": [
+            "string",
+            "function"
+          ]
+        },
+        "pointIdAccessor": {
+          "type": "string",
+          "description": "Stable ID for point annotations and push-mode remove()/update().",
+          "x-semiotic-runtime-types": [
+            "string",
+            "function"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "description": "Visible chart title and the chart's accessible name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Concise accessible description that overrides the chart's generated aria-label."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+        },
+        "accessibleTable": {
+          "type": [
+            "boolean",
+            "object"
+          ],
+          "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+          "default": true,
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "portalTarget"
+              ],
+              "properties": {
+                "portalTarget": {
+                  "type": "string",
+                  "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                }
+              }
+            }
+          ]
+        },
+        "height": {
+          "type": "number",
+          "default": 400
+        },
+        "responsiveWidth": {
+          "type": "boolean"
+        }
+      },
+      "requiredForStatic": [
+        "data"
+      ]
+    },
+    "schemaScope": "Selected properties copied from ai/schema.json; retrieve the component resource for the full schema. React push mode follows the included behavior contracts.",
+    "contracts": [
+      {
+        "id": "accessibility.description-props",
+        "title": "Accessible chart text uses direct chart props",
+        "summary": "High-level charts expose title for the visible name, description for a concise accessible description, summary for a screen-reader-only takeaway and interaction guidance, and accessibleTable for the data-table fallback.",
+        "action": "Put title, description, summary, and accessibleTable directly on the chart component when they appear in its schema. If a consumer-owned role=img wraps the chart, use accessibleTable: { portalTarget: \"element-id\" } and render that target outside the image. For generated L1–L3 description or a navigable chart tree, use ChartContainer with chartConfig plus describe and/or navigable; do not invent frameProps fields."
+      },
+      {
+        "id": "props.data-required-by-usage-mode",
+        "title": "Data required by usage mode",
+        "summary": "Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref.",
+        "action": "Pass usageMode=\"push\" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode=\"static\" or omit it for renderChart/MCP/static configs where data must be present."
+      },
+      {
+        "id": "streaming.push-mode-data",
+        "title": "Push mode omits data",
+        "summary": "HOC push mode is selected by omitting the data prop entirely. Passing data={[]} is static empty data and can clear/reinitialize the frame on render.",
+        "action": "For live charts, create a ref, omit data, then call ref.current.push() or pushMany(). For static renderChart/MCP snapshots, provide data because renderChart cannot push later."
+      },
+      {
+        "id": "streaming.ref-mutations-require-id-accessors",
+        "title": "Ref mutations need stable IDs",
+        "summary": "push() and pushMany() can append without IDs, but remove(id) and update(id, updater) require a stable ID accessor: pointIdAccessor for XY/realtime charts, dataIdAccessor for ordinal charts, and nodeIDAccessor/edgeIdAccessor for network operations.",
+        "action": "When generating code that calls remove() or update(), include the matching ID accessor and make sure pushed rows carry that ID field."
+      },
+      {
+        "id": "rendering.renderchart-static-props",
+        "title": "renderChart uses static props only",
+        "summary": "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
+        "action": "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output."
+      }
+    ]
+  },
+  "examples": [
+    {
+      "title": "Mounted browser lifecycle",
+      "environment": "React browser only",
+      "path": "docs/src/pages/tasks/examples/LiveChartExample.tsx",
+      "source": "import React, { useEffect, useRef, useState } from \"react\"\nimport { LineChart } from \"semiotic/line\"\nimport {\n  connectLiveChart,\n  createLiveSource,\n  LIVE_EVENTS,\n  liveChartProps,\n  type LiveSource,\n  type Observation,\n} from \"./live-chart\"\nimport \"./live-chart.css\"\n\n/** The optional source lets lifecycle tests inspect subscriptions directly. */\nexport function LiveChartSession({ source }: { source: LiveSource }) {\n  const chartRef = useRef<React.ComponentRef<typeof LineChart>>(null)\n  const [connected, setConnected] = useState(true)\n  const [playing, setPlaying] = useState(false)\n  const [sourceCursor, setSourceCursor] = useState(source.cursor)\n  const [display, setDisplay] = useState<{ rows: Observation[]; cursor: number }>({\n    rows: [],\n    cursor: 0,\n  })\n\n  useEffect(() => {\n    if (!connected || !chartRef.current) return\n    // Effects run after the child ref is available. Cleanup also handles\n    // React StrictMode's setup/cleanup/setup cycle without duplicate listeners.\n    return connectLiveChart(source, chartRef.current, (rows, cursor) => {\n      setDisplay({ rows, cursor })\n    })\n  }, [source, connected])\n\n  useEffect(() => {\n    if (!playing || !connected) return\n    const timer = window.setInterval(() => {\n      const advanced = source.advance()\n      setSourceCursor(source.cursor)\n      if (!advanced || source.cursor === LIVE_EVENTS.length) setPlaying(false)\n    }, 1_000)\n    return () => window.clearInterval(timer)\n  }, [source, playing, connected])\n\n  function advance() {\n    source.advance()\n    setSourceCursor(source.cursor)\n  }\n\n  const finished = sourceCursor === LIVE_EVENTS.length\n  const lag = sourceCursor - display.cursor\n  return (\n    <section className=\"task-live\" aria-label=\"Live chart demonstration\">\n      <p>\n        <strong>Synthetic fixture.</strong> Three readings start at 09:00–09:02. Five events include\n        two corrections and three new observations. The line uses observation time; the event\n        counter records processing order.\n      </p>\n      <div className=\"task-live__controls\">\n        <button type=\"button\" onClick={advance} disabled={finished || playing}>\n          Advance source\n        </button>\n        <button\n          type=\"button\"\n          onClick={() => setPlaying((value) => !value)}\n          disabled={!connected || finished}\n        >\n          {playing ? \"Pause replay\" : \"Play replay\"}\n        </button>\n        <button\n          type=\"button\"\n          onClick={() => {\n            setPlaying(false)\n            setConnected((value) => !value)\n          }}\n        >\n          {connected ? \"Disconnect\" : \"Reconnect\"}\n        </button>\n      </div>\n      <p role=\"status\" aria-live=\"polite\" data-testid=\"live-chart-status\">\n        {connected ? \"Connected\" : \"Disconnected\"}. Source event {sourceCursor} of{\" \"}\n        {LIVE_EVENTS.length}; display through event {display.cursor}.{\" \"}\n        {lag ? `${lag} unapplied event${lag === 1 ? \"\" : \"s\"}.` : \"Display is current.\"}\n      </p>\n      <p>\n        {finished ? \"Replay complete.\" : `Next event: ${LIVE_EVENTS[sourceCursor].label}.`}\n        {!connected &&\n          \" Advance the source while disconnected, then reconnect to replace the frozen display with the source’s current window.\"}\n      </p>\n      <div data-testid=\"live-chart-rendering\">\n        {/* No data prop: push mode remains active across control re-renders. */}\n        <LineChart ref={chartRef} {...liveChartProps} height={320} responsiveWidth />\n      </div>\n      <div className=\"task-live__table\">\n        <table>\n          <caption>Records currently retained by the chart</caption>\n          <thead>\n            <tr>\n              <th scope=\"col\">Record ID</th>\n              <th scope=\"col\">Observation time</th>\n              <th scope=\"col\">Reading (units)</th>\n            </tr>\n          </thead>\n          <tbody>\n            {display.rows.map((row) => (\n              <tr key={row.id}>\n                <th scope=\"row\">{row.id}</th>\n                <td>09:{String(row.minute).padStart(2, \"0\")}</td>\n                <td>{row.value}</td>\n              </tr>\n            ))}\n          </tbody>\n        </table>\n      </div>\n      <p>\n        Retention: the four latest observations by event time. Corrections replace a retained record\n        by ID; older observations are removed. A reconnect takes the current source window, so it\n        can recover a missed correction without retaining a complete event history. At completion,\n        expect obs-03 = 17, obs-04 = 20, obs-05 = 16 and obs-06 = 19.\n      </p>\n    </section>\n  )\n}\n\nexport default function LiveChartExample() {\n  const [source, setSource] = useState(createLiveSource)\n  const [session, setSession] = useState(0)\n  function restart() {\n    setSource(createLiveSource())\n    setSession((value) => value + 1)\n  }\n  return (\n    <>\n      <LiveChartSession key={session} source={source} />\n      <button type=\"button\" onClick={restart}>\n        Restart fixture\n      </button>\n    </>\n  )\n}\n",
+      "digest": "sha256:523ab188132a8fb182913b4a3c797fb2125519a75e5655e76f912f6e644af583"
+    },
+    {
+      "title": "Deterministic source and reconnect policy",
+      "environment": "Host-owned synthetic feed",
+      "path": "docs/src/pages/tasks/examples/live-chart.ts",
+      "source": "import type { ComponentRef } from \"react\"\nimport type { LineChart } from \"semiotic/line\"\n\nexport interface Observation {\n  id: string\n  minute: number\n  value: number\n}\n\nexport const RETAINED_RECORDS = 4\nexport const INITIAL_OBSERVATIONS: Observation[] = [\n  { id: \"obs-01\", minute: 0, value: 12 },\n  { id: \"obs-02\", minute: 1, value: 18 },\n  { id: \"obs-03\", minute: 2, value: 15 },\n]\n\n// Event order is processing order. A correction preserves the observation's\n// event time and ID; it does not create a new point at its arrival time.\nexport const LIVE_EVENTS = [\n  { row: { id: \"obs-02\", minute: 1, value: 14 }, label: \"Correct obs-02 from 18 to 14\" },\n  { row: { id: \"obs-04\", minute: 3, value: 20 }, label: \"Add obs-04 at minute 3\" },\n  { row: { id: \"obs-05\", minute: 4, value: 16 }, label: \"Add obs-05; discard obs-01\" },\n  { row: { id: \"obs-03\", minute: 2, value: 17 }, label: \"Correct obs-03 from 15 to 17\" },\n  { row: { id: \"obs-06\", minute: 5, value: 19 }, label: \"Add obs-06; discard obs-02\" },\n] satisfies Array<{ row: Observation; label: string }>\n\nexport const liveChartProps = {\n  xAccessor: \"minute\",\n  yAccessor: \"value\",\n  pointIdAccessor: \"id\",\n  xLabel: \"Observation time (minutes after 09:00)\",\n  yLabel: \"Synthetic reading (units)\",\n  title: \"The latest four observations\",\n  description:\n    \"Synthetic observations by event time. Corrections keep their original time and record ID.\",\n  summary:\n    \"Advance the source to inspect corrections and retention. Disconnect to freeze the displayed window, then reconnect to catch up.\",\n  showPoints: true,\n  showGrid: true,\n  accessibleTable: true,\n  xExtent: [0, 5] as [number, number],\n  yExtent: [0, 24] as [number, number],\n}\n\ntype FeedMessage =\n  | { kind: \"snapshot\"; rows: Observation[]; cursor: number }\n  | { kind: \"change\"; row: Observation; removed: string[]; cursor: number }\n\n/** A deterministic, in-memory source, not a network or ordering protocol. */\nexport function createLiveSource() {\n  let rows = INITIAL_OBSERVATIONS.map((row) => ({ ...row }))\n  let cursor = 0\n  const listeners = new Set<(message: FeedMessage) => void>()\n  return {\n    get cursor() {\n      return cursor\n    },\n    get subscriberCount() {\n      return listeners.size\n    },\n    get rows() {\n      return rows.map((row) => ({ ...row }))\n    },\n    subscribe(listener: (message: FeedMessage) => void) {\n      listeners.add(listener)\n      // Registration and snapshot are synchronous in this fixture. A remote\n      // source needs an atomic snapshot/cursor handoff to avoid losing events.\n      listener({ kind: \"snapshot\", rows: rows.map((row) => ({ ...row })), cursor })\n      return () => {\n        listeners.delete(listener)\n      }\n    },\n    advance() {\n      const event = LIVE_EVENTS[cursor]\n      if (!event) return false\n      const byId = new Map(rows.map((row) => [row.id, row]))\n      byId.set(event.row.id, { ...event.row })\n      const ordered = [...byId.values()].sort((a, b) => a.minute - b.minute)\n      const removed = ordered.slice(0, -RETAINED_RECORDS).map((row) => row.id)\n      rows = ordered.slice(-RETAINED_RECORDS)\n      cursor += 1\n      for (const listener of listeners) {\n        listener({ kind: \"change\", row: { ...event.row }, removed, cursor })\n      }\n      return true\n    },\n  }\n}\n\nexport type LiveSource = ReturnType<typeof createLiveSource>\ntype LiveChartHandle = ComponentRef<typeof LineChart>\n\n/** Connect only after React mounts the chart and supplies its ref. */\nexport function connectLiveChart(\n  source: LiveSource,\n  chart: LiveChartHandle,\n  onReadback: (rows: Observation[], cursor: number) => void,\n) {\n  const retainedIds = new Set<string>()\n  return source.subscribe((message) => {\n    if (message.kind === \"snapshot\") {\n      chart.clear()\n      chart.pushMany(message.rows)\n      retainedIds.clear()\n      for (const row of message.rows) retainedIds.add(row.id)\n    } else {\n      for (const id of message.removed) {\n        chart.remove(id)\n        retainedIds.delete(id)\n      }\n      if (retainedIds.has(message.row.id)) {\n        chart.update(message.row.id, (previous) => ({ ...previous, ...message.row }))\n      } else if (!message.removed.includes(message.row.id)) {\n        chart.push(message.row)\n        retainedIds.add(message.row.id)\n      }\n    }\n    // Inspect the chart's retained store, rather than echoing the source rows.\n    const actual = chart.getData().map((row) => ({\n      id: String(row.id),\n      minute: Number(row.minute),\n      value: Number(row.value),\n    }))\n    onReadback(actual, message.cursor)\n  })\n}\n",
+      "digest": "sha256:6bf1419436e062c710580585ff8ccc18b4a92dab13d8cd49dcd291e862a7b813"
+    },
+    {
+      "title": "Example styles",
+      "environment": "Browser presentation",
+      "path": "docs/src/pages/tasks/examples/live-chart.css",
+      "source": ".task-live {\n  min-width: 0;\n}\n.task-live__controls {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.6rem;\n}\n.task-live__controls button {\n  min-height: 40px;\n  padding: 0.4rem 0.8rem;\n}\n.task-live__table {\n  overflow-x: auto;\n  margin: 1rem 0;\n}\n.task-live__table table {\n  width: 100%;\n  border-collapse: collapse;\n}\n.task-live__table caption {\n  text-align: left;\n  font-weight: 600;\n  margin-bottom: 0.5rem;\n}\n.task-live__table th,\n.task-live__table td {\n  text-align: left;\n  padding: 0.5rem;\n  border-bottom: 1px solid var(--border-color, #aaa);\n}\n",
+      "digest": "sha256:2c0d749ff8f1683e524f5b2cf5a75b7515c49b30bfa52724254c98130e5cda1c"
+    }
+  ],
+  "evidence": {
+    "claimId": "task.update-live-chart",
+    "statement": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
+    "owner": "Semiotic repository maintainers",
+    "status": "supported-in-scope",
+    "observed": {
+      "verifiedAt": "2026-09-07T04:19:20.012Z",
+      "environment": {
+        "node": "v22.22.1",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "browser": "Playwright Chromium"
+      },
+      "runs": [
+        {
+          "kind": "unit",
+          "targets": [
+            "docs/src/pages/tasks/examples/category-comparison.test.ts",
+            "docs/src/pages/tasks/examples/live-chart.test.tsx",
+            "docs/src/pages/tasks/examples/source-correction.test.ts"
+          ],
+          "name": "Task source units",
+          "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
+          "exitCode": 0,
+          "passed": 14,
+          "skipped": 0,
+          "passedByFile": {
+            "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
+            "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
+            "docs/src/pages/tasks/examples/source-correction.test.ts": 5
+          }
+        },
+        {
+          "kind": "browser",
+          "targets": [
+            "integration-tests/docs-examples-task-live.spec.ts",
+            "integration-tests/docs-examples-tasks.spec.ts"
+          ],
+          "name": "Task browser behavior",
+          "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
+          "exitCode": 0,
+          "passed": 6,
+          "skipped": 0,
+          "passedByFile": {
+            "integration-tests/docs-examples-task-live.spec.ts": 2,
+            "integration-tests/docs-examples-tasks.spec.ts": 4
+          }
+        }
+      ],
+      "record": "ai/tasks/verification.json",
+      "authorship": "Agent-observed execution of repository tests; independent review is not recorded."
+    },
+    "validity": "Only the content digests and environment recorded here; not a release range or an adoption result.",
+    "invalidation": "Changes to runtime source, schemas, manifests, task examples, tests, verification tooling or this task definition invalidate the recorded result.",
+    "commands": [
+      "npx vitest run docs/src/pages/tasks/examples/live-chart.test.tsx",
+      "npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-task-live.spec.ts"
+    ],
+    "checks": {
+      "unit": "docs/src/pages/tasks/examples/live-chart.test.tsx",
+      "browser": "integration-tests/docs-examples-task-live.spec.ts"
+    },
+    "expected": [
+      "Corrections replace records by stable ID without increasing the retained count.",
+      "At most four records remain in the chart after new observations.",
+      "While disconnected, the displayed window remains unchanged; reconnect replaces it with the current source window.",
+      "Unmount and StrictMode cleanup leave no active subscription or playback timer.",
+      "After all five events, retained IDs obs-03 through obs-06 have values 17, 20, 16 and 19."
+    ],
+    "unassessed": [
+      "Real transport failures, server retention, clock synchronization and production backpressure.",
+      "Performance on physical devices or under a production event rate.",
+      "Assistive-technology reception and organic adoption."
+    ]
+  },
+  "recovery": [
+    {
+      "symptom": "Pushed rows disappear when React renders again.",
+      "contractId": "streaming.push-mode-data",
+      "action": "Omit data entirely in push mode. Push the initial window through the mounted ref; do not pass data={[]}.",
+      "recheck": "Change host UI state and confirm that the retained records survive."
+    },
+    {
+      "symptom": "A correction cannot find a record or creates duplicates.",
+      "contractId": "streaming.ref-mutations-require-id-accessors",
+      "action": "Set pointIdAccessor to id and use update(id, updater). On reconnect, replace the bounded window from the authoritative host snapshot.",
+      "recheck": "Inspect the chart handle's data after correction and reconnect, including IDs, values and count."
+    }
+  ],
+  "continuation": {
+    "rationale": "The host needs explicit correction and reconnect behavior over a bounded observation window.",
+    "recheck": [
+      "Cleanup, stable IDs, retention, data-prop omission and reconnect replacement after lifecycle or dependency changes."
+    ],
+    "loss": "A static export records one window. It does not carry an active subscription, prove cleanup or promise future updates."
+  },
+  "update": {
+    "status": "source-only",
+    "introducedIn": null,
+    "previousAssumption": "A static render or an empty data array demonstrates a working live chart.",
+    "action": "Omit data for push mode. Establish the subscription after the ref mounts, correct records by ID, clean up and reconcile from the authoritative window on reconnect.",
+    "recheck": [
+      "Retained records and actual canvas paint through correction, disconnect, reconnect and restart.",
+      "Subscriptions and replay timers after unmount and StrictMode cleanup."
+    ],
+    "remaining": "Production transport reliability and event-rate performance require their own environment-specific checks."
+  },
+  "definition": "ai/tasks/update-live-chart.json"
+}

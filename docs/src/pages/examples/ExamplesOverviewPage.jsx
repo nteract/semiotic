@@ -5,8 +5,10 @@ import "./ExamplesOverviewPage.css"
 import GroceryPreview from "./grocery-receipt/GroceryPreview"
 import PlanePreview from "./plane-day/PlanePreview"
 import ReservoirPreview from "./reservoir-guide/ReservoirPreview"
+import SuperpersuasionPreview from "./superpersuasion/SuperpersuasionPreview"
 
 const PREVIEW_COMPONENTS = {
+  superpersuasion: SuperpersuasionPreview,
   "plane-day": PlanePreview,
   "reservoir-guide": ReservoirPreview,
   "grocery-bill": GroceryPreview,

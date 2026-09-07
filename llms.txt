@@ -10,6 +10,10 @@ CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor|--audit-a11y]`
 
 ## Start Here
 
+- [Complete a Task](https://semiotic.nteract.io/tasks): Category values, live
+  record corrections, and published-chart revisions with executable examples
+- [Source Task Packets](https://github.com/nteract/semiotic/blob/main/ai/task-packets/index.json):
+  Compact generated guidance, selected schemas, repairs, build identity and limits
 - [README](https://github.com/nteract/semiotic/blob/main/README.md): Product
   overview, installation, entry points, and MCP setup
 - [Repository Instructions](https://github.com/nteract/semiotic/blob/main/AGENTS.md):
@@ -41,6 +45,9 @@ generation and validation helpers, `semiotic/server` for static rendering,
 Validate generated configurations with `prepareChart`,
 `npx semiotic-ai --doctor`, or the MCP diagnostic tools. When a renderer is
 available, confirm non-empty render evidence and run the accessibility audit.
+These checks do not authenticate sources or establish usability with actual
+readers. Source task packets label their content identity; verify the installed
+package separately before applying current-development guidance.
 
 The generated documentation catalog is available at
 [semiotic.nteract.io/llms.txt](https://semiotic.nteract.io/llms.txt), with the

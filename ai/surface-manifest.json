@@ -874,7 +874,7 @@
       ],
       "activation": "semiotic-mcp --profile public or MCP_TOOL_PROFILE=public"
     },
-    "resourceCount": 11,
+    "resourceCount": 13,
     "resources": [
       "semiotic-artifact-contract-schema",
       "semiotic-behavior-contracts",
@@ -886,7 +886,9 @@
       "semiotic-schema",
       "semiotic-schema-index",
       "semiotic-surface-manifest",
-      "semiotic-system-prompt"
+      "semiotic-system-prompt",
+      "semiotic-task-index",
+      "semiotic-task-packet"
     ],
     "promptCount": 2,
     "prompts": [

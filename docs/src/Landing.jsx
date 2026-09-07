@@ -156,7 +156,7 @@ const features = [
   {
     title: "AI-Ready",
     description:
-      "MCP server, machine-readable schemas, and instruction files for every major AI coding assistant. LLMs generate correct Semiotic code without examples.",
+      "Machine-readable schemas, executable examples, diagnostics, and an MCP server help coding assistants generate, check, and repair chart configurations.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
         <rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" strokeWidth="1.5" />
@@ -945,6 +945,9 @@ export default function Landing() {
             </Link>
             <Link to="/examples" style={styles.btnSecondary}>
               See Examples
+            </Link>
+            <Link to="/tasks" style={styles.btnSecondary}>
+              Complete a Task
             </Link>
             <Link to="/blog" style={styles.btnSecondary}>
               Blog

@@ -19,6 +19,10 @@ const Landing = lazy(() => import("./Landing"))
 const ChartsApiPage = lazy(() => import("./pages/api/ChartsApiPage"))
 const ApiReferencePage = lazy(() => import("./pages/api/ApiReferencePage"))
 const GettingStartedPage = lazy(() => import("./pages/GettingStartedPage"))
+const TasksPage = lazy(() => import("./pages/tasks/TasksPage"))
+const CategoryComparisonTaskPage = lazy(() => import("./pages/tasks/CategoryComparisonTaskPage"))
+const LiveChartTaskPage = lazy(() => import("./pages/tasks/LiveChartTaskPage"))
+const SourceCorrectionTaskPage = lazy(() => import("./pages/tasks/SourceCorrectionTaskPage"))
 const MigrationPage = lazy(() => import("./pages/MigrationPage"))
 const ChooseChartPage = lazy(() => import("./pages/ChooseChartPage"))
 const LineChartPage = lazy(() => import("./pages/charts/LineChartPage"))
@@ -185,6 +189,7 @@ const ExamplesOverviewPage = lazy(() => import("./pages/examples/ExamplesOvervie
 const GroceryBillExamplePage = lazy(() => import("./pages/examples/GroceryBillExamplePage"))
 const PlaneDayExamplePage = lazy(() => import("./pages/examples/PlaneDayExamplePage"))
 const ReservoirGuideExamplePage = lazy(() => import("./pages/examples/ReservoirGuideExamplePage"))
+const SuperpersuasionExamplePage = lazy(() => import("./pages/examples/SuperpersuasionExamplePage"))
 const MachineSemiosphereExamplePage = lazy(
   () => import("./pages/examples/MachineSemiosphereExamplePage"),
 )
@@ -336,6 +341,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "SuperpersuasionExamplePage.tsx": SuperpersuasionExamplePage,
   "GroceryBillExamplePage.jsx": GroceryBillExamplePage,
   "PlaneDayExamplePage.tsx": PlaneDayExamplePage,
   "ReservoirGuideExamplePage.tsx": ReservoirGuideExamplePage,
@@ -967,6 +973,10 @@ export default function DocsApp() {
 
               {/* Getting Started */}
               <Route path="getting-started" element={<GettingStartedPage />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route path="tasks/compare-category-totals" element={<CategoryComparisonTaskPage />} />
+              <Route path="tasks/update-live-chart" element={<LiveChartTaskPage />} />
+              <Route path="tasks/correct-published-chart" element={<SourceCorrectionTaskPage />} />
               <Route path="migration" element={<MigrationPage />} />
               <Route path="choose" element={<ChooseChartPage />} />
 

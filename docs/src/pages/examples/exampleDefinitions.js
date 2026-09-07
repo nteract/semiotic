@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "superpersuasion",
+    path: "/examples/superpersuasion",
+    sourceFile: "SuperpersuasionExamplePage.tsx",
+    sourceFiles: ["SuperpersuasionExamplePage.tsx", "SuperpersuasionExamplePage.css", "superpersuasion/DecisionFlow.tsx", "superpersuasion/decision-data.ts", "superpersuasion/decision-flow.css", "superpersuasion/FieldGuide.tsx", "superpersuasion/CorrectionDesk.tsx", "superpersuasion/correction-desk.ts", "superpersuasion/correction-desk.css"],
+    isPilot: true,
+    title: "The art of being worth choosing",
+    eyebrow: "Superpersuasion / an interactive essay",
+    description: "Follow the paths a good recommendation can take, inspect a pocket guide, and see what survives when a chart's source changes.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/ordinal", "semiotic/artifact", "semiotic/utils", "semiotic/themes/react"],
+      data: { states: ["snapshot"], fixture: { kind: "24-public-development-scenarios-and-synthetic-correction", replay: false, schemaVersion: "1", inventory: { scenarios: 24, taskGuides: 3, regions: 3 } } },
+      provenance: { source: "Local adoption development rubric, generated task packets, and synthetic source-correction fixture; Salvi et al. supplies separately cited research context", capturedAt: "2026-09-07", freshnessOwner: "Semiotic maintainers", reviewCadence: "Scenario, guide or revision API changes; no adoption result asserted" },
+      accessibility: { summary: "Linear editorial article with flow totals, original scenario prompts, exact path table, task guide links, paired values, and correction history", navigation: "Native group and case selectors, guide buttons, correction actions and optional downloads", keyboard: "All essential state is available through native controls and text; chart hover is optional", forcedColors: "System-color outlines and labels preserve selection; manual assistive-technology reception remains unassessed" },
+      motion: { reducedMotion: "No authored replay or automatic progression", visibility: "Local selections only; no polling or model calls" },
+      responsive: { status: "container-responsive with keyboard-scrollable wide flow diagram", viewports: [320, 390, 768, 1280], selectionIdentity: "Stable scenario IDs, guide IDs and artifact revision identities" },
+      ssr: { status: "deterministic article and opening state", hydration: "Local fixtures and readable text precede measured chart sizing" },
+      performance: { status: "route split; no timing claims", budgets: { bundle: "Public network, ordinal and artifact entries with local task packets", interaction: "24 scenarios, three guides and two correction editions", memory: "Bounded fixtures; no accumulating history", hiddenPage: "No timers, workers, polling or telemetry" } },
+    },
+  },
+  {
     id: "reservoir-guide",
     path: "/examples/reservoir-guide",
     sourceFile: "ReservoirGuideExamplePage.tsx",
@@ -1937,6 +1957,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "The art of being worth choosing",
+    path: "/examples/superpersuasion",
+    publishedAt: "2026-09-07T05:00:00Z",
+    eyebrow: "Superpersuasion / an interactive essay",
+    description: "Follow the paths a good recommendation can take, inspect a pocket guide, and see what survives when a chart's source changes.",
+    preview: "superpersuasion",
+    badges: ["Decision flows", "Portable guides", "A working correction"],
+    frames: ["network", "ordinal"],
+    topics: ["ai", "design", "accessibility"],
+  },
   {
     title: "How full is full?",
     path: "/examples/reservoir-guide",

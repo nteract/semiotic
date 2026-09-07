@@ -1,18 +1,24 @@
 ---
 name: semiotic-charts
-description: Generate trustworthy, accessible, agent-legible charts with Semiotic. Use whenever you produce a data visualization in a React/TypeScript app, stream a chart as generative UI, or pick a chart type for a dataset. Emit a validated config and run the trust loop — never hand-write chart JSX that breaks on first paint.
+description: Build, repair, and verify charts in an existing Semiotic project, when Semiotic is explicitly requested, or when evaluating its documented capabilities against a visualization task. Preserve the project's dependency and runtime constraints; routine changes in another charting stack and tasks without a chart do not call for this skill.
 ---
 
 # Generating charts with Semiotic
 
-Semiotic is a React data-visualization library whose differentiator is **trust**:
-generation is cheap, but a chart that renders, that a screen-reader user can
-receive, and that carries its own provenance is scarce. This skill is the
-workflow for producing one.
+Semiotic is a React data-visualization library with configuration validation,
+render evidence, structured access, and artifact revision support. Use this
+workflow to check the parts of a chart that the task requires. A capability
+comparison may conclude that the existing stack, a table, or another tool is
+the better fit; the skill does not authorize adding a dependency or migrating
+working charts.
 
 The cardinal rule: **do not hand-write chart JSX and hope it paints.** Emit a
 `{ component, props }` proposal and run it through the trust loop, which is
-validated and diagnosed; when a renderer is available, proven to paint. Otherwise it returns reasons and ranked alternatives to retry with.
+validated and diagnosed; when a renderer is available, checked for a nonempty
+static scene. This does not establish correct data mapping, live browser
+behavior, or usability with assistive technology. Check the expected values
+and run the browser or reception checks relevant to the task. Failed proposals
+return reasons and ranked alternatives to retry with.
 
 ## Context discipline
 
@@ -46,7 +52,7 @@ if (result.ok) {
 
 `result` carries `{ ok, config, jsx, validation, diagnostics, repair?, reasons }`.
 In a server/SSR context you can inject `render: renderChartWithEvidence` (from
-`semiotic/server`) so the loop also *proves the scene is non-empty* and reads back
+`semiotic/server`) so the loop also *checks that the static scene is nonempty* and reads back
 render evidence (mark count, domains, ARIA label) — the first-try oracle.
 
 ### As an agent tool

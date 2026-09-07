@@ -64,6 +64,11 @@ jobs:
           npm run check:ai-surface
           npm run check:ai-contracts
           npm run check:ai-instructions
+          npm run check:ai-tasks
+          npm run test:adoption-evals
+          npm run check:adoption-evals
+          npx tsc -p scripts/ai-tasks/tsconfig.json
+          npx tsc -p scripts/superpersuasion/tsconfig.json
           npm run check:ssr
           npm run check:jsdoc-coverage
           npm run check:ai-examples-coverage

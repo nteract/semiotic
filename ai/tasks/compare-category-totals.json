@@ -1,0 +1,101 @@
+{
+  "id": "compare-category-totals",
+  "title": "Compare category totals you can check",
+  "summary": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
+  "job": "Compare categories and keep a usable route to the values when the picture is unavailable.",
+  "dataShape": "One already aggregated, nonnegative total per category, all in the same unit. The synthetic fixture is North 12, South 30, West 18.",
+  "fit": [
+    "Use in an existing Semiotic React application or when structured chart access and schema-guided validation meet an explicit project requirement."
+  ],
+  "exclusions": [
+    "A small chart change alone need not justify replacing a working visualization library.",
+    "This fixture does not establish that an external source is accurate or that every reader can use the result."
+  ],
+  "component": "BarChart",
+  "importPath": "semiotic/ordinal",
+  "usageMode": "static",
+  "props": [
+    "data",
+    "categoryAccessor",
+    "valueAccessor",
+    "sort",
+    "orientation",
+    "title",
+    "description",
+    "summary",
+    "accessibleTable",
+    "height",
+    "responsiveWidth",
+    "valueLabel"
+  ],
+  "contracts": [
+    "accessibility.description-props",
+    "props.data-required-by-usage-mode",
+    "rendering.renderchart-static-props",
+    "serialization.formatters-are-react-callbacks"
+  ],
+  "examples": [
+    {
+      "title": "React component",
+      "environment": "React browser",
+      "path": "docs/src/pages/tasks/examples/CategoryComparisonExample.tsx"
+    },
+    {
+      "title": "Shared fixture and chart props",
+      "environment": "Browser and server",
+      "path": "docs/src/pages/tasks/examples/category-comparison.ts"
+    },
+    {
+      "title": "Optional server verification",
+      "environment": "Node authoring only",
+      "path": "docs/src/pages/tasks/examples/check-category-comparison.ts"
+    }
+  ],
+  "checks": {
+    "unit": "docs/src/pages/tasks/examples/category-comparison.test.ts",
+    "browser": "integration-tests/docs-examples-tasks.spec.ts",
+    "expected": [
+      "North 12, South 30, West 18; total 60, with South largest.",
+      "Three SVG bars retain 12:30:18 proportions and insertion order in both orientations.",
+      "The browser data table retains the exact category/value mapping.",
+      "An invalid value accessor is refused; the repaired configuration preserves the rows."
+    ],
+    "unassessed": [
+      "Underlying source accuracy: this is a synthetic fixture.",
+      "Assistive-technology reception and usability with actual readers.",
+      "Organic discovery, model preference, and published-package parity."
+    ]
+  },
+  "recovery": [
+    {
+      "symptom": "The chart has no useful values after a field was renamed.",
+      "contractId": "props.data-required-by-usage-mode",
+      "action": "Set valueAccessor to the actual numeric field, total, while preserving data. Run the server check and inspect the exact-value table.",
+      "recheck": "The bars must encode 12, 30 and 18; a nonempty scene alone is insufficient."
+    },
+    {
+      "symptom": "prepareChart returned ok, but there is no SVG.",
+      "contractId": "rendering.renderchart-static-props",
+      "action": "Inject renderChartWithEvidence from semiotic/server in Node authoring code when rendered evidence is required.",
+      "recheck": "Inspect evidence and svg explicitly. Without a renderer, ok covers a different set of checks."
+    }
+  ],
+  "continuation": {
+    "rationale": "This project needs React rendering with inspectable category values.",
+    "recheck": [
+      "Category/value mapping, units, order, summary and the accessible table after source or dependency changes."
+    ],
+    "loss": "An image alone omits the source rows and verification context. Keep the config and fixture when the next reader needs exact values."
+  },
+  "update": {
+    "status": "source-only",
+    "introducedIn": null,
+    "previousAssumption": "A valid configuration or a nonempty render establishes that the values are mapped correctly.",
+    "action": "Run configuration checks, inspect the rendered geometry and compare the category/value table with independent fixture facts.",
+    "recheck": [
+      "Rendering evidence must be present when a render is claimed.",
+      "An installed package version different from the packet's packageVersion needs matching guidance."
+    ],
+    "remaining": "Source truth and usability with actual readers remain separate obligations."
+  }
+}

@@ -982,11 +982,13 @@ function checkPackedExampleConsumer(proj, failures) {
   const fixtureDir = join(proj, "packed-example-consumer")
   cpSync(packedExampleConsumerFixture, fixtureDir, { recursive: true })
 
-  try {
-    const out = runFixtureScript(fixtureDir, "run-pilot-examples.mjs")
-    console.log(`  ✓ ${out.trim()}`)
-  } catch (err) {
-    failures.push(`Packed pilot examples: ${firstLine(err)}`)
+  for (const script of ["run-pilot-examples.mjs", "run-task-resources.mjs"]) {
+    try {
+      const out = runFixtureScript(fixtureDir, script)
+      console.log(`  ✓ ${out.trim()}`)
+    } catch (err) {
+      failures.push(`Packed example consumer ${script}: ${firstLine(err)}`)
+    }
   }
 }
 

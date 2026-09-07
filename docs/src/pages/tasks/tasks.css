@@ -1,0 +1,62 @@
+.task-page {
+  line-height: 1.65;
+}
+.task-lead {
+  font-size: 1.2rem;
+  max-width: 65ch;
+}
+.task-version {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.task-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+.task-example,
+.task-cards article {
+  border: 1px solid var(--surface-3);
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--surface-1);
+}
+.task-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.task-cards h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+.task-page details {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--surface-3);
+  border-radius: 6px;
+}
+.task-page summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.task-page code {
+  overflow-wrap: anywhere;
+}
+.task-page pre {
+  max-width: 100%;
+}
+.task-page button,
+.task-page select {
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+}
+.task-page a:focus-visible,
+.task-page button:focus-visible,
+.task-page select:focus-visible,
+.task-page summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
