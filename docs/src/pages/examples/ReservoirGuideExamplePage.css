@@ -137,7 +137,7 @@
 }
 .reservoir-opening-values {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 90px), 1fr));
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   margin: 32px 0 20px;

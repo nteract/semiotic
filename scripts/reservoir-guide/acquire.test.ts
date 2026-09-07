@@ -79,6 +79,78 @@ describe("reservoir acquisition CLI", () => {
     expect(await readFile(join(raw, "retrieval.json"), "utf8")).toBe(manifest)
   })
 
+  it.each(["first", "later"])(
+    "recovers from a partial %s download without changing completed sources",
+    async (attempt) => {
+      const original = JSON.parse(manifest)
+      const pending = attempt === "first" ? "SHA.csv" : "ORO.csv"
+      const retained = attempt === "first"
+        ? []
+        : original.sources.filter((source: { file: string }) => source.file !== pending)
+      const destination = attempt === "first" ? join(directory, "fresh") : raw
+      const retainedManifest = JSON.stringify({ sources: retained }, null, 2) + "\n"
+      if (attempt === "first") await mkdir(destination)
+      else {
+        await rm(join(raw, pending))
+        await writeFile(join(raw, "retrieval.json"), retainedManifest)
+      }
+      // A real child process writes partial bytes and fails once, then succeeds.
+      // PATH contains only this stub, so these tests cannot reach CDEC.
+      await writeFile(join(directory, "curl"), [
+        `#!${process.execPath}`,
+        'const { existsSync, writeFileSync } = require("node:fs")',
+        'const { basename } = require("node:path")',
+        `const marker = ${JSON.stringify(join(directory, "failed-once"))}`,
+        'const output = process.argv[process.argv.indexOf("-o") + 1]',
+        'if (!existsSync(marker)) {',
+        '  writeFileSync(output, "partial transfer")',
+        '  writeFileSync(marker, "failed")',
+        '  process.exit(28)',
+        '}',
+        'writeFileSync(output, "Synthetic source for " + basename(output) + "\\n")'
+      ].join("\n"), { mode: 0o755 })
+
+      const args = attempt === "first" ? [destination] : ["--resume", destination]
+      await expect(acquire(args)).rejects.toMatchObject({ code: 1 })
+      await expect(readFile(join(destination, pending))).rejects.toMatchObject({ code: "ENOENT" })
+      expect((await readdir(destination)).some((file) => file.startsWith(".acquire-"))).toBe(false)
+      if (attempt === "first")
+        await expect(readFile(join(destination, "retrieval.json"))).rejects.toMatchObject({ code: "ENOENT" })
+      else
+        expect(await readFile(join(destination, "retrieval.json"), "utf8")).toBe(retainedManifest)
+
+      await acquire(["--resume", destination])
+      const completed = JSON.parse(await readFile(join(destination, "retrieval.json"), "utf8"))
+      expect(completed.sources).toHaveLength(original.sources.length)
+      for (const source of retained) expect(completed.sources).toContainEqual(source)
+      for (const source of completed.sources) {
+        const bytes = await readFile(join(destination, source.file))
+        expect(bytes.toString()).toBe(`Synthetic source for ${source.file}\n`)
+        expect(source.bytes).toBe(bytes.length)
+        expect(source.sha256).toBe(createHash("sha256").update(bytes).digest("hex"))
+      }
+      expect((await readdir(destination)).sort()).toEqual([
+        ...original.sources.map((source: { file: string }) => source.file), "retrieval.json"
+      ].sort())
+    },
+    15_000
+  )
+
+  it("removes a completed download if its manifest cannot be published", async () => {
+    const destination = join(directory, "manifest-failure")
+    const blocked = join(destination, "retrieval.json")
+    await mkdir(blocked, { recursive: true })
+    await writeFile(join(blocked, "retained"), "keep this existing entry")
+    await writeFile(join(directory, "curl"), [
+      `#!${process.execPath}`,
+      'const { writeFileSync } = require("node:fs")',
+      'writeFileSync(process.argv[process.argv.indexOf("-o") + 1], "complete transfer")'
+    ].join("\n"), { mode: 0o755 })
+    await expect(acquire([destination])).rejects.toMatchObject({ code: 1 })
+    expect(await readdir(destination)).toEqual(["retrieval.json"])
+    expect(await readFile(join(blocked, "retained"), "utf8")).toBe("keep this existing entry")
+  })
+
   it.each([
     { args: [], error: "Usage:" },
     { args: [""], error: "Usage:" },

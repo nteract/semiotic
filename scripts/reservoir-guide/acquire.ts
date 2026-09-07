@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { parseArgs, promisify } from "node:util"
-import { mkdir, readFile, writeFile } from "node:fs/promises"
+import { link, mkdir, mkdtemp, readFile, rename, rm, unlink, writeFile } from "node:fs/promises"
 import { resolve, join } from "node:path"
 import { createHash } from "node:crypto"
 
@@ -72,9 +72,15 @@ async function main() {
         url: "https://water.ca.gov/Conditions-of-Use"
       }
     ])
-  const sources: SourceFile[] = values.resume
-    ? JSON.parse(await readFile(join(output, "retrieval.json"), "utf8")).sources
-    : []
+  let sources: SourceFile[] = []
+  if (values.resume) {
+    try {
+      sources = JSON.parse(await readFile(join(output, "retrieval.json"), "utf8")).sources
+    } catch (error) {
+      // A failed first download has no completed sources or manifest yet.
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+    }
+  }
   for (const job of jobs) {
     const path = join(output, job.file)
     const existing = sources.find((source) => source.file === job.file)
@@ -90,32 +96,44 @@ async function main() {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
     }
-    await execute("curl", [
-      "-fLsS",
-      "--connect-timeout",
-      "15",
-      "--max-time",
-      "90",
-      "--retry",
-      "1",
-      "-o",
-      path,
-      job.url
-    ])
-    const retrievedAt = new Date().toISOString()
-    const bytes = await readFile(path)
-    const source = {
-      ...job,
-      retrievedAt,
-      bytes: bytes.length,
-      sha256: createHash("sha256").update(bytes).digest("hex")
+    const staging = await mkdtemp(join(output, ".acquire-"))
+    try {
+      const downloaded = join(staging, job.file)
+      await execute("curl", [
+        "-fLsS",
+        "--connect-timeout",
+        "15",
+        "--max-time",
+        "90",
+        "--retry",
+        "1",
+        "-o",
+        downloaded,
+        job.url
+      ])
+      const retrievedAt = new Date().toISOString()
+      const bytes = await readFile(downloaded)
+      const source = {
+        ...job,
+        retrievedAt,
+        bytes: bytes.length,
+        sha256: createHash("sha256").update(bytes).digest("hex")
+      }
+      const manifest = join(staging, "retrieval.json")
+      await writeFile(manifest, JSON.stringify({ sources: [...sources, source] }, null, 2) + "\n")
+      // Publish only complete downloads, without replacing an existing source.
+      await link(downloaded, path)
+      try {
+        await rename(manifest, join(output, "retrieval.json"))
+      } catch (error) {
+        await unlink(path)
+        throw error
+      }
+      sources.push(source)
+      console.log(`${job.file}: ${bytes.length} bytes, retrieved ${retrievedAt}`)
+    } finally {
+      await rm(staging, { recursive: true, force: true })
     }
-    sources.push(source)
-    await writeFile(
-      join(output, "retrieval.json"),
-      JSON.stringify({ sources }, null, 2) + "\n"
-    )
-    console.log(`${job.file}: ${bytes.length} bytes, retrieved ${retrievedAt}`)
   }
 }
 main().catch((error) => {
