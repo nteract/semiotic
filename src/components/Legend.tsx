@@ -1,4 +1,5 @@
 import * as React from "react"
+import { LEGEND_FONT_STYLE, LEGEND_LABEL_STYLE } from "./legendStyles"
 
 import {
   LegendGroup,
@@ -14,18 +15,6 @@ import {
 
 export { GradientLegend } from "./GradientLegend"
 
-const typeHash: Record<
-  "fill" | "line",
-  (style: React.CSSProperties, swatchSize: number) => React.ReactElement
-> = {
-  fill: (style, swatchSize) => (
-    <rect style={style} width={swatchSize} height={swatchSize} />
-  ),
-  line: (style, swatchSize) => (
-    <line style={style} x1={0} y1={0} x2={swatchSize} y2={swatchSize} />
-  )
-}
-
 function renderType(
   item: LegendItem,
   i: number,
@@ -33,15 +22,11 @@ function renderType(
   styleFn: (item: LegendItem, index: number) => React.CSSProperties,
   swatchSize: number
 ) {
-  let renderedType
-  if (typeof type === "function") {
-    renderedType = type(item)
-  } else {
-    const Type = typeHash[type]
-    const style = styleFn(item, i)
-    renderedType = Type(style, swatchSize)
-  }
-  return renderedType
+  if (typeof type === "function") return type(item)
+  const style = styleFn(item, i)
+  return type === "fill"
+    ? <rect style={style} width={swatchSize} height={swatchSize} />
+    : <line style={style} x1={0} y1={0} x2={swatchSize} y2={swatchSize} />
 }
 
 /** Checkmark SVG for isolated items — centered on the swatch */
@@ -212,7 +197,7 @@ function renderCategoricalLegendItem(
         x={swatchSize + labelGap}
         dominantBaseline="central"
         fontSize={12}
-        style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
+        style={LEGEND_LABEL_STYLE}
         fill="var(--semiotic-text, #333)"
       >
         {item.label}
@@ -348,7 +333,7 @@ const renderLegendGroupHorizontal = (
     }
   })
 
-  const totalWidth = Math.max(0, ...rows.map((row) => row.width))
+  const totalWidth = rows.reduce((max, row) => Math.max(max, row.width), 0)
   const totalRows = rows.length
   const totalHeight = totalRows * rowHeight
   return { items: renderedItems, offset: totalWidth, totalRows, totalHeight }
@@ -407,7 +392,7 @@ const renderVerticalGroup = ({
           y={layout.labelY}
           className="legend-group-label"
           fontSize={12}
-          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
+          style={LEGEND_LABEL_STYLE}
           fill="var(--semiotic-text, #333)"
         >
           {l.label}
@@ -532,7 +517,7 @@ const renderHorizontalGroup = ({
           textAnchor="start"
           className="legend-group-label"
           fontSize={12}
-          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
+          style={LEGEND_LABEL_STYLE}
           fill="var(--semiotic-text, #333)"
         >
           {l.label}
@@ -642,10 +627,7 @@ export default function Legend(props: LegendProps) {
           : undefined
       }
       aria-label="Chart legend"
-      style={{
-        fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
-        fontWeight: "var(--semiotic-legend-font-weight, normal)",
-      }}
+      style={LEGEND_FONT_STYLE}
     >
       {title !== undefined && title !== "" && orientation === "vertical" && (
         <text
@@ -654,7 +636,7 @@ export default function Legend(props: LegendProps) {
           x={width / 2}
           textAnchor="middle"
           fontSize={12}
-          style={{ fontSize: "var(--semiotic-legend-font-size, 12px)" }}
+          style={LEGEND_LABEL_STYLE}
           fill="var(--semiotic-text, #333)"
         >
           {title}

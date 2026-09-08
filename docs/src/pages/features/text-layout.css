@@ -1,0 +1,62 @@
+.pretext-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 20px;
+  margin: 24px 0;
+  border: 1px solid var(--surface-3, #ddd);
+  border-radius: 8px;
+  background: var(--surface-1, #fff);
+}
+.pretext-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pretext-controls select,
+.pretext-controls textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--surface-1, #fff);
+  border: 1px solid var(--surface-3, #ddd);
+  border-radius: 4px;
+  padding: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.pretext-copy,
+.pretext-toggle {
+  grid-column: 1 / -1;
+}
+.pretext-controls .pretext-toggle {
+  flex-direction: row;
+  align-items: center;
+}
+.pretext-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.pretext-comparison section {
+  min-width: 0;
+}
+.pretext-note-chart {
+  min-width: 0;
+  overflow: hidden;
+}
+.pretext-note-chart .annotation-note {
+  font-family: var(--note-font-family);
+  font-size: var(--note-font-size);
+}
+@media (max-width: 900px) {
+  .pretext-comparison {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .pretext-controls {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px;
+  }
+}

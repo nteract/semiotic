@@ -29,6 +29,17 @@ describe("renderStaticLegend", () => {
     margin: { top: 20, right: 20, bottom: 30, left: 40 },
   }
 
+  it.each(["right", "bottom"] as const)("measures a large %s legend without an argument-limit overflow", position => {
+    const measured = measureStaticLegend({
+      ...baseConfig,
+      position,
+      categories: Array.from({ length: 150000 }, () => "A"),
+      legendLayout: { maxWidth: 1 }
+    })
+    expect(measured.width).toBe(29)
+    expect(measured.height).toBe(150000 * 22)
+  })
+
   it("returns null for empty categories", () => {
     expect(renderStaticLegend({ ...baseConfig, categories: [] })).toBeNull()
   })

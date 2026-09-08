@@ -1,8 +1,13 @@
 import * as React from "react"
+import {
+  measureAnnotationNote,
+  wrapAnnotationText,
+  type AnnotationNoteText
+} from "./text/annotationTextLayout"
 
 type AnnotationEventHandlers = Record<string, (e: React.SyntheticEvent) => void>
 
-type AnnotationNote = {
+type AnnotationNote = AnnotationNoteText & {
   label?: string
   title?: string
   wrap?: number
@@ -95,29 +100,6 @@ export interface AnnotationProps {
   }
 }
 
-function wrapText(
-  text: string,
-  wrap: number = 120,
-  charWidth: number = 8
-): string[] {
-  if (!text) return []
-  const maxChars = Math.max(1, Math.floor(wrap / charWidth))
-  const words = text.split(/\s+/)
-  const lines: string[] = []
-  let currentLine = ""
-
-  for (const word of words) {
-    if (currentLine && currentLine.length + 1 + word.length > maxChars) {
-      lines.push(currentLine)
-      currentLine = word
-    } else {
-      currentLine = currentLine ? `${currentLine} ${word}` : word
-    }
-  }
-  if (currentLine) lines.push(currentLine)
-  return lines
-}
-
 function bracketPath(
   type: string,
   span: number,
@@ -160,9 +142,11 @@ function renderNote(
     orientation = Math.abs(dx) > Math.abs(dy) ? "leftRight" : "topBottom"
   }
 
+  const horizontal = orientation === "topBottom"
+  const vertical = orientation === "leftRight"
   let align = explicitAlign
   if (!align || align === "dynamic") {
-    if (orientation === "topBottom") {
+    if (horizontal) {
       align = dx >= 0 ? "left" : "right"
     } else {
       align = dy >= 0 ? "top" : "bottom"
@@ -170,29 +154,28 @@ function renderNote(
   }
 
   let textAnchor: "start" | "middle" | "end" = "start"
-  if (orientation === "topBottom") {
+  if (horizontal) {
     if (align === "right") textAnchor = "end"
     else if (align === "middle") textAnchor = "middle"
   } else {
     textAnchor = dx >= 0 ? "start" : "end"
   }
 
-  const lineHeight = 16
+  const useHTML = note.useHTML || note.html
+  const layout = useHTML ? undefined : measureAnnotationNote(note)
+  const lineHeight = layout?.lineHeight ?? 16
   const labelPad = 2
   const padding = 4
-  const titleLines = title ? (noWrap ? [title] : wrapText(title, wrap)) : []
-  const labelLines = label ? (noWrap ? [label] : wrapText(label, wrap)) : []
-  const useHTML = note.useHTML || note.html
-
+  const titleLines =
+    layout?.titleLines ??
+    (title ? (noWrap ? [title] : wrapAnnotationText(title, wrap, 8)) : [])
+  const labelLines =
+    layout?.labelLines ??
+    (label ? (noWrap ? [label] : wrapAnnotationText(label, wrap, 8)) : [])
+  const totalLines = titleLines.length + labelLines.length
   // For leftRight orientation, offset text horizontally away from the note-line
-  const textX =
-    orientation === "leftRight"
-      ? textAnchor === "end"
-        ? -padding
-        : padding
-      : 0
+  const textX = vertical ? (textAnchor === "end" ? -padding : padding) : 0
 
-  let yOffset = 0
   const textElements: React.ReactElement[] = []
 
   const textFill =
@@ -200,7 +183,6 @@ function renderNote(
 
   if (useHTML) {
     const width = wrap
-    const totalLines = titleLines.length + labelLines.length
     const height = Math.max(
       lineHeight,
       totalLines * lineHeight + (title && label ? labelPad : 0)
@@ -253,35 +235,20 @@ function renderNote(
       </foreignObject>
     )
   } else {
-    if (titleLines.length > 0) {
+    for (const isTitle of [true, false]) {
+      const lines = isTitle ? titleLines : labelLines
+      if (lines.length === 0) continue
+      const className = `annotation-note-${isTitle ? "title" : "label"}`
       textElements.push(
         <text
-          key="annotation-note-title"
-          className="annotation-note-title"
+          key={className}
+          className={className}
           fill={textFill}
           textAnchor={textAnchor}
-          fontWeight="bold"
+          fontWeight={isTitle ? (layout?.titleFontWeight ?? "bold") : undefined}
+          y={isTitle ? undefined : titleLines.length * lineHeight}
         >
-          {titleLines.map((line, i) => (
-            <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
-              {line}
-            </tspan>
-          ))}
-        </text>
-      )
-      yOffset = titleLines.length * lineHeight
-    }
-
-    if (labelLines.length > 0) {
-      textElements.push(
-        <text
-          key="annotation-note-label"
-          className="annotation-note-label"
-          fill={textFill}
-          textAnchor={textAnchor}
-          y={yOffset}
-        >
-          {labelLines.map((line, i) => (
+          {lines.map((line, i) => (
             <tspan key={i} x={textX} dy={i === 0 ? 0 : lineHeight}>
               {line}
             </tspan>
@@ -293,77 +260,50 @@ function renderNote(
 
   let noteLine = null
   if ((title || label) && (dx !== 0 || dy !== 0)) {
-    if (orientation === "topBottom") {
-      const lineWidth = Math.min(wrap, 120)
-      let x1 = 0
-      let x2 = lineWidth
-      if (textAnchor === "end") {
-        x1 = -lineWidth
-        x2 = 0
-      } else if (textAnchor === "middle") {
-        x1 = -lineWidth / 2
-        x2 = lineWidth / 2
-      }
-      noteLine = (
-        <line
-          className="note-line"
-          x1={x1}
-          x2={x2}
-          y1={0}
-          y2={0}
-          stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-        />
-      )
-    } else {
-      const totalHeight =
-        (titleLines.length + labelLines.length) * lineHeight +
-        (labelLines.length > 0 ? lineHeight : 0)
-      let y1 = 0
-      let y2 = totalHeight
-      if (align === "bottom") {
-        y1 = -totalHeight
-        y2 = 0
-      } else if (align === "middle") {
-        y1 = -totalHeight / 2
-        y2 = totalHeight / 2
-      }
-      noteLine = (
-        <line
-          className="note-line"
-          x1={0}
-          x2={0}
-          y1={y1}
-          y2={y2}
-          stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-        />
-      )
-    }
+    const length = horizontal
+      ? layout
+        ? layout.width
+        : Math.min(wrap, 120)
+      : (titleLines.length +
+          labelLines.length +
+          (labelLines.length > 0 ? 1 : 0)) *
+        lineHeight
+    const alignment = horizontal ? textAnchor : align
+    const start =
+      alignment === "end" || alignment === "bottom"
+        ? -length
+        : alignment === "middle"
+          ? -length / 2
+          : 0
+    noteLine = (
+      <line
+        className="note-line"
+        x1={horizontal ? start : 0}
+        x2={horizontal ? start + length : 0}
+        y1={horizontal ? 0 : start}
+        y2={horizontal ? 0 : start + length}
+        stroke={color || "var(--semiotic-text-secondary, currentColor)"}
+      />
+    )
   }
 
   // Compute vertical offset for note content based on orientation and alignment.
   // With first tspan dy=0, the first baseline sits at the content group's y.
   // Subsequent lines are spaced by lineHeight. Total baseline span = (N-1)*lineHeight.
   // labelPad is the gap between the note-line and the nearest text.
-  const totalLines = titleLines.length + labelLines.length
   const baselineSpan = Math.max(0, totalLines - 1) * lineHeight
   const labelGap = labelLines.length > 0 && titleLines.length > 0 ? labelPad : 0
   const visualHeight = baselineSpan + lineHeight + labelGap
   let contentYOffset = 0
 
-  if (orientation === "topBottom") {
-    if (dy < 0) {
+  if (horizontal || vertical) {
+    if (vertical && align === "middle") {
+      contentYOffset = -(visualHeight / 2) + lineHeight / 2
+    } else if (dy < 0 || (vertical && align === "bottom")) {
       // Place text above the note-line
       contentYOffset = -(baselineSpan + labelPad)
     } else {
       // Place text below the note-line
-      contentYOffset = labelPad + lineHeight
-    }
-  } else if (orientation === "leftRight") {
-    if (align === "middle") {
-      contentYOffset = -(visualHeight / 2) + lineHeight / 2
-    } else if (align === "bottom" || dy < 0) {
-      contentYOffset = -(baselineSpan + labelPad)
-    } else {
       contentYOffset = labelPad + lineHeight
     }
   }
@@ -372,7 +312,11 @@ function renderNote(
     contentYOffset !== 0 ? `translate(0,${contentYOffset})` : undefined
 
   return (
-    <g className="annotation-note" transform={`translate(${dx},${dy})`}>
+    <g
+      className="annotation-note"
+      transform={`translate(${dx},${dy})`}
+      {...layout?.textProps}
+    >
       <g className="annotation-note-content" transform={contentTransform}>
         {textElements}
       </g>
@@ -388,18 +332,19 @@ function renderSubject(
   annotX?: number,
   annotY?: number
 ) {
-  const elements: React.ReactElement[] = []
+  let element: React.ReactNode = null
+  const stroke = color || "var(--semiotic-text-secondary, currentColor)"
 
   switch (type) {
     case "callout-circle": {
       const totalRadius = (subject?.radius || 0) + (subject?.radiusPadding || 0)
       if (totalRadius > 0) {
-        elements.push(
+        element = (
           <circle
             key="subject-circle"
             r={totalRadius}
             fill="none"
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
+            stroke={stroke}
           />
         )
       }
@@ -409,92 +354,57 @@ function renderSubject(
       const width = subject?.width || 0
       const height = subject?.height || 0
       if (width > 0 || height > 0) {
-        elements.push(
+        element = (
           <rect
             key="subject-rect"
             width={width}
             height={height}
             fill="none"
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
+            stroke={stroke}
           />
         )
       }
       break
     }
     case "callout-custom": {
-      if (subject?.custom) {
-        const customElements = Array.isArray(subject.custom)
-          ? subject.custom
-          : [subject.custom]
-        elements.push(...customElements)
-      }
+      element = subject?.custom
       break
     }
     case "xy-threshold": {
       const x = annotX || 0
       const y = annotY || 0
 
+      let x1 = 0
+      let x2 = 0
+      let y1 = 0
+      let y2 = 0
       if (subject?.x !== undefined) {
-        const y1 = (subject.y1 || 0) - y
-        const y2 = (subject.y2 || 0) - y
-        const sx = (subject.x || 0) - x
-        elements.push(
-          <line
-            key="threshold-line"
-            x1={sx}
-            y1={y1}
-            x2={sx}
-            y2={y2}
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-            strokeDasharray="5,5"
-          />
-        )
+        x1 = x2 = (subject.x || 0) - x
+        y1 = (subject.y1 || 0) - y
+        y2 = (subject.y2 || 0) - y
       } else if (subject?.y !== undefined) {
-        const x1 = (subject.x1 || 0) - x
-        const x2 = (subject.x2 || 0) - x
-        const sy = (subject.y || 0) - y
-        elements.push(
-          <line
-            key="threshold-line"
-            x1={x1}
-            y1={sy}
-            x2={x2}
-            y2={sy}
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-            strokeDasharray="5,5"
-          />
-        )
+        y1 = y2 = (subject.y || 0) - y
+        x1 = (subject.x1 || 0) - x
+        x2 = (subject.x2 || 0) - x
       } else if (subject?.x1 !== undefined || subject?.x2 !== undefined) {
-        // Horizontal threshold line when only x1/x2 provided (no subject.x or subject.y)
-        const x1 = (subject.x1 || 0) - x
-        const x2 = (subject.x2 || 0) - x
-        elements.push(
-          <line
-            key="threshold-line"
-            x1={x1}
-            y1={0}
-            x2={x2}
-            y2={0}
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-            strokeDasharray="5,5"
-          />
-        )
+        // Unpositioned thresholds use the annotation origin on the other axis.
+        x1 = (subject.x1 || 0) - x
+        x2 = (subject.x2 || 0) - x
       } else if (subject?.y1 !== undefined || subject?.y2 !== undefined) {
-        // Vertical threshold line when only y1/y2 provided (no subject.x or subject.y)
-        const y1 = (subject.y1 || 0) - y
-        const y2 = (subject.y2 || 0) - y
-        elements.push(
-          <line
-            key="threshold-line"
-            x1={0}
-            y1={y1}
-            x2={0}
-            y2={y2}
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
-            strokeDasharray="5,5"
-          />
-        )
-      }
+        y1 = (subject.y1 || 0) - y
+        y2 = (subject.y2 || 0) - y
+      } else break
+      element = (
+        <line
+          key="threshold-line"
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          stroke={stroke}
+          strokeDasharray="5,5"
+        />
+      )
       break
     }
     case "bracket": {
@@ -504,12 +414,12 @@ function renderSubject(
       const isVertical = subject?.width === undefined
 
       if (span !== undefined) {
-        elements.push(
+        element = (
           <path
             key="bracket-path"
             d={bracketPath(bracketType, span, depth, isVertical)}
             fill="none"
-            stroke={color || "var(--semiotic-text-secondary, currentColor)"}
+            stroke={stroke}
           />
         )
       }
@@ -517,7 +427,7 @@ function renderSubject(
     }
   }
 
-  return <g className="annotation-subject">{elements}</g>
+  return <g className="annotation-subject">{element}</g>
 }
 
 function renderConnector(
@@ -528,7 +438,8 @@ function renderConnector(
   type?: string,
   subject?: AnnotationSubject
 ) {
-  const elements: React.ReactElement[] = []
+  let lineElement: React.ReactElement | undefined
+  let arrowElement: React.ReactElement | undefined
 
   let startX = 0
   let startY = 0
@@ -571,7 +482,9 @@ function renderConnector(
     }
   }
 
-  const connectorLength = Math.sqrt((dx - startX) ** 2 + (dy - startY) ** 2)
+  const vx = dx - startX
+  const vy = dy - startY
+  const connectorLength = Math.hypot(vx, vy)
 
   if (connectorLength > 0.5) {
     const stroke = color || "var(--semiotic-text-secondary, currentColor)"
@@ -586,17 +499,17 @@ function renderConnector(
 
     // Arrowhead sits at the subject end; its angle follows the connector's
     // initial direction — start→control for a curve, start→note for a line.
-    let arrowAngle = Math.atan2(dy - startY, dx - startX)
+    let arrowAngle = Math.atan2(vy, vx)
 
     if (isCurve) {
       const midX = (startX + dx) / 2
       const midY = (startY + dy) / 2
-      const nx = -(dy - startY) / connectorLength
-      const ny = (dx - startX) / connectorLength
+      const nx = -vy / connectorLength
+      const ny = vx / connectorLength
       const bend = (connector?.curve ?? 0.25) * connectorLength
       const cx = midX + nx * bend
       const cy = midY + ny * bend
-      elements.push(
+      lineElement = (
         <path
           key="connector-line"
           className="connector-curve"
@@ -607,7 +520,7 @@ function renderConnector(
       )
       arrowAngle = Math.atan2(cy - startY, cx - startX)
     } else {
-      elements.push(
+      lineElement = (
         <line
           key="connector-line"
           x1={startX}
@@ -627,7 +540,7 @@ function renderConnector(
       const a2x = startX + arrowSize * Math.cos(arrowAngle - angleOffset)
       const a2y = startY + arrowSize * Math.sin(arrowAngle - angleOffset)
 
-      elements.push(
+      arrowElement = (
         <path
           key="connector-arrow"
           d={`M${startX},${startY}L${a1x},${a1y}L${a2x},${a2y}Z`}
@@ -638,7 +551,12 @@ function renderConnector(
     }
   }
 
-  return <g className="annotation-connector">{elements}</g>
+  return (
+    <g className="annotation-connector">
+      {lineElement}
+      {arrowElement}
+    </g>
+  )
 }
 
 function AnnotationRenderer(props: AnnotationRendererProps) {
@@ -664,7 +582,7 @@ function AnnotationRenderer(props: AnnotationRendererProps) {
 
   const x = Array.isArray(rawX) ? (rawX[0] ?? 0) : rawX
   const y = Array.isArray(rawY) ? (rawY[0] ?? 0) : rawY
-  const disableSet = new Set(Array.isArray(disable) ? disable : [])
+  const disabled = Array.isArray(disable) ? disable : []
 
   let dx = baseDx || 0
   let dy = baseDy || 0
@@ -701,11 +619,11 @@ function AnnotationRenderer(props: AnnotationRendererProps) {
       {...(strokeDasharray && { strokeDasharray })}
       {...events}
     >
-      {!disableSet.has("connector") &&
+      {!disabled.includes("connector") &&
         renderConnector(dx, dy, connector, color, resolvedType, subject)}
-      {!disableSet.has("subject") &&
+      {!disabled.includes("subject") &&
         renderSubject(resolvedType, subject, color, x, y)}
-      {!disableSet.has("note") && renderNote(note, dx, dy, color)}
+      {!disabled.includes("note") && renderNote(note, dx, dy, color)}
     </g>
   )
 }

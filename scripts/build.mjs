@@ -679,6 +679,14 @@ const generatedBundleMetadata = {
     stability: "stable",
     loading: "eager"
   },
+  "semiotic-text": {
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager"
+  },
   "semiotic-experimental": {
     platform: "browser",
     rsc: false,
@@ -1013,6 +1021,13 @@ async function build() {
   //   neither            — agnostic pure-function bundle (data, recipes/core)
   const bundles = [
     {
+      input: "src/components/semiotic-text.ts",
+      name: "semiotic-text",
+      analyze: false,
+      minify,
+      clientOnly: true
+    },
+    {
       input: "src/components/semiotic.ts",
       name: "semiotic",
       analyze,
@@ -1320,6 +1335,7 @@ async function build() {
   // independent bundle entries would fragment the primary graph by every
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
+    "semiotic-text",
     "controls",
     "semiotic-access",
     "semiotic-artifact-react",
@@ -1448,10 +1464,17 @@ async function build() {
     "semiotic-recipes-react",
   ])
   const clientCjsBundles = bundledEntries.filter(
-    (bundle) => bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name),
+    (bundle) =>
+      bundle.clientOnly &&
+      bundle.name !== "semiotic-text" &&
+      !isolatedClientCjsNames.has(bundle.name),
   )
   const standaloneCjsBundles = bundledEntries.filter(
-    (bundle) => !bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name)
+    // The text hook has no shared React context and must not make other CJS
+    // charts require its optional Pretext peer.
+    (bundle) =>
+      bundle.name === "semiotic-text" ||
+      (!bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name))
   )
   await createCjsBundle({
     input: "src/components/stream/customLayoutSelection.tsx",

@@ -73,6 +73,7 @@ export const EXTERNAL_RUNTIME_PACKAGES = Object.freeze([
   "@dimforge/rapier2d-compat",
   "world-atlas",
   "roughjs",
+  "@chenglou/pretext",
   "sharp",
   "gifenc"
 ])
@@ -133,6 +134,7 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   },
   { exportKey: "./data", symbol: "bin", platform: "browser" },
   { exportKey: "./geo", symbol: "ChoroplethMap", platform: "browser" },
+  { exportKey: "./text", symbol: "usePretextAnnotations", platform: "browser" },
   {
     exportKey: "./rough",
     symbol: "createRoughRenderMode",

@@ -9,18 +9,13 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent,
 } from "../stream/svgOverlayUtils"
-import { axisTickCount, defaultTickFormat } from "../stream/axisTickUtils"
-import { ticksForMode } from "../charts/shared/axisExtent"
 import { resolveLegendSideGutter, type AxisChromeInput } from "../legendLayout"
 import {
   isStaticTextTickLabel,
   renderStaticTickForeignObject,
 } from "./staticAxisTickLabel"
-import {
-  createStaticAxisTicks,
-  isStaticAxisLandmark,
-  resolveStaticAxisTicks,
-} from "./staticXYAxisTicks"
+import { isStaticAxisLandmark } from "./staticXYAxisTicks"
+import { generateXYTicks } from "../stream/xyAxisTicks"
 
 /**
  * Render the second vertical axis when an XY frame explicitly supplies a
@@ -53,30 +48,9 @@ export function renderPairedRightAxisSVG(options: {
   if (!leftAxis || !rightAxis) return null
 
   const s = themeStyles(theme)
-  const extentMode = rightAxis.extent ?? props.axisExtent
-  const tickCount = extentMode === "exact"
-    ? Math.max(2, axisTickCount(rightAxis, 5))
-    : Math.min(
-        axisTickCount(rightAxis, 5),
-        Math.max(2, Math.floor(layout.height / 30))
-  )
-  const values = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
-  const format = rightAxis.tickFormat || props.yFormat || props.tickFormatValue || defaultTickFormat
-  // The live right-axis branch invokes its formatter with the tick value
-  // alone, unlike the horizontal axis which exposes index/all ticks.
-  const rightTickFormatter = (value: number | Date) => format(value as number)
-  const ticks = resolveStaticAxisTicks({
-    candidates: createStaticAxisTicks({
-      values,
-      scale: scales.y,
-      format: rightTickFormatter,
-    }),
-    scale: scales.y,
-    minPixelDistance: 22,
-    includeMax: rightAxis.includeMax,
-    extentMode,
-    hasExplicitTickValues: Boolean(rightAxis.tickValues),
-    format: rightTickFormatter,
+  const ticks = generateXYTicks({
+    scale: scales.y, axis: rightAxis, size: layout.height,
+    format: props.yFormat || props.tickFormatValue, axisExtent: props.axisExtent,
   })
   const pixelExtent = tickPixelExtent(ticks)
   const label = rightAxis.label ?? props.yLabelRight

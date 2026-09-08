@@ -2,14 +2,8 @@
 
 import { useMemo } from "react"
 import type { ReactNode } from "react"
-import { ticksForMode } from "../charts/shared/axisExtent"
 import type { StreamScales, XYFrameAxisConfig } from "./types"
-import {
-  axisTickCount,
-  defaultTickFormat,
-  filterTicksByPixelDistance,
-  hasSameTickLabel,
-} from "./axisTickUtils"
+import { generateXYTicks } from "./xyAxisTicks"
 import { jaggedBaselinePath, resolveAxisLineStyle, resolveGridDash } from "./svgOverlayUtils"
 
 /** Props for the canvas-behind grid and axis-baseline SVG layer. */
@@ -45,91 +39,16 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     axisExtent,
   } = props
   const xTicks = useMemo(() => {
-    if (!scales) return []
-    const bottomAxis = axes?.find(a => a.orient === "bottom")
-    const topAxis = axes?.find(a => a.orient === "top")
-    const xAxis = bottomAxis ?? topAxis
-    const extentMode = xAxis?.extent ?? axisExtent
-    const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = axisTickCount(xAxis, 5)
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
-    const rawValues = rawTicks.map(v => v.valueOf())
-    const candidates = rawTicks.map((v, i) => ({
-      value: v,
-      pixel: scales.x(v),
-      label: fmt(v, i, rawValues),
-    }))
-    const maxLabelWidth = candidates.reduce(
-      (max, candidate) => Math.max(
-        max,
-        typeof candidate.label === "string"
-          ? candidate.label.length * 6.5
-          : typeof candidate.label === "number"
-            ? String(candidate.label).length * 6.5
-            : 60,
-      ),
-      0,
-    )
-    const minPixelDistance = xAxis?.autoRotate
-      ? Math.max(20, Math.min(maxLabelWidth + 8, 55))
-      : Math.max(55, maxLabelWidth + 8)
-    let filtered = filterTicksByPixelDistance(candidates, minPixelDistance)
-    if (filtered.length > 1) {
-      filtered = filtered.filter((tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
-      )
-    }
-    if (xAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !xAxis.tickValues) {
-      const domain = scales.x.domain() as [number, number]
-      const domainMax = domain[1]
-      const maxPx = scales.x(domainMax)
-      const nearestPx = filtered[filtered.length - 1].pixel
-      if (Math.abs(maxPx - nearestPx) > 1) {
-        const maxLabel = fmt(domainMax, filtered.length, rawValues)
-        if (Math.abs(maxPx - nearestPx) < minPixelDistance && filtered.length > 1) filtered = filtered.slice(0, -1)
-        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
-      }
-    }
-    return filtered
-  }, [scales, axes, xFormat, width, axisExtent])
+    if (!scales || !showGrid) return []
+    const axis = axes?.find(a => a.orient === "bottom") ?? axes?.find(a => a.orient === "top")
+    return generateXYTicks({ scale: scales.x, axis, size: width, horizontal: true, format: xFormat, axisExtent })
+  }, [scales, axes, xFormat, width, axisExtent, showGrid])
 
   const yTicks = useMemo(() => {
-    if (!scales) return []
-    const leftAxis = axes?.find(a => a.orient === "left")
-    const rightAxis = axes?.find(a => a.orient === "right")
-    const yAxis = leftAxis ?? rightAxis
-    const extentMode = yAxis?.extent ?? axisExtent
-    const fmt = yAxis?.tickFormat || yFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = axisTickCount(yAxis, 5)
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawTicks = yAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
-    const candidates = rawTicks.map(v => ({
-      value: v,
-      pixel: scales.y(v),
-      label: fmt(v),
-    }))
-    let filtered = filterTicksByPixelDistance(candidates, 22)
-    if (filtered.length > 1) {
-      filtered = filtered.filter((tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
-      )
-    }
-    if (yAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !yAxis.tickValues) {
-      const domain = scales.y.domain() as [number, number]
-      const domainMax = domain[1]
-      const maxPx = scales.y(domainMax)
-      const nearestPx = filtered[filtered.length - 1].pixel
-      if (Math.abs(maxPx - nearestPx) > 1) {
-        const maxLabel = fmt(domainMax)
-        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
-        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
-      }
-    }
-    return filtered
-  }, [scales, axes, yFormat, height, axisExtent])
+    if (!scales || !showGrid) return []
+    const axis = axes?.find(a => a.orient === "left") ?? axes?.find(a => a.orient === "right")
+    return generateXYTicks({ scale: scales.y, axis, size: height, format: yFormat, axisExtent })
+  }, [scales, axes, yFormat, height, axisExtent, showGrid])
 
   const hasGrid = showGrid && scales
   const hasBaselines = showAxes && scales

@@ -73,6 +73,9 @@ const ENTRY_GRAPHS = [
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
   { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
+  // The opt-in text adapter stays isolated. This budgets Semiotic's code;
+  // @chenglou/pretext remains an external optional peer, like React.
+  { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
   // Access contracts compose AI grounding/audit systems; keep them off chart
   // production graphs while retaining a narrow tooling budget.
   // Bumped 35→36: authored hierarchy rollups and choropleth coverage/range/

@@ -62,7 +62,7 @@ const IGNORED_EXPORTS = new Set([
 // Keep these short and stable; they describe *which charts/utilities*
 // each bundle ships, not implementation detail.
 const BLURBS = {
-  ".": "Everything below (full bundle)",
+  ".": "Full chart API and shared utilities",
   "./access": "Chart Access Contract factory and first-wave baseline contracts",
   "./evidence":
     "Chart Evidence Envelope, deterministic hashing, and publication gate",
@@ -114,7 +114,8 @@ const BLURBS = {
   "./controls":
     "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
   "./rough":
-    "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative"
+    "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative",
+  "./text": "Optional Pretext annotation hook — peer package excluded"
 }
 
 // Display order — independent of `package.json` key order so the
@@ -155,6 +156,7 @@ const ORDER = [
   "./ai/core",
   "./controls",
   "./rough",
+  "./text",
   "."
 ]
 

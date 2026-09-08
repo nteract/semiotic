@@ -14,12 +14,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/evidence",
-    "kb": 46,
+    "kb": 48,
     "blurb": "Chart Evidence Envelope, deterministic hashing, and publication gate"
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 118,
+    "kb": 119,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 130,
+    "kb": 131,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
@@ -69,27 +69,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 225,
+    "kb": 226,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 225,
+    "kb": 226,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 227,
+    "kb": 228,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 95,
+    "kb": 96,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 88,
+    "kb": 89,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -99,7 +99,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 99,
+    "kb": 100,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -154,12 +154,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 587,
+    "kb": 588,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 135,
+    "kb": 136,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -173,9 +173,14 @@ const bundleSizeRows = Object.freeze([
     "blurb": "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative"
   },
   {
+    "importPath": "semiotic/text",
+    "kb": 1,
+    "blurb": "Optional Pretext annotation hook — peer package excluded"
+  },
+  {
     "importPath": "semiotic",
     "kb": 370,
-    "blurb": "Everything below (full bundle)"
+    "blurb": "Full chart API and shared utilities"
   }
 ])
 // semiotic-bundle-sizes-js:end

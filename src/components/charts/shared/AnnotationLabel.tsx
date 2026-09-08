@@ -105,7 +105,7 @@ function resolveBackground(
   }
   if (background === false || background === "none") return null
   if (background === "box") return { type: "box" }
-  return { type: background.type ?? "halo", ...background }
+  return { ...background, type: background.type ?? "halo" }
 }
 
 /**

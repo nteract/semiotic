@@ -14,7 +14,6 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
-import { ticksForMode } from "../charts/shared/axisExtent"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import {
   useAnnotationActivationOptions,
@@ -28,12 +27,7 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
-import {
-  axisTickCount,
-  defaultTickFormat,
-  filterTicksByPixelDistance,
-  hasSameTickLabel,
-} from "./axisTickUtils"
+import { generateXYTicks, axisTicksNeedRotation } from "./xyAxisTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 
 export { SVGUnderlay } from "./SVGUnderlay"
@@ -224,160 +218,28 @@ export function SVGOverlay(props: SVGOverlayProps) {
       ? rightSideLegendGutter
       : margin.right
 
-  // Generate axis ticks — use per-axis config, auto-reduce to prevent overlap.
-  // After generating candidate ticks, filter by minimum pixel distance so labels
-  // never collide — critical for log scales where ticks cluster non-uniformly.
   const xTicks = useMemo(() => {
-    if (!showAxes || !scales) return []
-    const bottomAxis = axes?.find(a => a.orient === "bottom")
-    const topAxis = axes?.find(a => a.orient === "top")
-    // Bottom owns the primary x-axis ticks; fall back to top when no bottom
-    // entry is present so a top-only axes config can still set extent/ticks.
-    const xAxis = bottomAxis ?? topAxis
-    const extentMode = xAxis?.extent ?? axisExtent
-    const fmt = xAxis?.tickFormat || xFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(width / 70))
-    const requested = axisTickCount(xAxis, 5)
-    // Exact-mode contract: honor the requested count verbatim. The
-    // `maxFit` clamp would silently collapse "give me exactly 7 ticks"
-    // to whatever the width permits — pixel-distance filtering below
-    // still drops physically-overlapping labels, but we don't pre-clamp
-    // away an explicit count.
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    // Explicit `tickValues` wins over generated ticks (and skips
-    // `includeMax` below since the user already locked in the set).
-    const rawTicks = xAxis?.tickValues ?? ticksForMode(scales.x, tickCount, extentMode)
-    const rawValues = rawTicks.map(v => v.valueOf())
-    const candidates = rawTicks.map((v, i) => ({
-      value: v,
-      pixel: scales.x(v),
-      label: fmt(v, i, rawValues)
-    }))
-    const maxLabelWidth = candidates.reduce((max, c) => Math.max(max, typeof c.label === "string" ? c.label.length * 6.5 : typeof c.label === "number" ? String(c.label).length * 6.5 : 60), 0)
-    // When autoRotate is enabled, labels will be angled so they need much less horizontal space
-    const minPx = xAxis?.autoRotate
-      ? Math.max(20, Math.min(maxLabelWidth + 8, 55))
-      : Math.max(55, maxLabelWidth + 8)
-    let filtered = filterTicksByPixelDistance(candidates, minPx)
-    // Deduplicate adjacent identical labels (e.g. low-resolution date formats)
-    if (filtered.length > 1) {
-      filtered = filtered.filter((tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
-      )
-    }
-    // includeMax: ensure the domain max is represented as a tick.
-    // In exact-mode the last tick is always pinned to the domain max
-    // already, so this branch is a no-op there. Skip it entirely when
-    // the user supplied explicit `tickValues` — they've already picked
-    // the set they want, and appending would violate that contract.
-    if (xAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !xAxis?.tickValues) {
-      const domain = scales.x.domain() as [number, number]
-      const domainMax = domain[1]
-      const maxPx = scales.x(domainMax)
-      const lastPx = filtered[filtered.length - 1].pixel
-      if (Math.abs(maxPx - lastPx) > 1) {
-        const maxLabel = fmt(domainMax, filtered.length, rawValues)
-        if (maxPx - lastPx < minPx && filtered.length > 1) filtered = filtered.slice(0, -1)
-        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
-      }
-    }
-    return filtered
-  }, [showAxes, scales, axes, xFormat, width, axisExtent])
+    if ((!showAxes && !showGrid) || !scales) return []
+    const axis = axes?.find(a => a.orient === "bottom") ?? axes?.find(a => a.orient === "top")
+    return generateXYTicks({ scale: scales.x, axis, size: width, horizontal: true, format: xFormat, axisExtent })
+  }, [showAxes, showGrid, scales, axes, xFormat, width, axisExtent])
 
-  /**
-   * The active horizontal axis rotates tick labels when `autoRotate` is set
-   * and they would otherwise collide. Bottom-axis rotation also changes the
-   * chrome that a bottom legend must clear.
-   */
   const shouldRotateBottomTicks = useMemo(() => {
-    const bottomAxis = axes?.find(a => a.orient === "bottom")
-    const topAxis = axes?.find(a => a.orient === "top")
-    const xAxis = bottomAxis ?? topAxis
-    if (!xAxis?.autoRotate || xTicks.length <= 1) return false
-    const avgSpacing = width / Math.max(xTicks.length - 1, 1)
-    const maxLabelW = xTicks.reduce(
-      (max, t) => Math.max(max, typeof t.label === "string" ? t.label.length * 6.5 : 60),
-      0,
-    )
-    return avgSpacing < maxLabelW + 8
-  }, [axes, xTicks, width])
+    const axis = axes?.find(a => a.orient === "bottom") ?? axes?.find(a => a.orient === "top")
+    return Boolean(axis?.autoRotate && axisTicksNeedRotation(xTicks))
+  }, [axes, xTicks])
 
   const yTicks = useMemo(() => {
-    if (!showAxes || !scales) return []
-    const leftAxis = axes?.find(a => a.orient === "left")
-    const rightAxis = axes?.find(a => a.orient === "right")
-    const yAxis = leftAxis ?? rightAxis
-    const extentMode = yAxis?.extent ?? axisExtent
-    const fmt = yAxis?.tickFormat || yFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = axisTickCount(yAxis, 5)
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawYTicks = yAxis?.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
-    const candidates = rawYTicks.map(v => ({
-      value: v,
-      pixel: scales.y(v),
-      label: fmt(v)
-    }))
-    let filtered = filterTicksByPixelDistance(candidates, 22)
-    // Deduplicate adjacent identical labels
-    if (filtered.length > 1) {
-      filtered = filtered.filter((tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
-      )
-    }
-    if (yAxis?.includeMax && filtered.length > 0 && extentMode !== "exact" && !yAxis?.tickValues) {
-      const domain = scales.y.domain() as [number, number]
-      const domainMax = domain[1]
-      const maxPx = scales.y(domainMax)
-      // Y axis is inverted (domain max = top = smallest pixel). Compare with
-      // the tick closest to the top (first after filtering, since ticks are
-      // sorted by ascending domain value but descending pixel).
-      const nearestPx = filtered[filtered.length - 1].pixel
-      if (Math.abs(maxPx - nearestPx) > 1) {
-        const maxLabel = fmt(domainMax)
-        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
-        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
-      }
-    }
-    return filtered
-  }, [showAxes, scales, axes, yFormat, height, axisExtent])
+    if ((!showAxes && !showGrid) || !scales) return []
+    const axis = axes?.find(a => a.orient === "left") ?? axes?.find(a => a.orient === "right")
+    return generateXYTicks({ scale: scales.y, axis, size: height, format: yFormat, axisExtent })
+  }, [showAxes, showGrid, scales, axes, yFormat, height, axisExtent])
 
-  // Right Y axis ticks — same pixel positions as left but different labels
   const yTicksRight = useMemo(() => {
-    if (!showAxes || !scales) return []
-    const rightAxis = axes?.find(a => a.orient === "right")
-    if (!rightAxis) return []
-    const extentMode = rightAxis.extent ?? axisExtent
-    const fmt = rightAxis.tickFormat || yFormat || defaultTickFormat
-    const maxFit = Math.max(2, Math.floor(height / 30))
-    const requested = axisTickCount(rightAxis, 5)
-    const tickCount = extentMode === "exact" ? Math.max(2, requested) : Math.min(requested, maxFit)
-    const rawYTicksRight = rightAxis.tickValues ?? ticksForMode(scales.y, tickCount, extentMode)
-    const candidates = rawYTicksRight.map(v => ({
-      value: v,
-      pixel: scales.y(v),
-      label: fmt(v)
-    }))
-    let filtered = filterTicksByPixelDistance(candidates, 22)
-    if (filtered.length > 1) {
-      filtered = filtered.filter((tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, filtered[index - 1].label)
-      )
-    }
-    // The paired-right branch is a full axis, not a decorative duplicate.
-    // Keep `includeMax` consistent with the primary vertical-axis path.
-    if (rightAxis.includeMax && filtered.length > 0 && extentMode !== "exact" && !rightAxis.tickValues) {
-      const domain = scales.y.domain() as [number, number]
-      const domainMax = domain[1]
-      const maxPx = scales.y(domainMax)
-      const nearestPx = filtered[filtered.length - 1].pixel
-      if (Math.abs(maxPx - nearestPx) > 1) {
-        const maxLabel = fmt(domainMax)
-        if (Math.abs(maxPx - nearestPx) < 22 && filtered.length > 1) filtered = filtered.slice(0, -1)
-        filtered.push({ value: domainMax, pixel: maxPx, label: maxLabel })
-      }
-    }
-    return filtered
+    if (!showAxes || !scales || !axes?.some(a => a.orient === "left")) return []
+    const axis = axes?.find(a => a.orient === "right")
+    if (!axis) return []
+    return generateXYTicks({ scale: scales.y, axis, size: height, format: yFormat, axisExtent })
   }, [showAxes, scales, axes, yFormat, height, axisExtent])
 
   // Persistent cache for sticky annotation positions (survives re-renders)

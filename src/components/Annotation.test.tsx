@@ -120,6 +120,24 @@ describe("Annotation structure and note positioning", () => {
 })
 
 describe("Annotation subjects", () => {
+  it.each([
+    { subject: { x: 80, y1: 10, y2: 200 }, expected: [50, -40, 50, 150] },
+    { subject: { y: 80, x1: 10, x2: 200 }, expected: [-20, 30, 170, 30] },
+    { subject: { x1: 10, x2: 200 }, expected: [-20, 0, 170, 0] },
+    { subject: { y1: 10, y2: 200 }, expected: [0, -40, 0, 150] }
+  ])("preserves threshold endpoints for $subject", ({ subject, expected }) => {
+    const { container } = renderAnnotation({
+      type: "xy-threshold",
+      x: 30,
+      y: 50,
+      subject
+    })
+    const line = required<SVGLineElement>(container, ".annotation-subject line")
+    expect(
+      ["x1", "y1", "x2", "y2"].map((key) => Number(line.getAttribute(key)))
+    ).toEqual(expected)
+  })
+
   it("renders a callout-circle with radius padding", () => {
     const { container } = renderAnnotation({
       type: "callout-circle",

@@ -8,14 +8,6 @@ export function axisTickCount(
   return axis?.ticks ?? axis?.tickCount ?? fallback
 }
 
-export function defaultTickFormat(v: string | number | Date, _index?: number, _allTicks?: number[]): string {
-  if (v instanceof Date) {
-    return `${v.toLocaleString("en", { month: "short" })} ${v.getDate()}`
-  }
-  if (typeof v === "number") return String(Math.round(v * 100) / 100)
-  return String(v)
-}
-
 /**
  * Only primitive labels can be meaningfully compared without rendering.
  * `String(<span />)` is always "[object Object]", which used to erase every

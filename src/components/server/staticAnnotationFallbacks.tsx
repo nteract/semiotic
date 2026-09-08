@@ -1,3 +1,4 @@
+import { annotationNote } from "../text/annotationTextLayout"
 import * as React from "react"
 import Annotation from "../Annotation"
 import { packEnclose } from "d3-hierarchy"
@@ -189,11 +190,7 @@ export function renderStaticAnnotationFallback(
             y: y ?? 0,
             dx: ann.dx || 0,
             dy: ann.dy || 0,
-            note: {
-              label: ann.label,
-              title: ann.title,
-              wrap: ann.wrap || 120,
-            },
+            note: annotationNote(ann),
             type: "bracket",
             subject: {
               type: ann.bracketType || "curly",

@@ -1,4 +1,6 @@
 import * as React from "react"
+import { LEGEND_FONT_STYLE } from "./legendStyles"
+import { numericTickFormatter } from "./charts/shared/numericTickFormatter"
 
 import type { GradientLegendConfig, LegendItem } from "./types/legendTypes"
 import {
@@ -29,8 +31,8 @@ export function GradientLegend({
   legendInteraction
 }: GradientLegendProps) {
   const { colorFn, domain, label, format } = config
-  const formatValue =
-    format || ((value: number) => String(Math.round(value * 100) / 100))
+  const horizontal = orientation === "horizontal"
+  const formatValue = format || numericTickFormatter(domain)
   const steps = 64
   const reactId = React.useId()
   const gradientId = `grad-legend-${reactId}`
@@ -43,8 +45,8 @@ export function GradientLegend({
   const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null)
   const binRefs = React.useRef<Array<SVGRectElement | null>>([])
 
-  const rangeItem = (index: number, reverse = false): LegendItem => {
-    const visualIndex = reverse ? binCount - index - 1 : index
+  const rangeItem = (index: number): LegendItem => {
+    const visualIndex = horizontal ? index : binCount - index - 1
     const start = domain[0] + (visualIndex / binCount) * (domain[1] - domain[0])
     const end =
       domain[0] + ((visualIndex + 1) / binCount) * (domain[1] - domain[0])
@@ -138,127 +140,61 @@ export function GradientLegend({
     )
   }
 
-  const horizontal = orientation === "horizontal"
-  const stops: React.ReactElement[] = []
-  for (let index = 0; index <= steps; index++) {
-    const ratio = index / steps
-    const value = horizontal
-      ? domain[0] + ratio * (domain[1] - domain[0])
-      : domain[1] - ratio * (domain[1] - domain[0])
-    stops.push(
-      <stop key={index} offset={`${ratio * 100}%`} stopColor={colorFn(value)} />
-    )
-  }
-
-  if (horizontal) {
-    const barHeight = 12
-    const barWidth = Math.min(width, 200)
-    const startX = Math.max(0, (width - barWidth) / 2)
-    const barY = label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
-
-    return (
-      <g
-        aria-label={label || "Gradient legend"}
-        role={interactive ? "listbox" : undefined}
-        aria-orientation={interactive ? "horizontal" : undefined}
-        aria-multiselectable={interactive && isolateMode ? true : undefined}
-        style={{
-          fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
-          fontWeight: "var(--semiotic-legend-font-weight, normal)",
-        }}
-      >
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-            {stops}
-          </linearGradient>
-        </defs>
-        {label && (
-          <text
-            x={startX + barWidth / 2}
-            y={GRADIENT_LEGEND_LABEL_BASELINE}
-            textAnchor="middle"
-            fontSize={11}
-            fill="var(--semiotic-text, #333)"
-          >
-            {label}
-          </text>
-        )}
-        <rect
-          x={startX}
-          y={barY}
-          width={barWidth}
-          height={barHeight}
-          fill={`url(#${gradientId})`}
-          rx={2}
-        />
-        {interactive &&
-          Array.from({ length: binCount }, (_, index) =>
-            interactionRegion(
-              rangeItem(index),
-              {
-                x: startX + (index * barWidth) / binCount,
-                y: barY,
-                width: barWidth / binCount,
-                height: barHeight
-              },
-              index
-            )
-          )}
-        <text
-          x={startX}
-          y={barY + barHeight + 12}
-          textAnchor="start"
-          fontSize={10}
-          fill="var(--semiotic-text-secondary, #666)"
-        >
-          {formatValue(domain[0])}
-        </text>
-        <text
-          x={startX + barWidth}
-          y={barY + barHeight + 12}
-          textAnchor="end"
-          fontSize={10}
-          fill="var(--semiotic-text-secondary, #666)"
-        >
-          {formatValue(domain[1])}
-        </text>
-      </g>
-    )
-  }
-
-  const barWidth = 14
-  const barHeight = 100
+  const [min, max] = domain
+  const stops = React.useMemo(
+    () =>
+      Array.from({ length: steps + 1 }, (_, index) => {
+        const ratio = index / steps
+        const value = horizontal
+          ? min + ratio * (max - min)
+          : max - ratio * (max - min)
+        return (
+          <stop
+            key={index}
+            offset={ratio}
+            stopColor={colorFn(value)}
+          />
+        )
+      }),
+    [colorFn, min, max, horizontal]
+  )
+  const barWidth = horizontal ? Math.min(width, 200) : 14
+  const barHeight = horizontal ? 12 : 100
+  const startX = horizontal ? Math.max(0, (width - barWidth) / 2) : 0
   const barY = label ? GRADIENT_LEGEND_LABELED_BAR_Y : 0
 
   return (
     <g
       aria-label={label || "Gradient legend"}
       role={interactive ? "listbox" : undefined}
-      aria-orientation={interactive ? "vertical" : undefined}
+      aria-orientation={interactive ? orientation : undefined}
       aria-multiselectable={interactive && isolateMode ? true : undefined}
-      style={{
-        fontFamily: "var(--semiotic-legend-font-family, var(--semiotic-font-family, sans-serif))",
-        fontWeight: "var(--semiotic-legend-font-weight, normal)",
-      }}
+      style={LEGEND_FONT_STYLE}
     >
+      <defs>
+        <linearGradient
+          id={gradientId}
+          x1="0%"
+          y1="0%"
+          x2={horizontal ? "100%" : "0%"}
+          y2={horizontal ? "0%" : "100%"}
+        >
+          {stops}
+        </linearGradient>
+      </defs>
       {label && (
         <text
-          x={0}
+          x={horizontal ? startX + barWidth / 2 : 0}
           y={GRADIENT_LEGEND_LABEL_BASELINE}
-          textAnchor="start"
+          textAnchor={horizontal ? "middle" : "start"}
           fontSize={11}
           fill="var(--semiotic-text, #333)"
         >
           {label}
         </text>
       )}
-      <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-          {stops}
-        </linearGradient>
-      </defs>
       <rect
-        x={0}
+        x={startX}
         y={barY}
         width={barWidth}
         height={barHeight}
@@ -268,32 +204,28 @@ export function GradientLegend({
       {interactive &&
         Array.from({ length: binCount }, (_, index) =>
           interactionRegion(
-            rangeItem(index, true),
+            rangeItem(index),
             {
-              x: 0,
-              y: barY + (index * barHeight) / binCount,
-              width: barWidth,
-              height: barHeight / binCount
+              x: horizontal ? startX + (index * barWidth) / binCount : 0,
+              y: horizontal ? barY : barY + (index * barHeight) / binCount,
+              width: horizontal ? barWidth / binCount : barWidth,
+              height: horizontal ? barHeight : barHeight / binCount
             },
             index
           )
         )}
-      <text
-        x={barWidth + 5}
-        y={barY + 10}
-        fontSize={10}
-        fill="var(--semiotic-text-secondary, #666)"
-      >
-        {formatValue(domain[1])}
-      </text>
-      <text
-        x={barWidth + 5}
-        y={barY + barHeight}
-        fontSize={10}
-        fill="var(--semiotic-text-secondary, #666)"
-      >
-        {formatValue(domain[0])}
-      </text>
+      {[0, 1].map((index) => (
+        <text
+          key={index}
+          x={horizontal ? startX + index * barWidth : barWidth + 5}
+          y={barY + (horizontal ? barHeight + 12 : index ? barHeight : 10)}
+          textAnchor={horizontal ? (index ? "end" : "start") : undefined}
+          fontSize={10}
+          fill="var(--semiotic-text-secondary, #666)"
+        >
+          {formatValue(domain[horizontal ? index : 1 - index])}
+        </text>
+      ))}
     </g>
   )
 }

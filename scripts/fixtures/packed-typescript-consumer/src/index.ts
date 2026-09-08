@@ -1,6 +1,7 @@
 import { createElement } from "react"
 import { LineChart } from "semiotic"
 import { ForceDirectedGraph } from "semiotic/network"
+import { usePretextAnnotations, type PretextAnnotationOptions } from "semiotic/text"
 import { StreamPhysicsFrame } from "semiotic/physics"
 import {
   forceLayoutAsync,
@@ -42,6 +43,7 @@ type PublicEntryPointSurfaceSmoke = [
   keyof typeof import("semiotic/recipes/core"),
   keyof typeof import("semiotic/recipes/react"),
   keyof typeof import("semiotic/rough"),
+  keyof typeof import("semiotic/text"),
   keyof typeof import("semiotic/server"),
   keyof typeof import("semiotic/server/edge"),
   keyof typeof import("semiotic/server/node"),
@@ -56,6 +58,19 @@ type PublicEntryPointSurfaceSmoke = [
 ]
 
 type _AllPackedEntryPointsResolved = PublicEntryPointSurfaceSmoke
+
+function PretextAnnotationConsumer() {
+  const typography: PretextAnnotationOptions = { fontFamily: "Arial", fontSize: 14 }
+  const annotations = usePretextAnnotations([
+    { type: "callout", month: 2, revenue: 27, label: "Spring launch", wrap: 160 }
+  ] as const, typography)
+  // The optional hook retains the consumer's data fields and readonly input support.
+  const month: 2 = annotations[0].month
+  return createElement(LineChart, {
+    data: [{ month, revenue: 27 }], xAccessor: "month", yAccessor: "revenue",
+    annotations, autoPlaceAnnotations: true
+  })
+}
 
 const experimentalGofishDocument: UnstableGofishDisplayListDocument = {
   irVersion: 0,

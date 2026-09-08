@@ -211,10 +211,8 @@ describe("static axis tick parity", () => {
   })
 
   it("uses the live readable default formatter for static time ticks", () => {
-    // Construct local calendar dates so the assertion is independent of the
-    // runner's UTC offset while still exercising scaleTime's Date ticks.
-    const first = new Date(2024, 0, 1)
-    const last = new Date(2024, 1, 1)
+    const first = new Date("2024-01-01T00:00:00Z")
+    const last = new Date("2024-02-01T00:00:00Z")
     const svg = renderXYToStaticSVG({
       chartType: "line",
       data: [{ x: first, y: 10 }, { x: last, y: 20 }],
@@ -230,6 +228,18 @@ describe("static axis tick parity", () => {
 
     expect(svg).toContain(">Jan 1<")
     expect(svg).toContain(">Feb 1<")
+  })
+
+  it("keeps distinct subsecond labels in a direct frame export", () => {
+    const first = new Date("2026-01-01T00:00:00.250Z")
+    const last = new Date("2026-01-01T00:00:00.750Z")
+    const svg = renderXYToStaticSVG({
+      chartType: "line", data: [{ x: first, y: 10 }, { x: last, y: 20 }],
+      xAccessor: "x", yAccessor: "y", size: [600, 400],
+      axes: [{ orient: "bottom", tickValues: [first, last] }],
+    })
+    expect(svg).toContain(">00:00:00.250<")
+    expect(svg).toContain(">00:00:00.750<")
   })
 
   it("uses foreignObjects for categoryFormat and legacy oFormat ReactNodes in both ordinal projections", () => {

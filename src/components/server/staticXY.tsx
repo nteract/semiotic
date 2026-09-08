@@ -32,6 +32,7 @@ import {
   generateAxesSVG
 } from "./staticSVGChrome"
 import { renderGridSVG } from "./staticXYGrid"
+import { makeDateTickFormatter } from "../stream/xyDateTicks"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "../stream/normalizeXYData"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
@@ -254,8 +255,11 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       xySceneNodeToSVG(node, index, idPfx, props.hoverRadius ?? 30),
   })
 
+  const axisProps = store.xIsDate && !props.xFormat && !props.tickFormatTime
+    ? { ...props, xFormat: makeDateTickFormatter(store.scales.x.domain().map(value => value.valueOf()) as [number, number]) }
+    : props
   const grid = props.showGrid
-    ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes, props)
+    ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes, axisProps)
     : null
 
   const dataMarks = renderedScene.map(entry => entry.element)
@@ -266,7 +270,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? generateAxesSVG(
         store.scales,
         { width, height },
-        props,
+        axisProps,
         theme,
         idPfx,
         margin,

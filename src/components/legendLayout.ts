@@ -1,4 +1,5 @@
 import type { LegendLayout, LegendValue } from "./types/legendTypes"
+import { numericTickFormatter } from "./charts/shared/numericTickFormatter"
 import { isGradientLegendConfig, isLegendConfig } from "./types/legendTypes"
 import {
   MIN_TITLE_TOP_LEGEND_MARGIN,
@@ -65,18 +66,19 @@ export function resolveSideLegendWidth(
 ): number {
   if (isLegendConfig(legend)) {
     const metrics = resolveLegendMetrics(layout)
-    const widths = legend.legendGroups.flatMap((group) => [
-      group.label ? estimateLegendTextWidth(group.label) : 0,
-      ...group.items.map((item) =>
-        metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label)
-      ),
-    ])
-    return Math.max(DEFAULT_SIDE_LEGEND_WIDTH, ...widths)
+    let width = DEFAULT_SIDE_LEGEND_WIDTH
+    for (const group of legend.legendGroups) {
+      if (group.label) width = Math.max(width, estimateLegendTextWidth(group.label))
+      for (const item of group.items) {
+        width = Math.max(width, metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label))
+      }
+    }
+    return width
   }
 
   if (isGradientLegendConfig(legend)) {
     const { gradient } = legend
-    const format = gradient.format || ((value: number) => String(Math.round(value * 100) / 100))
+    const format = gradient.format || numericTickFormatter(gradient.domain)
     const endpointWidth = Math.max(
       estimateLegendTextWidth(format(gradient.domain[0])),
       estimateLegendTextWidth(format(gradient.domain[1])),

@@ -151,6 +151,12 @@
       "require": "./dist/geo.min.js",
       "default": "./dist/geo.module.min.js"
     },
+    "./text": {
+      "types": "./dist/semiotic-text.d.ts",
+      "import": "./dist/semiotic-text.module.min.js",
+      "require": "./dist/semiotic-text.min.js",
+      "default": "./dist/semiotic-text.module.min.js"
+    },
     "./rough": {
       "types": "./dist/semiotic-rough.d.ts",
       "import": "./dist/rough.module.min.js",
@@ -483,6 +489,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@chenglou/pretext": "0.0.9",
     "@axe-core/playwright": "^4.12.1",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.5",
@@ -547,6 +554,7 @@
     "world-atlas": "^2.0.2"
   },
   "peerDependencies": {
+    "@chenglou/pretext": "0.0.9",
     "@dimforge/rapier2d-compat": "^0.19.3",
     "matter-js": "^0.20.0",
     "react": "^18.1.0 || ^19.0.0",
@@ -555,6 +563,9 @@
     "world-atlas": "^2.0.2"
   },
   "peerDependenciesMeta": {
+    "@chenglou/pretext": {
+      "optional": true
+    },
     "@dimforge/rapier2d-compat": {
       "optional": true
     },
