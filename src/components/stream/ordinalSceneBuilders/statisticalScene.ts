@@ -1,4 +1,4 @@
-import { quantile as d3Quantile } from "d3-array"
+import { quantileSorted } from "d3-array"
 import { buildRectNode } from "../SceneGraph"
 import { getMax, getMinMax } from "../../charts/shared/minMax"
 import type {
@@ -39,28 +39,23 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
 
     if (values.length === 0) continue
 
-    const min = values[0]
-    const max = values[values.length - 1]
-    const q1 = d3Quantile(values, 0.25) ?? min
-    const median = d3Quantile(values, 0.5) ?? (min + max) / 2
-    const q3 = d3Quantile(values, 0.75) ?? max
+    const stats = computeDistributionStats(values)
+    const { min, max, q1, median, q3 } = stats
 
     // IQR-based whiskers
     const iqr = q3 - q1
     const lowerFence = q1 - 1.5 * iqr
     const upperFence = q3 + 1.5 * iqr
     const whiskerMin = values.find(v => v >= lowerFence) ?? min
-    const whiskerMax = [...values].reverse().find(v => v <= upperFence) ?? max
-
-    const stats: DistributionStats = {
-      n: values.length,
-      min: whiskerMin,
-      q1,
-      median,
-      q3,
-      max: whiskerMax,
-      mean: values.reduce((s, v) => s + v, 0) / values.length,
+    let whiskerMax = max
+    for (let i = values.length - 1; i >= 0; i--) {
+      if (values[i] <= upperFence) {
+        whiskerMax = values[i]
+        break
+      }
     }
+    stats.min = whiskerMin
+    stats.max = whiskerMax
     const style = resolveSummaryStyle(makeSummaryDatum(col.pieceData, col.name, stats), col.name)
 
     const outliers: BoxplotSceneNode["outliers"] = []
@@ -120,11 +115,31 @@ function computeDistributionStats(sortedValues: number[]): DistributionStats {
   const n = sortedValues.length
   const min = sortedValues[0]
   const max = sortedValues[n - 1]
-  const q1 = d3Quantile(sortedValues, 0.25) ?? min
-  const median = d3Quantile(sortedValues, 0.5) ?? (min + max) / 2
-  const q3 = d3Quantile(sortedValues, 0.75) ?? max
+  // Callers already sort and filter values. Avoid copying and selecting the
+  // same array for each quartile, especially on every streaming update.
+  const q1 = quantileSorted(sortedValues, 0.25) ?? min
+  const median = quantileSorted(sortedValues, 0.5) ?? (min + max) / 2
+  const q3 = quantileSorted(sortedValues, 0.75) ?? max
   const mean = sortedValues.reduce((s, v) => s + v, 0) / n
   return { n, min, q1, median, q3, max, mean }
+}
+
+/** Shared equal-width bins; include the upper endpoint in the final bin. */
+function countDistributionBins(
+  values: number[],
+  min: number,
+  max: number,
+  binWidth: number,
+  numBins: number
+): number[] {
+  const counts = new Array<number>(numBins).fill(0)
+  for (const value of values) {
+    // A histogram can use a visible domain narrower than its data extent.
+    if (value < min || value > max) continue
+    const index = Math.min(Math.floor((value - min) / binWidth), numBins - 1)
+    counts[index]++
+  }
+  return counts
 }
 
 export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
@@ -148,11 +163,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
     const binWidth = (vMax - vMin) / bins || 1
 
     // Build histogram bins
-    const counts = new Array(bins).fill(0)
-    for (const v of values) {
-      const idx = Math.min(Math.floor((v - vMin) / binWidth), bins - 1)
-      counts[idx]++
-    }
+    const counts = countDistributionBins(values, vMin, vMax, binWidth, bins)
     const maxCount = getMax(counts, 1)
 
     // Build symmetric violin path
@@ -199,13 +210,10 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
     // IQR overlay
     let iqrLine: ViolinSceneNode["iqrLine"]
     if (showIQR && values.length >= 4) {
-      const q1 = d3Quantile(values, 0.25) ?? vMin
-      const median = d3Quantile(values, 0.5) ?? (vMin + vMax) / 2
-      const q3 = d3Quantile(values, 0.75) ?? vMax
       iqrLine = {
-        q1Pos: rScale(q1),
-        medianPos: rScale(median),
-        q3Pos: rScale(q3),
+        q1Pos: rScale(stats.q1),
+        medianPos: rScale(stats.median),
+        q3Pos: rScale(stats.q3),
         centerPos: col.middle,
         isVertical
       }
@@ -258,13 +266,7 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     const vMax = globalMax != null && isFinite(globalMax) ? globalMax : dataMax
     const binWidth = (vMax - vMin) / numBins || 1
 
-    const counts = new Array(numBins).fill(0)
-    for (const v of values) {
-      // Skip values outside the visible domain (avoids piling into edge bins when rExtent is set)
-      if (v < vMin || v > vMax) continue
-      const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
-      counts[idx]++
-    }
+    const counts = countDistributionBins(values, vMin, vMax, binWidth, numBins)
 
     const total = values.length
     const maxCount = getMax(counts, 1)
@@ -328,13 +330,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
     const binWidth = (vMax - vMin) / numBins || 1
 
     // Build histogram bins
-    const counts = new Array(numBins).fill(0)
-    for (const v of values) {
-      // Skip values outside the visible domain (avoids piling into edge bins when rExtent is set)
-      if (v < vMin || v > vMax) continue
-      const idx = Math.min(Math.floor((v - vMin) / binWidth), numBins - 1)
-      counts[idx]++
-    }
+    const counts = countDistributionBins(values, vMin, vMax, binWidth, numBins)
     const maxCount = getMax(counts, 1)
 
     const stats = computeDistributionStats(values)
