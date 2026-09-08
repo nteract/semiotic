@@ -98,7 +98,9 @@ function normalizeValueExtent(
 }
 
 /**
- * Physics-backed Galton board chart that drops values through seeded pegs into a settled distribution.
+ * Physics-backed distribution drop: values enter preassigned bins and settle into piles.
+ * Mechanical mode generates seeded Bernoulli samples before the physical replay;
+ * the apparatus does not simulate peg collisions.
  *
  * @example
  * ```tsx

@@ -128,6 +128,7 @@ export function buildPhysicsSettledEvidence(
     sleepingCount === bodies.length
 
   const warnings: string[] = []
+  if (!settled) warnings.push("PHYSICS_NOT_SETTLED")
   // An undrained queue in a scene presented as settled is unambiguous: the
   // apparatus never received bodies the chart already counted in its
   // projection, so the drawn marks and the stated numbers disagree.

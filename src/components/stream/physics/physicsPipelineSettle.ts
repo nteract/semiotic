@@ -1,5 +1,5 @@
 /**
- * The shared "run this simulation to completion" loop behind both of
+ * The shared fixed-step loop behind live ticks and both of
  * `PhysicsPipelineStore`'s settle entry points.
  *
  * Settling has to mean *the simulation reached its end state*, and that includes
@@ -68,13 +68,27 @@ export interface PhysicsSettleRun {
 export function runPhysicsSettleSteps(
   host: PhysicsSettleHost,
   maxSteps: number,
-  sink: PhysicsSettleSink
+  sink: PhysicsSettleSink,
+  options: { stopAtRest?: boolean } = {}
 ): PhysicsSettleRun {
   let steps = 0
   let budget: PhysicsBodyBudgetDecision | undefined
 
-  while (steps < maxSteps && (host.queueSize() > 0 || !host.atRest())) {
+  while (
+    steps < maxSteps &&
+    (options.stopAtRest === false || host.queueSize() > 0 || !host.atRest())
+  ) {
+    // Integrate [t, t + dt] before admitting arrivals at its end. A body born
+    // at t + dt must never receive the motion from the interval before birth.
+    host.step(host.fixedDt)
     host.advanceTime(host.fixedDt)
+
+    const stepEvents = host.drainEvents()
+    if (sink.events) {
+      sink.events.push(...stepEvents)
+      host.observeKernelEvents(stepEvents, sink.observations)
+      host.observeSensorTransitions(sink.observations)
+    }
 
     const stepSpawned: string[] = []
     host.spawnDue(stepSpawned, sink.observations)
@@ -86,16 +100,6 @@ export function runPhysicsSettleSteps(
       const overflow = host.evictOverflow(sink.observations)
       sink.evicted?.push(...overflow.evicted)
       sink.sedimented?.push(...overflow.sedimented)
-    }
-
-    host.step(host.fixedDt)
-    // Drain kernel events every step whether or not this caller observes them,
-    // matching `tick` so nothing accumulates into a later frame.
-    const stepEvents = host.drainEvents()
-    if (sink.events) {
-      sink.events.push(...stepEvents)
-      host.observeKernelEvents(stepEvents, sink.observations)
-      host.observeSensorTransitions(sink.observations)
     }
 
     steps += 1

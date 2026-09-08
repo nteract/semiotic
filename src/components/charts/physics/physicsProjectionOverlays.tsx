@@ -369,7 +369,8 @@ export function eventDropOverlay(
 export function pileProjectionOverlay(
   rows: ValueProjectionRow[],
   ballRadius: number,
-  enabled: boolean | undefined
+  enabled: boolean | undefined,
+  unitValue = 1
 ): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
   if (enabled === false || rows.length === 0) return undefined
   return ({ size }) => {
@@ -401,7 +402,7 @@ export function pileProjectionOverlay(
         {rows.map((row, index) => {
           const barHeight = Math.min(
             area.plot.height,
-            geom.pileHeight(row.value)
+            geom.pileHeight(row.value / unitValue)
           )
           const barWidth = geom.tubeWidth
           const x = geom.centerX(index)
@@ -443,6 +444,15 @@ export function pileProjectionOverlay(
             </g>
           )
         })}
+        <text
+          x={resolvedSize[0] / 2}
+          y={resolvedSize[1] - 2}
+          textAnchor="middle"
+          fill="var(--semiotic-text-secondary, #555)"
+          fontSize={10}
+        >
+          {`Full circle = ${unitValue}; partial circles scaled by area`}
+        </text>
       </svg>
     )
   }

@@ -175,7 +175,7 @@ export const galtonBoardChart: ChartConfig = {
     const bins = rest.bins ?? 21
     const seed = rest.seed ?? 1
     const pegRows = Math.max(1, Math.round(rest.pegRows ?? bins - 1))
-    const isMechanical = rest.mode === "mechanical"
+    const isMechanical = (rest.simulationMode ?? rest.mode) === "mechanical"
     const rows = isMechanical
       ? generateGaltonMechanicalSamples({
           bins,
@@ -191,10 +191,11 @@ export const galtonBoardChart: ChartConfig = {
       data: rows,
       valueAccessor: rest.valueAccessor || "value",
       bins,
-      ballRadius: rest.ballRadius ?? 4,
+      ballRadius: rest.ballRadius ??
+        (rest.mode === "sparkline" ? 1.5 : rest.mode === "context" ? 4 : 6),
       seed,
       size,
-      valueExtent: isMechanical ? [0, pegRows] : undefined
+      valueExtent: isMechanical ? [0, pegRows] : rest.valueExtent
     })
     return {
       ...common,
@@ -234,7 +235,7 @@ export const eventDropChart: ChartConfig = {
       arrivalAccessor: rest.arrivalAccessor || "arrivalTime",
       windows: rest.windows || { size: 10 },
       watermark: rest.watermark,
-      ballRadius: rest.ballRadius ?? 5,
+      ballRadius: rest.ballRadius ?? 7,
       seed: rest.seed ?? 1,
       size,
       timeExtent: rest.timeExtent,
@@ -266,7 +267,7 @@ export const unitPileChart: ChartConfig = {
   layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
     const size = (common.size as [number, number]) ?? [600, 400]
-    const isMechanical = rest.mode === "mechanical"
+    const isMechanical = (rest.simulationMode ?? rest.mode) === "mechanical"
     const rows = isMechanical
       ? generatePhysicsPileMechanicalSamples({
           categories: rest.mechanicalCategories,
@@ -282,7 +283,7 @@ export const unitPileChart: ChartConfig = {
       categoryAccessor: rest.categoryAccessor || "category",
       valueAccessor: rest.valueAccessor || (isMechanical ? "value" : undefined),
       unitValue: rest.unitValue ?? 1,
-      ballRadius: rest.ballRadius ?? 5,
+      ballRadius: rest.ballRadius ?? 8,
       seed: rest.seed ?? 1,
       size
     })
@@ -294,8 +295,9 @@ export const unitPileChart: ChartConfig = {
       foregroundGraphics: composePhysicsGraphics(
         pileProjectionOverlay(
           layout.projectionRows,
-          rest.ballRadius ?? 5,
-          physicsChromeEnabled(common, rest, "showProjection")
+          rest.ballRadius ?? 8,
+          physicsChromeEnabled(common, rest, "showProjection"),
+          Number.isFinite(rest.unitValue) && rest.unitValue > 0 ? rest.unitValue : 1
         ),
         common.foregroundGraphics as FrameGraphicsProp | undefined
       ),

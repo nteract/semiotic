@@ -168,7 +168,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     name: "UnitPileChart",
     category: "physics",
     description:
-      "Physics-backed unit pile chart. Numeric values are unitized into repeated bodies that settle into category piles.",
+      "Physics-backed unit pile chart. Nonnegative values become full circles and area-scaled remainders, with exact source totals labelled by category.",
     required: [],
     dataShape: "array",
     dataAccessors: ["categoryAccessor", "valueAccessor"],
@@ -182,8 +182,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       },
       valueAccessor: {
         type: ["string", "function"],
-        default: "value",
-        description: "Numeric field converted into repeated unit bodies."
+        description: "Nonnegative numeric field converted into unit bodies. Omit to count each input row as 1; mechanical mode defaults to value."
       },
       mode: {
         type: "string",
@@ -209,13 +208,13 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       unitValue: {
         type: "number",
         default: 1,
-        description: "Value represented by one simulated body."
+        description: "Value represented by a full circle. Each record's remainder is a partial circle scaled by area; labels retain exact source totals."
       },
       showProjection: {
         type: "boolean",
         default: true,
         description:
-          "Draw an exact settled-projection overlay behind the moving units so category totals remain readable."
+          "Label exact source category totals and show approximate pile-height guides. Physical packing does not determine the totals."
       },
       sediment: {
         type: "boolean",

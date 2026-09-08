@@ -23,7 +23,7 @@ const eventDropChartProps = [
   { name: "windows", type: "object", required: false, default: "{ size: 10 }", description: "Window config such as { size, gapPolicy }." },
   { name: "watermark", type: "object | function", required: false, default: null, description: "Watermark delay object or resolver function." },
   { name: "timeScale", type: "number", required: false, default: "1", description: "Arrival replay playback speed; higher is faster (1 = real event-time)." },
-  { name: "ballRadius", type: "number", required: false, default: "5", description: "Radius for each simulated event body." },
+  { name: "ballRadius", type: "number", required: false, default: "7", description: "Radius for each simulated event body." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Categorical field used to color bodies." },
   { name: "seed", type: "number", required: false, default: "1", description: "Deterministic simulation seed." },
   { name: "showProjection", type: "boolean", required: false, default: "true", description: "Draw the window bins, watermark, closed windows, and late-event scaffold over the moving bodies." },

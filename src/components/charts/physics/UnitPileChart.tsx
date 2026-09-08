@@ -12,7 +12,6 @@ import {
   buildPhysicsPile,
   composePhysicsBodyStyle,
   generatePhysicsPileMechanicalSamples,
-  physicsChartArea,
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
@@ -38,6 +37,10 @@ import {
 } from "./physicsHocUtils"
 import { pileProjectionOverlay } from "./physicsProjectionOverlays"
 
+function pileRowId(datum: Datum, index: number): string {
+  return String(datum.id ?? `pile-${index}`)
+}
+
 export interface UnitPileChartProps<TDatum extends Datum = Datum>
   extends
     Omit<BaseChartProps, "margin" | "mode" | "selection">,
@@ -54,6 +57,7 @@ export interface UnitPileChartProps<TDatum extends Datum = Datum>
   simulationMode?: PhysicsSimulationMode
   mechanicalCount?: number
   mechanicalCategories?: readonly string[]
+  /** Quantity per full circle; a record's remainder uses proportional area. */
   unitValue?: number
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
@@ -195,8 +199,8 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
 
   const spawnDatum = useCallback(
     (datum: Datum, index: number) => {
-      const single = buildPhysicsPile({
-        data: [datum],
+      const single = buildPhysicsPile<Datum>({
+        data: [{ ...datum, id: pileRowId(datum, index) }],
         categoryAccessor: categoryAccessor as ChartAccessor<Datum, string>,
         valueAccessor: resolvedValueAccessor as
           ChartAccessor<Datum, number> | undefined,
@@ -205,20 +209,9 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
         seed: seed + index + 1,
         size: chartSize
       })
-      const fallback = {
-        id: String(datum.id ?? `pile-push-${index}`),
-        x: physicsChartArea(chartSize).plot.x,
-        y: physicsChartArea(chartSize).plot.y,
-        mass: 1,
-        shape: { type: "circle" as const, radius: ballRadius },
-        datum
-      }
-      const spawns = single.initialSpawns.length
-        ? single.initialSpawns
-        : [fallback]
       return {
-        datumId: String(datum.id ?? spawns[0].id),
-        spawns: spawns as PhysicsQueuedSpawn[]
+        datumId: pileRowId(datum, index),
+        spawns: single.initialSpawns as PhysicsQueuedSpawn[]
       }
     },
     [
@@ -233,6 +226,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
   usePhysicsHocHandle(ref, {
     frameRef,
     spawnDatum,
+    idAccessor: pileRowId,
     seedRows: chartData as Datum[],
     seedSpawns: layout.initialSpawns
   })
@@ -287,7 +281,8 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
   const projectionOverlay = pileProjectionOverlay(
     layout.projectionRows,
     ballRadius,
-    showProjection
+    showProjection,
+    Number.isFinite(unitValue) && unitValue > 0 ? unitValue : 1
   )
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(

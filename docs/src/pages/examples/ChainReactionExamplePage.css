@@ -62,7 +62,7 @@
 .release-machine__bridge strong { color: var(--text-primary); font-family: Georgia, "Times New Roman", serif; }
 .release-machine__bridge small { color: var(--text-secondary); }
 
-.release-machine__controls { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin: 18px 0 12px; padding: 10px; border: 1px solid color-mix(in srgb, var(--rm-pine) 25%, transparent); background: color-mix(in srgb, var(--rm-paper) 72%, var(--surface-1)); }
+.release-machine__controls { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin: 18px 0 12px; padding: 10px; border: 1px solid color-mix(in srgb, var(--rm-pine) 25%, transparent); background: var(--surface-2); }
 .release-machine__controls button { min-height: 36px; padding: 7px 12px; border: 1px solid var(--rm-pine); background: var(--surface-1); color: var(--text-primary); cursor: pointer; font-weight: 750; }
 .release-machine__controls button:hover,
 .release-machine__controls button:focus-visible { background: var(--rm-pine); color: #fff; }

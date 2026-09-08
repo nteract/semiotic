@@ -272,8 +272,10 @@ export default function ChainReactionExamplePage() {
 
           <ChartContainer
             title="What can move once a blocker clears"
-            subtitle="Logical task transitions with physics-guided prerequisite tokens"
-            status={previewTaskID ? "preview" : "live"}
+            subtitle={previewTaskID
+              ? `Preview: resolving ${machine.byID.get(previewTaskID)?.label}`
+              : "Logical task transitions with physics-guided prerequisite tokens"}
+            status={previewTaskID ? "static" : "live"}
             height={machineHeight + 160}
             actions={{ fullscreen: true, export: true }}
           >
