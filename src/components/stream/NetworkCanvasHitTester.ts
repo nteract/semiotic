@@ -5,8 +5,7 @@ import type {
   NetworkRectNode,
   NetworkArcNode,
   NetworkSymbolNode,
-  NetworkGlyphNode,
-  NetworkBezierEdge
+  NetworkGlyphNode
 } from "./networkTypes"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
@@ -296,71 +295,14 @@ function hitTestEdge(
 ): NetworkHitResult | null {
   switch (edge.type) {
     case "bezier":
-      return hitTestBezierEdge(edge, px, py)
-    case "line":
-      return hitTestLineEdge(edge, px, py)
     case "ribbon":
-      return hitTestPathEdge(edge, px, py)
     case "curved":
       return hitTestPathEdge(edge, px, py)
+    case "line":
+      return hitTestLineEdge(edge, px, py)
     default:
       return null
   }
-}
-
-function hitTestBezierEdge(
-  edge: NetworkBezierEdge,
-  px: number,
-  py: number
-): NetworkHitResult | null {
-  // Use Path2D for approximate point-in-path testing
-  if (!edge.pathD) return null
-
-  const path = getEdgePath2D(edge)
-  const ctx = getHitContext()
-  if (!path || !ctx) return null
-
-  // Hit position is the pointer position for every bezier edge, regardless
-  // of which chart produced it. The earlier code reached into
-  // `edge.datum.source/target/y0/y1` (d3-sankey edge shape) to position
-  // the tooltip at the ribbon midpoint — fine for SankeyDiagram, but
-  // `customNetworkLayout` consumers (ProcessSankey) emit a different datum
-  // and y0/y1 came back `undefined`, so the returned `y` was NaN. The
-  // FlippingTooltip drops non-finite positions, silently swallowing the
-  // tooltip on the band/ribbon interior — only the stroke fallback (which
-  // already used `px, py`) fired, producing the "tooltip works on border
-  // but not on body" symptom. Aligning bezier with line/ribbon/curved
-  // keeps the hit-test contract uniform across scene-edge types.
-  try {
-    if (ctx.isPointInPath(path, px, py)) {
-      return {
-        type: "edge",
-        datum: edge.datum,
-        x: px,
-        y: py,
-        distance: 0
-      }
-    }
-
-    // Also check isPointInStroke with a generous hit tolerance for thin bezier curves
-    const prevLineWidth = ctx.lineWidth
-    ctx.lineWidth = 10
-    const inStroke = ctx.isPointInStroke(path, px, py)
-    ctx.lineWidth = prevLineWidth
-    if (inStroke) {
-      return {
-        type: "edge",
-        datum: edge.datum,
-        x: px,
-        y: py,
-        distance: 4
-      }
-    }
-  } catch {
-    // Path2D may not be supported in all environments
-  }
-
-  return null
 }
 
 function hitTestLineEdge(
@@ -401,6 +343,8 @@ function hitTestPathEdge(
   px: number,
   py: number
 ): NetworkHitResult | null {
+  // Use pointer coordinates for every path edge; custom layout data need not
+  // contain Sankey-specific endpoint coordinates for tooltip placement.
   if (!edge.pathD) return null
 
   const path = getEdgePath2D(edge)

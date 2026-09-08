@@ -2,7 +2,8 @@ import type { SceneNode, SceneDatum, PointSceneNode, SymbolSceneNode, GlyphScene
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RingBuffer } from "../realtime/RingBuffer"
 import type { Quadtree } from "d3-quadtree"
-import { hitTestRect as sharedHitTestRect, getHitRadius } from "./hitTestUtils"
+import type { CurveFactory } from "d3-shape"
+import { hitTestRect as sharedHitTestRect, getHitRadius, pointToSegmentDistance } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
@@ -10,13 +11,16 @@ import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 import { sampleCurvePath } from "./sampleCurvePath"
 
 /**
- * Per-node memo for the dense curve-sampled polyline. Keyed by the
- * raw path reference so a streaming rebuild that produces a fresh
- * `path` array invalidates automatically. The sampling itself is
- * O(N · samplesPerSegment); the cache means the work happens once
- * per data change rather than once per hover frame.
+ * Memo for the dense curve-sampled polyline. Keyed by the
+ * raw path reference and curve factory so shared point arrays and curve
+ * changes cannot reuse another curve's geometry. A fresh `path` array
+ * invalidates automatically. Sampling is O(N · samplesPerSegment);
+ * the work happens once per path and curve rather than per hover frame.
  */
-const curveSampleCache = new WeakMap<ReadonlyArray<readonly [number, number]>, [number, number][]>()
+const curveSampleCache = new WeakMap<
+  ReadonlyArray<readonly [number, number]>,
+  Map<CurveFactory, [number, number][]>
+>()
 
 function getCurveSampledPath(
   rawPath: ReadonlyArray<readonly [number, number]>,
@@ -24,10 +28,15 @@ function getCurveSampledPath(
 ): [number, number][] {
   const factory = resolveCurveFactory(curve)
   if (!factory) return rawPath as [number, number][]
-  const cached = curveSampleCache.get(rawPath)
+  let samplesByCurve = curveSampleCache.get(rawPath)
+  const cached = samplesByCurve?.get(factory)
   if (cached) return cached
   const sampled = sampleCurvePath(rawPath, factory)
-  curveSampleCache.set(rawPath, sampled)
+  if (!samplesByCurve) {
+    samplesByCurve = new Map()
+    curveSampleCache.set(rawPath, samplesByCurve)
+  }
+  samplesByCurve.set(factory, sampled)
   return sampled
 }
 
@@ -281,7 +290,7 @@ function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: n
     for (let i = startSeg; i <= endSeg; i++) {
       const [ax, ay] = node.path[i]
       const [bx, by] = node.path[i + 1]
-      const segDist = pointToSegmentDist(px, py, ax, ay, bx, by)
+      const segDist = pointToSegmentDistance(px, py, ax, ay, bx, by)
       if (segDist < minSegDist) minSegDist = segDist
     }
     dist = minSegDist
@@ -303,23 +312,6 @@ function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: n
     : node.datum
 
   return { node, datum, x: nx, y: ny, distance: dist }
-}
-
-/** Distance from point (px, py) to line segment (ax,ay)-(bx,by) */
-function pointToSegmentDist(
-  px: number, py: number,
-  ax: number, ay: number,
-  bx: number, by: number
-): number {
-  const dx = bx - ax
-  const dy = by - ay
-  const lenSq = dx * dx + dy * dy
-  if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2)
-  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq
-  t = Math.max(0, Math.min(1, t))
-  const projX = ax + t * dx
-  const projY = ay + t * dy
-  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2)
 }
 
 function hitTestRect(node: RectSceneNode, px: number, py: number): HitResult | null {
@@ -388,7 +380,7 @@ function hitTestAreaPath(
       const [bx, by] = hitPath[i + 1]
       minSegDist = Math.min(
         minSegDist,
-        pointToSegmentDist(px, py, ax, ay, bx, by)
+        pointToSegmentDistance(px, py, ax, ay, bx, by)
       )
     }
     dist = minSegDist

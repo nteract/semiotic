@@ -22,7 +22,7 @@
  * `samplesPerSegment` per data segment (default 8 samples × ~50
  * segments = ~400 evals per hover-frame per series). At 60 Hz with
  * a few series that's ~100k evals/sec — well under render budget,
- * and consumers can cache the result against the path reference.
+ * and consumers can cache the result against the path reference and curve factory.
  */
 import { line as d3Line } from "d3-shape"
 import type { CurveFactory } from "d3-shape"
