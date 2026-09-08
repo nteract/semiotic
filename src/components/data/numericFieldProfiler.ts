@@ -23,7 +23,10 @@ export interface ProfileNumericFieldsOptions {
 }
 
 interface FieldObservation {
-  numbers: number[]
+  numbers?: number[]
+  finite: number
+  min: number
+  max: number
   missing: number
   nonFinite: number
   nonNumeric: number
@@ -32,9 +35,15 @@ interface FieldObservation {
   fractional: number
 }
 
-function observeField(data: ReadonlyArray<Datum>, field: string): FieldObservation {
+function observeField(
+  data: ReadonlyArray<Datum>,
+  field: string,
+  collectNumbers: boolean
+): FieldObservation {
   const out: FieldObservation = {
-    numbers: [], missing: 0, nonFinite: 0, nonNumeric: 0,
+    numbers: collectNumbers ? [] : undefined,
+    finite: 0, min: Infinity, max: -Infinity,
+    missing: 0, nonFinite: 0, nonNumeric: 0,
     zero: 0, negative: 0, fractional: 0,
   }
   for (const row of data) {
@@ -75,7 +84,10 @@ function observeField(data: ReadonlyArray<Datum>, field: string): FieldObservati
       out.nonFinite++
       continue
     }
-    out.numbers.push(value)
+    out.numbers?.push(value)
+    out.finite++
+    if (value < out.min) out.min = value
+    if (value > out.max) out.max = value
     if (value === 0) out.zero++
     if (value < 0) out.negative++
     if (!Number.isInteger(value)) out.fractional++
@@ -108,29 +120,23 @@ export function profileNumericFields(
 
   const profiles: Record<string, NumericFieldProfile> = {}
   for (const field of keys) {
-    const observation = observeField(data, field)
-    let min = Infinity
-    let max = -Infinity
-    for (const value of observation.numbers) {
-      if (value < min) min = value
-      if (value > max) max = value
-    }
-    const sorted = options.quantiles === false
-      ? undefined
-      : [...observation.numbers].sort((a, b) => a - b)
+    const observation = observeField(data, field, options.quantiles !== false)
+    // The observation owns this array. Sorting it cannot mutate source rows;
+    // callers that only need health counts and extents allocate no value array.
+    const sorted = observation.numbers?.sort((a, b) => a - b)
     profiles[field] = {
       field,
       observedCount: data.length - observation.missing,
-      finiteCount: observation.numbers.length,
+      finiteCount: observation.finite,
       missingCount: observation.missing,
       nonFiniteCount: observation.nonFinite,
       nonNumericCount: observation.nonNumeric,
       zeroCount: observation.zero,
       negativeCount: observation.negative,
       fractionalCount: observation.fractional,
-      ...(observation.numbers.length > 0
+      ...(observation.finite > 0
         ? {
-            min,
+            min: observation.min,
             ...(sorted
               ? {
                   q1: quantile(sorted, 0.25),
@@ -138,7 +144,7 @@ export function profileNumericFields(
                   q3: quantile(sorted, 0.75),
                 }
               : {}),
-            max,
+            max: observation.max,
           }
         : {}),
     }

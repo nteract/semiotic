@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest"
 import { profileNumericFields } from "./numericFieldProfiler"
 
 describe("profileNumericFields — dirty-numeric classification", () => {
+  it.each([true, false])("retains health counts and extents with quantiles=%s", (quantiles) => {
+    const data = [
+      { value: 4 }, { value: "-2.5" }, { value: 0 }, { value: "  " },
+      { value: "Infinity" }, { value: NaN }, { value: "bad" }, {},
+      { value: null }, { value: 2 }
+    ]
+    const original = data.slice()
+    const profile = profileNumericFields(data, { quantiles }).value
+    expect(profile).toEqual({
+      field: "value",
+      observedCount: 7,
+      finiteCount: 4,
+      missingCount: 3,
+      nonFiniteCount: 2,
+      nonNumericCount: 1,
+      zeroCount: 1,
+      negativeCount: 1,
+      fractionalCount: 1,
+      min: -2.5,
+      ...(quantiles ? { q1: -0.625, median: 1, q3: 2.5 } : {}),
+      max: 4
+    })
+    expect(data).toEqual(original)
+  })
+
+  it.each([true, false])("omits numeric statistics for nonnumeric fields with quantiles=%s", (quantiles) => {
+    expect(profileNumericFields([{ value: "bad" }, { value: null }], { quantiles }).value).toEqual({
+      field: "value", observedCount: 1, finiteCount: 0, missingCount: 1,
+      nonFiniteCount: 0, nonNumericCount: 1, zeroCount: 0,
+      negativeCount: 0, fractionalCount: 0
+    })
+  })
+
   it("counts a whitespace-only string as missing, not non-numeric", () => {
     const profile = profileNumericFields([{ value: 1 }, { value: "   " }, { value: 2 }])
     expect(profile.value).toMatchObject({
