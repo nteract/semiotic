@@ -1,13 +1,13 @@
 [
   {
     "file": "cli.mjs",
-    "bytes": 36177,
-    "sha256": "298d1da4ac16cff9f3236d585cb991b615eed8fbad05f926abc70573ca9523f1"
+    "bytes": 36571,
+    "sha256": "31a6880f31569bafe0cd9e2f80e73efc47bb564df75f667dc211669169e598ee"
   },
   {
     "file": "README.md",
-    "bytes": 7181,
-    "sha256": "ca3862b23a5c8d8dfc735daa8e58fabac2817301520183c5e69e81773cbfc2d8"
+    "bytes": 7432,
+    "sha256": "98e8241922a08e1bde41e79444f92e93f51c4944cd7b7e04078ad04661e669d2"
   },
   {
     "file": "source-checks.json",

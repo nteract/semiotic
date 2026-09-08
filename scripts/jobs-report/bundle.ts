@@ -31,6 +31,17 @@ const inventoryFor = (files: Record<string, string | Buffer>) =>
     bytes: Buffer.byteLength(value),
     sha256: createHash("sha256").update(value).digest("hex")
   }))
+function verifyOutputEntries(directory: string, expectedFiles: string[]) {
+  const expected = new Set(expectedFiles)
+  const entries = readdirSync(directory, { withFileTypes: true })
+  if (
+    entries.length !== expected.size ||
+    entries.some((entry) => !entry.isFile() || !expected.has(entry.name))
+  )
+    throw new Error(
+      "Output directory contains missing, unexpected or non-regular files"
+    )
+}
 export async function bundle(
   snapshot: JobsSnapshot,
   month: string,
@@ -113,8 +124,7 @@ export function writeEdition(
   const inventory = inventoryFor(files)
   const outputs = { ...files, "outputs.json": json(inventory) }
   if (existsSync(directory)) {
-    if (readdirSync(directory).length !== Object.keys(outputs).length)
-      throw new Error("Immutable output inventory changed")
+    verifyOutputEntries(directory, Object.keys(outputs))
     for (const [file, value] of Object.entries(outputs)) {
       if (!readFileSync(join(directory, file)).equals(Buffer.from(value)))
         throw new Error(`Refusing to replace immutable output: ${file}`)
@@ -148,6 +158,7 @@ export async function checkSaved(
   )
   // Check the actual exported bytes against reproduced outputs, not merely an
   // editable inventory. A changed graphic cannot reuse the original review.
+  verifyOutputEntries(directory, [...Object.keys(rebuilt.files), "outputs.json"])
   for (const [file, value] of Object.entries(rebuilt.files)) {
     if (!readFileSync(join(directory, file)).equals(Buffer.from(value)))
       throw new Error(`Output does not reproduce: ${file}`)

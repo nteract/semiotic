@@ -776,7 +776,7 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     id: "jobs-report",
     shortLabel: "Jobs revision desk",
     note: "Dated BLS/ALFRED payroll estimates retain publication calendars, same-vintage arithmetic and missing first releases. Waterfall revisions, paired dots and a separate monthly line accompany immutable briefings and explicit review handoffs.",
-    uses: ["input-static", "hoc-xy-lines", "feature-accessors", "feature-axes", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+    uses: ["input-static", "hoc-xy-lines", "hoc-ordinal-bars", "feature-accessors", "feature-axes", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
   },
   {
     id: "machine-semiosphere",

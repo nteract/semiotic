@@ -64,6 +64,10 @@ requirements change the review subject. Edition A's receipt cannot authorize B.
 The subject also binds the actual SVG, PNG, HTML, CSV and packet bytes, so a
 changed caption or rasterized graphic requires another review even if its
 underlying chart configuration is unchanged.
+Checks and immutable rebuilds require exactly the listed regular files.
+Extra files (including hidden files), directories, symbolic links and missing
+or renamed outputs are refused. Keep receipts and other working files outside
+the edition directory.
 The comparison retains original and replacement claims with different identities.
 
 The briefing can emphasize estimated direction (`--reading direction`, the

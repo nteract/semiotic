@@ -131,6 +131,31 @@ const ready = JSON.parse(
 )
 assert.equal(ready.status, "ready-for-demo")
 assert.equal(ready.publishable, false)
+cpSync(resolve(root, "rebuilt-b"), resolve(root, "unlisted-output"), {
+  recursive: true
+})
+writeFileSync(
+  resolve(root, "unlisted-output/unreviewed.html"),
+  "This extra export was not covered by the review receipt."
+)
+const unlistedArgs = checkArgs.map((arg) =>
+  arg === "rebuilt-b" ? "unlisted-output" : arg
+)
+const unlisted = JSON.parse(
+  run([...unlistedArgs, "--review", "demo-review.json", "--json"], 1).stderr
+)
+assert.equal(unlisted.status, "refuse")
+assert.equal(unlisted.publishable, false)
+assert.match(unlisted.error, /Output directory contains/)
+assert.match(
+  run([...unlistedArgs, "--review", "demo-review.json"], 1).stderr,
+  /^refuse: Output directory contains/
+)
+results.push({
+  check:
+    "Unlisted exported files refuse a matching review in both CLI JSON and terminal output",
+  passed: true
+})
 const stale = [...checkArgs]
 stale[stale.indexOf("rebuilt-b")] = "rebuilt-a"
 assert.equal(
@@ -248,6 +273,9 @@ const evidence = {
   packageVersion: parse("node_modules/semiotic/package.json").version,
   packageTarballSha256: createHash("sha256")
     .update(readFileSync(resolve(root, "semiotic-3.9.2.tgz")))
+    .digest("hex"),
+  adapterSha256: createHash("sha256")
+    .update(readFileSync(resolve(root, "tools/cli.mjs")))
     .digest("hex"),
   authority:
     "Automated clean-consumer exercise, not an independent human maintainer or editorial sign-off",

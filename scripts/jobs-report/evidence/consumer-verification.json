@@ -1,8 +1,9 @@
 {
-  "verifiedAt": "2026-09-07T22:44:19.061Z",
+  "verifiedAt": "2026-09-07T23:13:55.468Z",
   "node": "v22.22.1",
   "packageVersion": "3.9.2",
   "packageTarballSha256": "c00fbda6a37f4bab66144aaafbd3e8b84d81b9fa41a3281f769021c3f05e63c3",
+  "adapterSha256": "31a6880f31569bafe0cd9e2f80e73efc47bb564df75f667dc211669169e598ee",
   "authority": "Automated clean-consumer exercise, not an independent human maintainer or editorial sign-off",
   "publicImports": [
     "semiotic/artifact",
@@ -19,6 +20,10 @@
     },
     {
       "check": "Public CLI JSON and terminal both distinguish conditional exit zero; mismatched chart refused",
+      "passed": true
+    },
+    {
+      "check": "Unlisted exported files refuse a matching review in both CLI JSON and terminal output",
       "passed": true
     },
     {

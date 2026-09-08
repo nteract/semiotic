@@ -2,9 +2,12 @@
 import { afterEach, describe, expect, it } from "vitest"
 import {
   cpSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync
 } from "node:fs"
 import { tmpdir } from "node:os"
@@ -410,6 +413,52 @@ describe("publication and revision handoff", () => {
     writeFileSync(resolve(output, "outputs.json"), "[]")
     await expect(checkSaved(snapshot, output)).rejects.toThrow(
       /does not reproduce/
+    )
+  })
+  it.each([
+    "extra file",
+    "hidden file",
+    "nested directory",
+    "symbolic link",
+    "missing file",
+    "renamed file"
+  ])("refuses a reviewed edition with %s on check and rebuild", async (change) => {
+    const directory = scratch()
+    const output = resolve(directory, "edition")
+    const result = await bundle(snapshot, "2025-06", laterEdition)
+    writeEdition(output, result.files)
+    const review = {
+      ...receipt(await checkSaved(snapshot, output)),
+      reviewedAt: new Date(Date.now() - 60000).toISOString(),
+      expiresAt: new Date(Date.now() + 60000).toISOString()
+    }
+    expect(await checkSaved(snapshot, output, review)).toMatchObject({
+      status: "ready-for-demo",
+      publishable: false
+    })
+    const graphic = resolve(output, "graphic.svg")
+    if (change === "extra file" || change === "hidden file") {
+      writeFileSync(
+        resolve(output, change === "extra file" ? "unreviewed.html" : ".hidden"),
+        "These exported bytes were never reviewed."
+      )
+    } else if (change === "nested directory") {
+      mkdirSync(resolve(output, "extra"))
+      writeFileSync(resolve(output, "extra/graphic.svg"), "Unreviewed graphic")
+    } else if (change === "symbolic link") {
+      const external = resolve(directory, "graphic.svg")
+      renameSync(graphic, external)
+      symlinkSync(external, graphic)
+    } else if (change === "missing file") {
+      rmSync(graphic)
+    } else {
+      renameSync(graphic, resolve(output, "renamed.svg"))
+    }
+    await expect(checkSaved(snapshot, output, review)).rejects.toThrow(
+      /Output directory contains missing, unexpected or non-regular files/
+    )
+    expect(() => writeEdition(output, result.files)).toThrow(
+      /Output directory contains missing, unexpected or non-regular files/
     )
   })
 })

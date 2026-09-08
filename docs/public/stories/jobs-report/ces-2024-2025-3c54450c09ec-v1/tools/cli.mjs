@@ -705,6 +705,14 @@ var inventoryFor = (files) => Object.entries(files).map(([file, value]) => ({
   bytes: Buffer.byteLength(value),
   sha256: createHash2("sha256").update(value).digest("hex")
 }));
+function verifyOutputEntries(directory, expectedFiles) {
+  const expected = new Set(expectedFiles);
+  const entries = readdirSync2(directory, { withFileTypes: true });
+  if (entries.length !== expected.size || entries.some((entry) => !entry.isFile() || !expected.has(entry.name)))
+    throw new Error(
+      "Output directory contains missing, unexpected or non-regular files"
+    );
+}
 async function bundle(snapshot, month, asOf, reading = "direction") {
   const briefing = buildBriefing(snapshot, month, asOf, reading);
   const rendered = renderChartWithEvidence2(briefing.component, briefing.props, {
@@ -769,8 +777,7 @@ function writeEdition(directory, files) {
   const inventory = inventoryFor(files);
   const outputs = { ...files, "outputs.json": json(inventory) };
   if (existsSync(directory)) {
-    if (readdirSync2(directory).length !== Object.keys(outputs).length)
-      throw new Error("Immutable output inventory changed");
+    verifyOutputEntries(directory, Object.keys(outputs));
     for (const [file, value] of Object.entries(outputs)) {
       if (!readFileSync2(join(directory, file)).equals(Buffer.from(value)))
         throw new Error(`Refusing to replace immutable output: ${file}`);
@@ -798,6 +805,7 @@ async function checkSaved(snapshot, directory, review) {
     briefing.asOf,
     briefing.reading
   );
+  verifyOutputEntries(directory, [...Object.keys(rebuilt.files), "outputs.json"]);
   for (const [file, value] of Object.entries(rebuilt.files)) {
     if (!readFileSync2(join(directory, file)).equals(Buffer.from(value)))
       throw new Error(`Output does not reproduce: ${file}`);
