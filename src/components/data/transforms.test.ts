@@ -114,6 +114,47 @@ describe("rollup", () => {
       expect(d).toHaveProperty("value")
     }
   })
+
+  it.each(["sum", "mean", "count", "min", "max"] as const)("returns no groups for empty %s input", (agg) => {
+    expect(rollup([], { groupBy: "region", value: "sales", agg })).toEqual([])
+  })
+
+  it("preserves first-seen group order and numeric coercion", () => {
+    const rows = [
+      { group: 2, amount: "3" },
+      { group: "1", amount: null },
+      { group: "2", amount: true },
+      { group: "__proto__", amount: "7" }
+    ]
+    expect(rollup(rows, { groupBy: "group", value: "amount" })).toEqual([
+      { group: "2", value: 4 }, { group: "1", value: 0 }, { group: "__proto__", value: 7 }
+    ])
+  })
+
+  it.each([
+    ["sum", NaN, NaN], ["mean", NaN, NaN], ["count", 3, 1],
+    ["min", 2, Infinity], ["max", 4, -Infinity]
+  ] as const)("preserves invalid-value behavior for %s", (agg, mixed, invalid) => {
+    const rows = [
+      { group: "mixed", amount: 2 }, { group: "mixed", amount: "invalid" },
+      { group: "mixed", amount: 4 }, { group: "invalid", amount: undefined }
+    ]
+    expect(rollup(rows, { groupBy: "group", value: "amount", agg })).toEqual([
+      { group: "mixed", value: mixed }, { group: "invalid", value: invalid }
+    ])
+  })
+
+  it.each(["min", "max"] as const)("preserves the first signed zero for %s", (agg) => {
+    for (const first of [-0, 0]) {
+      const rows = [{ group: "A", amount: first }, { group: "A", amount: -first }]
+      expect(rollup(rows, { groupBy: "group", value: "amount", agg })[0].value).toBe(first)
+    }
+  })
+
+  it("accumulates sums in row order", () => {
+    const rows = [1e16, 1, -1e16, 2].map((amount) => ({ group: "A", amount }))
+    expect(rollup(rows, { groupBy: "group", value: "amount" })[0].value).toBe(2)
+  })
 })
 
 // ── groupBy ────────────────────────────────────────────────────────────

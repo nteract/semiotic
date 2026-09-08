@@ -66,39 +66,43 @@ export function rollup<T extends Datum>(
 ): Datum[] {
   const { groupBy: groupField, value: valueField, agg = "sum" } = options
 
-  const groups = new Map<string, number[]>()
+  // Retain only the aggregate and count instead of every group's values.
+  const groups = new Map<string, { total: number; count: number }>()
+  const initial = agg === "min" ? Infinity : agg === "max" ? -Infinity : 0
 
   for (const d of data) {
     const key = String(d[groupField])
-    if (!groups.has(key)) {
-      groups.set(key, [])
+    let group = groups.get(key)
+    if (!group) {
+      group = { total: initial, count: 0 }
+      groups.set(key, group)
     }
-    groups.get(key)!.push(Number(d[valueField]))
+    const value = Number(d[valueField])
+    group.count++
+    switch (agg) {
+      case "count":
+        break
+      case "min":
+        if (value < group.total) group.total = value
+        break
+      case "max":
+        if (value > group.total) group.total = value
+        break
+      default:
+        group.total += value
+        break
+    }
   }
 
   const result: Datum[] = []
 
-  for (const [key, vals] of groups) {
-    let aggregated: number
-
-    switch (agg) {
-      case "count":
-        aggregated = vals.length
-        break
-      case "mean":
-        aggregated = vals.reduce((a, b) => a + b, 0) / vals.length
-        break
-      case "min":
-        aggregated = getMinMax(vals)[0]
-        break
-      case "max":
-        aggregated = getMinMax(vals)[1]
-        break
-      case "sum":
-      default:
-        aggregated = vals.reduce((a, b) => a + b, 0)
-        break
-    }
+  for (const [key, group] of groups) {
+    const aggregated =
+      agg === "count"
+        ? group.count
+        : agg === "mean"
+          ? group.total / group.count
+          : group.total
 
     result.push({ [groupField]: key, value: aggregated })
   }
