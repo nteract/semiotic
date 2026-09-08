@@ -2,15 +2,18 @@ import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, ViolinSceneNode } 
 import { resolveCSSColor } from "./resolveCSSColor"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
 
+// Keep parsed geometry only as long as its scene node lives. Transitions may
+// update a retained node's path, so identity alone cannot validate the cache.
+const PATH_CACHE = new WeakMap<ViolinSceneNode, { source: string; path: Path2D }>()
+
 export const violinCanvasRenderer = (
   ctx: CanvasRenderingContext2D,
   nodes: OrdinalSceneNode[],
   _scales: OrdinalScales,
   _layout: OrdinalLayout
 ): void => {
-  const violinNodes = nodes.filter((n): n is ViolinSceneNode => n.type === "violin")
-
-  for (const node of violinNodes) {
+  for (const node of nodes) {
+    if (node.type !== "violin") continue
     ctx.save()
 
     if (node.translateX || node.translateY) {
@@ -18,7 +21,12 @@ export const violinCanvasRenderer = (
     }
 
     // Draw the violin shape
-    const path = new Path2D(node.pathString)
+    let cached = PATH_CACHE.get(node)
+    if (!cached || cached.source !== node.pathString) {
+      cached = { source: node.pathString, path: new Path2D(node.pathString) }
+      PATH_CACHE.set(node, cached)
+    }
+    const path = cached.path
 
     ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 0.6
     ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#007bff")

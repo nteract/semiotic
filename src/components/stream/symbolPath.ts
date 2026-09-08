@@ -110,10 +110,10 @@ export function symbolExtent(
   customPath?: string
 ): number {
   if (!customPath && (symbolType ?? "circle") === "circle") return symbolRadius(size)
-  const key = customPath ? `p:${customPath}` : `${symbolType}:${Math.round(size)}`
+  const key = customPath ? `p:${customPath}` : `s:${symbolType ?? "circle"}:${size}`
   const cached = EXTENT_CACHE.get(key)
   if (cached != null) return cached
-  const d = customPath ?? symbolPathString(symbolType, size)
+  const d = symbolPathString(symbolType, size, customPath)
   const nums = d.match(/-?\d*\.?\d+(?:e-?\d+)?/gi)
   let max = 0
   if (nums) {
@@ -124,7 +124,9 @@ export function symbolExtent(
       if (h > max) max = h
     }
   }
-  if (!(max > 0)) max = symbolRadius(size)
+  // A degenerate custom path falls back to a size-dependent radius, which
+  // cannot be cached under the size-independent custom-path key.
+  if (!(max > 0)) return symbolRadius(size)
   if (EXTENT_CACHE.size > 512) EXTENT_CACHE.clear()
   EXTENT_CACHE.set(key, max)
   return max

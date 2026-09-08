@@ -4,6 +4,7 @@ import type { StreamRendererFn } from "./types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
 import { symbolPathString } from "../symbolPath"
+import { getGlyphPath2D } from "../glyphDef"
 
 /**
  * Canvas painter for the per-datum shape ("symbol") channel — one `paintSymbol`
@@ -14,9 +15,9 @@ import { symbolPathString } from "../symbolPath"
  * `symbolPathString`, so a glyph looks identical across canvas, SVG/SSR, and
  * every chart family — there is no second path implementation.
  *
- * Named shapes are cached as `Path2D` by `symbolType:size` in one shared
- * cache, so a scene of thousands of marks across both pipelines parses only
- * a handful of distinct paths.
+ * Named shapes are cached by exact `symbolType:size`; custom paths share the
+ * bounded pictogram cache. Repeated marks across both pipelines parse only
+ * their distinct paths.
  */
 const PATH_CACHE = new Map<string, Path2D>()
 
@@ -26,8 +27,8 @@ function getSymbolPath2D(
   path: string | undefined
 ): Path2D | null {
   try {
-    if (path) return new Path2D(path)
-    const key = `${symbolType ?? "circle"}:${Math.round(size)}`
+    if (path) return getGlyphPath2D(path)
+    const key = `${symbolType ?? "circle"}:${size}`
     let p = PATH_CACHE.get(key)
     if (!p) {
       p = new Path2D(symbolPathString(symbolType, size))

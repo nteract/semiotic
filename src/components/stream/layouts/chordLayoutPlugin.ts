@@ -56,7 +56,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Build NxN matrix from edges ───────────────────────────────────
     const n = nodes.length
     const matrix: number[][] = Array.from({ length: n }, () =>
-      Array.from({ length: n }, () => 0)
+      new Array<number>(n).fill(0)
     )
 
     for (const edge of edges) {
@@ -201,18 +201,11 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const arcData = node.__arcData
       if (!arcData) continue
 
-      let fill: string
-      if (nodeStyleFn) {
-        const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-        fill =
-          (typeof userStyle.fill === "string" ? userStyle.fill : undefined) ||
-          nodeColorMap.get(node.id) ||
-          palette[i % palette.length]
-      } else {
-        fill = nodeColorMap.get(node.id) || palette[i % palette.length]
-      }
-
       const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
+      const fill =
+        (typeof userStyle.fill === "string" ? userStyle.fill : undefined) ||
+        nodeColorMap.get(node.id) ||
+        palette[i % palette.length]
       const style: Style = {
         fill,
         stroke: userStyle.stroke || "black",
@@ -269,8 +262,8 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       // sankey / connector): theme border first, then secondary, then
       // hardcoded #999.
       let fill = config.themeSemantic?.border || config.themeSemantic?.secondary || "#999"
+      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
       if (edgeStyleFn) {
-        const userStyle = edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
         fill =
           (typeof userStyle.fill === "string" ? userStyle.fill : undefined) ||
           fill
@@ -285,7 +278,6 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         }
       }
 
-      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
       const style: Style = {
         fill,
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
@@ -371,46 +363,16 @@ function translateSvgPath(d: string, dx: number, dy: number): string {
   while (i < tokens.length) {
     const cmd = tokens[i]
 
-    if (cmd === "M" || cmd === "L") {
+    if (cmd === "M" || cmd === "L" || cmd === "C" || cmd === "Q") {
       out.push(cmd)
       i++
-      // Pairs of (x, y) follow
+      // Endpoints and control points are all (x, y) pairs.
       while (i < tokens.length && !isNaN(Number(tokens[i]))) {
         out.push(String(Number(tokens[i]) + dx))
         i++
         if (i < tokens.length && !isNaN(Number(tokens[i]))) {
           out.push(String(Number(tokens[i]) + dy))
           i++
-        }
-      }
-    } else if (cmd === "C") {
-      out.push(cmd)
-      i++
-      // Triplets of (x,y) control points
-      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
-        for (let p = 0; p < 3 && i < tokens.length; p++) {
-          if (isNaN(Number(tokens[i]))) break
-          out.push(String(Number(tokens[i]) + dx))
-          i++
-          if (i < tokens.length && !isNaN(Number(tokens[i]))) {
-            out.push(String(Number(tokens[i]) + dy))
-            i++
-          }
-        }
-      }
-    } else if (cmd === "Q") {
-      out.push(cmd)
-      i++
-      // Pairs of (x,y) — 2 pairs per Q
-      while (i < tokens.length && !isNaN(Number(tokens[i]))) {
-        for (let p = 0; p < 2 && i < tokens.length; p++) {
-          if (isNaN(Number(tokens[i]))) break
-          out.push(String(Number(tokens[i]) + dx))
-          i++
-          if (i < tokens.length && !isNaN(Number(tokens[i]))) {
-            out.push(String(Number(tokens[i]) + dy))
-            i++
-          }
         }
       }
     } else if (cmd === "A") {

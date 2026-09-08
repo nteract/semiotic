@@ -13,7 +13,7 @@ import type { Datum } from "./datumTypes"
 // tooltip components, the per-family default-tooltip builders, and the frames
 // without import cycles.
 
-/** Field-name hints, in priority order, for the tooltip's bold title. */
+/** Field-name hints for the bold title, matched in datum insertion order. */
 const TITLE_HINTS = ["name", "label", "title"]
 /** Type/kind family — only the first present member is shown (rest are its synonyms). */
 const TYPE_FAMILY = ["type", "kind", "category", "group", "class", "status", "role", "shape"]
@@ -80,11 +80,12 @@ export function smartTooltipEntries(
   for (const [key, value] of Object.entries(raw)) {
     if (key.startsWith("_")) continue
     if (key === "data") continue
-    if (skipPositional && POSITIONAL_KEYS.has(key.toLowerCase())) continue
+    const lower = key.toLowerCase()
+    if (skipPositional && POSITIONAL_KEYS.has(lower)) continue
     if (value == null) continue
     const t = typeof value
     if (t !== "string" && t !== "number" && t !== "boolean" && !(value instanceof Date)) continue
-    fields.push({ key, lower: key.toLowerCase(), value })
+    fields.push({ key, lower, value })
   }
   if (fields.length === 0) return { entries: [] }
 
@@ -94,22 +95,18 @@ export function smartTooltipEntries(
   if (titleIdx < 0) titleIdx = fields.findIndex((f) => typeof f.value === "string")
   const titleField = titleIdx >= 0 ? fields[titleIdx] : undefined
 
-  let rest = fields.filter((_, i) => i !== titleIdx)
-  if (usedName) rest = rest.filter((f) => f.lower !== "id")
+  const rest = fields.filter((f, i) => i !== titleIdx && (!usedName || f.lower !== "id"))
 
   const typeField = pickFamily(rest, TYPE_FAMILY)
   const valueField = pickFamily(rest, VALUE_FAMILY)
-  const typeFamily = new Set(TYPE_FAMILY)
-  const valueFamily = new Set(VALUE_FAMILY)
 
   const entries: SmartTooltipEntry[] = []
   if (typeField) entries.push({ key: typeField.key, value: typeField.value })
   if (valueField) entries.push({ key: valueField.key, value: valueField.value })
   for (const f of rest) {
     if (entries.length >= maxEntries) break
-    if (f === typeField || f === valueField) continue
-    // Skip the other synonyms of an already-shown family.
-    if (typeFamily.has(f.lower) || valueFamily.has(f.lower)) continue
+    // Skip the selected families, including their other synonyms.
+    if (TYPE_FAMILY.includes(f.lower) || VALUE_FAMILY.includes(f.lower)) continue
     entries.push({ key: f.key, value: f.value })
   }
 

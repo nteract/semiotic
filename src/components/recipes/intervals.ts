@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { FirstAvailableTrack } from "./firstAvailableTrack"
 
 /**
  * Interval (Gantt/timeline) packing + temporal-density helpers — the generic
@@ -48,7 +49,7 @@ export interface PackIntervalsOptions<T> {
 /**
  * Greedy interval packing: assign each interval to the first sub-track whose
  * last interval has already ended, otherwise open a new track. The textbook
- * Gantt/swimlane packer. O(n·tracks).
+ * Gantt/swimlane packer. O(n log tracks) after sorting.
  *
  * @example
  * ```ts
@@ -68,16 +69,13 @@ export function packIntervals<T = Datum>(
       ? items.slice()
       : items.slice().sort((a, b) => getStart(a) - getStart(b) || getEnd(b) - getEnd(a))
 
-  const trackEnds: number[] = []
+  const tracks = new FirstAvailableTrack()
   const packed: PackedInterval<T>[] = order.map((item) => {
-    const s = getStart(item)
-    let track = trackEnds.findIndex((lastEnd) => lastEnd <= s)
-    if (track === -1) track = trackEnds.length
-    trackEnds[track] = getEnd(item)
+    const track = tracks.assign(getStart(item), getEnd(item))
     return { item, track }
   })
 
-  return { packed, trackCount: Math.max(1, trackEnds.length) }
+  return { packed, trackCount: Math.max(1, tracks.count) }
 }
 
 export interface ActiveCount {
@@ -123,14 +121,41 @@ export function activeCountOverDomain<T = Datum>(
   const [min, max] = options.domain
   const step = options.step ?? 1
   const halfOpen = options.bounds === "half-open"
+  if (!(min <= max)) return []
 
-  const out: ActiveCount[] = []
-  for (let v = min; v <= max; v += step) {
-    let count = 0
+  // A sweep avoids revisiting every interval at every sample. For short
+  // domains, direct counting is cheaper than sorting the endpoints.
+  const sweep = (max - min) / step > Math.log2(items.length + 1)
+  const starts: number[] = []
+  const ends: number[] = []
+  if (sweep) {
     for (const item of items) {
       const s = getStart(item)
       const e = getEnd(item)
-      if (s <= v && (halfOpen ? v < e : v <= e)) count++
+      // Reversed and NaN intervals never contribute to the direct count.
+      if (!(s <= e)) continue
+      starts.push(s)
+      ends.push(e)
+    }
+    starts.sort((a, b) => a - b)
+    ends.sort((a, b) => a - b)
+  }
+
+  let started = 0
+  let ended = 0
+  const out: ActiveCount[] = []
+  for (let v = min; v <= max; v += step) {
+    let count = 0
+    if (sweep) {
+      while (started < starts.length && starts[started] <= v) started++
+      while (ended < ends.length && (halfOpen ? ends[ended] <= v : ends[ended] < v)) ended++
+      count = started - ended
+    } else {
+      for (const item of items) {
+        const s = getStart(item)
+        const e = getEnd(item)
+        if (s <= v && (halfOpen ? v < e : v <= e)) count++
+      }
     }
     out.push({ value: v, count })
   }

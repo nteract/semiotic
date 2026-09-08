@@ -12,6 +12,7 @@
 import { describe, bench } from 'vitest'
 import { generateScatterData, generateXYData } from '../setup/data-generators'
 import { buildPointScene } from '../../src/components/stream/xySceneBuilders/pointScene'
+import { buildCandlestickScene } from '../../src/components/stream/xySceneBuilders/candlestickScene'
 import { buildLineScene } from '../../src/components/stream/xySceneBuilders/lineScene'
 import { buildAreaScene, buildStackedAreaScene } from '../../src/components/stream/xySceneBuilders/areaScene'
 import { buildHeatmapScene } from '../../src/components/stream/xySceneBuilders/heatmapScene'
@@ -80,6 +81,30 @@ const stacked1kx10 = generateStackedData(1_000, 10)
 const stacked2kx5 = generateStackedData(2_000, 5)
 
 const defaultLayout = { width: 800, height: 600, x: 0, y: 0 }
+
+describe("Scene Builders — Candlestick sizing", () => {
+  for (const order of ["ordered", "shuffled"]) {
+    const data = Array.from({ length: 10000 }, (_, i) => ({
+      x: order === "ordered" ? i : (i * 7919) % 10000,
+      open: 20,
+      high: 35,
+      low: 10,
+      close: 25
+    }))
+    for (const bodyWidth of [undefined, 6]) {
+      const ctx = makeCtx({
+        getOpen: (d) => d.open,
+        getHigh: (d) => d.high,
+        getLow: (d) => d.low,
+        getClose: (d) => d.close,
+        config: { candlestickStyle: { bodyWidth } }
+      })
+      bench(`candlestick-10k-${order}-${bodyWidth === undefined ? "auto" : "fixed"}-width`, () => {
+        buildCandlestickScene(ctx, data, defaultLayout)
+      })
+    }
+  }
+})
 
 // ── 1. Scene Builder Throughput ────────────────────────────────────────────
 
