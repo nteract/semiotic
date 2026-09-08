@@ -23,6 +23,18 @@ function ownDescriptor(
   }
 }
 
+function ownValuePaths(
+  value: object,
+  key: string,
+  path: string,
+  ancestors: Set<object>
+): string[] {
+  const descriptor = ownDescriptor(value, key)
+  return !descriptor || !("value" in descriptor) || !descriptor.enumerable
+    ? [path]
+    : nonJsonValuePaths(descriptor.value, path, ancestors)
+}
+
 /** Find values that cannot survive a strict JSON round trip unchanged. */
 export function nonJsonValuePaths(
   value: unknown,
@@ -72,13 +84,9 @@ export function nonJsonValuePaths(
         )
       }
       for (let index = 0; index < length; index += 1) {
-        const itemPath = childPath(path, index)
-        const descriptor = ownDescriptor(value, String(index))
-        if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
-          paths.push(itemPath)
-          continue
-        }
-        paths.push(...nonJsonValuePaths(descriptor.value, itemPath, ancestors))
+        paths.push(
+          ...ownValuePaths(value, String(index), childPath(path, index), ancestors)
+        )
       }
     } else {
       for (const key of ownKeys) {
@@ -86,13 +94,7 @@ export function nonJsonValuePaths(
           paths.push(symbolPath(path, key))
           continue
         }
-        const entryPath = childPath(path, key)
-        const descriptor = ownDescriptor(value, key)
-        if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) {
-          paths.push(entryPath)
-          continue
-        }
-        paths.push(...nonJsonValuePaths(descriptor.value, entryPath, ancestors))
+        paths.push(...ownValuePaths(value, key, childPath(path, key), ancestors))
       }
     }
     return paths

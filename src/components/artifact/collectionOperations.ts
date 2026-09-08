@@ -2,7 +2,13 @@ import { canonicalJson } from "./fingerprint"
 import { nonJsonValuePaths } from "./jsonCompatibility"
 import { validateArtifactContract } from "./contract"
 import { auditArtifactCollection } from "./collection"
-import { isRecord, rejectUnknownKeys } from "./validationPrimitives"
+import {
+  isRecord,
+  rejectUnknownKeys,
+  requiredString,
+  stringIfPresent,
+  validateActor as validateActorRef
+} from "./validationPrimitives"
 import {
   claimReferenceKey,
   correctionScopeIsValid,
@@ -23,16 +29,8 @@ function validateCollectionString(
   errors: ArtifactCollectionValidation["errors"],
   required = false
 ): void {
-  const value = record[key]
-  if (
-    (required && (typeof value !== "string" || !value)) ||
-    (!required && value !== undefined && typeof value !== "string")
-  ) {
-    errors.push({
-      path: `${path}.${key}`,
-      message: required ? "Expected a non-empty string." : "Expected a string."
-    })
-  }
+  const validate = required ? requiredString : stringIfPresent
+  validate(record, key, path, errors)
 }
 
 function validateCollectionStringArray(
@@ -90,21 +88,6 @@ function validateClaimReferenceArray(
       true
     )
   })
-}
-
-function validateActorRef(
-  value: unknown,
-  path: string,
-  errors: ArtifactCollectionValidation["errors"]
-): void {
-  if (!isRecord(value)) {
-    errors.push({ path, message: "Expected an actor object." })
-    return
-  }
-  rejectUnknownKeys(value, ["id", "name", "kind"], path, errors)
-  validateCollectionString(value, "kind", path, errors, true)
-  validateCollectionString(value, "id", path, errors)
-  validateCollectionString(value, "name", path, errors)
 }
 
 /** Dependency-free validation for untrusted collection payloads. */
