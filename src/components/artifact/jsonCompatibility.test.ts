@@ -92,6 +92,23 @@ describe("untrusted JSON inspection", () => {
     ).toEqual(["$.row"])
   })
 
+  it("retains every invalid path in order through mixed objects and arrays", () => {
+    const rows = Object.assign(new Array(3), {
+      0: 1,
+      2: { bad: Infinity },
+      extra: "Array properties cannot survive JSON serialization."
+    })
+    const value = Object.defineProperty({ rows }, "hidden", { value: 1 })
+    const ancestors = new Set<object>()
+    expect(nonJsonValuePaths(value, "$", ancestors)).toEqual([
+      "$.rows.extra",
+      "$.rows[1]",
+      "$.rows[2].bad",
+      "$.hidden"
+    ])
+    expect(ancestors.size).toBe(0)
+  })
+
   it("rejects custom array prototypes without invoking inherited serialization hooks", () => {
     const toJSON = vi.fn(() => "different data")
     const array = Object.setPrototypeOf([1], { toJSON })

@@ -1,0 +1,13 @@
+{
+  "series": "CES0000000001 = PAYEMS; U.S. total nonfarm, seasonally adjusted",
+  "referenceMonth": "Employment reference period, YYYY-MM",
+  "releaseDate": "Publication vintage, YYYY-MM-DD",
+  "value": "Employment level or monthly change, distinguished by measure",
+  "unit": "thousand jobs; multiply by 1000 for jobs",
+  "estimateKind": "First, third, or other dated vintage; third includes benchmarking when its release does",
+  "monthlyChange": "Current minus preceding reference-month level within ONE dated CSV",
+  "exclusions": "No rows discarded. 2023-12 is the arithmetic baseline; featured 2026 months are outside the reading window.",
+  "rowCount": 677,
+  "capturedAt": "2026-09-07T20:08:09.733Z",
+  "unavailable": "October 2025 first estimate unavailable; no value imputed. Third values after the chosen as-of date are withheld."
+}

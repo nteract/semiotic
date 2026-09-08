@@ -190,6 +190,7 @@ const GroceryBillExamplePage = lazy(() => import("./pages/examples/GroceryBillEx
 const PlaneDayExamplePage = lazy(() => import("./pages/examples/PlaneDayExamplePage"))
 const ReservoirGuideExamplePage = lazy(() => import("./pages/examples/ReservoirGuideExamplePage"))
 const SuperpersuasionExamplePage = lazy(() => import("./pages/examples/SuperpersuasionExamplePage"))
+const JobsReportExamplePage = lazy(() => import("./pages/examples/JobsReportExamplePage"))
 const MachineSemiosphereExamplePage = lazy(
   () => import("./pages/examples/MachineSemiosphereExamplePage"),
 )
@@ -342,6 +343,7 @@ const EqualPlacesAtlasExamplePage = lazy(
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "SuperpersuasionExamplePage.tsx": SuperpersuasionExamplePage,
+  "JobsReportExamplePage.tsx": JobsReportExamplePage,
   "GroceryBillExamplePage.jsx": GroceryBillExamplePage,
   "PlaneDayExamplePage.tsx": PlaneDayExamplePage,
   "ReservoirGuideExamplePage.tsx": ReservoirGuideExamplePage,

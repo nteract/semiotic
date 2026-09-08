@@ -1,0 +1,8 @@
+Reconstructed January 9 → March 6, 2026 vintages
+Reference month: June 2025
+Reason: source-update
+dated: -13000 → -20000 jobs
+revision: -160000 → -167000 jobs
+annual-2025: 584000 → 116000 jobs
+Claims reassessed: estimate-2026-01-09-2025-06-v1, estimate-2026-03-06-2025-06-v1, interpretation-2026-01-09-2025-06-v1, interpretation-2026-03-06-2025-06-v1
+Earlier editorial review cannot authorize this new edition.

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "scope": "demonstration-only",
+  "subject": "sha256:f70a7034166b75c6d3a5c12f86015287775bae00a52f665c0df18c1ceb644244",
+  "reviewedAt": "",
+  "expiresAt": "",
+  "reviewer": "",
+  "decisions": [
+    {
+      "id": "chart.compromising.table-static",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "The data table is read-only — not downloadable, sortable, or filterable."
+    },
+    {
+      "id": "chart.assistive.human-readable-numbers",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\")."
+    },
+    {
+      "id": "chart.perceivable.low-contrast",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Mark colors come from the theme/CSS variables — contrast can't be verified statically."
+    },
+    {
+      "id": "chart.perceivable.seizure-risk",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "No flashing detected statically. Confirm no element flashes more than 3×/sec."
+    },
+    {
+      "id": "chart.operable.interaction-cues",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer)."
+    },
+    {
+      "id": "chart.robust.conforms-to-standards",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "WCAG 2.1 / Section 508 conformance can't be settled from config alone."
+    },
+    {
+      "id": "chart.robust.semantically-valid",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question."
+    },
+    {
+      "id": "chart.assistive.features-described",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is."
+    },
+    {
+      "id": "chart.flexible.zoom-reflow",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function."
+    },
+    {
+      "id": "claims.model-review.estimate-2026-01-09-2025-06-v1",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Generated claim \"estimate-2026-01-09-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "claims.causal-language.interpretation-2026-01-09-2025-06-v1",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Claim \"interpretation-2026-01-09-2025-06-v1\" uses causal language without a declared causal basis."
+    },
+    {
+      "id": "claims.model-review.interpretation-2026-01-09-2025-06-v1",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Generated claim \"interpretation-2026-01-09-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "field.accountability.reviews",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception."
+    },
+    {
+      "id": "host.source-substitution",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "ALFRED dated CSVs substitute for the inaccessible BLS workbook. Independent BLS release-table checks are supplied; workbook-cell admission remains pending."
+    },
+    {
+      "id": "host.editorial-review",
+      "outcome": "pending",
+      "rationale": "",
+      "check": "Review the complete rendered graphic, exact values and prose for this edition."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "file": "cli.mjs",
+    "bytes": 36571,
+    "sha256": "31a6880f31569bafe0cd9e2f80e73efc47bb564df75f667dc211669169e598ee"
+  },
+  {
+    "file": "README.md",
+    "bytes": 7432,
+    "sha256": "98e8241922a08e1bde41e79444f92e93f51c4944cd7b7e04078ad04661e669d2"
+  },
+  {
+    "file": "source-checks.json",
+    "bytes": 4480,
+    "sha256": "1a6b855ba1a7325070348509aede55ed333c6d98383238a5cb917fd958c0f670"
+  },
+  {
+    "file": "dictionary.json",
+    "bytes": 845,
+    "sha256": "d8fd881418ae3bd72fc1a51cc8bba90f5f4d3d8acf5c8ad5982d048ad84a20ab"
+  },
+  {
+    "file": "change-report.json",
+    "bytes": 22955,
+    "sha256": "5529d33c35d3850be01aea198ed958aeaa74fae372a02b76e50f96be636e2fb5"
+  },
+  {
+    "file": "change-report.txt",
+    "bytes": 419,
+    "sha256": "79d0f2e6330a9db393960acb0fe77ba60a71f2e5193b74f2a4a69a2802f4f4cb"
+  },
+  {
+    "file": "reported-then.svg",
+    "bytes": 7143,
+    "sha256": "6e5b576ac9dd12317400a93a1b8a79bc6de05ba7866691d3e34f3e8163a757c6"
+  },
+  {
+    "file": "named-vintage.svg",
+    "bytes": 7279,
+    "sha256": "10ad4de1cbf5e24008af6701c11f6b24b27eeb389729f9bdd46903ffd0cbb33f"
+  },
+  {
+    "file": "opening-waterfall.phone.svg",
+    "bytes": 3671,
+    "sha256": "bbc8dd0498da9ba1fcc515da2897ff98f8d8de9567a149ba0bedcb6f699bca4a"
+  },
+  {
+    "file": "paired-2024.svg",
+    "bytes": 8717,
+    "sha256": "d76dc2fdbf833dece26f1811aed50e007d5da383bf38448f530f6708f40acbee"
+  },
+  {
+    "file": "paired-2025.svg",
+    "bytes": 8551,
+    "sha256": "831c1c80518b62ccb21e985b9a00d0d9d431cd48bca499ebf8e8ebfa7d96f29d"
+  }
+]

@@ -17,6 +17,47 @@ function codes(result: ReturnType<typeof auditData>): string[] {
 }
 
 describe("auditData", () => {
+  it("audits waterfall deltas without treating named steps as numeric coordinates", () => {
+    const data = [
+      { step: "First estimate", change: 147 },
+      { step: "Revision", change: -160 }
+    ]
+    expect(
+      auditData("WaterfallChart", {
+        data,
+        xAccessor: "step",
+        yAccessor: "change"
+      }).diagnoses
+    ).toEqual([])
+    expect(
+      auditData("WaterfallChart", {
+        data: [
+          { x: "A", y: 2 },
+          { x: "B", y: 2 }
+        ]
+      }).ok
+    ).toBe(true)
+    expect(
+      codes(
+        auditData("WaterfallChart", {
+          data: [...data, { step: "Bad delta", change: Infinity }],
+          xAccessor: "step",
+          yAccessor: "change"
+        })
+      )
+    ).toContain("NON_FINITE_VALUE")
+    // Actual XY coordinates retain their numeric constraint.
+    expect(
+      codes(
+        auditData("Scatterplot", {
+          data,
+          xAccessor: "step",
+          yAccessor: "change"
+        })
+      )
+    ).toContain("DEGENERATE_EXTENT")
+  })
+
   afterEach(() => {
     unregisterChartCapability("RiskDial")
   })

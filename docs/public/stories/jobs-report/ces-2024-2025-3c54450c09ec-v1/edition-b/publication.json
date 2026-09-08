@@ -1,0 +1,840 @@
+{
+  "status": "conditional",
+  "artifactStatus": "conditional",
+  "publishable": false,
+  "demoReady": false,
+  "subject": "sha256:545f21ec4274287c5ccd32273f25565f8aa722555f91333a9b1d799b108dd8aa",
+  "outputFingerprint": "sha256:0960cb460730dfdb665698f455029f8e7634b9a232196c34bc4f88de618a0941",
+  "requirements": [
+    {
+      "id": "chart.compromising.table-static",
+      "status": "warn",
+      "message": "The data table is read-only — not downloadable, sortable, or filterable."
+    },
+    {
+      "id": "chart.assistive.human-readable-numbers",
+      "status": "warn",
+      "message": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\")."
+    },
+    {
+      "id": "chart.perceivable.low-contrast",
+      "status": "manual",
+      "message": "Mark colors come from the theme/CSS variables — contrast can't be verified statically."
+    },
+    {
+      "id": "chart.perceivable.seizure-risk",
+      "status": "manual",
+      "message": "No flashing detected statically. Confirm no element flashes more than 3×/sec."
+    },
+    {
+      "id": "chart.operable.interaction-cues",
+      "status": "manual",
+      "message": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer)."
+    },
+    {
+      "id": "chart.robust.conforms-to-standards",
+      "status": "manual",
+      "message": "WCAG 2.1 / Section 508 conformance can't be settled from config alone."
+    },
+    {
+      "id": "chart.robust.semantically-valid",
+      "status": "manual",
+      "message": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question."
+    },
+    {
+      "id": "chart.assistive.features-described",
+      "status": "manual",
+      "message": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is."
+    },
+    {
+      "id": "chart.flexible.zoom-reflow",
+      "status": "manual",
+      "message": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function."
+    },
+    {
+      "id": "claims.model-review.estimate-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Generated claim \"estimate-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "claims.causal-language.interpretation-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" uses causal language without a declared causal basis."
+    },
+    {
+      "id": "claims.model-review.interpretation-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Generated claim \"interpretation-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "field.accountability.reviews",
+      "status": "manual",
+      "message": "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception."
+    },
+    {
+      "id": "host.source-substitution",
+      "status": "manual",
+      "message": "ALFRED dated CSVs substitute for the inaccessible BLS workbook. Independent BLS release-table checks are supplied; workbook-cell admission remains pending."
+    },
+    {
+      "id": "host.editorial-review",
+      "status": "manual",
+      "message": "Review the complete rendered graphic, exact values and prose for this edition."
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "chart.compromising.table-static",
+      "status": "warn",
+      "message": "The data table is read-only — not downloadable, sortable, or filterable."
+    },
+    {
+      "id": "chart.assistive.human-readable-numbers",
+      "status": "warn",
+      "message": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\")."
+    },
+    {
+      "id": "chart.perceivable.low-contrast",
+      "status": "manual",
+      "message": "Mark colors come from the theme/CSS variables — contrast can't be verified statically."
+    },
+    {
+      "id": "chart.perceivable.seizure-risk",
+      "status": "manual",
+      "message": "No flashing detected statically. Confirm no element flashes more than 3×/sec."
+    },
+    {
+      "id": "chart.operable.interaction-cues",
+      "status": "manual",
+      "message": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer)."
+    },
+    {
+      "id": "chart.robust.conforms-to-standards",
+      "status": "manual",
+      "message": "WCAG 2.1 / Section 508 conformance can't be settled from config alone."
+    },
+    {
+      "id": "chart.robust.semantically-valid",
+      "status": "manual",
+      "message": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question."
+    },
+    {
+      "id": "chart.assistive.features-described",
+      "status": "manual",
+      "message": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is."
+    },
+    {
+      "id": "chart.flexible.zoom-reflow",
+      "status": "manual",
+      "message": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function."
+    },
+    {
+      "id": "claims.model-review.estimate-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Generated claim \"estimate-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "claims.causal-language.interpretation-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" uses causal language without a declared causal basis."
+    },
+    {
+      "id": "claims.model-review.interpretation-2026-03-06-2025-06-v1",
+      "status": "warn",
+      "message": "Generated claim \"interpretation-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review."
+    },
+    {
+      "id": "field.accountability.reviews",
+      "status": "manual",
+      "message": "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception."
+    },
+    {
+      "id": "host.source-substitution",
+      "status": "manual",
+      "message": "ALFRED dated CSVs substitute for the inaccessible BLS workbook. Independent BLS release-table checks are supplied; workbook-cell admission remains pending."
+    },
+    {
+      "id": "host.editorial-review",
+      "status": "manual",
+      "message": "Review the complete rendered graphic, exact values and prose for this edition."
+    }
+  ],
+  "reviewMatches": false,
+  "evaluation": {
+    "status": "conditional",
+    "policy": {
+      "id": "exploratory",
+      "version": "0.1",
+      "appliedExceptions": [],
+      "rejectedExceptions": []
+    },
+    "validation": {
+      "artifact": {
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      "chart": {
+        "valid": true,
+        "errors": []
+      }
+    },
+    "data": {
+      "component": "WaterfallChart",
+      "ok": true,
+      "rowCount": 3,
+      "summary": {
+        "fieldsChecked": 1,
+        "errors": 0,
+        "warnings": 0
+      },
+      "contracts": [
+        {
+          "role": "y",
+          "accessor": "change",
+          "dataProp": "data",
+          "requirements": [
+            "finite"
+          ],
+          "allowMissing": false,
+          "domain": false
+        }
+      ],
+      "diagnoses": []
+    },
+    "claims": {
+      "ok": true,
+      "claims": 2,
+      "evidence": 1,
+      "summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 3,
+        "manual": 0,
+        "unknown": 0,
+        "notApplicable": 0
+      },
+      "findings": [
+        {
+          "id": "claims.model-review.estimate-2026-03-06-2025-06-v1",
+          "relation": "accountability",
+          "status": "warn",
+          "path": "claims[0].review",
+          "message": "Generated claim \"estimate-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review.",
+          "repair": "Record the reviewer and review time, or leave the claim provisional or unknown."
+        },
+        {
+          "id": "claims.references-valid.estimate-2026-03-06-2025-06-v1",
+          "relation": "claim-support",
+          "status": "pass",
+          "path": "claims[0].evidenceIds",
+          "evidenceIds": [
+            "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+          ],
+          "message": "Claim \"estimate-2026-03-06-2025-06-v1\" links to existing evidence records."
+        },
+        {
+          "id": "claims.causal-language.interpretation-2026-03-06-2025-06-v1",
+          "relation": "claim-support",
+          "status": "warn",
+          "path": "claims[1].text",
+          "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" uses causal language without a declared causal basis.",
+          "repair": "Use associational language or link evidence that supports causal identification."
+        },
+        {
+          "id": "claims.model-review.interpretation-2026-03-06-2025-06-v1",
+          "relation": "accountability",
+          "status": "warn",
+          "path": "claims[1].review",
+          "message": "Generated claim \"interpretation-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review.",
+          "repair": "Record the reviewer and review time, or leave the claim provisional or unknown."
+        },
+        {
+          "id": "claims.references-valid.interpretation-2026-03-06-2025-06-v1",
+          "relation": "claim-support",
+          "status": "pass",
+          "path": "claims[1].evidenceIds",
+          "evidenceIds": [
+            "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+          ],
+          "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" links to existing evidence records."
+        }
+      ]
+    },
+    "temporal": {
+      "ok": true,
+      "sources": 0,
+      "summary": {
+        "pass": 0,
+        "fail": 0,
+        "warn": 0,
+        "manual": 0,
+        "unknown": 0,
+        "notApplicable": 0
+      },
+      "findings": []
+    },
+    "accessibility": {
+      "component": "WaterfallChart",
+      "ok": true,
+      "summary": {
+        "criticalsPassed": 11,
+        "criticalsEvaluated": 14,
+        "fails": 0,
+        "warnings": 2,
+        "manual": 7,
+        "passes": 17
+      },
+      "findings": [
+        {
+          "id": "perceivable.low-contrast",
+          "principle": "perceivable",
+          "heuristic": "Low contrast",
+          "critical": true,
+          "status": "manual",
+          "message": "Mark colors come from the theme/CSS variables — contrast can't be verified statically.",
+          "fix": "Confirm geometries/large text have ≥ 3:1 and regular text ≥ 4.5:1 contrast against the background."
+        },
+        {
+          "id": "perceivable.content-only-visual",
+          "principle": "perceivable",
+          "heuristic": "Content is only visual",
+          "critical": true,
+          "status": "pass",
+          "message": "A screen-reader data table + live region expose the data non-visually (accessibleTable is on)."
+        },
+        {
+          "id": "perceivable.small-text",
+          "principle": "perceivable",
+          "heuristic": "Small text size",
+          "critical": true,
+          "status": "pass",
+          "message": "Semiotic's default tick and axis-label fonts are 12px, meeting Chartability's 9pt/12px floor.",
+          "fix": "If a theme or override lowers --semiotic-tick-font-size below 12px, raise it back for low-vision audiences."
+        },
+        {
+          "id": "perceivable.seizure-risk",
+          "principle": "perceivable",
+          "heuristic": "Visual presents seizure risk",
+          "critical": true,
+          "status": "manual",
+          "message": "No flashing detected statically. Confirm no element flashes more than 3×/sec.",
+          "fix": "Manual check — most static charts pass trivially."
+        },
+        {
+          "id": "operable.single-input-modality",
+          "principle": "operable",
+          "heuristic": "Interaction modality only has one input type",
+          "critical": true,
+          "status": "pass",
+          "message": "Built-in keyboard navigation (arrows/Home/End/PageUp-Down/Enter) mirrors mouse hover."
+        },
+        {
+          "id": "operable.tab-stops",
+          "principle": "operable",
+          "heuristic": "Inappropriate tab stops",
+          "critical": false,
+          "status": "pass",
+          "message": "The chart takes a single tab stop and navigates data with arrow keys — the recommended pattern for dense charts (no per-datum tab stops to wade through)."
+        },
+        {
+          "id": "operable.interaction-cues",
+          "principle": "operable",
+          "heuristic": "No interaction cues or instructions",
+          "critical": true,
+          "status": "manual",
+          "message": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer).",
+          "fix": "State the interaction model in summary, e.g. \"Use arrow keys to move between points.\""
+        },
+        {
+          "id": "operable.controls-override-at",
+          "principle": "operable",
+          "heuristic": "Controls override AT controls",
+          "critical": true,
+          "status": "pass",
+          "message": "Keyboard handlers fire only while the chart has focus, so they don't hijack page/app screen-reader shortcuts."
+        },
+        {
+          "id": "operable.focus-indicator",
+          "principle": "operable",
+          "heuristic": "Keyboard focus indicator missing, obscured, or low contrast",
+          "critical": false,
+          "status": "pass",
+          "message": "A shape-adaptive focus ring (var(--semiotic-focus)) marks the focused element.",
+          "fix": "Ensure --semiotic-focus keeps ≥ 3:1 contrast against your background."
+        },
+        {
+          "id": "understandable.title-summary-caption",
+          "principle": "understandable",
+          "heuristic": "No title, summary, or caption",
+          "critical": true,
+          "status": "pass",
+          "message": "Provided: title, description, summary."
+        },
+        {
+          "id": "understandable.explain-purpose",
+          "principle": "understandable",
+          "heuristic": "No explanation for purpose or for how to read",
+          "critical": true,
+          "status": "pass",
+          "message": "A description/summary is available to explain purpose and how to read the chart."
+        },
+        {
+          "id": "understandable.reading-level",
+          "principle": "understandable",
+          "heuristic": "Reading level inappropriate",
+          "critical": true,
+          "status": "pass",
+          "message": "Description/summary reads at ~grade 4 (≤ 9)."
+        },
+        {
+          "id": "robust.conforms-to-standards",
+          "principle": "robust",
+          "heuristic": "Does not conform to standards",
+          "critical": false,
+          "status": "manual",
+          "message": "WCAG 2.1 / Section 508 conformance can't be settled from config alone.",
+          "fix": "Run an automated checker (axe) on the rendered output and test with real assistive tech."
+        },
+        {
+          "id": "robust.semantically-valid",
+          "principle": "robust",
+          "heuristic": "Semantically invalid",
+          "critical": false,
+          "status": "manual",
+          "message": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question.",
+          "fix": "Verify with a screen reader that buttons read as buttons, the chart as an image/group, etc."
+        },
+        {
+          "id": "robust.fragile-technology-support",
+          "principle": "robust",
+          "heuristic": "Fragile technology support",
+          "critical": false,
+          "status": "pass",
+          "message": "Charts render on canvas with an SVG overlay and render to SVG in SSR, so access isn't tied to one rendering path.",
+          "fix": "Still test across NVDA+Firefox, JAWS+Chrome, and VoiceOver+Safari — AT support varies."
+        },
+        {
+          "id": "compromising.table",
+          "principle": "compromising",
+          "heuristic": "No table",
+          "critical": true,
+          "status": "pass",
+          "message": "A human-readable data table is provided (accessibleTable)."
+        },
+        {
+          "id": "compromising.table-static",
+          "principle": "compromising",
+          "heuristic": "Table/data is static",
+          "critical": false,
+          "status": "warn",
+          "message": "The data table is read-only — not downloadable, sortable, or filterable.",
+          "fix": "Wrap the chart in a ChartContainer and enable its data-download action (opt-in, so deployments can withhold it where export isn't allowed)."
+        },
+        {
+          "id": "compromising.shareable-state",
+          "principle": "compromising",
+          "heuristic": "State is not easy to share and reproduce",
+          "critical": false,
+          "status": "pass",
+          "message": "Chart state serializes via toConfig/toURL/copyConfig.",
+          "fix": "Expose it to users via the ChartContainer copyConfig action or a shareable URL."
+        },
+        {
+          "id": "compromising.navigable-structure",
+          "principle": "compromising",
+          "heuristic": "Information cannot be navigated according to narrative or structure",
+          "critical": false,
+          "status": "pass",
+          "message": "Keyboard navigation steps through points and switches series/groups.",
+          "fix": "For deeper structure (axis → series → datum), enable ChartContainer's navigable option."
+        },
+        {
+          "id": "assistive.data-density",
+          "principle": "assistive",
+          "heuristic": "Data density is inappropriate",
+          "critical": true,
+          "status": "pass",
+          "message": "3 data points — a reasonable density for non-visual consumption."
+        },
+        {
+          "id": "assistive.human-readable-numbers",
+          "principle": "assistive",
+          "heuristic": "Data in text is not human-readable",
+          "critical": false,
+          "status": "warn",
+          "message": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\").",
+          "fix": "Pass valueFormat / yFormat (e.g. a compact formatter so 6,500,000 reads as \"6.5M\"); the formatter flows to ticks, tooltips, and the data table."
+        },
+        {
+          "id": "assistive.features-described",
+          "principle": "assistive",
+          "heuristic": "Visually apparent features and relationships are not described",
+          "critical": false,
+          "status": "manual",
+          "message": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is.",
+          "fix": "Cover the L2/L3 content blind readers value most: direction of trend, peak/trough, notable outliers."
+        },
+        {
+          "id": "assistive.skippable-navigation",
+          "principle": "assistive",
+          "heuristic": "Navigation and interaction is tedious",
+          "critical": true,
+          "status": "pass",
+          "message": "A \"Skip to data table\" link lets screen-reader users bypass point-by-point navigation."
+        },
+        {
+          "id": "flexible.user-style-respected",
+          "principle": "flexible",
+          "heuristic": "User style change not respected",
+          "critical": true,
+          "status": "pass",
+          "message": "Styling flows through CSS custom properties and honors forced-colors mode, so user/user-agent style changes cascade in.",
+          "fix": "Avoid hardcoding colors via frameProps style fns that bypass theme variables."
+        },
+        {
+          "id": "flexible.reduced-motion",
+          "principle": "flexible",
+          "heuristic": "Long animations cannot be controlled",
+          "critical": false,
+          "status": "pass",
+          "message": "prefers-reduced-motion is auto-detected; transitions fast-forward and looping animation stops."
+        },
+        {
+          "id": "flexible.zoom-reflow",
+          "principle": "flexible",
+          "heuristic": "Zoom and reflow are not supported",
+          "critical": false,
+          "status": "manual",
+          "message": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function.",
+          "fix": "Use responsiveWidth/responsiveHeight so the chart reflows to its container."
+        }
+      ],
+      "reference": "Chartability (POUR-CAF) — https://chartability.github.io/POUR-CAF/. Not a pass/fail cert; pair with manual screen-reader testing (NVDA+Firefox, JAWS+Chrome, VoiceOver+Safari)."
+    },
+    "design": [],
+    "render": {
+      "component": "WaterfallChart",
+      "frameType": "xy",
+      "status": "ok",
+      "empty": false,
+      "markCount": 3,
+      "markCountByType": {
+        "rect": 3
+      },
+      "width": 760,
+      "height": 340,
+      "xDomain": [
+        -0.5,
+        2.5
+      ],
+      "yDomain": [
+        -36700,
+        163700
+      ],
+      "annotationCount": 0,
+      "ariaLabel": "Each floating bar adds or subtracts a revision. Its endpoint is the running estimate, in jobs; bar length is the change between drafts, not another month's employment.",
+      "warnings": [],
+      "semanticStatus": "not-assessed",
+      "semanticDiagnostics": [],
+      "margin": {
+        "top": 36,
+        "right": 25,
+        "bottom": 56,
+        "left": 80
+      },
+      "plot": {
+        "x": 80,
+        "y": 36,
+        "width": 655,
+        "height": 248
+      },
+      "sceneHashVersion": 2,
+      "sceneHash": "b9d034cf76b9f4e8ad3a7d22aee41d182f7aa77cb2e6f2c250171f52e2c79120"
+    },
+    "obligations": [
+      {
+        "id": "identity.component",
+        "relation": "accountability",
+        "status": "pass",
+        "path": "artifact.component",
+        "message": "The contract component matches the evaluated chart."
+      },
+      {
+        "id": "identity.configuration",
+        "relation": "accountability",
+        "status": "pass",
+        "path": "artifact.configFingerprint",
+        "message": "The configuration fingerprint matches the evaluated chart."
+      },
+      {
+        "id": "identity.data",
+        "relation": "claim-support",
+        "status": "pass",
+        "path": "artifact.dataFingerprint",
+        "message": "The data fingerprint matches the evaluated data."
+      },
+      {
+        "id": "chart.compromising.table-static",
+        "relation": "reception",
+        "status": "warn",
+        "message": "The data table is read-only — not downloadable, sortable, or filterable.",
+        "repair": "Wrap the chart in a ChartContainer and enable its data-download action (opt-in, so deployments can withhold it where export isn't allowed)."
+      },
+      {
+        "id": "chart.assistive.human-readable-numbers",
+        "relation": "reception",
+        "status": "warn",
+        "message": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\").",
+        "repair": "Pass valueFormat / yFormat (e.g. a compact formatter so 6,500,000 reads as \"6.5M\"); the formatter flows to ticks, tooltips, and the data table."
+      },
+      {
+        "id": "chart.perceivable.low-contrast",
+        "relation": "reception",
+        "status": "manual",
+        "message": "Mark colors come from the theme/CSS variables — contrast can't be verified statically.",
+        "repair": "Confirm geometries/large text have ≥ 3:1 and regular text ≥ 4.5:1 contrast against the background."
+      },
+      {
+        "id": "chart.perceivable.seizure-risk",
+        "relation": "reception",
+        "status": "manual",
+        "message": "No flashing detected statically. Confirm no element flashes more than 3×/sec.",
+        "repair": "Manual check — most static charts pass trivially."
+      },
+      {
+        "id": "chart.operable.interaction-cues",
+        "relation": "reception",
+        "status": "manual",
+        "message": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer).",
+        "repair": "State the interaction model in summary, e.g. \"Use arrow keys to move between points.\""
+      },
+      {
+        "id": "chart.robust.conforms-to-standards",
+        "relation": "reception",
+        "status": "manual",
+        "message": "WCAG 2.1 / Section 508 conformance can't be settled from config alone.",
+        "repair": "Run an automated checker (axe) on the rendered output and test with real assistive tech."
+      },
+      {
+        "id": "chart.robust.semantically-valid",
+        "relation": "reception",
+        "status": "manual",
+        "message": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question.",
+        "repair": "Verify with a screen reader that buttons read as buttons, the chart as an image/group, etc."
+      },
+      {
+        "id": "chart.assistive.features-described",
+        "relation": "reception",
+        "status": "manual",
+        "message": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is.",
+        "repair": "Cover the L2/L3 content blind readers value most: direction of trend, peak/trough, notable outliers."
+      },
+      {
+        "id": "chart.flexible.zoom-reflow",
+        "relation": "reception",
+        "status": "manual",
+        "message": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function.",
+        "repair": "Use responsiveWidth/responsiveHeight so the chart reflows to its container."
+      },
+      {
+        "id": "claims.model-review.estimate-2026-03-06-2025-06-v1",
+        "relation": "accountability",
+        "status": "warn",
+        "path": "claims[0].review",
+        "message": "Generated claim \"estimate-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review.",
+        "repair": "Record the reviewer and review time, or leave the claim provisional or unknown."
+      },
+      {
+        "id": "claims.references-valid.estimate-2026-03-06-2025-06-v1",
+        "relation": "claim-support",
+        "status": "pass",
+        "path": "claims[0].evidenceIds",
+        "evidenceIds": [
+          "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+        ],
+        "message": "Claim \"estimate-2026-03-06-2025-06-v1\" links to existing evidence records."
+      },
+      {
+        "id": "claims.causal-language.interpretation-2026-03-06-2025-06-v1",
+        "relation": "claim-support",
+        "status": "warn",
+        "path": "claims[1].text",
+        "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" uses causal language without a declared causal basis.",
+        "repair": "Use associational language or link evidence that supports causal identification."
+      },
+      {
+        "id": "claims.model-review.interpretation-2026-03-06-2025-06-v1",
+        "relation": "accountability",
+        "status": "warn",
+        "path": "claims[1].review",
+        "message": "Generated claim \"interpretation-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review.",
+        "repair": "Record the reviewer and review time, or leave the claim provisional or unknown."
+      },
+      {
+        "id": "claims.references-valid.interpretation-2026-03-06-2025-06-v1",
+        "relation": "claim-support",
+        "status": "pass",
+        "path": "claims[1].evidenceIds",
+        "evidenceIds": [
+          "source-ces-2024-2025-3c54450c09ec-v1-2026-03-06"
+        ],
+        "message": "Claim \"interpretation-2026-03-06-2025-06-v1\" links to existing evidence records."
+      },
+      {
+        "id": "contract.form",
+        "relation": "representation-fit",
+        "status": "pass",
+        "path": "form",
+        "message": "The artifact declares its form rationale."
+      },
+      {
+        "id": "contract.reception",
+        "relation": "reception",
+        "status": "pass",
+        "path": "reception",
+        "message": "The artifact declares its reception contract."
+      },
+      {
+        "id": "contract.contestability",
+        "relation": "challenge-and-correction",
+        "status": "pass",
+        "path": "contestability",
+        "message": "The artifact declares its challenge and correction path."
+      },
+      {
+        "id": "contract.accountability",
+        "relation": "accountability",
+        "status": "pass",
+        "path": "accountability",
+        "message": "The artifact declares its authorship and review history."
+      },
+      {
+        "id": "contract.inheritance",
+        "relation": "preservation",
+        "status": "pass",
+        "path": "inheritance",
+        "message": "The artifact declares its preservation contract."
+      },
+      {
+        "id": "field.accountability.reviews",
+        "relation": "accountability",
+        "status": "manual",
+        "path": "accountability.reviews",
+        "message": "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception."
+      },
+      {
+        "id": "policy.relation.claim-support",
+        "relation": "claim-support",
+        "status": "pass",
+        "message": "The artifact declares information for the required claim-support relation."
+      },
+      {
+        "id": "policy.relation.representation-fit",
+        "relation": "representation-fit",
+        "status": "pass",
+        "message": "The artifact declares information for the required representation-fit relation."
+      }
+    ],
+    "alternatives": [],
+    "repairs": [
+      {
+        "id": "repair.chart.compromising.table-static",
+        "category": "configuration",
+        "action": "Wrap the chart in a ChartContainer and enable its data-download action (opt-in, so deployments can withhold it where export isn't allowed).",
+        "reason": "The data table is read-only — not downloadable, sortable, or filterable.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.assistive.human-readable-numbers",
+        "category": "configuration",
+        "action": "Pass valueFormat / yFormat (e.g. a compact formatter so 6,500,000 reads as \"6.5M\"); the formatter flows to ticks, tooltips, and the data table.",
+        "reason": "Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. \"six hundred fifty thousand…\").",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.perceivable.low-contrast",
+        "category": "configuration",
+        "action": "Confirm geometries/large text have ≥ 3:1 and regular text ≥ 4.5:1 contrast against the background.",
+        "reason": "Mark colors come from the theme/CSS variables — contrast can't be verified statically.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.perceivable.seizure-risk",
+        "category": "configuration",
+        "action": "Manual check — most static charts pass trivially.",
+        "reason": "No flashing detected statically. Confirm no element flashes more than 3×/sec.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.operable.interaction-cues",
+        "category": "configuration",
+        "action": "State the interaction model in summary, e.g. \"Use arrow keys to move between points.\"",
+        "reason": "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer).",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.robust.conforms-to-standards",
+        "category": "configuration",
+        "action": "Run an automated checker (axe) on the rendered output and test with real assistive tech.",
+        "reason": "WCAG 2.1 / Section 508 conformance can't be settled from config alone.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.robust.semantically-valid",
+        "category": "configuration",
+        "action": "Verify with a screen reader that buttons read as buttons, the chart as an image/group, etc.",
+        "reason": "Whether interactive elements expose correct roles/names is a render-time, screen-reader question.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.assistive.features-described",
+        "category": "configuration",
+        "action": "Cover the L2/L3 content blind readers value most: direction of trend, peak/trough, notable outliers.",
+        "reason": "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.chart.flexible.zoom-reflow",
+        "category": "configuration",
+        "action": "Use responsiveWidth/responsiveHeight so the chart reflows to its container.",
+        "reason": "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.claims.model-review.estimate-2026-03-06-2025-06-v1",
+        "category": "contract",
+        "path": "claims[0].review",
+        "action": "Record the reviewer and review time, or leave the claim provisional or unknown.",
+        "reason": "Generated claim \"estimate-2026-03-06-2025-06-v1\" is marked supported without an attributable, timestamped review.",
+        "changesClaim": false
+      },
+      {
+        "id": "repair.claims.causal-language.interpretation-2026-03-06-2025-06-v1",
+        "category": "contract",
+        "path": "claims[1].text",
+        "action": "Use associational language or link evidence that supports causal identification.",
+        "reason": "Claim \"interpretation-2026-03-06-2025-06-v1\" uses causal language without a declared causal basis.",
+        "changesClaim": true
+      }
+    ],
+    "manualChecks": [
+      "Low contrast",
+      "Visual presents seizure risk",
+      "No interaction cues or instructions",
+      "Does not conform to standards",
+      "Semantically invalid",
+      "Visually apparent features and relationships are not described",
+      "Zoom and reflow are not supported",
+      "Mark colors come from the theme/CSS variables — contrast can't be verified statically.",
+      "No flashing detected statically. Confirm no element flashes more than 3×/sec.",
+      "Chart is interactive and has descriptive text. Confirm that text explains how to interact (keyboard + pointer).",
+      "WCAG 2.1 / Section 508 conformance can't be settled from config alone.",
+      "Whether interactive elements expose correct roles/names is a render-time, screen-reader question.",
+      "A summary is present. Confirm it describes trends, extrema, clusters, and outliers — not just what the chart is.",
+      "Fixed width/height — verify the chart survives browser zoom and reflow without clipping or loss of function.",
+      "No human editorial approval is recorded. Inspect the dates, prose, chart and source exception."
+    ]
+  },
+  "reason": "Export completion and CLI exit zero do not authorize publication. Open checks remain attached."
+}

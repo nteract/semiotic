@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "seriesId": "CES0000000001",
+  "distributorSeriesId": "PAYEMS",
+  "unit": "thousand jobs",
+  "seasonalAdjustment": "seasonally adjusted",
+  "geography": "United States",
+  "publisher": "U.S. Bureau of Labor Statistics",
+  "distributor": "ALFRED, Federal Reserve Bank of St. Louis",
+  "source": "https://alfred.stlouisfed.org/series?seid=PAYEMS",
+  "sourceTerms": "BLS public-domain data; cite BLS and ALFRED. No endorsement implied.",
+  "termsURL": "https://www.bls.gov/bls/linksite.htm",
+  "calendarSource": "https://www.bls.gov/bls/news-release/empsit.htm",
+  "requestedReferenceMonths": [
+    "2024-01",
+    "2025-12"
+  ],
+  "baselineReferenceMonth": "2023-12",
+  "captureStartedAt": "2026-09-07T20:08:09.733Z",
+  "unavailableFirstReleases": [
+    {
+      "referenceMonth": "2025-10",
+      "reason": "BLS did not publish an October 2025 Employment Situation release during the lapse in appropriations. The December 16 estimate is second preliminary, not a first estimate."
+    }
+  ],
+  "notes": [
+    "Raw bytes are ALFRED's dated CSV distribution of BLS CES levels, not the CES vintage workbook.",
+    "BLS XLSX and ZIP access returned HTTP 403 during this capture; workbook-cell verification remains a separate admission check.",
+    "First and third labels follow the BLS reference-period release sequence, including the 2025 shutdown gap. They are not assigned by counting downloaded files.",
+    "February 7, 2025 and February 11, 2026 incorporate annual benchmark/seasonal updates. Revisions spanning those releases cannot be attributed solely to late survey responses."
+  ],
+  "files": [
+    {
+      "file": "PAYEMS-2024-02-02.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-02-02",
+      "referenceMonth": "2024-01",
+      "releaseDate": "2024-02-02",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_02022024.htm",
+      "retrievedAt": "2026-09-07T20:08:10.405Z",
+      "bytes": 69,
+      "sha256": "89bf3f49ecbbb2e55fd1bc9356825be0d426243026b2249b57b2f3e1f71688f5"
+    },
+    {
+      "file": "PAYEMS-2024-03-08.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-03-08",
+      "referenceMonth": "2024-02",
+      "releaseDate": "2024-03-08",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_03082024.htm",
+      "retrievedAt": "2026-09-07T20:08:10.910Z",
+      "bytes": 87,
+      "sha256": "748227ed1ae89fd1b50b43595015c475223bd1359cd3e90f5ae01c4f2c054586"
+    },
+    {
+      "file": "PAYEMS-2024-04-05.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-04-05",
+      "referenceMonth": "2024-03",
+      "releaseDate": "2024-04-05",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_04052024.htm",
+      "retrievedAt": "2026-09-07T20:08:11.364Z",
+      "bytes": 105,
+      "sha256": "1df6fedec89a7df449569632901bf5dabe70feb6ffb22d2d333fe9e95fd5830b"
+    },
+    {
+      "file": "PAYEMS-2024-05-03.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-05-03",
+      "referenceMonth": "2024-04",
+      "releaseDate": "2024-05-03",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_05032024.htm",
+      "retrievedAt": "2026-09-07T20:08:11.798Z",
+      "bytes": 123,
+      "sha256": "0ebe3f4c4479cbdc2b4502889b028d05a030db68994eefc65cc4f9f3cdd99362"
+    },
+    {
+      "file": "PAYEMS-2024-06-07.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-06-07",
+      "referenceMonth": "2024-05",
+      "releaseDate": "2024-06-07",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_06072024.htm",
+      "retrievedAt": "2026-09-07T20:08:12.757Z",
+      "bytes": 141,
+      "sha256": "fb4034afc35ac20e580611a1bfb3ec1ec9a806edae01e6bdfc5ceb6fcb98843b"
+    },
+    {
+      "file": "PAYEMS-2024-07-05.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-07-05",
+      "referenceMonth": "2024-06",
+      "releaseDate": "2024-07-05",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_07052024.htm",
+      "retrievedAt": "2026-09-07T20:08:13.372Z",
+      "bytes": 159,
+      "sha256": "35461c6c0c02a85bccb3e86a9e62c63c7383b13ed12242af183659415c93bd1f"
+    },
+    {
+      "file": "PAYEMS-2024-08-02.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-08-02",
+      "referenceMonth": "2024-07",
+      "releaseDate": "2024-08-02",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_08022024.htm",
+      "retrievedAt": "2026-09-07T20:08:13.780Z",
+      "bytes": 177,
+      "sha256": "a6da40970a594f451db4e416aef9d8f5d8ae55c4be1732f4c92b3e29e2322465"
+    },
+    {
+      "file": "PAYEMS-2024-09-06.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-09-06",
+      "referenceMonth": "2024-08",
+      "releaseDate": "2024-09-06",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_09062024.htm",
+      "retrievedAt": "2026-09-07T20:08:14.260Z",
+      "bytes": 195,
+      "sha256": "852adaf0f6dde32c3056cd161331b0e6e88edd9c5200192251638351295a0fb5"
+    },
+    {
+      "file": "PAYEMS-2024-10-04.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-10-04",
+      "referenceMonth": "2024-09",
+      "releaseDate": "2024-10-04",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_10042024.htm",
+      "retrievedAt": "2026-09-07T20:08:14.682Z",
+      "bytes": 213,
+      "sha256": "b223b4891b61828e8ae5d5287bbfddc4c10710a060446f27a7d6f47f0f57c9c5"
+    },
+    {
+      "file": "PAYEMS-2024-11-01.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-11-01",
+      "referenceMonth": "2024-10",
+      "releaseDate": "2024-11-01",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_11012024.htm",
+      "retrievedAt": "2026-09-07T20:08:15.112Z",
+      "bytes": 231,
+      "sha256": "c85e22d342f77bc4ed38fda338286ca6f0f327e5f6f4ec7a0c74b5b45c2e6ec4"
+    },
+    {
+      "file": "PAYEMS-2024-12-06.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2024-12-06",
+      "referenceMonth": "2024-11",
+      "releaseDate": "2024-12-06",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_12062024.htm",
+      "retrievedAt": "2026-09-07T20:08:15.489Z",
+      "bytes": 249,
+      "sha256": "e5bc86908e65f5d1687211ab2ca3c705c0b2163a3e62a97579ca5219079d1fe7"
+    },
+    {
+      "file": "PAYEMS-2025-01-10.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-01-10",
+      "referenceMonth": "2024-12",
+      "releaseDate": "2025-01-10",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_01102025.htm",
+      "retrievedAt": "2026-09-07T20:08:15.964Z",
+      "bytes": 267,
+      "sha256": "63da5909b7c30ebc157d00a6af7d53b7a7216c222e9bdd928c29e9f3c226f903"
+    },
+    {
+      "file": "PAYEMS-2025-02-07.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-02-07",
+      "referenceMonth": "2025-01",
+      "releaseDate": "2025-02-07",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_02072025.htm",
+      "retrievedAt": "2026-09-07T20:08:16.452Z",
+      "bytes": 285,
+      "sha256": "8ab6beddf8c11d75da966aa7a7788bbcdfb1a318c0be5d16388b788f095a2d11"
+    },
+    {
+      "file": "PAYEMS-2025-03-07.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-03-07",
+      "referenceMonth": "2025-02",
+      "releaseDate": "2025-03-07",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_03072025.htm",
+      "retrievedAt": "2026-09-07T20:08:16.942Z",
+      "bytes": 303,
+      "sha256": "96bf9e229add8be51e8c83da828366d50ef7a10d6553207edfa8910e6d9e6ea8"
+    },
+    {
+      "file": "PAYEMS-2025-04-04.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-04-04",
+      "referenceMonth": "2025-03",
+      "releaseDate": "2025-04-04",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_04042025.htm",
+      "retrievedAt": "2026-09-07T20:08:17.485Z",
+      "bytes": 321,
+      "sha256": "87f99f2edb071e1f5299a777db9b641703dd0ae9cf0a6385d949ea6abc1da870"
+    },
+    {
+      "file": "PAYEMS-2025-05-02.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-05-02",
+      "referenceMonth": "2025-04",
+      "releaseDate": "2025-05-02",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_05022025.htm",
+      "retrievedAt": "2026-09-07T20:08:17.901Z",
+      "bytes": 339,
+      "sha256": "bce866da7de64b7944b964514d68db6e3267d4ab099524e5701d241c48343794"
+    },
+    {
+      "file": "PAYEMS-2025-06-06.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-06-06",
+      "referenceMonth": "2025-05",
+      "releaseDate": "2025-06-06",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_06062025.htm",
+      "retrievedAt": "2026-09-07T20:08:18.705Z",
+      "bytes": 357,
+      "sha256": "e20fb1097b36dce137b33cea15ff8330ad48f368fee8c3ccd7eb26ac1abd73e3"
+    },
+    {
+      "file": "PAYEMS-2025-07-03.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-07-03",
+      "referenceMonth": "2025-06",
+      "releaseDate": "2025-07-03",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_07032025.htm",
+      "retrievedAt": "2026-09-07T20:08:19.184Z",
+      "bytes": 375,
+      "sha256": "3b37ba0123987a239a81c0362726db06c82f5cce6de428d09cd0ad9c665700e4"
+    },
+    {
+      "file": "PAYEMS-2025-08-01.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-08-01",
+      "referenceMonth": "2025-07",
+      "releaseDate": "2025-08-01",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_08012025.htm",
+      "retrievedAt": "2026-09-07T20:08:19.657Z",
+      "bytes": 393,
+      "sha256": "c12abe49f060217092f347d3bb4b5368c26bfbba784dbc7af2162cf6b29c0b8a"
+    },
+    {
+      "file": "PAYEMS-2025-09-05.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-09-05",
+      "referenceMonth": "2025-08",
+      "releaseDate": "2025-09-05",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_09052025.htm",
+      "retrievedAt": "2026-09-07T20:08:20.134Z",
+      "bytes": 411,
+      "sha256": "116571ec958c6bf8df18caaeb0825d4d33c3b5b3dc2b8be0ff7feacbca480104"
+    },
+    {
+      "file": "PAYEMS-2025-11-20.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-11-20",
+      "referenceMonth": "2025-09",
+      "releaseDate": "2025-11-20",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_11202025.htm",
+      "retrievedAt": "2026-09-07T20:08:20.656Z",
+      "bytes": 429,
+      "sha256": "d7c09ec86aa6509cb540f80aa9a2141d5b3bcd4a7bd58413597cd3900e6362ad"
+    },
+    {
+      "file": "PAYEMS-2025-12-16.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2025-12-16",
+      "referenceMonth": "2025-11",
+      "releaseDate": "2025-12-16",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_12162025.htm",
+      "retrievedAt": "2026-09-07T20:08:21.089Z",
+      "bytes": 465,
+      "sha256": "0729a917f9424ff54383bb5b6821530e7f7601d970154213e84cd240de1cbd14"
+    },
+    {
+      "file": "PAYEMS-2026-01-09.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2026-01-09",
+      "referenceMonth": "2025-12",
+      "releaseDate": "2026-01-09",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_01092026.htm",
+      "retrievedAt": "2026-09-07T20:08:21.447Z",
+      "bytes": 483,
+      "sha256": "2d62e046d994b0f1e72cd3671f2683a45ec5c953e906060d64473addb02b02ef"
+    },
+    {
+      "file": "PAYEMS-2026-02-11.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2026-02-11",
+      "referenceMonth": "2026-01",
+      "releaseDate": "2026-02-11",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_02112026.htm",
+      "retrievedAt": "2026-09-07T20:08:21.861Z",
+      "bytes": 483,
+      "sha256": "f67e4a9ab3c37cacfe3fcf241a9220bf52a257871e40ee62b5e7f9f9da3086c4"
+    },
+    {
+      "file": "PAYEMS-2026-03-06.csv",
+      "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=PAYEMS&cosd=2023-12-01&coed=2025-12-01&vintage_date=2026-03-06",
+      "referenceMonth": "2026-02",
+      "releaseDate": "2026-03-06",
+      "releaseURL": "https://www.bls.gov/news.release/archives/empsit_03062026.htm",
+      "retrievedAt": "2026-09-07T20:08:22.385Z",
+      "bytes": 483,
+      "sha256": "be9d36fbbcd12ccecc8675420a43137da5f6a02a53ef1a206f617195ad3a9e87"
+    }
+  ]
+}

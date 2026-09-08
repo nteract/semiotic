@@ -1,0 +1,1231 @@
+{
+  "measuredAt": "2026-09-07T22:36:53.126Z",
+  "environment": {
+    "hardware": "Apple M3 Pro",
+    "os": "darwin 25.6.0",
+    "browser": "149.0.7827.55",
+    "node": "v22.22.1"
+  },
+  "profile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "downloadBitsPerSecond": 4000000,
+    "latencyMilliseconds": 150,
+    "cache": "disabled"
+  },
+  "limitations": [
+    "Desktop proxy, not real Android; one cold navigation is not navigation p95.",
+    "Interaction samples include automation and two animation frames.",
+    "Gzip sizes are estimates; transfer bytes reflect this preview server.",
+    "No independent human reader or assistive-technology session is asserted."
+  ],
+  "readingWithoutJavaScript": true,
+  "readingWithScriptsBlocked": true,
+  "initialTransferBytes": 535108,
+  "initialScriptDecodedBytes": 1312154,
+  "initialScriptEstimatedGzipBytes": 396816,
+  "timing": {
+    "openingMilliseconds": 186.5,
+    "paints": [
+      {
+        "name": "first-paint",
+        "startTime": 488
+      },
+      {
+        "name": "first-contentful-paint",
+        "startTime": 488
+      }
+    ]
+  },
+  "controls": {
+    "reference-month": {
+      "samples": [
+        35.0131250000004,
+        32.92283299999963,
+        24.9384170000003,
+        24.88866700000017,
+        33.400916999999936,
+        25.03966700000001,
+        25.12133300000005,
+        24.95783399999982,
+        24.909958000000188,
+        24.94654200000059,
+        24.958874999999352,
+        25.056125000000065,
+        24.96337500000027,
+        25.121541999999863,
+        24.809958999999253,
+        25.087249999999585,
+        24.945458000000144,
+        26.067541999999776,
+        23.88483300000007,
+        25.296374999999898,
+        24.733500000000276,
+        24.970916000000216,
+        25.089459000000716,
+        24.93908300000021,
+        24.968708000000333,
+        26.14812499999971,
+        23.993540999999823,
+        24.060583999999835,
+        25.928499999999985,
+        24.943833000000268
+      ],
+      "p95Milliseconds": 33.400916999999936
+    },
+    "publication-date": {
+      "samples": [
+        31.791582999999264,
+        23.536041999999725,
+        26.04083400000036,
+        24.15912500000013,
+        24.852124999999432,
+        24.983625000000757,
+        25.01787499999955,
+        25.097834000000148,
+        24.830917000000227,
+        25.073708999999326,
+        25.179667000000336,
+        24.810499999999593,
+        25.019665999999233,
+        24.978000000000065,
+        24.991125000000466,
+        25.208666999999878,
+        24.797999999999774,
+        24.956584000000475,
+        16.861833999999362,
+        25.234333000000333,
+        24.574375000000146,
+        25.075708000000304,
+        25.00537499999973,
+        16.672708000000057,
+        25.24866699999984,
+        24.677834000000075,
+        16.90849999999955,
+        16.15241700000024,
+        25.338834000000134,
+        24.95958299999984
+      ],
+      "p95Milliseconds": 26.04083400000036
+    }
+  },
+  "initialResources": [
+    {
+      "path": "/examples/jobs-report/",
+      "type": "document",
+      "status": 200,
+      "decodedBytes": 44636,
+      "estimatedGzipBytes": 7677
+    },
+    {
+      "path": "/assets/rolldown-runtime-QTnfLwEv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 694,
+      "estimatedGzipBytes": 422
+    },
+    {
+      "path": "/assets/index-Dh4E_cPA.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 22268,
+      "estimatedGzipBytes": 6033
+    },
+    {
+      "path": "/prism.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 20346,
+      "estimatedGzipBytes": 5758
+    },
+    {
+      "path": "/css2",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 12459,
+      "estimatedGzipBytes": 889
+    },
+    {
+      "path": "/assets/index-DVc8_FYk.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 573591,
+      "estimatedGzipBytes": 154184
+    },
+    {
+      "path": "/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 48432,
+      "estimatedGzipBytes": 48442
+    },
+    {
+      "path": "/assets/useElementSize-BbaJFXVQ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 713,
+      "estimatedGzipBytes": 426
+    },
+    {
+      "path": "/assets/ExamplesLayout-ifuJ0OdN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2810,
+      "estimatedGzipBytes": 1124
+    },
+    {
+      "path": "/assets/useMediaPreferences-CuceNqVu.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4810,
+      "estimatedGzipBytes": 1934
+    },
+    {
+      "path": "/assets/ThemeProvider-B77NZ3kZ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 13594,
+      "estimatedGzipBytes": 3686
+    },
+    {
+      "path": "/assets/semiotic-darkmode-X-YrYas7.png",
+      "type": "image",
+      "status": 200,
+      "decodedBytes": 12398,
+      "estimatedGzipBytes": 9435
+    },
+    {
+      "path": "/assets/LineChart-BYmC8oAF.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 9716,
+      "estimatedGzipBytes": 4022
+    },
+    {
+      "path": "/assets/colorUtils-AlPUAksC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7986,
+      "estimatedGzipBytes": 3608
+    },
+    {
+      "path": "/assets/JobsReportExamplePage-CcCNUR2D.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 33704,
+      "estimatedGzipBytes": 9678
+    },
+    {
+      "path": "/assets/StreamXYFrame-BEn2aMhK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47277,
+      "estimatedGzipBytes": 15608
+    },
+    {
+      "path": "/assets/semanticInteractions-GuXUNiHN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 94476,
+      "estimatedGzipBytes": 31178
+    },
+    {
+      "path": "/assets/JobsReportExamplePage-BHCMgUAU.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 5825,
+      "estimatedGzipBytes": 1769
+    },
+    {
+      "path": "/assets/quadtree-ILdsOlH2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12320,
+      "estimatedGzipBytes": 5058
+    },
+    {
+      "path": "/assets/glyphDef-MxYw_eeX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6737,
+      "estimatedGzipBytes": 2875
+    },
+    {
+      "path": "/assets/annotationDensity-CxUggBzK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1577,
+      "estimatedGzipBytes": 783
+    },
+    {
+      "path": "/assets/annotationTypes-BI8D4yOx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 416,
+      "estimatedGzipBytes": 230
+    },
+    {
+      "path": "/assets/frameLegendOptions-4q6qvjj4.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3859,
+      "estimatedGzipBytes": 1132
+    },
+    {
+      "path": "/assets/ribbonScene-Bs-9ajAK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5249,
+      "estimatedGzipBytes": 1891
+    },
+    {
+      "path": "/assets/gradient-D5mp64Xd.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7818,
+      "estimatedGzipBytes": 2640
+    },
+    {
+      "path": "/assets/renderBackend-C353rVmQ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6146,
+      "estimatedGzipBytes": 2637
+    },
+    {
+      "path": "/assets/motionEncoding-DZfpmIvs.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2114,
+      "estimatedGzipBytes": 1003
+    },
+    {
+      "path": "/assets/lifecycleBands-DNvEeDEn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 305,
+      "estimatedGzipBytes": 211
+    },
+    {
+      "path": "/assets/normalizeXYData-6LR3kjjN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 48012,
+      "estimatedGzipBytes": 12673
+    },
+    {
+      "path": "/assets/accessorUtils-DP7Jc8GA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 468,
+      "estimatedGzipBytes": 206
+    },
+    {
+      "path": "/assets/temporalStrings-Cj6br8hi.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 542,
+      "estimatedGzipBytes": 341
+    },
+    {
+      "path": "/assets/symlog-DBi6f4Ys.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2074,
+      "estimatedGzipBytes": 978
+    },
+    {
+      "path": "/assets/nice--vROP43K.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 151,
+      "estimatedGzipBytes": 138
+    },
+    {
+      "path": "/assets/time-CmbrtdoG.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 14254,
+      "estimatedGzipBytes": 4529
+    },
+    {
+      "path": "/assets/annotationStatusFilter-Cx_K-dut.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 340,
+      "estimatedGzipBytes": 218
+    },
+    {
+      "path": "/assets/frameCursorInteraction-aMSpsu-o.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 11082,
+      "estimatedGzipBytes": 3617
+    },
+    {
+      "path": "/assets/Tooltip-C-0PQSoV.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 47665,
+      "estimatedGzipBytes": 15245
+    },
+    {
+      "path": "/assets/LinkedCrosshairStore-CmYd3AY3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1101,
+      "estimatedGzipBytes": 453
+    },
+    {
+      "path": "/assets/SceneToSVG-BbhZ2xjT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12604,
+      "estimatedGzipBytes": 3559
+    },
+    {
+      "path": "/assets/paintNeeds-B7n9YpIP.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 167,
+      "estimatedGzipBytes": 142
+    },
+    {
+      "path": "/assets/frameKeyboardNavigation-CA9Am_Ak.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3715,
+      "estimatedGzipBytes": 1484
+    },
+    {
+      "path": "/assets/sceneUtils-DWgkAoc0.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 303,
+      "estimatedGzipBytes": 195
+    },
+    {
+      "path": "/assets/frameDefaultMargins-Cut1gdC2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 224,
+      "estimatedGzipBytes": 174
+    },
+    {
+      "path": "/assets/tooltipUtils-tzq5vcAO.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1954,
+      "estimatedGzipBytes": 896
+    },
+    {
+      "path": "/assets/withChartWrapper-dzbcooXf.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3232,
+      "estimatedGzipBytes": 1403
+    },
+    {
+      "path": "/assets/streamPropsHelpers-BglT-8QT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1116,
+      "estimatedGzipBytes": 595
+    },
+    {
+      "path": "/assets/selectionProvenance-C8MuQmXN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 155
+    },
+    {
+      "path": "/assets/validateChartData-Bp_59AF1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2600,
+      "estimatedGzipBytes": 1123
+    },
+    {
+      "path": "/assets/hooks-Dfx6-ojm.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 24767,
+      "estimatedGzipBytes": 8433
+    },
+    {
+      "path": "/assets/useXYBrush-CeC_r23I.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 936,
+      "estimatedGzipBytes": 520
+    },
+    {
+      "path": "/assets/useChartSetup-DrDLfOCN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2952,
+      "estimatedGzipBytes": 1325
+    },
+    {
+      "path": "/assets/useResolvedSelection-a328fSIx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 365,
+      "estimatedGzipBytes": 263
+    },
+    {
+      "path": "/assets/useFrameImperativeHandle-ezm4c6v3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2357,
+      "estimatedGzipBytes": 731
+    },
+    {
+      "path": "/assets/styleRules-DabqLBjT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1730,
+      "estimatedGzipBytes": 727
+    },
+    {
+      "path": "/assets/useSeriesFeatures-aPNC3h7w.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1920,
+      "estimatedGzipBytes": 951
+    },
+    {
+      "path": "/assets/useXYLineStyle-C6JZuCfS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 967,
+      "estimatedGzipBytes": 499
+    },
+    {
+      "path": "/assets/mergeShapeStyle-ChJbq-yw.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 357,
+      "estimatedGzipBytes": 191
+    },
+    {
+      "path": "/assets/linePlugin-CMgeHeHJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1118,
+      "estimatedGzipBytes": 598
+    },
+    {
+      "path": "/assets/pointCanvasRenderer-DVyUPhiz.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1371,
+      "estimatedGzipBytes": 633
+    },
+    {
+      "path": "/assets/renderPulse-hwidGfzN.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 659,
+      "estimatedGzipBytes": 319
+    },
+    {
+      "path": "/assets/emitPointNodes-B9UdCHi3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 354,
+      "estimatedGzipBytes": 266
+    },
+    {
+      "path": "/assets/lineCanvasRenderer-Cg9X3VxH.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2704,
+      "estimatedGzipBytes": 1108
+    },
+    {
+      "path": "/assets/areaCanvasRenderer-Csz6joJ2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3509,
+      "estimatedGzipBytes": 1262
+    },
+    {
+      "path": "/assets/areaPlugin-BQWHLtmX.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 233,
+      "estimatedGzipBytes": 177
+    },
+    {
+      "path": "/assets/areaGradient-CI1BTG_-.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 79,
+      "estimatedGzipBytes": 96
+    },
+    {
+      "path": "/assets/mixedPlugin-CZbAaJ4o.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1322,
+      "estimatedGzipBytes": 610
+    },
+    {
+      "path": "/assets/areaScene-BnDJcYBA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2909,
+      "estimatedGzipBytes": 1272
+    },
+    {
+      "path": "/assets/xyLineStyle-DaO5J9Ae.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 510,
+      "estimatedGzipBytes": 369
+    },
+    {
+      "path": "/assets/waterfallPlugin-b4vg7Pl6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1177,
+      "estimatedGzipBytes": 708
+    },
+    {
+      "path": "/assets/WaterfallChart-Boj_wflO.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5363,
+      "estimatedGzipBytes": 2236
+    },
+    {
+      "path": "/assets/waterfallCanvasRenderer-DHEmeX3y.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 553,
+      "estimatedGzipBytes": 388
+    },
+    {
+      "path": "/assets/barCanvasRenderer-C50s0G0g.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2502,
+      "estimatedGzipBytes": 1032
+    },
+    {
+      "path": "/assets/ExamplePageLayout-Dz5X1BFH.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 53521,
+      "estimatedGzipBytes": 10862
+    },
+    {
+      "path": "/assets/BlocksView-DZbNij-p.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 8859,
+      "estimatedGzipBytes": 1828
+    },
+    {
+      "path": "/assets/CodeBlock-DiBnOuEs.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3465,
+      "estimatedGzipBytes": 1444
+    },
+    {
+      "path": "/assets/examplesManifest-BwnVkoXh.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 749,
+      "estimatedGzipBytes": 362
+    },
+    {
+      "path": "/assets/fingerprint-CxTwB46U.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5615,
+      "estimatedGzipBytes": 2284
+    },
+    {
+      "path": "/assets/packet-B6KqnhEF.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 9367,
+      "estimatedGzipBytes": 4101
+    },
+    {
+      "path": "/assets/contract-Djld_FJK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 8932,
+      "estimatedGzipBytes": 2999
+    },
+    {
+      "path": "/assets/jsonCompatibility-_U0JBjec.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1265,
+      "estimatedGzipBytes": 643
+    },
+    {
+      "path": "/assets/grounding-CWwjckAv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 10197,
+      "estimatedGzipBytes": 3776
+    },
+    {
+      "path": "/assets/identity-CdmKUW6a.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 23573,
+      "estimatedGzipBytes": 6126
+    },
+    {
+      "path": "/assets/readerGrounding-CD2ROJnW.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 8912,
+      "estimatedGzipBytes": 3436
+    },
+    {
+      "path": "/assets/recipeSemantics-roRG-0YC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1275,
+      "estimatedGzipBytes": 634
+    },
+    {
+      "path": "/assets/describeChart-B6pekhqo.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 23124,
+      "estimatedGzipBytes": 8551
+    },
+    {
+      "path": "/assets/chartRecipeRegistry-CniUBoc1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 11143,
+      "estimatedGzipBytes": 3890
+    },
+    {
+      "path": "/assets/controlContract-DcIr2biC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 350,
+      "estimatedGzipBytes": 243
+    },
+    {
+      "path": "/assets/navigationTree-CLhD5Tv7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 15985,
+      "estimatedGzipBytes": 5461
+    },
+    {
+      "path": "/assets/recordProjection-B2pY6Cu8.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3088,
+      "estimatedGzipBytes": 1337
+    },
+    {
+      "path": "/assets/inheritance-Bq3O0iEl.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 11369,
+      "estimatedGzipBytes": 3683
+    },
+    {
+      "path": "/assets/temporal-BWoYLjh3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 19785,
+      "estimatedGzipBytes": 5885
+    },
+    {
+      "path": "/assets/claims-CDU4w6fR.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 19361,
+      "estimatedGzipBytes": 5138
+    },
+    {
+      "path": "/stories/jobs-report/ces-2024-2025-3c54450c09ec-v1/tools/opening-waterfall.phone.svg",
+      "type": "image",
+      "status": 200,
+      "decodedBytes": 3671,
+      "estimatedGzipBytes": 991
+    },
+    {
+      "path": "/assets/PilotExamplePanels-D5-C4zWF.css",
+      "type": "stylesheet",
+      "status": 200,
+      "decodedBytes": 647,
+      "estimatedGzipBytes": 321
+    },
+    {
+      "path": "/assets/PilotExamplePanels-sIplzzYn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3468,
+      "estimatedGzipBytes": 1207
+    },
+    {
+      "path": "/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOlOVk6OThhvA.woff2",
+      "type": "font",
+      "status": 200,
+      "decodedBytes": 21212,
+      "estimatedGzipBytes": 21240
+    }
+  ],
+  "optionalExportResources": [
+    {
+      "path": "/assets/export-runtime-jkTA-cOU.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 9163,
+      "estimatedGzipBytes": 4695
+    },
+    {
+      "path": "/assets/semiotic-server-BMMhj2Tz.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 159,
+      "estimatedGzipBytes": 145
+    },
+    {
+      "path": "/assets/range-EplFIxc7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 175,
+      "estimatedGzipBytes": 164
+    },
+    {
+      "path": "/assets/customLayoutPalette-BZ_SGwsJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 359,
+      "estimatedGzipBytes": 270
+    },
+    {
+      "path": "/assets/sankeyLayoutPlugin-ChqViCwS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 29673,
+      "estimatedGzipBytes": 8034
+    },
+    {
+      "path": "/assets/geoAnnotationAnchors-BFjonJ4Y.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 52617,
+      "estimatedGzipBytes": 17484
+    },
+    {
+      "path": "/assets/identity-Dfvzj6n2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 38,
+      "estimatedGzipBytes": 58
+    },
+    {
+      "path": "/assets/min-DKkL9U9e.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 381,
+      "estimatedGzipBytes": 163
+    },
+    {
+      "path": "/assets/forceLayoutNodeSize-BqQ8wOb_.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1451,
+      "estimatedGzipBytes": 701
+    },
+    {
+      "path": "/assets/devDataAccessWarning-D8DMnPh1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 40,
+      "estimatedGzipBytes": 60
+    },
+    {
+      "path": "/assets/ribbonGeometry-D39S7kqb.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 322,
+      "estimatedGzipBytes": 242
+    },
+    {
+      "path": "/assets/renderToStaticSVG-BnGXUeb9.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 356088,
+      "estimatedGzipBytes": 103030
+    },
+    {
+      "path": "/assets/sequential-Cx1ojrlo.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 926,
+      "estimatedGzipBytes": 448
+    },
+    {
+      "path": "/assets/orbitLayoutPlugin-DfMxqGoT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5806,
+      "estimatedGzipBytes": 2532
+    },
+    {
+      "path": "/assets/ordinalSceneSVG-BZvxqtyO.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 50345,
+      "estimatedGzipBytes": 14940
+    },
+    {
+      "path": "/assets/hierarchyLayoutPlugin-Dt3VI6nh.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 18955,
+      "estimatedGzipBytes": 6966
+    },
+    {
+      "path": "/assets/regressionUtils-baCYpvp3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 414,
+      "estimatedGzipBytes": 217
+    },
+    {
+      "path": "/assets/marginType-DJCAAiW4.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 295,
+      "estimatedGzipBytes": 162
+    },
+    {
+      "path": "/assets/parallelCoordinates-D4hzA2O1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12246,
+      "estimatedGzipBytes": 4987
+    },
+    {
+      "path": "/assets/recipeUtils-DgF3N6LS.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4147,
+      "estimatedGzipBytes": 1933
+    },
+    {
+      "path": "/assets/BumpChart.semanticViability-BgYB1mMm.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1364,
+      "estimatedGzipBytes": 793
+    },
+    {
+      "path": "/assets/recipeChrome-B8pyUrVq.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3620,
+      "estimatedGzipBytes": 1521
+    },
+    {
+      "path": "/assets/areaSeriesData-DblUCWbn.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 460,
+      "estimatedGzipBytes": 311
+    },
+    {
+      "path": "/assets/differenceSegments-QNwNBQv9.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1283,
+      "estimatedGzipBytes": 581
+    },
+    {
+      "path": "/assets/heatmapStyleRules-BlOPD-Om.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 366,
+      "estimatedGzipBytes": 237
+    },
+    {
+      "path": "/assets/gaugeGradient-DhxUGwwj.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7032,
+      "estimatedGzipBytes": 3019
+    },
+    {
+      "path": "/assets/forceLayoutPlugin-96qfeuZ7.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5044,
+      "estimatedGzipBytes": 2280
+    },
+    {
+      "path": "/assets/y-D4s7u4_n.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7061,
+      "estimatedGzipBytes": 2567
+    },
+    {
+      "path": "/assets/timer-iYmmyxKa.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2744,
+      "estimatedGzipBytes": 1262
+    },
+    {
+      "path": "/assets/networkUtils-D9HLE1sf.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1655,
+      "estimatedGzipBytes": 728
+    },
+    {
+      "path": "/assets/chordLayoutPlugin-CvroujgJ.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 8276,
+      "estimatedGzipBytes": 2964
+    },
+    {
+      "path": "/assets/realtimeStyleRules-CqYpkMYI.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 878,
+      "estimatedGzipBytes": 496
+    },
+    {
+      "path": "/assets/streamingLayout-NSOUWpUk.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 65317,
+      "estimatedGzipBytes": 21405
+    },
+    {
+      "path": "/assets/registerBuiltIn-BD1g7I8E.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 761,
+      "estimatedGzipBytes": 387
+    },
+    {
+      "path": "/assets/pointPlugin-BQHPjTKC.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1275,
+      "estimatedGzipBytes": 703
+    },
+    {
+      "path": "/assets/symbolCanvasRenderer-ahD3LGQt.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1069,
+      "estimatedGzipBytes": 557
+    },
+    {
+      "path": "/assets/customPlugin-D7e4NWc1.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 728,
+      "estimatedGzipBytes": 355
+    },
+    {
+      "path": "/assets/glyphCanvasRenderer-DBrUkJf6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1048,
+      "estimatedGzipBytes": 560
+    },
+    {
+      "path": "/assets/heatmapCanvasRenderer-CYCPIb-m.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1134,
+      "estimatedGzipBytes": 693
+    },
+    {
+      "path": "/assets/candlestickCanvasRenderer-DeQSKvw2.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 947,
+      "estimatedGzipBytes": 499
+    },
+    {
+      "path": "/assets/swarmCanvasRenderer-w4R5MNwg.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 72,
+      "estimatedGzipBytes": 88
+    },
+    {
+      "path": "/assets/stackedAreaPlugin-D1gmQqvj.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 235,
+      "estimatedGzipBytes": 180
+    },
+    {
+      "path": "/assets/heatmapPlugin-B-1ILBY4.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 4201,
+      "estimatedGzipBytes": 1854
+    },
+    {
+      "path": "/assets/candlestickPlugin-BcPM_FKY.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1370,
+      "estimatedGzipBytes": 745
+    },
+    {
+      "path": "/assets/barPlugin-D9_RaY6Q.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2221,
+      "estimatedGzipBytes": 1081
+    },
+    {
+      "path": "/assets/swarmPlugin-CyfRtY7T.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 793,
+      "estimatedGzipBytes": 511
+    },
+    {
+      "path": "/assets/statisticalOverlays-MKMYullH.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 6181,
+      "estimatedGzipBytes": 2362
+    },
+    {
+      "path": "/assets/physicsFramePipelineConfig-CU6KR2JK.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 51287,
+      "estimatedGzipBytes": 15818
+    },
+    {
+      "path": "/assets/random-BWaIcwNx.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 172,
+      "estimatedGzipBytes": 152
+    },
+    {
+      "path": "/assets/physicsChartShared-2s9uSnsT.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2427,
+      "estimatedGzipBytes": 1288
+    },
+    {
+      "path": "/assets/physicsCustomLayout-Bdr7UJ7E.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 5669,
+      "estimatedGzipBytes": 2415
+    },
+    {
+      "path": "/assets/physicsProjectionOverlays-CuMlnpRe.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 12017,
+      "estimatedGzipBytes": 4025
+    },
+    {
+      "path": "/assets/chainReactionOverlay-c3si9J0y.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 22464,
+      "estimatedGzipBytes": 8541
+    },
+    {
+      "path": "/assets/processFlowOverlays-CUnu9_6W.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 13131,
+      "estimatedGzipBytes": 5061
+    },
+    {
+      "path": "/assets/physicsChartLayout-B0DLUfdE.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 152,
+      "estimatedGzipBytes": 124
+    },
+    {
+      "path": "/assets/processPhysics-xNvbg-X3.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 7920,
+      "estimatedGzipBytes": 2736
+    },
+    {
+      "path": "/assets/gauntletChrome-hcNmmCXv.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 13189,
+      "estimatedGzipBytes": 4788
+    },
+    {
+      "path": "/assets/thresholdSparkline-CU_UlSi6.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 1784,
+      "estimatedGzipBytes": 719
+    },
+    {
+      "path": "/assets/crucibleChrome-DhZpYO8t.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 48809,
+      "estimatedGzipBytes": 14461
+    },
+    {
+      "path": "/assets/geoStyleDefaults-CK_kuDAq.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 67,
+      "estimatedGzipBytes": 78
+    },
+    {
+      "path": "/assets/cartogramOverlay-D35qCa0m.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2105,
+      "estimatedGzipBytes": 859
+    },
+    {
+      "path": "/assets/PhysicsAccessibility-DjQhU3vA.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 3005,
+      "estimatedGzipBytes": 1237
+    },
+    {
+      "path": "/assets/svgRoot-BTenKaNW.js",
+      "type": "script",
+      "status": 200,
+      "decodedBytes": 2075,
+      "estimatedGzipBytes": 1069
+    }
+  ]
+}

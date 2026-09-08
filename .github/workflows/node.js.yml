@@ -69,6 +69,7 @@ jobs:
           npm run check:adoption-evals
           npx tsc -p scripts/ai-tasks/tsconfig.json
           npx tsc -p scripts/superpersuasion/tsconfig.json
+          npx tsc -p scripts/jobs-report/tsconfig.json
           npm run check:ssr
           npm run check:jsdoc-coverage
           npm run check:ai-examples-coverage

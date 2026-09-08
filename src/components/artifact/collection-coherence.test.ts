@@ -12,6 +12,48 @@ import {
 import { contractWithClaim } from "./artifactTestFixtures"
 
 describe("collection coherence", () => {
+  it("preserves required, optional and actor field errors through shared validators", () => {
+    const invalid = {
+      collectionVersion: "0.1",
+      id: "",
+      title: false,
+      artifacts: [],
+      actions: [
+        {
+          id: "review",
+          action: "Review",
+          claimIds: [],
+          actor: { kind: "", id: 12, name: false, extra: "undeclared" }
+        }
+      ]
+    }
+    const result = validateArtifactCollection(invalid)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toEqual([
+      { path: "$.id", message: "Expected a non-empty string." },
+      { path: "$.title", message: "Expected a string." },
+      { path: "$.actions[0].actor.extra", message: "Unexpected property." },
+      { path: "$.actions[0].actor.kind", message: "Expected a non-empty string." },
+      { path: "$.actions[0].actor.id", message: "Expected a string." },
+      { path: "$.actions[0].actor.name", message: "Expected a string." }
+    ])
+    expect(
+      validateArtifactCollection({
+        ...invalid,
+        id: "review-collection",
+        title: "",
+        actions: [
+          {
+            id: "review",
+            action: "Review",
+            claimIds: [],
+            actor: { kind: "human", id: "", name: "" }
+          }
+        ]
+      }).valid
+    ).toBe(true)
+  })
+
   it("finds cross-view conflicts and traces changed evidence", () => {
     const first = contractWithClaim("panel-a", {
       scope: { metric: "conversion", direction: "increase" }
