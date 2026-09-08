@@ -92,6 +92,7 @@ const AxesPage = lazy(() => import("./pages/features/AxesPage"))
 const AnnotationsPage = lazy(() => import("./pages/features/AnnotationsPage"))
 const AnnotationDesignPage = lazy(() => import("./pages/features/AnnotationDesignPage"))
 const AnnotationFlowPage = lazy(() => import("./pages/features/AnnotationFlowPage"))
+const TextLayoutPage = lazy(() => import("./pages/features/TextLayoutPage"))
 const AnnotationProvenancePage = lazy(() => import("./pages/features/AnnotationProvenancePage"))
 const TooltipsPage = lazy(() => import("./pages/features/TooltipsPage"))
 const InteractionPage = lazy(() => import("./pages/features/InteractionPage"))
@@ -871,6 +872,7 @@ export default function DocsApp() {
                 <Route path="overview" element={<AnnotationsPage />} />
                 <Route path="design-guidance" element={<AnnotationDesignPage />} />
                 <Route path="advanced" element={<AnnotationFlowPage />} />
+                <Route path="text-layout" element={<TextLayoutPage />} />
                 <Route path="provenance-lifecycle" element={<AnnotationProvenancePage />} />
               </Route>
 

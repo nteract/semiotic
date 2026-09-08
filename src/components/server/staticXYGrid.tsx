@@ -2,15 +2,10 @@ import * as React from "react"
 import type { StreamLayout, StreamScales, StreamXYFrameProps } from "../stream/types"
 import type { XYFrameAxisConfig } from "../stream/xyFrameAxisTypes"
 import type { SemioticTheme } from "../store/themeCore"
-import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
-import { axisTickCount, defaultTickFormat } from "../stream/axisTickUtils"
+import type { AxisExtentMode } from "../charts/shared/axisExtent"
 import { resolveAxisLineStyle, resolveGridDash } from "../stream/svgOverlayUtils"
 import { themeStyles } from "./themeResolver"
-import {
-  createStaticAxisTicks,
-  resolveStaticAxisTicks,
-  staticAxisLabelWidth,
-} from "./staticXYAxisTicks"
+import { generateXYTicks } from "../stream/xyAxisTicks"
 
 /**
  * Server grid lines resolve the same filtered tick set as static axes. This
@@ -37,61 +32,13 @@ export function renderGridSVG(
   const rightAxis = axes?.find((axis) => axis.orient === "right")
   const xAxis = bottomAxis ?? topAxis
   const yAxis = leftAxis ?? rightAxis
-  const xExtentMode = xAxis?.extent ?? axisExtent
-  const yExtentMode = yAxis?.extent ?? axisExtent
-  const xTickCount = xExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const yTickCount = yExtentMode === "exact"
-    ? 5
-    : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const rawXTicks = xAxis?.tickValues ?? ticksForMode(
-    scales.x,
-    axisTickCount(xAxis, xTickCount),
-    xExtentMode,
-  )
-  const xFormatter = xAxis?.tickFormat || formatProps?.xFormat || formatProps?.tickFormatTime || defaultTickFormat
-  const xCandidates = createStaticAxisTicks({
-    values: rawXTicks,
-    scale: scales.x,
-    format: xFormatter,
+  const xTicks = generateXYTicks({
+    scale: scales.x, axis: xAxis, size: layout.width, horizontal: true,
+    format: formatProps?.xFormat || formatProps?.tickFormatTime, axisExtent,
   })
-  const xMaxLabelWidth = xCandidates.reduce(
-    (max, tick) => Math.max(max, staticAxisLabelWidth(tick.label)),
-    0,
-  )
-  const xMinPixelDistance = xAxis?.autoRotate
-    ? Math.max(20, Math.min(xMaxLabelWidth + 8, 55))
-    : Math.max(55, xMaxLabelWidth + 8)
-  const xTicks = resolveStaticAxisTicks({
-    candidates: xCandidates,
-    scale: scales.x,
-    minPixelDistance: xMinPixelDistance,
-    includeMax: xAxis?.includeMax,
-    extentMode: xExtentMode,
-    hasExplicitTickValues: Boolean(xAxis?.tickValues),
-    format: xFormatter,
-  })
-
-  const rawYTicks = yAxis?.tickValues ?? ticksForMode(
-    scales.y,
-    axisTickCount(yAxis, yTickCount),
-    yExtentMode,
-  )
-  const yFormatter = yAxis?.tickFormat || formatProps?.yFormat || formatProps?.tickFormatValue || defaultTickFormat
-  const yTickFormatter = (value: number | Date) => yFormatter(value as number)
-  const yTicks = resolveStaticAxisTicks({
-    candidates: createStaticAxisTicks({
-      values: rawYTicks,
-      scale: scales.y,
-      format: yTickFormatter,
-    }),
-    scale: scales.y,
-    minPixelDistance: 22,
-    includeMax: yAxis?.includeMax,
-    extentMode: yExtentMode,
-    hasExplicitTickValues: Boolean(yAxis?.tickValues),
-    format: yTickFormatter,
+  const yTicks = generateXYTicks({
+    scale: scales.y, axis: yAxis, size: layout.height,
+    format: formatProps?.yFormat || formatProps?.tickFormatValue, axisExtent,
   })
   const showXGrid = xAxis?.grid !== false
   const showYGrid = yAxis?.grid !== false

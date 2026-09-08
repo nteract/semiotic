@@ -5,7 +5,8 @@ import type {
   NetworkRectNode,
   NetworkArcNode,
   NetworkLineEdge,
-  NetworkBezierEdge
+  NetworkBezierEdge,
+  NetworkSceneEdge
 } from "./networkTypes"
 
 describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
@@ -364,13 +365,13 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       "M50,80 L100,82 L150,75 L200,78 L250,80 " +
       "L250,120 L200,118 L150,125 L100,122 L50,120 Z"
 
-    it("hits inside the body of a ProcessSankey band (regression)", async () => {
+    it.each(["bezier", "ribbon", "curved"] as const)("hits inside a %s band body", async (type) => {
       const restore = installGeometryFakes()
       try {
         vi.resetModules()
         const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
-        const band: NetworkBezierEdge = {
-          type: "bezier",
+        const band: NetworkSceneEdge = {
+          type,
           pathD: PROCESS_SANKEY_BAND_PATH,
           style: { fill: "#abc", fillOpacity: 0.86, stroke: "#abc", strokeWidth: 0.5 },
           datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
@@ -389,13 +390,13 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       }
     })
 
-    it("hits the perimeter of a ProcessSankey band (border tolerance)", async () => {
+    it.each(["bezier", "ribbon", "curved"] as const)("hits a %s band perimeter within tolerance", async (type) => {
       const restore = installGeometryFakes()
       try {
         vi.resetModules()
         const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
-        const band: NetworkBezierEdge = {
-          type: "bezier",
+        const band: NetworkSceneEdge = {
+          type,
           pathD: PROCESS_SANKEY_BAND_PATH,
           style: { fill: "#abc", stroke: "#abc", strokeWidth: 0.5 },
           datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
@@ -405,18 +406,21 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
         const hit = hitTest([], [band], 150, 72)
         expect(hit).not.toBeNull()
         expect(hit!.type).toBe("edge")
+        expect(hit!.distance).toBe(4)
+        expect(hit!.x).toBe(150)
+        expect(hit!.y).toBe(72)
       } finally {
         restore()
       }
     })
 
-    it("misses well outside the ProcessSankey band", async () => {
+    it.each(["bezier", "ribbon", "curved"] as const)("misses well outside a %s band", async (type) => {
       const restore = installGeometryFakes()
       try {
         vi.resetModules()
         const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
-        const band: NetworkBezierEdge = {
-          type: "bezier",
+        const band: NetworkSceneEdge = {
+          type,
           pathD: PROCESS_SANKEY_BAND_PATH,
           style: { fill: "#abc", stroke: "#abc", strokeWidth: 0.5 },
           datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,

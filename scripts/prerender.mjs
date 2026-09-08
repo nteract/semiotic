@@ -103,6 +103,10 @@ const ROUTE_META = {
     description:
       "Design first-class chart annotations for audience, hierarchy, placement, association, cohesion, and amount using Semiotic's annotation assistance APIs.",
   },
+  "annotations/text-layout": {
+    title: "Text Layout with Pretext — Semiotic",
+    description: "Compare default and font-measured annotation wrapping. Opt in to Pretext for multilingual notes, custom fonts, and automatic annotation placement.",
+  },
   theming: {
     title: "Theming — Semiotic",
     description:

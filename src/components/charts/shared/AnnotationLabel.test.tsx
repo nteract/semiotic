@@ -21,6 +21,14 @@ describe("AnnotationLabel", () => {
     expect(out).not.toContain("paint-order")
   })
 
+  it("keeps the halo default when an optional backdrop type is explicitly undefined", () => {
+    const out = svg(<AnnotationLabel x={10} y={10} text="Threshold" fill="#fff" background={{ type: undefined, fill: "#111", haloWidth: 4 }} />)
+    expect(out).toContain("paint-order:stroke")
+    expect(out).toContain("stroke:#111")
+    expect(out).toContain("stroke-width:4")
+    expect(out).not.toContain("<rect")
+  })
+
   it('renders a semitransparent box backdrop for background="box"', () => {
     const out = svg(<AnnotationLabel x={10} y={10} text="Fast-scaling · 10" fill="#0b6" background="box" />)
     expect(out).toContain("<rect")

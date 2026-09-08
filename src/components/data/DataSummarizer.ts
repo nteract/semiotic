@@ -64,18 +64,6 @@ function inferType(val: unknown): FieldType {
   return "unknown"
 }
 
-function minMax(values: ReadonlyArray<number>): { min: number; max: number } {
-  // Avoid Math.min(...values) — spread overflows the call stack around ~100k items.
-  let min = Infinity
-  let max = -Infinity
-  for (let i = 0; i < values.length; i++) {
-    const v = values[i]
-    if (v < min) min = v
-    if (v > max) max = v
-  }
-  return { min, max }
-}
-
 function median(sorted: ReadonlyArray<number>): number {
   const n = sorted.length
   if (n === 0) return NaN
@@ -127,37 +115,44 @@ export function summarizeData(
 
     if (type === "numeric") {
       const nums: number[] = []
+      let min = Infinity
+      let max = -Infinity
+      let sum = 0
       for (let i = 0; i < raw.length; i++) {
         const n = Number(raw[i])
-        if (Number.isFinite(n)) nums.push(n)
+        if (!Number.isFinite(n)) continue
+        nums.push(n)
+        if (n < min) min = n
+        if (n > max) max = n
+        sum += n
       }
       if (nums.length === 0) {
         fields[key] = { type: "unknown" }
         continue
       }
-      const { min, max } = minMax(nums)
-      let sum = 0
-      for (let i = 0; i < nums.length; i++) sum += nums[i]
-      const sorted = [...nums].sort((a, b) => a - b)
+      // nums is local; preserve source order for summation, then sort in place.
+      nums.sort((a, b) => a - b)
       fields[key] = {
         type: "numeric",
         min,
         max,
         mean: sum / nums.length,
-        median: median(sorted),
+        median: median(nums),
       }
     } else if (type === "date") {
-      const times: number[] = []
+      let min = Infinity
+      let max = -Infinity
       for (let i = 0; i < raw.length; i++) {
         const v = raw[i]
         const t = v instanceof Date ? v.getTime() : Date.parse(v as string)
-        if (Number.isFinite(t)) times.push(t)
+        if (!Number.isFinite(t)) continue
+        if (t < min) min = t
+        if (t > max) max = t
       }
-      if (times.length === 0) {
+      if (min === Infinity) {
         fields[key] = { type: "unknown" }
         continue
       }
-      const { min, max } = minMax(times)
       fields[key] = {
         type: "date",
         min: new Date(min).toISOString(),

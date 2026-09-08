@@ -117,7 +117,7 @@ export default function AnnotationFlowPage() {
         { label: "Annotations", path: "/annotations" },
         { label: "Advanced Annotations", path: "/annotations/advanced" },
       ]}
-      prevPage={{ title: "Design Guidance", path: "/annotations/design-guidance" }}
+      prevPage={{ title: "Text Layout with Pretext", path: "/annotations/text-layout" }}
       nextPage={{ title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" }}
     >
       <p>

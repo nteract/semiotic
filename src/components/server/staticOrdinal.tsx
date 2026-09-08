@@ -1,3 +1,4 @@
+import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
 import { ticksForMode } from "../charts/shared/axisExtent"
@@ -33,7 +34,6 @@ import {
   chartUID,
   reserveFrameLegendMargin,
   renderFrameLegend,
-  defaultTickFormat,
   renderOrdinalGridSVG,
   wrapSVG
 } from "./staticSVGChrome"
@@ -143,9 +143,11 @@ export function generateOrdinalAxesSVG(
   // OrdinalSVGOverlay requests five value ticks for both projections; d3 may
   // return a nearby "nice" count. Do not apply the XY frame's pixel-budget
   // heuristic here or SSR and CSR choose different intervals.
-  const rTicks = ticksForMode(scales.r, 5, props.axisExtent).map(v => ({
+  const values = props.rTickValues ?? ticksForMode(scales.r, 5, props.axisExtent)
+  const format = valFormat || numericTickFormatter(values)
+  const rTicks = values.map(v => ({
     pixel: scales.r(v),
-    label: (valFormat || defaultTickFormat)(v)
+    label: format(v)
   }))
 
   if (isVertical) {
@@ -420,7 +422,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
-  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent) : null
+  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent, props.rTickValues) : null
 
   // Check for bar-funnel dropoff bars — they need SVG hatch patterns
   const hasDropoffBars = store.scene.some(

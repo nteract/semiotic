@@ -23,23 +23,43 @@ export function loess(
   const ys = sorted.map((p) => p[1])
 
   // Number of neighbors to include
-  const span = Math.max(2, Math.ceil(bandwidth * n))
+  const span = Math.min(n, Math.max(2, Math.ceil(bandwidth * n)))
+  const canSlide = Number.isFinite(span) && xs.every(Number.isFinite)
+  let left = 0
+  let right = span - 1
 
   const result: [number, number][] = []
 
   for (let i = 0; i < n; i++) {
     const x0 = xs[i]
 
-    // Find distances to all points, pick the span nearest
-    const dists = xs.map((x) => Math.abs(x - x0))
-    const sortedDists = dists.slice().sort((a, b) => a - b)
-    const maxDist = sortedDists[Math.min(span - 1, n - 1)] || 1
-
-    // Compute tricube weights: w(u) = (1 - |u|^3)^3 for |u| < 1
-    const weights: number[] = []
-    for (let j = 0; j < n; j++) {
-      const u = maxDist === 0 ? 0 : dists[j] / maxDist
-      weights[j] = u < 1 ? Math.pow(1 - Math.pow(u, 3), 3) : 0
+    let start = 0
+    let end = n - 1
+    let maxDist: number
+    if (canSlide) {
+      // The nearest span is contiguous in sorted x order. Its endpoints only
+      // move right as x0 increases, eliminating a distance sort at every point.
+      // Advance on ties too, so a run of duplicate x values cannot block it.
+      while (
+        right < n - 1 &&
+        Math.abs(xs[right + 1] - x0) <= Math.abs(xs[left] - x0)
+      ) {
+        left++
+        right++
+      }
+      const radius = Math.max(Math.abs(xs[left] - x0), Math.abs(xs[right] - x0))
+      maxDist = radius || 1
+      // Points outside a positive-radius span have zero tricube weight.
+      // A zero radius historically falls back to 1, so include all points
+      // in that case (including duplicates and nearby fractional x values).
+      if (radius > 0) {
+        start = left
+        end = right
+      }
+    } else {
+      // Preserve the existing distance-order behavior for non-finite inputs.
+      const distances = xs.map((x) => Math.abs(x - x0)).sort((a, b) => a - b)
+      maxDist = distances[span - 1] || 1
     }
 
     // Weighted least squares: y = a + b*x
@@ -48,8 +68,10 @@ export function loess(
     let sumWY = 0
     let sumWXX = 0
     let sumWXY = 0
-    for (let j = 0; j < n; j++) {
-      const w = weights[j]
+    for (let j = start; j <= end; j++) {
+      // Compute and consume each tricube weight without a temporary array.
+      const u = Math.abs(xs[j] - x0) / maxDist
+      const w = u < 1 ? Math.pow(1 - Math.pow(u, 3), 3) : 0
       if (w === 0) continue
       sumW += w
       sumWX += w * xs[j]

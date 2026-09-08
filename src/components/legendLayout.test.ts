@@ -71,6 +71,23 @@ describe("side legend measurement", () => {
     expect(resolveSideLegendWidth(legend)).toBeGreaterThan(100)
   })
 
+  it("reserves enough width for precise default gradient labels", () => {
+    const legend = {
+      gradient: {
+        domain: [1.000000000000001, 1.000000000000002] as [number, number],
+        colorFn: () => "#555"
+      }
+    }
+    expect(resolveSideLegendWidth(legend)).toBeGreaterThanOrEqual(19 + 17 * 7)
+  })
+
+  it("measures large categorical legends without an argument-limit overflow", () => {
+    const item = { label: "A" }
+    const items = Array.from({ length: 150000 }, () => item)
+    items.push({ label: "An exceptionally long final label" })
+    expect(resolveSideLegendWidth({ legendGroups: [{ label: "", styleFn, items }] })).toBe(253)
+  })
+
   it("includes an overridden legend distance in automatic side reservation", () => {
     const legend = {
       legendGroups: [{ label: "", styleFn, items: [{ label: "A" }] }],

@@ -13,22 +13,38 @@ function sampleMass(sample: ProcessSankeySample): number {
   return sample.topMass + sample.botMass
 }
 
-function representativeAt(
-  data: ProcessSankeyNodeData,
-  time: number,
-): ProcessSankeySample | null {
-  const exact = data.samples.filter((sample) => sample.t === time)
-  if (exact.length > 0) {
-    return exact.reduce((best, sample) =>
-      sampleMass(sample) >= sampleMass(best) ? sample : best,
-    exact[0])
-  }
-  let found: ProcessSankeySample | null = null
+function createSampleCursor(data: ProcessSankeyNodeData) {
+  const byTime = new Map<number, ProcessSankeySample[]>()
   for (const sample of data.samples) {
-    if (sample.t > time) break
-    found = sample
+    // Exact matching uses ===; unlike Map lookup, NaN never matches itself.
+    if (Number.isNaN(sample.t)) continue
+    let exact = byTime.get(sample.t)
+    if (!exact) {
+      exact = []
+      byTime.set(sample.t, exact)
+    }
+    exact.push(sample)
   }
-  return found
+
+  let nextIndex = 0
+  let lastTime = -Infinity
+  return (time: number) => {
+    // Group times advance monotonically. Reset for the second pass, while
+    // retaining the original prefix-scan behavior even for unsorted samples.
+    if (!(time >= lastTime)) nextIndex = 0
+    lastTime = time
+    const exact = byTime.get(time)
+    if (exact) {
+      const sample = exact.reduce((best, candidate) =>
+        sampleMass(candidate) >= sampleMass(best) ? candidate : best,
+      exact[0])
+      return { exact, sample }
+    }
+    while (nextIndex < data.samples.length && !(data.samples[nextIndex].t > time)) {
+      nextIndex++
+    }
+    return { exact, sample: data.samples[nextIndex - 1] ?? null }
+  }
 }
 
 function cloneNodeData(
@@ -94,6 +110,9 @@ export function bondProcessSankeyNodeData(
     ))].sort((a, b) => a - b)
     const deltaByNode = new Map<string, Map<number, number>>()
     for (const node of members) deltaByNode.set(node.id, new Map())
+    const sampleAtByNode = new Map(members.map((node) =>
+      [node.id, createSampleCursor(nodeData[node.id])] as const,
+    ))
 
     for (const time of times) {
       const activeBySlot = new Map<number, Array<{
@@ -101,7 +120,7 @@ export function bondProcessSankeyNodeData(
         sample: ProcessSankeySample
       }>>()
       for (const node of members) {
-        const sample = representativeAt(nodeData[node.id], time)
+        const { sample } = sampleAtByNode.get(node.id)!(time)
         if (!sample || sampleMass(sample) <= MASS_EPSILON) continue
         const slot = slotByNode[node.id]
         if (slot == null) continue
@@ -136,11 +155,12 @@ export function bondProcessSankeyNodeData(
       const original = nodeData[node.id]
       const translated = result[node.id]
       const deltas = deltaByNode.get(node.id)!
+      const sampleAt = sampleAtByNode.get(node.id)!
       const samples: ProcessSankeySample[] = []
       for (const time of times) {
         const delta = deltas.get(time)
-        const exact = original.samples.filter((sample) => sample.t === time)
-        if (exact.length > 0) {
+        const { exact, sample } = sampleAt(time)
+        if (exact) {
           samples.push(...exact.map((sample) => ({
             ...sample,
             ...(delta != null ? {
@@ -149,7 +169,6 @@ export function bondProcessSankeyNodeData(
           })))
           continue
         }
-        const sample = representativeAt(original, time)
         if (delta == null || !sample || sampleMass(sample) <= MASS_EPSILON) continue
         samples.push({
           ...sample,

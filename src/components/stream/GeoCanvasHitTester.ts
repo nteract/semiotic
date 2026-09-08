@@ -1,7 +1,7 @@
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode } from "./geoTypes"
 import type { PointSceneNode, GlyphSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
-import { getHitRadius } from "./hitTestUtils"
+import { getHitRadius, pointToSegmentDistance } from "./hitTestUtils"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import { glyphHitGeometry } from "./glyphDef"
 
@@ -116,9 +116,23 @@ export function findNearestGeoNode(
     const line = node as GeoLineSceneNode
     const { path } = line
     const hitWidth = Math.max((line.style.strokeWidth ?? 2) + 4, 5, lineMaxDistance)
+    const minX = mouseX - hitWidth
+    const maxX = mouseX + hitWidth
+    const minY = mouseY - hitWidth
+    const maxY = mouseY + hitWidth
     for (let j = 0; j < path.length - 1; j++) {
-      const [ax, ay] = path[j]
-      const [bx, by] = path[j + 1]
+      const a = path[j]
+      const b = path[j + 1]
+      const ax = a[0], ay = a[1]
+      const bx = b[0], by = b[1]
+      // Reject distant segments before projecting onto them. Retain the exact
+      // distance calculation for candidates, including endpoints and ties.
+      if (
+        (ax < minX && bx < minX) ||
+        (ax > maxX && bx > maxX) ||
+        (ay < minY && by < minY) ||
+        (ay > maxY && by > maxY)
+      ) continue
       const dist = pointToSegmentDistance(mouseX, mouseY, ax, ay, bx, by)
       if (dist <= hitWidth && dist < bestLineDist) {
         bestLine = line
@@ -132,23 +146,4 @@ export function findNearestGeoNode(
   }
 
   return null
-}
-
-/** Distance from point (px, py) to line segment (ax,ay)-(bx,by) */
-function pointToSegmentDistance(
-  px: number, py: number,
-  ax: number, ay: number,
-  bx: number, by: number
-): number {
-  const dx = bx - ax
-  const dy = by - ay
-  const lenSq = dx * dx + dy * dy
-  if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2)
-
-  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq
-  t = Math.max(0, Math.min(1, t))
-
-  const projX = ax + t * dx
-  const projY = ay + t * dy
-  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2)
 }

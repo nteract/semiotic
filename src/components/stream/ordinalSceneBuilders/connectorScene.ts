@@ -39,7 +39,7 @@ export function buildConnectors(
   }
 
   // Draw lines connecting pieces with the same connector key, sorted by category order
-  const oExtent = scales.o.domain()
+  const categoryOrder = new Map(scales.o.domain().map((category, index) => [category, index]))
   const resolveConnStyle = config.connectorStyle
   const defaultStyle: Style = {
     stroke: ctx.config.themeSemantic?.border || ctx.config.themeSemantic?.secondary || "#999",
@@ -71,7 +71,9 @@ export function buildConnectors(
     if (points.length < 2) continue
 
     // Sort by category order
-    points.sort((a, b) => oExtent.indexOf(a.category) - oExtent.indexOf(b.category))
+    points.sort((a, b) =>
+      (categoryOrder.get(a.category) ?? -1) - (categoryOrder.get(b.category) ?? -1)
+    )
 
     for (let i = 0; i < points.length - 1; i++) {
       pushSegment(points[i], points[i + 1], key)

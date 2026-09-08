@@ -106,4 +106,36 @@ describe("chordLayoutPlugin", () => {
     expect(typeof edges[0].source).toBe("object")
     expect(typeof edges[0].target).toBe("object")
   })
+
+  it("evaluates each style callback once per rendered mark", () => {
+    const nodes = [makeNode("A"), makeNode("B"), makeNode("C")]
+    const edges = [makeEdge("A", "B"), makeEdge("B", "C"), makeEdge("A", "C")]
+    const nodeStyle = vi.fn(() => ({ fill: "red", stroke: "blue", strokeWidth: 3 }))
+    const edgeStyle = vi.fn(() => ({ fill: "green", stroke: "purple", fillOpacity: 0.4 }))
+    const config: NetworkPipelineConfig = { chartType: "chord", nodeStyle, edgeStyle }
+    chordLayoutPlugin.computeLayout(nodes, edges, config, [600, 600])
+    const scene = chordLayoutPlugin.buildScene(nodes, edges, config, [600, 600])
+    expect(nodeStyle).toHaveBeenCalledTimes(scene.sceneNodes.length)
+    expect(edgeStyle).toHaveBeenCalledTimes(scene.sceneEdges.length)
+    for (const node of scene.sceneNodes) {
+      expect(node.style).toMatchObject({ fill: "red", stroke: "blue", strokeWidth: 3 })
+    }
+    for (const edge of scene.sceneEdges) {
+      expect(edge.style).toMatchObject({ fill: "green", stroke: "purple", fillOpacity: 0.4 })
+    }
+  })
+
+  it.each([false, true])("translates ribbon endpoints and control points (self-link: %s)", (selfLink) => {
+    const nodes = [makeNode("A"), makeNode("B")]
+    const edges = [makeEdge("A", selfLink ? "A" : "B")]
+    const config: NetworkPipelineConfig = { chartType: "chord" }
+    chordLayoutPlugin.computeLayout(nodes, edges, config, [600, 400])
+    const scene = chordLayoutPlugin.buildScene(nodes, edges, config, [600, 400])
+    expect(scene.sceneEdges).toHaveLength(1)
+    const edge = scene.sceneEdges[0]
+    if (edge.type !== "ribbon") throw new Error("Expected a ribbon edge")
+    expect(edge.pathD).toMatch(/^M 300 20 A 180 180 /)
+    expect(edge.pathD).toContain("Q 300 200")
+    expect(edge.pathD).not.toMatch(/NaN|Infinity/)
+  })
 })

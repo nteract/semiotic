@@ -23,7 +23,7 @@ const ordinalData = [
 ]
 
 describe("static HOC annotation parity", () => {
-  it("preserves regression sugar for every HOC that advertises it", () => {
+  it.each(["linear", "loess"])("preserves %s regression sugar for every HOC that advertises it", (method) => {
     const cases = [
       {
         component: "Scatterplot",
@@ -55,11 +55,17 @@ describe("static HOC annotation parity", () => {
     for (const chart of cases) {
       const { svg, evidence } = renderChartWithEvidence(chart.component, {
         ...chart.props,
-        regression: { method: "linear", label: chart.label },
+        regression: { method, bandwidth: 0.75, label: chart.label },
       })
       expect(svg, chart.component).toContain(chart.label)
       expect(evidence.annotationCount, chart.component).toBe(1)
       expect(evidence.unrenderedAnnotationCount, chart.component).toBe(0)
+      const points = svg.match(/<polyline[^>]*points="([^"]+)"/)?.[1]
+      expect(points, chart.component).toBeDefined()
+      expect(points, chart.component).not.toMatch(/NaN|Infinity/)
+      if (method === "loess") {
+        expect(points!.trim().split(/\s+/), chart.component).toHaveLength(chart.props.data.length)
+      }
     }
   })
 

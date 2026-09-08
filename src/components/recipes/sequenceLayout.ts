@@ -1,3 +1,5 @@
+import { FirstAvailableTrack } from "./firstAvailableTrack"
+
 /**
  * Sequence diagram kit — linear spines, span-arc packing, and shared-edge
  * partition helpers for custom charts that treat a row of marks as a baseline
@@ -178,21 +180,15 @@ export function packSpanLevels<T extends SpanInterval>(
     })
     .sort((left, right) => left.width - right.width || left.a - right.a)
 
-  const levelEnds: number[] = []
+  const levels = new FirstAvailableTrack()
   const packed: PackedSpanLevel<T>[] = prepared.map((item) => {
     // Inclusive indices: a span ending at `b` frees the level for any span that
     // starts at `b` or later (they share an endpoint token, which is fine for arcs).
-    let level = levelEnds.findIndex((occupiedUntil) => item.a >= occupiedUntil)
-    if (level < 0) {
-      level = levelEnds.length
-      levelEnds.push(item.b)
-    } else {
-      levelEnds[level] = item.b
-    }
+    const level = levels.assign(item.a, item.b)
     return { span: item.span, level }
   })
 
-  const maxLevel = packed.reduce((max, item) => Math.max(max, item.level), 0)
+  const maxLevel = Math.max(0, levels.count - 1)
   return {
     packed,
     maxLevel,

@@ -9,6 +9,23 @@ export interface RectHitResult {
   cy: number
 }
 
+/** Distance to a segment, including a segment collapsed to a single point. */
+export function pointToSegmentDistance(
+  px: number, py: number,
+  ax: number, ay: number,
+  bx: number, by: number
+): number {
+  const dx = bx - ax
+  const dy = by - ay
+  const lenSq = dx * dx + dy * dy
+  if (lenSq === 0) return Math.sqrt((px - ax) ** 2 + (py - ay) ** 2)
+  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq
+  t = Math.max(0, Math.min(1, t))
+  const projX = ax + t * dx
+  const projY = ay + t * dy
+  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2)
+}
+
 /**
  * Test whether a point (px, py) falls within a rectangle defined by
  * { x, y, w, h } and return the rectangle's center coordinates.

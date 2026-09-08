@@ -38,7 +38,7 @@ export default function AnnotationDesignPage() {
         { label: "Design Guidance", path: "/annotations/design-guidance" },
       ]}
       prevPage={{ title: "Overview", path: "/annotations/overview" }}
-      nextPage={{ title: "Advanced Annotations", path: "/annotations/advanced" }}
+      nextPage={{ title: "Text Layout with Pretext", path: "/annotations/text-layout" }}
     >
       <p>
         A useful annotation is not just text placed on a chart. It establishes

@@ -2,6 +2,39 @@ import { describe, it, expect } from "vitest"
 import { summarizeData } from "./DataSummarizer"
 
 describe("summarizeData", () => {
+  it("preserves source order and summation order while computing the median", () => {
+    const data = [
+      Object.freeze({ value: 1e16 }),
+      Object.freeze({ value: 1 }),
+      Object.freeze({ value: -1e16 }),
+      Object.freeze({ value: "3" }),
+      Object.freeze({ value: NaN })
+    ]
+    const summary = summarizeData(Object.freeze(data))
+    expect(summary.fields.value).toEqual({
+      type: "numeric", min: -1e16, max: 1e16, mean: 0.75, median: 2
+    })
+    expect(summary.sample).toEqual(data)
+    expect(summary.sample[0]).toBe(data[0])
+  })
+
+  it("preserves the first signed zero for numeric extents", () => {
+    expect(summarizeData([{ value: 0 }, { value: -0 }]).fields.value).toMatchObject({ min: 0, max: 0 })
+    expect(summarizeData([{ value: -0 }, { value: 0 }]).fields.value).toMatchObject({ min: -0, max: -0 })
+  })
+
+  it("ignores invalid dates when determining the date extent", () => {
+    expect(summarizeData([
+      { date: new Date(NaN) },
+      { date: "2024-12-31" },
+      { date: "invalid" },
+      { date: new Date("2024-01-01") }
+    ]).fields.date).toEqual({
+      type: "date", min: "2024-01-01T00:00:00.000Z", max: "2024-12-31T00:00:00.000Z"
+    })
+    expect(summarizeData([{ date: new Date(NaN) }]).fields.date).toEqual({ type: "unknown" })
+  })
+
   it("summarizes numeric fields with min/max/mean/median", () => {
     const data = [
       { x: 1, y: 10 },

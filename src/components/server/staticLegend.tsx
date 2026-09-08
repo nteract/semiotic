@@ -6,6 +6,7 @@
  */
 
 import * as React from "react"
+import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import { scaleOrdinal } from "d3-scale"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveExplicitColor } from "../charts/shared/colorUtils"
@@ -210,7 +211,7 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
 
     return {
       items,
-      width: Math.max(0, ...rows.map((row) => row.width)),
+      width: rows.reduce((max, row) => Math.max(max, row.width), 0),
       height: rows.length * rowHeight,
       swatchSize,
       labelOffset,
@@ -218,7 +219,7 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
     }
   }
 
-  const columnWidth = Math.max(0, ...widths)
+  const columnWidth = widths.reduce((max, width) => Math.max(max, width), 0)
   const items = categories.map((category, i) => {
     return {
       category,
@@ -666,7 +667,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
   const legendConfig = { gradient: config.gradient, legendDistance: config.legendDistance }
   const sideLegendWidth = resolveSideLegendWidth(legendConfig)
   const id = `${config.idPrefix ? `${config.idPrefix}-` : ""}semiotic-static-gradient-legend`
-  const fmt = config.gradient.format || ((v: number) => String(Math.round(v * 100) / 100))
+  const fmt = config.gradient.format || numericTickFormatter(config.gradient.domain)
   const { x: tx, y: ty } = resolveLegendPlacement(legendConfig, {
     totalWidth: config.totalWidth,
     totalHeight: config.totalHeight,
@@ -682,7 +683,7 @@ export function renderStaticGradientLegend(config: StaticGradientLegendConfig): 
     const value = isHorizontal
       ? config.gradient.domain[0] + t * (config.gradient.domain[1] - config.gradient.domain[0])
       : config.gradient.domain[1] - t * (config.gradient.domain[1] - config.gradient.domain[0])
-    return <stop key={i} offset={`${t * 100}%`} stopColor={config.gradient.colorFn(value)} />
+    return <stop key={i} offset={t} stopColor={config.gradient.colorFn(value)} />
   })
 
   if (isHorizontal) {

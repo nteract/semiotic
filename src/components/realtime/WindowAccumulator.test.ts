@@ -110,6 +110,42 @@ describe("WindowAccumulator — hopping", () => {
 })
 
 describe("WindowAccumulator — session", () => {
+  it("keeps ordered appends, late bridges, gap endpoints, and snapshots consistent", () => {
+    const acc = new WindowAccumulator({ window: "session", gap: 5, size: 0 })
+    acc.push(0, 1)
+    acc.push(5, 3)
+    acc.push(15, 5)
+    acc.push(20, 7)
+    const beforeBridge = acc.emit()
+    expect(beforeBridge.map(({ start, end }) => [start, end])).toEqual([[0, 5], [15, 20]])
+
+    acc.push(10, 9) // merges the two existing sessions
+    acc.push(25, 11) // extends the merged session at its gap endpoint
+    acc.push(40, 13) // appends a new trailing session
+
+    const rows = acc.emit()
+    expect(rows.map(({ start, end, count, partial }) => ({ start, end, count, partial }))).toEqual([
+      { start: 0, end: 25, count: 6, partial: false },
+      { start: 40, end: 40, count: 1, partial: true }
+    ])
+    expect(rows[0].mean).toBeCloseTo(6)
+    expect(rows[0].stddev).toBeCloseTo(Math.sqrt(35 / 3))
+    expect(beforeBridge.map(({ start, end, count }) => [start, end, count])).toEqual([[0, 5, 2], [15, 20, 2]])
+  })
+
+  it("retains the newest sessions when ordered and backdated events are mixed", () => {
+    const acc = new WindowAccumulator({ window: "session", gap: 2, size: 0, retain: 2 })
+    for (const time of [0, 10, 20, 30, 31, 5, 21, 32]) acc.push(time, 1)
+    expect(acc.emit().map(({ start, end, count }) => [start, end, count])).toEqual([
+      [20, 21, 2], [30, 32, 3]
+    ])
+    acc.clear()
+    acc.push(-10, 4)
+    expect(acc.emit()).toEqual([
+      { start: -10, end: -10, count: 1, mean: 4, sum: 4, min: 4, max: 4, stddev: 0, partial: true }
+    ])
+  })
+
   it("groups events within the gap into one session", () => {
     const acc = new WindowAccumulator({ window: "session", gap: 5, size: 0 })
     acc.push(0, 1)

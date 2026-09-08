@@ -1,4 +1,5 @@
 "use client"
+import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef } from "react"
@@ -119,15 +120,14 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     margin,
     scales,
     showAxes,
-    showGrid,
-    rFormat
+    showGrid
   } = props
   const { rTickValues, axisExtent } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
 
   const valueTicks = useMemo(() => {
-    if (!scales || isRadial) return []
+    if (!scales || isRadial || !showGrid) return []
     // Explicit `rTickValues` wins over both modes — caller has hand-
     // picked the positions. Otherwise `ticksForMode` resolves
     // axisExtent: "nice" → d3-scale rounded; "exact" → equidistant
@@ -136,10 +136,9 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
     return rawTicks.map(v => ({
       value: v,
-      pixel: scales.r(v),
-      label: (rFormat || defaultRFormat)(v)
+      pixel: scales.r(v)
     }))
-  }, [scales, rFormat, isRadial, rTickValues, axisExtent])
+  }, [scales, isRadial, rTickValues, axisExtent, showGrid])
 
   const hasGrid = showGrid && scales && !isRadial
   const hasBaselines = showAxes && scales && !isRadial
@@ -203,9 +202,6 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
 }
 
 
-function defaultRFormat(v: number): string {
-  return String(Math.round(v * 100) / 100)
-}
 
 export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const {
@@ -330,17 +326,18 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const tickLabelEdgeAlign = props.tickLabelEdgeAlign
   const axisExtent = props.axisExtent
   const valueTicks = useMemo(() => {
-    if (!showAxes || !scales || isRadial) return []
+    if ((!showAxes && !showGrid) || !scales || isRadial) return []
     // Explicit `rTickValues` wins; otherwise resolve via `axisExtent`
     // ("nice" → d3-scale rounded | "exact" → equidistant from data
     // min to data max inclusive). The r-scale is always linear.
     const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
+    const format = rFormat || numericTickFormatter(rawTicks)
     return rawTicks.map(v => ({
       value: v,
       pixel: scales.r(v),
-      label: (rFormat || defaultRFormat)(v)
+      label: format(v)
     }))
-  }, [showAxes, scales, rFormat, isRadial, rTickValues, axisExtent])
+  }, [showAxes, showGrid, scales, rFormat, isRadial, rTickValues, axisExtent])
 
   // Persistent cache for sticky annotation positions
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())

@@ -161,6 +161,23 @@ export class WindowAccumulator {
     // The new event's provisional bounds.
     const newStats = new RunningStats()
     newStats.push(value)
+
+    // Ordered arrivals can only extend the newest session or append one.
+    // Avoid copying and sorting the entire history for this common path.
+    const tail = this.sessions[this.sessions.length - 1]
+    if (!tail || time >= tail.end) {
+      if (tail && tail.end >= time - gap && tail.start <= time + gap) {
+        // Match the general path's merge order to retain floating-point results.
+        newStats.merge(tail.stats)
+        tail.start = tail.start < time ? tail.start : time
+        tail.end = time
+        tail.stats = newStats
+      } else {
+        this.sessions.push({ start: time, end: time, stats: newStats })
+      }
+      return
+    }
+
     let lo = time
     let hi = time
 

@@ -2,6 +2,10 @@ import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
 import { isNoteAnnotation } from "../charts/shared/annotationTypes"
+import {
+  measureAnnotationNote,
+  wrapAnnotationText
+} from "../text/annotationTextLayout"
 import { annotationDensity, annotationBudget, type AnnotationDensityConfig } from "./annotationDensity"
 
 export interface AnnotationLayoutConfig {
@@ -247,24 +251,6 @@ function isPlaceableAnnotation(a: Datum): boolean {
   return isNoteAnnotation(a)
 }
 
-function textLines(text: string | undefined, wrap: number): string[] {
-  if (!text) return []
-  const maxChars = Math.max(1, Math.floor(wrap / 7))
-  const words = text.split(/\s+/).filter(Boolean)
-  const lines: string[] = []
-  let line = ""
-  for (const word of words) {
-    if (line && line.length + word.length + 1 > maxChars) {
-      lines.push(line)
-      line = word
-    } else {
-      line = line ? `${line} ${word}` : word
-    }
-  }
-  if (line) lines.push(line)
-  return lines
-}
-
 function estimateNoteSize(a: Datum): { width: number; height: number } {
   if (a.type === "widget") {
     return {
@@ -273,10 +259,15 @@ function estimateNoteSize(a: Datum): { width: number; height: number } {
     }
   }
 
+  const measured = measureAnnotationNote(a)
+  if (measured) return {
+    width: Math.max(24, measured.width + 10),
+    height: Math.max(18, measured.height + 6),
+  }
   const wrap = typeof a.wrap === "number" ? a.wrap : 120
   const lines = [
-    ...textLines(typeof a.title === "string" ? a.title : undefined, wrap),
-    ...textLines(typeof a.label === "string" ? a.label : undefined, wrap),
+    ...wrapAnnotationText(typeof a.title === "string" ? a.title : undefined, wrap, 7),
+    ...wrapAnnotationText(typeof a.label === "string" ? a.label : undefined, wrap, 7),
   ]
   const longest = lines.reduce((max, line) => Math.max(max, line.length), 0)
   return {
@@ -468,7 +459,9 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     const anchor = resolveAnchor(annotation, index, context)
     if (!anchor) return annotation
 
-    const size = estimateNoteSize(annotation)
+    const size = estimateNoteSize(
+      annotation.defensive === true ? applyVisibleProvenance(annotation) : annotation
+    )
     if (preserveManualOffsets && hasManualOffset(annotation)) {
       const fallback = rendererOffset(annotation)
       const dx = typeof annotation.dx === "number" ? annotation.dx : fallback.dx

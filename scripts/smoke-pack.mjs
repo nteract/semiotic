@@ -369,8 +369,9 @@ function checkUtilsFacadeExportContract(packageRoot, exportsMap, failures) {
  * in RSC and edge code that does not install or initialize a React runtime.
  * Inspect the packed artifact's complete local import graph rather than only
  * its facade: shared chunks can otherwise hide a transitive React dependency.
+ * The same walk keeps the optional Pretext peer off other public entry graphs.
  */
-function checkThemeCoreReactFree(packageRoot, exportsMap, failures) {
+function checkPackedImportIsolation(packageRoot, exportsMap, failures) {
   const exportEntry = exportsMap["./themes/core"]
   if (!exportEntry || typeof exportEntry !== "object") {
     failures.push(
@@ -431,6 +432,25 @@ function checkThemeCoreReactFree(packageRoot, exportsMap, failures) {
   if (!failed) {
     console.log("  ✓ themes/core packed import graph is React-free")
   }
+
+  // The optional hook must not make a root/family import require Pretext in
+  // either format. Walk shared chunks too: facade-only checks miss CJS leaks.
+  let textLeak = false
+  for (const [entry, conditions] of Object.entries(exportsMap)) {
+    if (entry === "./text" || !conditions || typeof conditions !== "object")
+      continue
+    for (const condition of ["import", "require"]) {
+      const target = conditions[condition]
+      if (typeof target !== "string") continue
+      for (const file of visitGraph(join(packageRoot, target))) {
+        if (!readFileSync(file, "utf8").includes("@chenglou/pretext"))
+          continue
+        textLeak = true
+        failures.push(`${entry} (${condition}) transitively imports Pretext`)
+      }
+    }
+  }
+  if (!textLeak) console.log("  ✓ Pretext peer is isolated to semiotic/text")
 }
 
 /**
@@ -1052,9 +1072,10 @@ try {
           react: sourcePackage.devDependencies.react,
           "react-dom": sourcePackage.devDependencies["react-dom"],
           // The smoke suite imports every public entry point, including the
-          // explicitly opt-in semiotic/rough adapter. Model that consumer choice
-          // by installing its optional peer without making it a core dependency.
-          roughjs: sourcePackage.devDependencies.roughjs
+          // opt-in rough/text adapters. Model those consumer choices by
+          // installing their optional peers without making them core dependencies.
+          roughjs: sourcePackage.devDependencies.roughjs,
+          "@chenglou/pretext": sourcePackage.devDependencies["@chenglou/pretext"]
         },
         devDependencies: {
           "@types/react": sourcePackage.devDependencies["@types/react"],
@@ -1104,6 +1125,13 @@ try {
     )
   }
   const packageRoot = join(proj, "node_modules/semiotic")
+  if (
+    pkg.peerDependenciesMeta?.["@chenglou/pretext"]?.optional !== true ||
+    pkg.dependencies?.["@chenglou/pretext"] ||
+    pkg.optionalDependencies?.["@chenglou/pretext"]
+  ) {
+    failures.push("Pretext must remain a consumer-selected optional peer")
+  }
   const {
     modules: entryPoints,
     packageJson: packageJsonExport,
@@ -1118,7 +1146,7 @@ try {
   checkPrivateDeclarations(packageRoot, failures)
   checkClientBoundaryDirectives(packageRoot, pkg.exports, failures)
   checkUtilsFacadeExportContract(packageRoot, pkg.exports, failures)
-  checkThemeCoreReactFree(packageRoot, pkg.exports, failures)
+  checkPackedImportIsolation(packageRoot, pkg.exports, failures)
   checkReactServerCoreImports(proj, failures)
   checkExperimentalBridgeStoreAnchor(packageRoot, failures)
 

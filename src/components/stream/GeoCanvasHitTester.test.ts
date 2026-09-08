@@ -190,4 +190,53 @@ describe("findNearestGeoNode", () => {
     expect(result).not.toBeNull()
     expect(result!.node.type).toBe("line")
   })
+
+  it.each([
+    { name: "start endpoint", path: [[0, 0], [100, 0]], pointer: [-6, 0], distance: 6 },
+    { name: "end endpoint", path: [[0, 0], [100, 0]], pointer: [106, 0], distance: 6 },
+    { name: "reversed segment", path: [[100, 0], [0, 0]], pointer: [50, 6], distance: 6 },
+    { name: "collapsed segment", path: [[10, 10], [10, 10]], pointer: [13, 14], distance: 5 },
+    { name: "diagonal interior", path: [[0, 0], [100, 100]], pointer: [50, 50], distance: 0 },
+    { name: "diagonal bounding-box miss", path: [[0, 0], [100, 100]], pointer: [10, 90], distance: null },
+    { name: "outside endpoint tolerance", path: [[0, 0], [100, 0]], pointer: [106.01, 0], distance: null }
+  ])("preserves exact line hits at $name", ({ path, pointer, distance }) => {
+    const line: LineSceneNode = {
+      type: "line",
+      path: path as [number, number][],
+      style: { stroke: "red", strokeWidth: 2 },
+      datum: [{ id: "route" }]
+    }
+    const hit = findNearestGeoNode([line], pointer[0], pointer[1], 5, createMockHitCtx())
+    if (distance === null) {
+      expect(hit).toBeNull()
+    } else {
+      expect(hit?.node).toBe(line)
+      expect(hit?.distance).toBe(distance)
+    }
+  })
+
+  it("preserves nearest-route selection and scene order for equal distances", () => {
+    const routes: LineSceneNode[] = [4, 2, -2].map((y) => ({
+      type: "line",
+      path: [[0, y], [100, y]],
+      style: { stroke: "red" },
+      datum: [{ y }]
+    }))
+    const ctx = createMockHitCtx()
+    expect(findNearestGeoNode(routes, 50, 0, 5, ctx)).toEqual({ node: routes[1], distance: 2 })
+    expect(findNearestGeoNode([...routes].reverse(), 50, 0, 5, ctx)).toEqual({ node: routes[2], distance: 2 })
+  })
+
+  it("respects line-specific tolerance and changed route coordinates", () => {
+    const line: LineSceneNode = {
+      type: "line", path: [[0, 0], [100, 0]],
+      style: { stroke: "red" }, datum: [{ id: "route" }]
+    }
+    const ctx = createMockHitCtx()
+    expect(findNearestGeoNode([line], 50, 20, 5, ctx, null, 0, 20)?.distance).toBe(20)
+    expect(findNearestGeoNode([line], 50, 20, 5, ctx)).toBeNull()
+    line.path[0][1] = 20
+    line.path[1][1] = 20
+    expect(findNearestGeoNode([line], 50, 20, 5, ctx)?.distance).toBe(0)
+  })
 })

@@ -44,18 +44,13 @@ import {
   tickPixelExtent,
   jaggedBaselinePath,
 } from "../stream/svgOverlayUtils"
-import { axisTickCount, defaultTickFormat as defaultAxisTickFormat } from "../stream/axisTickUtils"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   isStaticTextTickLabel,
   renderStaticTickForeignObject,
 } from "./staticAxisTickLabel"
-import {
-  createStaticAxisTicks,
-  isStaticAxisLandmark,
-  resolveStaticAxisTicks,
-  staticAxisLabelWidth,
-} from "./staticXYAxisTicks"
+import { isStaticAxisLandmark } from "./staticXYAxisTicks"
+import { generateXYTicks, axisTicksNeedRotation } from "../stream/xyAxisTicks"
 import {
   clampLegendReservation,
   resolveLegendSideGutter,
@@ -316,16 +311,14 @@ export function renderFrameLegend(options: {
   })
 }
 
-/** Shared with the live overlay so time-scale defaults stay human-readable. */
-export const defaultTickFormat = defaultAxisTickFormat
-
 /** Render grid lines for ordinal charts */
 export function renderOrdinalGridSVG(
   store: OrdinalPipelineStore,
   layout: { width: number; height: number },
   theme: SemioticTheme,
   idPrefix?: string,
-  axisExtent?: AxisExtentMode
+  axisExtent?: AxisExtentMode,
+  rTickValues?: number[]
 ): React.ReactNode {
   const scales = store.scales
   if (!scales || scales.projection === "radial") return null
@@ -335,7 +328,7 @@ export function renderOrdinalGridSVG(
   // Match the axis ticks (and the client) under axisExtent:"exact".
   // Match OrdinalSVGOverlay's fixed request; this is intentionally distinct
   // from the responsive XY tick budget.
-  const rTicks = ticksForMode(scales.r, 5, axisExtent)
+  const rTicks = rTickValues ?? ticksForMode(scales.r, 5, axisExtent)
 
   if (isVertical) {
     return (
@@ -482,12 +475,6 @@ export function generateAxesSVG(
     hasRenderedLegend && legendPosition === "right" && rightSideLegendGutter > 0
       ? rightSideLegendGutter
       : (margin?.right ?? props.margin?.right ?? 40)
-  // ticksForMode mirrors the client SVGOverlay: "exact" yields equidistant
-  // ticks inclusive of the data min/max (the axisExtent headline behavior);
-  // "nice"/undefined falls through to scale.ticks — byte-identical to before.
-  // Match SVGOverlay's responsive tick budget. d3's `ticks(5)` can emit
-  // seven "nice" values on a short plot while the browser deliberately
-  // requests fewer labels to keep the axis legible.
   const bottomAxis = props.axes?.find((axis) => axis.orient === "bottom")
   const topAxis = props.axes?.find((axis) => axis.orient === "top")
   const leftAxis = props.axes?.find((axis) => axis.orient === "left")
@@ -500,84 +487,15 @@ export function generateAxesSVG(
   const yBaselineX = yOrient === "right" ? layout.width : 0
   const xTickDirection = xOrient === "top" ? -1 : 1
   const yTickDirection = yOrient === "right" ? 1 : -1
-  const xExtentMode = xAxis?.extent ?? props.axisExtent
-  const yExtentMode = yAxis?.extent ?? props.axisExtent
-  const resolvedXTickCount =
-    xExtentMode === "exact"
-      ? 5
-      : Math.min(5, Math.max(2, Math.floor(layout.width / 70)))
-  const resolvedYTickCount =
-    yExtentMode === "exact"
-      ? 5
-      : Math.min(5, Math.max(2, Math.floor(layout.height / 30)))
-  const rawXTicks =
-    xAxis?.tickValues ??
-    ticksForMode(scales.x, axisTickCount(xAxis, resolvedXTickCount), xExtentMode)
-  const xFormatter =
-    xAxis?.tickFormat ||
-    props.xFormat ||
-    props.tickFormatTime ||
-    defaultTickFormat
-  const xCandidates = createStaticAxisTicks({
-    values: rawXTicks,
-    scale: scales.x,
-    format: xFormatter,
+  const xTicks = generateXYTicks({
+    scale: scales.x, axis: xAxis, size: layout.width, horizontal: true,
+    format: props.xFormat || props.tickFormatTime, axisExtent: props.axisExtent,
   })
-  const xMaxLabelWidth = xCandidates.reduce(
-    (max, tick) => Math.max(max, staticAxisLabelWidth(tick.label)),
-    0,
-  )
-  const xMinPixelDistance = xAxis?.autoRotate
-    ? Math.max(20, Math.min(xMaxLabelWidth + 8, 55))
-    : Math.max(55, xMaxLabelWidth + 8)
-  const xTicks = resolveStaticAxisTicks({
-    candidates: xCandidates,
-    scale: scales.x,
-    minPixelDistance: xMinPixelDistance,
-    includeMax: xAxis?.includeMax,
-    extentMode: xExtentMode,
-    hasExplicitTickValues: Boolean(xAxis?.tickValues),
-    format: xFormatter,
+  const yTicks = generateXYTicks({
+    scale: scales.y, axis: yAxis, size: layout.height,
+    format: props.yFormat || props.tickFormatValue, axisExtent: props.axisExtent,
   })
-
-  const rawYTicks =
-    yAxis?.tickValues ??
-    ticksForMode(scales.y, axisTickCount(yAxis, resolvedYTickCount), yExtentMode)
-  const yFormatter =
-    yAxis?.tickFormat ||
-    props.yFormat ||
-    props.tickFormatValue ||
-    defaultTickFormat
-  // SVGOverlay invokes vertical formatters with the value only. Preserve that
-  // contract even though the shared static tick builder also supports x-axis
-  // index/all-ticks arguments.
-  const yTickFormatter = (value: number | Date) => yFormatter(value as number)
-  const yCandidates = createStaticAxisTicks({
-    values: rawYTicks,
-    scale: scales.y,
-    format: yTickFormatter,
-  })
-  const yTicks = resolveStaticAxisTicks({
-    candidates: yCandidates,
-    scale: scales.y,
-    minPixelDistance: 22,
-    includeMax: yAxis?.includeMax,
-    extentMode: yExtentMode,
-    hasExplicitTickValues: Boolean(yAxis?.tickValues),
-    format: yTickFormatter,
-  })
-  const shouldRotateXAxis = Boolean(
-    xAxis?.autoRotate &&
-    xTicks.length > 1 &&
-    layout.width / Math.max(xTicks.length - 1, 1) <
-      xTicks.reduce(
-        (max, tick) => Math.max(
-          max,
-          typeof tick.label === "string" ? tick.label.length * 6.5 : 60,
-        ),
-        0,
-      ) + 8,
-  )
+  const shouldRotateXAxis = Boolean(xAxis?.autoRotate && axisTicksNeedRotation(xTicks))
   const xPixelExtent = tickPixelExtent(xTicks)
   const yPixelExtent = tickPixelExtent(yTicks)
   const xLabel = xAxis?.label ?? props.xLabel

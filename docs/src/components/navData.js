@@ -257,6 +257,7 @@ const navData = [
     children: [
       { title: "Overview", path: "/annotations/overview" },
       { title: "Design Guidance", path: "/annotations/design-guidance" },
+      { title: "Text Layout with Pretext", path: "/annotations/text-layout" },
       { title: "Advanced Annotations", path: "/annotations/advanced" },
       { title: "Provenance & Lifecycle", path: "/annotations/provenance-lifecycle" },
     ],

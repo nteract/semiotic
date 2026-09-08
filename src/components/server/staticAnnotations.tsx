@@ -1,3 +1,4 @@
+import { annotationNote } from "../text/annotationTextLayout"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 /**
  * Static annotation rendering for server-side SVG.
@@ -646,11 +647,7 @@ function renderAnnotation(
               y: py,
               dx,
               dy,
-              note: {
-                label: ann.label,
-                title: ann.title,
-                wrap: ann.wrap || 120,
-              },
+              note: annotationNote(ann),
               type: renderedType,
               ...(subject ? { subject } : {}),
               connector: ann.connector || { end: "arrow" },

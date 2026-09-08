@@ -52,6 +52,29 @@ function makeCtx(overrides: Partial<OrdinalSceneContext> = {}): OrdinalSceneCont
 const layout: OrdinalLayout = { width: 400, height: 300 }
 
 describe("buildConnectors", () => {
+  it("respects category order and preserves input order for tied or missing categories", () => {
+    const categories = ["B", "missing-first", "C", "A", "missing-second", "B"]
+    const pieceNodes = categories.map((category, index) => ({
+      type: "point" as const,
+      x: index,
+      y: index * 10,
+      r: 5,
+      style: defaultStyle,
+      datum: { category, group: "chain" }
+    }))
+    const ctx = makeCtx({
+      scales: makeScales({ oDomain: ["C", "B", "A"] }),
+      getConnector: (d: Datum) => d.group
+    })
+
+    const connectors = buildConnectors(ctx, pieceNodes, layout)
+
+    expect(connectors.map(({ x1, x2 }) => [x1, x2])).toEqual([
+      [1, 4], [4, 2], [2, 0], [0, 5], [5, 3]
+    ])
+    expect(pieceNodes.map(({ x }) => x)).toEqual([0, 1, 2, 3, 4, 5])
+  })
+
   it("returns connector nodes linking pieces with same connector key", () => {
     const scales = makeScales()
     const pieceNodes = [

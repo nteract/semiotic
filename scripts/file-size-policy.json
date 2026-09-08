@@ -167,11 +167,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +9 (2026-07-11): accessorRevision + onLayoutError prop plumbing, getLayoutFailure() handle, and consuming the restyle-only repaint flag."
     },
     {
-      "path": "src/components/stream/SVGOverlay.tsx",
-      "maxLines": 880,
-      "reason": "Grandfathered production file above hard limit (800). Ratcheted to current 875 lines; split on meaningful touch and do not grow past maxLines."
-    },
-    {
       "path": "src/components/stream/types.ts",
       "maxLines": 1067,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +15 (2026-07-11): accessorRevision escape hatch for stable-reference accessors, plus onLayoutError + getLayoutFailure() for custom-layout failure recovery."

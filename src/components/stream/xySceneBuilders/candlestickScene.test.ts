@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { buildCandlestickScene } from "./candlestickScene"
 import type { XYSceneContext } from "./types"
 import type { CandlestickSceneNode } from "../types"
@@ -195,6 +195,35 @@ describe("buildCandlestickScene", () => {
     // Explicit bodyWidth overrides auto-calculation
     expect(asCandlestick(nodes[0]).bodyWidth).toBe(15)
     expect(asCandlestick(nodes[1]).bodyWidth).toBe(15)
+  })
+
+  it.each([false, true])("skips width-inference accessors with a fixed width (range=%s)", (candlestickRangeMode) => {
+    const data = [
+      { x: 30, open: 10, high: 20, low: 5, close: 15 },
+      { x: 0, open: 10, high: 20, low: 5, close: 15 },
+      { x: 10, open: 10, high: 20, low: 5, close: 15 }
+    ]
+    const getX = vi.fn((d: Datum) => d.x)
+    const ctx = makeCtx({
+      getX,
+      config: { candlestickRangeMode, candlestickStyle: { bodyWidth: 12 } }
+    })
+    const nodes = buildCandlestickScene(ctx, data, defaultLayout)
+    expect(nodes.map((node) => node.x)).toEqual([30, 0, 10])
+    expect(nodes.map((node) => node.bodyWidth)).toEqual([12, 12, 12])
+    expect(getX).toHaveBeenCalledTimes(data.length)
+    if (candlestickRangeMode) expect(nodes.map((node) => node.dotRadius)).toEqual([6, 6, 6])
+  })
+
+  it("infers width from each projected x once, preserving duplicates and reversed scales", () => {
+    const data = [30, 0, 10, 10].map((x) => ({ x, open: 10, high: 20, low: 5, close: 15 }))
+    const ctx = makeCtx()
+    const project = vi.fn((value: number) => 400 - value * 2)
+    ctx.scales.x = project as unknown as XYSceneContext["scales"]["x"]
+    const nodes = buildCandlestickScene(ctx, data, defaultLayout)
+    expect(nodes.map((node) => node.x)).toEqual([340, 400, 380, 380])
+    expect(nodes.map((node) => node.bodyWidth)).toEqual([12, 12, 12, 12])
+    expect(project).toHaveBeenCalledTimes(data.length * 2)
   })
 
   it("applies up/down colors from candlestickStyle config", () => {

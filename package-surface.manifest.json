@@ -933,6 +933,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./text",
+      "path": "dist/semiotic-text.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-text.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-text.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-text.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-text.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-text.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./themes",
       "path": "dist/semiotic-themes.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1413,6 +1444,13 @@
         "path": "dist/semiotic-server.d.ts",
         "exports": [
           "./server"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-text.d.ts",
+        "exports": [
+          "./text"
         ],
         "reason": "Public type entry from `exports` map"
       },

@@ -99,6 +99,40 @@ describe("loess", () => {
     }
   })
 
+  it("moves past duplicate x values to reach a distant cluster", () => {
+    const points: [number, number][] = [[0, 1], [0, 2], [0, 3], [10, 20], [10.5, 40], [11, 45]]
+    const result = loess(points, 0)
+    expect(result.slice(3)).toEqual([[10, 20], [10.5, 40], [11, 45]])
+  })
+
+  it("uses every coincident point when the neighbor radius is zero", () => {
+    const points: [number, number][] = [[2, 1], [2, 4], [2, 7], [2, 12]]
+    expect(loess(points, 0)).toEqual(points.map(([x]) => [x, 6]))
+  })
+
+  it("includes nearby fractional x values in the zero-radius fallback", () => {
+    const points: [number, number][] = [[0, 2], [0, 4], [0, 6], [0.25, 9], [0.5, -4], [2, 7]]
+    const result = loess(points, 0)
+    for (const point of result.slice(0, 3)) {
+      expect(point).toEqual([0, 4.996750539638965])
+    }
+    expect(result.slice(3)).toEqual(points.slice(3))
+  })
+
+  it("assigns zero weight to points exactly on the neighbor radius", () => {
+    const result = loess([[-1, 100], [0, 5], [1, 99], [2, 11]], 0.75)
+    expect(result[1]).toEqual([0, 5])
+  })
+
+  it("preserves the input order and point tuples", () => {
+    const points: [number, number][] = [[4, 3], [1, 5], [3, 2], [2, 8]]
+    const original = points.map((point) => [...point])
+    points.forEach(Object.freeze)
+    Object.freeze(points)
+    expect(loess(points).map(([x]) => x)).toEqual([1, 2, 3, 4])
+    expect(points).toEqual(original)
+  })
+
   it("handles constant y values — output should be that constant", () => {
     const points: [number, number][] = [[1, 5], [2, 5], [3, 5], [4, 5], [5, 5]]
     const result = loess(points)
