@@ -11,7 +11,7 @@ const initialRows: Row[] = [
 export default function PhysicsLivePileDemo() {
   const ref = useRef<React.ComponentRef<typeof UnitPileChart>>(null)
   const nextId = useRef(0)
-  const [data, setData] = useState(initialRows)
+  const [data, setData] = useState<Row[] | undefined>(initialRows)
   const [rows, setRows] = useState(initialRows)
   const [unitValue, setUnitValue] = useState(100)
   const [paused, setPaused] = useState(false)
@@ -26,6 +26,26 @@ export default function PhysicsLivePileDemo() {
   return (
     <section className="physics-live-demo" aria-label="Live pile editor">
       <div className="physics-live-demo__controls">
+        <label>
+          Data source
+          <select
+            value={data === undefined ? "push" : data.length === 0 ? "empty" : "seeded"}
+            onChange={(event) => {
+              const next =
+                event.target.value === "push"
+                  ? undefined
+                  : event.target.value === "empty"
+                    ? []
+                    : initialRows.map((row) => ({ ...row }))
+              setData(next)
+              setRows(next ?? [])
+            }}
+          >
+            <option value="seeded">Start with 49 + 49</option>
+            <option value="empty">Empty array</option>
+            <option value="push">Push via ref</option>
+          </select>
+        </label>
         <button
           type="button"
           onClick={() =>
@@ -97,8 +117,11 @@ export default function PhysicsLivePileDemo() {
           Pause motion
         </label>
       </div>
+      {data?.length === 0 && (
+        <p>An explicit empty data array stays empty. Select Push via ref to add records.</p>
+      )}
       <p className="physics-live-demo__total" role="status">
-        {rows.length} source records · Total {total}
+        {rows.length} source {rows.length === 1 ? "record" : "records"} · Total {total}
       </p>
       <div className="physics-live-demo__scene">
         <div className="physics-live-demo__chart">

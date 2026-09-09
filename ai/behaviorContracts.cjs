@@ -323,7 +323,7 @@ const BEHAVIOR_CONTRACTS = [
       components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"],
     },
     summary: "Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.",
-    agentAction: "Use stable IDs and remove for source edits; popBodies only removes marks. Set xExtent/valueExtent for stable domains.",
+    agentAction: "Omit data for push mode; data=[] stays empty and rejects pushes. Use stable IDs and remove for source edits; popBodies only removes marks. Set xExtent/valueExtent for stable domains.",
     example: 'ref.current?.update("a", row => ({ ...row, value: 102 })); ref.current?.remove("b");',
   },
 ]

@@ -55,6 +55,15 @@ for (const theme of ["light", "dark"] as const) {
     await expect(
       editor.locator("svg text").filter({ hasText: /^98$/ })
     ).toBeVisible()
+    await editor.getByLabel("Data source").selectOption("empty")
+    await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
+    await expect(status).toHaveText("0 source records · Total 0")
+    await expect(editor.locator("canvas")).toHaveCount(0)
+    await editor.getByLabel("Data source").selectOption("push")
+    await expect(status).toHaveText("0 source records · Total 0")
+    await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
+    await expect(status).toHaveText("1 source record · Total 49")
+    await expect(editor.locator("svg text").filter({ hasText: /^49$/ })).toBeVisible()
     expect(pageErrors).toEqual([])
   })
 

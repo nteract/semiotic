@@ -247,6 +247,11 @@ export default function UnitPileChartPage() {
         An enabled <code>rerunMS</code> replays the original seeded data. <code>popBodies</code> only removes
         visual bodies; use <code>remove</code> to change source records and totals.
       </p>
+      <p>
+        Select <strong>Empty array</strong> and try adding a record: <code>data=&#123;[]&#125;</code>
+        keeps the chart empty. Select <strong>Push via ref</strong> to omit <code>data</code>
+        and enable live ingestion. Rejected pushes are not saved for a later mode change.
+      </p>
 
       <h2 id="props">Props</h2>
       <PropTable componentName="UnitPileChart" props={unitPileChartProps} />

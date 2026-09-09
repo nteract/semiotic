@@ -19,7 +19,7 @@ import {
 } from "./physicsSourceRows"
 
 // An omitted data prop must keep its identity across encoding changes.
-export const EMPTY_PHYSICS_ROWS: readonly Datum[] = []
+const EMPTY_PHYSICS_ROWS: readonly never[] = []
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -30,11 +30,12 @@ const useIsomorphicLayoutEffect =
 export function usePhysicsChartData<T extends Datum>(options: {
   ref: Ref<PhysicsFrameHandle> | undefined
   frameRef: RefObject<StreamPhysicsFrameHandle | null>
-  data: readonly T[]
+  data?: readonly T[]
   idPrefix: string
   buildLayout: (rows: T[]) => PhysicsChartLayout
-}): { rows: T[]; layout: PhysicsChartLayout; resetSeed: () => void } {
-  const { ref, frameRef, data, idPrefix, buildLayout } = options
+}): { layout: PhysicsChartLayout; resetSeed: () => void } {
+  const { ref, frameRef, idPrefix, buildLayout } = options
+  const data = options.data ?? EMPTY_PHYSICS_ROWS
   const [state, setState] = useState(() =>
     createPhysicsSourceState(data, idPrefix)
   )
@@ -98,6 +99,10 @@ export function usePhysicsChartData<T extends Datum>(options: {
 
   useImperativeHandle(ref, (): PhysicsFrameHandle => {
     function commit(next: PhysicsSourceState<T>): void {
+      // An authored empty array stays empty, including through a saved handle.
+      // Only omitted data uses the internal push-mode seed.
+      const seed = currentRef.current.seed
+      if (seed !== EMPTY_PHYSICS_ROWS && seed.length === 0) return
       currentRef.current = next
       const nextLayout = compile(next.rows)
       synchronize(nextLayout, false)
@@ -158,7 +163,6 @@ export function usePhysicsChartData<T extends Datum>(options: {
     }
   })
   return {
-    rows: current.rows,
     layout,
     resetSeed: () => {
       const next = createPhysicsSourceState(currentRef.current.seed, idPrefix)

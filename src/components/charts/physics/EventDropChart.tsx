@@ -242,6 +242,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
   )
   usePhysicsHocHandle(ref, {
     frameRef,
+    staticEmpty: data?.length === 0,
     spawnDatum,
     seedRows: chartData as Datum[],
     seedSpawns: layout.initialSpawns

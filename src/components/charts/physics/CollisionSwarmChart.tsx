@@ -16,7 +16,7 @@ import {
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
-import { EMPTY_PHYSICS_ROWS, usePhysicsChartData } from "./usePhysicsChartData"
+import { usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -152,7 +152,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     pointRadius ??
     (chartMode === "sparkline" ? 2 : chartMode === "context" ? 4 : 5)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const chartData = useMemo(() => data ?? (EMPTY_PHYSICS_ROWS as TDatum[]), [data])
   const buildLayout = useCallback(
     (rows: TDatum[]) =>
       buildCollisionSwarmPhysics({
@@ -179,10 +178,10 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       xExtent
     ]
   )
-  const { layout, rows: sourceRows, resetSeed } = usePhysicsChartData({
+  const { layout, resetSeed } = usePhysicsChartData({
     ref,
     frameRef,
-    data: chartData,
+    data,
     idPrefix: "collision-swarm",
     buildLayout
   })
@@ -223,7 +222,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   })
 
   const stateEl = renderPhysicsChartState({
-    data: data?.length === 0 ? sourceRows : data,
+    data,
     emptyContent,
     loading,
     loadingContent,

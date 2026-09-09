@@ -316,6 +316,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
   )
   usePhysicsHocHandle(ref, {
     frameRef,
+    staticEmpty: data?.length === 0,
     spawnDatum,
     seedRows: safeData as Datum[],
     seedSpawns: layout.initialSpawns

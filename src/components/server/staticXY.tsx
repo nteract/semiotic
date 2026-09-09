@@ -12,7 +12,7 @@ import {
   numericDomain,
   type EvidenceSink
 } from "./renderEvidence"
-import { xySceneNodeToSVG } from "../stream/SceneToSVG"
+import { xySceneNodeToSVG } from "../stream/SceneToSVGXY"
 import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme } from "./themeResolver"
 import {

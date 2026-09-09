@@ -16,7 +16,7 @@ import {
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
-import { EMPTY_PHYSICS_ROWS, usePhysicsChartData } from "./usePhysicsChartData"
+import { usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -151,7 +151,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
             seed,
             unitValue
           }) as TDatum[])
-        : (data ?? (EMPTY_PHYSICS_ROWS as TDatum[])),
+        : data,
     [
       data,
       mechanicalCategories,
@@ -181,7 +181,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       unitValue
     ]
   )
-  const { layout, rows: sourceRows, resetSeed } = usePhysicsChartData({
+  const { layout, resetSeed } = usePhysicsChartData({
     ref,
     frameRef,
     data: chartData,
@@ -237,7 +237,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
   })
 
   const stateEl = renderPhysicsChartState({
-    data: simulationMode === "mechanical" ? chartData : data?.length === 0 ? sourceRows : data,
+    data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
     loading,
     loadingContent,

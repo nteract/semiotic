@@ -1,8 +1,10 @@
 import * as React from "react"
 import { act, render } from "@testing-library/react"
+import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import type { PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineStore"
+import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { CollisionSwarmChart } from "./CollisionSwarmChart"
 import { GaltonBoardChart } from "./GaltonBoardChart"
 import { PhysicsPileChart, UnitPileChart } from "./UnitPileChart"
@@ -22,6 +24,93 @@ describe("physics chart source updates", () => {
     cleanupCanvas = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => cleanupCanvas())
+
+  for (const [name, Chart] of [
+    ["CollisionSwarmChart", CollisionSwarmChart],
+    ["GaltonBoardChart", GaltonBoardChart],
+    ["UnitPileChart", UnitPileChart],
+    ["PhysicsPileChart", PhysicsPileChart]
+  ] as const) {
+    it(`${name} keeps explicit empty data authoritative through ref edits and mode changes`, () => {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const row = { id: "a", category: "A", value: 49, x: 49 }
+      const empty: (typeof row)[] = []
+      const chart = (data?: (typeof row)[], title?: string) => (
+        <Chart
+          ref={ref}
+          data={data}
+          title={title}
+          emptyContent={<span>No source records</span>}
+        />
+      )
+      const { container, getByText, rerender } = render(chart(empty))
+      const handle = ref.current!
+      act(() => {
+        handle.push(row)
+        handle.pushMany([{ ...row, id: "b" }])
+      })
+      rerender(chart(empty, "Still empty"))
+      expect(getByText("No source records")).toBeTruthy()
+      expect(container.querySelector("canvas")).toBeNull()
+      expect(handle.getData()).toEqual([])
+      expect(handle.getCustomLayout!()).toBeNull()
+
+      // Switching to omitted data must not reveal previously rejected rows.
+      rerender(chart())
+      expect(container.querySelector("canvas")).not.toBeNull()
+      expect(handle.getData()).toEqual([])
+      expect(scene(ref).bodies).toEqual([])
+      act(() => handle.push(row))
+      expect(handle.getData()).toEqual([row])
+      expect(scene(ref).bodies).toHaveLength(1)
+      act(() => handle.clear())
+      expect(container.querySelector("canvas")).not.toBeNull()
+      expect(scene(ref).bodies).toEqual([])
+
+      // A saved handle cannot bypass a later controlled-empty prop either.
+      act(() => handle.push(row))
+      rerender(chart(empty))
+      act(() => handle.push(row))
+      expect(getByText("No source records")).toBeTruthy()
+      expect(container.querySelector("canvas")).toBeNull()
+      expect(handle.getData()).toEqual([])
+    })
+
+    it(`${name} keeps explicit empty data empty in React and serialized server output`, () => {
+      const html = renderToString(
+        <Chart data={[]} emptyContent={<span>No source records</span>} />
+      )
+      expect(html).toContain("No source records")
+      expect(html).not.toContain("stream-physics-frame")
+      // Serialized charts use canonical names; PhysicsPileChart is a React alias.
+      const { evidence } = renderChartWithEvidence(
+        name === "PhysicsPileChart" ? "UnitPileChart" : name,
+        { data: [] }
+      )
+      expect(evidence.empty).toBe(true)
+      expect(evidence.markCount).toBe(0)
+    })
+  }
+
+  for (const [Chart, sourceCount] of [
+    [GaltonBoardChart, 8],
+    [UnitPileChart, 4]
+  ] as const) {
+    it("retains explicitly requested mechanical demonstrations with empty data", () => {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const { container } = render(
+        <Chart
+          ref={ref}
+          data={[]}
+          simulationMode="mechanical"
+          mechanicalCount={8}
+        />
+      )
+      expect(container.querySelector("canvas")).not.toBeNull()
+      expect(ref.current!.getData()).toHaveLength(sourceCount)
+      expect(scene(ref).bodies).toHaveLength(8)
+    })
+  }
 
   it("reserves authored IDs before assigning anonymous IDs in a push batch", () => {
     const ref = React.createRef<PhysicsFrameHandle>()

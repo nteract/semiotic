@@ -529,6 +529,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
   )
   usePhysicsHocHandle(ref, {
     frameRef,
+    staticEmpty: (links ?? edges ?? data)?.length === 0,
     spawnDatum,
     seedRows: chartLinks as Datum[],
     seedSpawns: layout.initialSpawns
