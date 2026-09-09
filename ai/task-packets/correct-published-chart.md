@@ -5,7 +5,7 @@
 Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.
 
 Source package: semiotic@3.9.2. Channel: source.
-Source revision: sha256:070595eb59a8600f0345ba9d6c3e73b86cef4cef6e36874589d3eaa1705d72b6. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:aea093ae0361c1da7517143ac34b0ec291ac65d8f9de6d50b0b552403f2f49fe. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -539,7 +539,7 @@ npx vitest run docs/src/pages/tasks/examples/source-correction.test.ts
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts
 ```
 
-Recorded execution: 2026-09-08T21:55:28.380Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-09-09T02:43:52.862Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 

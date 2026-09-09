@@ -1,4 +1,10 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Locator } from "@playwright/test"
+
+async function expectPileProjection(editor: Locator, labels: string[]) {
+  const projection = editor.getByTestId("physics-pile-projection-overlay")
+  await expect(projection.locator("g text")).toHaveText(labels)
+  await expect(projection.locator("g text:visible")).toHaveCount(labels.length)
+}
 
 for (const theme of ["light", "dark"] as const) {
   test(`Live pile edits keep quantities and category labels together (${theme})`, async ({
@@ -14,57 +20,54 @@ for (const theme of ["light", "dark"] as const) {
     await page.goto("/charts/unit-pile-chart#live-updates")
     const editor = page.getByRole("region", { name: "Live pile editor" })
     const status = editor.getByRole("status")
-    const projectionLabels = editor
-      .getByTestId("physics-pile-projection-overlay")
-      .locator("g text:visible")
     await expect(status).toHaveText("2 source records · Total 98")
-    await expect(projectionLabels).toHaveText(["98", "A"])
+    await expectPileProjection(editor, ["98", "A"])
     await editor
       .getByRole("button", { name: "Add 49 to A", exact: true })
       .click()
     await expect(status).toHaveText("3 source records · Total 147")
-    await expect(projectionLabels).toHaveText(["147", "A"])
+    await expectPileProjection(editor, ["147", "A"])
     await editor
       .getByRole("button", { name: "Add category B", exact: true })
       .click()
     await expect(status).toHaveText("4 source records · Total 247")
-    await expect(projectionLabels).toHaveText(["147", "A", "100", "B"])
+    await expectPileProjection(editor, ["147", "A", "100", "B"])
     await editor.getByLabel("Value per full circle").selectOption("50")
     await expect(status).toHaveText("4 source records · Total 247")
-    await expect(projectionLabels).toHaveText(["147", "A", "100", "B"])
+    await expectPileProjection(editor, ["147", "A", "100", "B"])
     await expect(editor.getByText(/Full circle = 50/)).toBeVisible()
     await editor.getByLabel("Pause motion").check()
     await editor
       .getByRole("button", { name: "Remove last record", exact: true })
       .click()
     await expect(status).toHaveText("3 source records · Total 147")
-    await expect(projectionLabels).toHaveText(["147", "A"])
+    await expectPileProjection(editor, ["147", "A"])
     await editor
       .getByRole("button", { name: "Double first record", exact: true })
       .click()
     await expect(status).toHaveText("3 source records · Total 196")
-    await expect(projectionLabels).toHaveText(["196", "A"])
+    await expectPileProjection(editor, ["196", "A"])
     await editor.getByLabel("Pause motion").uncheck()
     await editor.screenshot({ path: testInfo.outputPath("live-pile.png") })
     await editor.getByRole("button", { name: "Clear", exact: true }).click()
     await expect(status).toHaveText("0 source records · Total 0")
-    await expect(projectionLabels).toHaveCount(0)
+    await expectPileProjection(editor, [])
     await editor
       .getByRole("button", { name: "Reset 49 + 49", exact: true })
       .click()
     await expect(status).toHaveText("2 source records · Total 98")
-    await expect(projectionLabels).toHaveText(["98", "A"])
+    await expectPileProjection(editor, ["98", "A"])
     await editor.getByLabel("Data source").selectOption("empty")
     await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
     await expect(status).toHaveText("0 source records · Total 0")
     await expect(editor.locator("canvas")).toHaveCount(0)
-    await expect(projectionLabels).toHaveCount(0)
+    await expectPileProjection(editor, [])
     await editor.getByLabel("Data source").selectOption("push")
     await expect(status).toHaveText("0 source records · Total 0")
-    await expect(projectionLabels).toHaveCount(0)
+    await expectPileProjection(editor, [])
     await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
     await expect(status).toHaveText("1 source record · Total 49")
-    await expect(projectionLabels).toHaveText(["49", "A"])
+    await expectPileProjection(editor, ["49", "A"])
     expect(pageErrors).toEqual([])
   })
 
