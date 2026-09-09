@@ -126,6 +126,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Physics charts separate chart mode from simulation input** (`physics.sample-and-mechanical-inputs`): Sample simulations use data plus the chart's accessors. Seeded no-data demonstrations use simulationMode="mechanical" (legacy mode="mechanical" remains accepted); mode otherwise carries chart display modes such as primary or sparkline.
 - **Physics push methods ingest source records** (`physics.push-uses-source-records`): Physics HOC refs push source records through the chart's accessors. pushRows and dataIdAccessor are not component props; stable source id fields are retained on spawned bodies without an invented accessor.
 - **Distribution physics charts update bodies and projections together** (`physics.live-source-reconciliation`): Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.
+- **EventDrop distinguishes admission history from current closure** (`physics.event-admission-history`): Arrival order determines historical lateness with a delay/function watermark. Equal arrival times keep source order. A window is closed when its end is at or below the watermark; previously accepted events stay accepted as later events advance it. An explicit watermark.value instead tests one fixed policy.
 
 <!-- semiotic-behavior-contracts:end -->
 

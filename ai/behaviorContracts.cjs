@@ -320,11 +320,21 @@ const BEHAVIOR_CONTRACTS = [
     title: "Distribution physics charts update bodies and projections together",
     severity: "warning",
     appliesTo: {
-      components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"],
+      components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart", "EventDropChart"],
     },
     summary: "Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.",
-    agentAction: "Omit data for push mode; data=[] stays empty and rejects pushes. Use stable IDs and remove for source edits; popBodies only removes marks. Set xExtent/valueExtent for stable domains.",
+    agentAction: "Omit data for push mode; data=[] stays empty and rejects pushes. Use stable IDs and remove for source edits; popBodies only removes marks. Set xExtent/valueExtent/timeExtent for stable domains.",
     example: 'ref.current?.update("a", row => ({ ...row, value: 102 })); ref.current?.remove("b");',
+  },
+  {
+    id: "physics.event-admission-history",
+    category: "physics",
+    title: "EventDrop distinguishes admission history from current closure",
+    severity: "error",
+    appliesTo: { components: ["EventDropChart"] },
+    summary: "Arrival order determines historical lateness with a delay/function watermark. Equal arrival times keep source order. A window is closed when its end is at or below the watermark; previously accepted events stay accepted as later events advance it. An explicit watermark.value instead tests one fixed policy.",
+    agentAction: "Use watermark={{delay: n}} in React for a replay, or supply watermarkAtArrivalAccessor with recorded per-event thresholds when watermark.value controls current closure. Keep arrival times and thresholds in the same units as event times. timeScale changes presentation pace, not admission decisions.",
+    example: '{ "data": [{"time":1,"arrivalTime":2,"admission":-3}], "watermarkAtArrivalAccessor":"admission", "watermark":{"value":100} }',
   },
 ]
 

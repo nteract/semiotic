@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { validateArtifactContract } from "semiotic/artifact"
 import WatermarksExamplePage from "./WatermarksExamplePage"
@@ -7,6 +7,7 @@ import { buildWatermarkTemporalRecord } from "./watermarksTemporalRecord"
 
 vi.mock("semiotic/physics", async () => {
   const ReactModule = await import("react")
+  const { buildEventDropPhysics } = await import("../../../../src/components/charts/physics/eventDropPhysics")
   return {
     EventDropChart: ReactModule.forwardRef(function MockEventDropChart(
       { description, title },
@@ -14,19 +15,7 @@ vi.mock("semiotic/physics", async () => {
     ) {
       return <div role="img" aria-label={`${title}. ${description}`} />
     }),
-    buildEventDropPhysics: () => ({
-      projectionRows: Array.from({ length: 7 }, (_, index) => ({
-        label: `${index * 12}–${(index + 1) * 12}`,
-        value: index === 2 ? 2 : 1,
-        secondary: index === 0 ? 1 : 0,
-      })),
-      metadata: {
-        plot: { x: 32, y: 24, width: 736, height: 342 },
-        windowPlot: { x: 92, y: 24, width: 676, height: 342 },
-        gutter: { x: 32, y: 24, width: 60, height: 342 },
-        lidSegments: [],
-      },
-    }),
+    buildEventDropPhysics,
   }
 })
 
@@ -60,6 +49,21 @@ const temporalEvents = [
   { id: "settled-event", eventTime: 45, arrivalTime: 18, source: "stream" },
   { id: "late-event", eventTime: 28, arrivalTime: 70, source: "backfill" },
 ]
+
+it("keeps historical acceptance and the selected explanation aligned as closure advances", () => {
+  render(<WatermarksExamplePage />)
+  expect(screen.getByRole("img", { name: /7 on time and 3 late/ })).toBeInTheDocument()
+  expect(screen.getByTestId("watermark-admission-decision")).toHaveTextContent(
+    "The window was already closed, so this event was late."
+  )
+  fireEvent.change(screen.getByRole("slider", { name: /arrival frontier/i }), { target: { value: "60" } })
+  expect(screen.getByRole("img", { name: /7 on time and 0 late/ })).toBeInTheDocument()
+  expect(screen.getByTestId("watermark-admission-decision")).toHaveTextContent(
+    "The window was still open, so this event was accepted."
+  )
+  fireEvent.change(screen.getByRole("slider", { name: /arrival frontier/i }), { target: { value: "70" } })
+  expect(screen.getByRole("img", { name: /7 on time and 3 late/ })).toBeInTheDocument()
+})
 
 describe("watermark Artifact Contract time record", () => {
   it("derives open, settled, and corrected states without reading the ambient clock", () => {

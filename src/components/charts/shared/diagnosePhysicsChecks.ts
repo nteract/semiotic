@@ -1,6 +1,12 @@
 import { PHYSICS_DIAGNOSTIC_CHARTS } from "./chartFamilySets"
 import type { Datum } from "./datumTypes"
 import type { Diagnosis } from "./diagnoseTypes"
+import {
+  generatePhysicsPileMechanicalSamples,
+  physicsPileUnitCount
+} from "../physics/physicsPileData"
+import { createPhysicsSourceState } from "../physics/physicsSourceRows"
+import { finiteNumber as physicsFiniteNumber } from "../physics/physicsChartShared"
 
 function finiteNumber(value: unknown): number | null {
   const number = value instanceof Date ? value.getTime() : Number(value)
@@ -106,6 +112,7 @@ export function checkPhysicsConfig(
   }
 
   if (component === "UnitPileChart") {
+    const mechanical = (props.simulationMode ?? props.mode) === "mechanical"
     const mechanicalCount = finiteNumber(props.mechanicalCount)
     if (
       props.mechanicalCount != null &&
@@ -119,7 +126,7 @@ export function checkPhysicsConfig(
       })
     }
     if (
-      props.mode === "mechanical" &&
+      mechanical &&
       Array.isArray(props.mechanicalCategories) &&
       props.mechanicalCategories.length === 0
     ) {
@@ -131,8 +138,8 @@ export function checkPhysicsConfig(
       })
     }
 
-    const unitValue = finiteNumber(props.unitValue ?? 1) ?? 1
-    if (unitValue <= 0) {
+    const unitValue = physicsFiniteNumber(props.unitValue ?? 1)
+    if (unitValue == null || unitValue <= 0) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_UNIT_VALUE",
@@ -142,18 +149,37 @@ export function checkPhysicsConfig(
       return
     }
 
-    const data = Array.isArray(props.data) ? props.data : []
-    const valueAccessor = props.valueAccessor || "value"
-    const bodyEstimate = data.reduce((sum: number, datum: Datum) => {
-      const value = finiteNumber(readField(datum, valueAccessor, "value")) ?? 0
-      return sum + Math.max(0, Math.round(value / unitValue))
+    const source = mechanical
+      ? generatePhysicsPileMechanicalSamples({
+          count: mechanicalCount ?? undefined,
+          categories: Array.isArray(props.mechanicalCategories)
+            ? props.mechanicalCategories
+            : undefined,
+          seed: physicsFiniteNumber(props.seed) ?? 1,
+          unitValue
+        })
+      : Array.isArray(props.data)
+        ? props.data
+        : []
+    const { rows: data } = createPhysicsSourceState(source, "pile")
+    const valueAccessor =
+      props.valueAccessor ?? (mechanical ? "value" : undefined)
+    const bodyEstimate = data.reduce((sum, datum, index) => {
+      const rawValue =
+        typeof valueAccessor === "function"
+          ? valueAccessor(datum, index)
+          : typeof valueAccessor === "string" && valueAccessor
+            ? datum[valueAccessor]
+            : 1
+      const value = Math.max(0, physicsFiniteNumber(rawValue) ?? 0)
+      return sum + physicsPileUnitCount(value, unitValue)
     }, 0)
     if (bodyEstimate > 1500) {
       out.push({
         severity: "warning",
         code: "PHYSICS_BODY_BUDGET",
         message: `UnitPileChart would create about ${bodyEstimate} live bodies; motion may dominate the chart and stress the frame budget.`,
-        fix: `Increase unitValue, cap visible units, or aggregate before rendering so the settled projection remains readable.`
+        fix: `Sample or aggregate source records, or use a bounded window with sediment. A larger unitValue reduces full circles but still leaves at least one body per positive source record.`
       })
     }
   }
@@ -462,10 +488,7 @@ export function checkPhysicsConfig(
   ) {
     const data = Array.isArray(props.data) ? props.data : []
     const mechanicalCount = finiteNumber(props.mechanicalCount) ?? 0
-    const estimated =
-      data.length > 0
-        ? data.length
-        : mechanicalCount
+    const estimated = data.length > 0 ? data.length : mechanicalCount
     if (estimated > 2500) {
       out.push({
         severity: "warning",

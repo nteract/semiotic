@@ -97,7 +97,7 @@ function addVectors(
 
 /**
  * Compose controllers into a single continuous flag, bodyForce, and onTick.
- * Call onTick from StreamPhysicsFrame after each pipeline tick; `ctx.dt`
+ * Call onTick from StreamPhysicsFrame after each fixed simulation step; `ctx.dt`
  * accounts for every fixed substep completed by that tick.
  */
 export function composePhysicsControllers(

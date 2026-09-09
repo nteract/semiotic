@@ -39,8 +39,7 @@ import {
 import {
   PhysicsPipelineStore,
   type PhysicsObservationEvent,
-  type PhysicsPipelineSnapshot,
-  type PhysicsPipelineTickResult
+  type PhysicsPipelineSnapshot
 } from "./PhysicsPipelineStore"
 import {
   createPhysicsFrameStore,
@@ -92,9 +91,8 @@ import {
   resolveRegionVector,
   resolveStyle,
   runPhysicsPostTick,
-  runPhysicsReducedMotionPasses,
-  type InternalStreamPhysicsBodyRegionState,
-  type PhysicsPostTickOutcome
+  runPhysicsObservedSteps,
+  type InternalStreamPhysicsBodyRegionState
 } from "./physicsRegionRuntime"
 import type {
   PhysicsCanvasPaintContext,
@@ -144,6 +142,7 @@ import {
 } from "./physicsSemanticUI"
 
 const DEFAULT_SIZE: [number, number] = [640, 360]
+const EMPTY_REGION_EFFECTS: StreamPhysicsRegionEffect[] = []
 const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
 const CHART_TYPE = "StreamPhysicsFrame"
 const SETTLED_THEME_BACKGROUND = physicsCanvasThemeCSSValue("background")
@@ -209,7 +208,7 @@ export const StreamPhysicsFrame = memo(
         onTick,
         opacity,
         paused = false,
-        regionEffects = [],
+        regionEffects = EMPTY_REGION_EFFECTS,
         responsiveHeight,
         responsiveWidth,
         selectedBodyStyle = DEFAULT_SELECTED_BODY_STYLE,
@@ -246,6 +245,17 @@ export const StreamPhysicsFrame = memo(
       const bodyForcesRef = useRef(bodyForces)
       const onTickRef = useRef(onTick)
       onTickRef.current = onTick
+      const steppingRef = useRef(false)
+      const readyToStepRef = useRef(false)
+      const reducedRunRef = useRef<{
+        store: PhysicsPipelineStore
+        revision: number
+        bodyForces: StreamPhysicsBodyForce | undefined
+        controllers: typeof composedControllers
+        regionEffects: typeof regionEffects
+        paused: boolean
+        visible: boolean
+      } | null>(null)
       const composedControllers = React.useMemo(
         () => composePhysicsControllers(controllers),
         [controllers]
@@ -715,11 +725,17 @@ export const StreamPhysicsFrame = memo(
           afterPaint(ctx, bodies, paintContext)
           ctx.restore()
         }
-        drawPopAnimations(
-          ctx,
-          popAnimationsRef.current,
-          logicalClockRef.current()
-        )
+        // Reduced motion stops the animation loop. Retiring effects here also
+        // clears a burst already in flight when the preference changes.
+        if (reducedMotionRef.current) {
+          popAnimationsRef.current.clear()
+        } else {
+          drawPopAnimations(
+            ctx,
+            popAnimationsRef.current,
+            logicalClockRef.current()
+          )
+        }
         ctx.restore()
         sceneRevisionDiagnosticsRef.current.afterCompute(
           sceneRevisionCheck,
@@ -748,7 +764,8 @@ export const StreamPhysicsFrame = memo(
         stylePrimitives,
         renderBodyProp,
         regionById,
-        physicsCanvasPointer
+        physicsCanvasPointer,
+        reducedMotionRef
       ])
 
       const reportExecutionState = useCallback(
@@ -789,6 +806,7 @@ export const StreamPhysicsFrame = memo(
           return "runtime region effects require sync"
         if (hasRuntimeBodyForces) return "body forces require sync"
         if (composedControllers) return "physics controllers require sync"
+        if (onTick) return "fixed-step onTick requires sync"
         if (!isPhysicsWorkerConfigSupported(augmentedConfig ?? {})) {
           return "config is not worker-cloneable"
         }
@@ -803,6 +821,7 @@ export const StreamPhysicsFrame = memo(
         hasRuntimeBodyForces,
         hasRuntimeRegionEffects,
         hydrated,
+        onTick,
         initialSpawnPacing
       ])
 
@@ -955,9 +974,41 @@ export const StreamPhysicsFrame = memo(
         [finishWorkerFrame, frameFromPayload, handleWorkerError]
       )
 
+      const runObservedSteps = useCallback((options: { deltaSeconds?: number; maxSteps?: number } = {}) => {
+        const store = storeRef.current!
+        const wasStepping = steppingRef.current
+        steppingRef.current = true
+        try {
+          if (!composedControllersRef.current && !onTickRef.current && !bodyForcesRef.current &&
+            !regionRuntimeEffectsRequireSync(regionEffectsRef.current)) {
+            const result = options.deltaSeconds === undefined
+              ? store.settleWithObservations(options.maxSteps)
+              : store.tick(options.deltaSeconds)
+            return { result, snapshot: store.snapshot(), regionEffectsApplied: false, bodyForcesApplied: false }
+          }
+          return runPhysicsObservedSteps(store, (result) => runPhysicsPostTick({
+            store,
+            result,
+            regionEffects: regionEffectsRef.current,
+            regionState: regionStateRef.current,
+            bodyForces: bodyForcesRef.current,
+            composed: composedControllersRef.current,
+            onTick: onTickRef.current
+          }), {
+            ...options,
+            continueWhile: () => Boolean(continuousRef.current || composedControllersRef.current ||
+              bodyForcesRef.current || regionRuntimeEffectsRequireSync(regionEffectsRef.current))
+          })
+        } finally {
+          steppingRef.current = wasStepping
+        }
+      }, [])
+
       const requestRender = useCallback(() => {
         const store = storeRef.current
-        if (!store) return
+        // A controller may use the frame ref to push/pop during a step. The
+        // active run will consume that work and paint; never recursively settle.
+        if (!store || !readyToStepRef.current || steppingRef.current) return
         const usingWorker = startWorkerIfNeeded()
         const snapshot = store.snapshot()
         const frameDrivenWork =
@@ -994,7 +1045,7 @@ export const StreamPhysicsFrame = memo(
         cancelRender()
         rafRef.current = null
         const store = storeRef.current
-        if (!store) return
+        if (!store || !readyToStepRef.current) return
 
         // A reduced-motion settle does not advance from the RAF clock. Clear the
         // animated-path timestamp before both worker and sync settles so the first
@@ -1002,6 +1053,16 @@ export const StreamPhysicsFrame = memo(
         const reducedMotionForFrame = reducedMotionRef.current
         if (reducedMotionForFrame) {
           lastFrameTimeRef.current = null
+          const previous = reducedRunRef.current
+          const state = store.snapshot()
+          if (previous?.store === store && previous.revision === store.version() &&
+            previous.bodyForces === bodyForcesRef.current &&
+            previous.controllers === composedControllersRef.current &&
+            previous.regionEffects === regionEffectsRef.current &&
+            previous.paused === state.paused && previous.visible === state.visible) {
+            paint()
+            return
+          }
         }
 
         if (workerActiveRef.current && workerSessionRef.current) {
@@ -1044,18 +1105,7 @@ export const StreamPhysicsFrame = memo(
               if (workerGenerationRef.current !== generation) return
               handleWorkerError(error)
 
-              const result = reducedMotionForFrame
-                ? store.settleWithObservations()
-                : store.tick(deltaSeconds)
-              runPhysicsPostTick({
-                store,
-                result,
-                regionEffects: regionEffectsRef.current,
-                regionState: regionStateRef.current,
-                bodyForces: bodyForcesRef.current,
-                composed: composedControllersRef.current,
-                onTick: onTickRef.current
-              })
+              runObservedSteps(reducedMotionForFrame ? {} : { deltaSeconds })
               paint()
               if (renderRequested) requestRender()
             })
@@ -1063,26 +1113,18 @@ export const StreamPhysicsFrame = memo(
         }
 
         const composed = composedControllersRef.current
-        const runPostTick = (result: PhysicsPipelineTickResult) =>
-          runPhysicsPostTick({
-            store,
-            result,
-            composed,
-            regionEffects: regionEffectsRef.current,
-            regionState: regionStateRef.current,
-            bodyForces: bodyForcesRef.current,
-            onTick: onTickRef.current
-          })
-
-        let outcome: PhysicsPostTickOutcome
-        if (reducedMotionForFrame) {
-          outcome = runPhysicsReducedMotionPasses(store, runPostTick)
-        } else {
+        let deltaSeconds: number | undefined
+        if (!reducedMotionForFrame) {
           const now = logicalClockRef.current()
           const last = lastFrameTimeRef.current
           lastFrameTimeRef.current = now
-          const result = store.tick(last === null ? 0 : (now - last) / 1000)
-          outcome = { ...runPostTick(result), result }
+          deltaSeconds = last === null ? 0 : (now - last) / 1000
+        }
+        const outcome = runObservedSteps({ deltaSeconds })
+        if (reducedMotionForFrame) reducedRunRef.current = {
+          store, revision: store.version(), bodyForces: bodyForcesRef.current,
+          controllers: composedControllersRef.current, regionEffects: regionEffectsRef.current,
+          paused: outcome.snapshot.paused, visible: outcome.snapshot.visible
         }
         const {
           result,
@@ -1112,6 +1154,7 @@ export const StreamPhysicsFrame = memo(
         paint,
         cancelRender,
         requestRender,
+        runObservedSteps,
         scheduleRender,
         reducedMotionRef,
         rafRef
@@ -1153,7 +1196,7 @@ export const StreamPhysicsFrame = memo(
         // value makes a runtime media-query change actively enter the settle path
         // or restart RAF work when motion is allowed again.
         requestRender()
-      }, [reducedMotion, requestRender])
+      }, [reducedMotion, requestRender, composedBodyForces, composedControllers, regionEffects])
 
       usePhysicsFrameLifecyclePolicy({
         cancelRender,
@@ -1193,6 +1236,7 @@ export const StreamPhysicsFrame = memo(
           clearRegionState: (bodyId) => {
             if (bodyId) regionStateRef.current.delete(bodyId)
             else regionStateRef.current.clear()
+            reducedRunRef.current = null
             requestRender()
           },
           getData: () => storeRef.current!.readBodies(),
@@ -1238,17 +1282,19 @@ export const StreamPhysicsFrame = memo(
               const body = bodyById.get(id)
               if (!body) continue
               regionStateRef.current.delete(id)
-              popAnimationsRef.current.set(id, {
-                body,
-                color: options.color ?? "#f59e0b",
-                durationMs: Math.max(120, options.durationMs ?? 520),
-                radius: options.radius ?? physicsBodyRadius(body),
-                scale:
-                  options.scale != null && options.scale > 0
-                    ? options.scale
-                    : 1,
-                startedAt: now
-              })
+              if (!reducedMotionRef.current) {
+                popAnimationsRef.current.set(id, {
+                  body,
+                  color: options.color ?? "#f59e0b",
+                  durationMs: Math.max(120, options.durationMs ?? 520),
+                  radius: options.radius ?? physicsBodyRadius(body),
+                  scale:
+                    options.scale != null && options.scale > 0
+                      ? options.scale
+                      : 1,
+                  startedAt: now
+                })
+              }
               if (focusedBodyIdRef.current === id) {
                 focusedBodyIdRef.current = null
                 setFocusedSemanticItem(null)
@@ -1283,29 +1329,19 @@ export const StreamPhysicsFrame = memo(
             requestRender()
           },
           settle: (maxSteps) => {
-            const steps = storeRef.current!.settle(maxSteps)
+            const steps = runObservedSteps({ maxSteps }).result.steps
             postWorkerCommand({ type: "settle", maxSteps })
-            requestRender()
+            paint()
             return steps
           },
           settleWithObservations: (maxSteps) => {
-            const result = storeRef.current!.settleWithObservations(maxSteps)
+            const { result } = runObservedSteps({ maxSteps })
             postWorkerCommand({ type: "settle", maxSteps })
-            requestRender()
+            paint()
             return result
           },
           step: (deltaSeconds) => {
-            const store = storeRef.current!
-            const result = store.tick(deltaSeconds)
-            runPhysicsPostTick({
-              store,
-              result,
-              regionEffects: regionEffectsRef.current,
-              regionState: regionStateRef.current,
-              bodyForces: bodyForcesRef.current,
-              composed: composedControllersRef.current,
-              onTick: onTickRef.current
-            })
+            const { result } = runObservedSteps({ deltaSeconds })
             postWorkerCommand({ type: "tick", deltaSeconds })
             paint()
             return result
@@ -1317,12 +1353,23 @@ export const StreamPhysicsFrame = memo(
           frameRuntime,
           paint,
           postWorkerCommand,
+          reducedMotionRef,
           requestRender,
+          runObservedSteps,
           setFocusedSemanticItem,
           setHoverData,
           stopWorker
         ]
       )
+
+      // Canvas-host layout effects can request a render before this frame's
+      // imperative ref is attached. Controllers may use that ref, so start
+      // execution only after the handle exists.
+      useEffect(() => {
+        readyToStepRef.current = true
+        requestRender()
+        return () => { readyToStepRef.current = false }
+      }, [requestRender])
 
       const serverLikeRender =
         isServerEnvironment || (!hydrated && wasHydratingFromSSR)

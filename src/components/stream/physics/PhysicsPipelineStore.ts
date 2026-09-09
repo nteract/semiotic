@@ -19,6 +19,7 @@ import type {
   PhysicsObservationEvent,
   PhysicsObservationRecord,
   PhysicsPipelineConfig,
+  PhysicsPipelineExecution,
   PhysicsPipelineControlSurface,
   PhysicsPipelineSnapshot,
   PhysicsPipelineTickResult,
@@ -60,7 +61,7 @@ import {
 } from "./physicsPipelineObservations"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
-import { runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
+import { createPhysicsStepObserver, runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
 
 // Re-export public API for stable import paths
 export type {
@@ -80,6 +81,7 @@ export type {
   PhysicsSensorObservationConfig,
   PhysicsPipelineObservationOptions,
   PhysicsPipelineConfig,
+  PhysicsPipelineExecution,
   PhysicsPipelineTickResult,
   PhysicsPipelineSnapshot,
   PhysicsPipelineControlSurface
@@ -324,7 +326,7 @@ export class PhysicsPipelineStore {
     this.updateResults.record({ kind: "clear" }, PHYSICS_BODY_INVALIDATIONS)
   }
 
-  tick(deltaSeconds: number): PhysicsPipelineTickResult {
+  tick(deltaSeconds: number, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
     const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
@@ -362,6 +364,7 @@ export class PhysicsPipelineStore {
     this.syncSimulationState(observations)
     if (spawned.length > 0) this.quiescence.reset()
     this.accumulator += delta
+    const afterStep = this.stepObserver(execution, { spawned, evicted, sedimented, events, observations })
 
     // Refresh/worker command acknowledgements use tick(0). They may admit
     // due rows, but must not consume time left by an earlier catch-up limit.
@@ -372,7 +375,7 @@ export class PhysicsPipelineStore {
       this.settleHost(),
       Math.min(availableSteps, this.config.maxSubsteps),
       { spawned, evicted, sedimented, events, observations },
-      { stopAtRest: false }
+      { stopAtRest: false, shouldStop: () => this.paused || !this.visible, afterStep }
     )
     this.accumulator = Math.max(0, this.accumulator - steps * this.config.fixedDt)
 
@@ -416,9 +419,17 @@ export class PhysicsPipelineStore {
   }
 
   settleWithObservations(
-    maxSteps = this.config.settleStepLimit
+    maxSteps = this.config.settleStepLimit,
+    execution?: PhysicsPipelineExecution
   ): PhysicsPipelineTickResult {
-    return this.runSettle(maxSteps, true)
+    return this.runSettle(maxSteps, true, execution)
+  }
+
+  private stepObserver(execution: PhysicsPipelineExecution | undefined, sink: Required<PhysicsSettleSink>): (() => void) | undefined {
+    return createPhysicsStepObserver(execution, (steps) => {
+      if (steps) this.revision += 1
+      return this.result(steps, sink.spawned, sink.evicted, sink.sedimented, sink.events, sink.observations)
+    })
   }
 
   /** Bind this store to the shared settle loop (see physicsPipelineSettle). */
@@ -444,7 +455,7 @@ export class PhysicsPipelineStore {
    * can't mean two different things. `observe` adds kernel/sensor observation
    * and the collected tick result; the stepping itself is identical.
    */
-  private runSettle(maxSteps: number, observe: boolean): PhysicsPipelineTickResult {
+  private runSettle(maxSteps: number, observe: boolean, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
     const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
@@ -469,8 +480,13 @@ export class PhysicsPipelineStore {
     const sink: PhysicsSettleSink = observe
       ? { spawned, evicted, sedimented, events, observations }
       : { spawned }
+    const afterStep = this.stepObserver(execution, { spawned, evicted, sedimented, events, observations: observations ?? [] })
     const { steps, budget }: PhysicsSettleRun =
-      runPhysicsSettleSteps(this.settleHost(), maxSteps, sink)
+      runPhysicsSettleSteps(this.settleHost(), maxSteps, sink, {
+        afterStep,
+        continueWhile: execution?.continueWhile,
+        shouldStop: observe ? () => this.paused || !this.visible : undefined
+      })
 
     const bodiesChanged = spawned.length + evicted.length + sedimented.length > 0
     if (steps > 0 || bodiesChanged || events.length > 0) this.revision += 1
@@ -802,7 +818,7 @@ export class PhysicsPipelineStore {
       queueSize: this.queue.length,
       revision: this.revision,
       shouldContinue:
-        shouldContinueOverride ?? (this.queue.length > 0 || !this.atRest()),
+        shouldContinueOverride ?? (!this.paused && this.visible && (this.queue.length > 0 || !this.atRest())),
       sleeping,
       sedimented,
       spawned,

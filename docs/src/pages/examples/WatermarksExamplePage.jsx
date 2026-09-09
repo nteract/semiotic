@@ -56,8 +56,8 @@ const SCENARIOS = [
     seed: 47,
     description: "a batch replay injects old event times after newer windows have already moved on",
     events: [
-      // Event times fix each event's window (and so its lateness); arrival
-      // times only choreograph the rain. The three "backfill"
+      // Event times select windows; each arrival is tested against the
+      // watermark at that moment. The three "backfill"
       // rows carry old event times but arrive last — the burst that lands
       // behind an already-advanced watermark.
       { id: "backfill-01", eventTime: 6, arrivalTime: 4, source: "api", value: 1 },
@@ -132,9 +132,13 @@ const timeAudit = auditTemporalContext(correctedTime, {
 
 <EventDropChart
   ref={chartRef}
-  data={arrivedEvents}
+  data={arrivedEvents.map(event => ({
+    ...event,
+    watermarkAtArrival: event.arrivalTime - allowedLateness - 1e-6,
+  }))}
   timeAccessor="eventTime"
   arrivalAccessor="arrivalTime"
+  watermarkAtArrivalAccessor="watermarkAtArrival"
   windows={{ size: windowSize }}
   watermark={{ value: currentEventTime - allowedLateness }}
   timeExtent={eventTimeExtent}
@@ -203,6 +207,7 @@ function buildModel(
     data: arrivedEvents,
     timeAccessor: "eventTime",
     arrivalAccessor: "arrivalTime",
+    watermarkAtArrivalAccessor: "watermarkAtArrival",
     windows: { size: windowSize },
     watermark: { value: colliderWatermark },
     ballRadius: BALL_RADIUS,
@@ -587,7 +592,15 @@ export default function WatermarksExamplePage() {
   const chartWidth = Math.max(360, Math.min(1060, hostWidth))
   const chartSize = useMemo(() => [chartWidth, CHART_HEIGHT], [chartWidth])
   const scenario = SCENARIOS.find((item) => item.id === scenarioId) ?? SCENARIOS[0]
-  const events = useMemo(() => [...scenario.events, ...injectedEvents], [scenario, injectedEvents])
+  const events = useMemo(
+    () => [...scenario.events, ...injectedEvents].map((event) => ({
+      ...event,
+      // This example declares an arrival-frontier policy. An arrival exactly
+      // at the closure instant is accepted, matching its temporal claim ledger.
+      watermarkAtArrival: event.arrivalTime - watermarkStrategy - WATERMARK_EPSILON,
+    })),
+    [scenario, injectedEvents, watermarkStrategy],
+  )
   const timeline = useMemo(() => timelineFor(events), [events])
   const arrivedEvents = useMemo(
     () => events.filter((event) => event.arrivalTime <= currentTime),
@@ -651,16 +664,17 @@ export default function WatermarksExamplePage() {
   const recordArcRendered = arc.recordRendered
   const recordedChartKeyRef = useRef(null)
 
-  // Classify each body against the physical lid state. Closed-window bodies are
-  // colored late; the angled colliders decide whether they roll to the gutter.
+  // Color records by their admission decision, including records in windows
+  // that have closed since they were accepted.
   const classify = useCallback(
     (datum) => {
-      if (datum?.timeliness === "late") return LATE_KEY
-      if (datum?.timeliness === "current") return ONTIME_KEY
       const eventTime = Number(datum?.eventTime)
-      return Number.isFinite(eventTime) && eventTime < model.currentTime ? LATE_KEY : ONTIME_KEY
+      const watermarkAtArrival = Number(datum?.watermarkAtArrival)
+      const windowEnd = (Math.floor(eventTime / committed.window) + 1) * committed.window
+      return Number.isFinite(watermarkAtArrival) && windowEnd <= watermarkAtArrival
+        ? LATE_KEY : ONTIME_KEY
     },
-    [model.currentTime],
+    [committed.window],
   )
 
   useEffect(() => {
@@ -874,6 +888,7 @@ export default function WatermarksExamplePage() {
         data={arrivedEvents}
         timeAccessor="eventTime"
         arrivalAccessor="arrivalTime"
+        watermarkAtArrivalAccessor="watermarkAtArrival"
         colorBy={classify}
         windows={{ size: committed.window }}
         watermark={{ value: model.watermark }}
@@ -884,7 +899,6 @@ export default function WatermarksExamplePage() {
         size={chartSize}
         paused={paused}
         showProjection={false}
-        title="Watermark replay"
         description={`Event-drop watermark replay: ${model.onTime} on time and ${model.late} late. The declared window is ${declaredTime?.window?.status ?? "unknown"} with ${declaredTime?.completeness?.status ?? "unknown"} completeness.`}
         frameProps={eventDropFrameProps}
       />
@@ -899,7 +913,7 @@ export default function WatermarksExamplePage() {
             Events do not always arrive in the order they happened. A <strong>watermark</strong> is
             the pipeline&rsquo;s promise that it is safe to close older windows. Here, a late
             arrival drops at its own event time, hits an angled lid, and rolls into the left
-            gutter—while open windows wait for the watermark to pass.
+            gutter. Events accepted earlier stay in their own windows when those windows close.
           </p>
           <div className="watermarks-example__credit">
             A remake of the mechanic from{" "}
@@ -1032,7 +1046,7 @@ export default function WatermarksExamplePage() {
 
           <p className="watermarks-example__scenario-note">
             <span className="watermarks-example__swatch watermarks-example__swatch--ontime" />{" "}
-            current event
+            accepted on arrival
             <span className="watermarks-example__swatch watermarks-example__swatch--late" /> late
             event &mdash; {scenario.label}: {scenario.description}.
           </p>
@@ -1125,9 +1139,18 @@ export default function WatermarksExamplePage() {
               </div>
               <div>
                 <dt>timeliness</dt>
-                <dd>{selectedClass === LATE_KEY ? "late event" : "current event"}</dd>
+                <dd>{selectedClass === LATE_KEY ? "late event" : "accepted on arrival"}</dd>
+              </div>
+              <div>
+                <dt>arrival watermark</dt>
+                <dd>{seconds(selected?.watermarkAtArrival)}</dd>
               </div>
             </dl>
+            <p className="watermarks-example__decision" data-testid="watermark-admission-decision">
+              {selected
+                ? `${selected.id} arrived at ${seconds(selected.arrivalTime)}. Its window ends at ${seconds((Math.floor(selected.eventTime / committed.window) + 1) * committed.window)}; the watermark at arrival was ${seconds(selected.watermarkAtArrival)}. ${selectedClass === LATE_KEY ? "The window was already closed, so this event was late." : "The window was still open, so this event was accepted."}`
+                : "Select an event to inspect its admission decision."}
+            </p>
           </div>
           <div>
             <h2>Arrival order</h2>

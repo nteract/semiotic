@@ -102,7 +102,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       "Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling.",
     required: ["data"],
     dataShape: "array",
-    dataAccessors: ["timeAccessor", "arrivalAccessor"],
+    dataAccessors: ["timeAccessor", "arrivalAccessor", "watermarkAtArrivalAccessor"],
     propBags: ["physics"],
     ownProps: {
       styleRules: STYLE_RULES_PROP_SPEC,
@@ -114,7 +114,11 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       arrivalAccessor: {
         type: ["string", "function"],
         default: "arrivalTime",
-        description: "Arrival-time field used to pace event ingestion."
+        description: "Arrival-time field used for admission order and ingestion pacing; ties keep source order."
+      },
+      watermarkAtArrivalAccessor: {
+        type: ["string", "function"],
+        description: "Recorded watermark at each event's arrival. Overrides computed admission thresholds while watermark.value can advance current window closure."
       },
       windows: {
         type: "object",
@@ -123,7 +127,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       watermark: {
         type: ["object", "function"],
         description:
-          "Watermark config: { delay }, { value }, or a function of latest event time."
+          "Watermark config: { delay } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure."
       },
       timeExtent: {
         type: "array",

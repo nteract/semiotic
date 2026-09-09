@@ -259,31 +259,6 @@ export const GauntletChart = forwardRef(function GauntletChart<
       })),
     [layout.gates, layout.height, layout.routeY, layout.width]
   )
-  const [states, setStates] = useState<GauntletProjectState<TDatum>[]>(() =>
-    safeData.map((datum, index) => {
-      const state = createInitialState(
-        datum,
-        index,
-        stateAccessors,
-        positiveProperties,
-        negativeById
-      )
-      return {
-        ...state,
-        viability:
-          viability?.(state, {
-            negativeProperties: negativeById,
-            positiveProperties: positiveById
-          }) ?? defaultViability(state, positiveById, negativeById)
-      }
-    })
-  )
-  const statesRef = useRef(states)
-  const elapsedRef = useRef(0)
-  const processedGateVisitsRef = useRef(new Map<string, number>())
-  const capacitySnapshotsRef = useRef<CapacityQueueSnapshot[]>([])
-  const onCapacityChangeRef = useRef(onCapacityChange)
-  onCapacityChangeRef.current = onCapacityChange
   // Keep latest builders/callbacks in refs so identity thrash (inline
   // viability, data={[row]}, onStateChange={() => …}) cannot re-seed the
   // simulation or re-enter React update loops.
@@ -331,6 +306,15 @@ export const GauntletChart = forwardRef(function GauntletChart<
     []
   )
 
+  const [states, setStates] = useState<GauntletProjectState<TDatum>[]>(() =>
+    safeData.map((datum, index) => createState(datum, index))
+  )
+  const statesRef = useRef(states)
+  const elapsedRef = useRef(0)
+  const processedGateVisitsRef = useRef(new Map<string, number>())
+  const capacitySnapshotsRef = useRef<CapacityQueueSnapshot[]>([])
+  const onCapacityChangeRef = useRef(onCapacityChange)
+  onCapacityChangeRef.current = onCapacityChange
   const resetRunState = useCallback(() => {
     processedGateVisitsRef.current.clear()
     capacitySnapshotsRef.current = []
@@ -394,7 +378,9 @@ export const GauntletChart = forwardRef(function GauntletChart<
   // the parent passes a fresh `data={[…]}` array with the same rows (the usual
   // cause of gauntlet remount flicker + max-update-depth loops with live
   // onStateChange readouts).
-  useEffect(() => {
+  const seededDataKeyRef = useRef(dataKey)
+  if (seededDataKeyRef.current !== dataKey) {
+    seededDataKeyRef.current = dataKey
     processedGateVisitsRef.current.clear()
     capacitySnapshotsRef.current = []
     elapsedRef.current = 0
@@ -403,11 +389,12 @@ export const GauntletChart = forwardRef(function GauntletChart<
     )
     statesRef.current = next
     setStates(next)
-  }, [createState, dataKey])
+  }
 
   useEffect(() => {
-    statesRef.current = states
-    onStateChangeRef.current?.(states)
+    // The child may have advanced during this commit's reduced-motion pass.
+    // Never replace its authoritative ledger with the pre-commit React state.
+    onStateChangeRef.current?.(statesRef.current)
   }, [states])
 
   const projectEvents = useCallback(

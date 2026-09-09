@@ -2,17 +2,19 @@
  * The shared fixed-step loop behind live ticks and both of
  * `PhysicsPipelineStore`'s settle entry points.
  *
- * Settling has to mean *the simulation reached its end state*, and that includes
- * admitting every arrival the queue still owes. Advancing simulated time per
- * step and re-checking due spawns inside the loop is what lets paced spawns
- * (`initialSpawnPacing`, per-datum `spawnAt`) and elapsed-time event tapes
- * finish on the reduced-motion / snapshot path instead of freezing at the first
- * spawn instant. Both entry points run this one loop so they cannot drift apart.
+ * Each step advances simulated time and admits due arrivals. An observed run
+ * can also execute authored behavior at that boundary. The step limit bounds
+ * the work; reaching it does not prove that every arrival or process completed.
+ * Both entry points use this loop so pacing cannot drift between them.
  */
 import type { PhysicsBodyBudgetDecision } from "./PhysicsBodyBudget"
 import type { PhysicsKernelEvent } from "./PhysicsKernel"
 import type { PhysicsPipelineEvictionResult } from "./physicsPipelineHelpers"
-import type { PhysicsObservationEvent } from "./PhysicsPipelineTypes"
+import type {
+  PhysicsObservationEvent,
+  PhysicsPipelineExecution,
+  PhysicsPipelineTickResult
+} from "./PhysicsPipelineTypes"
 
 /**
  * The slice of store behavior the loop drives. Passed explicitly (rather than
@@ -41,9 +43,7 @@ export interface PhysicsSettleHost {
     events: PhysicsKernelEvent[],
     observations?: PhysicsObservationEvent[]
   ) => void
-  observeSensorTransitions: (
-    observations?: PhysicsObservationEvent[]
-  ) => void
+  observeSensorTransitions: (observations?: PhysicsObservationEvent[]) => void
   refreshQuiescence: (deltaSeconds: number, spawnedCount: number) => void
 }
 
@@ -65,18 +65,65 @@ export interface PhysicsSettleRun {
   budget?: PhysicsBodyBudgetDecision
 }
 
+/** Deliver each admission/event exactly once, while retaining the aggregate
+ * result for the caller of tick or settleWithObservations. */
+export function createPhysicsStepObserver(
+  execution: PhysicsPipelineExecution | undefined,
+  readResult: (steps: number) => PhysicsPipelineTickResult
+): (() => void) | undefined {
+  if (!execution) return undefined
+  const keys = [
+    "spawned",
+    "evicted",
+    "sedimented",
+    "events",
+    "observations"
+  ] as const
+  const cursors = {
+    spawned: 0,
+    evicted: 0,
+    sedimented: 0,
+    events: 0,
+    observations: 0
+  }
+  const observe = (steps: number) => {
+    const aggregate = readResult(steps)
+    const result: PhysicsPipelineTickResult = {
+      ...aggregate,
+      spawned: aggregate.spawned.slice(cursors.spawned),
+      evicted: aggregate.evicted.slice(cursors.evicted),
+      sedimented: aggregate.sedimented.slice(cursors.sedimented),
+      events: aggregate.events.slice(cursors.events),
+      observations: aggregate.observations.slice(cursors.observations)
+    }
+    for (const key of keys) cursors[key] = aggregate[key].length
+    execution.onStep(result)
+  }
+  observe(0)
+  return () => observe(1)
+}
+
 export function runPhysicsSettleSteps(
   host: PhysicsSettleHost,
   maxSteps: number,
   sink: PhysicsSettleSink,
-  options: { stopAtRest?: boolean } = {}
+  options: {
+    stopAtRest?: boolean
+    shouldStop?: () => boolean
+    continueWhile?: () => boolean
+    afterStep?: () => void
+  } = {}
 ): PhysicsSettleRun {
   let steps = 0
   let budget: PhysicsBodyBudgetDecision | undefined
 
   while (
     steps < maxSteps &&
-    (options.stopAtRest === false || host.queueSize() > 0 || !host.atRest())
+    !options.shouldStop?.() &&
+    (options.stopAtRest === false ||
+      host.queueSize() > 0 ||
+      !host.atRest() ||
+      options.continueWhile?.())
   ) {
     // Integrate [t, t + dt] before admitting arrivals at its end. A body born
     // at t + dt must never receive the motion from the interval before birth.
@@ -107,6 +154,9 @@ export function runPhysicsSettleSteps(
     // the step limit on stragglers that never formally sleep. A fresh arrival
     // resets the timer, so a paced stream is never mistaken for at-rest.
     host.refreshQuiescence(host.fixedDt, stepSpawned.length)
+    // Controllers see transitions before the next integration step, regardless
+    // of how many steps the display frame or bounded settle requested.
+    options.afterStep?.()
   }
 
   return { steps, budget }

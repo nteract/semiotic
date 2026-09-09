@@ -7,6 +7,88 @@ async function expectPileProjection(editor: Locator, labels: string[]) {
 }
 
 for (const theme of ["light", "dark"] as const) {
+  test(`Watermark closure preserves historical admissions (${theme})`, async ({
+    page
+  }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.addInitScript(
+      (value) => localStorage.setItem("semiotic-theme", value),
+      theme
+    )
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.goto("/examples/watermarks")
+    const reading = page.getByRole("table", {
+      name: "Settled event-time windows"
+    })
+    await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
+      "0-12s",
+      "2",
+      "1",
+      "1",
+      "2"
+    ])
+    await expect(
+      page.getByTestId("watermark-admission-decision")
+    ).toContainText("The window was already closed, so this event was late.")
+    const frontier = page.getByRole("slider", { name: /Arrival frontier/i })
+    await frontier.fill("60")
+    await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
+      "0-12s",
+      "1",
+      "1",
+      "0",
+      "1"
+    ])
+    await expect(
+      page.getByTestId("watermark-admission-decision")
+    ).toContainText("The window was still open, so this event was accepted.")
+    await frontier.fill("70")
+    await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
+      "0-12s",
+      "2",
+      "1",
+      "1",
+      "2"
+    ])
+    await page.screenshot({
+      path: testInfo.outputPath("watermarks-admission.png"),
+      fullPage: true
+    })
+    expect(errors).toEqual([])
+  })
+
+  test(`Reduced-motion journey retains crossings through selection and replay (${theme})`, async ({
+    page
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.addInitScript(
+      (value) => localStorage.setItem("semiotic-theme", value),
+      theme
+    )
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.goto("/examples/stakeholder-journey")
+    const activation = page
+      .locator(".stakeholder-journey__ledger-row")
+      .filter({ has: page.getByText("Activation", { exact: true }) })
+      .locator("b")
+      .first()
+    await expect(activation).toHaveText(/^[1-9]\d? \/ 36$/)
+    const first = Number((await activation.textContent())!.split(" / ")[0])
+    await page.getByRole("button", { name: /^Ecosystem Leadership:/ }).click()
+    await expect
+      .poll(async () =>
+        Number((await activation.textContent())!.split(" / ")[0])
+      )
+      .toBeGreaterThanOrEqual(first)
+    await page
+      .getByRole("button", { name: "Replay cohort", exact: true })
+      .click()
+    await expect(activation).toHaveText(/^[1-9]\d? \/ 36$/)
+    expect(errors).toEqual([])
+  })
+
   test(`Live pile edits keep quantities and category labels together (${theme})`, async ({
     page
   }, testInfo) => {
@@ -58,14 +140,18 @@ for (const theme of ["light", "dark"] as const) {
     await expect(status).toHaveText("2 source records · Total 98")
     await expectPileProjection(editor, ["98", "A"])
     await editor.getByLabel("Data source").selectOption("empty")
-    await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
+    await editor
+      .getByRole("button", { name: "Add 49 to A", exact: true })
+      .click()
     await expect(status).toHaveText("0 source records · Total 0")
     await expect(editor.locator("canvas")).toHaveCount(0)
     await expectPileProjection(editor, [])
     await editor.getByLabel("Data source").selectOption("push")
     await expect(status).toHaveText("0 source records · Total 0")
     await expectPileProjection(editor, [])
-    await editor.getByRole("button", { name: "Add 49 to A", exact: true }).click()
+    await editor
+      .getByRole("button", { name: "Add 49 to A", exact: true })
+      .click()
     await expect(status).toHaveText("1 source record · Total 49")
     await expectPileProjection(editor, ["49", "A"])
     expect(pageErrors).toEqual([])

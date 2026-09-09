@@ -303,7 +303,7 @@ const physicsFrameProps = [
   { name: "onBodyPointerDown", type: "function", required: false, default: null, description: "Pointer-down callback with the nearest body, if any." },
   { name: "onSemanticItemFocus", type: "function", required: false, default: null, description: "Called when keyboard navigation focuses a semantic item." },
   { name: "onSemanticItemActivate", type: "function", required: false, default: null, description: "Called when Enter or Space activates the focused semantic item." },
-  { name: "onTick", type: "function", required: false, default: null, description: "Frame tick callback with physics result and imperative controls." },
+  { name: "onTick", type: "function", required: false, default: null, description: "Admission/fixed-step callback with physics result and imperative controls. steps is 0 on admission and 1 after each simulation step, including reduced-motion and imperative settles. Requires sync execution." },
   { name: "onSimulationExecutionChange", type: "function", required: false, default: null, description: "Reports whether the frame is running sync or worker execution and why." },
   { name: "simulationExecution", type: "string", required: false, default: '"auto"', description: '"auto", "sync", or "worker". Auto uses the worker when the config is cloneable and body counts justify it.' },
   { name: "workerBodyThreshold", type: "number", required: false, default: null, description: "Minimum body count for automatic worker execution." },
@@ -469,10 +469,20 @@ function SensorScene() {
 
       <p>
         Time-based controllers and continuous forces use simulated fixed-step
-        time, not the requested browser-frame delta. A controller receives{" "}
+        time. They run at every step boundary, even when one browser frame or
+        reduced-motion settle advances many steps. A controller receives{" "}
         <code>ctx.dt = result.steps * fixedDt</code>. A zero-step call can
         synchronize the frame, but it applies no continuous force and consumes
         no capacity work.
+      </p>
+
+      <p>
+        Reduced motion runs a bounded pass using <code>config.settleStepLimit</code>
+        {" "}and paints its result. A continuous process can still have unfinished
+        work when that budget ends. Use the process ledger or a declared time
+        horizon to report completion; sleeping bodies alone do not establish it.
+        Authored <code>onTick</code> callbacks and controllers use synchronous
+        execution, where they can change the world before the next step.
       </p>
 
       <p>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState } from "react"
 import {
   StreamPhysicsFrame,
   aggregateRegionCounts,
@@ -440,6 +440,14 @@ export default function StakeholderJourneyExamplePage() {
   const [runId, setRunId] = useState(0)
   const [journeys, setJourneys] = useState(() => emptyJourneys(0))
   const [regionCounts, setRegionCounts] = useState(emptyRegionCounts)
+  const [ledgerRun, setLedgerRun] = useState({ chartWidth, runId })
+  // Reset before the new child mounts. A parent effect runs after the child's
+  // reduced-motion settle and would erase the crossings it just observed.
+  if (ledgerRun.chartWidth !== chartWidth || ledgerRun.runId !== runId) {
+    setLedgerRun({ chartWidth, runId })
+    setJourneys(emptyJourneys(runId))
+    setRegionCounts(emptyRegionCounts())
+  }
   const [selectedStageId, setSelectedStageId] = useState("commitment")
   const system = SYSTEMS[systemId]
   const rowsBySystem = useMemo(
@@ -455,11 +463,6 @@ export default function StakeholderJourneyExamplePage() {
     () => buildBowtieModel(chartWidth, system, runId, leadershipReached),
     [chartWidth, leadershipReached, runId, system],
   )
-
-  useEffect(() => {
-    setJourneys(emptyJourneys(runId))
-    setRegionCounts(emptyRegionCounts())
-  }, [chartWidth, runId])
 
   const handleRegionEvent = useCallback((event) => {
     const eventSystemId = event.region.metadata?.systemId

@@ -201,6 +201,16 @@ export interface PhysicsPipelineTickResult {
   steps: number
 }
 
+/** Optional fixed-step execution for authored forces and process controllers. */
+export interface PhysicsPipelineExecution {
+  /** Called once after admitting due bodies (steps=0), then after each fixed step.
+   * Each result contains only that boundary's events and admissions. */
+  onStep: (result: PhysicsPipelineTickResult) => void
+  /** Keep a bounded settle advancing while semantic work remains at physical rest.
+   * The configured or supplied step limit still applies. */
+  continueWhile?: () => boolean
+}
+
 export interface PhysicsPipelineSnapshot {
   accumulator: number
   activeSensorPairs: string[]

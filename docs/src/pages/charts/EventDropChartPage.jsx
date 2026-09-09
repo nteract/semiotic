@@ -19,9 +19,10 @@ const eventDropData = [
 const eventDropChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Event rows with event and arrival times." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Event-time field used for windows." },
-  { name: "arrivalAccessor", type: "string | function", required: false, default: '"arrivalTime"', description: "Arrival-time field used for ingestion pacing." },
+  { name: "arrivalAccessor", type: "string | function", required: false, default: '"arrivalTime"', description: "Arrival-time field used for admission order and ingestion pacing. Ties retain source order." },
+  { name: "watermarkAtArrivalAccessor", type: "string | function", required: false, default: null, description: "Recorded watermark for each arrival, independent of current window closure." },
   { name: "windows", type: "object", required: false, default: "{ size: 10 }", description: "Window config such as { size, gapPolicy }." },
-  { name: "watermark", type: "object | function", required: false, default: null, description: "Watermark delay object or resolver function." },
+  { name: "watermark", type: "object | function", required: false, default: null, description: "{ delay } or a latest-event-time function replays a monotonic watermark; { value } tests one fixed admission policy." },
   { name: "timeScale", type: "number", required: false, default: "1", description: "Arrival replay playback speed; higher is faster (1 = real event-time)." },
   { name: "ballRadius", type: "number", required: false, default: "7", description: "Radius for each simulated event body." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Categorical field used to color bodies." },
@@ -75,6 +76,12 @@ export default function EventDropChartPage() {
       />
 
       <h2 id="example">Example</h2>
+      <p>
+        Each circle is one event. Its event time selects a window; its arrival time
+        determines when that window&apos;s admission policy is checked. This replay
+        accepts six events and rejects the old event arriving at 33. Advancing the
+        watermark closes windows without relabeling events they already accepted.
+      </p>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
         <EventDropChart
           data={eventDropData}
@@ -88,6 +95,22 @@ export default function EventDropChartPage() {
           title="Event arrivals"
         />
       </div>
+
+      <h2 id="admission-history">Replay and recorded admission</h2>
+      <p>
+        With <code>watermark={"{{ delay: 8 }}"}</code>, arrivals advance the watermark
+        from the greatest event time seen so far. The comparison uses the end of
+        the event&apos;s window, including equality. <code>timeScale</code> changes
+        playback speed while preserving those decisions.
+      </p>
+      <p>
+        Use <code>watermark.value</code> to test a fixed current policy. If your
+        records include the watermark at each original arrival, pass that field
+        through <code>watermarkAtArrivalAccessor</code>; current window closure can
+        then change independently of historical acceptance. The{" "}
+        <a href="/examples/watermarks">Watermarks example</a> demonstrates this with
+        an inspectable decision for each event.
+      </p>
 
       <h2 id="props">Props</h2>
       <PropTable componentName="EventDropChart" props={eventDropChartProps} />

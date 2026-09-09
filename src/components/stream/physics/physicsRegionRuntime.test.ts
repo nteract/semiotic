@@ -6,6 +6,7 @@ import {
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import {
   cloneRegionStateSnapshot,
+  runPhysicsObservedSteps,
   runPhysicsPostTick,
   type InternalStreamPhysicsBodyRegionState
 } from "./physicsRegionRuntime"
@@ -71,16 +72,20 @@ function advance(
     bodyForces?: { x?: number; y?: number }
   } = {}
 ) {
-  const result = runtime.store.tick(deltaSeconds)
-  const postTick = runPhysicsPostTick({
-    store: runtime.store,
-    result,
-    regionEffects: options.regionEffects ?? [],
-    regionState: runtime.regionState,
-    bodyForces: options.bodyForces,
-    composed: options.composed ?? null
-  })
-  return { postTick, result }
+  const postTick = runPhysicsObservedSteps(
+    runtime.store,
+    (result) =>
+      runPhysicsPostTick({
+        store: runtime.store,
+        result,
+        regionEffects: options.regionEffects ?? [],
+        regionState: runtime.regionState,
+        bodyForces: options.bodyForces,
+        composed: options.composed ?? null
+      }),
+    { deltaSeconds }
+  )
+  return { postTick, result: postTick.result }
 }
 
 describe("runPhysicsPostTick simulated time", () => {
@@ -130,6 +135,83 @@ describe("runPhysicsPostTick simulated time", () => {
     expect(oneBody.vy).toBeCloseTo(4, 8)
     expect(twoBody.vx).toBeCloseTo(oneBody.vx, 8)
     expect(twoBody.vy).toBeCloseTo(oneBody.vy, 8)
+    expect(twoBody.x).toBeCloseTo(oneBody.x, 8)
+    expect(twoBody.y).toBeCloseTo(oneBody.y, 8)
+  })
+
+  it("has identical trajectories and per-step admissions in RAF batches and a bounded settle", () => {
+    const run = (deltas: number[] | null) => {
+      const runtime = makeRuntime()
+      let admitted = false
+      const arrivals: string[] = []
+      const post = (
+        result: Parameters<typeof runPhysicsPostTick>[0]["result"]
+      ) =>
+        runPhysicsPostTick({
+          ...runtime,
+          result,
+          regionEffects: [],
+          bodyForces: { x: 60, y: 0 },
+          composed: null,
+          onTick: (step, controls) => {
+            arrivals.push(...step.spawned)
+            if (!admitted && step.elapsedSeconds >= 0.5) {
+              admitted = true
+              controls.push({
+                id: "arrival",
+                x: 100,
+                y: 100,
+                shape: { type: "circle", radius: 5 }
+              })
+            }
+          }
+        })
+      if (deltas)
+        deltas.forEach((deltaSeconds) =>
+          runPhysicsObservedSteps(runtime.store, post, { deltaSeconds })
+        )
+      else {
+        const outcome = runPhysicsObservedSteps(runtime.store, post, {
+          maxSteps: 60,
+          continueWhile: () => true
+        })
+        expect(outcome.result.steps).toBe(60)
+        expect(outcome.result.shouldContinue).toBe(true)
+      }
+      return {
+        bodies: runtime.store.readBodies(),
+        arrivals,
+        elapsed: runtime.store.elapsed()
+      }
+    }
+    const frames = run(Array(60).fill(1 / 60))
+    expect(frames.bodies[0].x).toBeCloseTo(69.5, 8)
+    expect(frames.bodies[0].vx).toBeCloseTo(60, 8)
+    expect(frames.arrivals).toEqual(["arrival"])
+    expect(run(Array(10).fill(0.1))).toEqual(frames)
+    expect(run(null)).toEqual(frames)
+  })
+
+  it("lets a controller pause a batched run at a step boundary", () => {
+    const runtime = makeRuntime()
+    const outcome = runPhysicsObservedSteps(
+      runtime.store,
+      (result) =>
+        runPhysicsPostTick({
+          ...runtime,
+          result,
+          regionEffects: [],
+          bodyForces: undefined,
+          composed: null,
+          onTick: (step, controls) => {
+            if (step.elapsedSeconds >= 3 * FIXED_DT) controls.pause()
+          }
+        }),
+      { maxSteps: 60, continueWhile: () => true }
+    )
+    expect(outcome.result.steps).toBe(3)
+    expect(outcome.snapshot.paused).toBe(true)
+    expect(outcome.result.shouldContinue).toBe(false)
   })
 
   it("does not drain controller work on step zero and is chunking invariant", () => {
@@ -176,11 +258,13 @@ describe("runPhysicsPostTick simulated time", () => {
 
 describe("cloneRegionStateSnapshot", () => {
   it("retains special body ids as own keys without replacing the prototype", () => {
-    const snapshot = cloneRegionStateSnapshot(new Map([
-      ["__proto__", emptyRegionState()],
-      ["constructor", emptyRegionState()],
-      ["toString", emptyRegionState()]
-    ]))
+    const snapshot = cloneRegionStateSnapshot(
+      new Map([
+        ["__proto__", emptyRegionState()],
+        ["constructor", emptyRegionState()],
+        ["toString", emptyRegionState()]
+      ])
+    )
 
     expect(Object.keys(snapshot)).toEqual([
       "__proto__",

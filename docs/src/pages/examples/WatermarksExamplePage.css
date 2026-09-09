@@ -17,6 +17,13 @@
   line-height: 1.55;
 }
 
+.watermarks-example__decision {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .watermarks-example__credit {
   max-width: 760px;
   color: var(--text-secondary);

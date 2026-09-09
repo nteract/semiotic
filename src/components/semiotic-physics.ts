@@ -436,6 +436,7 @@ export type {
   PhysicsPlotBounds,
   PhysicsPipelineSnapshot,
   PhysicsPipelineTickResult,
+  PhysicsPipelineExecution,
   PhysicsQueuedSpawn,
   PhysicsSpawnPacing,
   PhysicsSpawnPacingOptions,

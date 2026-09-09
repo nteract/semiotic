@@ -25624,8 +25624,16 @@
             },
             "arrivalAccessor": {
               "type": "string",
-              "description": "Arrival-time field used to pace event ingestion.",
+              "description": "Arrival-time field used for admission order and ingestion pacing; ties keep source order.",
               "default": "arrivalTime",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "watermarkAtArrivalAccessor": {
+              "type": "string",
+              "description": "Recorded watermark at each event's arrival. Overrides computed admission thresholds while watermark.value can advance current window closure.",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -25637,7 +25645,7 @@
             },
             "watermark": {
               "type": "object",
-              "description": "Watermark config: { delay }, { value }, or a function of latest event time.",
+              "description": "Watermark config: { delay } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure.",
               "x-semiotic-runtime-types": [
                 "object",
                 "function"
