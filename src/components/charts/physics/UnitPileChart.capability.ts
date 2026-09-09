@@ -22,13 +22,13 @@ export const UnitPileChartCapability: ChartCapability = {
   },
 
   // `showProjection` decides whether the exact totals are stated alongside the
-  // countable units, which changes what the reader can actually do.
+  // full and partial units, which changes what the reader can actually do.
   variants: [
     {
       key: "projected",
       label: "Piles with stated totals",
       description:
-        "Countable units plus the exact per-category total, so accumulation is dramatized without losing precision.",
+        "Full and area-scaled partial units plus exact source totals by category.",
       props: { showProjection: true },
       tags: ["observed"],
     },
@@ -36,7 +36,7 @@ export const UnitPileChartCapability: ChartCapability = {
       key: "units-only",
       label: "Units only",
       description:
-        "Piles without the totals overlay — reads as texture, and the reader must count.",
+        "Accumulation without numeric totals; fractional circles require area estimates.",
       props: { showProjection: false },
       tags: ["narrative"],
       intentDeltas: { "compare-categories": -1, "part-to-whole": -1 },

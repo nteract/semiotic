@@ -22,4 +22,12 @@ describe("bodyIdsForSeedRow", () => {
   it("falls back to [rowId] when nothing matches", () => {
     expect(bodyIdsForSeedRow("missing", [])).toEqual(["missing"])
   })
+
+  it("does not collect another source row whose ID shares the prefix", () => {
+    const spawns: PhysicsQueuedSpawn[] = [
+      { id: "row-0", x: 0, y: 0, shape: { type: "circle", radius: 4 }, datum: { id: "row" } },
+      { id: "row-extra-0", x: 0, y: 0, shape: { type: "circle", radius: 4 }, datum: { id: "row-extra" } }
+    ]
+    expect(bodyIdsForSeedRow("row", spawns)).toEqual(["row-0"])
+  })
 })

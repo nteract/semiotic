@@ -1569,7 +1569,7 @@ import { UnitPileChart } from "semiotic/physics"
 />
 ```
 
-Key props: `unitValue` controls how many simulated bodies appear. Increase it for large values so the settled piles remain readable and the frame budget stays bounded.
+Key props: `unitValue` sets the quantity per full circle. Each record's remainder becomes a partial circle scaled by area, preserving its source identity. Labels show exact nonnegative source totals, independently of body count and approximate pile height. For example, values 49 + 49 with `unitValue={100}` produce two partial circles and a category total of 98. Increasing `unitValue` reduces full circles but retains each record's partial circle.
 
 For a live unit pile, the ref ingests the same source-row shape the static
 `data` prop uses:

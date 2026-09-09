@@ -34,7 +34,7 @@ const galtonBoardChartProps = [
   { name: "pegRows", type: "number", required: false, default: "bins - 1", description: "Number of branch rows used by mechanical mode." },
   { name: "mechanicalCount", type: "number", required: false, default: "max(64, bins * 4)", description: "Number of generated bodies in mechanical mode." },
   { name: "branchProbability", type: "number", required: false, default: "0.5", description: "Probability that a generated body branches right at each peg." },
-  { name: "ballRadius", type: "number", required: false, default: "4", description: "Radius for each simulated body." },
+  { name: "ballRadius", type: "number", required: false, default: "6", description: "Radius for each simulated body in primary mode; context defaults to 4 and sparkline to 1.5." },
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Categorical field used to color bodies." },
   { name: "referenceLines", type: "object | array", required: false, default: null, description: "One or more value markers drawn over the board: { value, label, color, strokeWidth, strokeDasharray, labelPosition }." },
   { name: "seed", type: "number", required: false, default: "1", description: "Deterministic simulation seed." },
@@ -108,7 +108,6 @@ export default function GaltonBoardChartPage() {
   const [branchProbability, setBranchProbability] = useState(0.5)
   const [mechanicalCount, setMechanicalCount] = useState(96)
   const [pegRows, setPegRows] = useState(10)
-  const chartKey = `${mode}-${branchProbability}-${mechanicalCount}-${pegRows}`
   const demoProps = useMemo(
     () =>
       mode === "mechanical"
@@ -233,7 +232,6 @@ export default function GaltonBoardChartPage() {
       </div>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
         <GaltonBoardChart
-          key={chartKey}
           {...demoProps}
           size={[640, 320]}
         />

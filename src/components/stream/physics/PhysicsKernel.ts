@@ -1,4 +1,6 @@
 import { mulberry32 } from "../../recipes/random"
+import { cloneFixedPosition, enforceFixedPosition, fixedAxisContact } from "./physicsFixedPosition"
+import { cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
 
 export type PhysicsBodyShape =
   | { type: "circle"; radius: number }
@@ -48,6 +50,8 @@ export interface PhysicsBodySpec {
   friction?: number
   /** Disable body-body contacts for visual/tethered satellite marks. */
   bodyCollisions?: boolean
+  /** Hold either coordinate exactly, allowing motion on the other axis. */
+  fixedPosition?: { x?: number; y?: number }
   shape: PhysicsBodyShape
   datum?: unknown
 }
@@ -63,6 +67,7 @@ export interface PhysicsBodyState {
   angle: number
   mass: number
   bodyCollisions?: boolean
+  fixedPosition?: { x?: number; y?: number }
   shape: PhysicsBodyShape
   sleeping: boolean
   datum?: unknown
@@ -173,31 +178,6 @@ const EPSILON = 1e-9
  * jitter is handled by sleeping bodies becoming static anchors, not by slop.
  */
 const POSITION_SLOP = 0.005
-
-function cloneShape(shape: PhysicsBodyShape): PhysicsBodyShape {
-  return shape.type === "circle"
-    ? { type: "circle", radius: shape.radius }
-    : { type: "aabb", width: shape.width, height: shape.height }
-}
-
-function cloneColliderShape(shape: PhysicsColliderShape): PhysicsColliderShape {
-  return shape.type === "aabb"
-    ? {
-        type: "aabb",
-        x: shape.x,
-        y: shape.y,
-        width: shape.width,
-        height: shape.height
-      }
-    : {
-        type: "segment",
-        x1: shape.x1,
-        y1: shape.y1,
-        x2: shape.x2,
-        y2: shape.y2,
-        thickness: shape.thickness
-      }
-}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
@@ -507,53 +487,6 @@ function parseSensorKey(key: string): { sensorId: string; bodyId: string } {
   }
 }
 
-function cloneBody(body: MutableBody): MutableBody {
-  return {
-    id: body.id,
-    x: body.x,
-    y: body.y,
-    prevX: body.prevX,
-    prevY: body.prevY,
-    vx: body.vx,
-    vy: body.vy,
-    angle: body.angle,
-    mass: body.mass,
-    bodyCollisions: body.bodyCollisions,
-    shape: cloneShape(body.shape),
-    sleeping: body.sleeping,
-    datum: body.datum,
-    index: body.index,
-    sleepTime: body.sleepTime,
-    restitution: body.restitution,
-    friction: body.friction
-  }
-}
-
-function cloneColliderBodyFilter(
-  filter: PhysicsColliderBodyFilter | undefined
-): PhysicsColliderBodyFilter | undefined {
-  if (!filter || typeof filter === "function") return filter
-  return {
-    property: filter.property,
-    equals: filter.equals,
-    notEquals: filter.notEquals,
-    oneOf: filter.oneOf?.slice(),
-    notOneOf: filter.notOneOf?.slice()
-  }
-}
-
-function cloneCollider(collider: MutableCollider): MutableCollider {
-  return {
-    id: collider.id,
-    shape: cloneColliderShape(collider.shape),
-    sensor: collider.sensor,
-    restitution: collider.restitution,
-    friction: collider.friction,
-    bodyFilter: cloneColliderBodyFilter(collider.bodyFilter),
-    index: collider.index
-  }
-}
-
 /** Read a dot-separated property path off an arbitrary value. Shared across physics controllers. */
 export function valueAtPath(source: unknown, path: string): unknown {
   if (!path) return undefined
@@ -653,6 +586,7 @@ export class PhysicsKernelWorld {
       angle: spec.angle ?? 0,
       mass: Math.max(EPSILON, spec.mass ?? 1),
       bodyCollisions: spec.bodyCollisions ?? true,
+      ...(spec.fixedPosition ? { fixedPosition: cloneFixedPosition(spec.fixedPosition) } : {}),
       shape: cloneShape(spec.shape),
       sleeping: false,
       datum: spec.datum,
@@ -661,6 +595,7 @@ export class PhysicsKernelWorld {
       index: this.nextBodyIndex,
       sleepTime: 0
     }
+    enforceFixedPosition(body)
     this.nextBodyIndex += 1
     this.bodies.set(spec.id, body)
   }
@@ -712,6 +647,7 @@ export class PhysicsKernelWorld {
     if (!body) return
     body.vx += ix / body.mass
     body.vy += iy / body.mass
+    enforceFixedPosition(body)
     this.wake(body)
   }
 
@@ -735,6 +671,7 @@ export class PhysicsKernelWorld {
       body.vy += this.options.gravity.y * dt
       body.vx *= this.options.velocityDamping
       body.vy *= this.options.velocityDamping
+      enforceFixedPosition(body)
       if (maxVelocity > 0) {
         const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy)
         if (speed > maxVelocity) {
@@ -786,6 +723,7 @@ export class PhysicsKernelWorld {
         vy: body.vy,
         angle: body.angle,
         mass: body.mass,
+        ...(body.fixedPosition ? { fixedPosition: cloneFixedPosition(body.fixedPosition) } : {}),
         shape: cloneShape(body.shape),
         sleeping: body.sleeping,
         datum: body.datum
@@ -840,6 +778,7 @@ export class PhysicsKernelWorld {
     this.nextBodyIndex = 0
     for (const body of snapshot.bodies) {
       const cloned = cloneBody(body)
+      enforceFixedPosition(cloned)
       this.bodies.set(cloned.id, cloned)
       this.nextBodyIndex = Math.max(this.nextBodyIndex, cloned.index + 1)
     }
@@ -988,6 +927,13 @@ export class PhysicsKernelWorld {
     b: MutableBody,
     collision: Collision
   ): void {
+    if (a.fixedPosition || b.fixedPosition) {
+      if ((a.sleeping || a.fixedPosition?.x != null) && (b.sleeping || b.fixedPosition?.x != null)) {
+        collision = fixedAxisContact(a, b, "x")
+      } else if ((a.sleeping || a.fixedPosition?.y != null) && (b.sleeping || b.fixedPosition?.y != null)) {
+        collision = fixedAxisContact(a, b, "y")
+      }
+    }
     // A sleeping body is a static anchor: zero inverse mass so it is neither
     // shoved out of position nor spread sideways by arrivals landing on it.
     // This is what lets piles grow and hold their shape instead of churning flat.
@@ -1008,15 +954,21 @@ export class PhysicsKernelWorld {
     }
     const invA = a.sleeping ? 0 : 1 / a.mass
     const invB = b.sleeping ? 0 : 1 / b.mass
-    const invTotal = invA + invB
+    const ax = a.fixedPosition?.x == null ? invA : 0
+    const ay = a.fixedPosition?.y == null ? invA : 0
+    const bx = b.fixedPosition?.x == null ? invB : 0
+    const by = b.fixedPosition?.y == null ? invB : 0
+    const invTotal = a.fixedPosition || b.fixedPosition
+      ? collision.nx ** 2 * (ax + bx) + collision.ny ** 2 * (ay + by)
+      : invA + invB
     if (invTotal <= EPSILON) return
 
     const correction =
       Math.max(0, collision.penetration - POSITION_SLOP) / invTotal
-    a.x -= collision.nx * correction * invA
-    a.y -= collision.ny * correction * invA
-    b.x += collision.nx * correction * invB
-    b.y += collision.ny * correction * invB
+    a.x -= collision.nx * correction * ax
+    a.y -= collision.ny * correction * ay
+    b.x += collision.nx * correction * bx
+    b.y += collision.ny * correction * by
 
     const rvx = b.vx - a.vx
     const rvy = b.vy - a.vy
@@ -1028,10 +980,10 @@ export class PhysicsKernelWorld {
     const impulse = (-(1 + restitution) * velocityAlongNormal) / invTotal
     const ix = impulse * collision.nx
     const iy = impulse * collision.ny
-    a.vx -= ix * invA
-    a.vy -= iy * invA
-    b.vx += ix * invB
-    b.vy += iy * invB
+    a.vx -= ix * ax
+    a.vy -= iy * ay
+    b.vx += ix * bx
+    b.vy += iy * by
     this.applyFriction(a, b, collision, impulse, invA, invB)
     if (impactSpeed > this.options.contactWakeSpeed) {
       this.wake(a)
@@ -1052,7 +1004,13 @@ export class PhysicsKernelWorld {
     const rvx = b.vx - a.vx
     const rvy = b.vy - a.vy
     const tangentVelocity = rvx * tx + rvy * ty
-    const invTotal = invA + invB
+    const ax = a.fixedPosition?.x == null ? invA : 0
+    const ay = a.fixedPosition?.y == null ? invA : 0
+    const bx = b.fixedPosition?.x == null ? invB : 0
+    const by = b.fixedPosition?.y == null ? invB : 0
+    const invTotal = a.fixedPosition || b.fixedPosition
+      ? tx ** 2 * (ax + bx) + ty ** 2 * (ay + by)
+      : invA + invB
     if (Math.abs(tangentVelocity) <= EPSILON || invTotal <= EPSILON) return
     const friction = pairFriction(a.friction, b.friction, this.options.friction)
     const frictionImpulse = clamp(
@@ -1062,10 +1020,10 @@ export class PhysicsKernelWorld {
     )
     const ix = frictionImpulse * tx
     const iy = frictionImpulse * ty
-    a.vx -= ix * invA
-    a.vy -= iy * invA
-    b.vx += ix * invB
-    b.vy += iy * invB
+    a.vx -= ix * ax
+    a.vy -= iy * ay
+    b.vx += ix * bx
+    b.vy += iy * by
   }
 
   private resolveColliders(
@@ -1118,6 +1076,7 @@ export class PhysicsKernelWorld {
       body.vx -= tangentVelocity * tx * friction
       body.vy -= tangentVelocity * ty * friction
     }
+    enforceFixedPosition(body)
   }
 
   private updateSensors(bodies: MutableBody[]): void {

@@ -13,6 +13,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import GaltonBoardChart from "./GaltonBoardChart"
 import GauntletChart from "./GauntletChart"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import type { PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineStore"
 
 function mockReducedMotion(matches: boolean): () => void {
   const original = window.matchMedia
@@ -72,7 +73,9 @@ describe("physics charts under prefers-reduced-motion", () => {
     )
 
     await waitFor(() => {
-      expect(ref.current?.getData().length).toBe(galtonRows.length)
+      const snapshot = ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot
+      expect(snapshot.world.bodies).toHaveLength(galtonRows.length)
+      expect(snapshot.queue).toHaveLength(0)
     })
   })
 
@@ -166,6 +169,9 @@ describe("physics charts with motion allowed", () => {
     // Pacing is the point of the animated path: on the first frame only the
     // spawns already due exist. The reduced-motion case above is the one that
     // must reach the full count in a single pass.
-    expect(ref.current?.getData().length).toBeLessThan(galtonRows.length)
+    const snapshot = ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot
+    expect(snapshot.world.bodies.length).toBeLessThan(galtonRows.length)
+    expect(snapshot.queue.length).toBeGreaterThan(0)
+    expect(snapshot.world.bodies.length + snapshot.queue.length).toBe(galtonRows.length)
   })
 })

@@ -5,22 +5,18 @@ import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor, ChartMode } from "../shared/types"
 import {
   buildPhysicsPile,
   composePhysicsBodyStyle,
   generatePhysicsPileMechanicalSamples,
-  physicsChartArea,
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import {
-  usePhysicsHocHandle,
-  type PhysicsFrameHandle
-} from "./physicsHocHandle"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import { usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -54,6 +50,7 @@ export interface UnitPileChartProps<TDatum extends Datum = Datum>
   simulationMode?: PhysicsSimulationMode
   mechanicalCount?: number
   mechanicalCategories?: readonly string[]
+  /** Quantity per full circle; a record's remainder uses proportional area. */
   unitValue?: number
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
@@ -154,7 +151,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
             seed,
             unitValue
           }) as TDatum[])
-        : (data ?? []),
+        : data,
     [
       data,
       mechanicalCategories,
@@ -164,10 +161,10 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       unitValue
     ]
   )
-  const layout = useMemo(
-    () =>
+  const buildLayout = useCallback(
+    (rows: TDatum[]) =>
       buildPhysicsPile({
-        data: chartData,
+        data: rows,
         categoryAccessor,
         valueAccessor: resolvedValueAccessor,
         unitValue,
@@ -179,63 +176,26 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       ballRadius,
       categoryAccessor,
       chartSize,
-      chartData,
       resolvedValueAccessor,
       seed,
       unitValue
     ]
   )
+  const { layout, resetSeed } = usePhysicsChartData({
+    ref,
+    frameRef,
+    data: chartData,
+    idPrefix: "pile",
+    buildLayout
+  })
   const rerun = usePhysicsRerun(
     layout.config,
     rerunMS,
     paused,
-    undefined,
+    resetSeed,
     props.onSimulationStateChange
   )
 
-  const spawnDatum = useCallback(
-    (datum: Datum, index: number) => {
-      const single = buildPhysicsPile({
-        data: [datum],
-        categoryAccessor: categoryAccessor as ChartAccessor<Datum, string>,
-        valueAccessor: resolvedValueAccessor as
-          ChartAccessor<Datum, number> | undefined,
-        unitValue,
-        ballRadius,
-        seed: seed + index + 1,
-        size: chartSize
-      })
-      const fallback = {
-        id: String(datum.id ?? `pile-push-${index}`),
-        x: physicsChartArea(chartSize).plot.x,
-        y: physicsChartArea(chartSize).plot.y,
-        mass: 1,
-        shape: { type: "circle" as const, radius: ballRadius },
-        datum
-      }
-      const spawns = single.initialSpawns.length
-        ? single.initialSpawns
-        : [fallback]
-      return {
-        datumId: String(datum.id ?? spawns[0].id),
-        spawns: spawns as PhysicsQueuedSpawn[]
-      }
-    },
-    [
-      ballRadius,
-      categoryAccessor,
-      chartSize,
-      resolvedValueAccessor,
-      seed,
-      unitValue
-    ]
-  )
-  usePhysicsHocHandle(ref, {
-    frameRef,
-    spawnDatum,
-    seedRows: chartData as Datum[],
-    seedSpawns: layout.initialSpawns
-  })
   const resolvedColorBy =
     simulationMode === "mechanical" && colorBy == null
       ? ("category" as ChartAccessor<Datum, string>)
@@ -287,7 +247,8 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
   const projectionOverlay = pileProjectionOverlay(
     layout.projectionRows,
     ballRadius,
-    showProjection
+    showProjection,
+    Number.isFinite(unitValue) && unitValue > 0 ? unitValue : 1
   )
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(

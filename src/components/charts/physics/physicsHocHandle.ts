@@ -33,6 +33,8 @@ export interface PhysicsDatumSpawnResult {
 
 export interface UsePhysicsHocHandleOptions {
   frameRef: RefObject<StreamPhysicsFrameHandle | null>
+  /** An explicit empty input is authoritative, even through saved handles. */
+  staticEmpty?: boolean
   /**
    * Turn one user row into one or more physics body spawns. Called for
    * push / pushMany / update — never for initial static layout (that path
@@ -70,12 +72,11 @@ export function bodyIdsForSeedRow(
   if (!spawns?.length) return [rowId]
   const matched = spawns
     .filter((spawn) => {
-      if (spawn.id === rowId || spawn.id.startsWith(`${rowId}-`)) return true
       const datum = spawn.datum as Datum | undefined
       if (datum && typeof datum === "object" && datum.id != null) {
         return String(datum.id) === rowId
       }
-      return false
+      return spawn.id === rowId || spawn.id.startsWith(`${rowId}-`)
     })
     .map((spawn) => spawn.id)
   return matched.length ? matched : [rowId]
@@ -124,6 +125,13 @@ export function usePhysicsHocHandle(
   const knownRowsRef = useRef(new Map<string, Datum>())
   const bodyIdsByDatumRef = useRef(new Map<string, string[]>())
   const seedSignatureRef = useRef<string>("")
+  const staticEmptyRef = useRef(false)
+  staticEmptyRef.current = options.staticEmpty === true
+  if (staticEmptyRef.current) {
+    knownRowsRef.current.clear()
+    bodyIdsByDatumRef.current.clear()
+    seedSignatureRef.current = ""
+  }
 
   // Re-seed tracking when the static initial data identity changes.
   // Does not re-spawn bodies — only makes remove/update addressable.
@@ -173,6 +181,16 @@ export function usePhysicsHocHandle(
       function pushResolved(
         results: Array<{ datum: Datum; result: PhysicsDatumSpawnResult }>
       ): void {
+        if (staticEmptyRef.current) return
+        const frame = frameRef.current
+        if (!frame) {
+          if (process.env.NODE_ENV !== "production" && results.length) {
+            console.warn(
+              "[semiotic/physics] push() called before the physics frame mounted (loading/empty early-return). Omit data for push mode and ensure the chart is mounted."
+            )
+          }
+          return
+        }
         const spawns: PhysicsQueuedSpawn[] = []
         for (const { datum, result } of results) {
           knownRows.set(result.datumId, datum)
@@ -183,15 +201,6 @@ export function usePhysicsHocHandle(
           spawns.push(...result.spawns)
         }
         if (!spawns.length) return
-        const frame = frameRef.current
-        if (!frame) {
-          if (process.env.NODE_ENV !== "production") {
-            console.warn(
-              "[semiotic/physics] push() called before the physics frame mounted (loading/empty early-return). Omit data for push mode and ensure the chart is mounted."
-            )
-          }
-          return
-        }
         frame.pushMany(spawns)
         frame.step(0)
       }

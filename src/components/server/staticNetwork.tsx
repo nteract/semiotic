@@ -25,7 +25,7 @@ import {
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG,
   networkLabelToSVG
-} from "../stream/SceneToSVG"
+} from "../stream/SceneToSVGNetwork"
 import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import {

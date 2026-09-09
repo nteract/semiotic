@@ -23,7 +23,7 @@ import { registerBuiltInXYPlugins } from "../stream/xyPlugins/registerBuiltIn"
 registerBuiltInXYPlugins()
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
-import { xySceneNodeToSVG } from "../stream/SceneToSVG"
+import { xySceneNodeToSVG } from "../stream/SceneToSVGXY"
 import { renderSceneWithBackend } from "../stream/renderBackend"
 import { renderOrdinalSceneListWithBackend } from "../stream/ordinalSceneSVG"
 import type { SceneNode, SceneRenderMode } from "../stream/types"

@@ -8,7 +8,7 @@ import {
   buildEvidence,
   type EvidenceSink
 } from "./renderEvidence"
-import { geoSceneNodeToSVG } from "../stream/SceneToSVG"
+import { geoSceneNodeToSVG } from "../stream/SceneToSVGGeo"
 import { renderSceneListWithBackend } from "../stream/renderBackend"
 import { resolveTheme } from "./themeResolver"
 import {

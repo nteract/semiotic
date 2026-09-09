@@ -672,7 +672,8 @@ describe("PhysicsPipelineStore", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 0.1,
       maxDeltaSeconds: 1,
-      maxSubsteps: 1,
+      // Give a half-second display tick enough budget to advance model time.
+      maxSubsteps: 10,
       kernel: {
         gravity: { x: 0, y: 0 },
         sleepAfter: 999

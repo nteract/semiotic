@@ -296,10 +296,10 @@ const BEHAVIOR_CONTRACTS = [
     title: "Physics charts separate chart mode from simulation input",
     severity: "warning",
     appliesTo: {
-      components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"],
+      components: ["GaltonBoardChart", "UnitPileChart"],
     },
     summary: "Sample simulations use data plus the chart's accessors. Seeded no-data demonstrations use simulationMode=\"mechanical\" (legacy mode=\"mechanical\" remains accepted); mode otherwise carries chart display modes such as primary or sparkline.",
-    agentAction: "For observed Galton values pass data + valueAccessor. For unit piles pass data + categoryAccessor + valueAccessor. Use seed for reproducibility, bins for Galton columns, and unitValue for the amount represented by one UnitPile body.",
+    agentAction: "For observed Galton values pass data + valueAccessor. For unit piles pass data + categoryAccessor + valueAccessor. Use seed for reproducibility, bins for Galton columns, and unitValue for the amount represented by one full UnitPile circle; remainders use proportional area.",
     example: '{ "component": "GaltonBoardChart", "props": { "data": [{"id":"a","value":1}], "valueAccessor":"value", "bins":4, "seed":42 } }',
   },
   {
@@ -313,6 +313,18 @@ const BEHAVIOR_CONTRACTS = [
     summary: "Physics HOC refs push source records through the chart's accessors. pushRows and dataIdAccessor are not component props; stable source id fields are retained on spawned bodies without an invented accessor.",
     agentAction: "For React live code, call ref.current?.push(row) or pushMany(rows). For serialized snapshots, append the rows to data. Keep category/value/time accessors, but omit pushRows and dataIdAccessor.",
     example: 'ref.current?.push({ id: "c", team: "Blue", value: 2 }); <UnitPileChart ref={ref} categoryAccessor="team" valueAccessor="value" unitValue={1} />',
+  },
+  {
+    id: "physics.live-source-reconciliation",
+    category: "physics",
+    title: "Distribution physics charts update bodies and projections together",
+    severity: "warning",
+    appliesTo: {
+      components: ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"],
+    },
+    summary: "Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.",
+    agentAction: "Omit data for push mode; data=[] stays empty and rejects pushes. Use stable IDs and remove for source edits; popBodies only removes marks. Set xExtent/valueExtent for stable domains.",
+    example: 'ref.current?.update("a", row => ({ ...row, value: 102 })); ref.current?.remove("b");',
   },
 ]
 

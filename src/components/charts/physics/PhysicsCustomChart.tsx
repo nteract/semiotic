@@ -421,6 +421,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   )
   usePhysicsHocHandle(ref, {
     frameRef,
+    staticEmpty: data?.length === 0,
     spawnDatum,
     seedRows: safeData as Datum[],
     seedSpawns: stableInitialSpawns

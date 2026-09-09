@@ -581,13 +581,13 @@ function ChartNotificationBell({
   )
 }
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+const STATUS_COLORS = {
   live: { bg: "#22c55e", color: "#fff" },
   stale: { bg: "#ef4444", color: "#fff" },
   paused: { bg: "#eab308", color: "#000" },
   error: { bg: "#ef4444", color: "#fff" },
   static: { bg: "#6b7280", color: "#fff" },
-}
+} satisfies Record<NonNullable<ChartContainerProps["status"]>, { bg: string; color: string }>
 
 function Skeleton({ height }: { height: number }) {
   return (
@@ -1188,8 +1188,8 @@ export const ChartContainer = React.forwardRef<
                     fontWeight: 700,
                     letterSpacing: "0.05em",
                     textTransform: "uppercase",
-                    background: STATUS_COLORS[status].bg,
-                    color: STATUS_COLORS[status].color,
+                    background: STATUS_COLORS[status]?.bg ?? STATUS_COLORS.static.bg,
+                    color: STATUS_COLORS[status]?.color ?? STATUS_COLORS.static.color,
                     lineHeight: "18px",
                   }}
                 >

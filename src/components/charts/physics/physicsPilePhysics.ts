@@ -1,3 +1,4 @@
+import { createPhysicsSourceState } from "./physicsSourceRows"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type { PhysicsColliderSpec } from "../../stream/physics/PhysicsKernel"
@@ -83,10 +84,9 @@ export interface PileTubeGeometry {
 }
 
 /**
- * Column geometry shared by the pile builder and its projection overlay so the
- * ghost bar's height is exactly the fill target the stacked units rise to reach.
- * Units drop into a narrow tube (a few balls wide) so their count reads as
- * height — a bar chart assembled from falling units, not a spreading heap.
+ * Column geometry shared by the pile builder and its approximate stacking
+ * guide. Packing and fractional radii affect physical height; the projection
+ * labels report source totals independently of the pile's height.
  */
 export function pileTubeGeometry(
   plot: { x: number; y: number; width: number; height: number },
@@ -115,7 +115,7 @@ export function buildPhysicsPile<TDatum extends Datum>(
   options: PhysicsPileOptions<TDatum>
 ): PhysicsChartLayout {
   const {
-    data,
+    data: sourceRows,
     categoryAccessor,
     valueAccessor,
     unitValue,
@@ -124,10 +124,11 @@ export function buildPhysicsPile<TDatum extends Datum>(
     size
   } = options
   const safeUnitValue = positiveNumber(unitValue, 1)
+  const { rows: data } = createPhysicsSourceState(sourceRows, "pile")
   const area = physicsChartArea(size)
   const categories: string[] = []
   const categoryIndex = new Map<string, number>()
-  const rows = new Map<string, number>()
+  const totals = new Map<string, number>()
   const spawns: PhysicsQueuedSpawn[] = []
 
   function indexFor(category: string): number {
@@ -158,10 +159,25 @@ export function buildPhysicsPile<TDatum extends Datum>(
     const rawValue = valueAccessor
       ? finiteNumber(readAccessor(datum, index, valueAccessor))
       : 1
-    const count = Math.max(0, Math.round((rawValue ?? 0) / safeUnitValue))
+    const value = Math.max(0, rawValue ?? 0)
+    totals.set(category, (totals.get(category) ?? 0) + value)
+    const units = value / safeUnitValue
+    // Avoid a spurious sliver for floating-point quotients such as 0.07 / 0.01.
+    const nearest = Math.round(units)
+    const count = Math.ceil(
+      nearest > 0 && Math.abs(units - nearest) <= Number.EPSILON * units * 4
+        ? nearest
+        : units
+    )
     const centerX = geom.centerX(catIndex)
     for (let unitIndex = 0; unitIndex < count; unitIndex += 1) {
-      const running = rows.get(category) ?? 0
+      const running = perCategory[catIndex].length
+      // Keep each record addressable for selection/remove/update. Its final
+      // body carries the exact remainder, with area proportional to quantity.
+      const representedValue = unitIndex === count - 1
+        ? value - unitIndex * safeUnitValue
+        : safeUnitValue
+      const unitFraction = Math.min(1, representedValue / safeUnitValue)
       // Fan units across the tube's columns so they settle into rows rather
       // than a single toppling stack.
       const column = geom.perRow > 1 ? running % geom.perRow : 0
@@ -169,7 +185,6 @@ export function buildPhysicsPile<TDatum extends Datum>(
         geom.perRow > 1
           ? ((column / (geom.perRow - 1)) * 2 - 1) * spawnOffset
           : 0
-      rows.set(category, running + 1)
       perCategory[catIndex].push({
         id: `${String((datum as Datum).id ?? `pile-${index}`)}-${unitIndex}`,
         x: centerX + columnOffset,
@@ -177,8 +192,15 @@ export function buildPhysicsPile<TDatum extends Datum>(
         vx: (((unitIndex % 3) - 1) * ballRadius) / 2,
         vy: 0,
         mass: 1,
-        shape: { type: "circle", radius: ballRadius },
-        datum: { ...datum, category, unitIndex }
+        shape: { type: "circle", radius: ballRadius * Math.sqrt(unitFraction) },
+        datum: {
+          ...datum,
+          category,
+          unitIndex,
+          unitValue: safeUnitValue,
+          representedValue,
+          unitFraction
+        }
       })
     }
   })
@@ -227,8 +249,7 @@ export function buildPhysicsPile<TDatum extends Datum>(
     initialSpawnPacing: { pacing: { ratePerSec: 20 } },
     projectionRows: categories.map((category) => ({
       label: category,
-      value: rows.get(category) ?? 0
+      value: totals.get(category) ?? 0
     }))
   }
 }
-

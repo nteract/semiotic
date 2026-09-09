@@ -1,5 +1,5 @@
 import * as React from "react"
-import { xySceneNodeToSVG } from "../SceneToSVG"
+import { pointOrRectSceneNodeToSVG } from "../sceneToSVGShared"
 import { withSceneMarkCursor } from "../sceneCursor"
 import type { Style } from "../types"
 import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
@@ -164,7 +164,13 @@ export function createPhysicsSettledSVG(
                 : undefined
             return custom != null
               ? withSceneMarkCursor(custom, node, index)
-              : xySceneNodeToSVG(node, index, prefix)
+              : withSceneMarkCursor(
+                  node.type === "point" || node.type === "rect"
+                    ? pointOrRectSceneNodeToSVG(node, index, prefix)
+                    : null,
+                  node,
+                  `xy-cursor-${index}`
+                )
           })}
         </g>
         {resolvedForeground}

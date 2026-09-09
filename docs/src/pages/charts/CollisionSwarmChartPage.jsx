@@ -94,14 +94,16 @@ function makeSwarmData({ count, distribution, laneCount, variableRadius }) {
     const laneIndex = index % laneCount
     const group = groupLabels[laneIndex]
     let x
-    if (distribution === "bimodal") {
+    if (distribution === "identical") {
+      x = 50
+    } else if (distribution === "bimodal") {
       x = (index % 2 === 0 ? 36 : 66) + gaussian(random) * 7
     } else if (distribution === "skewed") {
       x = 22 + -Math.log(Math.max(0.000001, 1 - random())) * 16
     } else {
       x = 52 + gaussian(random) * 14
     }
-    x += laneCount > 1 ? (laneIndex - (laneCount - 1) / 2) * 4 : 0
+    x += distribution !== "identical" && laneCount > 1 ? (laneIndex - (laneCount - 1) / 2) * 4 : 0
     return {
       id: `${distribution}-${laneCount}-${index}`,
       x: Math.round(clamp(x, 4, 96) * 10) / 10,
@@ -118,11 +120,12 @@ export default function CollisionSwarmChartPage() {
   const [variableRadius, setVariableRadius] = useState(false)
   const [settle, setSettle] = useState(false)
   const [showProjection, setShowProjection] = useState(true)
+  const [pointRadius, setPointRadius] = useState(5)
+  const [height, setHeight] = useState(340)
   const data = useMemo(
     () => makeSwarmData({ count, distribution, laneCount, variableRadius }),
     [count, distribution, laneCount, variableRadius],
   )
-  const chartKey = `${distribution}-${count}-${laneCount}-${variableRadius}-${settle}`
   const usesGroups = laneCount > 1
 
   return (
@@ -165,7 +168,21 @@ export default function CollisionSwarmChartPage() {
       />
 
       <h2 id="example">Example</h2>
+      <p>
+        Try <strong>Test equal values</strong>: all 50 points have x=50, so they form one vertical
+        column. The overlap notice means the circles need more space. Reduce Point radius to 2
+        or increase Chart height to 900 to fit them. Their x values stay fixed through every change.
+      </p>
       <div style={controlPanelStyle} aria-label="Collision swarm controls">
+        <button type="button" style={inputStyle} onClick={() => {
+          setDistribution("identical")
+          setCount(50)
+          setLaneCount(1)
+          setVariableRadius(false)
+          setPointRadius(8)
+          setHeight(340)
+          setShowProjection(true)
+        }}>Test equal values</button>
         <label style={controlLabelStyle}>
           Distribution
           <select
@@ -176,6 +193,7 @@ export default function CollisionSwarmChartPage() {
             <option value="normal">Normal</option>
             <option value="bimodal">Bimodal</option>
             <option value="skewed">Skewed</option>
+            <option value="identical">All values = 50</option>
           </select>
         </label>
         <label style={controlLabelStyle}>
@@ -185,9 +203,27 @@ export default function CollisionSwarmChartPage() {
             value={count}
             onChange={(event) => setCount(Number(event.target.value))}
           >
+            <option value={50}>50</option>
             <option value={60}>60</option>
             <option value={120}>120</option>
             <option value={220}>220</option>
+          </select>
+        </label>
+        <label style={controlLabelStyle}>
+          Point radius
+          <select style={inputStyle} value={pointRadius} disabled={variableRadius} onChange={(event) => setPointRadius(Number(event.target.value))}>
+            <option value={2}>2</option>
+            <option value={5}>5</option>
+            <option value={8}>8</option>
+            <option value={12}>12</option>
+          </select>
+        </label>
+        <label style={controlLabelStyle}>
+          Chart height
+          <select style={inputStyle} value={height} onChange={(event) => setHeight(Number(event.target.value))}>
+            <option value={340}>340</option>
+            <option value={600}>600</option>
+            <option value={900}>900</option>
           </select>
         </label>
         <label style={controlLabelStyle}>
@@ -216,7 +252,7 @@ export default function CollisionSwarmChartPage() {
             checked={settle}
             onChange={(event) => setSettle(event.target.checked)}
           />
-          Start settled
+          Start at targets
         </label>
         <label style={checkboxLabelStyle}>
           <input
@@ -229,7 +265,6 @@ export default function CollisionSwarmChartPage() {
       </div>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
         <CollisionSwarmChart
-          key={chartKey}
           data={data}
           xAccessor="x"
           groupAccessor={usesGroups ? "group" : undefined}
@@ -237,17 +272,28 @@ export default function CollisionSwarmChartPage() {
           colorBy={usesGroups ? "group" : undefined}
           xExtent={[0, 100]}
           collisionIterations={8}
-          pointRadius={5}
+          pointRadius={pointRadius}
           settle={settle}
           showProjection={showProjection}
-          size={[640, 340]}
-          title="Collision-relaxed distribution"
+          width={640}
+          height={height}
+          responsiveWidth
+          title="Values stay fixed on the x-axis"
+          description="Each circle keeps its quantitative x value. Vertical separation makes neighboring observations visible; overfull lanes disclose overlap."
         />
       </div>
       <p>
         Use CollisionSwarmChart when the base chart is a dot strip or swarm plot, but overlap is
-        part of the story: bodies push each other apart while springs keep every point tethered to
-        its quantitative position. The chart still reads from the x-axis and optional lanes at rest.
+        part of the story. Each point keeps its exact x position while springs and collisions
+        arrange it vertically within its lane. Vertical position is spacing, not a second value.
+        If the packing cannot fit at the chosen radius and height, every point retains its value
+        and radius and the chart reports overlapping points.
+      </p>
+      <p>
+        These controls update the existing chart. New data, group lanes, radius, and axis extent
+        do not require a changing React key. For imperative updates, omit <code>data</code> and
+        push source records through a ref; lanes, counts, and inferred domains update together.
+        Set <code>xExtent</code> to keep the same domain as new values arrive.
       </p>
       <p>
         Use SwarmPlot when you only need a static distribution. Use PhysicsCustomChart when the

@@ -206,6 +206,9 @@ async function createSharedEsmGroup({
     // suffix. Both remain covered by package.json's `dist/*.min.js` file glob.
     outExtension: () => ({ js: ".js" }),
     esbuildOptions(esbuildOptions) {
+      // Fold syntax while the full module graph is visible. Terser runs on
+      // individual output chunks and cannot optimize across those boundaries.
+      esbuildOptions.minifySyntax = minify
       esbuildOptions.entryNames = "[name].module.min"
       // Private filenames do not need a descriptive basename: the content
       // hash is their cache identity, and shorter specifiers recur throughout

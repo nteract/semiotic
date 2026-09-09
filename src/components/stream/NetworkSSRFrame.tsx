@@ -8,7 +8,7 @@ import {
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG,
   networkLabelToSVG
-} from "./SceneToSVG"
+} from "./SceneToSVGNetwork"
 import { renderSceneWithBackend } from "./renderBackend"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"

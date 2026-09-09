@@ -118,7 +118,7 @@ describe("settled ledger", () => {
 
     const evidence = buildPhysicsSettledEvidence(store.snapshot(), {})
     expect(evidence.ledger).toBeUndefined()
-    expect(evidence.warnings).toEqual([])
+    expect(evidence.warnings).toEqual(["PHYSICS_NOT_SETTLED"])
   })
 
   it("balances when every charged body is live in the world", () => {

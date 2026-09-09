@@ -508,6 +508,17 @@ const bodies = frameRef.current?.getData()
 const snapshot = frameRef.current?.snapshot()`}
       />
 
+      <h2 id="fixed-coordinates">Keep a data coordinate exact</h2>
+      <p>
+        A body can declare <code>fixedPosition: &#123; x: 120 &#125;</code> to move vertically
+        while x stays exactly 120. Use <code>&#123; y: 80 &#125;</code> for horizontal motion,
+        or set both coordinates to anchor the body. Fixed coordinates take precedence over
+        forces, impulses, and contacts and survive queued spawns, snapshots, and worker execution
+        in the built-in engine. Custom engine adapters must honor this body field themselves.
+        <Link to="/charts/collision-swarm-chart">CollisionSwarmChart</Link> uses it to keep
+        quantitative x values exact; its vertical spacing is not another data variable.
+      </p>
+
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StreamPhysicsFrame" props={physicsFrameProps} />

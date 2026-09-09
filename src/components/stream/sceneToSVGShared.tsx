@@ -7,10 +7,10 @@
 
 import * as React from "react"
 import type { DefaultArcObject } from "d3-shape"
-import { isHatchFill, type HatchFill } from "../charts/shared/hatchFill"
+import { isHatchFill, hatchPatternDef, type HatchFill } from "../charts/shared/hatchFill"
 import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
 import type { GlyphDef } from "./glyphDef"
-import type { RectSceneNode, Style, SymbolSceneNode } from "./types"
+import type { PointSceneNode, RectSceneNode, Style, SymbolSceneNode } from "./types"
 import { clampCornerRadii } from "./renderers/cornerRadii"
 import { symbolPathString } from "./symbolPath"
 import type { GradientStop } from "../charts/shared/gradient"
@@ -249,5 +249,36 @@ export function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: s
       stroke={n.style.stroke}
       strokeWidth={n.style.strokeWidth}
     />
+  )
+}
+
+// Circle and rectangle marks shared with the physics SVG fallback.
+
+export function pointOrRectSceneNodeToSVG(
+  n: PointSceneNode | RectSceneNode,
+  i: number,
+  idPrefix?: string
+): React.ReactNode {
+  const point = n.type === "point"
+  const tag = point ? "circle" : "rect"
+  const geometry = point
+    ? { cx: n.x, cy: n.y, r: n.r }
+    : { x: n.x, y: n.y, width: n.w, height: n.h }
+  // Keep the established XY/physics pattern IDs and opacity defaults.
+  const hatchId = `${idPrefix ? `${idPrefix}-` : ""}${point ? "point" : "xyrect"}-${i}-hatch`
+  const hatch = isHatchFill(n.style.fill)
+    ? hatchPatternDef(n.style.fill, hatchId)
+    : undefined
+  return (
+    <React.Fragment key={`${n.type}-${i}`}>
+      {hatch && <defs>{hatch}</defs>}
+      {React.createElement(tag, {
+        ...geometry,
+        fill: hatch ? `url(#${hatchId})` : svgFill(n.style.fill),
+        opacity: point ? n.style.opacity ?? n.style.fillOpacity ?? 0.8 : n.style.opacity,
+        stroke: n.style.stroke,
+        strokeWidth: n.style.strokeWidth
+      })}
+    </React.Fragment>
   )
 }

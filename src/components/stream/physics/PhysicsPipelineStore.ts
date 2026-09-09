@@ -347,36 +347,38 @@ export class PhysicsPipelineStore {
     }
 
     const delta =
-      Math.max(0, Math.min(deltaSeconds, this.config.maxDeltaSeconds)) *
-      this.config.timeScale
-    this.elapsedSeconds += delta
+      Math.max(
+        0,
+        Math.min(
+          Number.isFinite(deltaSeconds) ? deltaSeconds : 0,
+          this.config.maxDeltaSeconds
+        )
+      ) * this.config.timeScale
     this.spawnDue(spawned, observations)
-    const budget = this.observeBodyBudget(observations)
+    const initialBudget = this.observeBodyBudget(observations)
     const overflow = this.evictOverflow(observations)
     evicted.push(...overflow.evicted)
     sedimented.push(...overflow.sedimented)
     this.syncSimulationState(observations)
+    if (spawned.length > 0) this.quiescence.reset()
     this.accumulator += delta
 
-    let steps = 0
-    while (
-      this.accumulator >= this.config.fixedDt &&
-      steps < this.config.maxSubsteps
-    ) {
-      this.world.step(this.config.fixedDt)
-      const stepEvents = this.world.events()
-      events.push(...stepEvents)
-      this.observeKernelEvents(stepEvents, observations)
-      this.observeSensorTransitions(observations)
-      this.accumulator -= this.config.fixedDt
-      steps += 1
-    }
+    // Refresh/worker command acknowledgements use tick(0). They may admit
+    // due rows, but must not consume time left by an earlier catch-up limit.
+    const availableSteps = delta > 0 ? Math.floor(
+      (this.accumulator + this.config.fixedDt * 1e-9) / this.config.fixedDt
+    ) : 0
+    const { steps, budget } = runPhysicsSettleSteps(
+      this.settleHost(),
+      Math.min(availableSteps, this.config.maxSubsteps),
+      { spawned, evicted, sedimented, events, observations },
+      { stopAtRest: false }
+    )
+    this.accumulator = Math.max(0, this.accumulator - steps * this.config.fixedDt)
 
     if (steps === this.config.maxSubsteps) {
       this.accumulator = Math.min(this.accumulator, this.config.fixedDt)
     }
-
-    this.quiescence.refresh(this.world, delta, spawned.length)
 
     if (
       steps > 0 ||
@@ -395,7 +397,7 @@ export class PhysicsPipelineStore {
       events,
       observations,
       undefined,
-      budget
+      budget ?? initialBudget
     )
     this.updateResults.record(
       { kind: "tick", count: steps },
@@ -691,6 +693,7 @@ export class PhysicsPipelineStore {
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
+    const previousState = this.simulationState
     this.config = {
       bodyLimit: snapshot.config.bodyLimit,
       eviction: snapshot.config.eviction,
@@ -728,6 +731,9 @@ export class PhysicsPipelineStore {
       this.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
     this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
+    if (this.simulationState !== previousState) {
+      this.observation.onSimulationStateChange?.(this.simulationState, previousState)
+    }
   }
 
   private spawnDue(
@@ -736,7 +742,7 @@ export class PhysicsPipelineStore {
   ): void {
     while (
       this.queue.length > 0 &&
-      this.queue[0].spawnAt <= this.elapsedSeconds
+      this.queue[0].spawnAt <= this.elapsedSeconds + this.config.fixedDt * 1e-9
     ) {
       const next = this.queue.shift()
       if (!next) return

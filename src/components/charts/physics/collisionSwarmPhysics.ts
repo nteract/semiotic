@@ -1,4 +1,6 @@
+import { createPhysicsSourceState } from "./physicsSourceRows"
 import { scaleLinear } from "d3-scale"
+import { packSwarmLane } from "./collisionSwarmPacking"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import {
@@ -33,14 +35,14 @@ export interface CollisionSwarmProjectionMetadata {
   kind: "collision-swarm"
   xExtent: [number, number]
   xRange: [number, number]
-  groups: Array<{ label: string; y: number; count: number }>
+  groups: Array<{ label: string; y: number; count: number; overlapping?: boolean }>
   plot: PhysicsChartArea["plot"]
 }
 export function buildCollisionSwarmPhysics<TDatum extends Datum>(
   options: CollisionSwarmPhysicsOptions<TDatum>
 ): PhysicsChartLayout {
   const {
-    data,
+    data: sourceRows,
     xAccessor,
     groupAccessor,
     radiusAccessor,
@@ -51,6 +53,7 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
     collisionIterations,
     settle
   } = options
+  const { rows: data } = createPhysicsSourceState(sourceRows, "collision-swarm")
   const area = physicsChartArea(size)
   const random = seededRandom(seed)
   const rows: Array<{
@@ -113,40 +116,41 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
   const xRangeEnd = area.plot.x + area.plot.width - maxRadius - 8
   const xScale = scaleLinear().domain([min, max]).range([xRangeStart, xRangeEnd])
   const groupCount = Math.max(1, groups.length)
-  const lanePadding = Math.min(
-    Math.max(28, maxRadius * 3),
-    area.plot.height / 4
-  )
-  const laneTop = area.plot.y + lanePadding
-  const laneBottom =
-    area.plot.y + area.plot.height - lanePadding
-  const laneSpan = Math.max(0, laneBottom - laneTop)
-  const yForGroup = (group: string): number => {
-    const index = groupIndex.get(group) ?? 0
-    if (groupCount === 1) return area.plot.y + area.plot.height * 0.54
-    return laneTop + (index / (groupCount - 1)) * laneSpan
-  }
+  const laneHeight = area.plot.height / groupCount
+  const laneGap = Math.min(6, laneHeight * 0.05)
+  const yForGroup = (group: string): number =>
+    area.plot.y + ((groupIndex.get(group) ?? 0) + 0.5) * laneHeight
   const counts = new Map<string, number>()
+  const overlappingGroups = new Set<string>()
+  const targets = new Map<number, { x: number; y: number; entryOffset: number }>()
+  for (const group of groups) {
+    const members = rows.filter((row) => row.group === group)
+    const center = yForGroup(group)
+    const points = members.map((row) => ({ x: xScale(row.value), radius: row.radius }))
+    const packed = packSwarmLane(points, center - laneHeight / 2 + laneGap, center + laneHeight / 2 - laneGap, random)
+    counts.set(group, members.length)
+    if (packed.overlapping) overlappingGroups.add(group)
+    members.forEach((row, index) => targets.set(row.index, {
+      x: points[index].x,
+      y: packed.positions[index],
+      entryOffset: packed.entryOffset
+    }))
+  }
   const spawns: PhysicsQueuedSpawn[] = rows.map((row, orderedIndex) => {
-    counts.set(row.group, (counts.get(row.group) ?? 0) + 1)
-    const targetX = xScale(row.value)
-    const targetY = yForGroup(row.group)
-    const jitterX = (random() - 0.5) * row.radius * 1.6
-    const jitterY = (random() - 0.5) * row.radius * 1.6
-    const entryOffset = ((orderedIndex % 9) - 4) * row.radius * 2.5
+    const target = targets.get(row.index)!
+    const targetX = target.x
+    const targetY = target.y
+    const overlapping = overlappingGroups.has(row.group)
     return {
       id: String((row.datum as Datum).id ?? `collision-swarm-${orderedIndex}`),
-      x: settle
-        ? targetX + jitterX
-        : clampNumber(targetX + entryOffset, xRangeStart, xRangeEnd),
-      y: settle
-        ? targetY + jitterY
-        : area.plot.y - 18 - (orderedIndex % 12) * row.radius,
-      vx: settle ? 0 : (random() - 0.5) * 22,
-      vy: settle ? 0 : 24 + random() * 18,
-      // Constant mass: position (x = value) and size (radius) carry the data.
-      // Mass is a neutral process property, never a data channel (dynamics are
-      // not perceptually readable as a quantity).
+      x: targetX,
+      y: targetY - (settle ? 0 : target.entryOffset),
+      vx: 0,
+      vy: 0,
+      fixedPosition: { x: targetX },
+      // An overfull lane cannot preserve radius, x, and non-overlap together.
+      // Keep its data encodings and disclose overlap in the projection.
+      bodyCollisions: !overlapping,
       mass: 1,
       shape: { type: "circle", radius: row.radius },
       datum: {
@@ -155,14 +159,15 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
         group: row.group,
         radius: row.radius,
         targetX,
-        targetY
+        targetY,
+        overlapping
       },
       springs: [
         {
           target: { type: "point", x: targetX, y: targetY },
           restLength: 0,
           stiffness: 34,
-          damping: 5.5
+          damping: 12
         }
       ]
     }
@@ -206,7 +211,8 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
       groups: groups.map((group) => ({
         label: group,
         y: yForGroup(group),
-        count: counts.get(group) ?? 0
+        count: counts.get(group) ?? 0,
+        overlapping: overlappingGroups.has(group)
       })),
       plot: area.plot
     } satisfies CollisionSwarmProjectionMetadata

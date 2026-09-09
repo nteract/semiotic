@@ -5,7 +5,7 @@
  * type emitted by a canvas scene builder has a matching SVG converter case.
  *
  * The third check is the load-bearing one: client renders via canvas (using
- * scene builders + canvas renderers); server renders via `SceneToSVG.tsx`
+ * scene builders + canvas renderers); server renders via `SceneToSVG*.tsx`
  * which converts the same scene-node values to SVG. If a new node type lands
  * on canvas without a corresponding case in `*SceneNodeToSVG`, server renders
  * silently drop those marks. The bar `gradientFill` near-miss in 3.4.2 was
@@ -26,8 +26,8 @@
  * Usage:
  *   node scripts/check-ssr-alignment.js
  *
- * Tests can point the scene parity pass at a temporary SceneToSVG copy via:
- *   SEMIOTIC_SCENE_TO_SVG=/tmp/SceneToSVG.tsx node scripts/check-ssr-alignment.js
+ * Tests can override the XY serializer with a temporary implementation via:
+ *   SEMIOTIC_SCENE_TO_SVG=/tmp/SceneToSVGXY.tsx node scripts/check-ssr-alignment.js
  */
 
 const fs = require("fs")
@@ -255,28 +255,13 @@ for (const { prop, charts, label, alts, global } of PROP_CHECKS) {
 // the literal lives — the union is the only single point of truth.
 
 const STREAM_DIR = path.join(ROOT, "src/components/stream")
-const SCENE_TO_SVG = process.env.SEMIOTIC_SCENE_TO_SVG
-  ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
-  : path.join(STREAM_DIR, "SceneToSVG.tsx")
-// Network, geo, and ordinal converters live in sibling modules re-exported
-// from SceneToSVG.tsx (split out to stay under the file-size ratchet
-// ceiling). The parity scan below concatenates all four so
-// `extractCaseLabels` still finds `function networkSceneNodeToSVG` /
-// `function geoSceneNodeToSVG` / `function ordinalSceneNodeToSVG`
-// regardless of which file they're physically declared in. Not overridden
-// by SEMIOTIC_SCENE_TO_SVG — that env var only simulates drift in the main
-// file's xy converter (see ssr-alignment.test.ts).
-const SCENE_TO_SVG_SIBLINGS = [
-  path.join(STREAM_DIR, "SceneToSVGNetwork.tsx"),
-  path.join(STREAM_DIR, "SceneToSVGGeo.tsx"),
-  path.join(STREAM_DIR, "SceneToSVGOrdinal.tsx"),
-]
-
+// Scan the same leaf implementations used by the runtime. SceneToSVG.tsx is
+// only a compatibility facade and has no converter bodies to inspect.
 const FRAMES = {
-  xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG" },
-  ordinal: { typesFile: "ordinalTypes.ts", unionName: "OrdinalSceneNode", svgFn: "ordinalSceneNodeToSVG" },
-  network: { typesFile: "networkTypes.ts", unionName: "NetworkSceneNode", svgFn: "networkSceneNodeToSVG" },
-  geo:     { typesFile: "geoTypes.ts",     unionName: "GeoSceneNode",     svgFn: "geoSceneNodeToSVG" },
+  xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG",      svgFile: "SceneToSVGXY.tsx" },
+  ordinal: { typesFile: "ordinalTypes.ts", unionName: "OrdinalSceneNode", svgFn: "ordinalSceneNodeToSVG", svgFile: "SceneToSVGOrdinal.tsx" },
+  network: { typesFile: "networkTypes.ts", unionName: "NetworkSceneNode", svgFn: "networkSceneNodeToSVG", svgFile: "SceneToSVGNetwork.tsx" },
+  geo:     { typesFile: "geoTypes.ts",     unionName: "GeoSceneNode",     svgFn: "geoSceneNodeToSVG",     svgFile: "SceneToSVGGeo.tsx" },
 }
 
 // Type-discriminant strings that legitimately appear on one side only.
@@ -377,13 +362,15 @@ function extractCaseLabels(source, functionName) {
 
 console.log("\n[scene parity] checking each frame's canvas ↔ SVG type coverage")
 
-const sceneToSvgSrc = [SCENE_TO_SVG, ...SCENE_TO_SVG_SIBLINGS]
-  .filter(fs.existsSync)
-  .map(f => fs.readFileSync(f, "utf8"))
-  .join("\n")
 const interfaceToType = buildInterfaceTypeMap()
 
-for (const [frame, { typesFile, unionName, svgFn }] of Object.entries(FRAMES)) {
+for (const [frame, { typesFile, unionName, svgFn, svgFile }] of Object.entries(FRAMES)) {
+  // The test override replaces the XY implementation, never supplements it:
+  // scanning both copies could let the real source mask a mutated fixture.
+  const svgPath = frame === "xy" && process.env.SEMIOTIC_SCENE_TO_SVG
+    ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
+    : path.join(STREAM_DIR, svgFile)
+  const sceneToSvgSrc = fs.readFileSync(svgPath, "utf8")
   const typesPath = path.join(STREAM_DIR, typesFile)
   if (!fs.existsSync(typesPath)) continue
   const typesSrc = fs.readFileSync(typesPath, "utf8")
@@ -407,7 +394,7 @@ for (const [frame, { typesFile, unionName, svgFn }] of Object.entries(FRAMES)) {
   for (const type of emitted) {
     if (PARITY_EXCEPTIONS.canvasOnly.has(type)) continue
     if (!handled.has(type)) {
-      errors.push(`Scene type "${type}" is part of the ${frame} ${unionName} union but ${svgFn} has no \`case "${type}":\` branch — SSR will drop these marks. Add a branch in src/components/stream/SceneToSVG.tsx, or list the type in PARITY_EXCEPTIONS.canvasOnly with justification.`)
+      errors.push(`Scene type "${type}" is part of the ${frame} ${unionName} union but ${svgFn} has no \`case "${type}":\` branch — SSR will drop these marks. Add a branch in src/components/stream/${svgFile}, or list the type in PARITY_EXCEPTIONS.canvasOnly with justification.`)
     }
   }
 
@@ -430,7 +417,7 @@ if (errors.length > 0) {
     console.error(`  ✗ ${err}`)
   }
   console.error(`\n${errors.length} issue(s) found.`)
-  console.error("Fix in src/components/server/serverChartConfigs.ts, validationMap.ts, or src/components/stream/SceneToSVG.tsx.")
+  console.error("Fix in src/components/server/serverChartConfigs.ts, validationMap.ts, or the reported SceneToSVG family implementation.")
   process.exit(1)
 } else {
   console.log("\n✅ SSR alignment check passed")
