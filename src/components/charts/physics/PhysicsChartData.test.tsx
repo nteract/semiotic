@@ -57,23 +57,29 @@ describe("physics chart source updates", () => {
 
       // Switching to omitted data must not reveal previously rejected rows.
       rerender(chart())
-      expect(container.querySelector("canvas")).not.toBeNull()
       expect(handle.getData()).toEqual([])
       expect(scene(ref).bodies).toEqual([])
       act(() => handle.push(row))
       expect(handle.getData()).toEqual([row])
-      expect(scene(ref).bodies).toHaveLength(1)
+      expect(scene(ref).bodies).toEqual([
+        expect.objectContaining({ datum: expect.objectContaining(row) })
+      ])
       act(() => handle.clear())
-      expect(container.querySelector("canvas")).not.toBeNull()
+      expect(handle.getData()).toEqual([])
       expect(scene(ref).bodies).toEqual([])
 
       // A saved handle cannot bypass a later controlled-empty prop either.
       act(() => handle.push(row))
+      expect(handle.getData()).toEqual([row])
+      expect(scene(ref).bodies).toEqual([
+        expect.objectContaining({ datum: expect.objectContaining(row) })
+      ])
       rerender(chart(empty))
       act(() => handle.push(row))
       expect(getByText("No source records")).toBeTruthy()
       expect(container.querySelector("canvas")).toBeNull()
       expect(handle.getData()).toEqual([])
+      expect(handle.getCustomLayout!()).toBeNull()
     })
 
     it(`${name} keeps explicit empty data empty in React and serialized server output`, () => {
@@ -98,7 +104,7 @@ describe("physics chart source updates", () => {
   ] as const) {
     it("retains explicitly requested mechanical demonstrations with empty data", () => {
       const ref = React.createRef<PhysicsFrameHandle>()
-      const { container } = render(
+      render(
         <Chart
           ref={ref}
           data={[]}
@@ -106,9 +112,18 @@ describe("physics chart source updates", () => {
           mechanicalCount={8}
         />
       )
-      expect(container.querySelector("canvas")).not.toBeNull()
-      expect(ref.current!.getData()).toHaveLength(sourceCount)
-      expect(scene(ref).bodies).toHaveLength(8)
+      expect(ref.current!.getData()).toEqual(
+        Array.from({ length: sourceCount }, () =>
+          expect.objectContaining({ mechanical: true })
+        )
+      )
+      expect(scene(ref).bodies).toEqual(
+        Array.from({ length: 8 }, () =>
+          expect.objectContaining({
+            datum: expect.objectContaining({ mechanical: true })
+          })
+        )
+      )
     })
   }
 
