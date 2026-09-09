@@ -18,6 +18,19 @@ test.describe("Physics charts - settled-state baselines", () => {
       await waitForChartReady(page, testId, { timeout: 15_000 })
       await waitForRafs(page, 2)
       const testCase = page.locator(`[data-testid="${testId}"]`)
+      if (testId === "physics-galton-settled") {
+        await expect(
+          testCase.getByTestId("galton-board-structure-overlay").locator("text")
+        ).toHaveText(["4", "1", "2", "2", "3", "4"])
+      } else if (testId === "physics-pile-settled") {
+        const projection = testCase.getByTestId("physics-pile-projection-overlay")
+        await expect(projection.locator("g text")).toHaveText([
+          "9", "North", "6", "South", "12", "East", "7", "West",
+        ])
+        await expect(projection.locator(":scope > text")).toHaveText(
+          "Full circle = 1; partial circles scaled by area"
+        )
+      }
       await expect(testCase).toHaveScreenshot(snapshotName, {
         maxDiffPixels: 200,
         timeout: 15_000,
