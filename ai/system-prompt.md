@@ -125,6 +125,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Proportional symbol maps use geographic props** (`geo.proportional-symbol-wire-shape`): ProportionalSymbolMap reads point rows from points, longitude from xAccessor (default lon), latitude from yAccessor (default lat), and radius from sizeBy. sizeRange is the two-number pixel-radius range.
 - **Physics charts separate chart mode from simulation input** (`physics.sample-and-mechanical-inputs`): Sample simulations use data plus the chart's accessors. Seeded no-data demonstrations use simulationMode="mechanical" (legacy mode="mechanical" remains accepted); mode otherwise carries chart display modes such as primary or sparkline.
 - **Physics push methods ingest source records** (`physics.push-uses-source-records`): Physics HOC refs push source records through the chart's accessors. pushRows and dataIdAccessor are not component props; stable source id fields are retained on spawned bodies without an invented accessor.
+- **Distribution physics charts update bodies and projections together** (`physics.live-source-reconciliation`): Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.
 
 <!-- semiotic-behavior-contracts:end -->
 

@@ -24788,7 +24788,7 @@
       "type": "function",
       "function": {
         "name": "GaltonBoardChart",
-        "description": "Physics-backed Galton board / Plinko-style dot distribution. Values enter deterministic bins and settle into a readable histogram-like projection; mechanical mode can generate a seeded no-data demonstration.",
+        "description": "Distribution drop with values assigned to bins before replay. Mechanical mode generates seeded Bernoulli samples; pegs do not classify values.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -25192,7 +25192,7 @@
                 "sample",
                 "mechanical"
               ],
-              "description": "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied.",
+              "description": "sample bins supplied values; mechanical generates seeded Bernoulli samples.",
               "default": "sample"
             },
             "pegRows": {
@@ -25205,7 +25205,7 @@
             },
             "branchProbability": {
               "type": "number",
-              "description": "Probability that each mechanical sample branches right at a peg.",
+              "description": "Probability of a right branch in each generated Bernoulli sample.",
               "default": 0.5
             },
             "referenceLines": {
@@ -25224,7 +25224,7 @@
             },
             "showProjection": {
               "type": "boolean",
-              "description": "Whether companion docs or wrappers should show the settled projection."
+              "description": "Show bin guides, counts, and the distribution outline."
             }
           },
           "required": []
@@ -26077,7 +26077,7 @@
                 "sample",
                 "mechanical"
               ],
-              "description": "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches.",
+              "description": "sample uses supplied rows; mechanical generates a seeded unit pile.",
               "default": "sample"
             },
             "mechanicalCount": {
@@ -26118,7 +26118,7 @@
       "type": "function",
       "function": {
         "name": "CollisionSwarmChart",
-        "description": "Physics-backed swarm / dot-strip chart. Quantitative records spring toward an x-position while collisions separate overlapping dots into a readable distribution.",
+        "description": "Physics swarm with exact quantitative x, vertical collision spacing, and disclosed overlap when crowded.",
         "parameters": {
           "type": "object",
           "properties": {
@@ -26498,7 +26498,7 @@
             },
             "xAccessor": {
               "type": "string",
-              "description": "Quantitative field that anchors each body along the x-axis.",
+              "description": "Numeric field fixing each body's x coordinate.",
               "default": "x",
               "x-semiotic-runtime-types": [
                 "string",
@@ -26537,7 +26537,7 @@
             },
             "settle": {
               "type": "boolean",
-              "description": "Start bodies near their target positions for a calmer first paint or reduced-motion demo."
+              "description": "Start at packed targets; does not run settling."
             },
             "rerunMS": {
               "type": [
@@ -26548,7 +26548,7 @@
             },
             "showProjection": {
               "type": "boolean",
-              "description": "Draw x-axis and group-lane guides behind the moving bodies.",
+              "description": "Show the x-axis, lane counts, and crowding notices.",
               "default": true
             }
           },

@@ -5,7 +5,6 @@ import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor, ChartMode } from "../shared/types"
 import {
@@ -16,10 +15,8 @@ import {
   styleFromColorAccessor
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import {
-  usePhysicsHocHandle,
-  type PhysicsFrameHandle
-} from "./physicsHocHandle"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import { EMPTY_PHYSICS_ROWS, usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -36,10 +33,6 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import { pileProjectionOverlay } from "./physicsProjectionOverlays"
-
-function pileRowId(datum: Datum, index: number): string {
-  return String(datum.id ?? `pile-${index}`)
-}
 
 export interface UnitPileChartProps<TDatum extends Datum = Datum>
   extends
@@ -158,7 +151,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
             seed,
             unitValue
           }) as TDatum[])
-        : (data ?? []),
+        : (data ?? (EMPTY_PHYSICS_ROWS as TDatum[])),
     [
       data,
       mechanicalCategories,
@@ -168,10 +161,10 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       unitValue
     ]
   )
-  const layout = useMemo(
-    () =>
+  const buildLayout = useCallback(
+    (rows: TDatum[]) =>
       buildPhysicsPile({
-        data: chartData,
+        data: rows,
         categoryAccessor,
         valueAccessor: resolvedValueAccessor,
         unitValue,
@@ -183,53 +176,26 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
       ballRadius,
       categoryAccessor,
       chartSize,
-      chartData,
       resolvedValueAccessor,
       seed,
       unitValue
     ]
   )
+  const { layout, rows: sourceRows, resetSeed } = usePhysicsChartData({
+    ref,
+    frameRef,
+    data: chartData,
+    idPrefix: "pile",
+    buildLayout
+  })
   const rerun = usePhysicsRerun(
     layout.config,
     rerunMS,
     paused,
-    undefined,
+    resetSeed,
     props.onSimulationStateChange
   )
 
-  const spawnDatum = useCallback(
-    (datum: Datum, index: number) => {
-      const single = buildPhysicsPile<Datum>({
-        data: [{ ...datum, id: pileRowId(datum, index) }],
-        categoryAccessor: categoryAccessor as ChartAccessor<Datum, string>,
-        valueAccessor: resolvedValueAccessor as
-          ChartAccessor<Datum, number> | undefined,
-        unitValue,
-        ballRadius,
-        seed: seed + index + 1,
-        size: chartSize
-      })
-      return {
-        datumId: pileRowId(datum, index),
-        spawns: single.initialSpawns as PhysicsQueuedSpawn[]
-      }
-    },
-    [
-      ballRadius,
-      categoryAccessor,
-      chartSize,
-      resolvedValueAccessor,
-      seed,
-      unitValue
-    ]
-  )
-  usePhysicsHocHandle(ref, {
-    frameRef,
-    spawnDatum,
-    idAccessor: pileRowId,
-    seedRows: chartData as Datum[],
-    seedSpawns: layout.initialSpawns
-  })
   const resolvedColorBy =
     simulationMode === "mechanical" && colorBy == null
       ? ("category" as ChartAccessor<Datum, string>)
@@ -271,7 +237,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
   })
 
   const stateEl = renderPhysicsChartState({
-    data: simulationMode === "mechanical" ? chartData : data,
+    data: simulationMode === "mechanical" ? chartData : data?.length === 0 ? sourceRows : data,
     emptyContent,
     loading,
     loadingContent,

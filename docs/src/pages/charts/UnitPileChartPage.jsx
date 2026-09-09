@@ -5,6 +5,7 @@ import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
+import PhysicsLivePileDemo from "../../components/PhysicsLivePileDemo"
 
 const pileData = [
   { id: "orders", category: "Orders", value: 18 },
@@ -119,7 +120,6 @@ export default function UnitPileChartPage() {
           },
     [mechanicalCategories, mechanicalCount, mode],
   )
-  const chartKey = `${mode}-${mechanicalCount}-${mechanicalCategoryCount}`
 
   return (
     <PageLayout
@@ -214,7 +214,6 @@ export default function UnitPileChartPage() {
       </div>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
         <UnitPileChart
-          key={chartKey}
           {...demoProps}
           unitValue={1}
           size={[640, 320]}
@@ -231,6 +230,22 @@ export default function UnitPileChartPage() {
         totals; pile height and the faint stacking guides are approximate. For example, 49 + 49
         with <code>unitValue=&#123;100&#125;</code> produces two partial circles and a total of 98.
         Set <code>showProjection=&#123;false&#125;</code> to hide the guides and labels.
+      </p>
+
+      <h2 id="live-updates">Try live updates</h2>
+      <p>
+        Start with 49 + 49: the total is 98. Add another 49 to make 147, then add category B
+        to create a second tube. Change the value per full circle: the circle count changes
+        while the totals stay the same. Pause motion to inspect edits without waiting for a fall.
+      </p>
+      <PhysicsLivePileDemo />
+      <p>
+        This editor uses <code>push</code>, <code>update</code>, <code>remove</code>, and <code>clear</code>
+        on the chart ref. <code>getData()</code> returns each source record once, including records
+        waiting to enter. A new <code>data</code> array replaces the source records; changing an
+        accessor or <code>unitValue</code> re-encodes the current records. A changing React key is unnecessary.
+        An enabled <code>rerunMS</code> replays the original seeded data. <code>popBodies</code> only removes
+        visual bodies; use <code>remove</code> to change source records and totals.
       </p>
 
       <h2 id="props">Props</h2>

@@ -5,7 +5,6 @@ import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
@@ -13,15 +12,12 @@ import {
   composePhysicsBodyStyle,
   generateGaltonMechanicalSamples,
   type GaltonBoardProjectionMetadata,
-  physicsChartArea,
   projectionRowsToSemanticItems,
   styleFromColorAccessor
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import {
-  usePhysicsHocHandle,
-  type PhysicsFrameHandle
-} from "./physicsHocHandle"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import { EMPTY_PHYSICS_ROWS, usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -183,7 +179,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
             pegRows: resolvedPegRows,
             seed
           }) as TDatum[])
-        : (data ?? []),
+        : (data ?? (EMPTY_PHYSICS_ROWS as TDatum[])),
     [
       bins,
       branchProbability,
@@ -194,10 +190,10 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       simulationMode
     ]
   )
-  const layout = useMemo(
-    () =>
+  const buildLayout = useCallback(
+    (rows: TDatum[]) =>
       buildGaltonBoardPhysics({
-        data: chartData,
+        data: rows,
         valueAccessor,
         bins,
         ballRadius: resolvedBallRadius,
@@ -207,7 +203,6 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       }),
     [
       bins,
-      chartData,
       chartSize,
       resolvedBallRadius,
       resolvedValueExtent,
@@ -215,53 +210,21 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
       valueAccessor
     ]
   )
+  const { layout, rows: sourceRows, resetSeed } = usePhysicsChartData({
+    ref,
+    frameRef,
+    data: chartData,
+    idPrefix: "galton",
+    buildLayout
+  })
   const rerun = usePhysicsRerun(
     layout.config,
     rerunMS,
     paused,
-    undefined,
+    resetSeed,
     props.onSimulationStateChange
   )
 
-  const spawnDatum = useCallback(
-    (datum: Datum, index: number) => {
-      const single = buildGaltonBoardPhysics({
-        data: [datum],
-        valueAccessor: valueAccessor as ChartAccessor<Datum, number>,
-        bins,
-        ballRadius: resolvedBallRadius,
-        seed: seed + index + 1,
-        size: chartSize,
-        valueExtent: resolvedValueExtent
-      })
-      const spawn = single.initialSpawns[0] ?? {
-        id: String(datum.id ?? `galton-push-${index}`),
-        x: physicsChartArea(chartSize).plot.x,
-        y: physicsChartArea(chartSize).plot.y,
-        mass: 1,
-        shape: { type: "circle" as const, radius: resolvedBallRadius },
-        datum
-      }
-      return {
-        datumId: String(datum.id ?? spawn.id),
-        spawns: [spawn as PhysicsQueuedSpawn]
-      }
-    },
-    [
-      bins,
-      chartSize,
-      resolvedBallRadius,
-      resolvedValueExtent,
-      seed,
-      valueAccessor
-    ]
-  )
-  usePhysicsHocHandle(ref, {
-    frameRef,
-    spawnDatum,
-    seedRows: chartData as Datum[],
-    seedSpawns: layout.initialSpawns
-  })
   const resolvedColorBy =
     simulationMode === "mechanical" && colorBy == null
       ? ("side" as ChartAccessor<Datum, string>)
@@ -298,7 +261,7 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
   })
 
   const stateEl = renderPhysicsChartState({
-    data: simulationMode === "mechanical" ? chartData : data,
+    data: simulationMode === "mechanical" ? chartData : data?.length === 0 ? sourceRows : data,
     emptyContent,
     loading,
     loadingContent,

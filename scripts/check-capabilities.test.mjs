@@ -43,6 +43,16 @@ describe("check-capabilities push-handle detection", () => {
     )
   })
 
+  it("recognizes the source-model physics bridge only when it is invoked", () => {
+    assert.equal(sourceWiresPushHandle('import { usePhysicsChartData } from "./usePhysicsChartData"'), false)
+    for (const chart of ["GaltonBoardChart", "UnitPileChart", "CollisionSwarmChart"]) {
+      const source = readFileSync(resolve(repoRoot, `src/components/charts/physics/${chart}.tsx`), "utf8")
+      assert.equal(sourceWiresPushHandle(source), true)
+    }
+    const bridge = readFileSync(resolve(repoRoot, "src/components/charts/physics/usePhysicsChartData.ts"), "utf8")
+    assert.match(bridge, /useImperativeHandle\s*\(/)
+  })
+
   it("recognizes every realtime HOC and verifies the shared bridge is imperative", () => {
     for (const chart of [
       "RealtimeLineChart",
@@ -63,7 +73,7 @@ describe("check-capabilities push-handle detection", () => {
       resolve(realtimeDir, "realtimeChartRuntime.ts"),
       "utf8"
     )
-    assert.match(runtime, /export function useRealtimeFrameHandle\s*\(/)
+    assert.match(runtime, /export function useRealtimeFrameHandle(?:<[^>]+>)?\s*\(/)
     assert.match(runtime, /React\.useImperativeHandle\s*\(/)
   })
 })

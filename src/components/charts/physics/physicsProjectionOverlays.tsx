@@ -498,6 +498,17 @@ export function collisionSwarmProjectionOverlay(
         viewBox={`0 0 ${resolvedSize[0]} ${resolvedSize[1]}`}
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       >
+        {metadata.groups.some((group) => group.overlapping) ? (
+          <text
+            data-testid="collision-swarm-overlap-warning"
+            x={area.plot.x}
+            y={Math.max(10, area.plot.y - 9)}
+            fill="var(--semiotic-warning, #b45309)"
+            fontSize={10}
+          >
+            {resolvedSize[0] < 360 ? "Points overlap" : "Points overlap. Reduce radius or increase height."}
+          </text>
+        ) : null}
         {metadata.groups.map((group) => (
           <g key={group.label}>
             <line
@@ -525,7 +536,7 @@ export function collisionSwarmProjectionOverlay(
               fill="var(--semiotic-text-secondary, #555)"
               fontSize={10}
             >
-              n={group.count}
+              n={group.count}{group.overlapping ? " · overlaps" : ""}
             </text>
           </g>
         ))}

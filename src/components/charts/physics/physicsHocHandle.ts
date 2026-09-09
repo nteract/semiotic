@@ -70,12 +70,11 @@ export function bodyIdsForSeedRow(
   if (!spawns?.length) return [rowId]
   const matched = spawns
     .filter((spawn) => {
-      if (spawn.id === rowId || spawn.id.startsWith(`${rowId}-`)) return true
       const datum = spawn.datum as Datum | undefined
       if (datum && typeof datum === "object" && datum.id != null) {
         return String(datum.id) === rowId
       }
-      return false
+      return spawn.id === rowId || spawn.id.startsWith(`${rowId}-`)
     })
     .map((spawn) => spawn.id)
   return matched.length ? matched : [rowId]

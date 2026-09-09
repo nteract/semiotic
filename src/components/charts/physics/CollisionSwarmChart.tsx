@@ -6,21 +6,17 @@ import StreamPhysicsFrame, {
   type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildCollisionSwarmPhysics,
   composePhysicsBodyStyle,
-  physicsChartArea,
   styleFromColorAccessor,
   type CollisionSwarmProjectionMetadata
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import {
-  usePhysicsHocHandle,
-  type PhysicsFrameHandle
-} from "./physicsHocHandle"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import { EMPTY_PHYSICS_ROWS, usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -80,7 +76,9 @@ function collisionSwarmSemanticItems(
     return {
       id: `collision-swarm-${group.label}`,
       label,
-      description: label,
+      description: group.overlapping
+        ? `${label}. Points overlap at this size. Reduce radius or increase height.`
+        : label,
       datum: group,
       x,
       y: group.y,
@@ -154,11 +152,11 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     pointRadius ??
     (chartMode === "sparkline" ? 2 : chartMode === "context" ? 4 : 5)
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const chartData = useMemo(() => data ?? [], [data])
-  const layout = useMemo(
-    () =>
+  const chartData = useMemo(() => data ?? (EMPTY_PHYSICS_ROWS as TDatum[]), [data])
+  const buildLayout = useCallback(
+    (rows: TDatum[]) =>
       buildCollisionSwarmPhysics({
-        data: chartData,
+        data: rows,
         xAccessor,
         groupAccessor,
         radiusAccessor,
@@ -170,7 +168,6 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
         settle
       }),
     [
-      chartData,
       chartSize,
       collisionIterations,
       groupAccessor,
@@ -182,61 +179,20 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
       xExtent
     ]
   )
+  const { layout, rows: sourceRows, resetSeed } = usePhysicsChartData({
+    ref,
+    frameRef,
+    data: chartData,
+    idPrefix: "collision-swarm",
+    buildLayout
+  })
   const rerun = usePhysicsRerun(
     layout.config,
     rerunMS,
     paused,
-    undefined,
+    resetSeed,
     props.onSimulationStateChange
   )
-
-  const spawnDatum = useCallback(
-    (datum: Datum, index: number) => {
-      const single = buildCollisionSwarmPhysics({
-        data: [datum],
-        xAccessor: xAccessor as ChartAccessor<Datum, number>,
-        groupAccessor: groupAccessor as
-          ChartAccessor<Datum, string> | undefined,
-        radiusAccessor: radiusAccessor as
-          ChartAccessor<Datum, number> | undefined,
-        pointRadius: resolvedPointRadius,
-        seed: seed + index + 1,
-        size: chartSize,
-        xExtent,
-        collisionIterations,
-        settle
-      })
-      const spawn = single.initialSpawns[0] ?? {
-        id: String(datum.id ?? `collision-swarm-push-${index}`),
-        x: physicsChartArea(chartSize).plot.x,
-        y: physicsChartArea(chartSize).plot.y,
-        mass: 1,
-        shape: { type: "circle" as const, radius: resolvedPointRadius },
-        datum
-      }
-      return {
-        datumId: String(datum.id ?? spawn.id),
-        spawns: [spawn as PhysicsQueuedSpawn]
-      }
-    },
-    [
-      chartSize,
-      collisionIterations,
-      groupAccessor,
-      resolvedPointRadius,
-      radiusAccessor,
-      seed,
-      settle,
-      xAccessor,
-      xExtent
-    ]
-  )
-  usePhysicsHocHandle(ref, {
-    frameRef,
-    spawnDatum,
-    seedRows: chartData as Datum[],
-    seedSpawns: layout.initialSpawns
-  })
 
   const resolvedColorBy =
     (colorBy as ChartAccessor<Datum, string> | undefined) ??
@@ -267,7 +223,7 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
   })
 
   const stateEl = renderPhysicsChartState({
-    data,
+    data: data?.length === 0 ? sourceRows : data,
     emptyContent,
     loading,
     loadingContent,

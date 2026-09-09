@@ -1,3 +1,4 @@
+import { createPhysicsSourceState } from "./physicsSourceRows"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type { PhysicsColliderSpec } from "../../stream/physics/PhysicsKernel"
@@ -114,7 +115,7 @@ export function buildPhysicsPile<TDatum extends Datum>(
   options: PhysicsPileOptions<TDatum>
 ): PhysicsChartLayout {
   const {
-    data,
+    data: sourceRows,
     categoryAccessor,
     valueAccessor,
     unitValue,
@@ -123,6 +124,7 @@ export function buildPhysicsPile<TDatum extends Datum>(
     size
   } = options
   const safeUnitValue = positiveNumber(unitValue, 1)
+  const { rows: data } = createPhysicsSourceState(sourceRows, "pile")
   const area = physicsChartArea(size)
   const categories: string[] = []
   const categoryIndex = new Map<string, number>()

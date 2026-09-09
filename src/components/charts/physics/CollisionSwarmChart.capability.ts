@@ -23,6 +23,7 @@ export const CollisionSwarmChartCapability: ChartCapability = {
 
   caveats: () => [
     "CollisionSwarmChart makes overlap and settling visible; use SwarmPlot when a static distribution is enough",
+    "X stays exact. Crowded lanes disclose overlap; reduce radius or increase height to separate points",
   ],
 
   buildProps: (profile) => {

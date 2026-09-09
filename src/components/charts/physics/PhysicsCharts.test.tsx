@@ -2,7 +2,7 @@ import * as React from "react"
 import { act, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
-import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
+import { PhysicsPipelineStore, type PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
 import {
@@ -214,7 +214,9 @@ describe("physics chart HOCs", () => {
       // Spawn pacing intentionally materializes only the first seed body on
       // the remount's initial frame. A mere wake-up of the cleared store would
       // still contain no bodies at all.
-      expect(ref.current?.getData().map((datum) => datum.id)).toContain("a")
+      const snapshot = ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot
+      expect(snapshot.world.bodies.map((body) => body.id)).toContain("a")
+      expect(snapshot.world.bodies.length + snapshot.queue.length).toBe(2)
     } finally {
       vi.useRealTimers()
     }

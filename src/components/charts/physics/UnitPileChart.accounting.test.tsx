@@ -107,6 +107,20 @@ describe("UnitPile quantity accounting", () => {
     })
     expect(evidence.markCount).toBe(12)
   })
+
+  it("avoids anonymous/authored ID collisions in both server entry points", () => {
+    const props = {
+      data: [{ category: "A", value: 49 }, { id: "pile-0", category: "A", value: 49 }],
+      valueAccessor: "value" as const,
+      unitValue: 100
+    }
+    const { svg, evidence } = renderChartWithEvidence("UnitPileChart", props)
+    expect(evidence.markCount).toBe(2)
+    for (const markup of [svg, renderToString(<UnitPileChart {...props} />)]) {
+      expect(markup.match(/<circle\b/g)).toHaveLength(2)
+      expect(markup).toMatch(/>98<\/text>/)
+    }
+  })
 })
 
 describe("UnitPile imperative quantities", () => {

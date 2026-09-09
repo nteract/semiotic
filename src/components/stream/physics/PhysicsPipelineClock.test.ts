@@ -109,4 +109,23 @@ describe("physics model clock", () => {
     expect(store.elapsed()).toBeCloseTo(1)
     expect(store.readBodies()[0].vy).toBeCloseTo(75)
   })
+
+  it("does not consume leftover time on zero-delta refreshes or worker restores", () => {
+    const store = scheduledStore()
+    store.updateConfig({ maxSubsteps: 2 })
+    store.tick(1)
+    const saved = store.snapshot()
+    expect(saved.accumulator).toBeGreaterThanOrEqual(fixedDt)
+    for (const delta of [0, -1, NaN, Infinity]) {
+      expect(store.tick(delta).steps).toBe(0)
+      expect(store.elapsed()).toBe(saved.elapsedSeconds)
+    }
+    const worker = createPhysicsWorkerRuntime()
+    worker.handle({ type: "init", snapshot: saved })
+    worker.handle({ type: "restore", snapshot: saved })
+    const response = worker.handle({ type: "snapshot" })
+    if (response.type !== "snapshot") throw new Error("Missing worker snapshot")
+    expect(response.snapshot.elapsedSeconds).toBe(saved.elapsedSeconds)
+    expect(response.snapshot.accumulator).toBe(saved.accumulator)
+  })
 })

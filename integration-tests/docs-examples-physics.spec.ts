@@ -1,6 +1,101 @@
 import { expect, test } from "@playwright/test"
 
 for (const theme of ["light", "dark"] as const) {
+  test(`Live pile edits keep quantities and category labels together (${theme})`, async ({
+    page
+  }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.addInitScript(
+      (value) => localStorage.setItem("semiotic-theme", value),
+      theme
+    )
+    const pageErrors: string[] = []
+    page.on("pageerror", (error) => pageErrors.push(error.message))
+    await page.goto("/charts/unit-pile-chart#live-updates")
+    const editor = page.getByRole("region", { name: "Live pile editor" })
+    const status = editor.getByRole("status")
+    await expect(status).toHaveText("2 source records · Total 98")
+    await editor
+      .getByRole("button", { name: "Add 49 to A", exact: true })
+      .click()
+    await expect(status).toHaveText("3 source records · Total 147")
+    await expect(
+      editor.locator("svg text").filter({ hasText: /^147$/ })
+    ).toBeVisible()
+    await editor
+      .getByRole("button", { name: "Add category B", exact: true })
+      .click()
+    await expect(status).toHaveText("4 source records · Total 247")
+    await expect(
+      editor.locator("svg text").filter({ hasText: /^B$/ })
+    ).toBeVisible()
+    await editor.getByLabel("Value per full circle").selectOption("50")
+    await expect(status).toHaveText("4 source records · Total 247")
+    await expect(editor.getByText(/Full circle = 50/)).toBeVisible()
+    await editor.getByLabel("Pause motion").check()
+    await editor
+      .getByRole("button", { name: "Remove last record", exact: true })
+      .click()
+    await expect(status).toHaveText("3 source records · Total 147")
+    await expect(
+      editor.locator("svg text").filter({ hasText: /^B$/ })
+    ).toHaveCount(0)
+    await editor
+      .getByRole("button", { name: "Double first record", exact: true })
+      .click()
+    await expect(status).toHaveText("3 source records · Total 196")
+    await editor.getByLabel("Pause motion").uncheck()
+    await editor.screenshot({ path: testInfo.outputPath("live-pile.png") })
+    await editor.getByRole("button", { name: "Clear", exact: true }).click()
+    await expect(status).toHaveText("0 source records · Total 0")
+    await editor
+      .getByRole("button", { name: "Reset 49 + 49", exact: true })
+      .click()
+    await expect(status).toHaveText("2 source records · Total 98")
+    await expect(
+      editor.locator("svg text").filter({ hasText: /^98$/ })
+    ).toBeVisible()
+    expect(pageErrors).toEqual([])
+  })
+
+  test(`Equal-value swarm discloses crowding and responds to radius changes (${theme})`, async ({
+    page
+  }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.addInitScript(
+      (value) => localStorage.setItem("semiotic-theme", value),
+      theme
+    )
+    const pageErrors: string[] = []
+    page.on("pageerror", (error) => pageErrors.push(error.message))
+    await page.goto("/charts/collision-swarm-chart#example")
+    await page
+      .getByRole("button", { name: "Test equal values", exact: true })
+      .click()
+    await expect(
+      page.getByTestId("collision-swarm-overlap-warning")
+    ).toBeVisible()
+    await expect(
+      page.getByText("n=50 · overlaps", { exact: true })
+    ).toBeVisible()
+    const canvas = page.locator(".stream-physics-frame canvas").first()
+    await canvas.evaluate((node) =>
+      node.setAttribute("data-update-probe", "retained")
+    )
+    await page.screenshot({ path: testInfo.outputPath("swarm-crowded.png") })
+    await page
+      .getByRole("combobox", { name: "Point radius", exact: true })
+      .selectOption("2")
+    await expect(
+      page.getByTestId("collision-swarm-overlap-warning")
+    ).toHaveCount(0)
+    await expect(page.getByText("n=50", { exact: true })).toBeVisible()
+    await expect(canvas).toHaveAttribute("data-update-probe", "retained")
+    await canvas.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: testInfo.outputPath("swarm-separated.png") })
+    expect(pageErrors).toEqual([])
+  })
+
   test(`Release Machine previews and clears a blocker resolution (${theme})`, async ({
     page
   }, testInfo) => {

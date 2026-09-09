@@ -13,7 +13,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     name: "GaltonBoardChart",
     category: "physics",
     description:
-      "Physics-backed Galton board / Plinko-style dot distribution. Values enter deterministic bins and settle into a readable histogram-like projection; mechanical mode can generate a seeded no-data demonstration.",
+      "Distribution drop with values assigned to bins before replay. Mechanical mode generates seeded Bernoulli samples; pegs do not classify values.",
     required: [],
     dataShape: "array",
     dataAccessors: ["valueAccessor"],
@@ -46,7 +46,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: "string",
         enum: ["sample", "mechanical"] as const,
         default: "sample",
-        description: "sample uses data values; mechanical emits a deterministic demonstration when no data is supplied."
+        description: "sample bins supplied values; mechanical generates seeded Bernoulli samples."
       },
       pegRows: {
         type: "number",
@@ -60,7 +60,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: "number",
         default: 0.5,
         description:
-          "Probability that each mechanical sample branches right at a peg."
+          "Probability of a right branch in each generated Bernoulli sample."
       },
       referenceLines: {
         type: ["object", "array"],
@@ -75,7 +75,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       showProjection: {
         type: "boolean",
         description:
-          "Whether companion docs or wrappers should show the settled projection."
+          "Show bin guides, counts, and the distribution outline."
       }
     },
     capabilities: {
@@ -195,7 +195,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: "string",
         enum: ["sample", "mechanical"] as const,
         default: "sample",
-        description: "sample uses data values; mechanical emits a deterministic no-data unit pile for design sketches."
+        description: "sample uses supplied rows; mechanical generates a seeded unit pile."
       },
       mechanicalCount: {
         type: "number",
@@ -242,7 +242,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     name: "CollisionSwarmChart",
     category: "physics",
     description:
-      "Physics-backed swarm / dot-strip chart. Quantitative records spring toward an x-position while collisions separate overlapping dots into a readable distribution.",
+      "Physics swarm with exact quantitative x, vertical collision spacing, and disclosed overlap when crowded.",
     required: [],
     dataShape: "array",
     dataAccessors: ["xAccessor", "groupAccessor", "radiusAccessor"],
@@ -253,7 +253,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: ["string", "function"],
         default: "x",
         description:
-          "Quantitative field that anchors each body along the x-axis."
+          "Numeric field fixing each body's x coordinate."
       },
       groupAccessor: {
         type: ["string", "function"],
@@ -281,7 +281,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       settle: {
         type: "boolean",
         description:
-          "Start bodies near their target positions for a calmer first paint or reduced-motion demo."
+          "Start at packed targets; does not run settling."
       },
       rerunMS: {
         type: ["number", "null"],
@@ -292,7 +292,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: "boolean",
         default: true,
         description:
-          "Draw x-axis and group-lane guides behind the moving bodies."
+          "Show the x-axis, lane counts, and crowding notices."
       }
     },
     capabilities: {

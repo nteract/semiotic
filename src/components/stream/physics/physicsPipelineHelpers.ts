@@ -85,6 +85,7 @@ export function cloneSpawn(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
   return {
     ...spawn,
     shape: { ...spawn.shape },
+    ...(spawn.fixedPosition ? { fixedPosition: { ...spawn.fixedPosition } } : {}),
     datum: spawn.datum,
     springs: spawn.springs?.map((spring) => ({
       ...spring,

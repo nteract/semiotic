@@ -1,3 +1,4 @@
+import { createPhysicsSourceState } from "./physicsSourceRows"
 import { scaleLinear } from "d3-scale"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
@@ -78,7 +79,8 @@ export function generateGaltonMechanicalSamples(
 export function buildGaltonBoardPhysics<TDatum extends Datum>(
   options: GaltonBoardPhysicsOptions<TDatum>
 ): PhysicsChartLayout {
-  const { data, valueAccessor, bins, ballRadius, seed, size, valueExtent } = options
+  const { data: sourceRows, valueAccessor, bins, ballRadius, seed, size, valueExtent } = options
+  const { rows: data } = createPhysicsSourceState(sourceRows, "galton")
   const area = physicsChartArea(size)
   const values = data
     .map((datum, index) => finiteNumber(readAccessor(datum, index, valueAccessor)))

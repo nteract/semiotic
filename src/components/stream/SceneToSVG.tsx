@@ -33,6 +33,7 @@ import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
 import type { GradientConfig } from "../charts/shared/gradient"
 
 import {
+  pointOrRectSceneNodeToSVG,
   svgFill,
   safeSvgId,
   glyphNodeToSVG,
@@ -361,53 +362,16 @@ function xySceneNodeToSVGMark(
         </React.Fragment>
       )
     }
-    case "point": {
-      const n = node as PointSceneNode
-      // A HatchFill descriptor becomes an inline <pattern> (SSR parity with canvas).
-      const pointHatchId = `${idPrefix ? `${idPrefix}-` : ""}point-${i}-hatch`
-      const pointHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, pointHatchId) : undefined
-      return (
-        <React.Fragment key={`point-${i}`}>
-          {pointHatch && <defs>{pointHatch}</defs>}
-          <circle
-            cx={n.x}
-            cy={n.y}
-            r={n.r}
-            fill={pointHatch ? `url(#${pointHatchId})` : svgFill(n.style.fill)}
-            opacity={n.style.opacity ?? n.style.fillOpacity ?? 0.8}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-          />
-        </React.Fragment>
-      )
-    }
+    case "point":
+      return pointOrRectSceneNodeToSVG(node as PointSceneNode, i, idPrefix)
     case "symbol":
       return symbolSceneNodeToSVG(node as SymbolSceneNode, i)
     case "glyph": {
       const n = node as GlyphSceneNode
       return glyphNodeToSVG(n, n.x, n.y, `${idPrefix ?? ""}glyph-${n.pointId ?? i}`)
     }
-    case "rect": {
-      const n = node as RectSceneNode
-      // HatchFill (styleRules on physics bodies / custom XY rects) → <pattern>.
-      const rectHatchId = `${idPrefix ? `${idPrefix}-` : ""}xyrect-${i}-hatch`
-      const rectHatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, rectHatchId) : undefined
-      return (
-        <React.Fragment key={`rect-${i}`}>
-          {rectHatch && <defs>{rectHatch}</defs>}
-          <rect
-            x={n.x}
-            y={n.y}
-            width={n.w}
-            height={n.h}
-            fill={rectHatch ? `url(#${rectHatchId})` : svgFill(n.style.fill)}
-            opacity={n.style.opacity}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-          />
-        </React.Fragment>
-      )
-    }
+    case "rect":
+      return pointOrRectSceneNodeToSVG(node as RectSceneNode, i, idPrefix)
     case "heatcell": {
       const n = node as HeatcellSceneNode
       // `style.opacity` dims the cell on canvas (heatmapCanvasRenderer sets

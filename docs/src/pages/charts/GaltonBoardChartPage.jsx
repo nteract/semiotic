@@ -108,7 +108,6 @@ export default function GaltonBoardChartPage() {
   const [branchProbability, setBranchProbability] = useState(0.5)
   const [mechanicalCount, setMechanicalCount] = useState(96)
   const [pegRows, setPegRows] = useState(10)
-  const chartKey = `${mode}-${branchProbability}-${mechanicalCount}-${pegRows}`
   const demoProps = useMemo(
     () =>
       mode === "mechanical"
@@ -233,7 +232,6 @@ export default function GaltonBoardChartPage() {
       </div>
       <div style={{ overflowX: "auto", border: "1px solid var(--surface-3)", borderRadius: 8, padding: 12 }}>
         <GaltonBoardChart
-          key={chartKey}
           {...demoProps}
           size={[640, 320]}
         />

@@ -363,9 +363,11 @@ export class PhysicsPipelineStore {
     if (spawned.length > 0) this.quiescence.reset()
     this.accumulator += delta
 
-    const availableSteps = Math.floor(
+    // Refresh/worker command acknowledgements use tick(0). They may admit
+    // due rows, but must not consume time left by an earlier catch-up limit.
+    const availableSteps = delta > 0 ? Math.floor(
       (this.accumulator + this.config.fixedDt * 1e-9) / this.config.fixedDt
-    )
+    ) : 0
     const { steps, budget } = runPhysicsSettleSteps(
       this.settleHost(),
       Math.min(availableSteps, this.config.maxSubsteps),
@@ -691,6 +693,7 @@ export class PhysicsPipelineStore {
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
+    const previousState = this.simulationState
     this.config = {
       bodyLimit: snapshot.config.bodyLimit,
       eviction: snapshot.config.eviction,
@@ -728,6 +731,9 @@ export class PhysicsPipelineStore {
       this.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
     this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
+    if (this.simulationState !== previousState) {
+      this.observation.onSimulationStateChange?.(this.simulationState, previousState)
+    }
   }
 
   private spawnDue(
