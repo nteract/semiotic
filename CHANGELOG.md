@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gates stay aligned across library, CLI, and MCP.
 - **Renderer hot paths** — packing, LOESS, rollup, ordinal scene builders,
   hover hit-test caching, and edge geometry share less per-frame work.
+- **Dependency hygiene** — Hono 4.13.7 (XSS fix), Sharp 0.35.4, esbuild
+  0.28.2, Vite React plugin 6.1.1, and GitHub Actions artifact upload/download
+  v7/v8. Transitive browserslist, fast-uri, fflate, and qs patches land too.
 
 ### Fixed
 - **Geo overlay accessible names** — `GeoSVGOverlay` no longer titles maps

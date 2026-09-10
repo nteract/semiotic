@@ -47,7 +47,9 @@ const analyze = process.argv.includes("--analyze")
 // 1.3 KiB gzip to the representative AI + family import union. Keep narrow
 // but explicit headroom so regressions toward the old multi-entry size are still
 // visible.
-const MULTI_IMPORT_GZIP_BUDGET = 388 * 1024
+// Bumped 388→390: esbuild 0.28.2 plus overlay/format/brush catalog work
+// measure 389.0 KiB gzip on the same union. Keep ~1 KiB of headroom.
+const MULTI_IMPORT_GZIP_BUDGET = 390 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"
