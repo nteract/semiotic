@@ -86,3 +86,30 @@ it("publishes time brush selections and application events, then clears both", (
   expect(onBrush).toHaveBeenLastCalledWith(null)
   expect(onObservation).toHaveBeenLastCalledWith(expect.objectContaining({ type: "brush-end" }))
 })
+
+it("uses the linked brush dimension for both the overlay and selected interval", () => {
+  let selection: ReturnType<typeof useSelection>
+  function Probe() {
+    selection = useSelection({ name: "two-axis" })
+    return null
+  }
+  const { rerender } = render(
+    <SelectionProvider>
+      <Probe />
+      <RealtimeHistogram binSize={10}
+        linkedBrush={{ name: "two-axis", xField: "time", yField: "value" }} />
+    </SelectionProvider>
+  )
+  expect(lastXYFrameProps.brush).toEqual({ dimension: "xy" })
+  act(() => lastXYFrameProps.onBrush!({ x: [10, 20], y: [2, 5] }))
+  expect(selection!.predicate({ time: 15, value: 3 })).toBe(true)
+  expect(selection!.predicate({ time: 15, value: 9 })).toBe(false)
+  rerender(
+    <SelectionProvider>
+      <Probe />
+      <RealtimeHistogram binSize={10} brush={{ dimension: "x", snap: "bin" }}
+        linkedBrush={{ name: "two-axis", xField: "time", yField: "value" }} />
+    </SelectionProvider>
+  )
+  expect(lastXYFrameProps.brush).toMatchObject({ dimension: "x", snap: "bin" })
+})

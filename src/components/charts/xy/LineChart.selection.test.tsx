@@ -76,3 +76,53 @@ it("field mode publishes the hovered category rather than the x position", () =>
   act(() => frame.customHoverBehavior!(null))
   expect(selection.isActive).toBe(false)
 })
+
+it("joins parent series metadata while retaining coordinate fields and style inputs", () => {
+  const data = [
+    {
+      id: "a",
+      category: "A",
+      coordinates: [
+        { x: 1, y: 4 },
+        { x: 2, y: 6 }
+      ]
+    },
+    {
+      id: "b",
+      category: "B",
+      coordinates: [
+        { x: 1, y: 8 },
+        { x: 2, y: 9 }
+      ]
+    }
+  ]
+  render(
+    <SelectionProvider>
+      <Probe />
+      <LineChart
+        data={data}
+        lineBy="id"
+        colorBy="category"
+        showPoints
+        colorScheme={{ A: "red", B: "blue" }}
+        linkedHover={{ name: "join", mode: "field", fields: ["category", "x"] }}
+        selection={{ name: "join", unselectedOpacity: 0.15 }}
+      />
+    </SelectionProvider>
+  )
+  const points = frame.data!
+  act(() => selection.selectPoints({ category: ["B"], x: [2] }))
+  expect(frame.pointStyle!(points[0]).opacity).toBe(0.15)
+  expect(frame.pointStyle!(points[2]).opacity).toBe(0.15)
+  expect(frame.pointStyle!(points[3]).opacity).toBeUndefined()
+  expect(frame.pointStyle!(points[3]).fill).toBe("blue")
+  act(() =>
+    frame.customHoverBehavior!({ data: points[3], xValue: 2, x: 10, y: 20 })
+  )
+  expect(selection.predicate({ category: "B", x: 2 })).toBe(true)
+  expect(selection.predicate({ category: "A", x: 2 })).toBe(false)
+  expect(selection.predicate({ category: "B", x: 1 })).toBe(false)
+  act(() => frame.customHoverBehavior!(null))
+  act(() => selection.clear())
+  expect(frame.pointStyle!(points[0]).opacity).toBeUndefined()
+})

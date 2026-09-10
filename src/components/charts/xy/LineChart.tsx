@@ -1,4 +1,5 @@
 "use client"
+import { selectionDatumWithParent } from "../../store/selectionProvenance"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
@@ -911,6 +912,7 @@ export const LineChart = forwardRef(
     color,
     pointRadius,
     colorDatumAccessor: pointColorDatum,
+    selectionDatumAccessor: selectionDatumWithParent,
     effectiveSelectionHook,
     resolvedSelection,
   })

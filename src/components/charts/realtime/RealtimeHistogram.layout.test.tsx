@@ -96,3 +96,52 @@ it("server evidence retains data marks with a hidden axis and reversed baseline"
   expect(bars).toHaveLength(2)
   expect(bars.every((node) => Number(node.getAttribute("y")) === 0)).toBe(true)
 })
+
+it.each([false, true])(
+  "reclaims hidden top/right gutters with title=%s in both renderers",
+  async (withTitle) => {
+    const ref = React.createRef<TestHandle>()
+    const props = {
+      data,
+      binSize: 10,
+      width: 400,
+      height: 200,
+      title: withTitle ? "Observations" : undefined,
+      axes: [
+        { orient: "top" as const, visible: false },
+        { orient: "right" as const, visible: false }
+      ],
+      timeExtent: [0, 20] as [number, number],
+      valueExtent: [0, 10] as [number, number],
+      gap: 0
+    }
+    const { container, rerender } = render(
+      <RealtimeHistogram {...props} ref={ref} />
+    )
+    await waitFor(() => expect(ref.current!.getScales()).toBeTruthy())
+    expect(container.querySelector(".semiotic-axis")).toBeNull()
+    expect(ref.current!.getScales()!.x.range()).toEqual([0, 400])
+    const plotHeight = withTitle ? 150 : 200
+    expect(ref.current!.getScales()!.y.range()).toEqual([plotHeight, 0])
+    const { svg, evidence } = renderChartWithEvidence(
+      "TemporalHistogram",
+      props
+    )
+    expect(evidence.markCount).toBe(2)
+    const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+    expect(
+      [...doc.querySelectorAll("rect")].some(
+        (node) => Number(node.getAttribute("height")) === plotHeight * 0.8
+      )
+    ).toBe(true)
+    expect(doc.querySelector(".semiotic-axis")).toBeNull()
+    rerender(
+      <RealtimeHistogram {...props} ref={ref} margin={{ top: 12, right: 17 }} />
+    )
+    expect(ref.current!.getScales()!.x.range()).toEqual([0, 383])
+    expect(ref.current!.getScales()!.y.range()).toEqual([
+      withTitle ? 164 : 188,
+      0
+    ])
+  }
+)

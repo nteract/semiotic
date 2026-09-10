@@ -337,7 +337,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   const showAxes = resolved.showAxes
   const axes = useMemo(() => resolveHistogramAxes({ axes: props.axes, showTimeAxis: props.showTimeAxis, showValueAxis: props.showValueAxis }), [props.axes, props.showTimeAxis, props.showValueAxis])
   const axisChrome = resolveXYAxisChrome({ showAxes, axes })
-  const marginDefaults = histogramMarginDefaults(resolved.marginDefaults, axes, showAxes)
+  const marginDefaults = histogramMarginDefaults(resolved.marginDefaults, axes, showAxes, !!resolved.title)
   const enableHover = resolved.enableHover
   const showHistogramLegend = resolved.showLegend !== false
   const resolvedSize: [number, number] = size ?? [
@@ -627,7 +627,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       {...streamingCategories.categoryDomainProps}
       brush={
         normalizedBrush ||
-        (linkedBrush ? { dimension: "x" as const } : undefined)
+        (linkedBrush ? brushStreamProps.brush : undefined)
       }
       onBrush={normalizedBrush || linkedBrush ? brushStreamProps.onBrush : undefined}
     />

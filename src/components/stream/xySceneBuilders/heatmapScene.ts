@@ -16,7 +16,7 @@ import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../ac
 import type { XYSceneContext } from "./types"
 import {
   attachSelectionProvenance,
-  getSelectionProvenance
+  requestsSelectionProvenance
 } from "../../store/selectionProvenance"
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
@@ -249,7 +249,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   const counts = new Int32Array(totalCells)
   const sums = new Float64Array(totalCells)
   const cellRows =
-    getSelectionProvenance(ctx.config.areaStyle)?.[0] === ctx.config.areaStyle
+    !!ctx.config.trackHoverRows || requestsSelectionProvenance(ctx.config.areaStyle)
     ? new Map<number, Datum[]>()
     : undefined
 

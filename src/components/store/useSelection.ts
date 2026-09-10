@@ -8,7 +8,7 @@ import {
   type FieldSelection,
   type SelectionStoreState
 } from "./SelectionStore"
-import { getSelectionProvenance } from "./selectionProvenance"
+import { getSelectionProvenance, selectionDatumWithParent } from "./selectionProvenance"
 import { hasOwnEnumerableKey } from "./createStore"
 
 // Re-export crosshair store for convenience
@@ -191,13 +191,14 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
         clear()
         return
       }
+      const selectionDatum = selectionDatumWithParent(datum)
       const fieldValues: Record<string, unknown[]> = {}
       for (const field of fields) {
-        const val = datum[field]
+        const val = selectionDatum[field]
         if (val !== undefined) {
           fieldValues[field] = [val]
         } else {
-          const values = getSelectionProvenance(datum)?.map(row => row[field]).filter(value => value !== undefined)
+          const values = getSelectionProvenance(datum)?.map(row => selectionDatumWithParent(row)[field]).filter(value => value !== undefined)
           if (values?.length) fieldValues[field] = [...new Set(values)]
         }
       }

@@ -158,7 +158,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   showValues: dependency("preserve", GEOMETRY),
   heatmapValueFormat: dependency("preserve", GEOMETRY),
 
-  trackHoverRows: dependency("preserve", STYLE),
+  trackHoverRows: dependency("preserve", GEOMETRY),
   lineStyle: dependency("preserve", STYLE),
   pointStyle: dependency("preserve", STYLE),
   areaStyle: dependency("preserve", STYLE),
@@ -249,11 +249,11 @@ export class PipelineStoreUpdateResults {
       : this.recordNoop("restyle")
   }
 
-  recordConfig(keys: readonly string[]): UpdateResult {
+  recordConfig(keys: readonly string[], rebuildGeometry = false): UpdateResult {
     const classification = classifyXYConfigPatch(keys)
     return this.tracker.record(
       { kind: "config", keys },
-      classification.invalidations
+      rebuildGeometry ? new Set([...classification.invalidations, ...GEOMETRY]) : classification.invalidations
     )
   }
 }

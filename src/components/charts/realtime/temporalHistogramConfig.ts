@@ -1,4 +1,4 @@
-import { resolveXYAxisChrome } from "../../legendLayout"
+import { resolveHiddenAxisMargins, resolveXYAxisChrome } from "../../legendLayout"
 
 /** Resolve histogram conveniences into the shared XY axis configuration. */
 export function resolveHistogramAxes(props: {
@@ -17,11 +17,12 @@ export function resolveHistogramAxes(props: {
 export function histogramMarginDefaults(
   defaults: { top: number; right: number; bottom: number; left: number },
   axes: import("../../stream/xyFrameAxisTypes").XYFrameAxisConfig[],
-  showAxes: boolean
+  showAxes: boolean,
+  hasTitle = false
 ) {
   const chrome = resolveXYAxisChrome({ axes, showAxes })
   return {
-    ...defaults,
+    ...resolveHiddenAxisMargins(defaults, axes, hasTitle),
     ...(!chrome.hasAxis && { bottom: 0 }),
     ...(!chrome.leftAxis?.hasAxis && { left: 0 })
   }

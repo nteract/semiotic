@@ -262,7 +262,7 @@ export { multiAxisLineChart, waterfallChart } from "./serverChartConfigsXYExtra"
 /** Static-data TemporalHistogram mapped onto the shared time-binned XY pipeline. */
 export const temporalHistogram: ChartConfig = {
   frameType: "xy",
-  layout: { margin: (props, mode) => histogramMarginDefaults(mode.marginDefaults, resolveHistogramAxes(props), mode.showAxes) },
+  layout: { margin: (props, mode) => histogramMarginDefaults(mode.marginDefaults, resolveHistogramAxes(props), mode.showAxes, !!mode.title) },
   buildProps: (data, _colorBy, _colorScheme, common, rest) => {
     const rows = Array.isArray(data) ? filterSparseArray(data) : []
     const timeAccessor = rest.timeAccessor || "time"

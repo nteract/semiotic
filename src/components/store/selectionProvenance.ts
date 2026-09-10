@@ -32,7 +32,19 @@ export function getSelectionProvenance(
   ]
 }
 
+/** Parent series metadata is a fallback; authored coordinate fields take precedence. */
+export function selectionDatumWithParent(datum: Datum): Datum {
+  return datum.parentLine
+    ? attachSelectionProvenance({ ...datum.parentLine, ...datum }, getSelectionProvenance(datum))
+    : datum
+}
+
 /** Keep the representative styling row while matching any row in a series. */
 export function seriesSelectionDatum(rows: readonly Datum[]): Datum {
-  return attachSelectionProvenance({ ...rows[0] }, rows)
+  return attachSelectionProvenance({ ...rows[0] }, rows.map(selectionDatumWithParent))
+}
+
+/** Selection-aware style callbacks request source rows on aggregate marks. */
+export function requestsSelectionProvenance(style: unknown): boolean {
+  return !!style && getSelectionProvenance(style)?.[0] === style
 }

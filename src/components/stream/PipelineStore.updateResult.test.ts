@@ -1,4 +1,6 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import { wrapStyleWithSelection } from "../charts/shared/selectionUtils"
+import { getSelectionProvenance } from "../store/selectionProvenance"
 import { describe, expect, it } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import {
@@ -111,4 +113,51 @@ describe("PipelineStore update-result reference path", () => {
     expect(futureOnly.changed.size).toBe(0)
     expect(futureOnly.revisions).toEqual(style.revisions)
   })
+})
+
+it.each(["bar", "heatmap"] as const)("%s rebuilds aggregate hover data when source-row tracking changes", (chartType) => {
+  const rows = [{ time: 1, value: 3, category: "North" }, { time: 2, value: 5, category: "South" }]
+  const store = new PipelineStore(makeConfig({
+    chartType, runtimeMode: "streaming", binSize: 10,
+    heatmapAggregation: "count", heatmapXBins: 1, heatmapYBins: 1, xExtent: [0, 10], yExtent: [0, 10],
+    timeAccessor: "time", valueAccessor: "value"
+  }))
+  const layout = { width: 400, height: 200 }
+  store.ingest({ inserts: rows, bounded: false })
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toBeUndefined()
+  const change = store.updateConfigWithResult({ trackHoverRows: true })
+  expect(change.changed.has("scene-geometry")).toBe(true)
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toEqual(rows)
+  store.updateConfig({ trackHoverRows: false })
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toBeUndefined()
+})
+
+
+it.each(["bar", "heatmap"] as const)("%s rebuilds provenance when selection-aware styles are added after mount", (chartType) => {
+  const rows = [{ time: 1, value: 3, category: "North" }, { time: 2, value: 5, category: "South" }]
+  const plainStyle = () => ({ fill: "blue" })
+  const store = new PipelineStore(makeConfig({
+    chartType, runtimeMode: "streaming", binSize: 10,
+    heatmapAggregation: "count", heatmapXBins: 1, heatmapYBins: 1, xExtent: [0, 10], yExtent: [0, 10],
+    timeAccessor: "time", valueAccessor: "value", areaStyle: plainStyle
+  }))
+  const layout = { width: 400, height: 200 }
+  store.ingest({ inserts: rows, bounded: false })
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toBeUndefined()
+  const selectedStyle = wrapStyleWithSelection(plainStyle, { isActive: false, predicate: () => true })
+  const change = store.updateConfigWithResult({ areaStyle: selectedStyle })
+  expect(change.changed.has("scene-geometry")).toBe(true)
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toEqual(rows)
+  const cleared = store.updateConfigWithResult({ areaStyle: plainStyle })
+  expect(cleared.changed.has("scene-geometry")).toBe(true)
+  store.computeScene(layout)
+  expect(getSelectionProvenance(store.scene[0].datum)).toBeUndefined()
+  const recolor = store.updateConfigWithResult({ areaStyle: () => ({ fill: "red" }) })
+  expect(recolor.changed.has("scene-geometry")).toBe(false)
+  expect(recolor.changed.has("scene-style")).toBe(true)
 })
