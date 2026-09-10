@@ -181,6 +181,7 @@ interface-member DonutChartProps::property::startAngle = optional startAngle: nu
 interface-member DonutChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member DonutChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member DonutChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member DonutChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member FunnelChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member FunnelChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member FunnelChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
@@ -200,6 +201,7 @@ interface-member FunnelChartProps::property::stepAccessor = optional stepAccesso
 interface-member FunnelChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member FunnelChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member FunnelChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member FunnelChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member GaugeChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member GaugeChartProps::property::arcWidth = optional arcWidth: number | undefined
 interface-member GaugeChartProps::property::backgroundColor = optional backgroundColor: string | undefined
@@ -273,6 +275,7 @@ interface-member GradientStop::property::opacity = optional opacity: number | un
 interface-member GroupedBarChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member GroupedBarChartProps::property::barPadding = optional barPadding: number | undefined
 interface-member GroupedBarChartProps::property::baselinePadding = optional baselinePadding: boolean | undefined
+interface-member GroupedBarChartProps::property::brush = optional brush: boolean | undefined
 interface-member GroupedBarChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member GroupedBarChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
 interface-member GroupedBarChartProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -285,6 +288,7 @@ interface-member GroupedBarChartProps::property::gradientFill = optional gradien
 interface-member GroupedBarChartProps::property::groupBy = required groupBy: ChartAccessor<TDatum, string>
 interface-member GroupedBarChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member GroupedBarChartProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member GroupedBarChartProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member GroupedBarChartProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
 interface-member GroupedBarChartProps::property::roundedTop = optional roundedTop: BarCornerRadius | undefined
 interface-member GroupedBarChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
@@ -415,6 +419,7 @@ interface-member PieChartProps::property::startAngle = optional startAngle: numb
 interface-member PieChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member PieChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member PieChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member PieChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member RadarChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member RadarChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RadarChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
@@ -433,6 +438,7 @@ interface-member RadarChartProps::property::styleRules = optional styleRules: St
 interface-member RadarChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member RadarChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member RadarChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member RadarChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member ResponsiveRule::property::description = optional description: string | undefined
 interface-member ResponsiveRule::property::id = optional id: string | undefined
 interface-member ResponsiveRule::property::priority = optional priority: number | undefined
@@ -456,6 +462,7 @@ interface-member SceneAccessibilityMetadata::property::accessibleDatum = optiona
 interface-member StackedBarChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StackedBarChartProps::property::barPadding = optional barPadding: number | undefined
 interface-member StackedBarChartProps::property::baselinePadding = optional baselinePadding: boolean | undefined
+interface-member StackedBarChartProps::property::brush = optional brush: boolean | undefined
 interface-member StackedBarChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member StackedBarChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
 interface-member StackedBarChartProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -468,6 +475,7 @@ interface-member StackedBarChartProps::property::gradientFill = optional gradien
 interface-member StackedBarChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member StackedBarChartProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member StackedBarChartProps::property::normalize = optional normalize: boolean | undefined
+interface-member StackedBarChartProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member StackedBarChartProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
 interface-member StackedBarChartProps::property::roundedTop = optional roundedTop: BarCornerRadius | undefined
 interface-member StackedBarChartProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
