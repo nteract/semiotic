@@ -12,7 +12,7 @@ published on those historical dates. Original source bytes are checksummed.
 ## Reproduce in a clean consumer
 
 Use Node 22 or later. This example is tested against a **locally packed build**
-of the accompanying checkout, whose package version is 3.9.2. It includes the
+of the accompanying checkout, whose package version is 3.10.0. It includes the
 waterfall audit fix; the existing registry release may not. Build the library
 and run `npm pack --ignore-scripts` in the checkout, then install that tarball,
 React, React DOM and the optional Sharp exporter in a new project. No
@@ -20,7 +20,7 @@ documentation-site imports are required:
 
 ```sh
 npm init -y
-npm install /path/to/semiotic-3.9.2.tgz react react-dom sharp
+npm install /path/to/semiotic-3.10.0.tgz react react-dom sharp
 tar -xzf briefing-kit.tar.gz
 node tools/cli.mjs build --source raw --month 2025-06 --vintage 2026-01-09 --output rebuilt-a
 node tools/cli.mjs build --source raw --month 2025-06 --vintage 2026-03-06 --output rebuilt-b --json

@@ -1577,6 +1577,7 @@ const StreamNetworkFrame = memo(forwardRef<
           labels={store?.labels || []}
           sceneNodes={store?.sceneNodes}
           title={title}
+          description={description}
           legend={legend}
           legendPosition={legendPosition}
           legendLayout={legendLayout}

@@ -57,6 +57,8 @@ const bubbleChartProps = [
   { name: "bubbleStrokeWidth", type: "number", required: false, default: "1", description: "Stroke width of bubble borders." },
   { name: "bubbleStrokeColor", type: "string", required: false, default: '"white"', description: "Stroke color of bubble borders." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
+  { name: "brush", type: "boolean", required: false, default: "false", description: "Enable an xy brush overlay for range selection. Also enabled when linkedBrush is set." },
+  { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { x, y } extents, or null when the brush clears." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend. Defaults to true when colorBy is specified." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },

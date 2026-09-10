@@ -17,7 +17,6 @@ import {
 } from "../../Tooltip/Tooltip"
 import { useChartMode } from "../shared/hooks"
 import { useThemeCategorical } from "../shared/hooks"
-import { COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -26,12 +25,15 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
+import { type StyleRule } from "../shared/styleRules"
+import {
+  MULTI_AXIS_SERIES_FIELD,
+  MULTI_AXIS_UNITIZED_FIELD,
+  makeMultiAxisRuleContext,
+  resolveMultiAxisSeriesColors,
+} from "./multiAxisFields"
 
 registerXYPlugin(lineXYPlugin)
-
-// ── Internal field names ────────────────────────────────────────────────
-const UNITIZED_FIELD = "__ma_unitized"
-const SERIES_FIELD = "__ma_series"
 
 /**
  * Configuration for a single series in a MultiAxisLineChart.
@@ -69,6 +71,12 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
   curve?: CurveType
   /** Line width in pixels @default 2 */
   lineWidth?: number
+  /**
+   * Declarative, threshold-aware line styling. Rules resolve per series against
+   * the original y (not the unitized display scale), so `{ axis: "y", gt: 10 }`
+   * matches the authored metric. Last applicable rule wins per property.
+   */
+  styleRules?: StyleRule[]
   /** Show legend @default true */
   showLegend?: boolean
   /** Show grid lines @default false */
@@ -194,8 +202,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
           if (val == null || !isFinite(val)) continue
           frameRef.current.push({
             ...raw,
-            [UNITIZED_FIELD]: unitize(val, extent),
-            [SERIES_FIELD]: s.label || `Series ${i + 1}`
+            [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, extent),
+            [MULTI_AXIS_SERIES_FIELD]: s.label || `Series ${i + 1}`
           })
         }
       },
@@ -213,8 +221,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
             if (val == null || !isFinite(val)) continue
             transformed.push({
               ...raw,
-              [UNITIZED_FIELD]: unitize(val, extent),
-              [SERIES_FIELD]: s.label || `Series ${i + 1}`
+              [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, extent),
+              [MULTI_AXIS_SERIES_FIELD]: s.label || `Series ${i + 1}`
             })
           }
         }
@@ -252,6 +260,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     colorScheme,
     curve = "monotoneX",
     lineWidth = 2,
+    styleRules,
     tooltip,
     annotations,
     frameProps = {},
@@ -313,20 +322,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   // ── Resolve colors from theme ─────────────────────────────────────────
   const themeCategorical = useThemeCategorical()
 
-  const seriesColors = useMemo(() => {
-    // Resolve the effective palette
-    let palette: string[]
-    if (Array.isArray(colorScheme)) {
-      palette = colorScheme
-    } else if (themeCategorical && themeCategorical.length > 0) {
-      palette = themeCategorical
-    } else {
-      const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-      palette = Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-    }
-
-    return safeSeries.map((s, i) => s.color || palette[i % palette.length])
-  }, [safeSeries, colorScheme, themeCategorical])
+  const seriesColors = useMemo(
+    () => resolveMultiAxisSeriesColors(safeSeries, colorScheme, themeCategorical),
+    [safeSeries, colorScheme, themeCategorical],
+  )
 
   // ── Series labels ─────────────────────────────────────────────────────
   const seriesLabels = useMemo(
@@ -359,8 +358,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
           if (val == null) continue
           result.push({
             ...d,
-            [UNITIZED_FIELD]: val,
-            [SERIES_FIELD]: seriesLabels[i]
+            [MULTI_AXIS_UNITIZED_FIELD]: val,
+            [MULTI_AXIS_SERIES_FIELD]: seriesLabels[i]
           })
         }
       }
@@ -376,8 +375,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
         if (val == null) continue
         result.push({
           ...d,
-          [UNITIZED_FIELD]: unitize(val, exts[i]),
-          [SERIES_FIELD]: seriesLabels[i]
+          [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, exts[i]),
+          [MULTI_AXIS_SERIES_FIELD]: seriesLabels[i]
         })
       }
     }
@@ -408,14 +407,14 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const legendData = useMemo(() => {
     if (unitizedData.length > 0) return unitizedData
     // Push mode: no data yet, but we know the series labels from props
-    return seriesLabels.map(label => ({ [SERIES_FIELD]: label }))
+    return seriesLabels.map(label => ({ [MULTI_AXIS_SERIES_FIELD]: label }))
   }, [unitizedData, seriesLabels])
 
   // ── Chart setup (legend, selection, margin) ───────────────────────────
   const setup = useChartSetup({
     data: legendData,
     rawData: data,
-    colorBy: SERIES_FIELD,
+    colorBy: MULTI_AXIS_SERIES_FIELD,
     colorScheme: seriesColors,
     legendInteraction,
     legendPosition: legendPositionProp,
@@ -426,7 +425,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     },
     selection,
     linkedHover,
-    fallbackFields: [SERIES_FIELD],
+    fallbackFields: [MULTI_AXIS_SERIES_FIELD],
     unwrapData: false,
     onObservation,
     onClick,
@@ -472,8 +471,13 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }, [seriesLabels, seriesColors])
 
   const resolveStroke = useCallback(
-    (d: Datum) => seriesColorMap.get(d[SERIES_FIELD]) || seriesColors[0],
+    (d: Datum) => seriesColorMap.get(d[MULTI_AXIS_SERIES_FIELD]) || seriesColors[0],
     [seriesColorMap, seriesColors],
+  )
+
+  const ruleContext = useMemo(
+    () => makeMultiAxisRuleContext(xAccessor as string | ((d: Datum) => unknown), series),
+    [xAccessor, series],
   )
 
   const lineStyle = useXYLineStyle({
@@ -484,6 +488,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
+    styleRules,
+    ruleContext,
   })
 
   // ── Tooltip ───────────────────────────────────────────────────────────
@@ -491,9 +497,9 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     // Default: show series name, x value, and original y value.
     return (d: Datum) => {
       const datum = d.data || d
-      const seriesName = datum[SERIES_FIELD]
+      const seriesName = datum[MULTI_AXIS_SERIES_FIELD]
       const seriesIdx = seriesLabels.indexOf(seriesName)
-      const unitizedVal = datum[UNITIZED_FIELD]
+      const unitizedVal = datum[MULTI_AXIS_UNITIZED_FIELD]
       const originalVal = isDualAxis && seriesIdx >= 0 && extents[seriesIdx]
         ? invertUnitized(unitizedVal, extents[seriesIdx])
         : unitizedVal
@@ -539,8 +545,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       let rawDatum = hit.datum
       if (rawDatum) {
         rawDatum = { ...rawDatum }
-        delete rawDatum[UNITIZED_FIELD]
-        delete rawDatum[SERIES_FIELD]
+        delete rawDatum[MULTI_AXIS_UNITIZED_FIELD]
+        delete rawDatum[MULTI_AXIS_SERIES_FIELD]
       }
       return { ...hit, value: mappedValue, datum: rawDatum }
     })
@@ -548,12 +554,12 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       ? { ...datum.data }
       : datum.data
     if (mappedData && typeof mappedData === "object" && !Array.isArray(mappedData)) {
-      delete mappedData[UNITIZED_FIELD]
-      delete mappedData[SERIES_FIELD]
+      delete mappedData[MULTI_AXIS_UNITIZED_FIELD]
+      delete mappedData[MULTI_AXIS_SERIES_FIELD]
     }
     const mapped: Datum = { ...datum, data: mappedData, allSeries: mappedSeries }
-    delete mapped[UNITIZED_FIELD]
-    delete mapped[SERIES_FIELD]
+    delete mapped[MULTI_AXIS_UNITIZED_FIELD]
+    delete mapped[MULTI_AXIS_SERIES_FIELD]
     return mapped
   }, [extents, isDualAxis, seriesLabels])
 
@@ -605,8 +611,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     chartType: "line",
     ...(data != null && { data: unitizedData }),
     xAccessor,
-    yAccessor: UNITIZED_FIELD,
-    groupAccessor: SERIES_FIELD,
+    yAccessor: MULTI_AXIS_UNITIZED_FIELD,
+    groupAccessor: MULTI_AXIS_SERIES_FIELD,
     lineStyle,
     colorScheme: seriesColors,
     size: [width, height],

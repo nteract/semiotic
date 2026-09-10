@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-08-24 · 59 charts indexed.
+Last regen: 2026-09-10 · 59 charts indexed.
 
 **Column key**
 
@@ -21,7 +21,7 @@ Last regen: 2026-08-24 · 59 charts indexed.
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **AreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `forecast` `anomaly` `band` `series-features` |
-| **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` |
+| **BubbleChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `size-encoding` `streaming-domain` `regression-overlay` `brush` |
 | **BumpChart** | ✓ | ✓ | ✓ | — | ✓ | categorical | custom | `ranking` `magnitude-ribbons` `time-series` `style-rules` |
 | **CandlestickChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `ohlc` |
 | **ConnectedScatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` |
@@ -46,13 +46,13 @@ Last regen: 2026-08-24 · 59 charts indexed.
 | **DotPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` |
 | **FunnelChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **GaugeChart** | — | — | — | — | ✓ | threshold | synthetic | `threshold-zones` `value-only` `controlled-prop-streaming` |
-| **GroupedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
+| **GroupedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `brush` |
 | **Histogram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `brush` |
 | **LikertChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **PieChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **RadarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `radial` |
 | **RidgelinePlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
-| **StackedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` |
+| **StackedBarChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `brush` |
 | **SwarmPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **SwimlaneChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `brush` |
 | **ViolinPlot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `statistical` |

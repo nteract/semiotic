@@ -685,6 +685,28 @@ describe("DifferenceChart", () => {
     )
     expect(typeof lastXYFrameProps.pointStyle).toBe("function")
   })
+
+  it("applies styleRules to difference fills by plotted y", () => {
+    render(
+      <TooltipProvider>
+        <DifferenceChart
+          data={sampleData}
+          xAccessor="date"
+          seriesAAccessor="actual"
+          seriesBAccessor="forecast"
+          styleRules={[{ when: { axis: "y", gte: 60 }, style: { fill: "#d7263d" } }]}
+        />
+      </TooltipProvider>
+    )
+    const areas = lastXYFrameProps.data.filter(
+      (d: { __diffSegment?: string }) => String(d.__diffSegment ?? "").startsWith("seg-")
+    )
+    const high = areas.find((d: { __y?: number }) => (d.__y ?? 0) >= 70)
+    const low = areas.find((d: { __y?: number }) => (d.__y ?? 0) < 55)
+    expect(high).toBeTruthy()
+    if (high) expect(lastXYFrameProps.areaStyle(high).fill).toBe("#d7263d")
+    if (low) expect(lastXYFrameProps.areaStyle(low).fill).not.toBe("#d7263d")
+  })
 })
 
 // ── Push API ──────────────────────────────────────────────────────────

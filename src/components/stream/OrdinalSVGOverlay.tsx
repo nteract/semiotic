@@ -2,7 +2,7 @@
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import { useMemo, useRef } from "react"
+import { useMemo, useRef, useId } from "react"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
@@ -18,6 +18,11 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import { SVGChartTitle } from "./SVGChartTitle"
+import {
+  overlayAccessibleDescription,
+  overlayAccessibleIds,
+  overlayAccessibleTitle
+} from "./overlayAccessibleText"
 import {
   resolveLegendSideGutter,
   resolveOrdinalAxisChrome,
@@ -54,6 +59,10 @@ interface OrdinalSVGOverlayProps {
 
   // Title
   title?: string | ReactNode
+  /** Accessible long description; wins over the title-derived `<desc>` suffix. */
+  description?: string
+  /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  idPrefix?: string
 
   // Legend
   legend?: LegendValue
@@ -219,6 +228,8 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     rFormat,
     showGrid,
     title,
+    description,
+    idPrefix,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -402,12 +413,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
   }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData, annotationActivation])
 
-  const hasContent = showAxes || title || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
+  const hasContent = showAxes || title || description || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
+  const generatedId = useId()
+  const { titleId, descId, labelledBy } = overlayAccessibleIds(idPrefix || chartId || generatedId)
   if (!hasContent) return null
 
   return (
     <svg
       role="img"
+      aria-labelledby={labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -419,11 +433,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title>{typeof title === "string" ? title : "Ordinal Chart"}</title>
-      <desc>
-        {typeof title === "string"
-          ? `${title} (ordinal data visualization)`
-          : "Ordinal data visualization"}
+      <title id={titleId}>{overlayAccessibleTitle(title, "Ordinal Chart")}</title>
+      <desc id={descId}>
+        {overlayAccessibleDescription(title, description, {
+          familyPhrase: "ordinal data visualization",
+          fallback: "Ordinal data visualization"
+        })}
       </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in OrdinalSVGUnderlay) */}

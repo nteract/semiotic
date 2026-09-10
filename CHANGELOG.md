@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-09-10
+
+### Added
+- **`styleRules` family completion** — `WaterfallChart`, `MultiAxisLineChart`,
+  `FlowMap`, `ProcessFlowChart`, `MinimapChart`, `CandlestickChart`,
+  `DifferenceChart`, and `ScatterplotMatrix` now honor declarative style rules
+  on both the React HOC and `renderChart` paths. Multi-axis thresholds read the
+  original series y; FlowMap rules restyle edges; ProcessFlow rules restyle
+  bodies; candlestick `fill` recolors the body (or range wick); difference
+  rules restyle A/B fills; SPLOM rules restyle scatter cells.
+- **Long-form evidence-led examples** — grocery-receipt, jobs-report, reservoir
+  guide, plane-day, and persuasion stories ship with pinned sources, clean
+  consumer kits, and route measurements.
+- **Realtime histogram and annotation polish** — temporal/realtime histograms
+  gain responsive sizing, axis visibility, downward Y inversion, and linked
+  hover/brush. Threshold annotations share circle end caps, and GaugeChart
+  center readouts are portable SVG in static output.
+
+### Changed
+- **Physics charts share source updates and fixed axes** — replay, EventDrop
+  timing, and HOC-owned source rows rebuild bodies, colliders, and chrome
+  together instead of stretching a stale canvas.
+- **Frame handles, evidence hashes, and artifact contracts tightened** —
+  typed realtime handles, deterministic envelope hashing, and publication
+  gates stay aligned across library, CLI, and MCP.
+- **Renderer hot paths** — packing, LOESS, rollup, ordinal scene builders,
+  hover hit-test caching, and edge geometry share less per-frame work.
+- **Dependency hygiene** — Hono 4.13.7 (XSS fix), Sharp 0.35.4, esbuild
+  0.28.2, Vite React plugin 6.1.1, and GitHub Actions artifact upload/download
+  v7/v8. Transitive browserslist, fast-uri, fflate, and qs patches land too.
+
+### Fixed
+- **Geo overlay accessible names** — `GeoSVGOverlay` no longer titles maps
+  "XY Chart". Authored `description` now flows into overlay `<desc>` on XY,
+  ordinal, network, and geo frames, matching canvas `aria-label` and static
+  SVG chrome. Live overlay and GIF `<title>`/`<desc>` ids are instance-local
+  so two charts on one page no longer collide on `semiotic-title`.
+- **Bubble, stacked, and grouped brushes** — `BubbleChart` now wires the
+  unused xy brush through `useXYBrush` like Scatterplot. `StackedBarChart`
+  and `GroupedBarChart` expose the same value-axis brush as `BarChart`.
+- **Radial `valueFormat`** — `RadarChart`, `FunnelChart`, `PieChart`, and
+  `DonutChart` apply `valueFormat` to default tooltips (and radar/funnel
+  value-axis ticks) instead of ignoring it.
+- **Candlestick hatch and MultiAxis named schemes** — candle `styleRules`
+  hatch fills and stroke widths reach SVG and canvas; `frameProps.pointStyle`
+  still wins over rules. MultiAxis named and `{ label: color }` schemes
+  color SSR strokes the same way as the live chart.
+- **FlowMap edge width is NaN-safe** — client and `renderChart` share one
+  width mapper; non-finite values collapse to the minimum stroke instead of
+  emitting `stroke-width="NaN"`.
+- **ProcessFlow `styleRules` CSR/SSR mismatch** — static rendering already
+  applied rules; the live HOC now does too.
+- **Provenance, brush, and histogram margins** — stacked-area sort alignment,
+  brush windows, and histogram axis chrome stay consistent across client and
+  static SVG.
+
 ## [3.9.2] - 2026-08-31
 
 ### Added

@@ -259,6 +259,25 @@ describe("FunnelChart", () => {
 
   // ── Test 12: tooltip renders step, value, and percentage ──────────
 
+  it("formats tooltip values and rFormat with valueFormat", () => {
+    const valueFormat = (v: number | string) => `${v} users`
+    render(
+      <TooltipProvider>
+        <FunnelChart data={sampleData} valueFormat={valueFormat} />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.rFormat).toBe(valueFormat)
+    const tooltipFn = lastOrdinalFrameProps.tooltipContent
+    const { container } = render(<>{tooltipFn({
+      __funnelStep: "Interest",
+      __funnelValue: 600,
+      __funnelPercent: 60,
+      __funnelIsFirstStep: false
+    })}</>)
+    expect(container.textContent).toContain("600 users")
+    expect(container.textContent).toContain("60%")
+  })
+
   it("default tooltip renders step, value, and percentage from horizontal metadata", () => {
     render(
       <TooltipProvider>

@@ -59,6 +59,8 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
   colorScheme?: string | string[] | Record<string, string>
   /** Ordered data-aware wedge styling; fieldless thresholds use absolute wedge magnitude. */
   styleRules?: StyleRule[]
+  /** Formatter for the default tooltip value. */
+  valueFormat?: (d: number | string) => string
   /**
    * Rotation in **degrees** applied to the first wedge. `0` starts at 12
    * o'clock and proceeds clockwise; `90` starts at 3 o'clock, `180` at 6
@@ -152,6 +154,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
     data, margin: userMargin, className,
     categoryAccessor = "category", valueAccessor = "value",
     colorBy, colorScheme, styleRules, startAngle = 0, cornerRadius,
+    valueFormat,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -240,9 +243,10 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
       valueAccessor,
       groupAccessor: colorBy && colorBy !== categoryAccessor ? colorBy : undefined,
       groupLabel: typeof colorBy === "string" ? colorBy : "group",
-      pieData: true
+      pieData: true,
+      valueFormat,
     }),
-    [categoryAccessor, valueAccessor, colorBy]
+    [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
 
   const validationError = validateArrayData({

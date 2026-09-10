@@ -13,6 +13,7 @@ import { DEFAULT_COLOR } from "../shared/hooks"
 import { useSelection, useBrushSelection } from "../../store/useSelection"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
+import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
 registerXYPlugin(scatterXYPlugin)
 
@@ -35,6 +36,7 @@ interface CellProps {
   cellSize: number
   pointRadius: number
   pointOpacity: number
+  styleRules?: StyleRule[]
   colorBy?: ChartAccessor<Datum, string>
   colorScale?: (v: string) => string
   brushSelectionName: string
@@ -59,6 +61,7 @@ export function ScatterplotCell({
   cellSize,
   pointRadius,
   pointOpacity,
+  styleRules,
   colorBy,
   colorScale,
   brushSelectionName,
@@ -139,18 +142,25 @@ export function ScatterplotCell({
     [onPointClick]
   )
 
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(xField, yField),
+    [xField, yField]
+  )
+  const ruledPointStyle = useMemo(
+    () => composeStyleRules(
+      (d: Datum) => ({
+        opacity: pointOpacity,
+        r: pointRadius,
+        fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
+      }),
+      styleRules,
+      ruleContext
+    ),
+    [pointOpacity, pointRadius, colorBy, colorScale, styleRules, ruleContext]
+  )
   const pointStyle = useCallback(
     (d: Datum) => {
-      const style: Style & { r?: number } = {
-        opacity: pointOpacity,
-        r: pointRadius
-      }
-
-      if (colorBy) {
-        style.fill = getColor(d, colorBy, colorScale)
-      } else {
-        style.fill = DEFAULT_COLOR
-      }
+      const style: Style & { r?: number } = { ...ruledPointStyle(d) }
 
       if (mode === "hover") {
         const hoverHighlighted = hoverHook.isActive && hoverHook.predicate(d)
@@ -160,10 +170,9 @@ export function ScatterplotCell({
           style.stroke = "#333"
           style.strokeWidth = 1.5
         } else if (hoverHook.isActive) {
-          style.opacity = pointOpacity * 0.6
+          style.opacity = (typeof style.opacity === "number" ? style.opacity : pointOpacity) * 0.6
         }
       } else {
-        // brush mode
         const brushDimmed = brushSelectionHook.isActive && !brushSelectionHook.predicate(d)
         if (brushDimmed) {
           style.opacity = unselectedOpacity
@@ -172,7 +181,7 @@ export function ScatterplotCell({
 
       return style
     },
-    [pointOpacity, pointRadius, colorBy, mode, colorScale, hoverHook, brushSelectionHook, unselectedOpacity]
+    [ruledPointStyle, mode, hoverHook, brushSelectionHook, unselectedOpacity, pointRadius, pointOpacity]
   )
 
   return (

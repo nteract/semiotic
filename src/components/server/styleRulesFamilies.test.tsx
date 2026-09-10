@@ -480,4 +480,189 @@ describe("styleRules across families (server / renderChart)", () => {
     expect(heatmap).toContain("#aabbcc")
     expect(histogram).toContain("#bbccdd")
   })
+
+  it("XY WaterfallChart — restyles negative deltas", () => {
+    const svg = renderChart("WaterfallChart", {
+      data: [
+        { step: "Start", value: 100 },
+        { step: "Costs", value: -25 }
+      ],
+      xAccessor: "step",
+      yAccessor: "value",
+      styleRules: [{ when: { axis: "y", lt: 0 }, style: { fill: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("XY WaterfallChart — frameProps.areaStyle wins over styleRules", () => {
+    const svg = renderChart("WaterfallChart", {
+      data: [
+        { step: "Start", value: 100 },
+        { step: "Costs", value: -25 }
+      ],
+      xAccessor: "step",
+      yAccessor: "value",
+      styleRules: [{ when: true, style: { fill: "#d7263d" } }],
+      frameProps: { areaStyle: { fill: "#010203" } },
+    })
+    expect(svg).toContain("#010203")
+    expect(svg).not.toContain("#d7263d")
+  })
+
+  it("XY MultiAxisLineChart — restyles a series from its original y", () => {
+    const svg = renderChart("MultiAxisLineChart", {
+      data: [
+        { x: 0, temp: 20, humidity: 40 },
+        { x: 1, temp: 90, humidity: 55 }
+      ],
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp" },
+        { yAccessor: "humidity", label: "Humidity" }
+      ],
+      styleRules: [{ when: { axis: "y", gte: 15 }, style: { stroke: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("Geo FlowMap — restyles heavy edges", () => {
+    const svg = renderChart("FlowMap", {
+      nodes: [
+        { id: "A", lon: 0, lat: 0 },
+        { id: "B", lon: 10, lat: 10 }
+      ],
+      flows: [
+        { source: "A", target: "B", value: 12 },
+        { source: "B", target: "A", value: 2 }
+      ],
+      valueAccessor: "value",
+      styleRules: [{ when: { gte: 10 }, style: { stroke: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("XY CandlestickChart — restyles a high close", () => {
+    const svg = renderChart("CandlestickChart", {
+      data: [
+        { x: 1, open: 10, high: 20, low: 8, close: 12 },
+        { x: 2, open: 12, high: 90, low: 11, close: 80 }
+      ],
+      xAccessor: "x",
+      openAccessor: "open",
+      highAccessor: "high",
+      lowAccessor: "low",
+      closeAccessor: "close",
+      styleRules: [{ when: { axis: "y", gte: 50 }, style: { fill: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("XY CandlestickChart — hatches a high close in SSR", () => {
+    const svg = renderChart("CandlestickChart", {
+      data: [
+        { x: 1, open: 10, high: 20, low: 8, close: 12 },
+        { x: 2, open: 12, high: 90, low: 11, close: 80 }
+      ],
+      xAccessor: "x",
+      openAccessor: "open",
+      highAccessor: "high",
+      lowAccessor: "low",
+      closeAccessor: "close",
+      styleRules: [{
+        when: { axis: "y", gte: 50 },
+        style: { fill: { type: "hatch", background: "#ffd166", stroke: "#e0a92a" } },
+      }]
+    })
+    expect(svg).toContain("<pattern")
+    expect(svg).toContain("#e0a92a")
+  })
+
+  it("XY CandlestickChart — frameProps.pointStyle wins over styleRules", () => {
+    const svg = renderChart("CandlestickChart", {
+      data: [
+        { x: 1, open: 10, high: 20, low: 8, close: 12 },
+        { x: 2, open: 12, high: 90, low: 11, close: 80 }
+      ],
+      xAccessor: "x",
+      openAccessor: "open",
+      highAccessor: "high",
+      lowAccessor: "low",
+      closeAccessor: "close",
+      styleRules: [{ when: true, style: { fill: "#d7263d" } }],
+      frameProps: { pointStyle: () => ({ fill: "#010203" }) },
+    })
+    expect(svg).toContain("#010203")
+    expect(svg).not.toContain("#d7263d")
+  })
+
+  it("XY MultiAxisLineChart — named colorScheme colors series strokes", () => {
+    const svg = renderChart("MultiAxisLineChart", {
+      data: [
+        { x: 0, temp: 20, humidity: 40 },
+        { x: 1, temp: 25, humidity: 55 }
+      ],
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp" },
+        { yAccessor: "humidity", label: "Humidity" }
+      ],
+      colorScheme: "tableau10",
+    })
+    expect(svg).toContain("#4e79a7")
+    expect(svg).not.toContain("#1f77b4")
+  })
+
+  it("XY MultiAxisLineChart — object colorScheme maps by series label", () => {
+    const svg = renderChart("MultiAxisLineChart", {
+      data: [
+        { x: 0, temp: 20, humidity: 40 },
+        { x: 1, temp: 25, humidity: 55 }
+      ],
+      xAccessor: "x",
+      series: [
+        { yAccessor: "temp", label: "Temp" },
+        { yAccessor: "humidity", label: "Humidity" }
+      ],
+      colorScheme: { Temp: "#aa0000", Humidity: "#00aa00" },
+    })
+    expect(svg).toContain("#aa0000")
+    expect(svg).toContain("#00aa00")
+  })
+
+  it("XY DifferenceChart — restyles the high difference band", () => {
+    const svg = renderChart("DifferenceChart", {
+      data: [
+        { x: 0, a: 70, b: 10 },
+        { x: 1, a: 8, b: 4 }
+      ],
+      xAccessor: "x",
+      seriesAAccessor: "a",
+      seriesBAccessor: "b",
+      styleRules: [{ when: { axis: "y", gte: 50 }, style: { fill: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("XY MinimapChart — restyles the detail series", () => {
+    const svg = renderChart("MinimapChart", {
+      data: [
+        { x: 0, y: 20 },
+        { x: 1, y: 4 }
+      ],
+      styleRules: [{ when: { axis: "y", gte: 15 }, style: { stroke: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
+
+  it("XY ScatterplotMatrix — restyles points by source field", () => {
+    const svg = renderChart("ScatterplotMatrix", {
+      data: [
+        { a: 1, b: 2 },
+        { a: 8, b: 9 }
+      ],
+      fields: ["a", "b"],
+      styleRules: [{ when: { field: "a", gte: 7 }, style: { fill: "#d7263d" } }]
+    })
+    expect(svg).toContain("#d7263d")
+  })
 })

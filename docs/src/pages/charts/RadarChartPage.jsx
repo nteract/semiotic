@@ -26,6 +26,7 @@ const props = [
   { name: "colorBy", type: "string | function", required: false, default: null, description: "Series color channel." },
   { name: "pointRadius", type: "number", required: false, default: "4", description: "Vertex radius." },
   { name: "valueExtent", type: "array", required: false, default: "[0, data-max]", description: "Fixed value-axis domain." },
+  { name: "valueFormat", type: "function", required: false, default: null, description: "Format function for radial-axis ticks and default tooltip values." },
 ]
 
 export default function RadarChartPage() {

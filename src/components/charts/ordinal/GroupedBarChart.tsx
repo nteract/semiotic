@@ -15,6 +15,7 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
@@ -60,6 +61,10 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /** Enable a value-axis brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ r: [min, max] }` or null when the brush clears. */
+  onBrush?: (extent: { r: [number, number] } | null) => void
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. */
@@ -133,6 +138,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, sort = false, barPadding = 60, roundedTop, gradientFill, styleRules, baselinePadding = false,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
+    linkedBrush, brush: brushProp, onBrush: onBrushProp,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
     legendInteraction,
@@ -192,6 +198,13 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     () => makeRuleValueResolver(valueAccessor as string | ((d: Datum) => unknown)),
     [valueAccessor],
   )
+
+  const ordinalBrush = useOrdinalBrush({
+    brushProp,
+    onBrushProp,
+    linkedBrush,
+    valueAccessor,
+  })
 
   // Use the shared bar-family piece-style recipe so frameProps.pieceStyle can
   // override any resolved mark property.
@@ -274,6 +287,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
+    ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

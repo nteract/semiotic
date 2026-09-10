@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "package": {
     "name": "semiotic",
-    "version": "3.9.2"
+    "version": "3.10.0"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
     "resolution": "fresh temporary consumer/node_modules/semiotic",
     "bundler": {
       "name": "esbuild",
-      "version": "0.28.1",
+      "version": "0.28.2",
       "format": "esm",
       "minify": true,
       "treeShaking": true
@@ -45,8 +45,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 430366,
-      "gzipBytes": 143568,
+      "rawBytes": 432286,
+      "gzipBytes": 144613,
       "packedPackageInputFiles": 70
     },
     {
@@ -54,8 +54,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 430060,
-      "gzipBytes": 144044,
+      "rawBytes": 431980,
+      "gzipBytes": 145042,
       "packedPackageInputFiles": 51
     },
     {
@@ -63,8 +63,8 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 430060,
-      "gzipBytes": 143944,
+      "rawBytes": 431980,
+      "gzipBytes": 144968,
       "packedPackageInputFiles": 44
     },
     {
@@ -72,8 +72,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 438380,
-      "gzipBytes": 135791,
+      "rawBytes": 440900,
+      "gzipBytes": 136737,
       "packedPackageInputFiles": 32
     },
     {
@@ -81,8 +81,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 484024,
-      "gzipBytes": 160038,
+      "rawBytes": 485237,
+      "gzipBytes": 160688,
       "packedPackageInputFiles": 31
     },
     {
@@ -90,8 +90,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 437773,
-      "gzipBytes": 144760,
+      "rawBytes": 439391,
+      "gzipBytes": 145785,
       "packedPackageInputFiles": 51
     },
     {
@@ -117,8 +117,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 452389,
-      "gzipBytes": 152592,
+      "rawBytes": 453840,
+      "gzipBytes": 153398,
       "packedPackageInputFiles": 14
     },
     {
@@ -144,8 +144,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 854587,
-      "gzipBytes": 273564,
+      "rawBytes": 858364,
+      "gzipBytes": 275087,
       "packedPackageInputFiles": 3
     },
     {
@@ -153,8 +153,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 388147,
-      "gzipBytes": 121955,
+      "rawBytes": 389601,
+      "gzipBytes": 122540,
       "packedPackageInputFiles": 1
     },
     {
@@ -162,8 +162,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 856218,
-      "gzipBytes": 274263,
+      "rawBytes": 859995,
+      "gzipBytes": 275830,
       "packedPackageInputFiles": 3
     },
     {
@@ -171,8 +171,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 826414,
-      "gzipBytes": 263421,
+      "rawBytes": 829742,
+      "gzipBytes": 264860,
       "packedPackageInputFiles": 72
     },
     {
@@ -180,8 +180,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 163987,
-      "gzipBytes": 47318,
+      "rawBytes": 164373,
+      "gzipBytes": 47371,
       "packedPackageInputFiles": 2
     },
     {
@@ -189,8 +189,8 @@
       "importPath": "semiotic/artifact",
       "symbol": "buildArtifactContract",
       "platform": "browser",
-      "rawBytes": 78211,
-      "gzipBytes": 19896,
+      "rawBytes": 78597,
+      "gzipBytes": 19953,
       "packedPackageInputFiles": 1
     },
     {
@@ -207,8 +207,8 @@
       "importPath": "semiotic/access",
       "symbol": "createChartAccessContract",
       "platform": "browser",
-      "rawBytes": 107227,
-      "gzipBytes": 33937,
+      "rawBytes": 107613,
+      "gzipBytes": 33995,
       "packedPackageInputFiles": 3
     },
     {
@@ -216,8 +216,8 @@
       "importPath": "semiotic/evidence",
       "symbol": "toEvidenceEnvelope",
       "platform": "browser",
-      "rawBytes": 158172,
-      "gzipBytes": 50011,
+      "rawBytes": 158558,
+      "gzipBytes": 50057,
       "packedPackageInputFiles": 1
     },
     {
@@ -234,8 +234,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 350667,
-      "gzipBytes": 118602,
+      "rawBytes": 352248,
+      "gzipBytes": 119380,
       "packedPackageInputFiles": 24
     },
     {
@@ -288,8 +288,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 39347,
-      "gzipBytes": 10382,
+      "rawBytes": 39733,
+      "gzipBytes": 10437,
       "packedPackageInputFiles": 8
     },
     {
@@ -297,8 +297,8 @@
       "importPath": "semiotic/utils/core",
       "symbol": "smartTickFormat",
       "platform": "browser",
-      "rawBytes": 32499,
-      "gzipBytes": 8047,
+      "rawBytes": 32885,
+      "gzipBytes": 8105,
       "packedPackageInputFiles": 1
     },
     {
@@ -342,8 +342,8 @@
       "importPath": "semiotic/value",
       "symbol": "BigNumber",
       "platform": "browser",
-      "rawBytes": 16985,
-      "gzipBytes": 6037,
+      "rawBytes": 16986,
+      "gzipBytes": 6038,
       "packedPackageInputFiles": 1
     },
     {

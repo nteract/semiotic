@@ -468,11 +468,42 @@ function xySceneNodeToSVGMark(
     }
     case "candlestick": {
       const n = node as CandlestickSceneNode
+      const hatchId = `${idPrefix ? `${idPrefix}-` : ""}candle-${i}-hatch`
+      const hatch = isHatchFill(n.style?.fill) ? hatchPatternDef(n.style.fill, hatchId) : undefined
+      const hatchFill = hatch ? `url(#${hatchId})` : undefined
+      const { fill: _overlayFill, ...groupStyle } = (n.style ?? {}) as Record<string, unknown>
+      void _overlayFill
       if (n.isRange) {
         // Range/dumbbell mode: high→low line + endpoint bulbs.
         const dotRadius = n.dotRadius ?? Math.max(2, n.bodyWidth / 2)
+        const rangeFill = hatchFill ?? n.wickColor
         return (
-          <g key={`candle-${i}`} style={n.style as React.CSSProperties}>
+          <React.Fragment key={`candle-${i}`}>
+            {hatch && <defs>{hatch}</defs>}
+            <g style={groupStyle as React.CSSProperties}>
+              <line
+                x1={n.x}
+                y1={n.highY}
+                x2={n.x}
+                y2={n.lowY}
+                stroke={n.wickColor}
+                strokeWidth={n.wickWidth}
+                opacity={n.style?.opacity}
+              />
+              <circle cx={n.x} cy={n.highY} r={dotRadius} fill={rangeFill} opacity={n.style?.opacity} />
+              <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={rangeFill} opacity={n.style?.opacity} />
+            </g>
+          </React.Fragment>
+        )
+      }
+      const bodyTop = Math.min(n.openY, n.closeY)
+      const bodyHeight = Math.max(Math.abs(n.openY - n.closeY), 1)
+      const bodyColor = n.isUp ? n.upColor : n.downColor
+      const bodyFill = hatchFill ?? bodyColor
+      return (
+        <React.Fragment key={`candle-${i}`}>
+          {hatch && <defs>{hatch}</defs>}
+          <g style={groupStyle as React.CSSProperties}>
             <line
               x1={n.x}
               y1={n.highY}
@@ -480,35 +511,20 @@ function xySceneNodeToSVGMark(
               y2={n.lowY}
               stroke={n.wickColor}
               strokeWidth={n.wickWidth}
+              opacity={n.style?.opacity}
             />
-            <circle cx={n.x} cy={n.highY} r={dotRadius} fill={n.wickColor} />
-            <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={n.wickColor} />
+            <rect
+              x={n.x - n.bodyWidth / 2}
+              y={bodyTop}
+              width={n.bodyWidth}
+              height={bodyHeight}
+              fill={bodyFill}
+              stroke={hatchFill ? n.wickColor : bodyColor}
+              strokeWidth={1}
+              opacity={n.style?.opacity}
+            />
           </g>
-        )
-      }
-      const bodyTop = Math.min(n.openY, n.closeY)
-      const bodyHeight = Math.max(Math.abs(n.openY - n.closeY), 1)
-      const bodyColor = n.isUp ? n.upColor : n.downColor
-      return (
-        <g key={`candle-${i}`} style={n.style as React.CSSProperties}>
-          <line
-            x1={n.x}
-            y1={n.highY}
-            x2={n.x}
-            y2={n.lowY}
-            stroke={n.wickColor}
-            strokeWidth={n.wickWidth}
-          />
-          <rect
-            x={n.x - n.bodyWidth / 2}
-            y={bodyTop}
-            width={n.bodyWidth}
-            height={bodyHeight}
-            fill={bodyColor}
-            stroke={bodyColor}
-            strokeWidth={1}
-          />
-        </g>
+        </React.Fragment>
       )
     }
     default:

@@ -151,6 +151,20 @@ describe("PieChart", () => {
     expect(typeof lastOrdinalFrameProps.tooltipContent).toBe("function")
   })
 
+  it("formats default tooltip values with valueFormat", () => {
+    render(
+      <TooltipProvider>
+        <PieChart data={sampleData} valueFormat={(v) => `$${v}`} />
+      </TooltipProvider>
+    )
+    const node = lastOrdinalFrameProps.tooltipContent({
+      data: [{ category: "A", value: 30 }]
+    })
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("$30")
+    expect(container.textContent).not.toContain("$30.00")
+  })
+
   it("allows OrdinalFrame prop overrides via frameProps", () => {
     render(
       <TooltipProvider>

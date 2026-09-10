@@ -76,13 +76,16 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
       // Canonical schema flags `true` for stacked bars to surface the legend.
       showLegend: { type: "boolean", default: true },
+      brush: { type: "boolean", description: "Enable a value-axis brush overlay for range selection." },
+      linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, rField? }." },
+      onBrush: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["stack"],
+      specialFeatures: ["stack", "brush"],
     },
   },
 
@@ -109,13 +112,16 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       baselinePadding: { type: "boolean", default: false, description: "Reserve space around the zero baseline for signed bars." },
       // Canonical schema flags `true` for grouped bars to surface the legend.
       showLegend: { type: "boolean", default: true },
+      brush: { type: "boolean", description: "Enable a value-axis brush overlay for range selection." },
+      linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, rField? }." },
+      onBrush: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: [],
+      specialFeatures: ["brush"],
     },
   },
 
@@ -326,6 +332,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // PieChartProps was corrected; the schema description here intentionally
       // matches the canonical (pre-corrected) text to keep Phase 2 byte-stable.
       startAngle: { type: "number", default: 0, description: "Starting angle in radians" },
+      valueFormat: { type: "function", omitFromSchema: true },
       cornerRadius: { type: "number", omitFromSchema: true },
       showCategoryTicks: { type: "boolean", description: "Show radial category labels." },
       dataIdAccessor: { type: ["string", "function"], description: "Stable slice datum id used by push-mode remove() and update()." },
@@ -354,6 +361,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       styleRules: STYLE_RULES_PROP_SPEC,
       innerRadius: { type: "number", default: 60, description: "Inner radius of the donut hole in pixels" },
       centerContent: { type: ["boolean", "object", "string", "number"], description: "React node to render in the center of the donut; false suppresses it." },
+      valueFormat: { type: "function", omitFromSchema: true },
       startAngle: { type: "number", default: 0 },
       cornerRadius: { type: "number", omitFromSchema: true },
       showCategoryTicks: { type: "boolean", description: "Show radial category labels." },

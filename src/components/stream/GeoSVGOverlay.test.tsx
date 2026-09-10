@@ -73,17 +73,30 @@ function geoOverlay() {
 }
 
 describe("GeoSVGOverlay parity", () => {
-  it("matches the prior Geo subset of SVGOverlay in SSR markup", () => {
-    expect(renderToStaticMarkup(geoOverlay())).toBe(
-      renderToStaticMarkup(legacyOverlay())
-    )
+  it("keeps Geo chrome, annotations, and legend while using geographic accessible text", () => {
+    const geo = renderToStaticMarkup(geoOverlay())
+    const legacy = renderToStaticMarkup(legacyOverlay())
+    expect(geo).toContain(">Geo overlay</title>")
+    expect(geo).toContain(">Geo overlay (geographic data visualization)</desc>")
+    expect(legacy).toContain(">Geo overlay (XY data visualization)</desc>")
+    expect(geo).toContain("Pinned annotation")
+    expect(geo).toContain("data-testid=\"foreground-overlay\"")
+    expect(geo).toContain("Alpha")
   })
 
   it("matches the prior Geo subset of SVGOverlay in CSR markup", () => {
     const legacy = render(legacyOverlay())
     const geo = render(geoOverlay())
 
-    expect(geo.container.innerHTML).toBe(legacy.container.innerHTML)
+    expect(geo.container.querySelector("svg[role='img'] title")?.textContent).toBe(
+      "Geo overlay"
+    )
+    expect(geo.container.querySelector("svg[role='img'] desc")?.textContent).toBe(
+      "Geo overlay (geographic data visualization)"
+    )
+    expect(legacy.container.querySelector("svg[role='img'] desc")?.textContent).toBe(
+      "Geo overlay (XY data visualization)"
+    )
     expect(geo.container.textContent).toContain("Pinned annotation")
     expect(
       geo.container.querySelector('[data-testid="foreground-overlay"]')
@@ -132,9 +145,45 @@ describe("GeoSVGOverlay parity", () => {
     const geoShell = renderToStaticMarkup(
       <GeoSVGOverlay {...dimensions} showAxes />
     )
-    expect(geoShell).toBe(legacyShell)
-    expect(geoShell).toContain("<title>XY Chart</title>")
-    expect(geoShell).toContain("<desc>XY data visualization</desc>")
+    expect(geoShell).toContain(">Geographic chart</title>")
+    expect(geoShell).toContain(">geographic data visualization</desc>")
+    expect(legacyShell).toContain(">XY Chart</title>")
+    expect(legacyShell).toContain(">XY data visualization</desc>")
+  })
+
+  it("uses description for <desc> instead of the title suffix", () => {
+    const svg = renderToStaticMarkup(
+      <GeoSVGOverlay
+        width={220}
+        height={120}
+        totalWidth={276}
+        totalHeight={160}
+        margin={margin}
+        title="Rainfall"
+        description="Monthly precipitation by station."
+      />
+    )
+    expect(svg).toContain(">Rainfall</title>")
+    expect(svg).toContain(">Monthly precipitation by station.</desc>")
+    expect(svg).not.toContain("XY data visualization")
+  })
+
+  it("scopes title and desc ids to idPrefix", () => {
+    const svg = renderToStaticMarkup(
+      <GeoSVGOverlay
+        width={220}
+        height={120}
+        totalWidth={276}
+        totalHeight={160}
+        margin={margin}
+        idPrefix="map-a"
+        title="Rainfall"
+        description="Monthly precipitation by station."
+      />
+    )
+    expect(svg).toContain('id="map-a-semiotic-title"')
+    expect(svg).toContain('id="map-a-semiotic-desc"')
+    expect(svg).toContain('aria-labelledby="map-a-semiotic-title map-a-semiotic-desc"')
   })
 
   it("keeps legend hover and click behavior", () => {

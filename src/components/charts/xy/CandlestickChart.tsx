@@ -21,6 +21,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { normalizePartialMargin } from "../../types/marginType"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
 registerXYPlugin(candlestickXYPlugin)
 
@@ -36,6 +37,12 @@ export interface CandlestickChartProps<TDatum extends Datum = Datum> extends Bas
   /** Optional — see openAccessor */
   closeAccessor?: ChartAccessor<TDatum, number>
   candlestickStyle?: CandlestickStyle
+  /**
+   * Declarative, threshold-aware candle styling. `ctx.y`/`ctx.value` is close
+   * in OHLC mode and high in range mode. A rule `fill` recolors the body
+   * (or the range wick/dots); `stroke` recolors the wick.
+   */
+  styleRules?: StyleRule[]
   tooltip?: TooltipProp
   annotations?: Datum[]
   /** Fixed x domain `[min, max]` (either bound may be undefined to leave that side data-derived). */
@@ -128,6 +135,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     openAccessor,
     closeAccessor,
     candlestickStyle,
+    styleRules,
     tooltip,
     annotations,
     xExtent,
@@ -172,13 +180,20 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     mobileInteraction: resolved.mobileInteraction,
   })
   const resolvedSelection = useResolvedSelection(selection)
+  const candleRuleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      (isRange ? highAccessor : closeAccessor) as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, highAccessor, closeAccessor, isRange],
+  )
   const selectionPointStyle = useMemo(
     () => wrapStyleWithSelection(
-      () => ({}),
+      composeStyleRules(undefined, styleRules, candleRuleContext),
       activeSelectionHook,
       resolvedSelection
     ),
-    [activeSelectionHook, resolvedSelection]
+    [styleRules, candleRuleContext, activeSelectionHook, resolvedSelection]
   )
 
   const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
@@ -245,7 +260,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
     lowAccessor,
     ...(!isRange && { openAccessor, closeAccessor }),
     ...(candlestickStyle && { candlestickStyle }),
-    ...(activeSelectionHook && { pointStyle: selectionPointStyle }),
+    ...((activeSelectionHook || styleRules?.length) && { pointStyle: selectionPointStyle }),
     scalePadding,
     extentPadding,
     size: [width, height],

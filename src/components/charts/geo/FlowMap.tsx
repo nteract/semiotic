@@ -33,9 +33,10 @@ import type { Style } from "../../stream/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GeoParticleStyle } from "../../stream/GeoParticlePool"
-import { scaleLinear } from "d3-scale"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
+import { type StyleRule } from "../shared/styleRules"
+import { buildFlowMapLineStyle } from "./flowMapLineStyle"
 
 export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
@@ -74,6 +75,12 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
   edgeLinecap?: "butt" | "round" | "square"
   /** Color scheme for edges @default "category10" */
   colorScheme?: string | string[] | Record<string, string>
+  /**
+   * Declarative, threshold-aware flow-edge styling. `ctx.value` is the
+   * `valueAccessor` magnitude so `{ gte: 1000 }` restyles heavy flows.
+   * Last applicable rule wins per property. Layers over `edgeColorBy`.
+   */
+  styleRules?: StyleRule[]
   /** Show animated particles along flow lines */
   showParticles?: boolean
   /** Particle appearance and behavior */
@@ -222,6 +229,7 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     pointRadius: pointRadiusProp,
     edgeLinecap = "round",
     colorScheme,
+    styleRules,
     showParticles,
     particleStyle,
     tooltip,
@@ -493,21 +501,27 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
     }
   }, [yAccessor])
 
-  // Edge width scale
-  const widthScale = useMemo(() => {
-    const vals = safeFlows.filter(f => f && typeof f === "object").map(f => f[valueAccessor] ?? 0).filter(v => isFinite(v))
-    if (vals.length === 0) return () => edgeWidthRange[0]
-    return scaleLinear()
-      .domain(getMinMax(vals))
-      .range(edgeWidthRange)
-  }, [safeFlows, valueAccessor, edgeWidthRange])
+  const valueDomain = useMemo(() => {
+    const vals = safeFlows
+      .filter((f) => f && typeof f === "object")
+      .map((f) => Number(f[valueAccessor] ?? 0))
+      .filter((v) => Number.isFinite(v))
+    if (vals.length === 0) return undefined
+    return getMinMax(vals)
+  }, [safeFlows, valueAccessor])
 
-  const baseLineStyleFn = useMemo(() => (d: Datum): Style => ({
-    stroke: edgeColorBy ? getColor(d, edgeColorBy, setup.colorScale) : DEFAULT_COLOR,
-    strokeWidth: widthScale(d[valueAccessor] ?? 0),
-    strokeLinecap: edgeLinecap,
-    opacity: edgeOpacity
-  }), [edgeColorBy, setup.colorScale, widthScale, valueAccessor, edgeOpacity, edgeLinecap])
+  const baseLineStyleFn = useMemo(
+    () => buildFlowMapLineStyle({
+      valueAccessor,
+      valueDomain,
+      edgeWidthRange,
+      resolveStroke: (d) => edgeColorBy ? getColor(d, edgeColorBy, setup.colorScale) : DEFAULT_COLOR,
+      edgeOpacity,
+      edgeLinecap,
+      styleRules,
+    }),
+    [valueAccessor, valueDomain, edgeWidthRange, edgeColorBy, setup.colorScale, edgeOpacity, edgeLinecap, styleRules],
+  )
 
   // Wrap line style with selection awareness so non-matching flows dim.
   // `fillOpacity: 0` is load-bearing — the line renderer interprets

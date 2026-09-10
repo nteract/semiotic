@@ -63,6 +63,15 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
     if (!isRangeMode && (open == null || Number.isNaN(open) || close == null || Number.isNaN(close))) continue
 
     const isUp = close >= open
+    const overlay = ctx.config.pointStyle?.(d) ?? {}
+    const overlayFillColor = typeof overlay.fill === "string" ? overlay.fill : undefined
+    const overlayStroke = typeof overlay.stroke === "string" ? overlay.stroke : undefined
+    const overlayWickWidth = typeof overlay.strokeWidth === "number" ? overlay.strokeWidth : undefined
+    const overlayOpacity = typeof overlay.opacity === "number"
+      ? overlay.opacity
+      : typeof overlay.fillOpacity === "number"
+        ? overlay.fillOpacity
+        : undefined
 
     const node: CandlestickSceneNode = {
       type: "candlestick",
@@ -72,14 +81,15 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
       highY: ctx.scales.y(high),
       lowY: ctx.scales.y(low),
       bodyWidth,
-      upColor,
-      downColor,
-      wickColor,
-      wickWidth,
+      upColor: overlayFillColor && isUp ? overlayFillColor : upColor,
+      downColor: overlayFillColor && !isUp ? overlayFillColor : downColor,
+      wickColor: overlayStroke ?? (isRangeMode && overlayFillColor ? overlayFillColor : wickColor),
+      wickWidth: overlayWickWidth ?? wickWidth,
       isUp,
       style: {
         cursor: cs.cursor,
-        ...(ctx.config.pointStyle?.(d) ?? {}),
+        ...overlay,
+        ...(overlayOpacity !== undefined && { opacity: overlayOpacity }),
       },
       datum: d,
     }

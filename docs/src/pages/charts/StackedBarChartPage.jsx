@@ -149,6 +149,8 @@ const stackedBarChartProps = [
   { name: "gradientFill", type: "{ stops }", required: false, default: null, description: "Tip-to-base gradient on each stack segment using { stops: [{ offset: 0–1, color?, opacity? }] }." },
   { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth data-change transitions. `true` for defaults (300ms ease-out, intro enabled), or `{ duration, easing, intro }`. Set `{ intro: false }` to disable intro." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on bar segments." },
+  { name: "brush", type: "boolean", required: false, default: "false", description: "Enable a value-axis brush overlay for range selection. Also enabled when linkedBrush is set." },
+  { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { r: [min, max] }, or null when the brush clears." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend for stacked categories." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },

@@ -36,9 +36,14 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
 import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
-import type { SegmentRow } from "./differenceSegments"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { type StyleRule } from "../shared/styleRules"
+import {
+  buildDifferenceAreaStyle,
+  buildDifferenceLineStyle,
+  buildDifferencePointStyle
+} from "./differenceMarkStyle"
 
 registerXYPlugin(mixedXYPlugin)
 
@@ -88,6 +93,12 @@ export interface DifferenceChartProps<TDatum extends Datum = Datum>
   areaOpacity?: number
   /** Gradient fill from each segment's tip (offset 0) to its base (offset 1). */
   gradientFill?: GradientInput
+  /**
+   * Declarative, threshold-aware fill/line styling. `ctx.y` is the plotted
+   * upper boundary (`__y`); `category` is `"A"` or `"B"`. Field thresholds
+   * see the original source row.
+   */
+  styleRules?: StyleRule[]
   /** Enable hover annotations. */
   enableHover?: boolean
   /** Show grid lines. Default `false`. */
@@ -152,6 +163,8 @@ interface LineRow {
   __diffSegment: string
   /** Retained on line vertices so selection can match area and line marks. */
   __diffWinner: "A" | "B"
+  /** Original source row for field-based styleRules. */
+  __sourceDatum?: Datum
 }
 
 /**
@@ -180,9 +193,9 @@ function buildOverlayLineRows<TDatum extends Datum>(
       a = getA(d),
       b = getB(d)
     if (Number.isFinite(a))
-      out.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A" })
+      out.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A", __sourceDatum: d })
     if (Number.isFinite(b))
-      out.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B" })
+      out.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B", __sourceDatum: d })
   }
   return out
 }
@@ -265,6 +278,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
     curve = "linear",
     areaOpacity = 0.6,
     gradientFill,
+    styleRules,
     tooltip,
     annotations,
     xExtent,
@@ -512,45 +526,32 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
     })
   })
   // ── Style resolvers ─────────────────────────────────────────────────
-  // areaStyle gets called per segment-group. The group key is
-  // `seg-<i>-A` or `seg-<i>-B`; the trailing letter picks the color.
-  const areaStyle = useCallback(
-    (d: Datum) => {
-      const segKey = (d as SegmentRow).__diffSegment
-      const winner = segKey?.endsWith("-A") ? "A" : "B"
-      return {
-        fill: winner === "A" ? seriesAColor : seriesBColor,
-        stroke: "none",
-        fillOpacity: areaOpacity
-      }
-    },
-    [seriesAColor, seriesBColor, areaOpacity]
+  const areaStyle = useMemo(
+    () => buildDifferenceAreaStyle({
+      seriesAColor,
+      seriesBColor,
+      areaOpacity,
+      styleRules
+    }),
+    [seriesAColor, seriesBColor, areaOpacity, styleRules]
   )
-
-  // lineStyle for the overlay lines — `line-A` / `line-B` keys.
-  const lineStyle = useCallback(
-    (d: Datum) => {
-      const key = (d as LineRow).__diffSegment
-      const winner = key === "line-A" ? "A" : "B"
-      return {
-        stroke: winner === "A" ? seriesAColor : seriesBColor,
-        strokeWidth: lineWidth,
-        fill: "none"
-      }
-    },
-    [seriesAColor, seriesBColor, lineWidth]
+  const lineStyle = useMemo(
+    () => buildDifferenceLineStyle({
+      seriesAColor,
+      seriesBColor,
+      lineWidth,
+      styleRules
+    }),
+    [seriesAColor, seriesBColor, lineWidth, styleRules]
   )
-
-  const pointStyle = useCallback(
-    (d: Datum) => {
-      const key = (d as LineRow).__diffSegment
-      const winner = key === "line-A" ? "A" : "B"
-      return {
-        fill: winner === "A" ? seriesAColor : seriesBColor,
-        r: pointRadius
-      }
-    },
-    [seriesAColor, seriesBColor, pointRadius]
+  const pointStyle = useMemo(
+    () => buildDifferencePointStyle({
+      seriesAColor,
+      seriesBColor,
+      pointRadius,
+      styleRules
+    }),
+    [seriesAColor, seriesBColor, pointRadius, styleRules]
   )
 
   // DifferenceChart renders synthesized area and line rows, so the generic

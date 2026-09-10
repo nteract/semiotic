@@ -1,6 +1,8 @@
 import type { SceneNode, StreamScales, StreamLayout, CandlestickSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { resolveCSSColor } from "./resolveCSSColor"
+import { isHatchFill } from "../../charts/shared/hatchFill"
+import { resolveCanvasPaint } from "./canvasRenderHelpers"
 
 export const candlestickCanvasRenderer: StreamRendererFn = (
   ctx: CanvasRenderingContext2D,
@@ -50,7 +52,12 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       // scene builder (so canvas + SVG match); fall back to the same formula
       // for any node built before this field existed.
       const dotRadius = n.dotRadius ?? Math.max(2, Math.min(n.bodyWidth / 2, layout.height * 0.12))
-      ctx.fillStyle = wickColor
+      const rangeFill = resolveCanvasPaint(
+        ctx,
+        isHatchFill(n.style?.fill) ? n.style.fill : n.wickColor,
+        n.wickColor,
+      )
+      ctx.fillStyle = rangeFill
       ctx.beginPath()
       ctx.arc(n.x, n.highY, dotRadius, 0, Math.PI * 2)
       ctx.fill()
@@ -62,11 +69,16 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       const bodyTop = Math.min(n.openY, n.closeY)
       const bodyHeight = Math.abs(n.openY - n.closeY)
       const rawBodyColor = n.isUp ? n.upColor : n.downColor
-      const bodyColor = resolveCSSColor(ctx, rawBodyColor) || rawBodyColor
+      const bodyFill = resolveCanvasPaint(
+        ctx,
+        isHatchFill(n.style?.fill) ? n.style.fill : rawBodyColor,
+        rawBodyColor,
+      )
+      const bodyStroke = typeof bodyFill === "string" ? bodyFill : (resolveCSSColor(ctx, n.wickColor) || n.wickColor)
 
-      ctx.fillStyle = bodyColor
+      ctx.fillStyle = bodyFill
       ctx.fillRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
-      ctx.strokeStyle = bodyColor
+      ctx.strokeStyle = bodyStroke
       ctx.lineWidth = 1
       ctx.strokeRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
     }

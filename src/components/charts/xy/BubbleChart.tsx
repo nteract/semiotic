@@ -22,9 +22,8 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizeLinkedBrush } from "../shared/selectionUtils"
-import { useBrushSelection } from "../../store/useSelection"
 import { useChartSetup } from "../shared/useChartSetup"
+import { useXYBrush } from "../shared/useXYBrush"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
@@ -122,6 +121,11 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    * @default true
    */
   enableHover?: boolean
+
+  /** Enable an xy brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ x, y }` extents, or null when the brush clears. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
 
   /**
    * Show grid lines
@@ -293,6 +297,8 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     selection,
     linkedHover,
     linkedBrush,
+    brush,
+    onBrush,
     onObservation,
     onClick,
     hoverHighlight,
@@ -390,12 +396,13 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     },
   })
 
-  const brushConfig = normalizeLinkedBrush(linkedBrush)
-
-  const _brushHook = useBrushSelection({
-    name: brushConfig?.name || "__unused_brush__",
-    xField: brushConfig?.xField || (typeof xAccessor === "string" ? xAccessor : undefined),
-    yField: brushConfig?.yField || (typeof yAccessor === "string" ? yAccessor : undefined)
+  const { brushStreamProps } = useXYBrush({
+    brush,
+    onBrush,
+    linkedBrush,
+    xAccessor,
+    yAccessor,
+    defaultDimension: "xy",
   })
 
   // ── Core chart logic ───────────────────────────────────────────────────
@@ -521,6 +528,7 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
+    ...brushStreamProps,
     ...frameProps
   }
 

@@ -25,6 +25,7 @@ import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineSto
 import type { ProcessChromeOptions } from "../../recipes/processChrome"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
+import type { StyleRule } from "../shared/styleRules"
 import { filterSparseArray } from "../shared/sparseArray"
 import { physicsProcessGroupSemanticItems } from "./physicsProcessPrimitives"
 import {
@@ -76,6 +77,11 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
   radiusAccessor?: ChartAccessor<TDatum, number>
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
+  /**
+   * Declarative, threshold-aware body styling. `ctx.value` is `workAccessor`
+   * when set. Last applicable rule wins per property.
+   */
+  styleRules?: StyleRule[]
   seed?: number
   route?: "horizontal"
   groupCompletion?: "allAbsorbed" | "none"
@@ -217,6 +223,7 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     springStiffness,
     stageAccessor = "stage" as ChartAccessor<TDatum, string>,
     stages,
+    styleRules,
     workAccessor
   } = props
 
@@ -325,9 +332,14 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
   const bodyStyle = useMemo(
     () =>
       styleFromColorAccessor(
-        colorBy as ChartAccessor<Datum, string> | undefined
+        colorBy as ChartAccessor<Datum, string> | undefined,
+        undefined,
+        {
+          styleRules,
+          valueAccessor: workAccessor as string | ((datum: Datum) => unknown) | undefined
+        }
       ),
-    [colorBy]
+    [colorBy, styleRules, workAccessor]
   )
 
   const capacityControllers = useMemo((): PhysicsController[] | undefined => {

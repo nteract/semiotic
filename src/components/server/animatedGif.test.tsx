@@ -91,10 +91,13 @@ describe("generateFrameSVGs", () => {
     it("generates frames from bar data (ordinal)", () => {
       const frames = generateFrameSVGs("bar", barData, {
         oAccessor: "category", rAccessor: "value", width: 400, height: 300,
+        title: "Category totals",
       }, { transitionFrames: 0 })
 
       expect(frames.length).toBeGreaterThan(1)
       frames.forEach(f => expect(f).toContain("<rect"))
+      const titleIds = frames.map((f) => f.match(/id="([^"]+-semiotic-title)"/)?.[1])
+      expect(new Set(titleIds).size).toBe(frames.length)
     })
 
     it("renders grouped ordinal connector fills in generated frames", () => {
@@ -288,6 +291,9 @@ describe("generateFrameSVGs", () => {
         expect(f).toContain("Revenue Trend")
         expect(f).toContain('transform="translate(40,36)"')
       })
+      const titleIds = frames.map((f) => f.match(/id="([^"]+-semiotic-title)"/)?.[1])
+      expect(titleIds.every(Boolean)).toBe(true)
+      expect(new Set(titleIds).size).toBe(frames.length)
     })
 
     it("applies background color", () => {
@@ -435,6 +441,26 @@ describe("generatePhysicsFrameSVGs", () => {
       expect(frame).toContain("#ffffff")
     })
     expect(firstCircleY(frames[4])).toBeGreaterThan(firstCircleY(frames[0]))
+  })
+
+  it("scopes physics title and desc ids per frame", () => {
+    const frames = generatePhysicsFrameSVGs({
+      ...physicsProps,
+      idPrefix: "physics-gif",
+      title: "Ball drop",
+      description: "A falling circle.",
+    }, {
+      frameCount: 3,
+      stepsPerFrame: 1,
+      stepDt: 1 / 60,
+    })
+    const titleIds = frames.map((f) => f.match(/id="([^"]+-semiotic-title)"/)?.[1])
+    expect(titleIds).toEqual([
+      "physics-gif-0-semiotic-title",
+      "physics-gif-1-semiotic-title",
+      "physics-gif-2-semiotic-title",
+    ])
+    expect(frames[0]).toContain("aria-labelledby=\"physics-gif-0-semiotic-title physics-gif-0-semiotic-desc\"")
   })
 
   it("is deterministic for identical config, spawns, and step options", () => {

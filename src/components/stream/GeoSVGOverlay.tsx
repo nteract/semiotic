@@ -6,7 +6,7 @@ import {
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
 import * as React from "react"
-import { useMemo, useRef } from "react"
+import { useMemo, useRef, useId } from "react"
 import type { ReactNode } from "react"
 import type { AnnotationContext } from "../realtime/types"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -21,6 +21,11 @@ import {
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { renderLegendFromConfig } from "./legendRenderer"
 import { SVGChartTitle } from "./SVGChartTitle"
+import {
+  overlayAccessibleDescription,
+  overlayAccessibleIds,
+  overlayAccessibleTitle
+} from "./overlayAccessibleText"
 
 interface GeoSVGOverlayProps {
   width: number
@@ -37,6 +42,10 @@ interface GeoSVGOverlayProps {
   showAxes?: boolean
 
   title?: string | ReactNode
+  /** Accessible long description; wins over the title-derived `<desc>` suffix. */
+  description?: string
+  /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  idPrefix?: string
 
   legend?: LegendValue
   legendHoverBehavior?: (item: { label: string } | null) => void
@@ -84,6 +93,8 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     margin,
     showAxes,
     title,
+    description,
+    idPrefix,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -172,15 +183,19 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
   const hasContent =
     showAxes ||
     title ||
+    description ||
     legend ||
     foregroundGraphics ||
     (renderedAnnotations && renderedAnnotations.length > 0)
+  const generatedId = useId()
+  const { titleId, descId, labelledBy } = overlayAccessibleIds(idPrefix || chartId || generatedId)
 
   if (!hasContent) return null
 
   return (
     <svg
       role="img"
+      aria-labelledby={labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -192,11 +207,12 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title>{typeof title === "string" ? title : "XY Chart"}</title>
-      <desc>
-        {typeof title === "string"
-          ? title + " (XY data visualization)"
-          : "XY data visualization"}
+      <title id={titleId}>{overlayAccessibleTitle(title, "Geographic chart")}</title>
+      <desc id={descId}>
+        {overlayAccessibleDescription(title, description, {
+          familyPhrase: "geographic data visualization",
+          fallback: "geographic data visualization"
+        })}
       </desc>
       <g transform={"translate(" + margin.left + "," + margin.top + ")"}>
         {renderedAnnotations}

@@ -192,6 +192,7 @@ interface-member FlowMapProps::property::pointRadius = optional pointRadius: num
 interface-member FlowMapProps::property::projection = optional projection: ProjectionProp | undefined
 interface-member FlowMapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member FlowMapProps::property::showParticles = optional showParticles: boolean | undefined
+interface-member FlowMapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member FlowMapProps::property::tileAttribution = optional tileAttribution: string | undefined
 interface-member FlowMapProps::property::tileCacheSize = optional tileCacheSize: number | undefined
 interface-member FlowMapProps::property::tileURL = optional tileURL: ((z: number, x: number, y: number, dpr: number) => string) | string | undefined

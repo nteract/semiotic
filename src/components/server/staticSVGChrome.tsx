@@ -26,6 +26,7 @@ import {
   buildStaticCategoricalLegendConfig,
 } from "./staticLegend"
 import { renderStaticRawLegend } from "./staticRawLegend"
+import { overlayAccessibleIds } from "../stream/overlayAccessibleText"
 import {
   reserveLegendConfigMargin,
   reserveStaticLegendMargin,
@@ -397,8 +398,11 @@ export function wrapSVG(
   const background = opts.background ?? s.background
   const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
   const titleText = typeof opts.title === "string" ? opts.title : undefined
-  const titleId = titleText ? `${pfx}semiotic-title` : undefined
-  const descId = opts.description ? `${pfx}semiotic-desc` : undefined
+  const accessible = opts.idPrefix
+    ? overlayAccessibleIds(opts.idPrefix)
+    : { titleId: "semiotic-title", descId: "semiotic-desc" }
+  const titleId = titleText ? accessible.titleId : undefined
+  const descId = opts.description ? accessible.descId : undefined
   const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
 
   return (

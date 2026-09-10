@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "semiotic",
-  "version": "3.9.2",
+  "version": "3.10.0",
   "description": "React data visualization library for charts, networks, and beyond",
   "tools": [
     {
@@ -3370,6 +3370,159 @@
             "lineWidth": {
               "type": "number",
               "default": 2
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [
@@ -3759,6 +3912,159 @@
             "candlestickStyle": {
               "type": "object",
               "description": "Style overrides."
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             },
             "pointIdAccessor": {
               "type": "string",
@@ -4339,6 +4645,17 @@
                 "object"
               ],
               "description": "Overlay a regression line on the bubbles. Same shape as Scatterplot's regression prop."
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable an xy brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, xField?, yField? }."
             }
           },
           "required": [
@@ -6620,6 +6937,17 @@
               "type": "boolean",
               "description": "Reserve space around the zero baseline for signed bars.",
               "default": false
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable a value-axis brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, rField? }."
             }
           },
           "required": [
@@ -7730,6 +8058,17 @@
               "type": "boolean",
               "description": "Reserve space around the zero baseline for signed bars.",
               "default": false
+            },
+            "brush": {
+              "type": "boolean",
+              "description": "Enable a value-axis brush overlay for range selection."
+            },
+            "linkedBrush": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "LinkedCharts brush channel name, or { name, rField? }."
             }
           },
           "required": [
@@ -20287,6 +20626,159 @@
                 "string",
                 "function"
               ]
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [
@@ -20661,6 +21153,159 @@
             "lineWidth": {
               "type": "number",
               "default": 2
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             },
             "fillArea": {
               "type": "boolean",
@@ -22213,6 +22858,159 @@
                 "string",
                 "function"
               ]
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             },
             "edgeOpacity": {
               "type": "number",
@@ -24102,6 +24900,159 @@
             "windowSize": {
               "type": "number",
               "description": "Max raw rows in the push buffer; older rows evict FIFO. Recommended for long-running streams."
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": []
@@ -27906,6 +28857,159 @@
                 "function"
               ]
             },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
+            },
             "radiusAccessor": {
               "type": "string",
               "description": "Optional per-body radius in pixels.",
@@ -31020,6 +32124,159 @@
             "gap": {
               "type": "number",
               "description": "Pixel gap between adjacent bars."
+            },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
             },
             "xExtent": {
               "type": "array"

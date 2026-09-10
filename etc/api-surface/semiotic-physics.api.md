@@ -2018,6 +2018,7 @@ interface-member ProcessFlowChartProps::property::springDamping = optional sprin
 interface-member ProcessFlowChartProps::property::springStiffness = optional springStiffness: number | undefined
 interface-member ProcessFlowChartProps::property::stageAccessor = optional stageAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member ProcessFlowChartProps::property::stages = required stages: readonly ProcessFlowStageDef[]
+interface-member ProcessFlowChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ProcessFlowChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member ProcessFlowChartProps::property::workAccessor = optional workAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member ProcessFlowPhysicsOptions::property::ballRadius = optional ballRadius: number | undefined

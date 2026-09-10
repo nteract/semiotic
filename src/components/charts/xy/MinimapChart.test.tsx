@@ -117,6 +117,21 @@ describe("MinimapChart", () => {
     expect(overviewProps.size[1]).toBeGreaterThanOrEqual(100)
   })
 
+  it("applies styleRules to the detail and default overview lineStyle", () => {
+    render(
+      <TooltipProvider>
+        <MinimapChart
+          data={[{ x: 0, y: 20 }, { x: 1, y: 4 }]}
+          styleRules={[{ when: { axis: "y", gte: 15 }, style: { stroke: "#d7263d" } }]}
+        />
+      </TooltipProvider>
+    )
+    const mainProps = xyFrameRenders.find((p) => p.enableHover === true)
+    const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)
+    expect(mainProps?.lineStyle?.({ x: 0, y: 20 }, undefined)?.stroke).toBe("#d7263d")
+    expect(overviewProps?.lineStyle?.({ x: 0, y: 20 }, undefined)?.stroke).toBe("#d7263d")
+  })
+
   it("default overview height is 60", () => {
     render(
       <TooltipProvider>
