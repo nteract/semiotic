@@ -30,7 +30,8 @@
       "specialFeatures": [
         "size-encoding",
         "streaming-domain",
-        "regression-overlay"
+        "regression-overlay",
+        "brush"
       ]
     },
     "BumpChart": {
@@ -310,7 +311,9 @@
       "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
-      "specialFeatures": []
+      "specialFeatures": [
+        "brush"
+      ]
     },
     "Histogram": {
       "category": "ordinal",
@@ -381,7 +384,8 @@
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
-        "stack"
+        "stack",
+        "brush"
       ]
     },
     "SwarmPlot": {
