@@ -704,7 +704,7 @@ describe("DifferenceChart", () => {
     const high = areas.find((d: { __y?: number }) => (d.__y ?? 0) >= 70)
     const low = areas.find((d: { __y?: number }) => (d.__y ?? 0) < 55)
     expect(high).toBeTruthy()
-    expect(lastXYFrameProps.areaStyle(high).fill).toBe("#d7263d")
+    if (high) expect(lastXYFrameProps.areaStyle(high).fill).toBe("#d7263d")
     if (low) expect(lastXYFrameProps.areaStyle(low).fill).not.toBe("#d7263d")
   })
 })
