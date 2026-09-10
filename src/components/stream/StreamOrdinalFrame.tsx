@@ -19,6 +19,7 @@
  */
 "use client"
 import * as React from "react"
+import { RadialCenterContent } from "../charts/shared/radialCenterContent"
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type {
   HoverData,
@@ -945,18 +946,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
             annotationData={enrichAnnotationData(store?.getData())}
           />
           {centerContent && projection === "radial" && (
-            <div
-              style={{
-                position: "absolute",
-                left: margin.left + adjustedWidth / 2,
-                top: margin.top + adjustedHeight / 2,
-                transform: "translate(-50%, -50%)",
-                pointerEvents: "none",
-                textAlign: "center"
-              }}
-            >
-              {centerContent}
-            </div>
+            <RadialCenterContent content={centerContent}
+              centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
+              width={size[0]} height={size[1]} />
           )}
         </div>
       )
@@ -1093,18 +1085,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
         {/* Donut center content */}
         {centerContent && projection === "radial" && (
-          <div
-            style={{
-              position: "absolute",
-              left: margin.left + adjustedWidth / 2,
-              top: margin.top + adjustedHeight / 2,
-              transform: "translate(-50%, -50%)",
-              pointerEvents: "none",
-              textAlign: "center"
-            }}
-          >
-            {centerContent}
-          </div>
+          <RadialCenterContent content={centerContent}
+            centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
+            width={size[0]} height={size[1]} />
         )}
 
         {staleness?.showBadge && (

@@ -112,6 +112,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     lineDataAccessor: props.lineDataAccessor,
     xExtent: props.xExtent,
     yExtent: props.yExtent,
+    invertY: props.invertY,
     // axisExtent ("nice"|"exact") pins the first/last tick to the data
     // min/max through domain resolution.
     axisExtent: props.axisExtent,

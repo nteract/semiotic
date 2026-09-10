@@ -1,3 +1,4 @@
+import { seriesSelectionDatum } from "../store/selectionProvenance"
 import type {
   SceneNode,
   SceneDatum,
@@ -274,7 +275,7 @@ export function buildStackedAreaNodes(
             ? order.map((index) => bottomPath[index])
             : bottomPath,
           rawValues: order ? order.map((index) => rawValues[index]) : rawValues,
-          style: styleFn(g.key, g.data[0]),
+          style: styleFn(g.key, seriesSelectionDatum(g.data)),
           datum: order ? order.map((index) => datums[index]) : datums,
           accessibleDatum: order
             ? order.map((index) => accessibleDatums[index])

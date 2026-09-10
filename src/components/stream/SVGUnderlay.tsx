@@ -1,10 +1,12 @@
 "use client"
+import { XYGrid } from "./XYGrid"
+import { resolveXYAxes } from "./resolveXYAxes"
 
 import { useMemo } from "react"
 import type { ReactNode } from "react"
 import type { StreamScales, XYFrameAxisConfig } from "./types"
 import { generateXYTicks } from "./xyAxisTicks"
-import { jaggedBaselinePath, resolveAxisLineStyle, resolveGridDash } from "./svgOverlayUtils"
+import { jaggedBaselinePath, resolveAxisLineStyle } from "./svgOverlayUtils"
 
 /** Props for the canvas-behind grid and axis-baseline SVG layer. */
 export interface SVGUnderlayProps {
@@ -54,26 +56,15 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
   const hasBaselines = showAxes && scales
   if (!hasGrid && !hasBaselines) return null
 
-  const bottomAxis = axes?.find(a => a.orient === "bottom")
-  const topAxis = axes?.find(a => a.orient === "top")
-  const leftAxis = axes?.find(a => a.orient === "left")
-  const rightAxis = axes?.find(a => a.orient === "right")
-  const xAxis = bottomAxis ?? topAxis
-  const yAxis = leftAxis ?? rightAxis
-  const xOrient = bottomAxis ? "bottom" : topAxis ? "top" : "bottom"
-  const yOrient = leftAxis ? "left" : rightAxis ? "right" : "left"
+  const { xAxis, yAxis, xOrient, yOrient } = resolveXYAxes(axes)
   const xBaselineY = xOrient === "top" ? 0 : height
   const yBaselineX = yOrient === "right" ? width : 0
-  const showXBaseline = hasBaselines && (xAxis ? xAxis.baseline !== false : true)
-  const showYBaseline = hasBaselines && (yAxis ? yAxis.baseline !== false : true)
+  const showXBaseline = hasBaselines && xAxis?.visible !== false && (xAxis ? xAxis.baseline !== false : true)
+  const showYBaseline = hasBaselines && yAxis?.visible !== false && (yAxis ? yAxis.baseline !== false : true)
   const xJagged = xAxis?.jaggedBase || false
   const yJagged = yAxis?.jaggedBase || false
   const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: "var(--semiotic-border, #ccc)", strokeWidth: 1 })
   const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: "var(--semiotic-border, #ccc)", strokeWidth: 1 })
-  const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
-  const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
-  const xGridDash = resolveGridDash(xAxis?.gridStyle)
-  const yGridDash = resolveGridDash(yAxis?.gridStyle)
 
   return (
     <svg
@@ -83,42 +74,19 @@ export function SVGUnderlay(props: SVGUnderlayProps) {
     >
       <g transform={`translate(${margin.left},${margin.top})`}>
         {hasGrid && (
-          <g className="stream-grid">
-            {xAxis?.grid !== false && xTicks.map((tick, i) => (
-              <line
-                key={`xgrid-${i}`}
-                x1={tick.pixel}
-                y1={0}
-                x2={tick.pixel}
-                y2={height}
-                {...xGridLine}
-                strokeDasharray={xGridDash ?? xGridLine.strokeDasharray}
-              />
-            ))}
-            {yAxis?.grid !== false && yTicks.map((tick, i) => (
-              <line
-                key={`ygrid-${i}`}
-                x1={0}
-                y1={tick.pixel}
-                x2={width}
-                y2={tick.pixel}
-                {...yGridLine}
-                strokeDasharray={yGridDash ?? yGridLine.strokeDasharray}
-              />
-            ))}
-          </g>
+          <XYGrid axes={axes} xTicks={xTicks} yTicks={yTicks} width={width} height={height} />
         )}
 
         {showXBaseline && !xJagged && (
           <line x1={0} y1={xBaselineY} x2={width} y2={xBaselineY} {...xAxisLine} />
         )}
-        {xJagged && (
+        {hasBaselines && xAxis?.visible !== false && xJagged && (
           <path d={jaggedBaselinePath(xOrient, width, height)} fill="none" {...xAxisLine} />
         )}
         {showYBaseline && !yJagged && (
           <line x1={yBaselineX} y1={0} x2={yBaselineX} y2={height} {...yAxisLine} />
         )}
-        {yJagged && (
+        {hasBaselines && yAxis?.visible !== false && yJagged && (
           <path d={jaggedBaselinePath(yOrient, width, height)} fill="none" {...yAxisLine} />
         )}
       </g>

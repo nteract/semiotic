@@ -16,7 +16,7 @@ import type { XYSceneContext } from "./types"
 import { resolveExplicitColor } from "../../charts/shared/colorUtils"
 import {
   attachSelectionProvenance,
-  getSelectionProvenance
+  requestsSelectionProvenance
 } from "../../store/selectionProvenance"
 
 export interface BarSceneResult {
@@ -37,7 +37,8 @@ export function buildBarScene(
     ctx.getY,
     ctx.config.binSize,
     ctx.getCategory,
-    getSelectionProvenance(ctx.config.areaStyle)?.[0] === ctx.config.areaStyle
+    // Hover producers also need source rows, even without a consuming selection.
+    !!ctx.config.trackHoverRows || requestsSelectionProvenance(ctx.config.areaStyle)
   )
   if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 

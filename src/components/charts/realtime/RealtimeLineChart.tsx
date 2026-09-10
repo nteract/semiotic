@@ -111,6 +111,10 @@ export interface RealtimeLineChartHandle<
 export interface RealtimeLineChartProps<
   TDatum extends Datum = Datum
 > extends RealtimeAccessibilityProps {
+  /** Fit the container width. */
+  responsiveWidth?: boolean
+  /** Fit a container with a definite height. */
+  responsiveHeight?: boolean
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -674,23 +678,18 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     () => composeStyleRules(baseLineStyle, styleRules, lineRuleContext),
     [baseLineStyle, styleRules, lineRuleContext]
   )
-  const primitiveLineStyle = useMemo(
-    () =>
-      mergeShapeStyle(ruledLineStyle, {
-        stroke: strokeProp,
-        strokeWidth: strokeWidthProp,
-        opacity
-      }),
-    [ruledLineStyle, strokeProp, strokeWidthProp, opacity]
-  )
-  const lineStyleWithPrimitives = useMemo(
-    () => (datum: Datum) => ({
-      ...primitiveLineStyle(datum),
+  const lineStyleWithPrimitives = useMemo(() => {
+    const primitiveStyle = mergeShapeStyle(ruledLineStyle, {
+      stroke: strokeProp,
+      strokeWidth: strokeWidthProp,
+      opacity
+    })
+    return (datum: Datum) => ({
+      ...primitiveStyle(datum),
       ...(strokeDasharray != null && { strokeDasharray }),
       ...(cursor != null && { cursor })
-    }),
-    [primitiveLineStyle, strokeDasharray, cursor]
-  )
+    })
+  }, [ruledLineStyle, strokeProp, strokeWidthProp, opacity, strokeDasharray, cursor])
   const interactiveLineStyle = useRealtimeSelectionStyle(
     lineStyleWithPrimitives,
     [activeSelectionHook],

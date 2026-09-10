@@ -1,4 +1,5 @@
 "use client"
+import { selectionDatumWithParent } from "../../store/selectionProvenance"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
@@ -7,7 +8,6 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -18,6 +18,7 @@ import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -36,6 +37,7 @@ registerLineFamilyXYPlugins()
 // flattened for StreamXYFrame. Keep the field internal so parent metadata can
 // remain the source of truth for string and function `lineBy` accessors.
 const LINE_OBJECT_SERIES_FIELD = "__lineObjectSeries"
+const pointColorDatum = (datum: Datum) => datum.parentLine || datum
 
 /**
  * LineChart component props
@@ -904,27 +906,16 @@ export const LineChart = forwardRef(
 
   const lineStyle = segmentAwareStyle || baseLineStyle
 
-  // Point style function (if showPoints is true)
-  const pointStyle = useMemo(() => {
-    if (!showPoints) return undefined
-
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {
-        r: pointRadius,
-        fillOpacity: 1
-      }
-
-      // Match line color — skip fill when colorScale unavailable (push API)
-      // so the frame's own color map can fill in
-      if (effectiveColorBy) {
-        if (colorScale) baseStyle.fill = getColor(d.parentLine || d, effectiveColorBy, colorScale)
-      } else {
-        baseStyle.fill = color || DEFAULT_COLOR
-      }
-
-      return baseStyle
-    }
-  }, [showPoints, pointRadius, effectiveColorBy, colorScale, color])
+  const pointStyle = useXYPointStyle({
+    colorBy: effectiveColorBy,
+    colorScale,
+    color,
+    pointRadius,
+    colorDatumAccessor: pointColorDatum,
+    selectionDatumAccessor: selectionDatumWithParent,
+    effectiveSelectionHook,
+    resolvedSelection,
+  })
 
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const

@@ -73,6 +73,10 @@ const EMPTY_LEGEND_DATA: Datum[] = []
 export interface RealtimeSwarmChartProps<
   TDatum extends Datum = Datum
 > extends RealtimeAccessibilityProps {
+  /** Fit the container width. */
+  responsiveWidth?: boolean
+  /** Fit a container with a definite height. */
+  responsiveHeight?: boolean
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */

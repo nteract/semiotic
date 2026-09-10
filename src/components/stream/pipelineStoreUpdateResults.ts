@@ -133,6 +133,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   xScaleType: dependency("preserve", DOMAIN_LAYOUT),
   yScaleType: dependency("preserve", DOMAIN_LAYOUT),
   xExtent: dependency("preserve", DOMAIN_LAYOUT),
+  invertY: dependency("preserve", DOMAIN_LAYOUT),
   yExtent: dependency("preserve", DOMAIN_LAYOUT),
   extentPadding: dependency("preserve", DOMAIN_LAYOUT),
   scalePadding: dependency("preserve", DOMAIN_LAYOUT),
@@ -157,6 +158,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   showValues: dependency("preserve", GEOMETRY),
   heatmapValueFormat: dependency("preserve", GEOMETRY),
 
+  trackHoverRows: dependency("preserve", GEOMETRY),
   lineStyle: dependency("preserve", STYLE),
   pointStyle: dependency("preserve", STYLE),
   areaStyle: dependency("preserve", STYLE),
@@ -247,11 +249,11 @@ export class PipelineStoreUpdateResults {
       : this.recordNoop("restyle")
   }
 
-  recordConfig(keys: readonly string[]): UpdateResult {
+  recordConfig(keys: readonly string[], rebuildGeometry = false): UpdateResult {
     const classification = classifyXYConfigPatch(keys)
     return this.tracker.record(
       { kind: "config", keys },
-      classification.invalidations
+      rebuildGeometry ? new Set([...classification.invalidations, ...GEOMETRY]) : classification.invalidations
     )
   }
 }

@@ -1,3 +1,4 @@
+import { seriesSelectionDatum } from "../../store/selectionProvenance"
 import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Ribbon scene builder — the unified primitive for painting a closed
@@ -112,7 +113,7 @@ export function buildRibbonForGroup(
     // this the envelope drew straight segments beneath a curved line.
     ...(ctx.config.curve &&
       ctx.config.curve !== "linear" && { curve: ctx.config.curve }),
-    style: pickStyle(ctx, ribbon, group, data[0]),
+    style: pickStyle(ctx, ribbon, group, seriesSelectionDatum(data)),
     datum,
     group,
     interactive: ribbon.interactive

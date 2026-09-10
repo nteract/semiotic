@@ -1,3 +1,4 @@
+import { requestsSelectionProvenance } from "../store/selectionProvenance"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * PipelineStore — stateful pipeline for XY/streaming chart data.
@@ -1561,7 +1562,11 @@ export class PipelineStore implements UpdateResultStore {
       if (extentAccessorChanged) this.rebuildExtents()
       this.needsFullRebuild = true
     }
-    this.updateResults.recordConfig(changedConfigKeys)
+    // A selection-aware area style changes the aggregate datum, not only its paint.
+    this.updateResults.recordConfig(changedConfigKeys,
+      (this.config.chartType === "bar" || this.config.chartType === "heatmap") && !this.config.trackHoverRows &&
+      requestsSelectionProvenance(prev.areaStyle) !== requestsSelectionProvenance(this.config.areaStyle)
+    )
   }
 
   /** Additive explicit-result form of {@link updateConfig}. */

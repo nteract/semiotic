@@ -1,4 +1,5 @@
 "use client"
+import { GaugeReadout } from "../shared/GaugeReadout"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
@@ -317,18 +318,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
       return typeof centerContent === "function" ? centerContent(clampedValue, min, max) : centerContent
     }
     const formatted = valueFormat ? valueFormat(clampedValue) : String(Math.round(clampedValue))
-    return (
-      <div style={{ textAlign: "center", lineHeight: 1.2 }}>
-        <div style={{ fontSize: Math.max(16, radius * 0.3), fontWeight: 700, color: "var(--semiotic-text, #333)" }}>
-          {formatted}
-        </div>
-        {showScaleLabels && (
-          <div style={{ fontSize: 11, color: "var(--semiotic-text-secondary, #666)" }}>
-            {min} – {max}
-          </div>
-        )}
-      </div>
-    )
+    return GaugeReadout({ value: formatted, min, max, radius, showScaleLabels })
   }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius, compactMode])
 
   // Context-mode value annotation: rendered as SVG text inside the bottom gap

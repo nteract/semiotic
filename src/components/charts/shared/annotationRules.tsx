@@ -1,3 +1,4 @@
+import { ThresholdAnnotation } from "./ThresholdAnnotation"
 import { annotationNote } from "../../text/annotationTextLayout"
 import * as React from "react"
 import Annotation from "../../Annotation"
@@ -18,7 +19,7 @@ import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annot
 import type { Datum } from "./datumTypes"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
-import { bandLabelY, thresholdLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
+import { bandLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 import { AnnotationLabel } from "./AnnotationLabel"
 import { resolveAnnotationBandFill } from "./annotationBandFill"
 import { FrameTextAnnotationSVG } from "./FrameTextAnnotationSVG"
@@ -99,115 +100,18 @@ export function createDefaultAnnotationRules(
         )
       }
 
-      // ── X-threshold (vertical line) ───────────────────────────────────
-      case "x-threshold": {
-        // Standardize on `value` for threshold-style annotations to match
-        // server `staticAnnotations`, ordinal frame, animated GIF helper,
-        // and the rest of the test surface. `x` is preserved as a fallback
-        // for back-compat. Done at the rule level rather than in
-        // `resolveX` itself so non-threshold annotations (label, widget,
-        // text) don't accidentally interpret a payload `value` field as a
-        // coordinate.
-        const px = ann.value != null
-          ? resolveX({ ...ann, x: ann.value }, context)
-          : resolveX(ann, context)
-        if (px == null) return null
-        const color = ann.color || "#f97316"
-        const labelPos = ann.labelPosition || "top"
-
-        let textY: number
-        if (labelPos === "bottom") {
-          textY = (context.height || 0) - 4
-        } else if (labelPos === "center") {
-          textY = (context.height || 0) / 2
-        } else {
-          textY = TOP_LABEL_BASELINE
-        }
-
-        // A line near the right edge must label leftward, or the text runs off
-        // the plot. Flip the anchor past 60% of the width.
-        const w = context.width || 0
-        const nearRight = px > w * 0.6
-        const textX = nearRight ? px - 4 : px + 4
-        const anchor = nearRight ? "end" : "start"
-
-        return (
-          <g key={`ann-${index}`} opacity={ann.opacity}>
-            <line
-              x1={px}
-              y1={0}
-              x2={px}
-              y2={context.height || 0}
-              stroke={color}
-              strokeWidth={ann.strokeWidth ?? 1.5}
-              strokeDasharray={ann.strokeDasharray || "6,3"}
-            />
-            {ann.label && (
-              <AnnotationLabel
-                x={textX}
-                y={textY}
-                text={ann.label}
-                textAnchor={anchor}
-                fill={color}
-                fontSize={12}
-                fontWeight="bold"
-                background={ann.labelBackground ?? "halo"}
-              />
-            )}
-          </g>
-        )
-      }
-
-      // ── Y-threshold (horizontal line) ─────────────────────────────────
+      // `value` is canonical; retain x/y compatibility fields at this boundary.
+      case "x-threshold":
       case "y-threshold": {
-        // Standardize on `value` for threshold annotations (see x-threshold
-        // comment). Falls through to legacy `y` so existing annotations
-        // continue to render.
-        const py = ann.value != null
-          ? resolveY({ ...ann, y: ann.value }, context)
-          : resolveY(ann, context)
-        if (py == null) return null
-        const color = ann.color || "#f97316"
-        const labelPos = ann.labelPosition || "right"
-
-        let textX: number, anchor: "start" | "middle" | "end"
-        if (labelPos === "left") {
-          textX = 4
-          anchor = "start"
-        } else if (labelPos === "center") {
-          textX = (context.width || 0) / 2
-          anchor = "middle"
-        } else {
-          textX = (context.width || 0) - 4
-          anchor = "end"
-        }
-        const textY = thresholdLabelY(py, context.height || 0)
-
-        return (
-          <g key={`ann-${index}`} opacity={ann.opacity}>
-            <line
-              x1={0}
-              y1={py}
-              x2={context.width || 0}
-              y2={py}
-              stroke={color}
-              strokeWidth={ann.strokeWidth ?? 1.5}
-              strokeDasharray={ann.strokeDasharray || "6,3"}
-            />
-            {ann.label && (
-              <AnnotationLabel
-                x={textX}
-                y={textY}
-                text={ann.label}
-                textAnchor={anchor}
-                fill={color}
-                fontSize={12}
-                fontWeight="bold"
-                background={ann.labelBackground ?? "halo"}
-              />
-            )}
-          </g>
-        )
+        const vertical = ann.type === "x-threshold"
+        const datum = ann.value != null
+          ? { ...ann, [vertical ? "x" : "y"]: ann.value }
+          : ann
+        const position = vertical ? resolveX(datum, context) : resolveY(datum, context)
+        if (position == null) return null
+        return <ThresholdAnnotation key={`ann-${index}`} ann={ann} position={position}
+          vertical={vertical} width={context.width || 0} height={context.height || 0}
+          color={ann.color || "#f97316"} bold />
       }
 
       // ── Enclose (circle enclosure) ────────────────────────────────────

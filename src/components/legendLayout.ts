@@ -1,3 +1,4 @@
+import { resolveXYAxes } from "./stream/resolveXYAxes"
 import type { LegendLayout, LegendValue } from "./types/legendTypes"
 import { numericTickFormatter } from "./charts/shared/numericTickFormatter"
 import { isGradientLegendConfig, isLegendConfig } from "./types/legendTypes"
@@ -187,20 +188,17 @@ export function resolveXYAxisChrome(input: {
   xLabel?: unknown
   yLabel?: unknown
   yLabelRight?: unknown
-  axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+  axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean; visible?: boolean }>
   rotatedTicks?: boolean
 }): AxisChromeInput {
-  const bottomAxis = input.axes?.find(axis => axis.orient === "bottom")
-  const topAxis = input.axes?.find(axis => axis.orient === "top")
-  const leftAxis = input.axes?.find(axis => axis.orient === "left")
-  const rightAxis = input.axes?.find(axis => axis.orient === "right")
+  const { bottomAxis, topAxis, leftAxis, rightAxis } = resolveXYAxes(input.axes)
   // No horizontal config means the frame renders its default bottom axis.
   // A top-only config instead moves that axis above the plot, so it should
   // not make a bottom legend reserve an imaginary lower gutter.
-  const hasBottomAxis = !topAxis || !!bottomAxis
-  const hasTopAxis = !!topAxis && !bottomAxis
-  const hasLeftAxis = !rightAxis || !!leftAxis
-  const hasRightAxis = !!rightAxis
+  const hasBottomAxis = (!topAxis || !!bottomAxis) && bottomAxis?.visible !== false
+  const hasTopAxis = !!topAxis && !bottomAxis && topAxis.visible !== false
+  const hasLeftAxis = (!rightAxis || !!leftAxis) && leftAxis?.visible !== false
+  const hasRightAxis = !!rightAxis && rightAxis.visible !== false
   const visible = input.showAxes !== false
   return {
     hasAxis: visible && hasBottomAxis,
@@ -246,14 +244,14 @@ export function resolveXYFramePropsAxisChrome(
     xLabel?: unknown
     yLabel?: unknown
     yLabelRight?: unknown
-    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean; visible?: boolean }>
   },
   defaults: {
     showAxes?: boolean
     xLabel?: unknown
     yLabel?: unknown
     yLabelRight?: unknown
-    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean }>
+    axes?: ReadonlyArray<{ orient?: string; label?: unknown; autoRotate?: boolean; visible?: boolean }>
   },
 ): AxisChromeInput {
   return resolveXYAxisChrome({
@@ -568,4 +566,17 @@ export function layoutVerticalLegendGroups(
 
     return { lineY, labelY, itemsY, endY: offset }
   })
+}
+
+/** Drop only default margins belonging to explicitly hidden XY axes. */
+export function resolveHiddenAxisMargins(
+  defaults: { top: number; right: number; bottom: number; left: number },
+  axes: ReadonlyArray<{ orient: "top" | "bottom" | "left" | "right"; visible?: boolean }> | undefined,
+  hasTitle = false
+) {
+  const result = { ...defaults }
+  for (const axis of axes ?? []) {
+    if (axis.visible === false && !(axis.orient === "top" && hasTitle)) result[axis.orient] = 0
+  }
+  return result
 }

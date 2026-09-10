@@ -92,6 +92,7 @@ export interface XYSceneConfig {
   heatmapColorScale?: (value: number) => string
 
   // Bar (realtime histogram)
+  trackHoverRows?: boolean
   binSize?: number
   barColors?: Record<string, string>
   /** Bar fill/stroke/strokeWidth/gap. Threaded through from RealtimeHistogram. */

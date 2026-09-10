@@ -62,6 +62,7 @@ export default defineConfig(({ mode }) => ({
         main: resolve(integrationRoot, "index.html"),
         accessibility: resolve(integrationRoot, "accessibility-examples/index.html"),
         backgroundGraphics: resolve(integrationRoot, "background-graphics-examples/index.html"),
+        chartFeatures: resolve(integrationRoot, "chart-features-examples/index.html"),
         chartModes: resolve(integrationRoot, "chart-modes-examples/index.html"),
         coordinated: resolve(integrationRoot, "coordinated-examples/index.html"),
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),

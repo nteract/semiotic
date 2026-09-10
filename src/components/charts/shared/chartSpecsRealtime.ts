@@ -55,6 +55,9 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
+      showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
+      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
       styleRules: STYLE_RULES_PROP_SPEC,
       binSize: {
         type: "number",
@@ -134,6 +137,9 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["timeAccessor", "valueAccessor", "categoryAccessor"],
     propBags: ["realtimeStatic"],
     ownProps: {
+      showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
+      showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
+      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
       styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of temporal observations" },
       binSize: {

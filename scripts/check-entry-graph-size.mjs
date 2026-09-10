@@ -223,7 +223,7 @@ const ENTRY_GRAPHS = [
   // contract, and serialized payload, while a missing report fails closed.
   // Focused policy/hash boundaries leave the compatibility graph at 576.2 KiB
   // without widening chart families; retain 3.8 KiB of review headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 583 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 584 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

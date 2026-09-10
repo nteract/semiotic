@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState, useMemo } from "react"
 import { RealtimeHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData } from "semiotic"
 
+import TemporalHistogramLinkedExample from "../../examples/TemporalHistogramLinkedExample"
+
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import CodeBlock from "../../components/CodeBlock"
@@ -560,7 +562,15 @@ const RealtimeHistogramProps = [
   { name: "strokeWidth", type: "number", required: false, default: null, description: "Bar stroke width." },
   { name: "cursor", type: "CSS cursor", required: false, default: null, description: 'Presentation-only cursor for bars, such as "pointer". It does not add click or keyboard behavior and is also inherited by TemporalHistogram.' },
   { name: "gap", type: "number", required: false, default: null, description: "Gap between bars in pixels." },
-  { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show canvas-drawn axes." },
+  { name: "responsiveWidth", type: "boolean", description: "Fit the container width before paint and on resize." },
+  { name: "responsiveHeight", type: "boolean", description: "Fit a parent with a definite height." },
+  { name: "showTimeAxis", type: "boolean", default: "true", description: "Hide the time axis with false; removes its default margin." },
+  { name: "showValueAxis", type: "boolean", default: "true", description: "Hide the value axis with false; removes its default margin." },
+  { name: "axes", type: "array", description: "Shared XY axes configuration, overriding the visibility conveniences." },
+  { name: "direction", type: '"up" | "down"', default: '"up"', description: "Reverse the value domain for mirrored histograms, including push mode." },
+  { name: "linkedHover", type: "boolean | string | object", description: "Publish a named hover selection using bin fields or authored source-row fields." },
+  { name: "selection", type: "object", description: "Consume a named selection and dim unmatched bins." },
+  { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show axis baselines, ticks, and labels." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },
   { name: "tooltipContent", type: "function", required: false, default: null, description: "Custom tooltip render function. Receives hover data." },
@@ -907,6 +917,73 @@ function FilteredMultiLineOverlay({ allData, width }) {
       {/* ----------------------------------------------------------------- */}
       {/* Props */}
       {/* ----------------------------------------------------------------- */}
+      <h2 id="linked-mirrored">Linked hover and mirrored histograms</h2>
+      <p>
+        Hover a category bar or line to highlight its series. Hover a time bin to
+        highlight the source observations on the line. The two histograms below
+        share the same zero baseline: North grows upward and South grows downward.
+      </p>
+      <TemporalHistogramLinkedExample />
+      <p>
+        Use <code>{'linkedHover={{ name: "detail", mode: "field", fields: ["time", "category"] }}'}</code>
+        {" "}on the histogram and <code>{'selection={{ name: "detail", unselectedOpacity: 0.12 }}'}</code>
+        {" "}on the line inside <code>LinkedCharts</code>. Set <code>showPoints</code>
+        {" "}on the line to distinguish matching observations. Bins publish authored
+        source field values, including every time key when several rows share a bin.
+        Fields directly on a bin (<code>binStart</code>, <code>binEnd</code>,
+        {" "}<code>total</code>, and stacked <code>category</code>) take precedence.
+        Moving off a mark clears the hover selection.
+      </p>
+      <p>
+        For application events, <code>onHover</code> receives a hover object whose
+        {" "}<code>data</code> contains those bin fields, or <code>null</code> on exit.
+        {" "}<code>onObservation</code> provides the standard hover and hover-end
+        observation events. A field join selects matching rows; use
+        {" "}<code>mode: "x-position"</code> with <code>xField</code> for a linked crosshair.
+      </p>
+      <CodeBlock language="jsx" code={`import { LinkedCharts } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
+import { TemporalHistogram } from "semiotic/realtime"
+
+<LinkedCharts>
+  <LineChart data={rows} xAccessor="time" yAccessor="value"
+    lineBy="category" colorBy="category" showPoints responsiveWidth
+    selection={{ name: "detail", unselectedOpacity: 0.12 }} />
+  <TemporalHistogram data={rows} binSize={10} responsiveWidth
+    categoryAccessor="category"
+    linkedHover={{ name: "detail", mode: "field", fields: ["time", "category"] }}
+    onHover={hover => console.log(hover?.data)} />
+</LinkedCharts>`} />
+      <p>
+        For mirrored charts, use identical <code>timeExtent</code>,
+        {" "}<code>valueExtent</code>, <code>binSize</code>, and left/right margins.
+        Hide the upper time axis with <code>{'showTimeAxis={false}'}</code>; its bottom
+        margin defaults to zero. Set the lower chart's top margin to zero and
+        {" "}<code>direction="down"</code>. Keep the value extent ascending on both
+        halves: Semiotic reverses the lower domain. Both halves must have the same
+        plot height (allow extra outer height for the lower time axis).
+      </p>
+      <CodeBlock language="jsx" code={`const shared = {
+  binSize: 10, timeExtent: [0, 30], valueExtent: [0, 12],
+  responsiveWidth: true, showLegend: false
+}
+<>
+  <TemporalHistogram {...shared} data={north} height={100}
+    showTimeAxis={false} margin={{ left: 48, right: 20, top: 0 }} />
+  <TemporalHistogram {...shared} data={south} height={128} direction="down"
+    margin={{ left: 48, right: 20, top: 0, bottom: 28 }} />
+</>`} />
+      <p>
+        <code>responsiveWidth</code> and <code>responsiveHeight</code> measure the
+        container before browser paint and follow later resizes. A responsive
+        height needs a parent with a definite height. <code>{'showValueAxis={false}'}</code>
+        {" "}removes the default left margin. Explicit margins remain authoritative.
+        For axis placement and formatting, use the shared XY <code>axes</code>
+        {" "}config, for example <code>{'axes={[{ orient: "top" }, { orient: "left", visible: false }]}'}</code>.
+        This overrides the histogram visibility conveniences. Other XY charts
+        accept the same config through <code>frameProps.axes</code>.
+      </p>
+
       <h2 id="props">Props</h2>
 
       <PropTable componentName="RealtimeHistogram" props={RealtimeHistogramProps} />

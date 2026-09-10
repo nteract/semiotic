@@ -45,7 +45,7 @@ export function renderPairedRightAxisSVG(options: {
     axisChrome,
     hasRenderedLegend,
   } = options
-  if (!leftAxis || !rightAxis) return null
+  if (!leftAxis || !rightAxis || rightAxis.visible === false) return null
 
   const s = themeStyles(theme)
   const ticks = generateXYTicks({

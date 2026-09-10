@@ -103,6 +103,8 @@ export interface XYPointStyleOptions {
    * Same hook BarChart's `parentLine` cascade uses.
    */
   colorDatumAccessor?: (d: Datum) => Datum
+  /** Adapt selection metadata without changing the point used for styling. */
+  selectionDatumAccessor?: (d: Datum) => Datum
 }
 
 /**
@@ -153,6 +155,7 @@ export function useXYPointStyle(
     effectiveSelectionHook,
     resolvedSelection,
     colorDatumAccessor,
+    selectionDatumAccessor,
     styleRules,
     ruleContext,
   } = options
@@ -208,7 +211,7 @@ export function useXYPointStyle(
 
   // 3 — selection wrap
   return useMemo(
-    () => wrapStyleWithSelection(baseWithPrimitives, effectiveSelectionHook ?? null, resolvedSelection),
-    [baseWithPrimitives, effectiveSelectionHook, resolvedSelection],
+    () => wrapStyleWithSelection(baseWithPrimitives, effectiveSelectionHook ?? null, resolvedSelection, selectionDatumAccessor),
+    [baseWithPrimitives, effectiveSelectionHook, resolvedSelection, selectionDatumAccessor],
   )
 }

@@ -84,6 +84,8 @@ export interface PipelineConfig {
   // Fixed extents (partial: [min] or [min, undefined] to set only min)
   xExtent?: [number | undefined, number | undefined] | [number]
   yExtent?: [number | undefined, number | undefined] | [number]
+  /** Reverse the resolved y domain, including domains derived from pushed data. */
+  invertY?: boolean
   sizeRange?: [number, number]
 
   // Bar/heatmap specifics
@@ -126,6 +128,8 @@ export interface PipelineConfig {
   semanticLineStops?: Array<{ offset: number; color: string; opacity?: number }>
 
   // Style
+  /** Retain source rows for aggregate hover emission even without selection styling. */
+  trackHoverRows?: boolean
   lineStyle?: Style | ((d: Datum, group?: string) => Style)
   pointStyle?: (d: Datum) => Style & { r?: number }
   areaStyle?: (d: Datum) => Style

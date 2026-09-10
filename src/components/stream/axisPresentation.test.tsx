@@ -58,12 +58,10 @@ function presentation(
   }
 }
 
-const xLabels = (container: HTMLElement, live: boolean) =>
+const xLabels = (container: HTMLElement) =>
   Array.from(
-    container.querySelectorAll(
-      live ? '[data-orient="bottom"] > g > text' : ".stream-axes > g > text"
-    )
-  ).filter((node) => live || node.parentElement?.querySelector("line[y2]"))
+    container.querySelectorAll('[data-orient="bottom"] > g > text')
+  )
 
 describe("axis presentation across live layers and exports", () => {
   it("keeps visible grid lines when axis labels are disabled", () => {
@@ -93,7 +91,8 @@ describe("axis presentation across live layers and exports", () => {
     for (const [name, container] of Object.entries(views)) {
       if (name === "underlay") continue
       expect(
-        xLabels(container, name === "live").map((node) => node.textContent)
+        xLabels(container).map((node) => node.textContent),
+        `${name} reversed-axis labels`
       ).toEqual(["0", "2", "4", "6", "9"])
     }
     const gridX = (container: HTMLElement) =>
@@ -125,8 +124,8 @@ describe("axis presentation across live layers and exports", () => {
     )
     for (const [name, container] of Object.entries(views)) {
       if (name === "underlay") continue
-      const labels = xLabels(container, name === "live")
-      expect(labels).toHaveLength(3)
+      const labels = xLabels(container)
+      expect(labels, `${name} clustered labels`).toHaveLength(3)
       for (const label of labels)
         expect(label).toHaveAttribute("transform", "rotate(-45)")
     }
@@ -142,9 +141,13 @@ describe("axis presentation across live layers and exports", () => {
         axes: [{ orient: "bottom", ticks: 30 }]
       }
     )
-    expect(xLabels(views.live, true).map((node) => node.textContent)).toEqual(
-      xLabels(views.exported, false).map((node) => node.textContent)
-    )
+    for (const [name, container] of Object.entries(views)) {
+      if (name === "underlay") continue
+      expect(
+        xLabels(container).map((node) => node.textContent),
+        `${name} responsive labels`
+      ).toEqual(["0", "20", "40", "60", "80", "100"])
+    }
   })
 
   it("preserves small numeric ticks on both primary and paired axes", () => {

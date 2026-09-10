@@ -798,6 +798,8 @@ export interface StreamXYFrameProps<T = Datum>
   // ── Extents ──────────────────────────────────────
   xExtent?: [number | undefined, number | undefined] | [number]
   yExtent?: [number | undefined, number | undefined] | [number]
+  /** Reverse the resolved y domain, including domains derived from pushed data. */
+  invertY?: boolean
   extentPadding?: number
   /** Pixel inset on scale ranges to prevent glyph clipping at chart edges. Default 0. */
   scalePadding?: number

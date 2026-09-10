@@ -42,12 +42,19 @@
     {
       "id": "semiotic/family-subpath-imports",
       "status": "unstable",
-      "score": 5,
+      "score": 6,
       "introducedAt": "2026-08-16",
       "implementation": "scripts/custom-lint/rules/family-subpath-imports.mjs",
       "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
       "rationale": "Production examples should model package-family imports so consumers do not accidentally widen their entry graph.",
-      "evidence": []
+      "evidence": [
+        {
+          "kind": "confirmed_bug",
+          "date": "2026-09-09",
+          "reference": "docs/src/examples/TemporalHistogramLinkedExample.tsx",
+          "note": "The linked histogram example imported coordination APIs through the broad root entry despite their existing semiotic/ai subpath. Moved those APIs to semiotic/ai while retaining chart family imports."
+        }
+      ]
     },
     {
       "id": "semiotic/interaction-test-layout-control",

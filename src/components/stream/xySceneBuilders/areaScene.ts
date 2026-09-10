@@ -1,3 +1,4 @@
+import { seriesSelectionDatum } from "../../store/selectionProvenance"
 import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Area and stacked area scene builders.
@@ -94,7 +95,7 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
     : undefined
 
   for (const g of groups) {
-    const style = ctx.resolveAreaStyle(g.key, g.data[0])
+    const style = ctx.resolveAreaStyle(g.key, seriesSelectionDatum(g.data))
     const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
     const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
     if (fillGradient) {

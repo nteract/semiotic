@@ -489,7 +489,7 @@ describe("renderChart", () => {
     // The scene center is offset so the *visible* half arc is centered in the
     // widget, rather than treating its hub as a full-circle chart center.
     expect(svg).toContain('transform="translate(200,244)"')
-    expect(svg).toContain("<foreignObject")
+    expect(svg).not.toContain("<foreignObject")
     expect(svg).toContain(">70<")
     expect(svg).not.toContain("stroke-linecap=\"round\"")
   })

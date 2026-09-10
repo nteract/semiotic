@@ -1,4 +1,4 @@
-import * as React from "react"
+import { GaugeReadout } from "../charts/shared/GaugeReadout"
 import type { Datum } from "../charts/shared/datumTypes"
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
 import { normalizeColorGradient } from "../charts/shared/gradient"
@@ -28,9 +28,7 @@ export const gaugeChart: ChartConfig = {
     const fillZones = rest.fillZones !== false
     const { startAngleDeg } = sweepToAngles(sweep)
 
-    const thresholds = rest.thresholds || [
-      { value: gMax, color: rest.color || "#4e79a7" }
-    ]
+    const thresholds = rest.thresholds
     const gradientFill = normalizeColorGradient(
       common.gradientFill as Parameters<typeof normalizeColorGradient>[0]
     )
@@ -94,32 +92,10 @@ export const gaugeChart: ChartConfig = {
           : suppliedCenterContent
         : rest.mode === "sparkline" || rest.mode === "context"
           ? undefined
-          : React.createElement(
-              "div",
-              { style: { textAlign: "center", lineHeight: 1.2 } },
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    fontSize: Math.max(16, radius * 0.3),
-                    fontWeight: 700,
-                    color: "var(--semiotic-text, #333)"
-                  }
-                },
-                formattedValue
-              ),
-              rest.showScaleLabels !== false &&
-                React.createElement(
-                  "div",
-                  {
-                    style: {
-                      fontSize: 11,
-                      color: "var(--semiotic-text-secondary, #666)"
-                    }
-                  },
-                  `${gMin} – ${gMax}`
-                )
-            )
+          : GaugeReadout({
+              value: formattedValue, min: gMin, max: gMax, radius,
+              showScaleLabels: rest.showScaleLabels !== false
+            })
 
     return {
       chartType: "donut",

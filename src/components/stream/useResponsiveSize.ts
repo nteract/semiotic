@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, type RefObject } from "react"
+import { useRef, useState, useEffect, useLayoutEffect, type RefObject } from "react"
 import {
   resolveResponsiveDimension,
   type ResponsiveSizeOptions,
@@ -6,6 +6,8 @@ import {
 
 export { resolveResponsiveDimension } from "./responsiveSize"
 export type { ResponsiveSizeOptions } from "./responsiveSize"
+
+const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 /**
  * Hook that measures the parent container and returns responsive dimensions.
@@ -26,7 +28,7 @@ export function useResponsiveSize(
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(null)
 
-  useEffect(() => {
+  useBrowserLayoutEffect(() => {
     if (!responsiveWidth && !responsiveHeight) return
     const el = containerRef.current
     if (!el || typeof ResizeObserver === "undefined") return
@@ -45,6 +47,11 @@ export function useResponsiveSize(
         options.heightStep,
       ),
     })
+
+    const initial = el.getBoundingClientRect()
+    if (initial.width > 0 || initial.height > 0) {
+      setMeasured(resolveMeasurement(initial.width, initial.height))
+    }
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {

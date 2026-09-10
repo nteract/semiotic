@@ -396,7 +396,10 @@ export function buildPipelineScales(options: {
   xDomain: [number, number]
   yDomain: [number, number]
 }): StreamScales {
-  const { config, layout, xDomain, yDomain } = options
+  const { config, layout, xDomain } = options
+  const yDomain: [number, number] = config.invertY
+    ? [options.yDomain[1], options.yDomain[0]]
+    : options.yDomain
   const isStreaming = config.runtimeMode === "streaming"
   const rawSp = config.scalePadding || 0
   const sp = Math.max(
