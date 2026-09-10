@@ -769,7 +769,9 @@ function SettledPhysicsLinkedHoverCohort() {
             arrivalAccessor: "arrivalTime",
             windows: { size: 20 },
             timeExtent: [0, 60],
-            timeScale: 0.2,
+            // Admit the full tape inside the declared 10-second settle budget.
+            // Readiness must not depend on incidental React rerenders advancing it.
+            timeScale: 2,
             onSimulationStateChange: readiness.callbacks.EventDropChart,
           }),
         }),
@@ -887,6 +889,9 @@ function AuthoredPhysicsLinkedHoverCohort() {
           testId: "GauntletChart",
           children: React.createElement(GauntletChart, {
             data: physicsGauntletData,
+            // This cohort tests authored terminal events. Physical crashes are
+            // covered separately and can preempt the tape in this small viewport.
+            crashDetection: false,
             idAccessor: "id",
             labelAccessor: "label",
             positiveAccessor: "positives",

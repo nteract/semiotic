@@ -82,7 +82,10 @@ const ENTRY_GRAPHS = [
   // rank branches replace the former flat mark dump. Production measures
   // 35.4 KiB gzip; these are the public navigation semantics, not a runtime
   // dependency leak.
-  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 36 },
+  // Bumped 36→37: the contract marker lattice now includes policy lineage and
+  // correction provenance in the access surface. Measured graph reaches
+  // 36.1 KiB gzip.
+  { entry: "semiotic-access.module.min.js", label: "access", limitKb: 37 },
   // Evidence envelopes include data profiles and grounding; this is tooling,
   // not a chart runtime dependency. The public aesthetic-evaluation evidence
   // adds its reusable color-evidence normalization here. CI measures 50.1 KiB
@@ -99,12 +102,14 @@ const ENTRY_GRAPHS = [
   // lineage, and collection-scoped transfer audits complete that public
   // contract. Its isolated graph measures 113.4 KiB gzip; keep a reviewable
   // 3.6 KiB guard band.
-  // Bumped 117→118→119 (3.9.2): policy telemetry sidecar support adds a
+  // Bumped 117→118→119→120→121: policy telemetry sidecar support and policy
+  // lineage provenance fields increase the shared contract surface. Production
+  // graph now measures 120.8 KiB gzip.
   // light metadata path on this shared chart contract boundary.
   {
     entry: "semiotic-artifact.module.min.js",
     label: "artifact",
-    limitKb: 119
+    limitKb: 121
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -211,14 +216,14 @@ const ENTRY_GRAPHS = [
   // independent contract evaluator, claim/time audits, refusal outcomes, and
   // safe grounding helpers. Production measures 567.2 KiB gzip; chart-family
   // entries do not inherit this opt-in tooling graph.
-  // Bumped 570→579: the completed contract hardening above is also exported
-  // from this compatibility surface. Production measures 577.5 KiB gzip;
+  // Bumped 570→579→582: the completed contract hardening above is also exported
+  // from this compatibility surface. Production measures 582.4 KiB gzip;
   // retain 1.5 KiB of headroom without widening chart-family entries.
   // Chart-config reports now bind component/recipe identity, the full
   // contract, and serialized payload, while a missing report fails closed.
   // Focused policy/hash boundaries leave the compatibility graph at 576.2 KiB
   // without widening chart families; retain 3.8 KiB of review headroom.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 580 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 583 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

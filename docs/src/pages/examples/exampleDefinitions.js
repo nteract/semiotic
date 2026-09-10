@@ -1289,6 +1289,11 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     sourceFiles: [
       "WatermarksExamplePage.jsx",
       "WatermarksExamplePage.css",
+      "WatermarkExperiment.tsx",
+      "WatermarkClosureLesson.tsx",
+      "WatermarkPeriod.tsx",
+      "watermarksScenarios.ts",
+      "physicsStories.css",
       "watermarksClaimContracts.js",
       "watermarksTemporalRecord.js",
     ],
@@ -1296,7 +1301,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     title: "Watermarks, Made Physical",
     eyebrow: "Late events, closing windows",
     description:
-      "Push out-of-order events through closing windows and watch the watermark separate accepted history from visibly quarantined late arrivals.",
+      "Compare two waiting policies on the same event tape: closing sooner produces an earlier count, while waiting longer accepts more of a delayed batch.",
     contract: {
       publicImports: ["semiotic/artifact", "semiotic/physics"],
       data: {
@@ -1347,11 +1352,18 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     id: "stakeholder-journey",
     path: "/examples/stakeholder-journey",
     sourceFile: "StakeholderJourneyExamplePage.jsx",
+    sourceFiles: [
+      "StakeholderJourneyExamplePage.jsx",
+      "StakeholderJourneyExamplePage.css",
+      "stakeholderJourneyScenarios.ts",
+      "PhysicsStoryClock.tsx",
+      "physicsStories.css",
+    ],
     isPilot: true,
     title: "The Stakeholder Journey",
     eyebrow: "From first use to real contribution",
     description:
-      "Replay the same people through two community designs and compare whether invitation after habit formation creates a path to contribution or private usage.",
+      "Follow the same 36 participants for 20 model seconds. Change only invitation at Habit and compare first crossings into Commitment.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -1402,11 +1414,19 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     id: "merge-pressure",
     path: "/examples/merge-pressure",
     sourceFile: "MergePressureExamplePage.jsx",
+    sourceFiles: [
+      "MergePressureExamplePage.jsx",
+      "MergePressureExamplePage.css",
+      "mergePressureScenarios.ts",
+      "mergePressureModel.ts",
+      "PhysicsStoryClock.tsx",
+      "physicsStories.css",
+    ],
     isPilot: true,
     title: "Merge Pressure",
     eyebrow: "Review queues under AI throughput",
     description:
-      "Route AI-era pull requests through finite review capacity and repeated CI passes to expose queue pressure that completion percentage hides.",
+      "Keep eight pull requests fixed while changing arrival pace, review depth, or review capacity. Compare peak queues, repeat visits, and risk that reaches the feature.",
     contract: {
       publicImports: ["semiotic/physics"],
       data: {
@@ -2239,7 +2259,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-07T18:19:32-07:00",
     eyebrow: "Late events, closing windows",
     description:
-      "Push out-of-order events through closing windows and watch the watermark separate accepted history from visibly quarantined late arrivals.",
+      "Compare two waiting policies on the same event tape: closing sooner produces an earlier count, while waiting longer accepts more of a delayed batch.",
     preview: "watermarks",
     badges: ["EventDropChart", "Physics", "Agent-readable"],
     frames: ["stream-physics", "xy"],
@@ -2251,9 +2271,9 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "From first use to real contribution",
     description:
-      "Replay the same people through two community designs and compare whether invitation after habit formation creates a path to contribution or private usage.",
+      "Follow the same 36 participants for 20 model seconds. Change only invitation at Habit and compare first crossings into Commitment.",
     preview: "stakeholder-journey",
-    badges: ["StreamPhysicsFrame", "Stage ledger", "Live geometry"],
+    badges: ["StreamPhysicsFrame", "Stage ledger", "Controlled comparison"],
     frames: ["stream-physics"],
     topics: ["process", "civic"],
   },
@@ -2263,7 +2283,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-07-09T07:26:39-07:00",
     eyebrow: "Review queues under AI throughput",
     description:
-      "Route AI-era pull requests through finite review capacity and repeated CI passes to expose queue pressure that completion percentage hides.",
+      "Keep eight pull requests fixed while changing arrival pace, review depth, or review capacity. Compare peak queues, repeat visits, and risk that reaches the feature.",
     preview: "merge-pressure",
     badges: ["GauntletChart", "Shared capacity", "Weighted groups"],
     frames: ["gauntlet"],

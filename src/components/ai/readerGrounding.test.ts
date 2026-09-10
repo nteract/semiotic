@@ -194,7 +194,8 @@ describe("buildReaderGrounding", () => {
       valueAccessor: "value",
       bins: 4,
     })
-    expect(g.description.text).toContain("No settled projection")
+    expect(g.description.levels.l2).toContain("The source projection contains 4 samples across 4 bins")
+    expect(g.description.levels.l2).not.toContain("The settled projection")
     expect(g.facts?.source).toBe("chart-props")
     expect(g.facts?.statements).toContain("4 observed source rows are supplied.")
     expect(g.text).toContain("Observed value ranges from 1 to 4.")

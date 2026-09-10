@@ -48,7 +48,11 @@
   padding: 26px;
   border: 1px solid var(--surface-3);
   border-radius: 18px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-0) 92%, #e6f4f7), var(--surface-1));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--surface-0) 92%, #e6f4f7),
+    var(--surface-1)
+  );
 }
 
 .merge-pressure__kicker {
@@ -116,7 +120,10 @@
   background: var(--surface-0);
   cursor: pointer;
   font: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .merge-pressure__presets button:hover {
@@ -140,7 +147,9 @@
 
 .merge-pressure__presets button.is-active {
   border-color: var(--mp-blue);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--mp-blue) 12%, transparent), transparent), var(--surface-0);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--mp-blue) 12%, transparent), transparent),
+    var(--surface-0);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-blue) 20%, transparent);
 }
 
@@ -237,11 +246,16 @@
 .merge-pressure__chart-shell {
   position: relative;
   overflow: hidden;
-  min-height: 540px;
+  min-height: 0;
   border: 1px solid var(--mp-chart-border);
   border-radius: 12px;
-  background:
-    linear-gradient(90deg, var(--mp-chart-bg-start) 0%, var(--mp-chart-bg-start) 42%, var(--mp-chart-bg-mid) 58%, var(--mp-chart-bg-end) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--mp-chart-bg-start) 0%,
+    var(--mp-chart-bg-start) 42%,
+    var(--mp-chart-bg-mid) 58%,
+    var(--mp-chart-bg-end) 100%
+  );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -480,7 +494,7 @@
   min-height: 22px;
   padding: 0 7px;
   border-radius: 999px;
-  color: color-mix(in srgb, var(--mp-quality) 18%, #ffffff);
+  color: var(--text-primary);
   background: color-mix(in srgb, var(--mp-quality) 24%, transparent);
   border: 1px solid color-mix(in srgb, var(--mp-quality) 62%, transparent);
   font-size: 0.64rem;
@@ -577,11 +591,14 @@
 
 @media (max-width: 640px) {
   .merge-pressure__hero,
-  .merge-pressure__presets,
   .merge-pressure__legend,
-  .merge-pressure__metrics,
   .merge-pressure__needs-grid {
     grid-template-columns: 1fr;
+  }
+
+  .merge-pressure__presets,
+  .merge-pressure__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .merge-pressure__hero,

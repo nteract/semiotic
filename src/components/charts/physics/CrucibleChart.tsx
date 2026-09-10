@@ -376,7 +376,9 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     setInternalPlaybackRate(boundedCruciblePlaybackRate(playbackRate))
   }, [playbackRate])
 
-  useEffect(() => {
+  const runtimeSeedRef = useRef(initialRuntime)
+  if (runtimeSeedRef.current !== initialRuntime) {
+    runtimeSeedRef.current = initialRuntime
     const nextPlaying = !snapshotMode
     const next = replayCrucibleRuntime(
       plan,
@@ -386,8 +388,8 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
     playingRef.current = nextPlaying
     setPlaying(nextPlaying)
     commitRuntime(next)
-    // The semantic key intentionally shields this reset from inline-fresh arrays.
-  }, [commitRuntime, plan, resolvedSnapshotTime, snapshotMode, visualKey])
+    // Reset before a replacement child can report new observations.
+  }
 
   useEffect(() => {
     const current = runtimeRef.current
@@ -407,11 +409,12 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
   }, [visualKey, plan.diagnostics])
 
   useEffect(() => {
-    onStateChangeRef.current?.(runtime.state)
+    const current = runtimeRef.current.state
+    onStateChangeRef.current?.(current)
     if (conservation) {
       const spec = conservation === true ? {} : conservation
       onConservationRef.current?.(
-        evaluateCrucibleConservation(runtime.state, spec)
+        evaluateCrucibleConservation(current, spec)
       )
     }
   }, [conservation, runtime.state])

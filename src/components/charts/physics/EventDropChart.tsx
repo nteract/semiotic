@@ -5,24 +5,19 @@ import { forwardRef, useCallback, useMemo, useRef } from "react"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
-import type { PhysicsQueuedSpawn } from "../../stream/physics/PhysicsPipelineStore"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
   buildEventDropPhysics,
   composePhysicsBodyStyle,
-  physicsChartArea,
-  placeEventDropSpawn,
   projectionRowsToSemanticItems,
   styleFromColorAccessor,
   type EventDropProjectionMetadata,
   type EventDropWindowOptions
 } from "./physicsChartUtils"
 import type { StyleRule } from "../shared/styleRules"
-import {
-  usePhysicsHocHandle,
-  type PhysicsFrameHandle
-} from "./physicsHocHandle"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import { usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
   renderPhysicsChartState,
@@ -56,6 +51,8 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   windows?: EventDropWindowOptions
   watermark?:
     { delay?: number; value?: number } | ((latestEventTime: number) => number)
+  /** Recorded watermark for each arrival; later closure changes preserve this decision. */
+  watermarkAtArrivalAccessor?: ChartAccessor<TDatum, number>
   ballRadius?: number
   colorBy?: ChartAccessor<TDatum, string>
   /**
@@ -85,19 +82,17 @@ function eventDropSemanticItems(
 ) {
   if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
   const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
-  const maxValue = Math.max(
-    1,
-    ...rows.map((row) => row.value + (row.secondary ?? 0))
-  )
+  const maxValue = Math.max(1, ...rows.map((row) => row.value))
   const maxHeight = metadata.windowPlot.height * 0.62
   const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
 
-  return rows.map((row, index) => {
-    const total = row.value + (row.secondary ?? 0)
-    const barHeight = Math.max(8, (total / maxValue) * maxHeight)
+  const items = rows.map((row, index) => {
+    const barHeight = Math.max(8, (row.value / maxValue) * maxHeight)
     const x = metadata.windowPlot.x + (index + 0.5) * laneWidth
     const y = yBottom - barHeight / 2
-    const late = row.secondary ? `, ${row.secondary} late` : ""
+    const late = row.secondary
+      ? `, ${row.secondary} late sent to the far-left bin`
+      : ""
     const label = `window ${row.label}: ${row.value} on time${late}`
     return {
       id: `window-${row.label}`,
@@ -112,6 +107,22 @@ function eventDropSemanticItems(
       group: "window"
     }
   })
+  return [
+    ...items,
+    {
+      id: "eventdrop-late-bin",
+      label: `far-left bin: ${metadata.lateCount} late events`,
+      description:
+        "Late events are collected here, outside their original event-time windows.",
+      datum: { label: "Late", value: metadata.lateCount },
+      x: metadata.gutter.x + metadata.gutter.width / 2,
+      y: yBottom - maxHeight / 2,
+      shape: "rect" as const,
+      width: metadata.gutter.width,
+      height: maxHeight,
+      group: "late-bin"
+    }
+  ]
 }
 
 /**
@@ -159,6 +170,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
     timeExtent,
     timeScale = 1,
     watermark,
+    watermarkAtArrivalAccessor,
     windows = { size: 10 }
   } = props
   const layoutMode = usePhysicsChartMode(props, [760, 360])
@@ -175,15 +187,15 @@ export const EventDropChart = forwardRef(function EventDropChart<
     accessibleTable: modeAccessibleTable
   } = layoutMode
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const chartData = useMemo(() => data ?? [], [data])
-  const layout = useMemo(
-    () =>
+  const buildLayout = useCallback(
+    (rows: TDatum[]) =>
       buildEventDropPhysics({
-        data: chartData,
+        data: rows,
         timeAccessor,
         arrivalAccessor,
         windows,
         watermark,
+        watermarkAtArrivalAccessor,
         ballRadius,
         seed,
         size: chartSize,
@@ -194,59 +206,31 @@ export const EventDropChart = forwardRef(function EventDropChart<
       arrivalAccessor,
       ballRadius,
       chartSize,
-      chartData,
       seed,
       timeAccessor,
       timeExtent,
       timeScale,
       watermark,
+      watermarkAtArrivalAccessor,
       windows
     ]
   )
+  const { layout, resetSeed } = usePhysicsChartData({
+    ref,
+    frameRef,
+    data,
+    idPrefix: "event",
+    buildLayout
+  })
   const rerun = usePhysicsRerun(
     layout.config,
     rerunMS,
     paused,
-    undefined,
+    resetSeed,
     props.onSimulationStateChange
   )
 
   const metadata = layout.metadata as EventDropProjectionMetadata | undefined
-  const spawnDatum = useCallback(
-    (datum: Datum, index: number) => {
-      // Place the pushed event onto the mounted board's live domain so it lands
-      // in its true window (or the late gutter), not the center of a one-event
-      // mini-domain. Falls back to a plot-left drop only if the domain or the
-      // event time is missing.
-      const placed = metadata
-        ? placeEventDropSpawn(datum, index, metadata, {
-            timeAccessor: timeAccessor as ChartAccessor<Datum, number>,
-            arrivalAccessor: arrivalAccessor as ChartAccessor<Datum, number>,
-            ballRadius
-          })
-        : null
-      const spawn: PhysicsQueuedSpawn = placed ?? {
-        id: String(datum.id ?? `event-push-${index}`),
-        x: physicsChartArea(chartSize).plot.x,
-        y: physicsChartArea(chartSize).plot.y,
-        mass: 1,
-        shape: { type: "circle" as const, radius: ballRadius },
-        datum
-      }
-      return {
-        datumId: String(datum.id ?? spawn.id),
-        spawns: [spawn]
-      }
-    },
-    [arrivalAccessor, ballRadius, chartSize, metadata, timeAccessor]
-  )
-  usePhysicsHocHandle(ref, {
-    frameRef,
-    staticEmpty: data?.length === 0,
-    spawnDatum,
-    seedRows: chartData as Datum[],
-    seedSpawns: layout.initialSpawns
-  })
   const generatedBodyStyle = useMemo(
     () =>
       styleFromColorAccessor(
@@ -321,7 +305,7 @@ export const EventDropChart = forwardRef(function EventDropChart<
       {...sharedFrameProps}
       ref={frameRef}
       onBodyHover={onBodyHover}
-      key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
+      key={rerun.rerunKey}
       config={rerun.config}
       foregroundGraphics={composePhysicsFrameGraphics(
         projectionOverlay,

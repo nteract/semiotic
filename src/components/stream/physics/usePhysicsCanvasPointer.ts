@@ -12,6 +12,7 @@ import {
   bodySearchRadius
 } from "./physicsPipelineHelpers"
 import { physicsHoverData } from "./physicsSemanticUI"
+import { physicsCanvasCoordinates } from "./physicsCanvasCoordinates"
 import type {
   PhysicsHoverData,
   StreamPhysicsFrameProps
@@ -126,9 +127,11 @@ export function usePhysicsCanvasPointer({
         return
       }
       const store = storeRef.current
-      const rect = event.currentTarget.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
+      const { x, y } = physicsCanvasCoordinates(
+        event.currentTarget,
+        event.clientX,
+        event.clientY
+      )
       const pointer = pointerRef.current
       pointer.inside = true
       pointer.x = x

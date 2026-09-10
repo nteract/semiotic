@@ -43,11 +43,11 @@ const analyze = process.argv.includes("--analyze")
 // Budget for the "someone uses AI tooling + several chart families" path that
 // previously paid the full fat-entry tax. Allow headroom for d3/platform noise
 // without letting the old ~800KB–1MB regression return.
-// Bumped 384→386: the prebuilt AI facade now retains the completed artifact
-// contract chunk alongside named recommendation imports. The representative
-// union measures 384.6 KiB gzip; keep 1.4 KiB of explicit headroom while the
-// chart-family graphs remain unchanged.
-const MULTI_IMPORT_GZIP_BUDGET = 386 * 1024
+// Bumped 386→388: access and artifact contract marker/lineage growth adds about
+// 1.3 KiB gzip to the representative AI + family import union. Keep narrow
+// but explicit headroom so regressions toward the old multi-entry size are still
+// visible.
+const MULTI_IMPORT_GZIP_BUDGET = 388 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

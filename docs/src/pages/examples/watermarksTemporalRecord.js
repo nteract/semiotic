@@ -25,19 +25,14 @@ export function replaySeconds(value) {
   return Number.isFinite(time) ? (time - REPLAY_EPOCH_MS) / 1000 : undefined
 }
 
-export function temporalDurationSeconds(value) {
-  const match = /^PT([0-9]+(?:\.[0-9]+)?)S$/i.exec(value ?? "")
-  return match ? Number(match[1]) : undefined
-}
-
 function boundsFor(event, windowSize) {
   const eventTime = finiteTime(event?.eventTime) ?? 0
   const start = Math.floor(eventTime / windowSize) * windowSize
   return { start, end: start + windowSize }
 }
 
-function closesAt(event, windowSize, allowedLateness) {
-  return boundsFor(event, windowSize).end + allowedLateness
+function closesAt(event, windowSize, watermarkLag) {
+  return boundsFor(event, windowSize).end + watermarkLag
 }
 
 function byLatestEvent(left, right) {
@@ -92,8 +87,8 @@ function stageUpdate({
     },
     watermark: {
       value: replayTimestamp(watermark),
-      policy: "Arrival frontier minus the declared late allowance",
-      allowedLateness: `PT${Math.max(0, allowedLatenessFor(watermark, currentTime))}S`,
+      policy: `Arrival frontier minus ${watermarkLagFor(watermark, currentTime)}s watermark lag`,
+      allowedLateness: "PT0S",
     },
     window: {
       start: replayTimestamp(bounds.start),
@@ -112,7 +107,7 @@ function stageUpdate({
   }
 }
 
-function allowedLatenessFor(watermark, currentTime) {
+function watermarkLagFor(watermark, currentTime) {
   return Math.round((currentTime - watermark) * 1e6) / 1e6
 }
 
@@ -173,12 +168,12 @@ export function buildWatermarkTemporalRecord({
   arrivedEvents,
   currentTime,
   windowSize,
-  allowedLateness,
+  watermarkLag,
 }) {
   const arrivalFrontier = finiteTime(currentTime) ?? 0
   const safeWindowSize = Math.max(1, finiteTime(windowSize) ?? 1)
-  const safeAllowedLateness = Math.max(0, finiteTime(allowedLateness) ?? 0)
-  const watermark = arrivalFrontier - safeAllowedLateness
+  const safeWatermarkLag = Math.max(0, finiteTime(watermarkLag) ?? 0)
+  const watermark = arrivalFrontier - safeWatermarkLag
   const arrived = (arrivedEvents ?? [])
     .filter(
       (event) =>
@@ -188,18 +183,18 @@ export function buildWatermarkTemporalRecord({
     )
     .map((event) => ({ ...event }))
   const openEvent = arrived
-    .filter((event) => closesAt(event, safeWindowSize, safeAllowedLateness) >= arrivalFrontier)
+    .filter((event) => closesAt(event, safeWindowSize, safeWatermarkLag) >= arrivalFrontier)
     .sort(byLatestEvent)[0]
   const settledEvent = arrived
     .filter(
       (event) =>
-        closesAt(event, safeWindowSize, safeAllowedLateness) < arrivalFrontier &&
-        Number(event.arrivalTime) <= closesAt(event, safeWindowSize, safeAllowedLateness),
+        closesAt(event, safeWindowSize, safeWatermarkLag) < arrivalFrontier &&
+        Number(event.arrivalTime) <= closesAt(event, safeWindowSize, safeWatermarkLag),
     )
     .sort(byLatestEvent)[0]
   const correctedEvent = arrived
     .filter(
-      (event) => Number(event.arrivalTime) > closesAt(event, safeWindowSize, safeAllowedLateness),
+      (event) => Number(event.arrivalTime) > closesAt(event, safeWindowSize, safeWatermarkLag),
     )
     .sort(byLatestArrival)[0]
   const referenceTime = replayTimestamp(arrivalFrontier)
@@ -216,7 +211,7 @@ export function buildWatermarkTemporalRecord({
       windowBounds,
       windowEvents,
       eventsBeforeSettlement: windowEvents.filter(
-        (candidate) => Number(candidate.arrivalTime) <= windowBounds.end + safeAllowedLateness,
+        (candidate) => Number(candidate.arrivalTime) <= windowBounds.end + safeWatermarkLag,
       ),
       ...(correctionId ? { correctionId } : {}),
     }

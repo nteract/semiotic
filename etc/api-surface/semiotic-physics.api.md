@@ -59,11 +59,11 @@ class-member PhysicsPipelineStore::method::setConstraint = required setConstrain
 class-member PhysicsPipelineStore::method::setPaused = required setPaused(paused: boolean): void
 class-member PhysicsPipelineStore::method::setVisible = required setVisible(visible: boolean): void
 class-member PhysicsPipelineStore::method::settle = required settle(maxSteps?: number | undefined): number
-class-member PhysicsPipelineStore::method::settleWithObservations = required settleWithObservations(maxSteps?: number | undefined): PhysicsPipelineTickResult
+class-member PhysicsPipelineStore::method::settleWithObservations = required settleWithObservations(maxSteps?: number | undefined, execution?: PhysicsPipelineExecution | undefined): PhysicsPipelineTickResult
 class-member PhysicsPipelineStore::method::snapshot = required snapshot(): PhysicsPipelineSnapshot
 class-member PhysicsPipelineStore::method::spawnNow = required spawnNow(spawn: PhysicsQueuedSpawn): void
 class-member PhysicsPipelineStore::method::subscribeUpdateResult = required subscribeUpdateResult(listener: () => void): () => void
-class-member PhysicsPipelineStore::method::tick = required tick(deltaSeconds: number): PhysicsPipelineTickResult
+class-member PhysicsPipelineStore::method::tick = required tick(deltaSeconds: number, execution?: PhysicsPipelineExecution | undefined): PhysicsPipelineTickResult
 class-member PhysicsPipelineStore::method::updateConfig = required updateConfig(config: PhysicsPipelineConfig): void
 class-member PhysicsPipelineStore::method::updateConfigWithResult = required updateConfigWithResult(config: PhysicsPipelineConfig): UpdateResult
 class-member PhysicsPipelineStore::method::version = required version(): number
@@ -181,6 +181,7 @@ function processLaneWalls(options: {idPrefix?: string; left: number; right: numb
 function processStageLayout(options: ProcessVolumeLayoutOptions): ProcessVolumeLayout
 function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStageRegionOptions | undefined): StreamPhysicsRegionEffect[]
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
+function readEventDropOccupancy(metadata: EventDropProjectionMetadata, bodies: readonly {x: number; y: number;}[]): {accepted: number[]; late: number; inFlight: number; total: number;}
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
 function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "events" | "initialState" | "outlets" | "phases" | "products">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
@@ -297,6 +298,7 @@ interface DependencyTrackOptions
 interface DependencyTrackRoute
 interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface EventDropPhysicsOptions<TDatum extends Datum = Datum>
+interface EventDropProjectionMetadata
 interface EventDropWindowOptions
 interface GaltonBoardChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
 interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum>
@@ -374,6 +376,7 @@ interface PhysicsKernelOptions
 interface PhysicsPileOptions<TDatum extends Datum = Datum>
 interface PhysicsPipelineConfig
 interface PhysicsPipelineControlSurface
+interface PhysicsPipelineExecution
 interface PhysicsPipelineSnapshot
 interface PhysicsPipelineTickResult
 interface PhysicsPlotBounds
@@ -1136,6 +1139,7 @@ interface-member EventDropChartProps::property::timeExtent = optional timeExtent
 interface-member EventDropChartProps::property::timeScale = optional timeScale: number | undefined
 interface-member EventDropChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member EventDropChartProps::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropChartProps::property::watermarkAtArrivalAccessor = optional watermarkAtArrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropChartProps::property::windows = optional windows: EventDropWindowOptions | undefined
 interface-member EventDropPhysicsOptions::property::arrivalAccessor = required arrivalAccessor: ChartAccessor<TDatum, number>
 interface-member EventDropPhysicsOptions::property::ballRadius = required ballRadius: number
@@ -1146,7 +1150,20 @@ interface-member EventDropPhysicsOptions::property::timeAccessor = required time
 interface-member EventDropPhysicsOptions::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member EventDropPhysicsOptions::property::timeScale = optional timeScale: number | undefined
 interface-member EventDropPhysicsOptions::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropPhysicsOptions::property::watermarkAtArrivalAccessor = optional watermarkAtArrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropPhysicsOptions::property::windows = required windows: EventDropWindowOptions
+interface-member EventDropProjectionMetadata::property::closedWindowCount = required closedWindowCount: number
+interface-member EventDropProjectionMetadata::property::gutter = required gutter: EventDropPlotRegion
+interface-member EventDropProjectionMetadata::property::kind = required kind: "event-drop"
+interface-member EventDropProjectionMetadata::property::lateCount = required lateCount: number
+interface-member EventDropProjectionMetadata::property::lidSegments = required lidSegments: EventDropLidSegment[]
+interface-member EventDropProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member EventDropProjectionMetadata::property::watermarkValue = required watermarkValue: number
+interface-member EventDropProjectionMetadata::property::windowCount = required windowCount: number
+interface-member EventDropProjectionMetadata::property::windowPlot = required windowPlot: EventDropPlotRegion
+interface-member EventDropProjectionMetadata::property::windowSize = required windowSize: number
+interface-member EventDropProjectionMetadata::property::windowStart = required windowStart: number
+interface-member EventDropProjectionMetadata::property::windowWalls = optional windowWalls: (EventDropPlotRegion & {id: string;})[] | undefined
 interface-member EventDropWindowOptions::property::gapPolicy = optional gapPolicy: "drop" | "keep" | undefined
 interface-member EventDropWindowOptions::property::size = required size: number
 interface-member GaltonBoardChartProps::property::ballRadius = optional ballRadius: number | undefined
@@ -1731,6 +1748,8 @@ interface-member PhysicsPipelineControlSurface::property::settle = required sett
 interface-member PhysicsPipelineControlSurface::property::settleWithObservations = required settleWithObservations: (maxSteps?: number) => PhysicsPipelineTickResult
 interface-member PhysicsPipelineControlSurface::property::snapshot = required snapshot: () => PhysicsPipelineSnapshot
 interface-member PhysicsPipelineControlSurface::property::step = required step: (deltaSeconds: number) => PhysicsPipelineTickResult
+interface-member PhysicsPipelineExecution::property::continueWhile = optional continueWhile: (() => boolean) | undefined
+interface-member PhysicsPipelineExecution::property::onStep = required onStep: (result: PhysicsPipelineTickResult) => void
 interface-member PhysicsPipelineSnapshot::property::accumulator = required accumulator: number
 interface-member PhysicsPipelineSnapshot::property::activeSensorPairs = required activeSensorPairs: string[]
 interface-member PhysicsPipelineSnapshot::property::bodyBudget = required bodyBudget: PhysicsBodyBudgetOptions | false

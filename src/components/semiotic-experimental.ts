@@ -234,6 +234,7 @@ export type {
   PhysicsPipelineQueuedSpawnSnapshot as UnstablePhysicsPipelineQueuedSpawnSnapshot,
   PhysicsPipelineSnapshot as UnstablePhysicsPipelineSnapshot,
   PhysicsPipelineTickResult as UnstablePhysicsPipelineTickResult,
+  PhysicsPipelineExecution as UnstablePhysicsPipelineExecution,
   PhysicsPlotBounds as UnstablePhysicsPlotBounds,
   PhysicsQueuedSpawn as UnstablePhysicsQueuedSpawn,
   PhysicsSensorObservationConfig as UnstablePhysicsSensorObservationConfig,

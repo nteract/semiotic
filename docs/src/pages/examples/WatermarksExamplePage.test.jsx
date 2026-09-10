@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { validateArtifactContract } from "semiotic/artifact"
 import WatermarksExamplePage from "./WatermarksExamplePage"
@@ -7,6 +7,8 @@ import { buildWatermarkTemporalRecord } from "./watermarksTemporalRecord"
 
 vi.mock("semiotic/physics", async () => {
   const ReactModule = await import("react")
+  const { buildEventDropPhysics, readEventDropOccupancy } =
+    await import("../../../../src/components/charts/physics/eventDropPhysics")
   return {
     EventDropChart: ReactModule.forwardRef(function MockEventDropChart(
       { description, title },
@@ -14,19 +16,8 @@ vi.mock("semiotic/physics", async () => {
     ) {
       return <div role="img" aria-label={`${title}. ${description}`} />
     }),
-    buildEventDropPhysics: () => ({
-      projectionRows: Array.from({ length: 7 }, (_, index) => ({
-        label: `${index * 12}–${(index + 1) * 12}`,
-        value: index === 2 ? 2 : 1,
-        secondary: index === 0 ? 1 : 0,
-      })),
-      metadata: {
-        plot: { x: 32, y: 24, width: 736, height: 342 },
-        windowPlot: { x: 92, y: 24, width: 676, height: 342 },
-        gutter: { x: 32, y: 24, width: 60, height: 342 },
-        lidSegments: [],
-      },
-    }),
+    buildEventDropPhysics,
+    readEventDropOccupancy,
   }
 })
 
@@ -61,6 +52,46 @@ const temporalEvents = [
   { id: "late-event", eventTime: 28, arrivalTime: 70, source: "backfill" },
 ]
 
+it("keeps historical acceptance and the selected explanation aligned as closure advances", () => {
+  render(<WatermarksExamplePage />)
+  expect(screen.getByRole("img", { name: /7 on time and 3 late/ })).toBeInTheDocument()
+  expect(screen.getByTestId("watermark-admission-decision")).toHaveTextContent(
+    "The window was already closed, so this event was late.",
+  )
+  fireEvent.click(screen.getByText("Explore other streams and settings"))
+  fireEvent.change(screen.getByRole("slider", { name: /arrival frontier/i }), {
+    target: { value: "60" },
+  })
+  expect(screen.getByRole("img", { name: /6 on time and 0 late/ })).toBeInTheDocument()
+  expect(screen.getByTestId("watermark-admission-decision")).toHaveTextContent(
+    "The window was still open, so this event was accepted.",
+  )
+  fireEvent.change(screen.getByRole("slider", { name: /arrival frontier/i }), {
+    target: { value: "70" },
+  })
+  expect(screen.getByRole("img", { name: /7 on time and 3 late/ })).toBeInTheDocument()
+})
+
+it("explains the selected lag and the batch result without changing historical admissions", () => {
+  render(<WatermarksExamplePage />)
+  const period = screen.getByTestId("watermark-period")
+  const result = screen.getByTestId("watermark-snapshot-result")
+  expect(period).toHaveTextContent("now 70s − lag 18s = watermark 52s")
+  expect(result).toHaveTextContent("7 accepted · 3 late")
+  fireEvent.click(screen.getByRole("button", { name: /Wait for the delayed batch/ }))
+  fireEvent.click(screen.getByRole("button", { name: "After the batch", exact: true }))
+  expect(period).toHaveTextContent("now 70s − lag 54s = watermark 16s")
+  expect(result).toHaveTextContent("10 accepted · 0 late")
+  expect(result).toHaveTextContent("The batch arrived before its windows closed.")
+  const payload = JSON.parse(screen.getByTestId("watermark-temporal-payload").textContent)
+  expect(payload.states.every((state) => state.time.watermark.allowedLateness === "PT0S")).toBe(
+    true,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /Close sooner/ }))
+  expect(result).toHaveTextContent("7 accepted · 3 late")
+  expect(period).toHaveTextContent("watermark 52s")
+})
+
 describe("watermark Artifact Contract time record", () => {
   it("derives open, settled, and corrected states without reading the ambient clock", () => {
     const inputs = {
@@ -69,7 +100,7 @@ describe("watermark Artifact Contract time record", () => {
       arrivedEvents: temporalEvents,
       currentTime: 70,
       windowSize: 12,
-      allowedLateness: 18,
+      watermarkLag: 18,
     }
     const record = buildWatermarkTemporalRecord(inputs)
 
@@ -136,6 +167,7 @@ describe("watermark Artifact Contract time record", () => {
   it("renders plain-language states and the same inspectable payload", () => {
     const { container } = render(<WatermarksExamplePage />)
 
+    fireEvent.click(screen.getByText("Inspect time states and correction records"))
     expect(screen.getByRole("heading", { name: "One declared time model" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Live / open" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Settled", exact: true })).toBeInTheDocument()
@@ -145,6 +177,7 @@ describe("watermark Artifact Contract time record", () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/window and completeness are both settled/i)).toBeInTheDocument()
     expect(screen.getByText(/revision is backfilled, the window is corrected/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByText("Explore other streams and settings"))
     expect(screen.getByRole("slider", { name: /Arrival frontier/ })).toBeInTheDocument()
     expect(screen.queryByRole("slider", { name: /Current event time/ })).not.toBeInTheDocument()
 
@@ -154,7 +187,8 @@ describe("watermark Artifact Contract time record", () => {
     expect(payload.states.map(({ id }) => id)).toEqual(["live-open", "settled", "late-corrected"])
     expect(payload.states[0].time.watermark).toMatchObject({
       value: "2026-01-01T00:00:52.000Z",
-      allowedLateness: "PT18S",
+      allowedLateness: "PT0S",
+      policy: "Arrival frontier minus 18s watermark lag",
     })
 
     const openCard = container.querySelector('[data-state="live-open"]')

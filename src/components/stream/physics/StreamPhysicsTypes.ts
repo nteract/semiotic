@@ -368,6 +368,9 @@ export interface StreamPhysicsFrameProps {
   ) => void
   onSemanticItemActivate?: (item: PhysicsSemanticItem) => void
   onSemanticItemFocus?: (item: PhysicsSemanticItem | null) => void
+  /** Runs at admission (steps=0) and after each fixed simulation step (steps=1),
+   * including reduced-motion and imperative settles. Respect elapsedSeconds or
+   * steps for time-based work. Callback-driven execution uses the sync engine. */
   onTick?: (
     result: PhysicsPipelineTickResult,
     controls: PhysicsPipelineControlSurface

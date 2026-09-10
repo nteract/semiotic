@@ -22,6 +22,15 @@ test.describe("Physics charts - settled-state baselines", () => {
         await expect(
           testCase.getByTestId("galton-board-structure-overlay").locator("text")
         ).toHaveText(["4", "1", "2", "2", "3", "4"])
+      } else if (testId === "physics-eventdrop-settled") {
+        // All eleven arrivals precede closure. The final watermark must not
+        // retroactively reject the five events in now-closed windows.
+        await expect(
+          testCase.getByTestId("event-drop-window-overlay").locator("text")
+        ).toHaveText([
+          "0 late", "3", "0-10", "2", "10-20", "3", "20-30",
+          "3", "30-40", "0", "40-50", "watermark 26",
+        ])
       } else if (testId === "physics-pile-settled") {
         const projection = testCase.getByTestId("physics-pile-projection-overlay")
         await expect(projection.locator("g text")).toHaveText([

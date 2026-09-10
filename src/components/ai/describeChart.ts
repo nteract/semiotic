@@ -16,6 +16,8 @@ import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { describeRecipeChart } from "./describeRecipeChart"
 import { resolveRecipeForChart } from "./recipeSemantics"
+import { describePhysicsSource } from "./describePhysicsSource"
+import { physicsProjectionRows, applyPhysicsLevels } from "./describePhysicsProjection"
 /**
  * describeChart — generate a layered natural-language description of a chart
  * from its `(component, props)` config, following Lundgard & Satyanarayan's
@@ -205,176 +207,11 @@ const PHYSICS = new Set([
   "PhysicsCustomChart"
 ])
 
-interface PhysicsProjectionRow {
-  label: string
-  count: number
-  secondary?: number
-  secondaryLabel?: string
-  observed?: number
-}
-
 function humanizeComponent(name: string): string {
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
 }
 function kindPhrase(component: string): string {
   return KIND_PHRASE[component] || `${humanizeComponent(component)} chart`
-}
-
-function finiteNumber(value: unknown): number | undefined {
-  const n =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : NaN
-  return Number.isFinite(n) ? n : undefined
-}
-
-function physicsProjectionRows(
-  props: Datum,
-  fmtNum: (n: number) => string
-): PhysicsProjectionRow[] | null {
-  const physics =
-    props.physics && typeof props.physics === "object"
-      ? (props.physics as Datum)
-      : null
-  const settled =
-    props.settledProjection && typeof props.settledProjection === "object"
-      ? (props.settledProjection as Datum)
-      : null
-  const candidates = [
-    props.settledProjectionRows,
-    props.projectionRows,
-    settled?.rows,
-    physics?.settledProjectionRows,
-    physics?.projectionRows,
-    physics?.settledProjection && typeof physics.settledProjection === "object"
-      ? (physics.settledProjection as Datum).rows
-      : undefined
-  ]
-  const rawRows = candidates.find((candidate) => Array.isArray(candidate))
-  if (!Array.isArray(rawRows)) return null
-
-  return rawRows
-    .map((row, index): PhysicsProjectionRow | null => {
-      if (!row || typeof row !== "object") return null
-      const d = row as Datum
-      const count = finiteNumber(
-        d.count ?? d.value ?? d.total ?? d.bodies ?? d.events
-      )
-      if (count == null) return null
-      const rawLabel = d.label ?? d.id ?? d.name ?? `container ${index + 1}`
-      const secondary = finiteNumber(d.secondary ?? d.secondaryCount)
-      const observed = finiteNumber(d.observed ?? d.observedCount)
-      return {
-        label: fmtDim(rawLabel, fmtNum),
-        count,
-        ...(secondary != null ? { secondary } : {}),
-        ...(typeof d.secondaryLabel === "string" && d.secondaryLabel
-          ? { secondaryLabel: d.secondaryLabel }
-          : {}),
-        ...(observed != null ? { observed } : {})
-      }
-    })
-    .filter((row): row is PhysicsProjectionRow => row != null)
-}
-
-function physicsRowNoun(component: string): string {
-  if (component === "EventDropChart") return "time window"
-  if (component === "GaltonBoardChart") return "bin"
-  if (component === "CollisionSwarmChart") return "group lane"
-  if (component === "PacketFlowChart") return "flow node"
-  if (component === "CrucibleChart") return "result group"
-  return "container"
-}
-
-function physicsUnitNoun(component: string): string {
-  if (component === "EventDropChart") return "event"
-  if (component === "GaltonBoardChart") return "sample"
-  if (component === "CollisionSwarmChart") return "point"
-  if (component === "PacketFlowChart") return "packet"
-  if (component === "CrucibleChart") return "settled item"
-  return "body"
-}
-
-function physicsL1Sentence(component: string, kind: string): string {
-  if (component === "EventDropChart") {
-    return "An event-drop physics chart that collapses moving events into a settled projection by event-time window."
-  }
-  if (component === "GaltonBoardChart") {
-    return "A Galton board chart that collapses falling samples into a settled histogram projection."
-  }
-  if (component === "UnitPileChart") {
-    return "A physics pile chart that collapses moving bodies into a settled bar-style projection by container."
-  }
-  if (component === "CollisionSwarmChart") {
-    return "A collision swarm chart that separates overlapping points while preserving their quantitative axis position."
-  }
-  if (component === "PacketFlowChart") {
-    return "A physical flow chart that keeps authored routes visible while packet bodies show throughput and proximity events."
-  }
-  if (component === "CrucibleChart") {
-    return "A crucible physics chart that replays authored phases and events into declared products and outlets; the settled ledger, not collisions, determines the result."
-  }
-  return `A ${kind} whose accessible reading is the settled projection rather than individual trajectories.`
-}
-
-function formatPercent(part: number, total: number): string {
-  if (!(total > 0)) return "0%"
-  const pct = (part / total) * 100
-  return `${pct >= 10 ? Math.round(pct) : Math.round(pct * 10) / 10}%`
-}
-
-function applyPhysicsLevels(
-  component: string,
-  kind: string,
-  rows: PhysicsProjectionRow[] | null,
-  levels: { l1?: string; l2?: string; l3?: string; l4?: string },
-  want: Set<DescribeLevel>,
-  fmtNum: (n: number) => string
-): void {
-  const rowNoun = physicsRowNoun(component)
-  const unitNoun = physicsUnitNoun(component)
-  if (want.has("l1")) levels.l1 = physicsL1Sentence(component, kind)
-  if (!want.has("l2") && !want.has("l3")) return
-  if (!rows || rows.length === 0) {
-    if (want.has("l2")) levels.l2 = "No settled projection is loaded yet."
-    return
-  }
-
-  const total = rows.reduce((sum, row) => sum + row.count, 0)
-  const populated = rows
-    .filter((row) => row.count > 0)
-    .sort((a, b) => b.count - a.count)
-  const leader =
-    populated[0] ?? rows.slice().sort((a, b) => b.count - a.count)[0]
-  if (!leader) return
-  const secondaryTotal = rows.reduce(
-    (sum, row) => sum + (row.secondary ?? 0),
-    0
-  )
-  const secondaryLabel =
-    rows.find((row) => row.secondaryLabel)?.secondaryLabel ?? "secondary"
-
-  if (want.has("l2")) {
-    if (populated.length === 0) {
-      levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; no ${plural(2, rowNoun)} are non-empty yet.`
-    } else {
-      const secondarySentence =
-        secondaryTotal > 0
-          ? ` ${fmtNum(secondaryTotal)} ${plural(secondaryTotal, unitNoun)} ${secondaryTotal === 1 ? "is" : "are"} marked ${secondaryLabel}.`
-          : ""
-      levels.l2 = `The settled projection contains ${fmtNum(total)} ${plural(total, unitNoun)} across ${rows.length} ${plural(rows.length, rowNoun)}; ${populated.length} ${plural(populated.length, rowNoun)} ${populated.length === 1 ? "is" : "are"} non-empty. The largest ${rowNoun} is ${leader.label} with ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)}.${secondarySentence}`
-    }
-  }
-
-  if (want.has("l3") && total > 0 && populated.length > 0) {
-    const runnerUp = populated.find((row) => row !== leader)
-    const share = formatPercent(leader.count, total)
-    levels.l3 = runnerUp
-      ? `The settled projection is most concentrated in ${leader.label}, which holds ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)} (${share}); ${runnerUp.label} follows with ${fmtNum(runnerUp.count)} ${plural(runnerUp.count, unitNoun)}.`
-      : `The settled projection is concentrated in ${leader.label}, which holds all ${fmtNum(leader.count)} ${plural(leader.count, unitNoun)}.`
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -862,6 +699,9 @@ export function describeChart(
   const physicsProjection = PHYSICS.has(component)
     ? physicsProjectionRows(props, fmtNum)
     : null
+  const sourceProjection = PHYSICS.has(component) && physicsProjection === null
+    ? describePhysicsSource(component, props)
+    : null
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(
     component,
@@ -878,7 +718,11 @@ export function describeChart(
 
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
   if (PHYSICS.has(component)) {
-    applyPhysicsLevels(component, kind, physicsProjection, levels, want, fmtNum)
+    applyPhysicsLevels(
+      component, kind,
+      physicsProjection ?? (sourceProjection ? physicsProjectionRows({ projectionRows: sourceProjection.rows }, fmtNum) : null),
+      levels, want, fmtNum, sourceProjection
+    )
   }
 
   // ── L1: encoding ───────────────────────────────────────────────────────
