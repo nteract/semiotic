@@ -112,6 +112,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       timeAccessor,
       xExtent,
       yExtent,
+      invertY,
       extentPadding = 0.1,
       scalePadding,
       sizeRange,
@@ -376,6 +377,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // animate → transition + introEnabled comes from useFrame above.
 
+    const trackHoverRows = !!customHoverBehavior
     const pipelineConfig = useMemo((): PipelineConfig => ({
       chartType,
       runtimeMode: isStreaming ? "streaming" : "bounded",
@@ -407,6 +409,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       yScaleType,
       xExtent,
       yExtent,
+      invertY,
       sizeRange,
       binSize,
       normalize,
@@ -426,6 +429,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       closeAccessor,
       candlestickStyle,
       lineStyle,
+      trackHoverRows,
       pointStyle,
       areaStyle,
       swarmStyle,
@@ -456,7 +460,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this

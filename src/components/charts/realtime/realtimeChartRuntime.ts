@@ -1,3 +1,4 @@
+import type { RealtimeResponsiveProps } from "./realtimeChartTypes"
 import * as React from "react"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { StreamXYFrameHandle } from "../../stream/types"
@@ -12,25 +13,11 @@ import {
   wrapStyleWithSelection,
   type SelectionHookResult
 } from "../shared/selectionUtils"
-import type { ChartAccessor, ChartMode, SelectionConfig } from "../shared/types"
+import type { ChartMode, SelectionConfig } from "../shared/types"
 
-/** Read a numeric time/value off a datum via accessor, with a field fallback. */
-export function readRealtimeNumber<TDatum extends Datum>(
-  datum: Datum,
-  accessor: ChartAccessor<TDatum, number> | undefined,
-  fallback: string
-): number | null {
-  const raw: unknown =
-    typeof accessor === "function"
-      ? accessor(datum)
-      : datum[String(accessor ?? fallback)]
-  if (raw == null) return null
-  if (raw instanceof Date) return raw.getTime()
-  const number = Number(raw)
-  return Number.isFinite(number) ? number : null
-}
+export { readRealtimeNumber } from "./realtimeAccessors"
 
-interface RealtimeModeProps extends Omit<ChartModeInput, "enableHover"> {
+interface RealtimeModeProps extends Omit<ChartModeInput, "enableHover">, RealtimeResponsiveProps {
   mode?: ChartMode
   size?: [number, number]
   enableHover?: unknown
@@ -38,8 +25,8 @@ interface RealtimeModeProps extends Omit<ChartModeInput, "enableHover"> {
 
 export function useRealtimeChartMode(
   props: RealtimeModeProps
-): ChartModeResult {
-  return useChartMode(props.mode, {
+): ChartModeResult & RealtimeResponsiveProps {
+  const mode = useChartMode(props.mode, {
     width: props.size?.[0] ?? props.width,
     height: props.size?.[1] ?? props.height,
     showAxes: props.showAxes,
@@ -54,6 +41,7 @@ export function useRealtimeChartMode(
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules
   })
+  return { ...mode, responsiveWidth: props.responsiveWidth, responsiveHeight: props.responsiveHeight }
 }
 
 export function useRealtimeFrameHandle<TDatum extends Datum = Datum>(
@@ -99,11 +87,13 @@ export function useRealtimeSelectionStyle<TStyle extends Datum>(
 }
 
 export function buildRealtimeFrameChromeProps(
-  resolved: ChartModeResult,
+  resolved: ChartModeResult & RealtimeResponsiveProps,
   legend: LegendInteractionState,
   mode: LegendInteractionMode | undefined
 ) {
   return {
+    responsiveWidth: resolved.responsiveWidth,
+    responsiveHeight: resolved.responsiveHeight,
     title: resolved.title,
     description: resolved.description,
     summary: resolved.summary,

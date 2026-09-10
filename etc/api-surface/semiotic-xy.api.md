@@ -632,6 +632,7 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined
 interface-member StreamXYFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamXYFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
 interface-member StreamXYFrameProps::property::legend = optional legend: LegendValue

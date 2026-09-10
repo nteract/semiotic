@@ -359,6 +359,8 @@ const realtimeProps: Record<string, ChartPropSpec> = {
     description: "Display mode controlling dimensions, chrome, and interaction defaults.",
   },
   size: { type: "array", description: "[width, height] in pixels" },
+  responsiveWidth: { type: "boolean" },
+  responsiveHeight: { type: "boolean" },
   width: { type: "number", description: "Alias for size[0]" },
   height: { type: "number", description: "Alias for size[1]" },
   maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes." },

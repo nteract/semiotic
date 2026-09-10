@@ -34,6 +34,8 @@ export interface AxisLineStyle {
  */
 export interface XYFrameAxisConfig {
   orient: "left" | "right" | "top" | "bottom"
+  /** Hide this axis, including baseline, ticks, and label. Grid is independent. */
+  visible?: boolean
   label?: string
   ticks?: number
   /** Compatibility alias for `ticks`; `ticks` wins when both are supplied. */

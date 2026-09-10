@@ -17,6 +17,7 @@ import { composeLegendConfigs } from "../../types/legendTypes"
 import {
   clampLegendReservation,
   reserveLegendMargin,
+  resolveHiddenAxisMargins,
   type AxisChromeInput
 } from "../../legendLayout"
 import type { Datum } from "./datumTypes"
@@ -59,6 +60,7 @@ export interface FrameLegendOverrides {
   legendLayout?: LegendLayout
   /** Any explicit frame margin replaces the HOC-measured margin. */
   margin?: unknown
+  axes?: ReadonlyArray<{ orient: "top" | "bottom" | "left" | "right"; visible?: boolean }>
 }
 
 function hasFrameLegendField(
@@ -220,9 +222,11 @@ export function useChartLegendAndMargin({
             right: userMargin
           }
         : (userMargin ?? {})
+    const visibleDefaults = resolveHiddenAxisMargins(defaults, frameLegend?.axes, hasTitle)
     const resolveSide = (side: keyof MarginType): number => {
       const value = userSides[side]
-      return typeof value === "number" ? value : defaults[side]
+      if (typeof value === "number") return value
+      return visibleDefaults[side]
     }
     const finalMargin: MarginType = {
       top: resolveSide("top"),
@@ -279,6 +283,7 @@ export function useChartLegendAndMargin({
     return finalMargin
   }, [
     defaults,
+    frameLegend?.axes,
     userMargin,
     legend,
     legendPosition,

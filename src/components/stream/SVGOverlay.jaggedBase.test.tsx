@@ -113,6 +113,17 @@ describe("jaggedBase rendering", () => {
     expect(container.querySelectorAll("path").length).toBeGreaterThan(0)
   })
 
+  it("hides jagged replacements when the entire axis is invisible", () => {
+    for (const Component of [SVGUnderlay, SVGOverlay]) {
+      const { container, unmount } = render(
+        <Component {...baseProps} scales={makeStubScales()} showAxes
+          axes={[{ orient: "left", visible: false, baseline: false, jaggedBase: true }]} />
+      )
+      expect(container.querySelectorAll("path")).toHaveLength(0)
+      unmount()
+    }
+  })
+
   it("SVGOverlay emits the jagged path when underlayRendered is false (frame variants without an SVGUnderlay)", () => {
     // Most frames pair `SVGUnderlay` + `SVGOverlay` (with `underlayRendered`),
     // but the overlay's own jagged branch is the legacy path and ships

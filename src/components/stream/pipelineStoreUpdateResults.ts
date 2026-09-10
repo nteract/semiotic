@@ -133,6 +133,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   xScaleType: dependency("preserve", DOMAIN_LAYOUT),
   yScaleType: dependency("preserve", DOMAIN_LAYOUT),
   xExtent: dependency("preserve", DOMAIN_LAYOUT),
+  invertY: dependency("preserve", DOMAIN_LAYOUT),
   yExtent: dependency("preserve", DOMAIN_LAYOUT),
   extentPadding: dependency("preserve", DOMAIN_LAYOUT),
   scalePadding: dependency("preserve", DOMAIN_LAYOUT),
@@ -157,6 +158,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   showValues: dependency("preserve", GEOMETRY),
   heatmapValueFormat: dependency("preserve", GEOMETRY),
 
+  trackHoverRows: dependency("preserve", STYLE),
   lineStyle: dependency("preserve", STYLE),
   pointStyle: dependency("preserve", STYLE),
   areaStyle: dependency("preserve", STYLE),

@@ -1,3 +1,4 @@
+import { seriesSelectionDatum } from "../../store/selectionProvenance"
 import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Mixed scene builder — renders some series as areas and others as lines.
@@ -46,7 +47,7 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
   for (const g of groups) {
     if (areaGroups.has(g.key)) {
       // Render as area
-      const style = ctx.resolveAreaStyle(g.key, g.data[0])
+      const style = ctx.resolveAreaStyle(g.key, seriesSelectionDatum(g.data))
       const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
       const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
       if (fillGradient) {
@@ -61,7 +62,7 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
       nodes.push(node)
     } else {
       // Render as line
-      const style = ctx.resolveLineStyle(g.key, g.data[0])
+      const style = ctx.resolveLineStyle(g.key, seriesSelectionDatum(g.data))
       const lineNode = buildLineNode(g.data, ctx.scales, ctx.getX, ctx.getY, style, g.key)
       if (ctx.config.curve && ctx.config.curve !== "linear") {
         lineNode.curve = ctx.config.curve

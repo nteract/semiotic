@@ -62,3 +62,19 @@ describe("useResponsiveSize", () => {
     expect(result.current[1]).toEqual([480, 240])
   })
 })
+
+it("measures the mounted box before the first browser paint", () => {
+  const box = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 480, height: 240 } as DOMRect)
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock)
+  function Harness() {
+    const [ref, size] = useResponsiveSize([600, 400], true, true)
+    return <div ref={ref} data-testid="initial-size">{size.join("x")}</div>
+  }
+  try {
+    render(<Harness />)
+    expect(screen.getByTestId("initial-size").textContent).toBe("480x240")
+  } finally {
+    box.mockRestore()
+    vi.unstubAllGlobals()
+  }
+})

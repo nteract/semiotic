@@ -1,3 +1,5 @@
+import { ThresholdAnnotation } from "../charts/shared/ThresholdAnnotation"
+import { renderThresholdEndCap } from "../charts/shared/ThresholdEndCap"
 import { annotationNote } from "../text/annotationTextLayout"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 /**
@@ -21,7 +23,6 @@ import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
 
 const TOP_LABEL_BASELINE = 16
-const TOP_THRESHOLD_LABEL_FLIP = 20
 
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
@@ -378,7 +379,6 @@ function renderAnnotation(
       if (value == null) return null
       const color = resolveAnnotationColor(ann, theme)
       const label = ann.label
-      const labelPos = ann.labelPosition || "right"
       const dasharray = ann.strokeDasharray || "6,4"
       const lineWidth = ann.strokeWidth ?? 1.5
 
@@ -390,6 +390,7 @@ function renderAnnotation(
           <g key={`ann-ythresh-${index}`} opacity={ann.opacity}>
             <line x1={px} y1={0} x2={px} y2={layout.height}
               stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray} />
+            {renderThresholdEndCap(ann.endCap, [px, 0], color)}
             {label && (
               <AnnotationLabel x={px + 4} y={TOP_LABEL_BASELINE} textAnchor="start"
                 fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}
@@ -402,28 +403,10 @@ function renderAnnotation(
       // Default: horizontal line (vertical ordinal or XY)
       const py = scales.y ? scales.y(value) : scales.r ? scales.r(value) : null
       if (py == null) return null
-      return (
-        <g key={`ann-ythresh-${index}`}>
-          <line
-            x1={0} y1={py} x2={layout.width} y2={py}
-            stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
-          />
-          {label && (
-            <AnnotationLabel
-              x={labelPos === "left" ? 4 : labelPos === "center" ? layout.width / 2 : layout.width - 4}
-              y={py < TOP_THRESHOLD_LABEL_FLIP
-                ? Math.min(layout.height - 4, py + TOP_LABEL_BASELINE)
-                : py - 6}
-              textAnchor={labelPos === "left" ? "start" : labelPos === "center" ? "middle" : "end"}
-              fontSize={theme.typography.tickSize}
-              fill={color}
-              fontFamily={theme.typography.fontFamily}
-              text={label}
-              background={ssrLabelBackground(ann, theme, "halo")}
-            />
-          )}
-        </g>
-      )
+      return <ThresholdAnnotation key={`ann-ythresh-${index}`} ann={ann} position={py}
+        vertical={false} width={layout.width} height={layout.height} color={color}
+        fontSize={theme.typography.tickSize} fontFamily={theme.typography.fontFamily}
+        background={ssrLabelBackground(ann, theme, "halo")} dash="6,4" labelGap={6} />
     }
 
     case "x-threshold": {
@@ -442,30 +425,10 @@ function renderAnnotation(
         : scales.x ? scales.x(value) : null
       if (px == null) return null
       const color = resolveAnnotationColor(ann, theme)
-      const label = ann.label
-      const labelPos = ann.labelPosition || "top"
-      const dasharray = ann.strokeDasharray || "6,4"
-      const lineWidth = ann.strokeWidth ?? 1.5
-      return (
-        <g key={`ann-xthresh-${index}`} opacity={ann.opacity}>
-          <line
-            x1={px} y1={0} x2={px} y2={layout.height}
-            stroke={color} strokeWidth={lineWidth} strokeDasharray={dasharray}
-          />
-          {label && (
-            <AnnotationLabel
-              x={px > layout.width * 0.6 ? px - 4 : px + 4}
-              y={labelPos === "bottom" ? layout.height - 4 : labelPos === "center" ? layout.height / 2 : TOP_LABEL_BASELINE}
-              textAnchor={px > layout.width * 0.6 ? "end" : "start"}
-              fontSize={theme.typography.tickSize}
-              fill={color}
-              fontFamily={theme.typography.fontFamily}
-              text={label}
-              background={ssrLabelBackground(ann, theme, "halo")}
-            />
-          )}
-        </g>
-      )
+      return <ThresholdAnnotation key={`ann-xthresh-${index}`} ann={ann} position={px}
+        vertical width={layout.width} height={layout.height} color={color}
+        fontSize={theme.typography.tickSize} fontFamily={theme.typography.fontFamily}
+        background={ssrLabelBackground(ann, theme, "halo")} dash="6,4" />
     }
 
     case "band": {

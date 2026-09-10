@@ -238,6 +238,7 @@ export function resolvePipelineBoundsStyle(
   return {
     fill: lineStyle.stroke || config.themeSemantic?.primary || "#4e79a7",
     fillOpacity: 0.2,
+    ...(lineStyle.opacity != null && { opacity: lineStyle.opacity }),
     stroke: "none",
     cursor: lineStyle.cursor
   }

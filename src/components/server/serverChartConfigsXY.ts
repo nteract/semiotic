@@ -1,3 +1,4 @@
+import { readRealtimeNumber } from "../charts/realtime/realtimeAccessors"
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
@@ -24,7 +25,7 @@ import {
   viridisColor,
 } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
-import { resolveDownwardHistogramExtent } from "../charts/realtime/temporalHistogramConfig"
+import { resolveHistogramAxes, histogramMarginDefaults } from "../charts/realtime/temporalHistogramConfig"
 import { prepareLineSeriesForSsr } from "../charts/shared/lineSeriesSsr"
 import type { AnomalyConfig, ForecastConfig } from "../charts/shared/statisticalOverlays"
 import { makeHistogramRuleContext } from "../charts/realtime/realtimeStyleRules"
@@ -261,28 +262,20 @@ export { multiAxisLineChart, waterfallChart } from "./serverChartConfigsXYExtra"
 /** Static-data TemporalHistogram mapped onto the shared time-binned XY pipeline. */
 export const temporalHistogram: ChartConfig = {
   frameType: "xy",
+  layout: { margin: (props, mode) => histogramMarginDefaults(mode.marginDefaults, resolveHistogramAxes(props), mode.showAxes) },
   buildProps: (data, _colorBy, _colorScheme, common, rest) => {
     const rows = Array.isArray(data) ? filterSparseArray(data) : []
     const timeAccessor = rest.timeAccessor || "time"
     const valueAccessor = rest.valueAccessor || "value"
     const categoryAccessor = rest.categoryAccessor
     const valueExtent = rest.valueExtent || common.yExtent
-    const resolvedValueExtent = rest.direction === "down"
-      ? resolveDownwardHistogramExtent({
-          data: rows,
-          timeAccessor,
-          valueAccessor,
-          binSize: Number(rest.binSize),
-          valueExtent,
-          extentPadding: rest.extentPadding,
-        })
-      : valueExtent
-    const barStyle = {
-      ...(rest.fill !== undefined && { fill: rest.fill }),
-      ...(rest.stroke !== undefined && { stroke: rest.stroke }),
-      ...(rest.strokeWidth !== undefined && { strokeWidth: rest.strokeWidth }),
-      ...(rest.opacity !== undefined && { opacity: rest.opacity }),
+    const strokeStyle = {
+      ...primitiveStyleOverrides(rest),
       ...(rest.cursor !== undefined && { cursor: rest.cursor }),
+    }
+    const barStyle = {
+      ...strokeStyle,
+      ...(rest.fill !== undefined && { fill: rest.fill }),
       ...(rest.gap !== undefined && { gap: rest.gap }),
     }
     const ruledBarStyle = composeStyleRules(
@@ -293,10 +286,7 @@ export const temporalHistogram: ChartConfig = {
     const resolvedAreaStyle = (datum: Datum) => ({
       ...ruledBarStyle(datum),
       ...(!categoryAccessor && rest.fill !== undefined && { fill: rest.fill }),
-      ...(rest.stroke !== undefined && { stroke: rest.stroke }),
-      ...(rest.strokeWidth !== undefined && { strokeWidth: rest.strokeWidth }),
-      ...(rest.opacity !== undefined && { opacity: rest.opacity }),
-      ...(rest.cursor !== undefined && { cursor: rest.cursor }),
+      ...strokeStyle,
     })
     return {
       chartType: "bar",
@@ -306,10 +296,12 @@ export const temporalHistogram: ChartConfig = {
       windowMode: "growing",
       windowSize: Math.max(1, rows.length),
       arrowOfTime: rest.arrowOfTime || "right",
-      timeAccessor,
-      valueAccessor,
+      timeAccessor: (datum: Datum) => readRealtimeNumber(datum, timeAccessor, "time") ?? NaN,
+      valueAccessor: (datum: Datum) => readRealtimeNumber(datum, valueAccessor, "value") ?? NaN,
       xExtent: rest.timeExtent || common.xExtent,
-      yExtent: resolvedValueExtent,
+      yExtent: valueExtent,
+      invertY: rest.direction === "down",
+      axes: resolveHistogramAxes({ ...rest, axes: common.axes ?? rest.axes }),
       extentPadding: rest.extentPadding ?? common.extentPadding,
       binSize: rest.binSize,
       categoryAccessor,

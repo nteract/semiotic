@@ -432,6 +432,12 @@ export default function AnnotationsPage() {
       {/* Thresholds */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="thresholds">Thresholds</h2>
+      <p>
+        Both x and y thresholds accept <code>endCap: "circle"</code> for a native
+        circle at the top (x threshold) or left (y threshold) plot edge. Use <code>{'{ radius: 5, fill: "#f97316" }'}</code>
+        {" "}to customize its radius and color. End caps render
+        in the browser and in server SVG exports.
+      </p>
 
       <p>
         Thresholds are the most common annotation type. Use{" "}

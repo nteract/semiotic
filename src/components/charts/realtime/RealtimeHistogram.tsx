@@ -1,3 +1,4 @@
+import { readRealtimeNumber } from "./realtimeAccessors"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -30,6 +31,7 @@ import type {
   ChartMode,
   ChartAccessor,
   SelectionConfig,
+  LinkedHoverProp,
   MobileInteractionProp
 } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -38,8 +40,7 @@ import {
   renderLoadingState,
   renderEmptyState
 } from "../shared/withChartWrapper"
-import { normalizeLinkedBrush } from "../shared/selectionUtils"
-import { useBrushSelection } from "../../store/useSelection"
+import { useXYBrush } from "../shared/useXYBrush"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
@@ -48,7 +49,9 @@ import type { ResponsiveRule } from "../shared/responsiveRules"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { LegendValue } from "../../types/legendTypes"
 import type { PartialMargin } from "../../types/marginType"
-import { resolveDownwardHistogramExtent } from "./temporalHistogramConfig"
+import { resolveHistogramAxes, histogramMarginDefaults } from "./temporalHistogramConfig"
+import { resolveXYAxisChrome } from "../../legendLayout"
+import type { XYFrameAxisConfig } from "../../stream/xyFrameAxisTypes"
 import { resolveTooltipContent } from "../../Tooltip/Tooltip"
 import type {
   RealtimeAccessibilityProps,
@@ -76,6 +79,10 @@ const EMPTY_LEGEND_DATA: Datum[] = []
 export interface RealtimeHistogramProps<
   TDatum extends Datum = Datum
 > extends RealtimeAccessibilityProps {
+  /** Fit the container width. */
+  responsiveWidth?: boolean
+  /** Fit a container with a definite height. */
+  responsiveHeight?: boolean
   /** Display mode: "primary" (full chrome), "context" (compact), "sparkline" (inline) */
   mode?: ChartMode
   /** Semantic responsive transformations applied before chart-mode defaults. */
@@ -153,8 +160,14 @@ export interface RealtimeHistogramProps<
   styleRules?: StyleRule[]
   /** Gap between bars in pixels */
   gap?: number
-  /** Show canvas-drawn axes */
+  /** Show axis baselines, ticks, and labels */
   showAxes?: boolean
+  /** Show the temporal axis; hidden axes reserve no default margin. */
+  showTimeAxis?: boolean
+  /** Show the value axis; hidden axes reserve no default margin. */
+  showValueAxis?: boolean
+  /** Shared XY axis configuration. Explicit axes override visibility conveniences. */
+  axes?: XYFrameAxisConfig[]
   /** Background fill color */
   background?: string
   /** Enable hover interaction */
@@ -180,7 +193,7 @@ export interface RealtimeHistogramProps<
   /** Declarative tooltip config or the legacy full-HoverData callback. */
   tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
-  linkedHover?: boolean | string | { name?: string; fields: string[] }
+  linkedHover?: LinkedHoverProp
   /** Consume a named selection — dims unselected elements */
   selection?: SelectionConfig
   /** Configurable opacity decay for older data */
@@ -322,6 +335,9 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   } = props
 
   const showAxes = resolved.showAxes
+  const axes = useMemo(() => resolveHistogramAxes({ axes: props.axes, showTimeAxis: props.showTimeAxis, showValueAxis: props.showValueAxis }), [props.axes, props.showTimeAxis, props.showValueAxis])
+  const axisChrome = resolveXYAxisChrome({ showAxes, axes })
+  const marginDefaults = histogramMarginDefaults(resolved.marginDefaults, axes, showAxes)
   const enableHover = resolved.enableHover
   const showHistogramLegend = resolved.showLegend !== false
   const resolvedSize: [number, number] = size ?? [
@@ -388,13 +404,13 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       showLegend: resolved.showLegend,
       legendPosition: legendPositionProp,
       userMargin,
-      defaults: resolved.marginDefaults,
+      defaults: marginDefaults,
       categories: histogramLegendCategories,
       additionalLegend,
       chartWidth: resolvedSize[0],
       chartHeight: resolvedSize[1],
       // Reserve the bottom-axis band a bottom legend is placed beyond.
-      axisChrome: { hasAxis: resolved.showAxes !== false }
+      axisChrome
     })
   const legendState = useLegendInteraction(
     props.legendInteraction,
@@ -452,20 +468,6 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
           ? brushProp
           : undefined
 
-  // LinkedBrush integration via selection store
-  const brushConfig = normalizeLinkedBrush(linkedBrush)
-  const timeField = typeof timeAccessor === "string" ? timeAccessor : "time"
-
-  const brushHook = useBrushSelection({
-    name: brushConfig?.name || "__unused_hist_brush__",
-    xField: brushConfig?.xField || timeField,
-    ...(brushConfig?.yField ? { yField: brushConfig.yField } : {})
-  })
-
-  // Stabilize with ref to avoid BrushOverlay re-creation
-  const brushInteractionRef = useRef(brushHook.brushInteraction)
-  brushInteractionRef.current = brushHook.brushInteraction
-
   const combinedOnBrush = useCallback(
     (extent: { x: [number, number]; y: [number, number] } | null) => {
       // Fire user callback
@@ -490,26 +492,15 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
           })
         }
       }
-
-      // Update selection store for linkedBrush
-      if (brushConfig) {
-        const bi = brushInteractionRef.current
-        if (!extent) {
-          bi.end(null)
-        } else if (bi.brush === "xBrush") {
-          bi.end(extent.x)
-        } else if (bi.brush === "yBrush") {
-          bi.end(extent.y)
-        } else {
-          bi.end([
-            [extent.x[0], extent.y[0]],
-            [extent.x[1], extent.y[1]]
-          ])
-        }
-      }
     },
-    [userOnBrush, onObservation, chartId, brushConfig]
+    [userOnBrush, onObservation, chartId]
   )
+  const { brushStreamProps } = useXYBrush({
+    linkedBrush,
+    xAccessor: typeof timeAccessor === "string" ? timeAccessor : "time",
+    defaultDimension: "x",
+    onBrush: combinedOnBrush,
+  })
 
   useRealtimeFrameHandle(ref, frameRef)
 
@@ -571,27 +562,9 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
 
+  const numericTime = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
+  const numericValue = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN, [valueAccessor])
   const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
-  const resolvedValueExtent = useMemo(() => {
-    if (direction !== "down") return valueExtent
-    return resolveDownwardHistogramExtent({
-      data: data as TDatum[] | undefined,
-      valueAccessor,
-      timeAccessor,
-      binSize,
-      valueExtent,
-      extentPadding
-    })
-  }, [
-    direction,
-    data,
-    valueAccessor,
-    timeAccessor,
-    binSize,
-    valueExtent,
-    extentPadding
-  ])
-
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (loadingEl) return loadingEl
   if (emptyEl) return emptyEl
@@ -614,10 +587,11 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       windowMode={windowMode}
       windowSize={windowSize}
       data={data}
-      timeAccessor={timeAccessor}
-      valueAccessor={valueAccessor}
+      timeAccessor={numericTime}
+      valueAccessor={numericValue}
       xExtent={timeExtent}
-      yExtent={resolvedValueExtent}
+      yExtent={valueExtent}
+      invertY={direction === "down"}
       extentPadding={extentPadding}
       binSize={binSize}
       categoryAccessor={categoryAccessor}
@@ -625,6 +599,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       barStyle={barStyle}
       areaStyle={interactiveBarStyle}
       showAxes={showAxes}
+      axes={axes}
       background={background}
       hoverAnnotation={enableHover}
       tooltipContent={resolvedTooltip}
@@ -654,7 +629,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
         normalizedBrush ||
         (linkedBrush ? { dimension: "x" as const } : undefined)
       }
-      onBrush={normalizedBrush || linkedBrush ? combinedOnBrush : undefined}
+      onBrush={normalizedBrush || linkedBrush ? brushStreamProps.onBrush : undefined}
     />
   )
 }) as unknown as {

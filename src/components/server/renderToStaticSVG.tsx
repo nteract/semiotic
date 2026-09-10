@@ -1,3 +1,4 @@
+import { resolveHiddenAxisMargins } from "../legendLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   findSvgRoot,
@@ -457,10 +458,13 @@ function renderChartInternal(
   // Top-level props win so renderChart mirrors the React HOC API.
   const framePropsOverrides = rest.frameProps || {}
   const layoutMargin = config.layout?.margin
-  const defaultMargin =
+  const chartDefaultMargin =
     typeof layoutMargin === "function"
       ? layoutMargin(props, resolvedMode)
       : (layoutMargin ?? resolvedMode.marginDefaults)
+  const defaultMargin = config.frameType === "xy"
+    ? resolveHiddenAxisMargins(chartDefaultMargin, rest.axes ?? framePropsOverrides.axes, !!resolvedMode.title)
+    : chartDefaultMargin
   // Resolve the caller's numeric margin as a baseline. Chart-owned chrome can
   // grow it later, matching the client HOC's minimum-margin contract.
   const explicitMargin =

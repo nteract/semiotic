@@ -115,6 +115,8 @@ describe("buildBarScene", () => {
       data
     )
     expect(getSelectionProvenance(styledOnly.nodes[0]!.datum!)).toBeUndefined()
+    const hoverProducer = buildBarScene(makeCtx({ config: { binSize: 10, trackHoverRows: true } }), data)
+    expect(getSelectionProvenance(hoverProducer.nodes[0]!.datum!)).toEqual(data)
   })
 
   it("bars outside X domain are clamped — bins beyond domain produce no nodes", () => {

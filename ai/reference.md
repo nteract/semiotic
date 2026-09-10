@@ -141,6 +141,11 @@ Push API: `ref.current.push({time, value})`. All pushed data must include a time
 
 **RealtimeLineChart**, **RealtimeHistogram** (+ `brush`, `onBrush`, `linkedBrush`, `direction`; **stacked** via `categoryAccessor` + `colors` — bars sum by category within each bin; **mirrored/diverging** via `direction="down"` flipping the value domain — pair two halves with a shared `timeExtent`/`valueExtent` for an up/down detail view, and overlay extra instances on the same extent for layered envelopes), **TemporalHistogram** (static sibling — same props minus `windowSize`/`windowMode`), **RealtimeSwarmChart**, **RealtimeWaterfallChart**, **RealtimeHeatmap** (+ sequential `colorScheme`; use `colorScheme="custom"` with `customColorScale(value)` for a custom ramp), **Streaming Sankey** (StreamNetworkFrame + `showParticles`). All six named realtime chart forms expose `styleRules`; aggregate histogram/heatmap rules resolve against displayed bins/cells rather than arbitrary source rows.
 
+Temporal histograms support native `responsiveWidth` / `responsiveHeight` (definite parent height required), `showTimeAxis` / `showValueAxis`, and shared XY `axes` configs with `visible: false`. Hidden axes reserve no default margin; explicit margins win. Other XY HOCs use `frameProps.axes`. For mirrored histograms, use shared ascending time/value extents and side margins, hide the upper time axis, set the lower top margin to zero, and use `direction="down"` below. Match plot heights, allowing extra outer height for the lower time axis. Realtime downward orientation also follows pushed data.
+
+Histogram `linkedHover={{ name: "detail", mode: "field", fields: ["time", "category"] }}` emits bin fields or source-row values for absent bin fields. A LineChart with `selection={{ name: "detail" }}` dims nonmatching series, and `showPoints` dims nonmatching observations. Line field hover publishes the hovered row's fields; x-position crosshairs require explicit `mode: "x-position"`. Bin `onHover` receives `{ data: { binStart, binEnd, total, category? }, ... }` or null; `onObservation` emits standard hover/hover-end events. See the realtime histogram docs' linked/mirrored example.
+
+
 All five realtime wrappers accept a top-level `cursor` as a presentation-only default for retained marks; `RealtimeSwarmChart.pointStyle` can override it per datum. Pair actionable cursors with explicit click or observation behavior.
 
 `RealtimeLineChart` supports `eventTime={{ lateness, latePolicy? }}` for bounded out-of-order input. Type its ref as `RealtimeLineChartHandle` and call `ref.current.flush()` when the source ends so events still inside the grace window are released in event-time order. A flush commits an ordering boundary: later newer events buffer normally, while events older than the flushed frontier follow `latePolicy`. Changing the event-time config or `timeAccessor` live drains the old tail before the new interpretation begins.
@@ -494,3 +499,5 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 
 ## Performance
 Prefer string accessors (`xAccessor="value"`) — always referentially stable. Memoize function accessors with `useCallback`.
+
+Threshold annotations (`x-threshold` and `y-threshold`) accept `endCap: "circle"` or `{ radius?, fill? }` at the top (x) or left (y) plot edge in both browser and static SVG. GaugeChart defaults to a native SVG center readout; custom HTML centerContent still uses foreignObject for SVG exports.

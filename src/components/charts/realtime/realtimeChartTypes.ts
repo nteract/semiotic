@@ -5,6 +5,14 @@ import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
+/** Container sizing shared by realtime charts and their static siblings. */
+export interface RealtimeResponsiveProps {
+  /** Fit the container width. */
+  responsiveWidth?: boolean
+  /** Fit a container with a definite height. */
+  responsiveHeight?: boolean
+}
+
 /** Accessibility metadata shared by the streaming chart wrappers. */
 export interface RealtimeAccessibilityProps {
   /** Visible chart title and accessible name. */

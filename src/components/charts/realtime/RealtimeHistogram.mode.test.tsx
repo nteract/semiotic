@@ -2,8 +2,10 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { RealtimeHistogram } from "./RealtimeHistogram"
+import { SelectionProvider } from "../../store/SelectionStore"
+import { useSelection } from "../../store/useSelection"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 // `useChartMode` only affects the props RealtimeHistogram forwards to
@@ -54,4 +56,33 @@ describe("RealtimeHistogram — chart mode resolution", () => {
     expect(lastXYFrameProps.size).toEqual([600, 400])
     expect(lastXYFrameProps.showAxes).toBe(true)
   })
+})
+
+
+it("publishes time brush selections and application events, then clears both", () => {
+  let selection: ReturnType<typeof useSelection>
+  function Probe() {
+    selection = useSelection({ name: "time-window" })
+    return null
+  }
+  const onBrush = vi.fn()
+  const onObservation = vi.fn()
+  render(
+    <SelectionProvider>
+      <Probe />
+      <RealtimeHistogram binSize={10} timeAccessor="timestamp"
+        linkedBrush="time-window" onBrush={onBrush} onObservation={onObservation} />
+    </SelectionProvider>
+  )
+  const extent = { x: [10, 20] as [number, number], y: [0, 5] as [number, number] }
+  act(() => lastXYFrameProps.onBrush!(extent))
+  expect(selection!.isActive).toBe(true)
+  expect(selection!.predicate({ timestamp: 15 })).toBe(true)
+  expect(selection!.predicate({ timestamp: 30 })).toBe(false)
+  expect(onBrush).toHaveBeenLastCalledWith(extent)
+  expect(onObservation).toHaveBeenLastCalledWith(expect.objectContaining({ type: "brush", extent }))
+  act(() => lastXYFrameProps.onBrush!(null))
+  expect(selection!.isActive).toBe(false)
+  expect(onBrush).toHaveBeenLastCalledWith(null)
+  expect(onObservation).toHaveBeenLastCalledWith(expect.objectContaining({ type: "brush-end" }))
 })

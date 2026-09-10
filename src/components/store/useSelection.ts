@@ -8,6 +8,7 @@ import {
   type FieldSelection,
   type SelectionStoreState
 } from "./SelectionStore"
+import { getSelectionProvenance } from "./selectionProvenance"
 import { hasOwnEnumerableKey } from "./createStore"
 
 // Re-export crosshair store for convenience
@@ -195,10 +196,15 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
         const val = datum[field]
         if (val !== undefined) {
           fieldValues[field] = [val]
+        } else {
+          const values = getSelectionProvenance(datum)?.map(row => row[field]).filter(value => value !== undefined)
+          if (values?.length) fieldValues[field] = [...new Set(values)]
         }
       }
       if (hasOwnEnumerableKey(fieldValues)) {
         selectPoints(fieldValues)
+      } else {
+        clear()
       }
     },
     [fields, selectPoints, clear]

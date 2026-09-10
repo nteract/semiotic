@@ -31,3 +31,8 @@ export function getSelectionProvenance(
     SELECTION_PROVENANCE
   ]
 }
+
+/** Keep the representative styling row while matching any row in a series. */
+export function seriesSelectionDatum(rows: readonly Datum[]): Datum {
+  return attachSelectionProvenance({ ...rows[0] }, rows)
+}

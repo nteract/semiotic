@@ -1,4 +1,6 @@
 "use client"
+import { XYGrid } from "./XYGrid"
+import { resolveXYAxes } from "./resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useEffect } from "react"
@@ -22,7 +24,6 @@ import {
 import {
   jaggedBaselinePath,
   resolveAxisLineStyle,
-  resolveGridDash,
   resolveHorizontalTickAnchor,
   resolveVerticalTickBaseline,
   tickPixelExtent
@@ -346,57 +347,13 @@ export function SVGOverlay(props: SVGOverlayProps) {
          *    canvas opacity; pinning the canvas-opacity hint via
          *    `canvasObscuresUnderlay` keeps both regressions out of
          *    play simultaneously. */}
-        {showGrid && scales && (!underlayRendered || canvasObscuresUnderlay) && (() => {
-          const bottomAxis = axes?.find(a => a.orient === "bottom")
-          const topAxis = axes?.find(a => a.orient === "top")
-          const leftAxis = axes?.find(a => a.orient === "left")
-          const rightAxis = axes?.find(a => a.orient === "right")
-          const xAxis = bottomAxis ?? topAxis
-          const yAxis = leftAxis ?? rightAxis
-          const bottomGridStyle = resolveGridDash(xAxis?.gridStyle)
-          const leftGridStyle = resolveGridDash(yAxis?.gridStyle)
-          const xGridLine = resolveAxisLineStyle(xAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
-          const yGridLine = resolveAxisLineStyle(yAxis?.gridStyle, { stroke: "var(--semiotic-grid, #e0e0e0)", strokeWidth: 1 })
-          const showXGrid = xAxis?.grid !== false
-          const showYGrid = yAxis?.grid !== false
-          return (
-          <g className="stream-grid">
-            {showXGrid && xTicks.map((tick, i) => (
-              <line
-                key={`xgrid-${i}`}
-                x1={tick.pixel}
-                y1={0}
-                x2={tick.pixel}
-                y2={height}
-                {...xGridLine}
-                strokeDasharray={bottomGridStyle ?? xGridLine.strokeDasharray}
-              />
-            ))}
-            {showYGrid && yTicks.map((tick, i) => (
-              <line
-                key={`ygrid-${i}`}
-                x1={0}
-                y1={tick.pixel}
-                x2={width}
-                y2={tick.pixel}
-                {...yGridLine}
-                strokeDasharray={leftGridStyle ?? yGridLine.strokeDasharray}
-              />
-            ))}
-          </g>
-          )
-        })()}
+        {showGrid && scales && (!underlayRendered || canvasObscuresUnderlay) && (
+          <XYGrid axes={axes} xTicks={xTicks} yTicks={yTicks} width={width} height={height} />
+        )}
 
         {/* Axes */}
         {showAxes && scales && (() => {
-          const bottomAxis = axes?.find(a => a.orient === "bottom")
-          const topAxis = axes?.find(a => a.orient === "top")
-          const leftAxis = axes?.find(a => a.orient === "left")
-          const rightAxis = axes?.find(a => a.orient === "right")
-          const xAxis = bottomAxis ?? topAxis
-          const yAxis = leftAxis ?? rightAxis
-          const xOrient = bottomAxis ? "bottom" : topAxis ? "top" : "bottom"
-          const yOrient = leftAxis ? "left" : rightAxis ? "right" : "left"
+          const { xAxis, yAxis, xOrient, yOrient, leftAxis } = resolveXYAxes(axes)
           const xBaselineY = xOrient === "top" ? 0 : height
           const yBaselineX = yOrient === "right" ? width : 0
           const xTickDirection = xOrient === "top" ? -1 : 1
@@ -446,7 +403,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const yPixelExtent = tickPixelExtent(yTicks)
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
-            <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
+            {xAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
             {/* Horizontal-axis baseline. Same three-state gate as the grid block
                 above: render unless the underlay is already showing
                 through a transparent canvas. */}
@@ -503,9 +460,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {xAxisLabel}
               </text>
             )}
-            </g>
+            </g>}
 
-            <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
+            {yAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
             {/* Vertical-axis baseline. Same gate as the horizontal baseline above. */}
             {(!underlayRendered || canvasObscuresUnderlay) && showYBaseline && !yJagged && (
               <line x1={yBaselineX} y1={0} x2={yBaselineX} y2={height} {...yAxisLine} />
@@ -561,7 +518,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {yAxisLabel}
               </text>
             )}
-            </g>
+            </g>}
 
             {/* Right Y axis */}
             {(() => {
@@ -570,7 +527,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
               // the right axis. Render this second block only for an explicit
               // left/right pair so right-only configs do not also create a
               // default left axis.
-              if (!leftAxis || !rightAxis || yTicksRight.length === 0) return null
+              if (!leftAxis || !rightAxis || rightAxis.visible === false || yTicksRight.length === 0) return null
               const showRightBaseline = rightAxis.baseline !== false
               const rightLandmark = rightAxis.landmarkTicks
               const rightLabel = rightAxis.label || yLabelRight

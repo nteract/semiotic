@@ -1,3 +1,4 @@
+import { resolveXYAxes } from "../stream/resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import {
@@ -475,14 +476,7 @@ export function generateAxesSVG(
     hasRenderedLegend && legendPosition === "right" && rightSideLegendGutter > 0
       ? rightSideLegendGutter
       : (margin?.right ?? props.margin?.right ?? 40)
-  const bottomAxis = props.axes?.find((axis) => axis.orient === "bottom")
-  const topAxis = props.axes?.find((axis) => axis.orient === "top")
-  const leftAxis = props.axes?.find((axis) => axis.orient === "left")
-  const rightAxis = props.axes?.find((axis) => axis.orient === "right")
-  const xAxis = bottomAxis ?? topAxis
-  const yAxis = leftAxis ?? rightAxis
-  const xOrient = bottomAxis ? "bottom" : topAxis ? "top" : "bottom"
-  const yOrient = leftAxis ? "left" : rightAxis ? "right" : "left"
+  const { xAxis, yAxis, xOrient, yOrient } = resolveXYAxes(props.axes)
   const xBaselineY = xOrient === "top" ? 0 : layout.height
   const yBaselineX = yOrient === "right" ? layout.width : 0
   const xTickDirection = xOrient === "top" ? -1 : 1
@@ -508,6 +502,7 @@ export function generateAxesSVG(
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
+      {xAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
       {xAxis?.baseline !== false && !xAxis?.jaggedBase && (
         <line
           x1={0}
@@ -573,6 +568,8 @@ export function generateAxesSVG(
         </text>
       )}
 
+      </g>}
+      {yAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
       {yAxis?.baseline !== false && !yAxis?.jaggedBase && (
         <line
           x1={yBaselineX}
@@ -615,7 +612,7 @@ export function generateAxesSVG(
             fontFamily: s.fontFamily,
             color: s.textSecondary,
           })}
-        </g>
+          </g>
         )
       })}
       {yLabel && (
@@ -631,6 +628,7 @@ export function generateAxesSVG(
           {yLabel}
         </text>
       )}
+      </g>}
     </g>
   )
 }
