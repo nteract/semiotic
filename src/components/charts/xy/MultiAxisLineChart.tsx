@@ -17,7 +17,6 @@ import {
 } from "../../Tooltip/Tooltip"
 import { useChartMode } from "../shared/hooks"
 import { useThemeCategorical } from "../shared/hooks"
-import { COLOR_SCHEMES, DEFAULT_COLORS } from "../shared/colorUtils"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -30,7 +29,8 @@ import { type StyleRule } from "../shared/styleRules"
 import {
   MULTI_AXIS_SERIES_FIELD,
   MULTI_AXIS_UNITIZED_FIELD,
-  makeMultiAxisRuleContext
+  makeMultiAxisRuleContext,
+  resolveMultiAxisSeriesColors,
 } from "./multiAxisFields"
 
 registerXYPlugin(lineXYPlugin)
@@ -322,20 +322,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   // ── Resolve colors from theme ─────────────────────────────────────────
   const themeCategorical = useThemeCategorical()
 
-  const seriesColors = useMemo(() => {
-    // Resolve the effective palette
-    let palette: string[]
-    if (Array.isArray(colorScheme)) {
-      palette = colorScheme
-    } else if (themeCategorical && themeCategorical.length > 0) {
-      palette = themeCategorical
-    } else {
-      const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-      palette = Array.isArray(resolved) ? resolved as string[] : DEFAULT_COLORS as unknown as string[]
-    }
-
-    return safeSeries.map((s, i) => s.color || palette[i % palette.length])
-  }, [safeSeries, colorScheme, themeCategorical])
+  const seriesColors = useMemo(
+    () => resolveMultiAxisSeriesColors(safeSeries, colorScheme, themeCategorical),
+    [safeSeries, colorScheme, themeCategorical],
+  )
 
   // ── Series labels ─────────────────────────────────────────────────────
   const seriesLabels = useMemo(

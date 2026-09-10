@@ -72,6 +72,28 @@ describe("buildCandlestickScene", () => {
     expect(nodes[1].style?.opacity).toBe(0.2)
   })
 
+  it("promotes strokeWidth and fillOpacity from pointStyle", () => {
+    const data = [{ x: 0, open: 10, high: 15, low: 5, close: 12 }]
+    const ctx = makeCtx({
+      config: {
+        pointStyle: () => ({
+          fill: { type: "hatch", background: "#ffd166", stroke: "#e0a92a" },
+          strokeWidth: 3,
+          fillOpacity: 0.4,
+        }),
+      },
+    })
+    const node = asCandlestick(buildCandlestickScene(ctx, data, defaultLayout)[0])
+    expect(node.upColor).toBe("#28a745")
+    expect(node.wickWidth).toBe(3)
+    expect(node.style?.opacity).toBe(0.4)
+    expect(node.style?.fill).toEqual({
+      type: "hatch",
+      background: "#ffd166",
+      stroke: "#e0a92a",
+    })
+  })
+
   it("uses pointStyle fill as the body color for that candle", () => {
     const data = [
       { x: 0, open: 10, high: 15, low: 5, close: 12 },

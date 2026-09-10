@@ -509,8 +509,8 @@ and declares them as normal runtime dependencies. Consumers do not need to
 install d3 packages manually; their bundler resolves, deduplicates, and
 tree-shakes that dependency graph. A packed webpack comparison favored this
 model in three of four representative chart families, and a Next 16 webpack
-route was 21.8 KiB gzip smaller than the fully bundled alternative. The one
-bundled win, Sankey, was only 1.1 KiB gzip. This choice retains a 22-package,
+route was 22.7 KiB gzip smaller than the fully bundled alternative. The one
+bundled win, Sankey, was only 0.4 KiB gzip. This choice retains a 22-package,
 1.9 MB unpacked d3 install closure in exchange for smaller common application
 graphs and an ordinary dependency contract. The checked policy is
 `npm run check:d3-packaging`; the reproducible evidence is in

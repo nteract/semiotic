@@ -1,12 +1,13 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { DEFAULT_COLORS } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
+import { resolveTheme } from "./themeResolver"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../charts/shared/styleRules"
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import {
   MULTI_AXIS_SERIES_FIELD,
   MULTI_AXIS_UNITIZED_FIELD,
-  makeMultiAxisRuleContext
+  makeMultiAxisRuleContext,
+  resolveMultiAxisSeriesColors,
 } from "../charts/xy/multiAxisFields"
 import { type ChartConfig } from "./serverChartConfigShared"
 
@@ -40,10 +41,14 @@ export const multiAxisLineChart: ChartConfig = {
       format?: (d: number) => string
       extent?: [number, number]
     }> : []
-    const palette = Array.isArray(colorScheme) ? colorScheme as string[] : [...DEFAULT_COLORS]
-    const seriesColorScheme = series.some((s) => typeof s.color === "string")
-      ? series.map((s, i) => s.color || palette[i % palette.length])
-      : colorScheme
+    const themeCategorical = resolveTheme(
+      common.theme as Parameters<typeof resolveTheme>[0],
+    ).colors.categorical
+    const seriesColors = resolveMultiAxisSeriesColors(
+      series,
+      colorScheme as string | string[] | Record<string, string> | undefined,
+      themeCategorical,
+    )
     const isDual = series.length === 2
     const extents = series.map((s) => s.extent || multiAxisExtent(rows, s.yAccessor))
     const unitized: Datum[] = []
@@ -84,17 +89,14 @@ export const multiAxisLineChart: ChartConfig = {
         ]
       : undefined
     const seriesColorMap = new Map<string, string>()
-    const strokePalette = Array.isArray(seriesColorScheme)
-      ? seriesColorScheme as string[]
-      : palette
     series.forEach((s, i) => {
-      seriesColorMap.set(s.label || `Series ${i + 1}`, s.color || strokePalette[i % strokePalette.length])
+      seriesColorMap.set(s.label || `Series ${i + 1}`, seriesColors[i])
     })
     const lineStyle = mergeShapeStyle(
       buildXYLineBaseStyle({
         lineWidth: typeof rest.lineWidth === "number" ? rest.lineWidth : 2,
         resolveStroke: (d) =>
-          seriesColorMap.get(String(d[MULTI_AXIS_SERIES_FIELD] ?? "")) || strokePalette[0],
+          seriesColorMap.get(String(d[MULTI_AXIS_SERIES_FIELD] ?? "")) || seriesColors[0],
         styleRules: rest.styleRules as StyleRule[] | undefined,
         ruleContext: makeMultiAxisRuleContext(
           rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
@@ -114,13 +116,13 @@ export const multiAxisLineChart: ChartConfig = {
       yAccessor: MULTI_AXIS_UNITIZED_FIELD,
       groupAccessor: MULTI_AXIS_SERIES_FIELD,
       colorAccessor: MULTI_AXIS_SERIES_FIELD,
-      colorScheme: seriesColorScheme,
       ...(axes && { axes }),
       ...(isDual && { yExtent: [0, 1] as [number, number] }),
       ...common,
       // HOC defaults; `...common` last would otherwise drop them when omitted.
       curve: rest.curve || common.curve || "monotoneX",
       showLegend: common.showLegend ?? true,
+      colorScheme: seriesColors,
       lineStyle,
     }
   },
@@ -139,6 +141,25 @@ export const waterfallChart: ChartConfig = {
     const plotData = needsIndex
       ? rows.map((d, i) => ({ ...d, __waterfallX: i, __waterfallTick: String(readX(d) ?? i) }))
       : rows
+    const ruledAreaStyle = rest.styleRules
+      ? composeStyleRules(
+          undefined,
+          rest.styleRules as StyleRule[],
+          makeXYRuleContext(
+            rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
+            rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
+          ),
+        )
+      : undefined
+    const areaStyle = ruledAreaStyle
+      ? (d: Datum) => {
+          const ruled = ruledAreaStyle(d)
+          const extra = typeof common.areaStyle === "function"
+            ? common.areaStyle(d)
+            : common.areaStyle
+          return extra ? { ...ruled, ...extra } : ruled
+        }
+      : undefined
     return {
       chartType: "waterfall",
       data: plotData,
@@ -155,16 +176,7 @@ export const waterfallChart: ChartConfig = {
         opacity: rest.opacity,
       },
       ...common,
-      ...(rest.styleRules ? {
-        areaStyle: composeStyleRules(
-          undefined,
-          rest.styleRules as StyleRule[],
-          makeXYRuleContext(
-            rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
-            rest.yAccessor as string | ((d: Datum) => unknown) | undefined,
-          ),
-        ),
-      } : {}),
+      ...(areaStyle && { areaStyle }),
       ...(needsIndex && {
         axes: common.axes ?? [{
           orient: "bottom" as const,

@@ -541,9 +541,11 @@ export const candlestickChart: ChartConfig = {
       closeAccessor: rest.closeAccessor,
       candlestickStyle: rest.candlestickStyle,
       ...common,
-      ...(Array.isArray(rest.styleRules) && rest.styleRules.length > 0 && {
+      // `frameProps.pointStyle` is the documented last-spread escape hatch on
+      // the HOC. Do not compose styleRules over it on the server path.
+      ...(!common.pointStyle && Array.isArray(rest.styleRules) && rest.styleRules.length > 0 && {
         pointStyle: composeStyleRules(
-          typeof common.pointStyle === "function" ? common.pointStyle as (d: Datum) => Datum : undefined,
+          undefined,
           rest.styleRules as StyleRule[],
           makeXYRuleContext(
             (rest.xAccessor || "x") as string | ((d: Datum) => unknown),

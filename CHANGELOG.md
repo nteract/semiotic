@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Radial `valueFormat`** — `RadarChart`, `FunnelChart`, `PieChart`, and
   `DonutChart` apply `valueFormat` to default tooltips (and radar/funnel
   value-axis ticks) instead of ignoring it.
+- **Candlestick hatch and MultiAxis named schemes** — candle `styleRules`
+  hatch fills and stroke widths reach SVG and canvas; `frameProps.pointStyle`
+  still wins over rules. MultiAxis named and `{ label: color }` schemes
+  color SSR strokes the same way as the live chart.
 - **FlowMap edge width is NaN-safe** — client and `renderChart` share one
   width mapper; non-finite values collapse to the minimum stroke instead of
   emitting `stroke-width="NaN"`.

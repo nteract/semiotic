@@ -755,6 +755,28 @@ describe("xySceneNodeToSVG — candlestick", () => {
     expect(html).toContain('fill="green"')
   })
 
+  it("emits an SVG hatch pattern when style.fill is a HatchFill", () => {
+    const node = {
+      type: "candlestick",
+      x: 50,
+      openY: 30,
+      closeY: 20,
+      highY: 10,
+      lowY: 40,
+      bodyWidth: 8,
+      upColor: "green",
+      downColor: "red",
+      wickColor: "#333",
+      wickWidth: 1,
+      isUp: true,
+      style: { fill: { type: "hatch", background: "#ffd166", stroke: "#e0a92a" } },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0, "c1"))
+    expect(html).toContain("<pattern")
+    expect(html).toContain("#e0a92a")
+    expect(html).toContain("url(#c1-candle-0-hatch)")
+  })
+
   it("uses downColor when isUp is false", () => {
     const node = {
       type: "candlestick",

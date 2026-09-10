@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "package": "3.10.0",
-  "generatedAt": "2026-08-31T23:30:38.969Z",
+  "generatedAt": "2026-09-10T20:46:21.100Z",
   "environment": {
     "platform": "darwin",
     "architecture": "arm64",
@@ -11,10 +11,10 @@
     "artifact": "npm pack --ignore-scripts production tarball",
     "externalized": "Packed Semiotic package with individual d3 runtime dependencies resolved by the consumer bundler.",
     "bundled": "Synthetic package generated from the packed family ESM entries with all d3 modules folded into its split ESM graph; React, optional adapters, and topojson-client remain external.",
-    "webpack": "5.109.2",
-    "next": "16.3.2",
+    "webpack": "5.110.3",
+    "next": "16.3.4",
     "nextBundler": "webpack",
-    "esbuild": "0.28.1",
+    "esbuild": "0.28.2",
     "hostExternals": [
       "react",
       "react-dom",
@@ -30,10 +30,10 @@
     ]
   },
   "bundledVariant": {
-    "rawBytes": 1398382,
-    "gzipBytes": 451314,
-    "files": 50,
-    "outputFiles": 44
+    "rawBytes": 1406327,
+    "gzipBytes": 454589,
+    "files": 49,
+    "outputFiles": 43
   },
   "d3InstallClosure": {
     "directPackages": 12,
@@ -70,20 +70,20 @@
       "subpath": "xy",
       "symbol": "LineChart",
       "externalized": {
-        "rawBytes": 442012,
-        "gzipBytes": 141182,
+        "rawBytes": 436076,
+        "gzipBytes": 142071,
         "files": 7,
         "resolvedD3Modules": 23
       },
       "bundled": {
-        "rawBytes": 514318,
-        "gzipBytes": 159081,
+        "rawBytes": 513646,
+        "gzipBytes": 160813,
         "files": 10,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 72306,
-        "gzipBytes": 17899
+        "rawBytes": 77570,
+        "gzipBytes": 18742
       }
     },
     {
@@ -91,20 +91,20 @@
       "subpath": "ordinal",
       "symbol": "BarChart",
       "externalized": {
-        "rawBytes": 443215,
-        "gzipBytes": 130374,
+        "rawBytes": 438161,
+        "gzipBytes": 130593,
         "files": 3,
         "resolvedD3Modules": 6
       },
       "bundled": {
-        "rawBytes": 454305,
-        "gzipBytes": 134078,
+        "rawBytes": 453167,
+        "gzipBytes": 134462,
         "files": 3,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 11090,
-        "gzipBytes": 3704
+        "rawBytes": 15006,
+        "gzipBytes": 3869
       }
     },
     {
@@ -112,20 +112,20 @@
       "subpath": "network",
       "symbol": "SankeyDiagram",
       "externalized": {
-        "rawBytes": 545706,
-        "gzipBytes": 173977,
+        "rawBytes": 538901,
+        "gzipBytes": 173209,
         "files": 5,
         "resolvedD3Modules": 6
       },
       "bundled": {
-        "rawBytes": 540324,
-        "gzipBytes": 172879,
+        "rawBytes": 538950,
+        "gzipBytes": 172829,
         "files": 5,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": -5382,
-        "gzipBytes": -1098
+        "rawBytes": 49,
+        "gzipBytes": -380
       }
     },
     {
@@ -133,20 +133,20 @@
       "subpath": "geo",
       "symbol": "ChoroplethMap",
       "externalized": {
-        "rawBytes": 1820279,
-        "gzipBytes": 570809,
+        "rawBytes": 1816708,
+        "gzipBytes": 571432,
         "files": 6,
         "resolvedD3Modules": 0
       },
       "bundled": {
-        "rawBytes": 1831051,
-        "gzipBytes": 574179,
+        "rawBytes": 1830723,
+        "gzipBytes": 575452,
         "files": 6,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 10772,
-        "gzipBytes": 3370
+        "rawBytes": 14015,
+        "gzipBytes": 4020
       }
     }
   ],
@@ -156,18 +156,18 @@
       "symbol": "LineChart"
     },
     "externalized": {
-      "rawBytes": 1321182,
-      "gzipBytes": 411953,
+      "rawBytes": 1348898,
+      "gzipBytes": 421760,
       "files": 24
     },
     "bundled": {
-      "rawBytes": 1408241,
-      "gzipBytes": 434266,
+      "rawBytes": 1437085,
+      "gzipBytes": 444985,
       "files": 29
     },
     "delta": {
-      "rawBytes": 87059,
-      "gzipBytes": 22313
+      "rawBytes": 88187,
+      "gzipBytes": 23225
     }
   },
   "decision": {
