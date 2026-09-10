@@ -9,6 +9,10 @@ import { composeStyleRules, makeRuleValueResolver, makeXYRuleContext, resolveSty
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
+  buildDifferenceAreaStyle,
+  buildDifferenceLineStyle,
+} from "../charts/xy/differenceMarkStyle"
+import {
   normalizeGradient,
   normalizeSemanticGradient,
   reverseGradient,
@@ -405,8 +409,8 @@ export const differenceChart: ChartConfig = {
       const sorted = finite.sort((p, q) => getX(p) - getX(q))
       for (const d of sorted) {
         const x = getX(d), a = getA(d), b = getB(d)
-        if (Number.isFinite(a)) overlay.push({ __x: x, __y: a, __diffSegment: "line-A" })
-        if (Number.isFinite(b)) overlay.push({ __x: x, __y: b, __diffSegment: "line-B" })
+        if (Number.isFinite(a)) overlay.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A", __sourceDatum: d })
+        if (Number.isFinite(b)) overlay.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B", __sourceDatum: d })
       }
     }
     const combined = [...segmented, ...overlay] as Datum[]
@@ -424,24 +428,18 @@ export const differenceChart: ChartConfig = {
       // A/B series colors and never applies `mergeShapeStyle`, so honoring
       // top-level stroke/strokeWidth/opacity in SSR alone would make the
       // static SVG diverge from the canvas rather than match it.
-      areaStyle: (d: Datum) => {
-        const key = d.__diffSegment as string
-        const winner = key?.endsWith("-A") ? "A" : "B"
-        return {
-          fill: winner === "A" ? seriesAColor : seriesBColor,
-          stroke: "none",
-          fillOpacity: areaOpacity,
-        }
-      },
-      lineStyle: (d: Datum) => {
-        const key = d.__diffSegment as string
-        const winner = key === "line-A" ? "A" : "B"
-        return {
-          stroke: winner === "A" ? seriesAColor : seriesBColor,
-          strokeWidth: lineWidth,
-          fill: "none",
-        }
-      },
+      areaStyle: buildDifferenceAreaStyle({
+        seriesAColor,
+        seriesBColor,
+        areaOpacity,
+        styleRules: rest.styleRules as StyleRule[] | undefined,
+      }),
+      lineStyle: buildDifferenceLineStyle({
+        seriesAColor,
+        seriesBColor,
+        lineWidth,
+        styleRules: rest.styleRules as StyleRule[] | undefined,
+      }),
       curve: rest.curve || "linear",
       ...common,
       ...(showLegend && {
@@ -543,6 +541,16 @@ export const candlestickChart: ChartConfig = {
       closeAccessor: rest.closeAccessor,
       candlestickStyle: rest.candlestickStyle,
       ...common,
+      ...(Array.isArray(rest.styleRules) && rest.styleRules.length > 0 && {
+        pointStyle: composeStyleRules(
+          typeof common.pointStyle === "function" ? common.pointStyle as (d: Datum) => Datum : undefined,
+          rest.styleRules as StyleRule[],
+          makeXYRuleContext(
+            (rest.xAccessor || "x") as string | ((d: Datum) => unknown),
+            (rest.closeAccessor || rest.highAccessor || "high") as string | ((d: Datum) => unknown),
+          ),
+        ),
+      }),
       // CandlestickChart deliberately insets the x scale so bodies don't
       // touch the chart edges. This HOC-level calculation was absent from
       // renderChart(), making SSR candles visibly wider/outset than CSR.

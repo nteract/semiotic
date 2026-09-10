@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 
@@ -61,6 +62,10 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
   legendPosition?: "right" | "left" | "top" | "bottom"
   tooltip?: TooltipProp
   annotations?: Datum[]
+  /** Enable a value-axis brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ r: [min, max] }` or null when the brush clears. */
+  onBrush?: (extent: { r: [number, number] } | null) => void
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
   /** Fixed value-axis domain `[min, max]`. Either bound may be `undefined` to leave that side data-derived. Stacked bars auto-extend the value domain to cover the cumulative stack unless `valueExtent` is fully specified. */
@@ -134,6 +139,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, normalize = false, sort = false, barPadding = 40, roundedTop, gradientFill, styleRules, baselinePadding = false,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
+    linkedBrush, brush: brushProp, onBrush: onBrushProp,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
     legendInteraction,
@@ -196,6 +202,13 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
 
   // Consolidated piece-style — same recipe as BarChart/PieChart
   // (base fill, style rules, user overlay, primitive props, selection wrap).
+  const ordinalBrush = useOrdinalBrush({
+    brushProp,
+    onBrushProp,
+    linkedBrush,
+    valueAccessor,
+  })
+
   const pieceStyle = useOrdinalPieceStyle({
     colorBy: effectiveColorBy,
     colorScale: setup.colorScale,
@@ -276,6 +289,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
+    ...ordinalBrush.brushStreamProps,
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),

@@ -107,7 +107,7 @@
     "src/components/store/selectionProvenance.ts"
   ],
   "inventoryVersion": 1,
-  "repositoryVersion": "3.9.2",
+  "repositoryVersion": "3.10.0",
   "relations": [
     {
       "id": "claim-support",
@@ -3970,6 +3970,7 @@
         "fits",
         "importPath",
         "intentScores",
+        "numericContracts",
         "rubric"
       ],
       "documentation": {
@@ -4010,7 +4011,8 @@
         "abstention": {
           "status": "partial",
           "evidence": [
-            "caveats"
+            "caveats",
+            "numericContracts"
           ]
         },
         "preservation": {
@@ -5318,7 +5320,10 @@
       ],
       "exports": [
         "attachSelectionProvenance",
-        "getSelectionProvenance"
+        "getSelectionProvenance",
+        "requestsSelectionProvenance",
+        "selectionDatumWithParent",
+        "seriesSelectionDatum"
       ]
     },
     {

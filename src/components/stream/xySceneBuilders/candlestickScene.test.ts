@@ -72,6 +72,21 @@ describe("buildCandlestickScene", () => {
     expect(nodes[1].style?.opacity).toBe(0.2)
   })
 
+  it("uses pointStyle fill as the body color for that candle", () => {
+    const data = [
+      { x: 0, open: 10, high: 15, low: 5, close: 12 },
+      { x: 10, open: 12, high: 18, low: 9, close: 8 },
+    ]
+    const ctx = makeCtx({
+      config: {
+        pointStyle: (datum) => datum.close > 10 ? { fill: "#d7263d" } : {},
+      },
+    })
+    const nodes = buildCandlestickScene(ctx, data, defaultLayout)
+    expect(asCandlestick(nodes[0]).upColor).toBe("#d7263d")
+    expect(asCandlestick(nodes[1]).downColor).toBe("#dc3545")
+  })
+
   it("sets isUp=true when close >= open, isUp=false when close < open", () => {
     const data = [
       { x: 0, open: 10, high: 20, low: 5, close: 15 },   // up: 15 >= 10

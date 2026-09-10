@@ -127,6 +127,29 @@ describe("RadarChart", () => {
     expect(fillA).not.toBe(fillB)
   })
 
+  it("forwards valueFormat to rFormat and the default tooltip", () => {
+    const valueFormat = (v: number | string) => `n=${v}`
+    render(
+      <TooltipProvider>
+        <RadarChart
+          data={sample}
+          categoryAccessor="attribute"
+          valueAccessor="value"
+          seriesAccessor="name"
+          valueFormat={valueFormat}
+          width={400}
+          height={400}
+        />
+      </TooltipProvider>
+    )
+    expect(lastOrdinalFrameProps.rFormat).toBe(valueFormat)
+    const node = lastOrdinalFrameProps.tooltipContent({
+      data: { attribute: "speed", value: 80, name: "A" }
+    })
+    const { container } = render(<>{node}</>)
+    expect(container.textContent).toContain("n=80")
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

@@ -40,6 +40,8 @@ export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChart
   pointRadius?: number
   /** Fixed value-axis domain. Defaults to `[0, data-max]`. */
   valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Formatter for axis ticks and the default tooltip. */
+  valueFormat?: (d: number | string) => string
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
@@ -118,6 +120,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     styleRules,
     pointRadius = 4,
     valueExtent,
+    valueFormat,
     tooltip,
     annotations,
     frameProps = {},
@@ -215,8 +218,9 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
       valueAccessor,
       groupAccessor: seriesKey,
       groupLabel: typeof seriesKey === "string" ? seriesKey : "series",
+      valueFormat,
     }),
-    [categoryAccessor, valueAccessor, seriesKey]
+    [categoryAccessor, valueAccessor, seriesKey, valueFormat]
   )
 
   if (setup.earlyReturn) return setup.earlyReturn
@@ -251,6 +255,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
     pieceStyle,
     ...(categoryFormat && { oFormat: categoryFormat }),
     rExtent: valueExtent ?? [0],
+    rFormat: valueFormat,
     oLabel: "",
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

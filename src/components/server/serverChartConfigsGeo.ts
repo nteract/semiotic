@@ -4,7 +4,8 @@ import { DEFAULT_COLOR } from "../charts/shared/hooks"
 import { getMinMax } from "../charts/shared/minMax"
 import { GEO_BACKGROUND_AREA_STYLE } from "../charts/shared/geoStyleDefaults"
 import { type ChartConfig } from "./serverChartConfigShared"
-import { composeStyleRules, makeNodeRuleContext } from "../charts/shared/styleRules"
+import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../charts/shared/styleRules"
+import { buildFlowMapLineStyle } from "../charts/geo/flowMapLineStyle"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
 import { scaleSequential } from "d3-scale"
 import type { GradientLegendConfig } from "../types/legendTypes"
@@ -365,21 +366,11 @@ export const flowMap: ChartConfig = {
       return getColor(d, edgeColorByIn as string | ((d: Datum) => string), colorScale)
     }
 
-    // Precompute min/max value range once per build. Recomputing inside
-    // `lineStyle` would be O(n) per line → O(n²) total for rendering.
-    let minValue = Infinity
-    let maxValue = -Infinity
-    for (const line of lines) {
-      const v = Number(line[valueAccessor] ?? 0)
-      if (!isFinite(v)) continue
-      if (v < minValue) minValue = v
-      if (v > maxValue) maxValue = v
-    }
-    const valueRange = maxValue > minValue ? maxValue - minValue : 0
-
-    // Width scale — map value → edgeWidthRange linearly. Mirrors the HOC.
+    const valueVals = lines
+      .map((line) => Number(line[valueAccessor] ?? 0))
+      .filter((v) => Number.isFinite(v))
+    const valueDomain = valueVals.length > 0 ? getMinMax(valueVals) : undefined
     const [widthMin, widthMax] = rest.edgeWidthRange ?? [1, 8]
-    const widthSpan = widthMax - widthMin
     const edgeOpacity = rest.edgeOpacity ?? 0.6
     const edgeLinecap = rest.edgeLinecap ?? "round"
 
@@ -397,26 +388,15 @@ export const flowMap: ChartConfig = {
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
       colorScheme,
-      lineStyle: (d: Datum) => {
-        // Guard against non-finite values (NaN from strings, Infinity, etc.)
-        // — they'd otherwise propagate through `normalized` and produce an
-        // invalid `stroke-width="NaN"` in the output SVG. Non-finite inputs
-        // collapse to `minValue`, and the ratio is clamped to [0, 1] as a
-        // belt-and-suspenders against odd (value < minValue, value > maxValue)
-        // inputs.
-        const raw = Number(d?.[valueAccessor])
-        const v = Number.isFinite(raw) ? raw : minValue
-        const ratio = valueRange > 0 ? (v - minValue) / valueRange : 0
-        const normalized = Math.max(0, Math.min(1, ratio))
-        const width = widthMin + normalized * widthSpan
-        return {
-          stroke: resolveEdgeColor(d),
-          strokeWidth: width,
-          strokeLinecap: edgeLinecap,
-          opacity: edgeOpacity,
-          fillOpacity: 0,
-        }
-      },
+      lineStyle: buildFlowMapLineStyle({
+        valueAccessor,
+        valueDomain,
+        edgeWidthRange: [widthMin, widthMax],
+        resolveStroke: resolveEdgeColor,
+        edgeOpacity,
+        edgeLinecap,
+        styleRules: rest.styleRules as StyleRule[] | undefined,
+      }),
       pointStyle: () => ({ fill: "#333", r: 4, fillOpacity: 0.8 }),
       ...common,
     }

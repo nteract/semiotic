@@ -30,6 +30,8 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
   colorScheme?: string | string[] | Record<string, string>
   /** Ordered data-aware wedge styling; fieldless thresholds use absolute wedge magnitude. */
   styleRules?: StyleRule[]
+  /** Formatter for the default tooltip value. */
+  valueFormat?: (d: number | string) => string
   startAngle?: number
   /** Rounded corner radius on wedge arcs */
   cornerRadius?: number
@@ -106,6 +108,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
     categoryAccessor = "category", valueAccessor = "value",
     innerRadius: userInnerRadius, centerContent,
     colorBy, colorScheme, styleRules, startAngle = 0, cornerRadius,
+    valueFormat,
     tooltip, annotations, frameProps = {},
     selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
@@ -198,9 +201,10 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
       valueAccessor,
       groupAccessor: colorBy && colorBy !== categoryAccessor ? colorBy : undefined,
       groupLabel: typeof colorBy === "string" ? colorBy : "group",
-      pieData: true
+      pieData: true,
+      valueFormat,
     }),
-    [categoryAccessor, valueAccessor, colorBy]
+    [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
 
   const validationError = validateArrayData({

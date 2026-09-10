@@ -67,4 +67,33 @@ describe("frame title chrome", () => {
       )
     }
   })
+
+  it("keeps live overlay title and desc ids instance-local", () => {
+    const a = render(
+      <SVGOverlay
+        {...dimensions}
+        scales={null}
+        xValues={[]}
+        yValues={[]}
+        idPrefix="chart-a"
+        title="A"
+      />
+    )
+    const b = render(
+      <OrdinalSVGOverlay
+        {...dimensions}
+        scales={null}
+        idPrefix="chart-b"
+        title="B"
+      />
+    )
+    expect(a.container.querySelector("#chart-a-semiotic-title")?.textContent).toBe("A")
+    expect(b.container.querySelector("#chart-b-semiotic-title")?.textContent).toBe("B")
+    expect(a.container.querySelector("svg[role='img']")?.getAttribute("aria-labelledby")).toBe(
+      "chart-a-semiotic-title chart-a-semiotic-desc"
+    )
+    expect(b.container.querySelector("svg[role='img']")?.getAttribute("aria-labelledby")).toBe(
+      "chart-b-semiotic-title chart-b-semiotic-desc"
+    )
+  })
 })

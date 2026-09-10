@@ -20,6 +20,7 @@ import {
   type ServerColorScheme
 } from "./serverChartConfigShared"
 import { lineChart } from "./serverChartConfigsXY"
+import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../charts/shared/styleRules"
 import { renderChainReaction } from "./serverCompositeChainReaction"
 import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
@@ -126,6 +127,11 @@ function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
       ? (rest.frameProps as Datum)
       : {}
 
+  const lineRest: Datum = {
+    ...rest,
+    xAccessor: rest.xAccessor || "x",
+    yAccessor: rest.yAccessor || "y"
+  }
   const detailCommon: Datum = {
     ...common,
     size: [width, detailHeight],
@@ -138,7 +144,7 @@ function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
     colorBy,
     colorScheme,
     detailCommon,
-    rest
+    lineRest
   )
   // MinimapChart's documented frameProps escape hatch is spread last.
   Object.assign(detailProps, framePropsOverride)
@@ -167,7 +173,7 @@ function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
   delete overviewCommon.lineStyle
   delete overviewCommon.pointStyle
   const overviewRest: Datum = {
-    ...rest,
+    ...lineRest,
     fillArea: false,
     lineWidth: 1,
     showPoints: false,
@@ -556,11 +562,15 @@ function renderScatterplotMatrix(
           size: [cellSize, cellSize],
           xAccessor: columnField,
           yAccessor: rowField,
-          pointStyle: (datum: Datum) => ({
-            r: pointRadius,
-            opacity: pointOpacity,
-            fill: colors.color(datum)
-          }),
+          pointStyle: composeStyleRules(
+            (datum: Datum) => ({
+              r: pointRadius,
+              opacity: pointOpacity,
+              fill: colors.color(datum)
+            }),
+            rest.styleRules as StyleRule[] | undefined,
+            makeXYRuleContext(columnField, rowField)
+          ),
           margin: CELL_MARGIN,
           showAxes: false,
           showGrid: false,

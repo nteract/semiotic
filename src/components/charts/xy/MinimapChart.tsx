@@ -10,6 +10,7 @@ import { MinimapBrushOverlayLazy } from "./minimapBrushOverlayLazy"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
+import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import type { LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { resolveMultiCapableTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
@@ -67,6 +68,12 @@ export interface MinimapChartProps<TDatum extends Datum = Datum>
 
   /** Line stroke width (default: 2) */
   lineWidth?: number
+  /**
+   * Declarative, threshold-aware line styling. Applied to the detail view
+   * and the default overview. Per-series against the first point, same as
+   * LineChart. `minimap.lineStyle` still wins on the overview.
+   */
+  styleRules?: StyleRule[]
 
   /** Fill area under lines */
   fillArea?: boolean
@@ -198,6 +205,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     colorScheme,
     curve = "linear",
     lineWidth = 2,
+    styleRules,
     fillArea = false,
     areaOpacity = 0.3,
     showPoints = false,
@@ -312,12 +320,22 @@ export function MinimapChart<TDatum extends Datum = Datum>(
   // here — selection wiring would round-trip through `setup` but the
   // minimap predates that integration). The overview drops `fillArea`
   // by design (a dimmer single-line context band, not a filled area).
+  const ruleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+
   const mainLineStyle = useXYLineStyle({
     lineWidth,
     colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
     colorScale,
     fillArea,
     areaOpacity,
+    styleRules,
+    ruleContext,
   })
 
   const overviewLineStyle = useMemo(() => {
@@ -331,18 +349,21 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     lineWidth: 1,
     colorBy: colorBy as ChartAccessor<Datum, string> | undefined,
     colorScale,
+    styleRules,
+    ruleContext,
   })
 
   const resolvedOverviewLineStyle = overviewLineStyle ?? defaultOverviewLineStyle
 
   const pointStyle = useMemo(() => {
     if (!showPoints) return undefined
-    return (d: Datum) => {
+    const base = (d: Datum) => {
       const style: Datum = { r: pointRadius, fillOpacity: 1 }
       style.fill = colorBy ? getColor(d.parentLine || d, colorBy, colorScale) : DEFAULT_COLOR
       return style
     }
-  }, [showPoints, pointRadius, colorBy, colorScale])
+    return composeStyleRules(base, styleRules, ruleContext, (d) => d.parentLine || d)
+  }, [showPoints, pointRadius, colorBy, colorScale, styleRules, ruleContext])
 
   // ── Legend + Margins ──────────────────────────────────────────────────
 

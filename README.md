@@ -24,31 +24,30 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.9.2
+## What's New in 3.10.0
 
-3.9.2 expands Semiotic's portable chart, accessibility, evidence, and rendering
-surfaces while tightening browser/server parity and production entry graphs:
+3.10.0 finishes style-rule coverage on the remaining sibling charts, fixes geo
+overlay accessible names, and lands the post-3.9.2 example, physics, and
+renderer work:
 
-- `LineChart` gains the dedicated `semiotic/line` entry, and chart HOCs,
-  network layouts, force workers, and optional overlays load only the runtime
-  code their chart paths need.
-- `ChartAccessContract@1`, `ChartEvidenceEnvelope@1`, and the new
-  `semiotic/access` and `semiotic/evidence` entries provide schema-backed access
-  inventories, privacy-aware provenance, deterministic hashing, MCP evidence
-  fragments, and publication gates.
-- `ParallelCoordinatesRecipe` and `CalendarHeatmapRecipe` are now portable,
-  JSON-safe chart recipes, while Minimap, ScatterplotMatrix, and ChainReaction
-  gain evidence-backed static rendering through `semiotic/server` and MCP.
-- Typed realtime handles preserve authored row types, `styleRules` now spans
-  ordinal, XY, network, geo, realtime, and physics families, and structured
-  navigation provides overview-first hierarchy and choropleth semantics.
-- Renderer and interaction fixes cover constant-value heatmaps, linked
-  selection and hover, automatic network legends, Waterfall and Radar geometry,
-  marginal graphics, custom layouts, tree-shaken network registration, and
-  instance-local accessible names.
-- Release evidence now includes controlled dense-browser measurements,
-  deterministic linked-hover cohorts, generated bundle guidance, stronger AI
-  diagnostics, and stricter shipped-product and contributor gates.
+- `styleRules` now reach `WaterfallChart`, `MultiAxisLineChart`, `FlowMap`,
+  `ProcessFlowChart`, `MinimapChart`, `CandlestickChart`, `DifferenceChart`,
+  and `ScatterplotMatrix` in both React and `renderChart`/MCP output.
+- Geographic overlays use "Geographic chart" fallbacks and honor `description`
+  in `<desc>`, matching canvas `aria-label` and static SVG chrome across XY,
+  ordinal, network, and geo frames. Live overlay and GIF `<title>`/`<desc>`
+  ids are instance-local so two charts on one page do not collide.
+- `BubbleChart` now exposes the same xy brush as Scatterplot; stacked and
+  grouped bars share BarChart's value-axis brush. Radar, funnel, pie, and
+  donut honor `valueFormat` in default tooltips (and radar/funnel ticks).
+- Physics charts share source updates, replay, and fixed axes; EventDrop and
+  process-flow semantics stay aligned between live and settled output.
+- Realtime histograms gain responsive sizing, axis control, Y inversion, and
+  linked hover/brush; threshold end caps and Gauge readouts are portable SVG.
+- New long-form examples cover grocery receipts, the jobs report, reservoir
+  guide, plane day, and persuasion, each with pinned sources and consumer kits.
+- Renderer hot paths (packing, LOESS, rollup, ordinal scenes, hover hit-test)
+  and evidence/artifact contracts are tighter without changing public APIs.
 
 ## Why Semiotic
 

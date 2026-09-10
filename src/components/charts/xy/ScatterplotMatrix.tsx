@@ -24,6 +24,7 @@ import {
 } from "../../stream/AccessibleDataTable"
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
 import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX } from "./scatterplotMatrixCells"
+import { type StyleRule } from "../shared/styleRules"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,11 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
   /** Field or function to identify each data point in tooltips. Defaults to "Row {index}" */
   idAccessor?: string | ((d: TDatum) => string)
   /**
+   * Declarative, threshold-aware point styling applied to every scatter cell.
+   * `axis: "x"|"y"` is the cell's plotted fields; `field` reads the source row.
+   */
+  styleRules?: StyleRule[]
+  /**
    * Called when a point in any cell is clicked. Receives the clicked row datum
    * and its grid-relative pixel position `{ x, y }` — the same coordinate space
    * as `onObservation`. Fires in hover mode (the default); in brush mode the
@@ -98,6 +104,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     tooltip,
     showLegend,
     idAccessor,
+    styleRules,
     width: _width,
     height: _height,
     className,
@@ -287,6 +294,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                   cellSize={cellSize}
                   pointRadius={pointRadius}
                   pointOpacity={pointOpacity}
+                  styleRules={styleRules}
                   colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
                   colorScale={colorScale}
                   brushSelectionName={brushSelectionName}

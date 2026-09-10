@@ -129,6 +129,7 @@ const donutChartProps = [
   { name: "cornerRadius", type: "number", required: false, default: "0", description: "Rounded corner radius on wedge arcs." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on slices." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend." },
+  { name: "valueFormat", type: "function", required: false, default: null, description: "Format function for default tooltip values." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
   { name: "width", type: "number", required: false, default: "400", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },

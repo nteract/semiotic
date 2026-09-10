@@ -471,8 +471,6 @@ classifyPublicOnly(
 
 classifyPublicOnly(
   [
-    "StackedBarChart",
-    "GroupedBarChart",
     "BoxPlot",
     "RidgelinePlot",
     "DotPlot",
@@ -482,7 +480,7 @@ classifyPublicOnly(
     "FunnelChart",
     "RadarChart",
     "LikertChart",
-    ...XY_CHARTS.filter((chart) => chart !== "LineChart" && chart !== "Scatterplot"),
+    ...XY_CHARTS.filter((chart) => chart !== "LineChart" && chart !== "Scatterplot" && chart !== "BubbleChart"),
     ...NETWORK_CHARTS,
     ...GEO_CHARTS,
     ...PHYSICS_BASE_CHARTS,

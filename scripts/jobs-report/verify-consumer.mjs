@@ -272,7 +272,7 @@ const evidence = {
   node: process.version,
   packageVersion: parse("node_modules/semiotic/package.json").version,
   packageTarballSha256: createHash("sha256")
-    .update(readFileSync(resolve(root, "semiotic-3.9.2.tgz")))
+    .update(readFileSync(resolve(root, `semiotic-${parse("node_modules/semiotic/package.json").version}.tgz`)))
     .digest("hex"),
   adapterSha256: createHash("sha256")
     .update(readFileSync(resolve(root, "tools/cli.mjs")))

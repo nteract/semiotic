@@ -688,6 +688,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         type: ["string", "function"],
         description: "Work-units field stamped for capacity metadata."
       },
+      styleRules: STYLE_RULES_PROP_SPEC,
       radiusAccessor: {
         type: ["string", "function"],
         description: "Optional per-body radius in pixels."

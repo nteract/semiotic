@@ -164,6 +164,7 @@ export function NetworkSSRFrame({
         labels={labels}
         sceneNodes={sceneNodes}
         title={title}
+        description={description}
         legend={legend}
         legendPosition={legendPosition}
         legendLayout={legendLayout}

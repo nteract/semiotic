@@ -3,7 +3,7 @@ import { XYGrid } from "./XYGrid"
 import { resolveXYAxes } from "./resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
-import { useMemo, useRef, useEffect } from "react"
+import { useMemo, useRef, useEffect, useId } from "react"
 import type { StreamScales, MarginalGraphicsConfig, XYFrameAxisConfig } from "./types"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
@@ -30,6 +30,11 @@ import {
 } from "./svgOverlayUtils"
 import { generateXYTicks, axisTicksNeedRotation } from "./xyAxisTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
+import {
+  overlayAccessibleDescription,
+  overlayAccessibleIds,
+  overlayAccessibleTitle
+} from "./overlayAccessibleText"
 
 export { SVGUnderlay } from "./SVGUnderlay"
 
@@ -73,6 +78,10 @@ interface SVGOverlayProps {
 
   // Title
   title?: string | ReactNode
+  /** Accessible long description; wins over the title-derived `<desc>` suffix. */
+  description?: string
+  /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  idPrefix?: string
 
   // Legend
   legend?: LegendValue
@@ -159,6 +168,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
     axisExtent,
     showGrid,
     title,
+    description,
+    idPrefix,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -306,13 +317,16 @@ export function SVGOverlay(props: SVGOverlayProps) {
     return () => document.removeEventListener("keydown", handler)
   }, [crosshairPos?.locked, linkedCrosshairName])
 
-  const hasContent = showAxes || title || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
+  const hasContent = showAxes || title || description || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
+  const generatedId = useId()
+  const { titleId, descId, labelledBy } = overlayAccessibleIds(idPrefix || chartId || generatedId)
 
   if (!hasContent) return null
 
   return (
     <svg
       role="img"
+      aria-labelledby={labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -324,11 +338,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title>{typeof title === "string" ? title : "XY Chart"}</title>
-      <desc>
-        {typeof title === "string"
-          ? `${title} (XY data visualization)`
-          : "XY data visualization"}
+      <title id={titleId}>{overlayAccessibleTitle(title, "XY Chart")}</title>
+      <desc id={descId}>
+        {overlayAccessibleDescription(title, description, {
+          familyPhrase: "XY data visualization",
+          fallback: "XY data visualization"
+        })}
       </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines.

@@ -109,6 +109,7 @@ export const GEO_CHART_SPECS: Record<string, ChartSpec> = {
       areas: { type: ["array", "string"] },
       areaStyle: { type: "object" },
       edgeColorBy: { type: ["string", "function"] },
+      styleRules: STYLE_RULES_PROP_SPEC,
       edgeOpacity: { type: "number", default: 0.6 },
       edgeWidthRange: { type: "array", default: [1, 8] },
       pointRadius: { type: "number", default: 5, description: "Node radius in pixels; defaults to 1.5 in sparkline mode." },

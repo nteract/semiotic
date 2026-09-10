@@ -91,6 +91,24 @@ describe("CandlestickChart", () => {
     expect(lastXYFrameProps.pointStyle(linkedData[0]).opacity).toBeUndefined()
   })
 
+  it("applies styleRules to candle pointStyle using close as y", () => {
+    render(
+      <TooltipProvider>
+        <CandlestickChart
+          data={ohlc}
+          xAccessor="t"
+          openAccessor="o"
+          highAccessor="h"
+          lowAccessor="l"
+          closeAccessor="c"
+          styleRules={[{ when: { axis: "y", gte: 16 }, style: { fill: "#d7263d" } }]}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.pointStyle(ohlc[1]).fill).toBe("#d7263d")
+    expect(lastXYFrameProps.pointStyle(ohlc[0]).fill).toBeUndefined()
+  })
+
   describe("chart type + accessor forwarding", () => {
     it("sets chartType to 'candlestick'", () => {
       render(<TooltipProvider><CandlestickChart data={ohlc} xAccessor="t"

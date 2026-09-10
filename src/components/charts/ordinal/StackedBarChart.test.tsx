@@ -260,6 +260,30 @@ describe("StackedBarChart", () => {
     })
   })
 
+  describe("brush support", () => {
+    it("forwards a value-axis brush overlay when brush is true", () => {
+      const onBrush = vi.fn()
+      render(
+        <TooltipProvider>
+          <StackedBarChart data={sampleData} stackBy="product" brush onBrush={onBrush} />
+        </TooltipProvider>
+      )
+      expect(frameProps().brush).toEqual({ dimension: "r" })
+      expect(typeof frameProps().onBrush).toBe("function")
+      frameProps().onBrush({ r: [5, 15] })
+      expect(onBrush).toHaveBeenCalledWith({ r: [5, 15] })
+    })
+
+    it("enables brush when linkedBrush is set without an explicit brush prop", () => {
+      render(
+        <TooltipProvider>
+          <StackedBarChart data={sampleData} stackBy="product" linkedBrush="range" />
+        </TooltipProvider>
+      )
+      expect(frameProps().brush).toEqual({ dimension: "r" })
+    })
+  })
+
   it("survives the loading→data transition without a hooks-count error", () => {
     // Mounting empty (loading skeleton, 0 bars) then re-rendering as data
     // arrives must not call a different number of hooks between renders —

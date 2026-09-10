@@ -352,6 +352,21 @@ describe("FlowMap", () => {
       const styleLow = lastGeoFrameProps.lineStyle({ passengers: 9500 })
       expect(styleHigh.strokeWidth).toBeGreaterThan(styleLow.strokeWidth)
     })
+
+    it("applies styleRules to heavy flows", () => {
+      render(
+        <Wrapper>
+          <FlowMap
+            nodes={sampleNodes}
+            flows={sampleFlows}
+            valueAccessor="passengers"
+            styleRules={[{ when: { gte: 15000 }, style: { stroke: "#d7263d" } }]}
+          />
+        </Wrapper>
+      )
+      expect(lastGeoFrameProps.lineStyle({ passengers: 18000 }).stroke).toBe("#d7263d")
+      expect(lastGeoFrameProps.lineStyle({ passengers: 9500 }).stroke).not.toBe("#d7263d")
+    })
   })
 
   // ── Particles ─────────────────────────────────────────────────────────

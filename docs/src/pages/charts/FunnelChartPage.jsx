@@ -90,6 +90,7 @@ const funnelChartProps = [
   { name: "showLabels", type: "boolean", required: false, default: "true", description: "Show step name and value/percent labels on funnel bars. Labels are suppressed on bars narrower than 50px." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover tooltips on bars and connectors." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy set)", description: "Show a legend. Defaults to true when colorBy is specified." },
+  { name: "valueFormat", type: "function", required: false, default: null, description: "Format function for default tooltip values and vertical-funnel value-axis ticks." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function. Default shows step name, value, and % of first step." },
   { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects to render on the chart. Supports widget, label, y-threshold, enclose, and other annotation types." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },

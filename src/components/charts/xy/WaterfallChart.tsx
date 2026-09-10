@@ -21,6 +21,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
+import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
 registerXYPlugin(waterfallXYPlugin)
 
@@ -36,6 +37,13 @@ export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseC
   connectorStroke?: string
   connectorWidth?: number
   gap?: number
+  /**
+   * Declarative, threshold-aware bar styling. Ordered `{ when, style }` rules;
+   * last applicable rule wins per property. `ctx` is `{ value, x, y }` from the
+   * step accessors so `{ axis: "y", lt: 0 }` matches negative deltas. Layers
+   * over the signed positive/negative fill; `frameProps.areaStyle` still wins.
+   */
+  styleRules?: StyleRule[]
   enableHover?: boolean
   showGrid?: boolean
   showLegend?: boolean
@@ -118,6 +126,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     connectorStroke,
     connectorWidth,
     gap,
+    styleRules,
     tooltip,
     annotations,
     xExtent,
@@ -266,13 +275,30 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
     opacity: props.opacity,
   }), [positiveColor, negativeColor, connectorStroke, connectorWidth, gap, props.stroke, props.strokeWidth, props.opacity])
 
+  const waterfallRuleContext = useMemo(
+    () => makeXYRuleContext(
+      xAccessor as string | ((d: Datum) => unknown),
+      yAccessor as string | ((d: Datum) => unknown),
+    ),
+    [xAccessor, yAccessor],
+  )
+  const ruledBarStyle = useMemo(
+    () => composeStyleRules(undefined, styleRules, waterfallRuleContext),
+    [styleRules, waterfallRuleContext],
+  )
+
   const selectionAwareBarStyle = useMemo(
     () => wrapStyleWithSelection(
-      frameAreaStyle ?? (() => ({})),
+      (d: Datum) => {
+        const ruled = ruledBarStyle(d)
+        if (!frameAreaStyle) return ruled
+        const extra = typeof frameAreaStyle === "function" ? frameAreaStyle(d) : frameAreaStyle
+        return extra ? { ...ruled, ...extra } : ruled
+      },
       setup.effectiveSelectionHook,
       setup.resolvedSelection,
     ),
-    [frameAreaStyle, setup.effectiveSelectionHook, setup.resolvedSelection],
+    [ruledBarStyle, frameAreaStyle, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
   const defaultTooltipContent = useMemo(

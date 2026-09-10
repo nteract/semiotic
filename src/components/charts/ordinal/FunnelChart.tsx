@@ -59,6 +59,8 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
   annotations?: Datum[]
   /** Custom formatter for category tick labels */
   categoryFormat?: CategoryFormatFn
+  /** Formatter for the default tooltip and vertical-funnel value axis. */
+  valueFormat?: (d: number | string) => string
   frameProps?: Partial<Omit<StreamOrdinalFrameProps, "data" | "size">>
 }
 
@@ -146,6 +148,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     orientation = "horizontal",
     connectorOpacity = 0.3,
     showLabels = true,
+    valueFormat,
     tooltip,
     annotations,
     frameProps = {},
@@ -282,11 +285,15 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
           {step && <div style={{ fontWeight: "bold" }}>{String(step)}</div>}
           {cat && cat !== step && <div style={{ marginTop: 2, opacity: 0.8 }}>{String(cat)}</div>}
           {isDropoff && <div style={{ marginTop: 2, fontStyle: "italic", opacity: 0.7 }}>Dropoff</div>}
-          <div style={{ marginTop: 4 }}>{String(value)}{pctStr}</div>
+          <div style={{ marginTop: 4 }}>{
+            valueFormat && (typeof value === "number" || typeof value === "string")
+              ? valueFormat(value)
+              : String(value)
+          }{pctStr}</div>
         </div>
       )
     }
-  }, [])
+  }, [valueFormat])
 
   // Loading / empty state — returned only after every hook above has run, so
   // the hook count is identical whether or not data is present. Mounting empty
@@ -321,6 +328,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
     showAxes: isVertical && resolved.showAxes,
     showCategoryTicks: isVertical && resolved.showAxes,
     ...(categoryFormat && { oFormat: categoryFormat }),
+    ...(valueFormat && { rFormat: valueFormat }),
     showGrid: isVertical,
     ...(!isVertical && { connectorOpacity }),
     showLabels,

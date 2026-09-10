@@ -183,6 +183,27 @@ describe("WaterfallChart", () => {
     expect(lastXYFrameProps.areaStyle({ step: "Costs" }).opacity).toBeLessThan(1)
   })
 
+  it("applies styleRules to bars and lets frame areaStyle win", () => {
+    render(
+      <TooltipProvider>
+        <WaterfallChart
+          data={sample}
+          xAccessor="step"
+          yAccessor="value"
+          width={400}
+          height={300}
+          styleRules={[{ when: { axis: "y", lt: 0 }, style: { fill: "#d7263d" } }]}
+          frameProps={{ areaStyle: () => ({ stroke: "purple" }) }}
+        />
+      </TooltipProvider>
+    )
+    expect(lastXYFrameProps.areaStyle({ step: "Costs", value: -25 })).toMatchObject({
+      fill: "#d7263d",
+      stroke: "purple"
+    })
+    expect(lastXYFrameProps.areaStyle({ step: "Sales", value: 40 }).fill).not.toBe("#d7263d")
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

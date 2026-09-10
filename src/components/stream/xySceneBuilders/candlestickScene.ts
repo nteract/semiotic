@@ -63,6 +63,9 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
     if (!isRangeMode && (open == null || Number.isNaN(open) || close == null || Number.isNaN(close))) continue
 
     const isUp = close >= open
+    const overlay = ctx.config.pointStyle?.(d) ?? {}
+    const overlayFill = typeof overlay.fill === "string" ? overlay.fill : undefined
+    const overlayStroke = typeof overlay.stroke === "string" ? overlay.stroke : undefined
 
     const node: CandlestickSceneNode = {
       type: "candlestick",
@@ -72,14 +75,14 @@ export function buildCandlestickScene(ctx: XYSceneContext, data: Datum[], layout
       highY: ctx.scales.y(high),
       lowY: ctx.scales.y(low),
       bodyWidth,
-      upColor,
-      downColor,
-      wickColor,
+      upColor: overlayFill && isUp ? overlayFill : upColor,
+      downColor: overlayFill && !isUp ? overlayFill : downColor,
+      wickColor: overlayStroke ?? (isRangeMode ? overlayFill ?? wickColor : wickColor),
       wickWidth,
       isUp,
       style: {
         cursor: cs.cursor,
-        ...(ctx.config.pointStyle?.(d) ?? {}),
+        ...overlay,
       },
       datum: d,
     }

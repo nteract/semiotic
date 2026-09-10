@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
+import { useId } from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -14,6 +15,11 @@ import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotati
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AnnotationContext } from "../realtime/types"
 import { SVGChartTitle } from "./SVGChartTitle"
+import {
+  overlayAccessibleDescription,
+  overlayAccessibleIds,
+  overlayAccessibleTitle
+} from "./overlayAccessibleText"
 import {
   collectNetworkAnnotationAnchors,
   type NetworkAnnotationAnchorNode,
@@ -43,6 +49,10 @@ export interface NetworkSVGOverlayProps {
 
   /** Chart title */
   title?: string | ReactNode
+  /** Accessible long description; wins over the title-derived `<desc>` suffix. */
+  description?: string
+  /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  idPrefix?: string
 
   /** Legend configuration */
   legend?: LegendValue
@@ -89,6 +99,8 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     margin,
     labels,
     title,
+    description,
+    idPrefix,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -159,6 +171,8 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
   const hasDeferredWidget = layoutAnnotations?.some(
     (annotation) => annotation.type === "widget" && annotation._annotationDeferred === true
   ) === true
+  const generatedId = useId()
+  const { titleId, descId, labelledBy } = overlayAccessibleIds(idPrefix || chartId || generatedId)
 
   return (
     <>
@@ -167,6 +181,7 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     )}
     <svg
       role="img"
+      aria-labelledby={labelledBy}
       width={totalWidth}
       height={totalHeight}
       style={{
@@ -176,11 +191,12 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         pointerEvents: "none"
       }}
     >
-      <title>{typeof title === "string" ? title : "Network Chart"}</title>
-      <desc>
-        {typeof title === "string"
-          ? `${title} (network data visualization)`
-          : "Network data visualization"}
+      <title id={titleId}>{overlayAccessibleTitle(title, "Network Chart")}</title>
+      <desc id={descId}>
+        {overlayAccessibleDescription(title, description, {
+          familyPhrase: "network data visualization",
+          fallback: "Network data visualization"
+        })}
       </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Labels */}

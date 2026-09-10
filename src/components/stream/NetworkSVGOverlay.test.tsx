@@ -67,6 +67,7 @@ describe("NetworkSVGOverlay", () => {
         margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
         labels={[]}
         sceneNodes={[]}
+        idPrefix="net-a"
         title="Network title"
       />
     )
@@ -74,6 +75,13 @@ describe("NetworkSVGOverlay", () => {
     const title = container.querySelector(".semiotic-chart-title")
     expect(title?.getAttribute("style")).toContain("--semiotic-title-font-family")
     expect(title?.getAttribute("style")).toContain("--semiotic-title-font-weight")
+    const svg = container.querySelector("svg[role='img']")
+    expect(svg?.getAttribute("aria-labelledby")).toBe(
+      "net-a-semiotic-title net-a-semiotic-desc"
+    )
+    expect(container.querySelector("#net-a-semiotic-title")?.textContent).toBe(
+      "Network title"
+    )
   })
 
   it("renders a pointId-anchored annotation via the default network rules (no svgAnnotationRules)", () => {

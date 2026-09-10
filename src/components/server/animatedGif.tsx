@@ -31,7 +31,9 @@ import type { OrdinalSceneNode } from "../stream/ordinalTypes"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import { reserveTitleMargin, TITLE_BASELINE } from "../stream/titleLayout"
+import { overlayAccessibleIds } from "../stream/overlayAccessibleText"
 import { renderChart } from "./renderToStaticSVG"
+import { chartUID } from "./staticSVGChrome"
 import {
   PhysicsPipelineStore,
   type PhysicsPipelineConfig,
@@ -214,7 +216,7 @@ export function generateFrameSVGs(
       store.computeScene({ width: innerW, height: innerH })
 
       if (store.scene.length > 0) {
-        svgFrames.push(renderOrdinalFrameSVG(store.scene as OrdinalSceneNode[], width, height, theme, frameProps))
+        svgFrames.push(renderOrdinalFrameSVG(store.scene as OrdinalSceneNode[], width, height, theme, frameProps, svgFrames.length))
       }
     }
   } else {
@@ -258,7 +260,7 @@ export function generateFrameSVGs(
 
       // Phase 1: Base frame (no transition)
       const scales = store.scales ? { y: store.scales.y } : undefined
-      svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales))
+      svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales, svgFrames.length))
 
       // Phase 2: Transition easing frames between data steps (XY only)
       if (transitionFrames > 0 && fi > 0 && store.activeTransition) {
@@ -267,7 +269,7 @@ export function generateFrameSVGs(
           const t = tf / transitionFrames
           const fakeNow = store.activeTransition.startTime + t * duration
           store.advanceTransition(fakeNow)
-          svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales))
+          svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales, svgFrames.length))
         }
       }
 
@@ -305,6 +307,31 @@ export function generateFrameSequence(
   })
 }
 
+function gifAccessibleChrome(
+  idPrefix: string,
+  frameIndex: number,
+  title: unknown,
+  description: unknown
+) {
+  const ids = overlayAccessibleIds(`${idPrefix}-${frameIndex}`)
+  const titleText = typeof title === "string" && title.length > 0 ? title : undefined
+  const descText = typeof description === "string" && description.length > 0 ? description : undefined
+  const titleId = titleText ? ids.titleId : undefined
+  const descId = descText ? ids.descId : undefined
+  return {
+    titleText,
+    descText,
+    titleId,
+    descId,
+    labelledBy: [titleId, descId].filter(Boolean).join(" ") || undefined
+  }
+}
+
+function gifFramePrefix(props: Datum, familyFallback: string): string {
+  if (typeof props.idPrefix === "string" && props.idPrefix.length > 0) return props.idPrefix
+  return chartUID(props) || familyFallback
+}
+
 function renderPhysicsFrameSVG(
   store: PhysicsPipelineStore,
   props: PhysicsGifFrameProps,
@@ -315,9 +342,8 @@ function renderPhysicsFrameSVG(
   const s = themeStyles(theme)
   const bg = props.background || theme.colors.background
   const idPrefix = props.idPrefix ?? "physics-gif"
-  const titleId = props.title ? `${idPrefix}-title-${frameIndex}` : undefined
-  const descId = props.description ? `${idPrefix}-desc-${frameIndex}` : undefined
-  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+  const chrome = gifAccessibleChrome(idPrefix, frameIndex, props.title, props.description)
+  const { titleId, descId, labelledBy } = chrome
   const sceneNodes = physicsBodiesToXYSceneNodes(store.readBodies(), {
     bodyStyle: props.bodyStyle,
     getBodyLabel: props.getBodyLabel
@@ -469,7 +495,8 @@ function renderXYFrameSVG(
   height: number,
   theme: SemioticTheme,
   props: Datum,
-  storeScales?: { y?: (v: number) => number }
+  storeScales?: { y?: (v: number) => number },
+  frameIndex = 0
 ): string {
   const s = themeStyles(theme)
   const margin = reserveTitleMargin(
@@ -490,11 +517,12 @@ function renderXYFrameSVG(
   // Use explicit yExtent for annotation mapping, falling back to store scales
   const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent, storeScales?.y)
 
-  const titleText = typeof props.title === "string" ? props.title : undefined
-  const descText = typeof props.description === "string" ? props.description : undefined
-  const titleId = titleText ? "semiotic-title" : undefined
-  const descId = descText ? "semiotic-desc" : undefined
-  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+  const { titleText, descText, titleId, descId, labelledBy } = gifAccessibleChrome(
+    gifFramePrefix(props, "xy-gif"),
+    frameIndex,
+    props.title,
+    props.description
+  )
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
@@ -524,7 +552,8 @@ function renderOrdinalFrameSVG(
   width: number,
   height: number,
   theme: SemioticTheme,
-  props: Datum
+  props: Datum,
+  frameIndex = 0
 ): string {
   const s = themeStyles(theme)
   const margin = reserveTitleMargin(
@@ -542,11 +571,12 @@ function renderOrdinalFrameSVG(
     renderMode,
     idPrefix: props.idPrefix
   }).map(entry => entry.element)
-  const titleText = typeof props.title === "string" ? props.title : undefined
-  const descText = typeof props.description === "string" ? props.description : undefined
-  const titleId = titleText ? "semiotic-title" : undefined
-  const descId = descText ? "semiotic-desc" : undefined
-  const labelledBy = [titleId, descId].filter(Boolean).join(" ") || undefined
+  const { titleText, descText, titleId, descId, labelledBy } = gifAccessibleChrome(
+    gifFramePrefix(props, "ordinal-gif"),
+    frameIndex,
+    props.title,
+    props.description
+  )
 
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
