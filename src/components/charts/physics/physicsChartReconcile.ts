@@ -22,9 +22,31 @@ export function reconcilePhysicsChart(
   )
   const after = new Map(next.initialSpawns.map((spawn) => [spawn.id, spawn]))
   const replaced = new Set<string>()
+  const bodies = new Map(snapshot.world.bodies.map((body) => [body.id, body]))
   for (const [id, old] of before) {
     const candidate = after.get(id)
-    if (!candidate || placementKey(old) !== placementKey(candidate))
+    const admissionChanged =
+      candidate &&
+      next.metadata?.kind === "event-drop" &&
+      (old.datum as { late?: boolean })?.late !==
+        (candidate.datum as { late?: boolean })?.late
+    // EventDrop can close a lid above an already admitted body. Its snapshot
+    // spawn moves below the lid, but the retained body is already there.
+    const retainUnderLid =
+      candidate &&
+      previous.metadata?.kind === "event-drop" &&
+      next.metadata?.kind === "event-drop" &&
+      JSON.stringify(previous.metadata.windowPlot) ===
+        JSON.stringify(next.metadata.windowPlot) &&
+      (old.datum as { late?: boolean })?.late === false &&
+      (candidate.datum as { late?: boolean })?.late === false &&
+      (bodies.get(id)?.y ?? -Infinity) >= candidate.y &&
+      placementKey({ ...old, y: candidate.y }) === placementKey(candidate)
+    if (
+      !candidate ||
+      admissionChanged ||
+      (!retainUnderLid && placementKey(old) !== placementKey(candidate))
+    )
       replaced.add(id)
   }
 

@@ -10,6 +10,7 @@ import {
   type SetStateAction
 } from "react"
 import { isInteractiveKeyboardTarget } from "../../charts/shared/semanticInteractions"
+import { physicsCanvasCoordinates } from "./physicsCanvasCoordinates"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import type {
   PhysicsPipelineStore,
@@ -189,9 +190,11 @@ export function usePhysicsSemanticNavigation({
     (event: PointerEvent<HTMLCanvasElement>) => {
       clearSemanticFocus()
       const store = storeRef.current
-      const rect = event.currentTarget.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
+      const { x, y } = physicsCanvasCoordinates(
+        event.currentTarget,
+        event.clientX,
+        event.clientY
+      )
       const body = store ? store.hitTest(x, y, Math.max(16, hoverRadius)) : null
       onBodyPointerDown?.(body, event)
       if (body) {

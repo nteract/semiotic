@@ -181,6 +181,7 @@ function processLaneWalls(options: {idPrefix?: string; left: number; right: numb
 function processStageLayout(options: ProcessVolumeLayoutOptions): ProcessVolumeLayout
 function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStageRegionOptions | undefined): StreamPhysicsRegionEffect[]
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
+function readEventDropOccupancy(metadata: EventDropProjectionMetadata, bodies: readonly {x: number; y: number;}[]): {accepted: number[]; late: number; inFlight: number; total: number;}
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
 function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "events" | "initialState" | "outlets" | "phases" | "products">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
@@ -297,6 +298,7 @@ interface DependencyTrackOptions
 interface DependencyTrackRoute
 interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface EventDropPhysicsOptions<TDatum extends Datum = Datum>
+interface EventDropProjectionMetadata
 interface EventDropWindowOptions
 interface GaltonBoardChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
 interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum>
@@ -1150,6 +1152,18 @@ interface-member EventDropPhysicsOptions::property::timeScale = optional timeSca
 interface-member EventDropPhysicsOptions::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
 interface-member EventDropPhysicsOptions::property::watermarkAtArrivalAccessor = optional watermarkAtArrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropPhysicsOptions::property::windows = required windows: EventDropWindowOptions
+interface-member EventDropProjectionMetadata::property::closedWindowCount = required closedWindowCount: number
+interface-member EventDropProjectionMetadata::property::gutter = required gutter: EventDropPlotRegion
+interface-member EventDropProjectionMetadata::property::kind = required kind: "event-drop"
+interface-member EventDropProjectionMetadata::property::lateCount = required lateCount: number
+interface-member EventDropProjectionMetadata::property::lidSegments = required lidSegments: EventDropLidSegment[]
+interface-member EventDropProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member EventDropProjectionMetadata::property::watermarkValue = required watermarkValue: number
+interface-member EventDropProjectionMetadata::property::windowCount = required windowCount: number
+interface-member EventDropProjectionMetadata::property::windowPlot = required windowPlot: EventDropPlotRegion
+interface-member EventDropProjectionMetadata::property::windowSize = required windowSize: number
+interface-member EventDropProjectionMetadata::property::windowStart = required windowStart: number
+interface-member EventDropProjectionMetadata::property::windowWalls = optional windowWalls: (EventDropPlotRegion & {id: string;})[] | undefined
 interface-member EventDropWindowOptions::property::gapPolicy = optional gapPolicy: "drop" | "keep" | undefined
 interface-member EventDropWindowOptions::property::size = required size: number
 interface-member GaltonBoardChartProps::property::ballRadius = optional ballRadius: number | undefined

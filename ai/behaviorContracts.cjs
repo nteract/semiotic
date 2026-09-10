@@ -333,7 +333,7 @@ const BEHAVIOR_CONTRACTS = [
     severity: "error",
     appliesTo: { components: ["EventDropChart"] },
     summary: "Arrival order determines historical lateness with a delay/function watermark. Equal arrival times keep source order. A window is closed when its end is at or below the watermark; previously accepted events stay accepted as later events advance it. An explicit watermark.value instead tests one fixed policy.",
-    agentAction: "Use watermark={{delay: n}} in React for a replay, or supply watermarkAtArrivalAccessor with recorded per-event thresholds when watermark.value controls current closure. Keep arrival times and thresholds in the same units as event times. timeScale changes presentation pace, not admission decisions.",
+    agentAction: "Use watermark={{delay: n}} for arrival-ordered admission, or watermarkAtArrivalAccessor for recorded thresholds independent of current closure. Keep all times in the same units. The current board has solid lids: accepted history starts below them, late arrivals roll left. For a chronological demonstration, supply successive data/watermark states and coordinate source time with travel. timeScale does not replay lid changes. Source projection labels describe snapshot totals; readEventDropOccupancy(metadata, bodies) counts current containers and in-flight bodies independently of source flags.",
     example: '{ "data": [{"time":1,"arrivalTime":2,"admission":-3}], "watermarkAtArrivalAccessor":"admission", "watermark":{"value":100} }',
   },
 ]

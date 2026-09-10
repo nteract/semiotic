@@ -82,19 +82,17 @@ function eventDropSemanticItems(
 ) {
   if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
   const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
-  const maxValue = Math.max(
-    1,
-    ...rows.map((row) => row.value + (row.secondary ?? 0))
-  )
+  const maxValue = Math.max(1, ...rows.map((row) => row.value))
   const maxHeight = metadata.windowPlot.height * 0.62
   const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
 
-  return rows.map((row, index) => {
-    const total = row.value + (row.secondary ?? 0)
-    const barHeight = Math.max(8, (total / maxValue) * maxHeight)
+  const items = rows.map((row, index) => {
+    const barHeight = Math.max(8, (row.value / maxValue) * maxHeight)
     const x = metadata.windowPlot.x + (index + 0.5) * laneWidth
     const y = yBottom - barHeight / 2
-    const late = row.secondary ? `, ${row.secondary} late` : ""
+    const late = row.secondary
+      ? `, ${row.secondary} late sent to the far-left bin`
+      : ""
     const label = `window ${row.label}: ${row.value} on time${late}`
     return {
       id: `window-${row.label}`,
@@ -109,6 +107,22 @@ function eventDropSemanticItems(
       group: "window"
     }
   })
+  return [
+    ...items,
+    {
+      id: "eventdrop-late-bin",
+      label: `far-left bin: ${metadata.lateCount} late events`,
+      description:
+        "Late events are collected here, outside their original event-time windows.",
+      datum: { label: "Late", value: metadata.lateCount },
+      x: metadata.gutter.x + metadata.gutter.width / 2,
+      y: yBottom - maxHeight / 2,
+      shape: "rect" as const,
+      width: metadata.gutter.width,
+      height: maxHeight,
+      group: "late-bin"
+    }
+  ]
 }
 
 /**

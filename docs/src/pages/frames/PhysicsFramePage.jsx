@@ -340,10 +340,54 @@ export default function PhysicsFramePage() {
 
       <p>
         StreamPhysicsFrame is the low-level frame behind Semiotic physics
-        process-driven physics charts. Use it when the chart wrappers are too
+        charts. Use it when the chart wrappers are too
         specific and you need to declare bodies, colliders, sensors, observation
         events, semantic regions, and custom foreground or background graphics
         directly.
+      </p>
+
+      <h2 id="physical-meaning">Make the physical rules readable</h2>
+      <p>
+        Start with the quantity and the process that changes it. Specify what one
+        body represents, what each container holds, and what a crossing means.
+        The apparatus should let a reader predict what happens next.
+      </p>
+      <ul>
+        <li>
+          <strong>Draw the rules that the simulation uses.</strong> Derive visible
+          walls and ramps from collider geometry. Show sensors as permeable regions.
+          A solid lid blocks every body; a selective gate needs a visible mechanism
+          that explains who can pass.
+        </li>
+        <li>
+          <strong>Give each clock a meaning.</strong> Source time determines when an
+          event arrives or a rule changes. Travel time illustrates that decision.
+          Pause source time during a teaching step, or explicitly coordinate both
+          clocks. A snapshot with already closed bins places accepted history
+          beneath their lids; a chronological demonstration admits the bodies before
+          closing those lids.
+        </li>
+        <li>
+          <strong>Count what the label names.</strong> Current occupancy, historical
+          arrivals, and completed work answer different questions. Count bodies in
+          flight separately from bodies inside a container. For an unweighted scene
+          with no departures, arrivals equal container occupancy plus bodies in
+          flight. Account explicitly for removed bodies, queued arrivals, or weighted
+          units when the model uses them.
+        </li>
+        <li>
+          <strong>Check the drawing against an independent ledger.</strong> Test actual
+          body positions and crossings against expected outcomes. A correct source
+          total does not prove that the bodies reached the right destinations. Use
+          the same quantity definitions in motion, reduced motion, accessible text,
+          and static output.
+        </li>
+      </ul>
+      <p>
+        The <a href="/examples/watermarks">Watermarks closure sequence</a> demonstrates
+        these rules with two events, one closing lid, and the far-left bin for late
+        arrivals. Its displayed equation reads physical occupancy from the shared
+        EventDrop layout.
       </p>
 
       <h2 id="quick-start">Quick Start</h2>

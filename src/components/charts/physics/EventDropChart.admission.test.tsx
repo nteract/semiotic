@@ -11,6 +11,7 @@ import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { EventDropChart } from "./EventDropChart"
 import {
   buildEventDropPhysics,
+  readEventDropOccupancy,
   type EventDropProjectionMetadata
 } from "./eventDropPhysics"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
@@ -32,6 +33,48 @@ describe("EventDrop admission across rendering and source edits", () => {
     cleanupCanvas = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => cleanupCanvas())
+
+  it("exports accepted history and the far-left late bin at their actual SVG positions", () => {
+    const options = {
+      data: [
+        { id: "early", time: 6, arrivalTime: 7, admission: -11 },
+        { id: "late", time: 6, arrivalTime: 62, admission: 44 }
+      ],
+      timeAccessor: "time" as const,
+      arrivalAccessor: "arrivalTime" as const,
+      watermarkAtArrivalAccessor: "admission" as const,
+      watermark: { value: 44 },
+      windows: { size: 12 },
+      size,
+      width: size[0],
+      height: size[1],
+      ballRadius: 10,
+      seed: 47
+    }
+    const layout = buildEventDropPhysics(options)
+    const { svg, evidence } = renderChartWithEvidence("EventDropChart", options)
+    const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+    const bodies = Array.from(
+      doc.querySelectorAll("#physics-data-area circle"),
+      (node) => ({
+        x: Number(node.getAttribute("cx")),
+        y: Number(node.getAttribute("cy"))
+      })
+    )
+    expect(
+      readEventDropOccupancy(
+        layout.metadata as unknown as EventDropProjectionMetadata,
+        bodies
+      )
+    ).toEqual({
+      accepted: [1, 0],
+      late: 1,
+      inFlight: 0,
+      total: 2
+    })
+    expect(evidence.markCount).toBe(2)
+    expect(projectionLabels(doc)).toEqual(["1 late", "1", "0-12", "0", "12-24"])
+  })
 
   it("keeps accepted historical events inside their own windows after closure", () => {
     const layout = buildEventDropPhysics({
@@ -94,7 +137,7 @@ describe("EventDrop admission across rendering and source edits", () => {
       }))
     )
     expect(projectionLabels(getByTestId("event-drop-window-overlay"))).toEqual([
-      "gutter",
+      "0 late",
       "1",
       "0-10",
       "1",
@@ -109,8 +152,8 @@ describe("EventDrop admission across rendering and source edits", () => {
       watermarkAtArrival: 15
     })
     expect(projectionLabels(getByTestId("event-drop-window-overlay"))).toEqual([
-      "gutter",
-      "1 / 1 late",
+      "1 late",
+      "1",
       "0-10",
       "1",
       "10-20",
@@ -124,7 +167,7 @@ describe("EventDrop admission across rendering and source edits", () => {
       late: false
     })
     expect(projectionLabels(getByTestId("event-drop-window-overlay"))).toEqual([
-      "gutter",
+      "0 late",
       "2",
       "0-10",
       "1",
@@ -186,7 +229,7 @@ describe("EventDrop admission across rendering and source edits", () => {
     for (const markup of [react, serialized.svg]) {
       const document = new DOMParser().parseFromString(markup, "text/html")
       expect(projectionLabels(document)).toEqual([
-        "gutter",
+        "0 late",
         "1",
         "0-10",
         "0",

@@ -39,6 +39,7 @@ import {
 import {
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,
+  readEventDropOccupancy,
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
@@ -148,6 +149,7 @@ export {
   bodyGroupSpec,
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,
+  readEventDropOccupancy,
   buildGaltonBoardPhysics,
   buildPhysicalFlowPhysics,
   buildPhysicsPile,
@@ -295,6 +297,7 @@ export type {
   CollisionSwarmPhysicsOptions,
   CollisionSwarmProjectionMetadata,
   EventDropWindowOptions,
+  EventDropProjectionMetadata,
   EventDropPhysicsOptions,
   GaltonBoardProjectionMetadata,
   GaltonBoardPhysicsOptions,

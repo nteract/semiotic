@@ -19,11 +19,10 @@ for (const theme of ["light", "dark"] as const) {
     page.on("pageerror", (error) => errors.push(error.message))
     await page.goto("/examples/watermarks")
     const reading = page.getByRole("table", {
-      name: "Settled event-time windows"
+      name: "Event-time window counts"
     })
     await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
       "0-12s",
-      "2",
       "1",
       "1",
       "2"
@@ -31,11 +30,11 @@ for (const theme of ["light", "dark"] as const) {
     await expect(
       page.getByTestId("watermark-admission-decision")
     ).toContainText("The window was already closed, so this event was late.")
+    await page.getByText("Explore other streams and settings", { exact: true }).click()
     const frontier = page.getByRole("slider", { name: /Arrival frontier/i })
     await frontier.fill("60")
     await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
       "0-12s",
-      "1",
       "1",
       "0",
       "1"
@@ -46,7 +45,6 @@ for (const theme of ["light", "dark"] as const) {
     await frontier.fill("70")
     await expect(reading.getByRole("row").nth(1).getByRole("cell")).toHaveText([
       "0-12s",
-      "2",
       "1",
       "1",
       "2"

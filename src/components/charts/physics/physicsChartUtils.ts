@@ -33,6 +33,7 @@ export type {
 } from "./eventDropPhysics"
 export {
   buildEventDropPhysics,
+  readEventDropOccupancy,
   placeEventDropSpawn
 } from "./eventDropPhysics"
 

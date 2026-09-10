@@ -229,9 +229,6 @@ export function eventDropOverlay(
               height={yBottom - gutterTop}
               fill="var(--semiotic-danger, #e15759)"
               fillOpacity={0.07}
-              stroke="var(--semiotic-border, #d1d5db)"
-              strokeOpacity={0.55}
-              strokeWidth={1}
             />
             <text
               x={gutter.x + gutter.width / 2}
@@ -241,7 +238,7 @@ export function eventDropOverlay(
               fontSize={10}
               fontWeight={700}
             >
-              gutter
+              {metadata.lateCount} late
             </text>
           </g>
         ) : null}
@@ -249,7 +246,6 @@ export function eventDropOverlay(
           const row = rows[index]
           const x = windowPlot.x + index * laneWidth
           const closed = index < metadata.closedWindowCount
-          const late = row?.secondary ?? 0
           return (
             <g key={`window-${index}`}>
               <rect
@@ -263,9 +259,6 @@ export function eventDropOverlay(
                     : "var(--semiotic-primary, #4e79a7)"
                 }
                 fillOpacity={closed ? 0.08 : 0.06}
-                stroke="var(--semiotic-border, #d1d5db)"
-                strokeOpacity={0.68}
-                strokeWidth={1}
               />
               {closed
                 ? metadata.lidSegments
@@ -293,7 +286,6 @@ export function eventDropOverlay(
                 fontWeight={700}
               >
                 {row?.value ?? 0}
-                {late ? ` / ${late} late` : ""}
               </text>
               <text
                 x={x + laneWidth / 2}
@@ -307,6 +299,14 @@ export function eventDropOverlay(
             </g>
           )
         })}
+        {metadata.windowWalls?.map(({ id, ...wall }) => (
+          <rect
+            key={id}
+            {...wall}
+            fill="var(--semiotic-border, #d1d5db)"
+            fillOpacity={0.68}
+          />
+        ))}
         {metadata.lidSegments
           .filter((segment) => segment.windowIndex == null)
           .map((segment) => (
@@ -349,18 +349,6 @@ export function eventDropOverlay(
         >
           watermark {Math.round(metadata.watermarkValue * 100) / 100}
         </text>
-        {metadata.lateCount > 0 ? (
-          <text
-            x={gutter.x + gutter.width / 2}
-            y={plot.y + 32}
-            textAnchor="middle"
-            fill="var(--semiotic-danger, #e15759)"
-            fontSize={10}
-            fontWeight={700}
-          >
-            {metadata.lateCount} late
-          </text>
-        ) : null}
       </svg>
     )
   }

@@ -607,7 +607,7 @@ export const StreamPhysicsFrame = memo(
         storeRef
       })
 
-      const paint = useCallback(() => {
+      const paint = useCallback((forceSemanticUpdate = false) => {
         const canvas = canvasRef.current
         const store = storeRef.current
         if (!canvas || !store) return
@@ -656,7 +656,12 @@ export const StreamPhysicsFrame = memo(
         const snapshot = store.snapshot()
         const bodies = store.readBodies()
         const bodyCursors = physicsCanvasPointer.begin()
-        syncBodySemanticItems(bodies, snapshot.simulationState)
+        // Throttle moving frames, but always publish the final navigation
+        // geometry when motion stops or a caller advances the model manually.
+        syncBodySemanticItems(
+          bodies, snapshot.simulationState,
+          forceSemanticUpdate || reducedMotionRef.current || snapshot.simulationState !== "running"
+        )
         if (needsLiveAnnotationAnchors) {
           const now = logicalClockRef.current()
           if (now - lastAnnotationAnchorUpdateRef.current >= 100) {
@@ -1331,19 +1336,19 @@ export const StreamPhysicsFrame = memo(
           settle: (maxSteps) => {
             const steps = runObservedSteps({ maxSteps }).result.steps
             postWorkerCommand({ type: "settle", maxSteps })
-            paint()
+            paint(true)
             return steps
           },
           settleWithObservations: (maxSteps) => {
             const { result } = runObservedSteps({ maxSteps })
             postWorkerCommand({ type: "settle", maxSteps })
-            paint()
+            paint(true)
             return result
           },
           step: (deltaSeconds) => {
             const { result } = runObservedSteps({ deltaSeconds })
             postWorkerCommand({ type: "tick", deltaSeconds })
-            paint()
+            paint(true)
             return result
           }
         }),

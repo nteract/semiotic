@@ -1,201 +1,25 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import {
-  GauntletChart,
-  bodyGroupSpec,
-  groupCompletionRows,
-  planGauntletPropertyWork,
-  replaceGauntletNegative,
-} from "semiotic/physics"
+import React, { useCallback, useMemo, useState } from "react"
+import { GauntletChart, bodyGroupSpec, groupCompletionRows } from "semiotic/physics"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import ExamplePageLayout from "./ExamplePageLayout"
+import {
+  TRAITS,
+  TRAIT_ORDER,
+  NEGATIVE_PROPERTIES,
+  PR_TEMPLATES,
+  SCENARIOS,
+  SCENARIO_ORDER,
+} from "./mergePressureScenarios"
+import { buildReviewEvents, outcomeForPR, viabilityForPR } from "./mergePressureModel"
+import { usePhysicsStoryClock, PhysicsStoryClock } from "./PhysicsStoryClock"
 import "./MergePressureExamplePage.css"
+import "./physicsStories.css"
 
 const MAX_WIDTH = 1120
-const MIN_WIDTH = 300
+const MIN_WIDTH = 240
+const MODEL_WIDTH = 760
 const FRAME_HEIGHT = 540
 const FEATURE_POINTS = 18
-
-const TRAITS = {
-  missing_tests: {
-    id: "missing_tests",
-    label: "Missing Tests",
-    short: "MT",
-    color: "#dc2626",
-    work: 3,
-    priority: 3,
-    load: 1.35,
-  },
-  bad_tests: {
-    id: "bad_tests",
-    label: "Bad Tests",
-    short: "BT",
-    color: "#ea580c",
-    work: 2,
-    priority: 5,
-    load: 1.15,
-  },
-  bugs: {
-    id: "bugs",
-    label: "Bugs",
-    short: "BUG",
-    color: "#e11d48",
-    work: 2,
-    priority: 1,
-    load: 1.1,
-  },
-  docs: {
-    id: "docs",
-    label: "Docs Gap",
-    short: "DOC",
-    color: "#d97706",
-    work: 1,
-    priority: 0,
-    load: 0.7,
-  },
-  scope: {
-    id: "scope",
-    label: "Scope Creep",
-    short: "SCOPE",
-    color: "#475569",
-    work: 2,
-    priority: 2,
-    load: 0.95,
-  },
-  tech_debt: {
-    id: "tech_debt",
-    label: "Tech Debt",
-    short: "DEBT",
-    color: "#7c3aed",
-    work: 3,
-    priority: 4,
-    load: 1.25,
-  },
-}
-
-const TRAIT_ORDER = [
-  "docs",
-  "bugs",
-  "scope",
-  "missing_tests",
-  "tech_debt",
-  "bad_tests",
-]
-
-const NEGATIVE_PROPERTIES = Object.values(TRAITS).map((trait) => ({
-  ...trait,
-  mass: 0.72,
-  radius: 7.5,
-  pull: { x: -7, y: 18 + trait.load * 5 },
-}))
-
-const PR_TEMPLATES = [
-  { points: 2, negatives: ["missing_tests", "docs"] },
-  { points: 4, negatives: ["docs", "bugs", "missing_tests"] },
-  { points: 3, negatives: ["scope", "docs"] },
-  {
-    points: 6,
-    negatives: ["docs", "bugs", "scope", "missing_tests", "tech_debt"],
-  },
-  { points: 5, negatives: ["missing_tests", "tech_debt", "bugs"] },
-  { points: 3, negatives: ["docs", "bad_tests"] },
-  { points: 4, negatives: ["scope", "bugs", "missing_tests", "bugs"] },
-  { points: 2, negatives: ["docs", "tech_debt"] },
-]
-
-const SCENARIOS = {
-  humanPace: {
-    id: "humanPace",
-    short: "1. Human pace",
-    label: "Coding throttles the system",
-    source: "Human-authored PRs",
-    count: 5,
-    arrivalGap: 1.45,
-    reviewRate: 5,
-    humanBudget: 5,
-    aiMode: "observe",
-    seed: 31,
-    description:
-      "PR work arrives slowly enough that the shared human queue drains between arrivals.",
-    lesson:
-      "When coding is slower than review service, attached risk can be inspected without a persistent backlog.",
-  },
-  aiBurst: {
-    id: "aiBurst",
-    short: "2. AI burst",
-    label: "The bottleneck moves to review",
-    source: "AI-assisted PRs",
-    count: 8,
-    arrivalGap: 0.38,
-    reviewRate: 5,
-    humanBudget: 5,
-    aiMode: "observe",
-    seed: 83,
-    description:
-      "The same review service now receives code points faster than it can process them.",
-    lesson:
-      "More generated code is visible immediately; merged Feature points remain governed by shared review throughput.",
-  },
-  ciReturns: {
-    id: "ciReturns",
-    short: "3. CI returns",
-    label: "Recirculation consumes capacity twice",
-    source: "AI-agent PRs, narrow review",
-    count: 8,
-    arrivalGap: 0.38,
-    reviewRate: 5,
-    humanBudget: 3,
-    aiMode: "observe",
-    seed: 127,
-    description:
-      "A smaller remediation budget leaves Missing Tests attached, so CI sends the same PR back through human review.",
-    lesson:
-      "A CI return sends the same PR through review again, adding repeat demand to a finite service.",
-  },
-  aiTests: {
-    id: "aiTests",
-    short: "4. AI tests",
-    label: "Automation can move risk, not remove it",
-    source: "AI-reviewed PRs",
-    count: 8,
-    arrivalGap: 0.38,
-    reviewRate: 5,
-    humanBudget: 5,
-    aiMode: "bad_tests",
-    seed: 173,
-    description:
-      "AI review replaces Missing Tests with Bad Tests. CI returns fall, but residual risk can merge into the Feature.",
-    lesson:
-      "A faster green check can leave residual risk when review replaces one negative trait with another.",
-  },
-  scaledReview: {
-    id: "scaledReview",
-    short: "5. Scale review",
-    label: "Code velocity needs review velocity",
-    source: "AI-assisted PRs, wider review",
-    count: 8,
-    arrivalGap: 0.38,
-    reviewRate: 15,
-    humanBudget: 7,
-    aiMode: "observe",
-    seed: 211,
-    description:
-      "Arrival velocity stays high, while review service and per-pass remediation both increase.",
-    lesson:
-      "The intervention is systemic: service rate, review depth, and CI feedback must scale with generated work.",
-  },
-}
-
-const SCENARIO_ORDER = [
-  "humanPace",
-  "aiBurst",
-  "ciReturns",
-  "aiTests",
-  "scaledReview",
-]
-
-function traitLabel(id) {
-  return TRAITS[id]?.label ?? id
-}
 
 function countById(ids) {
   return ids.reduce((counts, id) => {
@@ -228,176 +52,9 @@ function buildProjectRows(scenario, runId) {
   }))
 }
 
-function humanReviewEffect(project, scenario, passLabel) {
-  const plan = planGauntletPropertyWork({
-    attachedIds: project.negativeIds,
-    properties: NEGATIVE_PROPERTIES,
-    budget: scenario.humanBudget,
-  })
-  const popped = plan.ids.map(traitLabel).join(", ") || "nothing"
-  return {
-    metricsDelta: {
-      humanPasses: 1,
-      humanReviewedWork: plan.used,
-    },
-    popNegative: { ids: plan.ids },
-    stage: passLabel,
-    summary: `${passLabel} used ${plan.used}/${scenario.humanBudget} remediation units and removed ${popped}.`,
-  }
-}
-
-function aiReviewEffect(project, scenario) {
-  if (scenario.aiMode === "bad_tests") {
-    const replacement = replaceGauntletNegative(project, {
-      from: "missing_tests",
-      to: "bad_tests",
-    })
-    if (replacement.popNegative) {
-      return {
-        ...replacement,
-        metricsDelta: { aiPasses: 1, aiReplacements: 1 },
-        stage: "AI Review",
-        summary: "AI review replaced Missing Tests with Bad Tests.",
-      }
-    }
-  }
-  return {
-    metricsDelta: { aiPasses: 1 },
-    stage: "AI Review",
-    summary: "AI review left the attached negative traits unchanged.",
-  }
-}
-
-function ciEffect(project, label) {
-  if (project.negativeIds.includes("missing_tests")) {
-    return {
-      delayDelta: 1,
-      metricsDelta: { ciReturns: 1 },
-      outcome: "returned_to_review",
-      stage: label,
-      summary: "CI found Missing Tests and returned the same PR to human review.",
-    }
-  }
-  return {
-    metricsDelta: { ciPasses: 1 },
-    stage: label,
-    summary: "CI passed; any remaining non-blocking risk stays attached.",
-  }
-}
-
-function gateById(layout, id) {
-  return layout.gates.find((gate) => gate.id === id)
-}
-
-function buildReviewEvents(scenario, project, layout) {
-  const ai = gateById(layout, "ai-review")
-  const human = gateById(layout, "human-review")
-  const ci = gateById(layout, "ci")
-  const routeY = layout.routeY
-  const events = [
-    {
-      id: "ai-review",
-      label: "AI Review",
-      gateId: "ai-review",
-      routeX: ai?.x,
-      routeY,
-      time: 0.72,
-      effects: [aiReviewEffect(project, scenario)],
-    },
-    {
-      id: "human-review-1",
-      label: "Human Review",
-      gateId: "human-review",
-      gateVisit: 1,
-      routeX: human?.x,
-      routeY,
-      time: 1.55,
-      effects: [humanReviewEffect(project, scenario, "Human Review")],
-    },
-    {
-      id: "ci-check-1",
-      label: "CI",
-      gateId: "ci",
-      gateVisit: 1,
-      routeX: ci?.x,
-      routeY,
-      time: 2.5,
-      effects: [ciEffect(project, "CI")],
-    },
-  ]
-
-  if (!project.eventsApplied.includes("ci-check-1")) return events
-  if (!project.negativeIds.includes("missing_tests")) {
-    events.push({
-      id: "merge-decision",
-      label: "Merge Decision",
-      routeX: (ci?.x ?? layout.socketX) + 18,
-      routeY,
-      time: 2.72,
-      final: true,
-      summary: "The PR contributes its points to the Feature once.",
-    })
-    return events
-  }
-
-  events.push(
-    {
-      id: "human-review-2",
-      label: "Return Review",
-      gateId: "human-review",
-      gateVisit: 2,
-      routeX: human?.x,
-      routeY: routeY - 72,
-      time: 3.55,
-      effects: [humanReviewEffect(project, scenario, "Return Review")],
-    },
-    {
-      id: "ci-final",
-      label: "CI Final",
-      gateId: "ci",
-      gateVisit: 2,
-      routeX: ci?.x,
-      routeY,
-      time: 4.65,
-      effects: [ciEffect(project, "CI Final")],
-    },
-  )
-  if (project.eventsApplied.includes("ci-final")) {
-    events.push({
-      id: "merge-decision",
-      label: "Merge Decision",
-      routeX: (ci?.x ?? layout.socketX) + 18,
-      routeY,
-      time: 4.88,
-      final: true,
-      summary: project.negativeIds.includes("missing_tests")
-        ? "Missing Tests still block this PR from contributing Feature points."
-        : "The returned PR now contributes its points to the Feature once.",
-    })
-  }
-  return events
-}
-
-function outcomeForPR(project) {
-  if (project.negativeIds.includes("missing_tests")) return "approved_not_built"
-  if (project.negativeIds.length > 0) return "built_diminished"
-  return "built"
-}
-
-function viabilityForPR(project, { negativeProperties }) {
-  const points = Number(project.datum.points ?? 1)
-  const load = project.negativeIds.reduce(
-    (sum, id) => sum + (negativeProperties.get(id)?.load ?? 1),
-    0,
-  )
-  return Math.max(0, Math.min(100, 96 - points * 1.1 - load * 8 - project.delay * 6))
-}
-
 function buildGates(width, scenario) {
   const compact = width < 520
-  const gateX = compact
-    ? { ai: 0.27, human: 0.5, ci: 0.84 }
-    : { ai: 0.3, human: 0.54, ci: 0.78 }
+  const gateX = compact ? { ai: 0.27, human: 0.5, ci: 0.84 } : { ai: 0.3, human: 0.54, ci: 0.78 }
   return [
     {
       id: "ai-review",
@@ -451,9 +108,7 @@ function resolveCanvasColor(ctx, value, fallback) {
     return value || fallback
   }
   const token = value.match(/var\((--[^,\s)]+)/)?.[1]
-  return token
-    ? getComputedStyle(ctx.canvas).getPropertyValue(token).trim() || fallback
-    : fallback
+  return token ? getComputedStyle(ctx.canvas).getPropertyValue(token).trim() || fallback : fallback
 }
 
 function drawReviewBody(ctx, body, style) {
@@ -498,42 +153,6 @@ function drawReviewBody(ctx, body, style) {
   ctx.restore()
 }
 
-const implementationCode = `import {
-  GauntletChart,
-  bodyGroupSpec,
-  groupCompletionRows,
-  planGauntletPropertyWork,
-  replaceGauntletNegative,
-} from "semiotic/physics"
-
-const feature = bodyGroupSpec({
-  id: "feature",
-  bodyIds: prs.map((pr) => pr.id),
-  completion: {
-    mode: "threshold",
-    threshold: 18,
-    valueByBodyId: Object.fromEntries(prs.map((pr) => [pr.id, pr.points])),
-  },
-})
-
-<GauntletChart
-  data={prs}
-  startTimeAccessor="arrival"
-  negativeAccessor="negatives"
-  negativeProperties={reviewTraits}
-  gates={[
-    { id: "ai-review", capacity: { unitsPerSecond: 60 } },
-    {
-      id: "human-review",
-      capacity: { unitsPerSecond: 5, unitAccessor: "reviewWork" },
-    },
-    { id: "ci", capacity: { unitsPerSecond: 60 } },
-  ]}
-  events={reviewEvents}
-  onCapacityChange={setCapacity}
-/>
-`
-
 export default function MergePressureExamplePage() {
   const [width, hostRef] = useResponsiveWidth(MIN_WIDTH, MAX_WIDTH)
   const [scenarioId, setScenarioId] = useState("humanPace")
@@ -547,38 +166,36 @@ export default function MergePressureExamplePage() {
     MIN_WIDTH,
     Math.min(MAX_WIDTH, Math.round(width - readoutReserve - workbenchInset)),
   )
-  const gates = useMemo(() => buildGates(chartWidth, scenario), [chartWidth, scenario])
-  const projectData = useMemo(
-    () => buildProjectRows(scenario, runId),
-    [runId, scenario],
-  )
-  const runKey = `${scenario.id}:${runId}:${chartWidth}`
+  const gates = useMemo(() => buildGates(MODEL_WIDTH, scenario), [scenario])
+  const projectData = useMemo(() => buildProjectRows(scenario, runId), [runId, scenario])
+  const runKey = `${scenario.id}:${runId}`
+  const clock = usePhysicsStoryClock(runKey)
+  const chartScale = Math.min(1, chartWidth / MODEL_WIDTH)
 
-  useEffect(() => {
+  const [ledgerKey, setLedgerKey] = useState(runKey)
+  if (ledgerKey !== runKey) {
+    setLedgerKey(runKey)
     setProjectStates([])
     setCapacityStats([])
-  }, [runKey])
+  }
 
   const events = useCallback(
     (project, layout) => buildReviewEvents(scenario, project, layout),
     [scenario],
   )
 
-  const coreBody = useCallback(
-    (project) => {
-      const points = Number(project.datum.points ?? 1)
-      const compact = chartWidth < 520
-      return {
-        bodyCollisions: !compact,
-        mass: 4.5 + points * 0.5,
-        shape: {
-          type: "circle",
-          radius: Math.round(prRadius(points) * (compact ? 0.8 : 1)),
-        },
-      }
-    },
-    [chartWidth],
-  )
+  const coreBody = useCallback((project) => {
+    const points = Number(project.datum.points ?? 1)
+    const compact = MODEL_WIDTH < 520
+    return {
+      bodyCollisions: !compact,
+      mass: 4.5 + points * 0.5,
+      shape: {
+        type: "circle",
+        radius: Math.round(prRadius(points) * (compact ? 0.8 : 1)),
+      },
+    }
+  }, [])
 
   const projectPlacement = useCallback((_project, index, layout) => {
     const lane = (index % 5) - 2
@@ -642,14 +259,11 @@ export default function MergePressureExamplePage() {
     [featureGroup],
   )
 
-  const humanCapacity = capacityStats.find((snapshot) =>
-    snapshot.regionId.includes("human-review"),
-  )
+  const humanCapacity = capacityStats.find((snapshot) => snapshot.regionId.includes("human-review"))
   const totalPoints = projectData.reduce((sum, project) => sum + project.points, 0)
   const arrivalWindow = Math.max(1, (projectData.length - 1) * scenario.arrivalGap)
   const incomingRate = totalPoints / arrivalWindow
   const reviewPressure = incomingRate / scenario.reviewRate
-  const burstDebt = Math.max(0, totalPoints - scenario.reviewRate * arrivalWindow)
   const reviewVisits = projectStates.reduce(
     (sum, state) => sum + Number(state.metrics?.humanPasses ?? 0),
     0,
@@ -661,10 +275,7 @@ export default function MergePressureExamplePage() {
   const mergedStates = projectStates.filter(
     (state) => state.outcome === "built" || state.outcome === "built_diminished",
   )
-  const residualRisk = mergedStates.reduce(
-    (sum, state) => sum + state.negativeIds.length,
-    0,
-  )
+  const residualRisk = mergedStates.reduce((sum, state) => sum + state.negativeIds.length, 0)
   const traitMetrics = useMemo(() => {
     const active = projectStates.flatMap((state) => state.negativeIds)
     const popped = projectStates.flatMap((state) => state.poppedNegativeIds ?? [])
@@ -703,9 +314,13 @@ export default function MergePressureExamplePage() {
           opacity: 0.98,
         }
       },
+      onTick: clock.onTick,
+      suspendWhenHidden: false,
       config: {
+        fixedDt: 1 / 60,
+        settleStepLimit: 1200,
         kernel: {
-          seed: scenario.seed + runId,
+          seed: scenario.seed,
           gravity: { x: 0, y: 0 },
           restitution: 0.12,
           friction: 0.48,
@@ -719,26 +334,25 @@ export default function MergePressureExamplePage() {
           gates={gates}
           height={FRAME_HEIGHT}
           queueDepth={humanCapacity?.queueDepth ?? 0}
-          width={chartWidth}
+          width={MODEL_WIDTH}
         />
       ),
       renderBody: drawReviewBody,
     }),
-    [chartWidth, ciReturns, featureProgress, gates, humanCapacity?.queueDepth, runId, scenario],
+    [clock.onTick, ciReturns, featureProgress, gates, humanCapacity?.queueDepth, scenario],
   )
 
   return (
-    <ExamplePageLayout title="Merge Pressure" code={implementationCode}>
+    <ExamplePageLayout title="Merge Pressure">
       <div className="merge-pressure" ref={hostRef}>
-        <section className="merge-pressure__hero">
+        <section className="merge-pressure__hero physics-story">
           <div>
-            <span className="merge-pressure__kicker">
-              Review queues under AI throughput
-            </span>
+            <span className="merge-pressure__kicker">Review queues under AI throughput</span>
+            <h2>What happens when coding outruns review?</h2>
             <p className="merge-pressure__lede">
-              AI can increase code production without increasing review capacity. Each pull request
-              is a bundle: how much code it carries, what risks ride with it, and what happens when
-              CI sends it back. Only merges count toward shipping the feature.
+              Follow the same eight pull requests carrying 29 code points. Speed up their arrival,
+              then give the reviewer more capacity. Watch work collect at the review gate and return
+              from CI. Only a unique merge contributes to the feature.
             </p>
           </div>
           <div className="merge-pressure__source-card">
@@ -773,46 +387,77 @@ export default function MergePressureExamplePage() {
           })}
         </section>
 
-        <section className="merge-pressure__legend" aria-label="Visual grammar">
-          <LegendItem title="PR core" body="Circle area grows with code points; arrivals are staggered by the scenario." swatch="core" />
-          <LegendItem title="Negative trait" body="Square satellites remain attached until AI or human review transforms or removes them." swatch="trait" />
-          <LegendItem title="Shared service" body="Human review is one shared queue—PRs wait their turn." swatch="capacity" />
-          <LegendItem title="Feature" body="Only merged PR work fills the feature. Reviewing alone does not." swatch="feature" />
-        </section>
+        <p className="physics-story__reading" data-testid="merge-comparison-rule">
+          <b>Same work, one intervention.</b> {scenario.comparison} PR sizes, initial risks, physics
+          seed, model geometry, and the 20-second observation stay fixed.
+        </p>
 
-        <section className="merge-pressure__workbench">
-          <div className="merge-pressure__chart-shell" style={{ width: chartWidth }}>
-            <GauntletChart
-              key={runKey}
-              title={`Merge pressure: ${scenario.short}`}
-              summary={`${scenario.label}: ${projectData.length} PRs carry ${totalPoints} code points. Incoming work is ${incomingRate.toFixed(1)} points per second against ${scenario.reviewRate} review points per second. ${featureProgress.absorbedValue} of ${FEATURE_POINTS} Feature points have merged.`}
-              description="Staggered compound PR bodies cross AI review, a shared capacity-limited human review queue, and CI. Attached negative traits can be removed or replaced. CI returns the same body when Missing Tests remain."
-              data={projectData}
-              idAccessor="id"
-              startTimeAccessor="arrival"
-              negativeAccessor="negatives"
-              metricsAccessor="metrics"
-              negativeProperties={NEGATIVE_PROPERTIES}
-              gates={gates}
-              events={events}
-              bodyGroups={bodyGroups}
-              initialViability={100}
-              viability={viabilityForPR}
-              outcome={outcomeForPR}
-              coreBody={coreBody}
-              projectPlacement={projectPlacement}
-              coreForceMode="route"
-              crashDetection={false}
-              size={[chartWidth, FRAME_HEIGHT]}
-              terminalBehavior="outcome"
-              showChrome={false}
-              showProjection={false}
-              showTethers
-              accessibleTable
-              onStateChange={setProjectStates}
-              onCapacityChange={setCapacityStats}
-              frameProps={frameProps}
+        <details className="physics-story__technical">
+          <summary>Read the bodies: circles are PRs, attached squares are risks</summary>
+          <section className="merge-pressure__legend" aria-label="Visual grammar">
+            <LegendItem
+              title="PR core"
+              body="Circle area grows with code points; arrivals are staggered by the scenario."
+              swatch="core"
             />
+            <LegendItem
+              title="Negative trait"
+              body="Square satellites remain attached until AI or human review transforms or removes them."
+              swatch="trait"
+            />
+            <LegendItem
+              title="Shared service"
+              body="Human review is one shared queue—PRs wait their turn."
+              swatch="capacity"
+            />
+            <LegendItem
+              title="Feature"
+              body="Only merged PR work fills the feature. Reviewing alone does not."
+              swatch="feature"
+            />
+          </section>
+        </details>
+        <PhysicsStoryClock elapsed={clock.elapsed} />
+        <section className="merge-pressure__workbench">
+          <div className="merge-pressure__chart-shell" style={{ width: MODEL_WIDTH * chartScale }}>
+            <div className="physics-story__viewport" style={{ height: FRAME_HEIGHT * chartScale }}>
+              <div
+                className="physics-story__model"
+                style={{ width: MODEL_WIDTH, transform: `scale(${chartScale})` }}
+              >
+                <GauntletChart
+                  key={runKey}
+                  title={`Merge pressure: ${scenario.short}`}
+                  summary={`${scenario.label}: ${projectData.length} PRs carry ${totalPoints} code points. Incoming work is ${incomingRate.toFixed(1)} points per second against ${scenario.reviewRate} review points per second. ${featureProgress.absorbedValue} of ${FEATURE_POINTS} Feature points have merged.`}
+                  description="Staggered compound PR bodies cross AI review, a shared capacity-limited human review queue, and CI. Attached negative traits can be removed or replaced. CI returns the same body when Missing Tests remain."
+                  data={projectData}
+                  idAccessor="id"
+                  startTimeAccessor="arrival"
+                  negativeAccessor="negatives"
+                  metricsAccessor="metrics"
+                  negativeProperties={NEGATIVE_PROPERTIES}
+                  gates={gates}
+                  events={events}
+                  bodyGroups={bodyGroups}
+                  initialViability={100}
+                  viability={viabilityForPR}
+                  outcome={outcomeForPR}
+                  coreBody={coreBody}
+                  projectPlacement={projectPlacement}
+                  coreForceMode="route"
+                  crashDetection={false}
+                  size={[MODEL_WIDTH, FRAME_HEIGHT]}
+                  terminalBehavior="outcome"
+                  showChrome={false}
+                  showProjection={false}
+                  showTethers
+                  accessibleTable
+                  onStateChange={setProjectStates}
+                  onCapacityChange={setCapacityStats}
+                  frameProps={frameProps}
+                />
+              </div>
+            </div>
           </div>
 
           <aside className="merge-pressure__readout">
@@ -822,19 +467,55 @@ export default function MergePressureExamplePage() {
             <div className="merge-pressure__regime-callout">
               <strong>{scenario.lesson}</strong>
               <span>
-                Baseline pressure: {reviewPressure.toFixed(2)}. Human remediation budget: {scenario.humanBudget} units per visit.
+                Incoming work / service: {reviewPressure.toFixed(2)}, before repeat visits. Human
+                remediation budget: {scenario.humanBudget} units per visit.
               </span>
             </div>
 
             <div className="merge-pressure__metrics">
-              <Metric label="incoming work" value={incomingRate.toFixed(1)} detail="code points / sec" warn={reviewPressure > 1} />
-              <Metric label="review service" value={scenario.reviewRate} detail="work units / sec" />
-              <Metric label="burst debt" value={burstDebt.toFixed(1)} detail={`${humanCapacity?.queueDepth ?? 0} bodies in service now`} warn={burstDebt > 0} />
-              <Metric label="review visits" value={reviewVisits} detail="same PR can visit twice" warn={reviewVisits > projectData.length} />
-              <Metric label="CI returns" value={ciReturns} detail="Missing Tests" warn={ciReturns > 0} />
-              <Metric label="merged risk" value={residualRisk} detail={`${mergedStates.length} PRs merged`} warn={residualRisk > 0} />
+              <Metric
+                label="incoming work"
+                value={incomingRate.toFixed(1)}
+                detail="code points / model sec"
+                warn={reviewPressure > 1}
+              />
+              <Metric
+                label="review service"
+                value={scenario.reviewRate}
+                detail="work units / model sec"
+              />
+              <Metric
+                label="peak queue"
+                value={humanCapacity?.peakQueueDepth ?? 0}
+                detail={`${humanCapacity?.queueDepth ?? 0} PRs in service now`}
+                warn={reviewPressure > 1}
+              />
+              <Metric
+                label="review visits"
+                value={reviewVisits}
+                detail="same PR can visit twice"
+                warn={reviewVisits > projectData.length}
+              />
+              <Metric
+                label="CI returns"
+                value={ciReturns}
+                detail="Missing Tests"
+                warn={ciReturns > 0}
+              />
+              <Metric
+                label="merged risk"
+                value={residualRisk}
+                detail={`${mergedStates.length} PRs merged`}
+                warn={residualRisk > 0}
+              />
             </div>
 
+            <p className="physics-story__reading" data-testid="merge-observation">
+              {clock.elapsed >= 20 ? "At 20 model seconds" : "So far"}: {mergedStates.length} of 8
+              PRs merged, using {reviewVisits} review visits. The busiest queue held{" "}
+              {humanCapacity?.peakQueueDepth ?? 0} PRs. {residualRisk} risk{" "}
+              {residualRisk === 1 ? "trait remains" : "traits remain"} on merged work.
+            </p>
             <FeatureProgress progress={featureProgress} />
             <TraitLedger metrics={traitMetrics} />
           </aside>
@@ -849,7 +530,9 @@ export default function MergePressureExamplePage() {
             {eventLog.length ? (
               eventLog.map((event) => (
                 <article key={`${runKey}:${event.projectLabel}:${event.id}`}>
-                  <strong>{event.projectLabel} · {event.label}</strong>
+                  <strong>
+                    {event.projectLabel} · {event.label}
+                  </strong>
                   <span>{event.summary}</span>
                 </article>
               ))
@@ -865,19 +548,29 @@ export default function MergePressureExamplePage() {
         <section className="merge-pressure__explanation">
           <div>
             <span className="merge-pressure__kicker">Reusable mechanics</span>
-            <h2>Entity, service, transition, aggregate.</h2>
+            <h2>What the model assumes</h2>
           </div>
           <div>
             <p>
-              The page supplies domain data and policies. GauntletChart now owns staggered local
-              timelines, core-only capacity service, occurrence-preserving property changes, and an
-              ordered event tape. The process recipe owns weighted group completion, so a Feature
-              can be any threshold of uniquely completed member value.
+              This is a hypothetical workflow, not measured developer productivity. Every code point
+              consumes one review-work unit; each review has a separate remediation budget. CI
+              checks for missing tests, not their quality. Physics makes waiting, repeated visits,
+              and attached risk visible. The event ledger decides what merged; a collision cannot
+              approve a PR.
             </p>
             <div className="merge-pressure__needs-grid">
-              <Need title="compound entity" body="One semantic PR is a core plus repeated negative-property occurrences." />
-              <Need title="shared capacity" body="A gate processes root entities by work units and re-arms only after a real exit." />
-              <Need title="weighted group" body="Merged PR values accumulate once toward a generic threshold outcome." />
+              <Need
+                title="compound entity"
+                body="One semantic PR is a core plus repeated negative-property occurrences."
+              />
+              <Need
+                title="shared capacity"
+                body="A gate processes root entities by work units and re-arms only after a real exit."
+              />
+              <Need
+                title="weighted group"
+                body="Merged PR values accumulate once toward a generic threshold outcome."
+              />
             </div>
           </div>
         </section>
@@ -897,31 +590,70 @@ function MergePressureOverlay({ ciReturns, featureProgress, gates, height, queue
   return (
     <svg aria-hidden="true" className="merge-pressure__overlay" viewBox={`0 0 ${width} ${height}`}>
       <defs>
-        <marker id="merge-pressure-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker
+          id="merge-pressure-arrow"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto-start-reverse"
+        >
           <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--mp-red)" />
         </marker>
       </defs>
-      <path className="merge-pressure__route" d={`M ${startX - 60} ${routeY} C ${width * 0.28} ${routeY - 36}, ${width * 0.48} ${routeY + 36}, ${width * 0.68} ${routeY} S ${width * 0.82} ${routeY - 24}, ${socketX} ${routeY}`} />
+      <path
+        className="merge-pressure__route"
+        d={`M ${startX - 60} ${routeY} C ${width * 0.28} ${routeY - 36}, ${width * 0.48} ${routeY + 36}, ${width * 0.68} ${routeY} S ${width * 0.82} ${routeY - 24}, ${socketX} ${routeY}`}
+      />
       {ciReturns > 0 && ci && human ? (
-        <path className="merge-pressure__return-route" d={`M ${ci.x} ${routeY - 58} C ${ci.x - 52} ${routeY - 122}, ${human.x + 58} ${routeY - 122}, ${human.x + 8} ${routeY - 72}`} markerEnd="url(#merge-pressure-arrow)" />
+        <path
+          className="merge-pressure__return-route"
+          d={`M ${ci.x} ${routeY - 58} C ${ci.x - 52} ${routeY - 122}, ${human.x + 58} ${routeY - 122}, ${human.x + 8} ${routeY - 72}`}
+          markerEnd="url(#merge-pressure-arrow)"
+        />
       ) : null}
       {gates.map((gate) => (
         <g key={gate.id} className="merge-pressure__gate">
-          <rect x={gate.x - gate.width / 2} y={88} width={gate.width} height={height - 168} rx={gate.width / 2} fill={gate.color} />
-          <text x={gate.x} y={72} textAnchor="middle">{gate.label}</text>
+          <rect
+            x={gate.x - gate.width / 2}
+            y={88}
+            width={gate.width}
+            height={height - 168}
+            rx={gate.width / 2}
+            fill={gate.color}
+          />
+          <text x={gate.x} y={72} textAnchor="middle">
+            {gate.label}
+          </text>
           <text x={gate.x} y={height - 62} textAnchor="middle">
-            {gate.id === "human-review" ? `${gate.capacity.unitsPerSecond} work/sec` : gate.id === "ai-review" ? "transform" : "return MT"}
+            {gate.id === "human-review"
+              ? `${gate.capacity.unitsPerSecond} work/sec`
+              : gate.id === "ai-review"
+                ? "transform"
+                : "return MT"}
           </text>
         </g>
       ))}
-      <g className={`merge-pressure__feature-socket ${complete ? "is-complete" : ""}`} transform={`translate(${socketX} ${routeY})`}>
+      <g
+        className={`merge-pressure__feature-socket ${complete ? "is-complete" : ""}`}
+        transform={`translate(${socketX} ${routeY})`}
+      >
         <circle r="38" />
-        <text y="-3" textAnchor="middle">FEATURE</text>
-        <text y="13" textAnchor="middle">{featureProgress.absorbedValue}/{FEATURE_POINTS} pt</text>
+        <text y="-3" textAnchor="middle">
+          FEATURE
+        </text>
+        <text y="13" textAnchor="middle">
+          {featureProgress.absorbedValue}/{FEATURE_POINTS} pt
+        </text>
       </g>
       <g className="merge-pressure__annotation">
-        <text x={startX - 58} y={routeY - 72}>staggered PR arrivals</text>
-        <text x={(human?.x ?? width * 0.5) - 48} y={routeY + 104}>shared queue: {queueDepth}</text>
+        <text x={startX - 58} y={routeY - 72}>
+          staggered PR arrivals
+        </text>
+        <text x={(human?.x ?? width * 0.5) - 48} y={routeY + 104}>
+          shared queue: {queueDepth}
+        </text>
       </g>
     </svg>
   )
@@ -956,10 +688,19 @@ function FeatureProgress({ progress }) {
         <strong>{progress.complete ? "Feature complete" : "Feature accumulating"}</strong>
         <span>{progress.absorbed} unique PRs merged</span>
       </div>
-      <div className="merge-pressure__feature-track" role="progressbar" aria-label="Merged Feature points" aria-valuemin={0} aria-valuemax={FEATURE_POINTS} aria-valuenow={value}>
+      <div
+        className="merge-pressure__feature-track"
+        role="progressbar"
+        aria-label="Merged Feature points"
+        aria-valuemin={0}
+        aria-valuemax={FEATURE_POINTS}
+        aria-valuenow={value}
+      >
         <i style={{ width: `${percent}%` }} />
       </div>
-      <b>{progress.absorbedValue} / {FEATURE_POINTS} points</b>
+      <b>
+        {progress.absorbedValue} / {FEATURE_POINTS} points
+      </b>
     </div>
   )
 }

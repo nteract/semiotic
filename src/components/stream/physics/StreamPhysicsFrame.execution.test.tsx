@@ -1,5 +1,5 @@
 import * as React from "react"
-import { act, cleanup, render } from "@testing-library/react"
+import { act, cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { createFrameScheduler } from "../test-utils/frameScheduler"
@@ -53,6 +53,50 @@ describe("frame fixed-step execution", () => {
     restoreCanvas()
     vi.unstubAllGlobals()
   })
+
+  it.each(["reduced", "paused", "step", "settle"])(
+    "refreshes keyboard positions and descriptions after a %s bounded run",
+    (mode) => {
+      reduced = mode === "reduced"
+      const ref = React.createRef<StreamPhysicsFrameHandle>()
+      const onSemanticItemFocus = vi.fn()
+      const { container, getByRole } = render(
+        <StreamPhysicsFrame
+          ref={ref}
+          size={[240, 120]}
+          config={config}
+          initialSpawns={[{ ...initialSpawns[0], vx: 80 }]}
+          frameScheduler={createFrameScheduler().scheduler}
+          bodySemanticUpdateMs={60_000}
+          bodySemanticItems={(body) => ({
+            label: body.id,
+            description: body.x > 100 ? "Reached the next stage" : "Waiting"
+          })}
+          onSemanticItemFocus={onSemanticItemFocus}
+        />
+      )
+      if (mode !== "reduced")
+        act(() => {
+          if (mode === "settle") ref.current!.settle(10)
+          else ref.current!.step(1)
+          if (mode === "paused") ref.current!.pause()
+        })
+      const body = ref.current!.readBodies()[0]
+      expect(body.x).toBeGreaterThan(100)
+      fireEvent.keyDown(getByRole("group"), { key: "Home" })
+      expect(onSemanticItemFocus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bodyId: "body",
+          x: body.x,
+          y: body.y,
+          description: "Reached the next stage"
+        })
+      )
+      expect(
+        container.querySelector('circle[stroke-dasharray="4,2"]')
+      ).toHaveAttribute("cx", String(body.x))
+    }
+  )
 
   it("matches bounded reduced motion with imperative batches and ignores decorative rerenders", () => {
     function mount() {

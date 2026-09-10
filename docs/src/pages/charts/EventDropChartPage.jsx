@@ -5,6 +5,7 @@ import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
+import CodeBlock from "../../components/CodeBlock"
 
 const eventDropData = [
   { id: "e0", time: 2, arrivalTime: 3, source: "api" },
@@ -78,7 +79,7 @@ export default function EventDropChartPage() {
       <h2 id="example">Example</h2>
       <p>
         Each circle is one event. Its event time selects a window; its arrival time
-        determines when that window&apos;s admission policy is checked. This replay
+        determines when that window&apos;s admission policy is checked. This history
         accepts six events and rejects the old event arriving at 33. Advancing the
         watermark closes windows without relabeling events they already accepted.
       </p>
@@ -111,6 +112,40 @@ export default function EventDropChartPage() {
         <a href="/examples/watermarks">Watermarks example</a> demonstrates this with
         an inspectable decision for each event.
       </p>
+
+      <h2 id="physical-reading">Read the containers and the clock</h2>
+      <p>
+        A closed lid is solid for every event. In a snapshot of the current board,
+        previously accepted events start beneath their lids. Later arrivals fall
+        onto the ramp and roll into the farthest-left bin. Window labels report
+        accepted source totals; the far-left label reports the total sent there.
+        These totals describe the snapshot, including events still being illustrated.
+        If you rewind current closure while retaining recorded rejections, that
+        rejected history starts inside the far-left bin; the reopened board cannot
+        reenact its earlier rejection.
+      </p>
+      <p>
+        To show the causal sequence, supply successive data and watermark states:
+        let an event enter, close its lid, then supply the late arrival. Keep the
+        chart mounted and use stable event IDs. The{" "}
+        <a href="/examples/watermarks">three-step Watermarks lesson</a> pauses source
+        time while each arrival travels and counts actual container occupancy.
+        Changing <code>timeScale</code> alone does not animate historical lid changes.
+      </p>
+      <p>
+        For live container counts, use the metadata from{" "}
+        <code>buildEventDropPhysics</code> with the same layout options as the chart.
+        The helper classifies each body&apos;s center by its physical container,
+        independently of its source admission flag. A body inside a bin can still
+        be moving; this is occupancy, not a claim that it has settled.
+      </p>
+      <CodeBlock language="tsx" code={`import { readEventDropOccupancy } from "semiotic/physics"
+
+// In frameProps.onTick, using metadata from the matching layout:
+const counts = readEventDropOccupancy(metadata, controls.readBodies())
+// { accepted: [countPerWindow, ...], late, inFlight, total }
+// sum(accepted) + late + inFlight === total
+// total covers materialized bodies; queued arrivals are not included.`} />
 
       <h2 id="props">Props</h2>
       <PropTable componentName="EventDropChart" props={eventDropChartProps} />

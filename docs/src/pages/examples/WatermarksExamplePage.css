@@ -1,4 +1,6 @@
 .watermarks-example {
+  --watermark-color: #efb754;
+  --arrival-color: #80b5df;
   display: grid;
   gap: 28px;
   padding-bottom: 36px;
@@ -104,14 +106,13 @@
   background: #244f72;
 }
 
-/* 3 = inject current (blue), 4 = inject late (purple) */
-.watermarks-example__actions button:nth-child(3) {
+.watermarks-example__actions button.is-current {
   color: #fff;
   border-color: #3f6690;
   background: #3f6690;
 }
 
-.watermarks-example__actions button:nth-child(4) {
+.watermarks-example__actions button.is-late {
   color: #fff;
   border-color: #7b4f7d;
   background: #7b4f7d;
@@ -131,8 +132,14 @@
   display: inline-block;
   width: 12px;
   height: 12px;
-  margin-left: 6px;
   border-radius: 3px;
+}
+
+.watermarks-example__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
 }
 
 .watermarks-example__swatch--ontime {
@@ -165,7 +172,7 @@
 }
 
 .watermarks-example__chart-shell .stream-physics-frame {
-  min-width: 360px;
+  min-width: 0;
 }
 
 /* One overlay above the canvas. Washes stay faint so the bright bodies read
@@ -188,18 +195,15 @@
 }
 
 .watermarks-example__window.is-closed {
-  fill: color-mix(in srgb, #a73b45 12%, transparent);
+  fill: color-mix(in srgb, var(--text-secondary) 7%, transparent);
 }
 
 .watermarks-example__gutter {
   fill: color-mix(in srgb, #a73b45 10%, transparent);
-  stroke: color-mix(in srgb, #a73b45 45%, transparent);
-  stroke-width: 1;
 }
 
-.watermarks-example__divider {
-  stroke: color-mix(in srgb, var(--text-secondary) 24%, transparent);
-  stroke-width: 1;
+.watermarks-example__wall {
+  fill: color-mix(in srgb, var(--text-secondary) 45%, transparent);
 }
 
 .watermarks-example__lid {
@@ -214,13 +218,13 @@
 }
 
 .watermarks-example__watermark {
-  stroke: #e0a53a;
+  stroke: var(--watermark-color);
   stroke-width: 3;
   stroke-dasharray: 7 5;
 }
 
 .watermarks-example__current-time {
-  stroke: #244f72;
+  stroke: var(--arrival-color);
   stroke-width: 3;
 }
 
@@ -236,11 +240,57 @@
 }
 
 .watermarks-example__watermark-label {
-  fill: #e0a53a;
+  fill: var(--watermark-color);
 }
 
 .watermarks-example__current-time-label {
-  fill: #244f72;
+  fill: var(--arrival-color);
+}
+
+.watermarks-example__period {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.watermarks-example__period-equation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 20px;
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+}
+
+.watermarks-example__period-equation strong {
+  color: var(--watermark-color);
+}
+
+.watermarks-example__period-band {
+  fill: var(--watermark-color);
+  fill-opacity: 0.45;
+}
+
+.watermarks-example__waiting-region {
+  fill: var(--watermark-color);
+  fill-opacity: 0.16;
+}
+
+.watermarks-example__time-rail {
+  stroke: var(--text-secondary);
+  stroke-opacity: 0.45;
+}
+
+.watermarks-example__period-reading {
+  margin: 8px 0 16px;
+  max-width: 76ch;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+[data-theme="light"] .watermarks-example {
+  --watermark-color: #a46508;
+  --arrival-color: #326ea0;
 }
 
 .watermarks-example__rule-label {
@@ -476,7 +526,7 @@
 
 .watermarks-example__table-row {
   display: grid;
-  grid-template-columns: 1.25fr repeat(4, minmax(48px, 0.55fr));
+  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
   gap: 8px;
   min-height: 34px;
   align-items: center;
@@ -589,6 +639,9 @@
 }
 
 @media (max-width: 560px) {
+  .watermarks-example__rule-label {
+    display: none;
+  }
   .watermarks-example__workbench {
     padding: 12px;
   }
