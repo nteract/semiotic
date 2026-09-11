@@ -54,6 +54,7 @@ import {
 } from "./physicsPipelineUpdateResults"
 import {
   emitPhysicsSimulationStateTransition,
+  emitPhysicsBodyBudgetObservation,
   observePhysicsKernelEvents,
   observePhysicsSensorTransitions,
   removePhysicsSensorPairsForBodies,
@@ -887,26 +888,7 @@ export class PhysicsPipelineStore {
     const key = `${decision.state}:${decision.action}`
     if (key === this.bodyBudgetObservationKey) return decision
     this.bodyBudgetObservationKey = key
-    this.emitObservation(
-      {
-        type:
-          decision.state === "overflow"
-            ? "physics-budget-overflow"
-            : "physics-budget-warning",
-        timestamp: this.elapsedSeconds,
-        chartType: this.observation.chartType,
-        chartId: this.observation.chartId,
-        budgetAction: decision.action,
-        bodyLimit: decision.bodyLimit,
-        engineMaxBodiesHint: decision.engineMaxBodiesHint,
-        liveBodies: decision.liveBodies,
-        overflow: decision.overflow,
-        projectedBodies: decision.projectedBodies,
-        queuedBodies: decision.queuedBodies,
-        warnAt: decision.warnAt
-      },
-      observations
-    )
+    emitPhysicsBodyBudgetObservation(decision, this.observationContext(observations))
     return decision
   }
 

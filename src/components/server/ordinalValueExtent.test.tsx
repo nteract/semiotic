@@ -1,7 +1,8 @@
 import { createRequire } from "node:module"
 import Ajv from "ajv"
 import { describe, expect, it } from "vitest"
-import { prepareChart } from "semiotic/ai/core"
+// Source tests must typecheck before the package's dist declarations are built.
+import { prepareChart } from "../semiotic-ai-core"
 import { renderChartWithEvidence } from "./renderToStaticSVG"
 
 const require = createRequire(import.meta.url)

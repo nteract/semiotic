@@ -5,6 +5,8 @@
  */
 import * as React from "react"
 import { useDataSummary } from "../../DataSummaryContext"
+import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
+import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { PhysicsSimulationState } from "./PhysicsPipelineStore"
@@ -273,6 +275,42 @@ function physicsTooltipRows(data: unknown): Array<[string, string]> {
     })
     .filter((entry): entry is [string, string] => entry != null)
     .slice(0, 8)
+}
+
+export function renderPhysicsTooltip({
+  enableHover,
+  hoverData,
+  tooltipContent,
+  plotWidth,
+  plotHeight,
+  margin
+}: {
+  enableHover: boolean
+  hoverData: PhysicsHoverData | null
+  tooltipContent: StreamPhysicsFrameProps["tooltipContent"]
+  plotWidth: number
+  plotHeight: number
+  margin: FrameMargin
+}): React.ReactElement | null {
+  if (!enableHover || !hoverData) return null
+  const content = tooltipContent ? (
+    tooltipContent(hoverData)
+  ) : (
+    <DefaultPhysicsTooltip hover={hoverData} />
+  )
+  if (!content) return null
+  return (
+    <FlippingTooltip
+      x={hoverData.x - margin.left}
+      y={hoverData.y - margin.top}
+      containerWidth={plotWidth}
+      containerHeight={plotHeight}
+      margin={margin}
+      className="stream-physics-tooltip"
+    >
+      {content}
+    </FlippingTooltip>
+  )
 }
 
 function DefaultPhysicsTooltip({

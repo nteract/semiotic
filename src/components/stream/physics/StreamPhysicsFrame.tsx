@@ -19,7 +19,6 @@ import {
 } from "../useCanvasFrameHost"
 import { isServerEnvironment } from "../isServerEnvironment"
 import { getDevicePixelRatio, prepareCanvas, subscribeToCanvasFontInvalidation } from "../canvasSetup"
-import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import {
   createPhysicsCanvasThemeCache,
   physicsCanvasColorWithAlpha,
@@ -136,7 +135,7 @@ export type {
 } from "./StreamPhysicsTypes"
 
 import {
-  DefaultPhysicsTooltip,
+  renderPhysicsTooltip,
   PhysicsSemanticDataTable,
   SR_ONLY_STYLE
 } from "./physicsSemanticUI"
@@ -1391,27 +1390,14 @@ export const StreamPhysicsFrame = memo(
         (typeof title === "string" ? title : undefined) ??
         "Physics chart"
       const tableId = `${svgInstanceId}-physics-table`
-      const tooltipRendered =
-        enableHover && hoverData ? (
-          tooltipContent ? (
-            tooltipContent(hoverData)
-          ) : (
-            <DefaultPhysicsTooltip hover={hoverData} />
-          )
-        ) : null
-      const tooltipElement =
-        tooltipRendered && hoverData ? (
-          <FlippingTooltip
-            x={hoverData.x - margin.left}
-            y={hoverData.y - margin.top}
-            containerWidth={plotWidth}
-            containerHeight={plotHeight}
-            margin={margin}
-            className="stream-physics-tooltip"
-          >
-            {tooltipRendered}
-          </FlippingTooltip>
-        ) : null
+      const tooltipElement = renderPhysicsTooltip({
+        enableHover,
+        hoverData,
+        tooltipContent,
+        plotWidth,
+        plotHeight,
+        margin
+      })
 
       if (serverLikeRender) {
         const store =

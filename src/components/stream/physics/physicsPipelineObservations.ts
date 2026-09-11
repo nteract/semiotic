@@ -1,3 +1,4 @@
+import type { PhysicsBodyBudgetDecision } from "./PhysicsBodyBudget"
 import type { PhysicsEngineAdapter } from "./PhysicsEngineAdapter"
 import type { PhysicsKernelEvent } from "./PhysicsKernel"
 import type {
@@ -112,5 +113,28 @@ export function emitPhysicsSimulationStateTransition(
     chartId: context.observation.chartId,
     simulationState: next,
     previousSimulationState: previous
+  })
+}
+
+export function emitPhysicsBodyBudgetObservation(
+  decision: PhysicsBodyBudgetDecision,
+  context: PhysicsObservationContext
+): void {
+  context.emit({
+    type:
+      decision.state === "overflow"
+        ? "physics-budget-overflow"
+        : "physics-budget-warning",
+    timestamp: context.elapsedSeconds,
+    chartType: context.observation.chartType,
+    chartId: context.observation.chartId,
+    budgetAction: decision.action,
+    bodyLimit: decision.bodyLimit,
+    engineMaxBodiesHint: decision.engineMaxBodiesHint,
+    liveBodies: decision.liveBodies,
+    overflow: decision.overflow,
+    projectedBodies: decision.projectedBodies,
+    queuedBodies: decision.queuedBodies,
+    warnAt: decision.warnAt
   })
 }
