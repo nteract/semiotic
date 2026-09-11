@@ -124,6 +124,21 @@ for (const key of [...keys].sort()) {
   if (now < before) removed.push({ key, delta: before - now })
 }
 
+const hostTmpHits = []
+for (const filePath of files) {
+  const relPath = relative(repoRoot, filePath)
+  readFileSync(filePath, "utf8").split(/\r?\n/).forEach((line, index) => {
+    if (!line.includes("/private/tmp")) return
+    hostTmpHits.push(`${relPath}:${index + 1}`)
+  })
+}
+if (hostTmpHits.length) {
+  console.error("Tests must not write to /private/tmp (macOS-only; Linux CI has no such path).")
+  console.error("Use testInfo.outputPath() or os.tmpdir() instead:")
+  for (const hit of hostTmpHits) console.error(`  ${hit}`)
+  process.exit(1)
+}
+
 if (added.length || removed.length) {
   if (added.length) {
     console.error("New mount-only assertion candidates found:")

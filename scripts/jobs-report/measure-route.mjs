@@ -1,11 +1,11 @@
 import { chromium, expect } from "@playwright/test"
 import { mkdir, writeFile } from "node:fs/promises"
-import { dirname } from "node:path"
-import { cpus, platform, release } from "node:os"
+import { dirname, join } from "node:path"
+import { cpus, platform, release, tmpdir } from "node:os"
 import { gzipSync } from "node:zlib"
 
 const url = process.argv[2] || "http://127.0.0.1:4173/examples/jobs-report/"
-const output = process.argv[3] || "/private/tmp/e06-route-measurement.json"
+const output = process.argv[3] || join(tmpdir(), "e06-route-measurement.json")
 const browser = await chromium.launch({ headless: true })
 try {
   const context = await browser.newContext({
@@ -125,7 +125,7 @@ try {
   )
   await blocked.close()
   await page.screenshot({
-    path: "/private/tmp/e06-production-phone.png",
+    path: join(tmpdir(), "e06-production-phone.png"),
     fullPage: true
   })
   if (errors.length) throw new Error(errors.join("\n"))

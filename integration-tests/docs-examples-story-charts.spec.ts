@@ -104,7 +104,7 @@ test("a grocery month is inspectable and a saved basket restores its path in ano
 
 test("flight schedules are visibly hatched and notes survive the guided transformation", async ({
   page
-}) => {
+}, testInfo) => {
   await page.goto("/examples/plane-day")
   const path = page.getByTestId("time-space-chart")
   await path.scrollIntoViewIfNeeded()
@@ -132,7 +132,7 @@ test("flight schedules are visibly hatched and notes survive the guided transfor
   await ribbon.scrollIntoViewIfNeeded()
   await painted(ribbon, [40, 122, 121])
   await painted(ribbon, [89, 102, 116])
-  await ribbon.screenshot({ path: "/private/tmp/story-flight-hatching.png" })
+  await ribbon.screenshot({ path: testInfo.outputPath("story-flight-hatching.png") })
   const event = page.waitForEvent("download")
   await page
     .getByRole("button", { name: "Download printable day sheet" })
@@ -167,7 +167,7 @@ test("reservoir dots retain baseline limits and travel into the offline download
 for (const width of [320, 390, 1280]) {
   test(`new story charts paint without overflow at ${width}px`, async ({
     page
-  }) => {
+  }, testInfo) => {
     await page.setViewportSize({ width, height: 900 })
     await page.emulateMedia({ reducedMotion: "reduce" })
     for (const [route, article, chartID] of [
@@ -183,7 +183,7 @@ for (const width of [320, 390, 1280]) {
         route === "reservoir-guide" ? [98, 104, 87] : undefined
       )
       await chart.screenshot({
-        path: `/private/tmp/story-${route}-${width}.png`
+        path: testInfo.outputPath(`story-${route}-${width}.png`)
       })
       const box = await page
         .locator(article)

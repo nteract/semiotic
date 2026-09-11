@@ -6,7 +6,7 @@ import snapshot from "../docs/src/pages/examples/plane-day/snapshot.json"
 test("plane story preserves a flight through layouts, clocks, URL and an independent note import", async ({
   page,
   browser
-}) => {
+}, testInfo) => {
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
   await page.goto("/examples/plane-day")
@@ -14,7 +14,7 @@ test("plane story preserves a flight through layouts, clocks, URL and an indepen
     page.getByRole("heading", { name: "Your plane has had a day." })
   ).toBeVisible()
   await expect(page.getByTestId("flight-charts")).toBeVisible()
-  await page.screenshot({ path: "/private/tmp/e02-desktop.png" })
+  await page.screenshot({ path: testInfo.outputPath("e02-desktop.png") })
   await page.getByRole("button", { name: "Pin HA 466 · PPG → HNL" }).click()
   const selected = await page
     .getByTestId("pinned-flight")
@@ -23,7 +23,7 @@ test("plane story preserves a flight through layouts, clocks, URL and an indepen
   await page.getByLabel("Clock labels").selectOption("utc")
   await page
     .locator(".plane-charts")
-    .screenshot({ path: "/private/tmp/e02-network.png" })
+    .screenshot({ path: testInfo.outputPath("e02-network.png") })
   await expect(page.getByTestId("flight-charts")).toHaveAttribute(
     "data-selected-event",
     selected!
@@ -96,7 +96,7 @@ test("plane story preserves a flight through layouts, clocks, URL and an indepen
 for (const width of [320, 390, 768, 1280]) {
   test(`plane itinerary supports keyboard, forced colors and no overflow at ${width}px`, async ({
     page
-  }) => {
+  }, testInfo) => {
     await page.setViewportSize({ width, height: 900 })
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.goto("/examples/plane-day")
@@ -130,10 +130,10 @@ for (const width of [320, 390, 768, 1280]) {
       await page
         .getByRole("heading", { name: "The day, leg by leg." })
         .scrollIntoViewIfNeeded()
-      await page.screenshot({ path: "/private/tmp/e02-mobile-itinerary.png" })
+      await page.screenshot({ path: testInfo.outputPath("e02-mobile-itinerary.png") })
       await page
         .locator(".plane-itinerary")
-        .screenshot({ path: "/private/tmp/e02-mobile-cards.png" })
+        .screenshot({ path: testInfo.outputPath("e02-mobile-cards.png") })
     }
   })
 }
