@@ -770,6 +770,12 @@
     fill: CanvasText !important;
   }
 
+  .thunderdome-stage__nav button {
+    /* Switch system foreground/background colors together: the global button
+       transition otherwise briefly leaves the active label on a matching fill. */
+    transition: none;
+  }
+
   .thunderdome-stage__nav button[aria-current="step"] {
     border-color: CanvasText;
     background: CanvasText;

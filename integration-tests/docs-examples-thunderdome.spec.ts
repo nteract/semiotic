@@ -331,57 +331,100 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
     expect(browserErrors).toEqual([])
   })
 
-  test("keeps chart labels and active section navigation legible in forced colors", async ({
-    page
-  }) => {
-    await page.setViewportSize({ width: 1280, height: 900 })
-    await page.emulateMedia({ forcedColors: "active" })
-    const browserErrors = collectBrowserErrors(page)
-    await openExample(page)
-    await scrollRoundIntoObserver(page, "06")
+  for (const colorScheme of ["light", "dark"] as const) {
+    test(`keeps chart labels and active section navigation legible in forced colors (${colorScheme})`, async ({
+      page
+    }) => {
+      await page.setViewportSize({ width: 1280, height: 900 })
+      await page.emulateMedia({ forcedColors: "active", colorScheme })
+      const browserErrors = collectBrowserErrors(page)
+      await openExample(page)
 
-    const stage = page
-      .getByRole("complementary", { name: "Active chart" })
-      .locator(".thunderdome-stage")
-    const activeNav = stage.getByRole("button", {
-      name: "Section 06: The tools tag is not where all the tools are"
-    })
-    const inactiveNav = stage.getByRole("button", {
-      name: "Section 05: DHQ stopped treating the digital as a medium"
-    })
-
-    const forcedColorState = await stage.evaluate((element) => {
-      const chartLabel = element.querySelector("svg text")
-      const active = element.querySelector(
-        '.thunderdome-stage__nav button[aria-current="step"]'
+      const stage = page
+        .getByRole("complementary", { name: "Active chart" })
+        .locator(".thunderdome-stage")
+      // Capture selection styles in the mutation microtask, before a background
+      // transition can advance. Two animation frames do not guarantee contrast.
+      const selectionChanges = await stage.evaluateHandle((element) => {
+        const changes: {
+          background: string
+          color: string
+          inactiveBackground: string
+        }[] = []
+        const observer = new MutationObserver(() => {
+          const active = element.querySelector('button[aria-current="step"]')
+          const inactive = element.querySelector(
+            ".thunderdome-stage__nav button:not([aria-current])"
+          )
+          if (!active || !inactive) return
+          const styles = getComputedStyle(active)
+          changes.push({
+            background: styles.backgroundColor,
+            color: styles.color,
+            inactiveBackground: getComputedStyle(inactive).backgroundColor
+          })
+        })
+        observer.observe(element, {
+          subtree: true,
+          attributes: true,
+          attributeFilter: ["aria-current"]
+        })
+        return { changes, observer }
+      })
+      await scrollRoundIntoObserver(page, "06")
+      const changes = await selectionChanges.evaluate(
+        ({ changes, observer }) => {
+          observer.disconnect()
+          return changes
+        }
       )
-      const inactive = element.querySelector(
-        ".thunderdome-stage__nav button:not([aria-current])"
-      )
-      if (!chartLabel || !active || !inactive) return null
-      return {
-        stageBackground: getComputedStyle(element).backgroundColor,
-        labelFill: getComputedStyle(chartLabel).fill,
-        activeBackground: getComputedStyle(active).backgroundColor,
-        activeColor: getComputedStyle(active).color,
-        inactiveBackground: getComputedStyle(inactive).backgroundColor
+      await selectionChanges.dispose()
+      expect(changes.length).toBeGreaterThan(0)
+      for (const change of changes) {
+        expect(change.background).not.toBe(change.inactiveBackground)
+        expect(change.color).not.toBe(change.background)
       }
-    })
 
-    expect(forcedColorState).not.toBeNull()
-    expect(forcedColorState?.labelFill).not.toBe(
-      forcedColorState?.stageBackground
-    )
-    expect(forcedColorState?.activeBackground).not.toBe(
-      forcedColorState?.inactiveBackground
-    )
-    expect(forcedColorState?.activeColor).not.toBe(
-      forcedColorState?.activeBackground
-    )
-    await expect(activeNav).toHaveAttribute("aria-current", "step")
-    await expect(inactiveNav).not.toHaveAttribute("aria-current", "step")
-    expect(browserErrors).toEqual([])
-  })
+      const activeNav = stage.getByRole("button", {
+        name: "Section 06: The tools tag is not where all the tools are"
+      })
+      const inactiveNav = stage.getByRole("button", {
+        name: "Section 05: DHQ stopped treating the digital as a medium"
+      })
+
+      const forcedColorState = await stage.evaluate((element) => {
+        const chartLabel = element.querySelector("svg text")
+        const active = element.querySelector(
+          '.thunderdome-stage__nav button[aria-current="step"]'
+        )
+        const inactive = element.querySelector(
+          ".thunderdome-stage__nav button:not([aria-current])"
+        )
+        if (!chartLabel || !active || !inactive) return null
+        return {
+          stageBackground: getComputedStyle(element).backgroundColor,
+          labelFill: getComputedStyle(chartLabel).fill,
+          activeBackground: getComputedStyle(active).backgroundColor,
+          activeColor: getComputedStyle(active).color,
+          inactiveBackground: getComputedStyle(inactive).backgroundColor
+        }
+      })
+
+      expect(forcedColorState).not.toBeNull()
+      expect(forcedColorState?.labelFill).not.toBe(
+        forcedColorState?.stageBackground
+      )
+      expect(forcedColorState?.activeBackground).not.toBe(
+        forcedColorState?.inactiveBackground
+      )
+      expect(forcedColorState?.activeColor).not.toBe(
+        forcedColorState?.activeBackground
+      )
+      await expect(activeNav).toHaveAttribute("aria-current", "step")
+      await expect(inactiveNav).not.toHaveAttribute("aria-current", "step")
+      expect(browserErrors).toEqual([])
+    })
+  }
 
   test("renders all eight Semiotic views inline on a phone without horizontal overflow", async ({
     page
