@@ -1,0 +1,34 @@
+{
+  "id": "checkout-ab-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "leadView": "MotifBraidChart (not implemented in Phase 1)",
+  "dataDictionary": {
+    "assigned": "Assigned users in the experiment partition. The A/B denominator.",
+    "loopUsers": "Assigned users with at least one qualifying loop episode. Not raw episode totals.",
+    "purchases": "Assigned users who purchased."
+  },
+  "inputs": {
+    "mobile": {
+      "control": { "assigned": 20000, "loopUsers": 1600, "purchases": 2000 },
+      "treatment": { "assigned": 20000, "loopUsers": 6000, "purchases": 1200 }
+    },
+    "desktop": {
+      "control": { "assigned": 20000, "purchases": 2000 },
+      "treatment": { "assigned": 20000, "purchases": 3120 }
+    }
+  },
+  "expected": {
+    "mobileControlLoopBps": 800,
+    "mobileTreatmentLoopBps": 3000,
+    "mobileControlConversionBps": 1000,
+    "mobileTreatmentConversionBps": 600,
+    "overallControlConversionBps": 1000,
+    "overallTreatmentConversionBps": 1080,
+    "denominator": "assigned",
+    "limitations": [
+      "The motif is a diagnostic, not proof that the loop caused the full four-point mobile decline.",
+      "Hold the mobile rollout under its guardrail; inspect the redirect."
+    ]
+  }
+}

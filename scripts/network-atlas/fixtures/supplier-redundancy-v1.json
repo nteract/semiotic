@@ -1,0 +1,48 @@
+{
+  "id": "supplier-redundancy-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "leadView": "DependencyForestChart (not implemented in Phase 1)",
+  "dataDictionary": {
+    "unitsPerWeek": "Planning allocation. Not a probability of outage.",
+    "exposure": "Share of current allocation whose admitted path includes X.",
+    "shortfall": "Demand minus remaining independent capacity under the no-inventory outage scenario."
+  },
+  "inputs": {
+    "demandPerWeek": 10000,
+    "suppliers": { "A": 4000, "B": 3500, "C": 2500 },
+    "dependsOnX": ["A", "B"],
+    "independentInFixture": ["C"],
+    "cExpandableTo": 3000,
+    "outputRetentionTargetBps": 7000
+  },
+  "graph": {
+    "root": "world",
+    "nodes": ["world", "X", "A", "B", "C", "product"],
+    "edges": [
+      { "id": "wX", "source": "world", "target": "X" },
+      { "id": "wC", "source": "world", "target": "C" },
+      { "id": "XA", "source": "X", "target": "A" },
+      { "id": "XB", "source": "X", "target": "B" },
+      { "id": "Ap", "source": "A", "target": "product" },
+      { "id": "Bp", "source": "B", "target": "product" },
+      { "id": "Cp", "source": "C", "target": "product" }
+    ]
+  },
+  "expected": {
+    "exposedAllocation": 7500,
+    "exposureBps": 7500,
+    "remainingUnderXOutage": 3000,
+    "shortfallBps": 7000,
+    "additionalIndependentUnitsPerWeek": 4000,
+    "dominance": {
+      "root": "world",
+      "dominates": { "X": ["A", "B"] },
+      "doesNotDominate": { "X": ["product"] }
+    },
+    "limitations": [
+      "75% current allocation exposed is not a 75% probability of outage.",
+      "A capacity-limited route still defeats an unconditional claim of topological domination of the product node."
+    ]
+  }
+}

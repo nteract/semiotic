@@ -1,0 +1,17 @@
+{
+  "id": "and-prerequisites",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "tsOwner": "NA3",
+  "note": "Admitted now. Dominator reachability is not a substitute for AND completion.",
+  "inputs": {
+    "task": "T",
+    "requires": ["A", "B"],
+    "ordinaryPathThroughBIfALost": true
+  },
+  "expected": {
+    "completionIfALost": false,
+    "ordinaryPathThroughBSurvives": true,
+    "dominatorReachabilityIsNotCompletion": true
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "zero-capacity-bypass",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "tsOwner": "NA3",
+  "note": "Admitted now. TypeScript dominance is not a Phase 1 prepare() obligation.",
+  "inputs": {
+    "demandPerWeek": 10000,
+    "remainingWithoutX": 3000,
+    "bypass": { "id": "Y", "target": "A", "usableCapacity": 0 }
+  },
+  "expected": {
+    "structural": {
+      "XDominatesAWithoutBypass": true,
+      "XDominatesAWithBypass": false
+    },
+    "capacityShortfallBpsUnchanged": 7000,
+    "limitations": [
+      "Topological and capacity results can differ correctly.",
+      "A structurally valid bypass with zero usable capacity does not improve the shortfall."
+    ]
+  }
+}

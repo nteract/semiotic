@@ -1,0 +1,64 @@
+{
+  "id": "edge-coverage",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "source": {
+    "graphRef": "edge-coverage",
+    "revision": "edge-coverage-v1",
+    "nodes": [
+      { "id": "A", "sectionId": "s1" },
+      { "id": "B", "sectionId": "s2" },
+      { "id": "C", "sectionId": "s3" },
+      { "id": "__proto__", "sectionId": "s2" },
+      { "id": "orphan" }
+    ],
+    "edges": [
+      { "id": "e1", "source": "A", "target": "B" },
+      { "id": "e-parallel", "source": "A", "target": "B" },
+      { "id": "e-loop", "source": "B", "target": "B" },
+      { "id": "constructor", "source": "B", "target": "C" },
+      { "id": "e-proto", "source": "B", "target": "__proto__" },
+      { "id": "e-orphan", "source": "A", "target": "orphan" }
+    ],
+    "measureValues": []
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": { "kind": "ordinal", "sectionIds": ["s1", "s2", "s3"] },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase1-exact",
+    "measures": {},
+    "motifs": {
+      "catalogId": "atlas-phase1",
+      "catalogVersion": "0.1.0",
+      "countUnit": "occurrence",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "rooted-backbone",
+        "roots": ["A"],
+        "rankingPolicyId": "main-transport"
+      }
+    },
+    "dataRevision": "edge-coverage-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "expected": {
+    "originalEdgeIds": [
+      "e1",
+      "e-parallel",
+      "e-loop",
+      "constructor",
+      "e-proto",
+      "e-orphan"
+    ],
+    "backboneEdgeIds": ["e1", "e-parallel", "e-loop", "constructor", "e-proto"],
+    "residualEdgeIds": ["e-orphan"]
+  }
+}

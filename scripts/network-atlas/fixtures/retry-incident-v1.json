@@ -1,0 +1,24 @@
+{
+  "id": "retry-incident-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "leadView": "FlowCircuitChart (not implemented in Phase 1)",
+  "dataDictionary": {
+    "rootsPerSecond": "External boundary requests. Attempt amplification must not change this.",
+    "attemptsPerSecond": "Work arriving at the inventory module, including retries.",
+    "retriesPerSecond": "Attempts generated inside the system."
+  },
+  "inputs": {
+    "rootsPerSecond": 10000,
+    "attemptsPerSecond": 30000,
+    "retriesPerSecond": 20000
+  },
+  "expected": {
+    "rootsPlusRetries": 30000,
+    "rootCountDoesNotTriple": true,
+    "queueGrowthEstablished": false,
+    "limitations": [
+      "Queue growth is not established from offered load minus service capacity without cancellation, admission, timeout, and completion data."
+    ]
+  }
+}

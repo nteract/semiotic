@@ -1,0 +1,27 @@
+{
+  "id": "search-no-result-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "leadView": "MotifBraidChart (not implemented in Phase 1)",
+  "dataDictionary": {
+    "completedSessions": "Sessions that reached the observation window end.",
+    "loopingSessions": "Completed sessions with repeated no-result episodes.",
+    "catalogEligibleLoopSessions": "Looping sessions whose query family had catalog-eligible stock in this fixture."
+  },
+  "inputs": {
+    "completedSessions": 50000,
+    "loopingSessions": 10000,
+    "loopingPurchases": 500,
+    "nonLoopingPurchases": 8000,
+    "catalogEligibleLoopSessions": 6000
+  },
+  "expected": {
+    "loopingPurchaseBps": 500,
+    "nonLoopingPurchaseBps": 2000,
+    "overallPurchaseBps": 1700,
+    "catalogEligibleLoopSessions": 6000,
+    "limitations": [
+      "Does not forecast a 15-point uplift from repairing lexical matching."
+    ]
+  }
+}

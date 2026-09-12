@@ -1,0 +1,12 @@
+{
+  "id": "display-backbone-permutation",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "note": "Same graph as etl-snapshot-v1. Ranking change must not change ledger, motif, or coverage facts.",
+  "baseFixture": "etl-snapshot-v1.json",
+  "policies": ["main-transport", "tree-only"],
+  "expected": {
+    "invariant": ["ledgerTotals", "motifCounts", "edgeCoverageEquality"],
+    "treeOnlyMayMoveJoinEdgesToResidual": true
+  }
+}

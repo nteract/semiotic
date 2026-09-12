@@ -1,0 +1,75 @@
+{
+  "id": "overlap-entity",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "dataDictionary": {
+    "entityId": "Canonical entity. Motif matches may overlap; this identifier does not."
+  },
+  "source": {
+    "graphRef": "overlap-entity",
+    "revision": "overlap-entity-v1",
+    "nodes": [
+      { "id": "ingest", "sectionId": "ingest" },
+      { "id": "enrich", "sectionId": "enrich" },
+      { "id": "write_a", "sectionId": "write" },
+      { "id": "write_b", "sectionId": "write" },
+      { "id": "load", "sectionId": "load" }
+    ],
+    "edges": [
+      { "id": "e1", "source": "ingest", "target": "enrich" },
+      { "id": "e2", "source": "enrich", "target": "write_a" },
+      { "id": "e3", "source": "enrich", "target": "write_b" },
+      { "id": "e4", "source": "write_a", "target": "load" },
+      { "id": "e5", "source": "write_b", "target": "load" }
+    ],
+    "occurrences": [
+      {
+        "id": "one-entity",
+        "entityId": "user-1",
+        "entityCount": 1,
+        "nodePath": ["ingest", "enrich", "write_a", "load"],
+        "complete": true
+      }
+    ],
+    "measureValues": [
+      { "measureId": "work-items", "subjectId": "ingest", "value": 1, "status": "exact" }
+    ]
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": {
+      "kind": "ordinal",
+      "sectionIds": ["ingest", "enrich", "write", "load"]
+    },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase1-exact",
+    "measures": {
+      "work-items": { "unitKind": "stock", "countUnit": "work-item" }
+    },
+    "motifs": {
+      "catalogId": "atlas-phase1",
+      "catalogVersion": "0.1.0",
+      "countUnit": "entity",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "rooted-backbone",
+        "roots": ["ingest"],
+        "rankingPolicyId": "main-transport"
+      }
+    },
+    "dataRevision": "overlap-entity-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "expected": {
+    "uniqueEntities": 1,
+    "overlappingTemplates": ["serial-chain", "fan-in"],
+    "motifPercentagesNeedNotSumTo100": true
+  }
+}

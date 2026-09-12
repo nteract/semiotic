@@ -419,6 +419,7 @@
     "test:smoke-hosted-mcp": "node --test scripts/smoke-hosted-mcp.test.mjs",
     "test:mcp-registry-live": "node --test scripts/mcp-registry-live.test.mjs",
     "check:file-size": "node scripts/check-file-size.mjs",
+    "check:network-atlas-fixtures": "python3 scripts/network-atlas/independent-check.py",
     "check:jsdoc-coverage": "node scripts/check-jsdoc-coverage.mjs",
     "check:ai-examples-coverage": "node scripts/check-ai-examples-coverage.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",

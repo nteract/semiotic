@@ -1,0 +1,119 @@
+{
+  "id": "etl-snapshot-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "readerQuestion": "Where is work queued, and which write partition is hot?",
+  "dataDictionary": {
+    "work-items": "Stock count of admitted work items. Not a unique-user population and not a rate.",
+    "completed": "Stock count of work items that left a node toward a successful downstream.",
+    "queued": "Stock still waiting at a node. Not a rate.",
+    "capacity": "Installed work-item capacity at a node. Not inferred from shape.",
+    "ingest_arrival_rate": "Rate of arrivals. Incomparable to stock without a time denominator."
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": {
+      "kind": "ordinal",
+      "sectionIds": ["ingest", "enrich", "write", "load"]
+    },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase1-exact",
+    "measures": {
+      "work-items": { "unitKind": "stock", "countUnit": "work-item" },
+      "completed": { "unitKind": "stock", "countUnit": "work-item" },
+      "queued": { "unitKind": "stock", "countUnit": "work-item" },
+      "capacity": { "unitKind": "capacity", "countUnit": "work-item" },
+      "ingest_arrival_rate": {
+        "unitKind": "rate",
+        "countUnit": "work-item",
+        "timeDenominator": "second"
+      }
+    },
+    "motifs": {
+      "catalogId": "atlas-phase1",
+      "catalogVersion": "0.1.0",
+      "countUnit": "work-item",
+      "denominatorRef": "work-items",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "rooted-backbone",
+        "roots": ["upstream"],
+        "rankingPolicyId": "main-transport"
+      }
+    },
+    "dataRevision": "etl-snapshot-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "source": {
+    "graphRef": "etl-snapshot-v1",
+    "revision": "etl-snapshot-v1",
+    "nodes": [
+      { "id": "upstream", "sectionId": "ingest", "completeness": "unknown" },
+      { "id": "ingest", "sectionId": "ingest", "completeness": "known" },
+      { "id": "enrich", "sectionId": "enrich", "completeness": "known" },
+      { "id": "write_hot", "sectionId": "write", "completeness": "known" },
+      { "id": "write_a", "sectionId": "write", "completeness": "known" },
+      { "id": "write_b", "sectionId": "write", "completeness": "known" },
+      { "id": "load", "sectionId": "load", "completeness": "known" },
+      { "id": "dead_letter" }
+    ],
+    "edges": [
+      { "id": "e1", "source": "upstream", "target": "ingest" },
+      { "id": "e2", "source": "ingest", "target": "enrich" },
+      { "id": "e3", "source": "enrich", "target": "write_hot" },
+      { "id": "e4", "source": "enrich", "target": "write_a" },
+      { "id": "e5", "source": "enrich", "target": "write_b" },
+      { "id": "e6", "source": "write_hot", "target": "load" },
+      { "id": "e7", "source": "write_a", "target": "load" },
+      { "id": "e8", "source": "write_b", "target": "load" },
+      { "id": "e9", "source": "enrich", "target": "dead_letter" }
+    ],
+    "measureValues": [
+      { "measureId": "work-items", "subjectId": "ingest", "value": 60, "status": "exact" },
+      { "measureId": "work-items", "subjectId": "enrich", "value": 60, "status": "exact" },
+      { "measureId": "work-items", "subjectId": "write_hot", "value": 25, "status": "exact" },
+      { "measureId": "work-items", "subjectId": "write_a", "value": 15, "status": "exact" },
+      { "measureId": "work-items", "subjectId": "write_b", "value": 15, "status": "exact" },
+      { "measureId": "work-items", "subjectId": "dead_letter", "value": 5, "status": "exact" },
+      { "measureId": "completed", "subjectId": "write_hot", "value": 15, "status": "exact" },
+      { "measureId": "completed", "subjectId": "write_a", "value": 15, "status": "exact" },
+      { "measureId": "completed", "subjectId": "write_b", "value": 15, "status": "exact" },
+      { "measureId": "completed", "subjectId": "load", "value": 45, "status": "exact" },
+      { "measureId": "queued", "subjectId": "write_hot", "value": 10, "status": "exact" },
+      { "measureId": "capacity", "subjectId": "write_hot", "value": 20, "status": "exact" },
+      { "measureId": "capacity", "subjectId": "write_a", "value": 20, "status": "exact" },
+      { "measureId": "capacity", "subjectId": "write_b", "value": 20, "status": "exact" },
+      {
+        "measureId": "ingest_arrival_rate",
+        "subjectId": "ingest",
+        "value": 60,
+        "status": "exact"
+      }
+    ]
+  },
+  "expected": {
+    "admitted": 60,
+    "completedAtLoad": 45,
+    "deadLetter": 5,
+    "queuedHot": 10,
+    "conservation": [45, 5, 10],
+    "writeArrivals": { "write_hot": 25, "write_a": 15, "write_b": 15 },
+    "writeCompleted": { "write_hot": 15, "write_a": 15, "write_b": 15 },
+    "writeCapacity": 20,
+    "backboneEdgeIds": ["e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8"],
+    "residualEdgeIds": ["e9"],
+    "unknownNodeIds": ["upstream"],
+    "fanOutHub": "enrich",
+    "fanOutDestinations": ["write_hot", "write_a", "write_b", "dead_letter"],
+    "fanInHub": "load",
+    "fanInSources": ["write_hot", "write_a", "write_b"],
+    "serialChainContains": ["ingest", "enrich"]
+  }
+}

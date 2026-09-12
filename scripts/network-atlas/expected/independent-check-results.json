@@ -1,0 +1,127 @@
+{
+  "fixtures": {
+    "and-prerequisites": {
+      "completionIfALost": false,
+      "dominatorReachabilityIsNotCompletion": true,
+      "ordinaryPathThroughBSurvives": true
+    },
+    "checkout-ab-v1": {
+      "denominator": "assigned",
+      "mobileControlConversionBps": 1000,
+      "mobileControlLoopBps": 800,
+      "mobileTreatmentConversionBps": 600,
+      "mobileTreatmentLoopBps": 3000,
+      "overallControlConversionBps": 1000,
+      "overallTreatmentConversionBps": 1080
+    },
+    "display-backbone-permutation": {
+      "invariant": [
+        "ledgerTotals",
+        "motifCounts",
+        "edgeCoverageEquality"
+      ]
+    },
+    "edge-coverage": {
+      "backboneEdgeIds": [
+        "e1",
+        "e-parallel",
+        "e-loop",
+        "constructor",
+        "e-proto"
+      ],
+      "originalEdgeIds": [
+        "e1",
+        "e-parallel",
+        "e-loop",
+        "constructor",
+        "e-proto",
+        "e-orphan"
+      ],
+      "residualEdgeIds": [
+        "e-orphan"
+      ]
+    },
+    "etl-hot-partition-v1": {
+      "installedCapacity": 80000,
+      "otherPartitionsArrivalsPerSecond": 30000,
+      "queuedPerMinute": 1200000
+    },
+    "etl-snapshot-v1": {
+      "admitted": 60,
+      "backboneEdgeIds": [
+        "e1",
+        "e2",
+        "e3",
+        "e4",
+        "e5",
+        "e6",
+        "e7",
+        "e8"
+      ],
+      "conservation": [
+        45,
+        5,
+        10
+      ],
+      "residualEdgeIds": [
+        "e9"
+      ],
+      "unknownNodeIds": [
+        "upstream"
+      ]
+    },
+    "ghost-route": {
+      "graphWalkNotAJourney": true,
+      "unsupportedRejected": true
+    },
+    "missing-prehistory": {
+      "motifStatus": "incomplete"
+    },
+    "overlap-entity": {
+      "overlappingTemplates": [
+        "serial-chain",
+        "fan-in"
+      ],
+      "uniqueEntities": 1
+    },
+    "retry-incident-v1": {
+      "queueGrowthEstablished": false,
+      "rootCountDoesNotTriple": true,
+      "rootsPlusRetries": 30000
+    },
+    "search-no-result-v1": {
+      "catalogEligibleLoopSessions": 6000,
+      "loopingPurchaseBps": 500,
+      "nonLoopingPurchaseBps": 2000,
+      "overallPurchaseBps": 1700
+    },
+    "supplier-redundancy-v1": {
+      "additionalIndependentUnitsPerWeek": 4000,
+      "dominance": {
+        "doesNotDominate": {
+          "X": [
+            "product"
+          ]
+        },
+        "dominates": {
+          "X": [
+            "A",
+            "B"
+          ]
+        },
+        "root": "world"
+      },
+      "exposedAllocation": 7500,
+      "exposureBps": 7500,
+      "remainingUnderXOutage": 3000,
+      "shortfallBps": 7000
+    },
+    "zero-capacity-bypass": {
+      "XDominatesAWithBypass": false,
+      "XDominatesAWithoutBypass": true,
+      "capacityShortfallBpsUnchanged": 7000
+    }
+  },
+  "method": "Independent Python standard-library fixture audit; no TypeScript formulas imported",
+  "synthetic": true
+}

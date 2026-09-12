@@ -1,0 +1,74 @@
+{
+  "id": "ghost-route",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "dataDictionary": {
+    "nodePath": "Ordered admitted trajectory for one entity or cohort. Not a marginal edge walk."
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": { "kind": "ordinal", "sectionIds": ["s1", "s2", "s3"] },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase1-exact",
+    "measures": {},
+    "motifs": {
+      "catalogId": "atlas-phase1",
+      "catalogVersion": "0.1.0",
+      "countUnit": "entity",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "rooted-backbone",
+        "roots": ["A"],
+        "rankingPolicyId": "main-transport"
+      }
+    },
+    "dataRevision": "ghost-route-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "source": {
+    "graphRef": "ghost-route",
+    "revision": "ghost-route-v1",
+    "nodes": [
+      { "id": "A", "sectionId": "s1" },
+      { "id": "X", "sectionId": "s2" },
+      { "id": "B", "sectionId": "s3" },
+      { "id": "C", "sectionId": "s1" },
+      { "id": "D", "sectionId": "s3" }
+    ],
+    "edges": [
+      { "id": "eAX", "source": "A", "target": "X" },
+      { "id": "eXB", "source": "X", "target": "B" },
+      { "id": "eCX", "source": "C", "target": "X" },
+      { "id": "eXD", "source": "X", "target": "D" }
+    ],
+    "occurrences": [
+      {
+        "id": "t-axb",
+        "entityId": "cohort-axb",
+        "entityCount": 10,
+        "nodePath": ["A", "X", "B"],
+        "complete": true
+      },
+      {
+        "id": "t-cxd",
+        "entityId": "cohort-cxd",
+        "entityCount": 10,
+        "nodePath": ["C", "X", "D"],
+        "complete": true
+      }
+    ],
+    "measureValues": []
+  },
+  "expected": {
+    "supportedRoutes": [["A", "X", "B"], ["C", "X", "D"]],
+    "unsupportedRoutes": [["A", "X", "D"], ["C", "X", "B"]],
+    "graphWalkExists": [["A", "X", "D"], ["C", "X", "B"]]
+  }
+}

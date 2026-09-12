@@ -1,0 +1,59 @@
+{
+  "id": "missing-prehistory",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": { "kind": "ordinal", "sectionIds": ["s1", "s2", "s3"] },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase1-exact",
+    "measures": {},
+    "motifs": {
+      "catalogId": "atlas-phase1",
+      "catalogVersion": "0.1.0",
+      "countUnit": "occurrence",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "rooted-backbone",
+        "roots": ["search"],
+        "rankingPolicyId": "main-transport"
+      }
+    },
+    "dataRevision": "missing-prehistory-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "source": {
+    "graphRef": "missing-prehistory",
+    "revision": "missing-prehistory-v1",
+    "nodes": [
+      { "id": "search", "sectionId": "s1" },
+      { "id": "no_results", "sectionId": "s2" },
+      { "id": "search_again", "sectionId": "s3" }
+    ],
+    "edges": [
+      { "id": "e1", "source": "search", "target": "no_results" },
+      { "id": "e2", "source": "no_results", "target": "search_again" }
+    ],
+    "occurrences": [
+      {
+        "id": "partial-window",
+        "entityId": "sess-1",
+        "nodePath": ["no_results", "search_again"],
+        "complete": false,
+        "missingPrehistory": true
+      }
+    ],
+    "measureValues": []
+  },
+  "expected": {
+    "motifStatus": "incomplete",
+    "notZeroMatches": true
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "etl-hot-partition-v1",
+  "synthetic": true,
+  "label": "Synthetic design fixture. Not a production analysis.",
+  "leadView": "FlowCircuitChart (not implemented in Phase 1)",
+  "note": "Flagship eight-partition story. Distinct from the small etl-snapshot-v1 kernel.",
+  "dataDictionary": {
+    "capacityPerPartition": "Installed records/second at one partition.",
+    "arrivalsPerSecond": "Offered load. Not completions.",
+    "completionsPerSecond": "Measured throughput.",
+    "queuedPerMinute": "Stock increase over 60 seconds from arrivals minus completions under the complete no-loss ledger."
+  },
+  "inputs": {
+    "partitionCount": 8,
+    "capacityPerPartition": 10000,
+    "arrivalsPerSecond": 60000,
+    "hotPartitionArrivalsPerSecond": 30000,
+    "completionsPerSecond": 40000,
+    "windowSeconds": 60
+  },
+  "expected": {
+    "installedCapacity": 80000,
+    "otherPartitionsArrivalsPerSecond": 30000,
+    "queuedPerMinute": 1200000,
+    "limitations": [
+      "Fan-in is not labelled a bottleneck from shape alone.",
+      "A split across partitions is a capacity-feasible candidate, not a permitted rewrite of key semantics."
+    ]
+  }
+}
