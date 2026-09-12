@@ -297,21 +297,26 @@ jobs:
 
       - name: Check whether this exact version is already published
         id: published-artifact
+        env:
+          EXPECTED_INTEGRITY: ${{ steps.release-artifact.outputs.integrity }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED_INTEGRITY=$(npm view "semiotic@${VERSION}" dist.integrity 2>/dev/null || true)
-          if [ -z "$PUBLISHED_INTEGRITY" ]; then
-            echo "already-published=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ "$PUBLISHED_INTEGRITY" != "${{ steps.release-artifact.outputs.integrity }}" ]; then
-            echo "semiotic@${VERSION} already exists with different integrity"
-            echo "Expected: ${{ steps.release-artifact.outputs.integrity }}"
-            echo "Published: $PUBLISHED_INTEGRITY"
-            exit 1
-          fi
-          echo "semiotic@${VERSION} already has the expected integrity; treating this as an idempotent rerun"
-          echo "already-published=true" >> "$GITHUB_OUTPUT"
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs"
+          import { readNpmPublication } from "./scripts/wait-for-npm-publication.mjs"
+
+          const { name: packageName, version } = JSON.parse(readFileSync("package.json", "utf8"))
+          const { manifest, pending, code } = await readNpmPublication({ packageName, version, timeoutMs: 10_000 })
+          if (code === "E404" || code === "ETARGET") {
+            appendFileSync(process.env.GITHUB_OUTPUT, "already-published=false\n")
+          } else {
+            if (!manifest) throw new Error(`Cannot determine whether the package exists: ${pending}`)
+            if (manifest.name !== packageName || manifest.version !== version || manifest.dist?.integrity !== process.env.EXPECTED_INTEGRITY) {
+              throw new Error(`${packageName}@${version} already exists with different identity or integrity`)
+            }
+            console.log(`${packageName}@${version} already has the expected integrity; treating this as an idempotent rerun`)
+            appendFileSync(process.env.GITHUB_OUTPUT, "already-published=true\n")
+          }
+          NODE
 
       - name: Dry-run publish exact artifact
         if: steps.published-artifact.outputs.already-published != 'true'
@@ -321,41 +326,22 @@ jobs:
         if: steps.published-artifact.outputs.already-published != 'true'
         run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }} --registry=https://registry.npmjs.org
 
+      # npm can accept the upload before asynchronous processing makes it public.
+      # Keep publication identity/provenance checks inside the bounded wait.
+      - name: Wait for published artifact and provenance
+        timeout-minutes: 16
+        run: node scripts/wait-for-npm-publication.mjs --expected-integrity "${{ steps.release-artifact.outputs.integrity }}"
+
       - name: Post-publish smoke test
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          TAG=${{ steps.dist-tag.outputs.tag }}
-          echo "Waiting for npm to propagate semiotic@${VERSION}..."
-          for i in 1 2 3 4 5; do
-            PUBLISHED=$(npm view semiotic@${VERSION} version 2>/dev/null || echo "")
-            if [ "$PUBLISHED" = "$VERSION" ]; then
-              echo "Package available on npm"
-              break
-            fi
-            echo "Attempt $i: not yet available, waiting 15s..."
-            sleep 15
-          done
-          if [ "$PUBLISHED" != "$VERSION" ]; then
-            echo "Package was not visible on npm registry after 75s"
-            exit 1
-          fi
-
-          EXPECTED_INTEGRITY="${{ steps.release-artifact.outputs.integrity }}"
-          PUBLISHED_INTEGRITY=$(npm view "semiotic@${VERSION}" dist.integrity)
-          if [ "$PUBLISHED_INTEGRITY" != "$EXPECTED_INTEGRITY" ]; then
-            echo "Published package integrity does not match the immutable release artifact"
-            echo "Expected: $EXPECTED_INTEGRITY"
-            echo "Published: $PUBLISHED_INTEGRITY"
-            exit 1
-          fi
-          echo "Published npm integrity matches the immutable release artifact"
-
           # Install in a temp project and verify imports
           CONSUMER_DIR=$(mktemp -d)
+          trap 'rm -rf "$CONSUMER_DIR"' EXIT
           cd "$CONSUMER_DIR"
           npm init -y > /dev/null 2>&1
-          npm install --ignore-scripts --registry=https://registry.npmjs.org \
-            semiotic@${VERSION} react@19.2.0 react-dom@19.2.0 > /dev/null 2>&1
+          npm install --ignore-scripts --prefer-online --registry=https://registry.npmjs.org \
+            semiotic@${VERSION} react@19.2.0 react-dom@19.2.0
 
           node -e "
             const assert = require('assert');
@@ -381,42 +367,6 @@ jobs:
             assert(utils.validateProps, 'validateProps not exported from semiotic/utils');
             console.log('All smoke tests passed — 8 entry points verified');
           "
-          rm -rf "$CONSUMER_DIR"
-
-      - name: Verify published package registry provenance metadata
-        env:
-          EXPECTED_INTEGRITY: ${{ steps.release-artifact.outputs.integrity }}
-        run: |
-          export VERSION=$(node -p "require('./package.json').version")
-          node - <<'NODE'
-            const { execSync } = require("node:child_process")
-
-            const packageName = "semiotic"
-            const version = process.env.VERSION
-            const expectedIntegrity = process.env.EXPECTED_INTEGRITY
-
-            const payload = execSync(`npm view ${packageName}@${version} --json`, {
-              encoding: "utf8",
-            })
-            const manifest = JSON.parse(payload)
-            const dist = manifest.dist || {}
-
-            if (dist.integrity !== expectedIntegrity) {
-              throw new Error(`Published dist.integrity (${dist.integrity}) does not match expected integrity (${expectedIntegrity})`)
-            }
-
-            const asArray = (value) => (Array.isArray(value) ? value : value ? [value] : [])
-            const signatures = asArray(dist.signatures)
-            const attestations = asArray(dist.attestations)
-
-            if (signatures.length === 0) {
-              throw new Error("Published package is missing dist.signatures")
-            }
-            if (attestations.length === 0) {
-              throw new Error("Published package is missing dist.attestations")
-            }
-            console.log(`Verified registry provenance for ${packageName}@${version}: ${signatures.length} signature(s), ${attestations.length} attestation(s)`)
-          NODE
 
       - name: Prepare exact stable Cloud Run source
         if: steps.dist-tag.outputs.tag == 'latest'
