@@ -175,6 +175,8 @@ function placeWithMinGap(options: MinGapPlacementOptions): number[]
 function pointMagnitude(a: Point): number
 function polarToXY(angle: number, radius: number, opts?: PolarOptions | undefined): Point
 function portalRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; impulseOnEnter?: StreamPhysicsRegionVector; damping?: number; targetStage?: string;}): StreamPhysicsRegionEffect
+function prepareMotifBraid(atlas: PreparedNetworkAtlas): Promise<MotifBraidProjection>
+function prepareNetworkAtlasAsync(spec: NetworkAtlasSpec, source: NetworkAtlasSource, options?: PrepareOptions | undefined): Promise<PrepareResult>
 function pressureFieldRegion(options: ProcessRegionBaseOptions & {pressure?: number; occupancy?: number; baseDamping?: number; dampingPerUnit?: number; energyPerUnit?: number; force?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
 function processChrome(layout: ProcessChromeLayout, options?: ProcessChromeOptions | undefined): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function processJourneyRows(ledger: ProcessJourneyLedger): ProcessJourneyRow[]
@@ -2088,10 +2090,16 @@ type AggregatedAdjacencyFlowEdge = Datum & {source: string; target: string; valu
 type AggregatedAdjacencyFlowNode = Datum & {id: string; label: string; group: string; aggregate: boolean; memberIds: string[]; memberCount: number; internalValue: number; incomingValue: number; outgoingValue: number;}
 type AllocatedCellsFor<T extends CellWeight = CellWeight> = AllocatedCells & T
 type AnnotationCohesion = "blended" | "layer"
+type AtlasEdge = {id: string; source: string; target: string;}
+type AtlasIssue = {kind: string; severity: AtlasIssueSeverity; message: string; id?: string;}
+type AtlasMeasureValue = {measureId: string; subjectId: string; value: number; status: EvidenceStatus;}
+type AtlasNode = {id: string; sectionId?: string; completeness?: CompletenessStatus;}
+type AtlasOccurrence = {id: string; entityId: string; entityCount?: number; nodePath: string[]; complete: boolean; missingPrehistory?: boolean; partition?: string; groupKeys?: Record<string, string>;}
 type AutoPlaceAnnotations = AutoPlaceAnnotationsConfig | boolean
 type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
 type AxisOrient = "bottom" | "left" | "right" | "top"
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {bandwidth?: () => number;}
+type BraidRibbon = {id: string; groupId: string; partition?: string; fromPrefixId: string; toPrefixId: string; fromState: string; toState: string; entityCount: number;}
 type CalloutConnector = "curve" | "elbow" | "straight"
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
@@ -2115,6 +2123,12 @@ type LineageLod = "compact" | "dot" | "full" | "icon"
 type MobileAnnotationStrategyMode = "callout-list" | "hybrid" | "plot"
 type MobileChartFamily = "area" | "geo" | "line" | "network" | "ordinal" | "scatter" | "small-multiple"
 type MotifBraidLayoutConfig = {braid: MotifBraidProjection;}
+type MotifBraidProjection = {atlas: PreparedNetworkAtlas; groups: TrajectoryGroup[]; signatureOrder: string[]; ribbons: BraidRibbon[]; capsules: MotifCapsule[]; profile: MotifProfileStrip; differences: SignedReadout[]; prefixForest: PrefixForest; sceneSeeds: {nodes: Array<{id: string; partition?: string; signature?: string;}>; edges: Array<{id: string; source: string; target: string;}>;};}
+type MotifCapsule = {id: string; matchId: string; template: MotifTemplate; entryState: string; exitState: string; entityCount: number; occurrenceIds: string[]; selected: boolean;}
+type MotifProfileCell = {template: MotifTemplate; sectionId: string; partition?: string; completionCount: number; intersectionCount: number; denominator: number; status: EvidenceStatus;}
+type MotifProfileStrip = {templates: MotifTemplate[]; sections: string[]; cells: MotifProfileCell[];}
+type NetworkAtlasSource = {graphRef: string; revision: string; nodes: AtlasNode[]; edges: AtlasEdge[]; occurrences?: AtlasOccurrence[]; measureValues: AtlasMeasureValue[];}
+type NetworkAtlasSpec = {schemaVersion: typeof NETWORK_ATLAS_SCHEMA_VERSION; coordinate: CoordinateSpec; relations: RelationPolicy; evidencePolicyId: string; measures: Record<string, MeasureSpec>; motifs: MotifSpec; forest: {display: DisplayForestSpec;}; comparison?: SharedPartitionComparison; dataRevision: string; temporal: TemporalContract;}
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSymbolName = "chevron" | "circle" | "cross" | "diamond" | "square" | "star" | "triangle" | "wye"
 type NumericScale = (value: number) => number
@@ -2126,6 +2140,9 @@ type PhysicsTraceAccessor<TSample> = ((sample: TSample, index: number, traceId: 
 type PhysicsTraceComparisonStatus = "above" | "below" | "inside" | "unobserved"
 type PhysicsTraceInterpolation = "linear" | "step"
 type PhysicsTraceOutsideDomain = "clamp" | "omit"
+type PrepareNetworkAtlasOptions = {generation?: number;}
+type PrepareNetworkAtlasResult = {ok: false; atlas?: undefined; issues: AtlasIssue[];} | {ok: true; atlas: PreparedNetworkAtlas; issues: AtlasIssue[];}
+type PreparedNetworkAtlas = {sourceGraphRef: string; analysisRevision: string; spec: NetworkAtlasSpec; source: NetworkAtlasSource; sections: SectionIndex; motifs: MotifMatchIndex; forest: DisplayForest; residualEdges: OriginalEdgeIndex; ports: RouteSupportIndex; ledger: MeasureLedger; completeness: CompletenessReport; provenance: AtlasProvenance; prefixForest?: PrefixForest; comparison?: PreparedComparison;}
 type ProcessVolumePoint = [x: number, y: number]
 type ProcessVolumePolygonRole = "center" | "incoming" | "outgoing" | "volume"
 type ProcessVolumeShape = "bowtie" | "funnel" | "lane"
@@ -2134,6 +2151,7 @@ type ReserveLevels = {/** Margin below this % is "tight" / danger. Default 5. */
 type ReserveSnapshot = {t: number; ba: string; /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */ reserveMarginPct: number; netLoadMw: number; demandMw: number; netGenMw: number;}
 type RingArcOptions = PolarOptions
 type ServiceLevelCaseState = "protected" | "resolved" | "resolved-unhappy" | "unhappy" | "waiting"
+type SignedReadout = {motif: string; leftPartition: string; rightPartition: string; leftCount: number; rightCount: number; deltaCount: number; deltaBps: number; denominator: number;}
 type TokenCapabilityIntent = "compare-categories" | "distribution" | "outlier-detection" | "part-to-whole" | "rank"
 type TokenCountStrategy = "actual" | "fixed-denominator" | "posterior-sample" | "quantile" | "random-sample" | "sample" | "unitized"
 type TokenDiagnosticCode = "DECORATIVE_PICTOGRAPHS" | "ICON_ONLY_LABELS" | "MISSING_COUNT_STRATEGY" | "MISSING_UNIT_MEANING" | "MISSING_UNIT_VALUE" | "TOKEN_SEMANTICS_UNCLEAR" | "TOKEN_STRATEGY_MISMATCH" | "TOO_MANY_VISIBLE_TOKENS"
@@ -2144,6 +2162,7 @@ type TokenLayout = "bar-segment" | "beeswarm" | "column" | "dotplot" | "grid" | 
 type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "possible-outcome" | "posterior-sample" | "risk-case" | "topic-anchor" | "unitized-measure"
 type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
 type TokenType = "dot" | "glyph" | "icon"
+type TrajectoryGroup = {id: string; occurrenceId: string; partition?: string; nodePath: string[]; entityCount: number; signature: string;}
 type TransitDiagramLineValue = ReadonlyArray<TransitDiagramLineDescriptor | number | string> | TransitDiagramLineDescriptor | number | string
 type TransitDiagramMode = "compact" | "minimap" | "primary"
 ```

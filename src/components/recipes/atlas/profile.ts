@@ -3,6 +3,7 @@ import type {
   MotifTemplate,
   PreparedNetworkAtlas
 } from "./types"
+import { countMotifEntities } from "./entityCounts"
 import { assignedDenominator } from "./compare"
 
 export type MotifProfileCell = {
@@ -27,33 +28,39 @@ export function buildMotifProfile(
 ): MotifProfileStrip {
   const templates = options.templates ?? ["repeated-state-episode"]
   const sections =
-    atlas.spec.coordinate.kind === "ordinal" ? atlas.spec.coordinate.sectionIds : []
+    atlas.spec.coordinate.kind === "ordinal"
+      ? atlas.spec.coordinate.sectionIds
+      : []
   const denominator =
-    (options.partition ? assignedDenominator(atlas, options.partition) : undefined) ??
-    (atlas.spec.comparison
-      ? atlas.comparison?.rows.reduce((sum, row) => sum + row.assigned, 0)
-      : undefined) ??
-    0
+    options.partition !== undefined
+      ? (assignedDenominator(atlas, options.partition) ?? 0)
+      : atlas.spec.comparison
+        ? (atlas.comparison?.rows.reduce((sum, row) => sum + row.assigned, 0) ??
+          0)
+        : (atlas.ledger.entries.find(
+            (entry) =>
+              entry.subjectKind === "global" &&
+              entry.measureId === atlas.spec.motifs.denominatorRef
+          )?.value ?? 0)
+  const count = (matches: typeof atlas.motifs.matches) =>
+    countMotifEntities(
+      matches,
+      atlas.source.occurrences,
+      options.partition ?? atlas.spec.comparison?.partitions
+    )
   const cells: MotifProfileCell[] = []
   const incomplete = atlas.motifs.incompleteCandidates.length > 0
   for (const template of templates) {
     for (const sectionId of sections) {
-      const matches = atlas.motifs.matches.filter((match) => {
-        if (match.template !== template) return false
-        if (!options.partition) return true
-        return match.entityIds.some((id) =>
-          (atlas.source.occurrences ?? []).some(
-            (occurrence) =>
-              occurrence.entityId === id && occurrence.partition === options.partition
-          )
-        )
-      })
-      const completionCount = matches
-        .filter((match) => match.completionSectionId === sectionId)
-        .reduce((sum, match) => sum + partitionWeight(atlas, match.entityWeights, options.partition), 0)
-      const intersectionCount = matches
-        .filter((match) => match.intersectSectionIds.includes(sectionId))
-        .reduce((sum, match) => sum + partitionWeight(atlas, match.entityWeights, options.partition), 0)
+      const matches = atlas.motifs.matches.filter(
+        (match) => match.template === template
+      )
+      const completionCount = count(
+        matches.filter((match) => match.completionSectionId === sectionId)
+      )
+      const intersectionCount = count(
+        matches.filter((match) => match.intersectSectionIds.includes(sectionId))
+      )
       cells.push({
         template,
         sectionId,
@@ -66,20 +73,4 @@ export function buildMotifProfile(
     }
   }
   return { templates, sections, cells }
-}
-
-function partitionWeight(
-  atlas: PreparedNetworkAtlas,
-  weights: Record<string, number>,
-  partition?: string
-): number {
-  if (!partition) {
-    return Object.values(weights).reduce((sum, value) => sum + value, 0)
-  }
-  let total = 0
-  for (const occurrence of atlas.source.occurrences ?? []) {
-    if (occurrence.partition !== partition) continue
-    total += weights[occurrence.entityId] ?? 0
-  }
-  return total
 }

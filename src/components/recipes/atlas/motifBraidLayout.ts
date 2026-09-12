@@ -9,6 +9,7 @@ import {
   roundedTransitPath,
   type TransitDiagramPoint
 } from "../transitDiagramGeometry"
+import { prefixIdFor } from "./ids"
 import type { MotifBraidProjection, TrajectoryGroup } from "./braid"
 
 export type MotifBraidLayoutConfig = {
@@ -19,6 +20,7 @@ type PrefixTreeNode = {
   id: string
   state: string
   depth: number
+  parent?: PrefixTreeNode
   children: Map<string, PrefixTreeNode>
   signatures: Set<string>
 }
@@ -37,7 +39,8 @@ function steppedRoute(
 function packCenters(widths: number[], gap: number): number[] {
   if (widths.length === 0) return []
   if (widths.length === 1) return [0]
-  const total = widths.reduce((sum, width) => sum + width, 0) + gap * (widths.length - 1)
+  const total =
+    widths.reduce((sum, width) => sum + width, 0) + gap * (widths.length - 1)
   let cursor = -total / 2
   return widths.map((width) => {
     const center = cursor + width / 2
@@ -53,11 +56,6 @@ function strokeWidthFor(count: number, maxCount: number): number {
   return minWidth + (count / maxCount) * (maxWidth - minWidth)
 }
 
-function usesPrefix(group: TrajectoryGroup, prefixId: string): boolean {
-  if (!prefixId) return true
-  return group.nodePath.join(">").startsWith(prefixId)
-}
-
 function buildPrefixTree(groups: readonly TrajectoryGroup[]): PrefixTreeNode {
   const root: PrefixTreeNode = {
     id: FALSE_ROOT_ID,
@@ -70,13 +68,14 @@ function buildPrefixTree(groups: readonly TrajectoryGroup[]): PrefixTreeNode {
     let cursor = root
     cursor.signatures.add(group.signature)
     for (const state of group.nodePath) {
-      const id = cursor.id ? `${cursor.id}>${state}` : state
+      const id = prefixIdFor(group.nodePath, cursor.depth)
       let child = cursor.children.get(state)
       if (!child) {
         child = {
           id,
           state,
           depth: cursor.depth + 1,
+          parent: cursor,
           children: new Map(),
           signatures: new Set()
         }
@@ -89,7 +88,10 @@ function buildPrefixTree(groups: readonly TrajectoryGroup[]): PrefixTreeNode {
   return root
 }
 
-function visitTree(node: PrefixTreeNode, visit: (node: PrefixTreeNode) => void): void {
+function visitTree(
+  node: PrefixTreeNode,
+  visit: (node: PrefixTreeNode) => void
+): void {
   visit(node)
   for (const child of node.children.values()) visitTree(child, visit)
 }
@@ -104,25 +106,38 @@ function mean(values: number[]): number {
  * do not share a prefix. Shared steps are parallel offset tracks; a lone path
  * is a simple rounded stroke. Stroke width is that strand's magnitude.
  */
-export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ctx) => {
+export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
+  ctx
+) => {
   const braid = ctx.config.braid
   const plot = ctx.dimensions.plot
   const groups = braid.groups
   const partitions = braid.atlas.spec.comparison?.partitions ?? [
     ...new Set(groups.map((group) => group.partition))
   ]
+  const renderedGroups = groups.filter((group) =>
+    partitions.includes(group.partition)
+  )
+  const renderedSignatures = new Set(
+    renderedGroups.map((group) => group.signature)
+  )
   const panelCount = Math.max(partitions.length, 1)
   const panelHeight = plot.height / panelCount
   const signatureOrder =
     braid.signatureOrder.length > 0
-      ? braid.signatureOrder
-      : [...new Set(groups.map((group) => group.signature))]
-  const tree = buildPrefixTree(groups)
+      ? braid.signatureOrder.filter((signature) =>
+          renderedSignatures.has(signature)
+        )
+      : [...renderedSignatures]
+  const tree = buildPrefixTree(renderedGroups)
   const maxDepth = Math.max(
-    ...groups.map((group) => group.nodePath.length),
+    ...renderedGroups.map((group) => group.nodePath.length),
     1
   )
-  const maxCount = Math.max(...groups.map((group) => group.entityCount), 1)
+  const maxCount = Math.max(
+    ...renderedGroups.map((group) => group.entityCount),
+    1
+  )
   const colWidth = plot.width / (maxDepth + 0.5)
   const sceneEdges: NetworkCurvedEdge[] = []
   const sceneNodes: NetworkSceneNode[] = []
@@ -130,7 +145,10 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
 
   const leafY = (panelTop: number, signature: string) => {
     const slot = Math.max(0, signatureOrder.indexOf(signature))
-    const slotHeight = Math.max(18, (panelHeight - 36) / Math.max(signatureOrder.length, 1))
+    const slotHeight = Math.max(
+      18,
+      (panelHeight - 36) / Math.max(signatureOrder.length, 1)
+    )
     return panelTop + 28 + slot * slotHeight + slotHeight / 2
   }
 
@@ -139,13 +157,15 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
     panelTop: number
   ): TransitDiagramPoint => {
     const signatures = [...node.signatures].sort(
-      (left, right) => signatureOrder.indexOf(left) - signatureOrder.indexOf(right)
+      (left, right) =>
+        signatureOrder.indexOf(left) - signatureOrder.indexOf(right)
     )
     const x =
-      node.depth === 0
-        ? plot.x
-        : plot.x + 12 + (node.depth - 0.5) * colWidth
-    return { x, y: mean(signatures.map((signature) => leafY(panelTop, signature))) }
+      node.depth === 0 ? plot.x : plot.x + 12 + (node.depth - 0.5) * colWidth
+    return {
+      x,
+      y: mean(signatures.map((signature) => leafY(panelTop, signature)))
+    }
   }
 
   const emitTrack = (
@@ -159,7 +179,8 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
     const width = strokeWidthFor(group.entityCount, maxCount)
     const strandIndex = Math.max(0, signatureOrder.indexOf(group.signature))
     const stroke =
-      ctx.theme.categorical[strandIndex] ?? ctx.resolveColor(`strand:${strandIndex}`)
+      ctx.theme.categorical[strandIndex] ??
+      ctx.resolveColor(`strand:${strandIndex}`)
     sceneEdges.push({
       type: "curved",
       id: key,
@@ -189,9 +210,12 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
   ) => {
     const ordered = [...strands].sort(
       (left, right) =>
-        signatureOrder.indexOf(left.signature) - signatureOrder.indexOf(right.signature)
+        signatureOrder.indexOf(left.signature) -
+        signatureOrder.indexOf(right.signature)
     )
-    const widths = ordered.map((group) => strokeWidthFor(group.entityCount, maxCount))
+    const widths = ordered.map((group) =>
+      strokeWidthFor(group.entityCount, maxCount)
+    )
     const centers = packCenters(widths, 2)
     const base = steppedRoute(from, to)
     ordered.forEach((group, index) => {
@@ -214,27 +238,22 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
     const panelGroups = groups.filter((group) => group.partition === partition)
     if (panelGroups.length === 0) return
 
-    const parentOf = (node: PrefixTreeNode): PrefixTreeNode => {
-      if (node.depth <= 1) return tree
-      const parentId = node.id.slice(0, node.id.lastIndexOf(">"))
-      let cursor = tree
-      for (const state of parentId.split(">")) {
-        const next = cursor.children.get(state)
-        if (!next) break
-        cursor = next
-      }
-      return cursor
-    }
-
     visitTree(tree, (node) => {
       if (node.depth === 0) return
-      const parent = parentOf(node)
-      const strands = panelGroups.filter((group) => usesPrefix(group, node.id))
+      const parent = node.parent!
+      const strands = panelGroups.filter((group) =>
+        node.signatures.has(group.signature)
+      )
       if (strands.length === 0) return
       if (parent.depth === 0) {
         const start = nodePoint(node, panelTop)
         const leading = { x: plot.x + 8, y: start.y }
-        drawCorridor(leading, start, strands, `lead:${partition ?? "all"}:${node.id}`)
+        drawCorridor(
+          leading,
+          start,
+          strands,
+          `lead:${partition ?? "all"}:${node.id}`
+        )
         return
       }
       drawCorridor(
@@ -251,15 +270,19 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (ct
         leaf = leaf.children.get(state) ?? leaf
       }
       const from = nodePoint(leaf, panelTop)
-      const to = { x: plot.x + plot.width - 8, y: leafY(panelTop, group.signature) }
+      const to = {
+        x: plot.x + plot.width - 8,
+        y: leafY(panelTop, group.signature)
+      }
       drawCorridor(from, to, [group], `tail:${group.id}`)
       labels.push({
         x: to.x - 4,
         y: to.y,
         text: group.nodePath[group.nodePath.length - 1] ?? group.signature,
         fill:
-          ctx.theme.categorical[Math.max(0, signatureOrder.indexOf(group.signature))] ??
-          ctx.resolveColor(`strand:${group.signature}`),
+          ctx.theme.categorical[
+            Math.max(0, signatureOrder.indexOf(group.signature))
+          ] ?? ctx.resolveColor(`strand:${group.signature}`),
         fontSize: 10,
         anchor: "end",
         baseline: "middle"

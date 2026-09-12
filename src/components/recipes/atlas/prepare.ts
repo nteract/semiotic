@@ -27,19 +27,19 @@ function analysisRevision(
   source: NetworkAtlasSource,
   generation: number
 ): string {
-  const sections =
-    spec.coordinate.kind === "ordinal" ? spec.coordinate.sectionIds.join(",") : spec.coordinate.field
-  return [
-    generation,
-    source.revision,
-    spec.dataRevision,
-    spec.motifs.catalogVersion,
-    spec.forest.display.kind,
-    spec.forest.display.rankingPolicyId ?? "",
-    (spec.forest.display.roots ?? []).join(","),
-    spec.comparison?.partitions.join(",") ?? "",
-    sections
-  ].join("|")
+  // Include the complete spec and preserve array order without delimiter collisions.
+  // Sorting object keys makes equivalent specs independent of property insertion order.
+  return JSON.stringify(
+    [generation, source.graphRef, source.revision, spec],
+    (_, value) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? Object.fromEntries(
+            Object.keys(value)
+              .sort()
+              .map((key) => [key, value[key]])
+          )
+        : value
+  )
 }
 
 export function prepareNetworkAtlas(
@@ -61,11 +61,13 @@ export function prepareNetworkAtlas(
   const ports = buildRouteSupportIndex(source)
   const revision = analysisRevision(spec, source, generation)
   const prefixForest =
-    spec.forest.display.kind === "observed-prefix" || (source.occurrences?.length ?? 0) > 0
+    spec.forest.display.kind === "observed-prefix" ||
+    (source.occurrences?.length ?? 0) > 0
       ? buildPrefixForest(source.occurrences ?? [], {
           referencePartition:
             spec.forest.display.kind === "observed-prefix"
-              ? spec.forest.display.referencePartition ?? spec.comparison?.referencePartition
+              ? (spec.forest.display.referencePartition ??
+                spec.comparison?.referencePartition)
               : spec.comparison?.referencePartition
         })
       : undefined

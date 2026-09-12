@@ -7,10 +7,17 @@ import { describe, expect, it } from "vitest"
 import { NetworkCustomChart } from "../../charts/custom/NetworkCustomChart"
 import { renderChart } from "../../server/renderToStaticSVG"
 import { MotifBraidChart } from "./MotifBraidChart"
-import { prepareMotifBraid } from "./braid"
-import { motifBraidLayout } from "./motifBraidLayout"
+import {
+  prepareMotifBraid,
+  prepareNetworkAtlasAsync,
+  motifBraidLayout,
+  type NetworkAtlasSource,
+  type NetworkAtlasSpec,
+  type MotifBraidProjection
+} from "../../semiotic-recipes-core"
+import * as recipes from "../../semiotic-recipes"
 import { prepareNetworkAtlas } from "./prepare"
-import type { NetworkAtlasSource, NetworkAtlasSpec } from "./types"
+import { prepareMotifBraid as projectBraid } from "./braid"
 
 const FIXTURE_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -29,7 +36,7 @@ describe("Motif Braid SSR", () => {
   if (!prepared.ok) {
     throw new Error(prepared.issues.map((issue) => issue.message).join("; "))
   }
-  const braid = prepareMotifBraid(prepared.atlas)
+  const braid: MotifBraidProjection = projectBraid(prepared.atlas)
   const props = {
     nodes: braid.sceneSeeds.nodes,
     edges: braid.sceneSeeds.edges,
@@ -39,10 +46,38 @@ describe("Motif Braid SSR", () => {
     height: 360,
     animate: false as const,
     colorScheme: ["#4e79a7", "#f28e2c"],
-    title: "SSR motif braid",
+    title: "SSR motif braid"
   }
 
-  it("renderChart and live NetworkCustomChart emit ribbons, capsules, and profile marks", () => {
+  it("exposes preparation and layout through both public recipe facades", async () => {
+    expect(recipes.prepareNetworkAtlasAsync).toBe(prepareNetworkAtlasAsync)
+    expect(
+      await prepareNetworkAtlasAsync(fixture.spec, fixture.source)
+    ).toEqual(prepared)
+    expect(recipes.prepareMotifBraid).toBe(prepareMotifBraid)
+    expect(await prepareMotifBraid(prepared.atlas)).toEqual(braid)
+    expect(recipes.motifBraidLayout).toBe(motifBraidLayout)
+  })
+
+  it("preserves validation failures and generation options through async preparation", async () => {
+    const invalid = {
+      ...fixture.spec,
+      schemaVersion: "unsupported"
+    } as unknown as NetworkAtlasSpec
+    expect(await prepareNetworkAtlasAsync(invalid, fixture.source)).toEqual(
+      prepareNetworkAtlas(invalid, fixture.source)
+    )
+    const generated = await prepareNetworkAtlasAsync(
+      fixture.spec,
+      fixture.source,
+      { generation: 5 }
+    )
+    expect(generated).toEqual(
+      prepareNetworkAtlas(fixture.spec, fixture.source, { generation: 5 })
+    )
+  })
+
+  it("renderChart and live NetworkCustomChart emit curved journey tracks and partition labels", () => {
     const fromApi = renderChart("NetworkCustomChart", props)
     const live = renderToStaticMarkup(<NetworkCustomChart {...props} />)
     for (const svg of [fromApi, live]) {
@@ -67,7 +102,8 @@ describe("Motif Braid SSR", () => {
         title="SSR motif braid"
       />
     )
-    const ribbonCount = (svg: string) => (svg.match(/<path[^>]*d="M/g) ?? []).length
+    const ribbonCount = (svg: string) =>
+      (svg.match(/<path[^>]*d="M/g) ?? []).length
     expect(ribbonCount(fromHoc)).toBe(ribbonCount(fromApi))
     expect(fromHoc).toContain('fill="none"')
     expect(fromHoc).toContain("mobile/control")

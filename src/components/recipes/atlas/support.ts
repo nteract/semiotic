@@ -4,18 +4,22 @@ import type {
   SupportedHop
 } from "./types"
 
-function isSubsequence(path: readonly string[], route: readonly string[]): boolean {
-  if (route.length === 0) return true
-  let index = 0
-  for (const nodeId of path) {
-    if (nodeId !== route[index]) continue
-    index += 1
-    if (index === route.length) return true
-  }
-  return false
+/** Whether an observed path contains every route hop consecutively. */
+export function containsRoute(
+  path: readonly string[],
+  route: readonly string[]
+): boolean {
+  return (
+    route.length > 0 &&
+    path.some((_, start) =>
+      route.every((state, offset) => path[start + offset] === state)
+    )
+  )
 }
 
-export function buildRouteSupportIndex(source: NetworkAtlasSource): RouteSupportIndex {
+export function buildRouteSupportIndex(
+  source: NetworkAtlasSource
+): RouteSupportIndex {
   const hops: SupportedHop[] = []
   for (const occurrence of source.occurrences ?? []) {
     if (occurrence.missingPrehistory) continue
@@ -59,7 +63,7 @@ export function isSupportedRoute(
   if (route.length < 2) return false
   return (source.occurrences ?? []).some(
     (occurrence) =>
-      !occurrence.missingPrehistory && isSubsequence(occurrence.nodePath, route)
+      !occurrence.missingPrehistory && containsRoute(occurrence.nodePath, route)
   )
 }
 

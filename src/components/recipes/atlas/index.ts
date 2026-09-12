@@ -19,9 +19,14 @@ export { matchMotifs } from "./motifs"
 export { classifyForest, assertEdgeCoverage } from "./forests"
 export { buildPrefixForest } from "./prefixForest"
 export { selectCapsules } from "./capsules"
-export { buildComparison, assignedDenominator, signedDifferenceBps } from "./compare"
+export {
+  buildComparison,
+  assignedDenominator,
+  signedDifferenceBps
+} from "./compare"
 export { buildMotifProfile } from "./profile"
 export { prepareNetworkAtlas } from "./prepare"
+export { prepareNetworkAtlasAsync } from "./prepareAsync"
 export type { PrepareResult, PrepareOptions } from "./prepare"
 export {
   getSectionMeasures,
@@ -34,5 +39,11 @@ export {
 export { publishPreparedAtlas } from "./publish"
 export type { AtlasPublicationStore } from "./publish"
 export { prepareMotifBraid, ribbonSupportsRoute } from "./braid"
+export type {
+  MotifBraidProjection,
+  TrajectoryGroup,
+  BraidRibbon,
+  SignedReadout
+} from "./braid"
 export { motifBraidLayout } from "./motifBraidLayout"
 export type { MotifBraidLayoutConfig } from "./motifBraidLayout"

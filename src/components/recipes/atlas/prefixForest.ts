@@ -1,4 +1,4 @@
-import { idDictionary, setOwnValue } from "./ids"
+import { idDictionary, setOwnValue, prefixIdFor } from "./ids"
 import type { AtlasOccurrence, PrefixForest, PrefixForestNode } from "./types"
 
 type TrieNode = {
@@ -15,7 +15,11 @@ function entityCountOf(occurrence: AtlasOccurrence): number {
   return occurrence.entityCount ?? 1
 }
 
-function addPartition(node: TrieNode, partition: string | undefined, count: number): void {
+function addPartition(
+  node: TrieNode,
+  partition: string | undefined,
+  count: number
+): void {
   const key = partition ?? ""
   node.partitionCounts.set(key, (node.partitionCounts.get(key) ?? 0) + count)
 }
@@ -47,7 +51,7 @@ export function buildPrefixForest(
     addPartition(cursor, occurrence.partition, weight)
     for (const stateId of occurrence.nodePath) {
       const prefix = [...cursor.prefix, stateId]
-      const id = prefix.join(">")
+      const id = prefixIdFor(prefix, prefix.length - 1)
       let child = cursor.children.get(stateId)
       if (!child) {
         child = {
@@ -77,9 +81,13 @@ export function buildPrefixForest(
     keys.sort((left, right) => {
       const leftChild = node.children.get(left)!
       const rightChild = node.children.get(right)!
-      const leftRef = reference ? (leftChild.partitionCounts.get(reference) ?? 0) : 1
-      const rightRef = reference ? (rightChild.partitionCounts.get(reference) ?? 0) : 1
-      if ((leftRef > 0) !== (rightRef > 0)) return leftRef > 0 ? -1 : 1
+      const leftRef = reference
+        ? (leftChild.partitionCounts.get(reference) ?? 0)
+        : 1
+      const rightRef = reference
+        ? (rightChild.partitionCounts.get(reference) ?? 0)
+        : 1
+      if (leftRef > 0 !== rightRef > 0) return leftRef > 0 ? -1 : 1
       return left.localeCompare(right)
     })
     return keys
@@ -118,6 +126,4 @@ export function buildPrefixForest(
   }
 }
 
-export function prefixIdFor(path: readonly string[], depth: number): string {
-  return path.slice(0, depth + 1).join(">")
-}
+export { prefixIdFor } from "./ids"

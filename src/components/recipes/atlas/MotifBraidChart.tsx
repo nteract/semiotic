@@ -8,7 +8,6 @@ import type { PreparedNetworkAtlas } from "./types"
 
 export type MotifBraidChartProps = {
   atlas: PreparedNetworkAtlas
-  expandedCapsuleIds?: string[]
   width?: number
   height?: number
   colorScheme?: NetworkCustomChartProps["colorScheme"]
@@ -23,7 +22,6 @@ export type MotifBraidChartProps = {
  */
 export function MotifBraidChart({
   atlas,
-  expandedCapsuleIds,
   colorScheme,
   title,
   description,
@@ -31,10 +29,7 @@ export function MotifBraidChart({
   width,
   height
 }: MotifBraidChartProps) {
-  const braid = useMemo(
-    () => prepareMotifBraid(atlas, { expandedCapsuleIds }),
-    [atlas, expandedCapsuleIds]
-  )
+  const braid = useMemo(() => prepareMotifBraid(atlas), [atlas])
   return (
     <NetworkCustomChart
       width={width}

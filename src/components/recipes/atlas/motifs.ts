@@ -114,10 +114,7 @@ function fanMatch(
         : edgesBetween(source.edges, other, hubId)
     edgeIds.push(...pair)
   }
-  const interval = sectionsAlong(source, [
-    hubId,
-    ...others.map((id) => id)
-  ])
+  const interval = sectionsAlong(source, [hubId, ...others.map((id) => id)])
   const bound = entitiesVisiting(source.occurrences ?? [], hubId)
   const roles: Record<string, string | string[]> =
     template === "fan-out"
@@ -166,7 +163,8 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
     const outN = outs.get(node.id) ?? []
     if (outN.length !== 1) continue
     const predecessorIsInternal =
-      inN.length === 1 && isChainInternal(inN[0], ins.get(inN[0]) ?? [], outs.get(inN[0]) ?? [])
+      inN.length === 1 &&
+      isChainInternal(inN[0], ins.get(inN[0]) ?? [], outs.get(inN[0]) ?? [])
     if (isChainInternal(node.id, inN, outN) && predecessorIsInternal) continue
     const path = [node.id]
     let cursor = node.id
@@ -176,7 +174,8 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
       if (!next || guard.has(next)) break
       path.push(next)
       guard.add(next)
-      if (!isChainInternal(next, ins.get(next) ?? [], outs.get(next) ?? [])) break
+      if (!isChainInternal(next, ins.get(next) ?? [], outs.get(next) ?? []))
+        break
       cursor = next
     }
     if (path.length < 2) continue
@@ -209,7 +208,10 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
   return matches
 }
 
-function bindOccurrenceEntities(matches: MotifMatch[], source: NetworkAtlasSource): void {
+function bindOccurrenceEntities(
+  matches: MotifMatch[],
+  source: NetworkAtlasSource
+): void {
   const occurrences = source.occurrences ?? []
   if (occurrences.length === 0) return
   for (const match of matches) {
@@ -218,14 +220,19 @@ function bindOccurrenceEntities(matches: MotifMatch[], source: NetworkAtlasSourc
     const weights = idDictionary<number>()
     for (const occurrence of occurrences) {
       if (occurrence.missingPrehistory) continue
-      const visitsHub = roleNodes.some((nodeId) => occurrence.nodePath.includes(nodeId))
+      const visitsHub = roleNodes.some((nodeId) =>
+        occurrence.nodePath.includes(nodeId)
+      )
       if (!visitsHub) continue
       setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
     }
     const entityIds = Object.keys(weights)
     match.entityIds = entityIds
     match.entityWeights = weights
-    match.entityCount = entityIds.reduce((sum, id) => sum + (weights[id] ?? 0), 0)
+    match.entityCount = entityIds.reduce(
+      (sum, id) => sum + (weights[id] ?? 0),
+      0
+    )
     match.flags = {
       ...match.flags,
       occurrence: entityIds.length > 0,
@@ -238,25 +245,31 @@ function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
   const matches: MotifMatch[] = []
   for (const occurrence of source.occurrences ?? []) {
     if (occurrence.missingPrehistory) continue
-    const seen = new Map<string, number>()
-    const repeated: string[] = []
-    for (const nodeId of occurrence.nodePath) {
-      const next = (seen.get(nodeId) ?? 0) + 1
-      seen.set(nodeId, next)
-      if (next === 2) repeated.push(nodeId)
-    }
-    for (const stateId of repeated) {
-      const interval = sectionsAlong(source, occurrence.nodePath)
+    const firstVisits = new Map<string, number>()
+    const completed = new Set<string>()
+    for (const [index, stateId] of occurrence.nodePath.entries()) {
+      const first = firstVisits.get(stateId)
+      if (first == null) {
+        firstVisits.set(stateId, index)
+        continue
+      }
+      if (completed.has(stateId)) continue
+      completed.add(stateId)
+      const episodePath = occurrence.nodePath.slice(first, index + 1)
+      const interval = sectionsAlong(source, episodePath)
       const weights = idDictionary<number>()
       setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
       matches.push({
         id: `repeated-state-episode:${occurrence.id}:${stateId}`,
         template: "repeated-state-episode",
         roles: { state: stateId, occurrence: occurrence.id },
-        nodePath: occurrence.nodePath,
+        nodePath: episodePath,
         edgeIds: [],
-        startSectionId: interval[0],
-        completionSectionId: interval[interval.length - 1],
+        startSectionId: sectionOf(source, episodePath[0]),
+        completionSectionId: sectionOf(
+          source,
+          episodePath[episodePath.length - 1]
+        ),
         intersectSectionIds: interval,
         entityIds: [occurrence.entityId],
         entityWeights: weights,

@@ -1,6 +1,11 @@
 import { selectCapsules, type MotifCapsule } from "./capsules"
-import { assignedDenominator, buildComparison, signedDifferenceBps } from "./compare"
-import { prefixIdFor } from "./prefixForest"
+import {
+  assignedDenominator,
+  buildComparison,
+  signedDifferenceBps
+} from "./compare"
+import { containsRoute } from "./support"
+import { prefixIdFor } from "./ids"
 import { buildMotifProfile, type MotifProfileStrip } from "./profile"
 import type {
   AtlasOccurrence,
@@ -48,7 +53,6 @@ export type MotifBraidProjection = {
   profile: MotifProfileStrip
   differences: SignedReadout[]
   prefixForest: PrefixForest
-  expandedCapsuleIds: string[]
   sceneSeeds: {
     nodes: Array<{ id: string; partition?: string; signature?: string }>
     edges: Array<{ id: string; source: string; target: string }>
@@ -59,7 +63,9 @@ function entityCountOf(occurrence: AtlasOccurrence): number {
   return occurrence.entityCount ?? 1
 }
 
-function groupFromOccurrence(occurrence: AtlasOccurrence): TrajectoryGroup | undefined {
+function groupFromOccurrence(
+  occurrence: AtlasOccurrence
+): TrajectoryGroup | undefined {
   if (occurrence.missingPrehistory) return undefined
   return {
     id: `group:${occurrence.id}`,
@@ -67,13 +73,12 @@ function groupFromOccurrence(occurrence: AtlasOccurrence): TrajectoryGroup | und
     partition: occurrence.partition,
     nodePath: occurrence.nodePath,
     entityCount: entityCountOf(occurrence),
-    signature: occurrence.nodePath.join(">")
+    signature: prefixIdFor(occurrence.nodePath, occurrence.nodePath.length - 1)
   }
 }
 
 export function prepareMotifBraid(
-  atlas: PreparedNetworkAtlas,
-  options: { expandedCapsuleIds?: string[] } = {}
+  atlas: PreparedNetworkAtlas
 ): MotifBraidProjection {
   const prefixForest = atlas.prefixForest
   if (!prefixForest) {
@@ -91,7 +96,6 @@ export function prepareMotifBraid(
         nodes: [],
         order: []
       },
-      expandedCapsuleIds: options.expandedCapsuleIds ?? [],
       sceneSeeds: { nodes: [], edges: [] }
     }
   }
@@ -102,18 +106,19 @@ export function prepareMotifBraid(
 
   const signatureIndex = new Map<string, number>()
   for (const group of groups) {
-    const firstPrefix = prefixIdFor(group.nodePath, 0)
-    const rank = prefixForest.order.indexOf(firstPrefix)
+    const rank = prefixForest.order.indexOf(group.signature)
     const current = signatureIndex.get(group.signature)
     const next = rank === -1 ? prefixForest.order.length : rank
-    if (current == null || next < current) signatureIndex.set(group.signature, next)
+    if (current == null || next < current)
+      signatureIndex.set(group.signature, next)
   }
-  const signatureOrder = [...new Set(groups.map((group) => group.signature))].sort(
-    (left, right) => {
-      const rank = (signatureIndex.get(left) ?? 0) - (signatureIndex.get(right) ?? 0)
-      return rank !== 0 ? rank : left.localeCompare(right)
-    }
-  )
+  const signatureOrder = [
+    ...new Set(groups.map((group) => group.signature))
+  ].sort((left, right) => {
+    const rank =
+      (signatureIndex.get(left) ?? 0) - (signatureIndex.get(right) ?? 0)
+    return rank !== 0 ? rank : left.localeCompare(right)
+  })
 
   const ribbons: BraidRibbon[] = []
   for (const group of groups) {
@@ -158,7 +163,8 @@ export function prepareMotifBraid(
       rightPartition: right.partition,
       leftCount: left.outcomes.purchases ?? 0,
       rightCount: right.outcomes.purchases ?? 0,
-      deltaCount: (right.outcomes.purchases ?? 0) - (left.outcomes.purchases ?? 0),
+      deltaCount:
+        (right.outcomes.purchases ?? 0) - (left.outcomes.purchases ?? 0),
       deltaBps: signedDifferenceBps(
         left.outcomes.purchases ?? 0,
         right.outcomes.purchases ?? 0,
@@ -190,7 +196,6 @@ export function prepareMotifBraid(
     profile: buildMotifProfile(atlas),
     differences,
     prefixForest,
-    expandedCapsuleIds: options.expandedCapsuleIds ?? [],
     sceneSeeds
   }
 }
@@ -199,10 +204,7 @@ export function ribbonSupportsRoute(
   braid: MotifBraidProjection,
   route: readonly string[]
 ): boolean {
-  const signature = route.join(">")
-  return braid.groups.some(
-    (group) => group.signature === signature || group.nodePath.join(">").includes(signature)
-  )
+  return braid.groups.some((group) => containsRoute(group.nodePath, route))
 }
 
 export { assignedDenominator }

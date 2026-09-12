@@ -12,7 +12,8 @@ export type MotifCapsule = {
 }
 
 function occurrenceKeys(match: MotifMatch): string[] {
-  return match.entityIds
+  const occurrenceId = match.roles.occurrence
+  return typeof occurrenceId === "string" ? [occurrenceId] : match.entityIds
 }
 
 /**
@@ -23,9 +24,7 @@ export function selectCapsules(
   matches: readonly MotifMatch[],
   options: { templates?: MotifTemplate[] } = {}
 ): MotifCapsule[] {
-  const templates = new Set(
-    options.templates ?? ["repeated-state-episode"]
-  )
+  const templates = new Set(options.templates ?? ["repeated-state-episode"])
   const candidates = matches
     .filter((match) => templates.has(match.template))
     .map((match) => {

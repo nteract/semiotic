@@ -1,6 +1,6 @@
 # Network Atlas Phase 1–2 (NA0–NA2)
 
-**Status:** Kernel spike plus Motif Braid recipe. These names are **not** public imports. `MotifBraidChart` is recipe-local.
+**Status:** Kernel spike plus Motif Braid recipe. `prepareNetworkAtlasAsync`, `prepareMotifBraid`, `motifBraidLayout`, and their input/output types are public through `semiotic/recipes/core` and `semiotic/recipes`. `MotifBraidChart` remains recipe-local.
 
 **Pinned baseline:** package `3.10.0`, commit `ffd5d48fc201c4780d5437e23089814f88e9e6ab`, Volta Node `22.22.1`.
 
@@ -47,3 +47,27 @@ python3 scripts/network-atlas/independent-check.py --write
 npm run check:network-atlas-fixtures
 npx vitest run src/components/recipes/atlas/
 ```
+
+## Public preparation and layout
+
+Pass a `NetworkAtlasSpec` and `NetworkAtlasSource` to `await prepareNetworkAtlasAsync(spec, source)` and
+check the returned `ok` discriminant before using `atlas`. Pass that atlas to
+`await prepareMotifBraid(atlas)` to obtain a `MotifBraidProjection`. Render with
+`NetworkCustomChart` using `nodes={braid.sceneSeeds.nodes}`,
+`edges={braid.sceneSeeds.edges}`, `layout={motifBraidLayout}`, and
+`layoutConfig={{ braid }}`. The same props work with `renderChart` from
+`semiotic/server`. Both public preparation functions load their analysis code on demand; layout
+remains synchronous. All three are available from the core entry; the chart wrapper is local to this recipe.
+
+Repeated-state episodes cover the first through second visit of each repeated
+state, with completion anchored to the second visit's section. Profiles count an
+entity once per cell across episodes and occurrences. Non-comparison profiles
+use the global ledger measure named by `motifs.denominatorRef`. Capsule IDs refer
+to occurrences; capsule expansion is not implemented or exposed as a chart option.
+Trajectory and prefix identifiers escape `%` and `>` within state IDs before
+joining segments with `>`; route queries compare actual consecutive states.
+
+Review regression coverage includes episode completion/intersection queries,
+partitioned and unpartitioned counts, duplicate entities, reference ordering,
+separator-containing state IDs, hidden-panel geometry, analysis revisions, both
+public recipe facades, and React/server SVG rendering.
