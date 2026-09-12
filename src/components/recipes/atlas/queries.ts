@@ -82,13 +82,26 @@ export function getMotifPrevalence(
     return match.intersectSectionIds.includes(query.window.sectionId)
   })
   const truncated = matches.some((match) => match.truncation)
-  const entityIds = new Set<string>()
-  let entityCount = 0
+  const weights: Record<string, number> = Object.create(null)
+  let structuralCount = 0
   for (const match of matches) {
-    for (const id of match.entityIds) entityIds.add(id)
-    entityCount += match.entityCount
+    const entries = Object.entries(match.entityWeights ?? {})
+    if (entries.length === 0) {
+      structuralCount += match.entityCount
+      continue
+    }
+    for (const [id, weight] of entries) {
+      Object.defineProperty(weights, id, {
+        value: weight,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      })
+    }
   }
-  const uniqueEntities = entityIds.size > 0 ? entityIds.size : entityCount
+  const uniqueEntities =
+    Object.values(weights).reduce((sum: number, value: number) => sum + value, 0) +
+    structuralCount
   const limitations: string[] = []
   if (incomplete.length > 0) limitations.push("missing-prehistory")
   if (truncated) limitations.push("truncated-match-budget")

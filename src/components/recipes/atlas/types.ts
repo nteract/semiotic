@@ -38,6 +38,11 @@ export const PHASE1_MOTIF_MATCHERS: readonly MotifTemplate[] = [
   "fan-in"
 ]
 
+export const PHASE2_MOTIF_MATCHERS: readonly MotifTemplate[] = [
+  ...PHASE1_MOTIF_MATCHERS,
+  "repeated-state-episode"
+]
+
 export type MeasureSpec = {
   unitKind: UnitKind
   countUnit: AtlasCountUnit
@@ -66,10 +71,19 @@ export type MotifSpec = {
   matchBudget?: number
 }
 
-export type DisplayForestSpec = {
-  kind: "rooted-backbone"
-  roots: string[]
-  rankingPolicyId: string
+export type DisplayForestSpec =
+  | { kind: "rooted-backbone"; roots: string[]; rankingPolicyId: string }
+  | {
+      kind: "observed-prefix"
+      roots?: string[]
+      rankingPolicyId?: string
+      referencePartition?: string
+    }
+
+export type SharedPartitionComparison = {
+  partitions: string[]
+  denominatorMeasureId: string
+  referencePartition?: string
 }
 
 export type TemporalContract =
@@ -84,6 +98,7 @@ export type NetworkAtlasSpec = {
   measures: Record<string, MeasureSpec>
   motifs: MotifSpec
   forest: { display: DisplayForestSpec }
+  comparison?: SharedPartitionComparison
   dataRevision: string
   temporal: TemporalContract
 }
@@ -107,6 +122,8 @@ export type AtlasOccurrence = {
   nodePath: string[]
   complete: boolean
   missingPrehistory?: boolean
+  partition?: string
+  groupKeys?: Record<string, string>
 }
 
 export type AtlasMeasureValue = {
@@ -157,6 +174,7 @@ export type MotifMatch = {
   completionSectionId?: string
   intersectSectionIds: string[]
   entityIds: string[]
+  entityWeights: Record<string, number>
   entityCount: number
   flags: MotifFlags
   truncation?: { disclosed: true; omitted: number; fullCount: number }
@@ -180,6 +198,37 @@ export type DisplayForest = {
   rankingPolicyId: string
   backboneEdgeIds: string[]
   primaryParentEdgeIdByNode: Record<string, string>
+}
+
+export type PrefixForestNode = {
+  id: string
+  stateId: string
+  prefix: string[]
+  parentId: string | null
+  childIds: string[]
+  entityCount: number
+  occurrenceIds: string[]
+  partitionCounts: Record<string, number>
+}
+
+export type PrefixForest = {
+  kind: "observed-prefix"
+  rootIds: string[]
+  nodes: PrefixForestNode[]
+  order: string[]
+  referencePartition?: string
+}
+
+export type PreparedComparison = {
+  partitions: string[]
+  denominatorMeasureId: string
+  referencePartition?: string
+  rows: Array<{
+    partition: string
+    assigned: number
+    motifUsers: Record<string, number>
+    outcomes: Record<string, number>
+  }>
 }
 
 export type OriginalEdgeIndex = {
@@ -248,6 +297,8 @@ export type PreparedNetworkAtlas = {
   ledger: MeasureLedger
   completeness: CompletenessReport
   provenance: AtlasProvenance
+  prefixForest?: PrefixForest
+  comparison?: PreparedComparison
 }
 
 export type QueryResult<T> = {

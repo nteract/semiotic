@@ -2,7 +2,7 @@
   "id": "search-no-result-v1",
   "synthetic": true,
   "label": "Synthetic design fixture. Not a production analysis.",
-  "leadView": "MotifBraidChart (not implemented in Phase 1)",
+  "leadView": "MotifBraidChart",
   "dataDictionary": {
     "completedSessions": "Sessions that reached the observation window end.",
     "loopingSessions": "Completed sessions with repeated no-result episodes.",
@@ -22,6 +22,73 @@
     "catalogEligibleLoopSessions": 6000,
     "limitations": [
       "Does not forecast a 15-point uplift from repairing lexical matching."
+    ]
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": {
+      "kind": "ordinal",
+      "sectionIds": ["query", "results", "outcome"]
+    },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase2-exact",
+    "measures": {
+      "assigned": { "unitKind": "stock", "countUnit": "entity" },
+      "purchases": { "unitKind": "stock", "countUnit": "entity" }
+    },
+    "motifs": {
+      "catalogId": "atlas-phase2",
+      "catalogVersion": "0.2.0",
+      "countUnit": "entity",
+      "denominatorRef": "assigned",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": { "kind": "observed-prefix", "roots": ["query"] }
+    },
+    "dataRevision": "search-no-result-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "source": {
+    "graphRef": "search-no-result-v1",
+    "revision": "search-no-result-v1",
+    "nodes": [
+      { "id": "query", "sectionId": "query" },
+      { "id": "results", "sectionId": "results" },
+      { "id": "no_results", "sectionId": "results" },
+      { "id": "done", "sectionId": "outcome" }
+    ],
+    "edges": [
+      { "id": "e-query-results", "source": "query", "target": "results" },
+      { "id": "e-query-empty", "source": "query", "target": "no_results" },
+      { "id": "e-empty-query", "source": "no_results", "target": "query" },
+      { "id": "e-results-done", "source": "results", "target": "done" }
+    ],
+    "occurrences": [
+      {
+        "id": "ordinary",
+        "entityId": "ordinary-sessions",
+        "entityCount": 40000,
+        "nodePath": ["query", "results", "done"],
+        "complete": true
+      },
+      {
+        "id": "loop",
+        "entityId": "loop-sessions",
+        "entityCount": 10000,
+        "nodePath": ["query", "no_results", "query", "results", "done"],
+        "complete": true
+      }
+    ],
+    "measureValues": [
+      { "measureId": "assigned", "subjectId": "completed", "value": 50000, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "loop", "value": 500, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "ordinary", "value": 8000, "status": "exact" }
     ]
   }
 }

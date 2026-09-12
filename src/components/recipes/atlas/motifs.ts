@@ -1,6 +1,7 @@
+import { idDictionary, setOwnValue } from "./ids"
 import {
   MOTIF_CATALOG_TEMPLATES,
-  PHASE1_MOTIF_MATCHERS,
+  PHASE2_MOTIF_MATCHERS,
   type AtlasEdge,
   type AtlasOccurrence,
   type MotifMatch,
@@ -132,6 +133,7 @@ function fanMatch(
     completionSectionId: interval[interval.length - 1],
     intersectSectionIds: interval,
     entityIds: bound.entityIds,
+    entityWeights: idDictionary<number>(),
     entityCount: bound.entityCount,
     flags: {
       occurrence: bound.entityIds.length > 0,
@@ -194,6 +196,7 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
       completionSectionId: interval[interval.length - 1],
       intersectSectionIds: interval,
       entityIds: bound.entityIds,
+      entityWeights: idDictionary<number>(),
       entityCount: bound.entityCount,
       flags: {
         occurrence: bound.entityIds.length > 0,
@@ -210,24 +213,64 @@ function bindOccurrenceEntities(matches: MotifMatch[], source: NetworkAtlasSourc
   const occurrences = source.occurrences ?? []
   if (occurrences.length === 0) return
   for (const match of matches) {
+    if (match.template === "repeated-state-episode") continue
     const roleNodes = match.nodePath
-    const entityIds: string[] = []
-    let entityCount = 0
+    const weights = idDictionary<number>()
     for (const occurrence of occurrences) {
       if (occurrence.missingPrehistory) continue
       const visitsHub = roleNodes.some((nodeId) => occurrence.nodePath.includes(nodeId))
       if (!visitsHub) continue
-      entityIds.push(occurrence.entityId)
-      entityCount += entityCountOf(occurrence)
+      setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
     }
+    const entityIds = Object.keys(weights)
     match.entityIds = entityIds
-    match.entityCount = entityCount
+    match.entityWeights = weights
+    match.entityCount = entityIds.reduce((sum, id) => sum + (weights[id] ?? 0), 0)
     match.flags = {
       ...match.flags,
       occurrence: entityIds.length > 0,
       trajectorySupported: entityIds.length > 0
     }
   }
+}
+
+function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
+  const matches: MotifMatch[] = []
+  for (const occurrence of source.occurrences ?? []) {
+    if (occurrence.missingPrehistory) continue
+    const seen = new Map<string, number>()
+    const repeated: string[] = []
+    for (const nodeId of occurrence.nodePath) {
+      const next = (seen.get(nodeId) ?? 0) + 1
+      seen.set(nodeId, next)
+      if (next === 2) repeated.push(nodeId)
+    }
+    for (const stateId of repeated) {
+      const interval = sectionsAlong(source, occurrence.nodePath)
+      const weights = idDictionary<number>()
+      setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
+      matches.push({
+        id: `repeated-state-episode:${occurrence.id}:${stateId}`,
+        template: "repeated-state-episode",
+        roles: { state: stateId, occurrence: occurrence.id },
+        nodePath: occurrence.nodePath,
+        edgeIds: [],
+        startSectionId: interval[0],
+        completionSectionId: interval[interval.length - 1],
+        intersectSectionIds: interval,
+        entityIds: [occurrence.entityId],
+        entityWeights: weights,
+        entityCount: entityCountOf(occurrence),
+        flags: {
+          occurrence: true,
+          temporal: false,
+          trajectorySupported: true,
+          enriched: false
+        }
+      })
+    }
+  }
+  return matches
 }
 
 export function matchMotifs(
@@ -255,6 +298,7 @@ export function matchMotifs(
     if (fanIn) matches.push(fanIn)
   }
   matches.push(...serialChains(source))
+  matches.push(...repeatedStateEpisodes(source))
   bindOccurrenceEntities(matches, source)
 
   const incompleteCandidates: MotifMatchIndex["incompleteCandidates"] = []
@@ -265,10 +309,15 @@ export function matchMotifs(
       occurrenceId: occurrence.id,
       reason: "missing-prehistory"
     })
+    incompleteCandidates.push({
+      template: "repeated-state-episode",
+      occurrenceId: occurrence.id,
+      reason: "missing-prehistory"
+    })
   }
 
   const unsupportedTemplates = MOTIF_CATALOG_TEMPLATES.filter(
-    (template) => !PHASE1_MOTIF_MATCHERS.includes(template)
+    (template) => !PHASE2_MOTIF_MATCHERS.includes(template)
   )
 
   return {

@@ -45,7 +45,8 @@ export function classifyForest(
   source: NetworkAtlasSource
 ): ForestClassification {
   const originalEdgeIds = source.edges.map((edge) => edge.id)
-  const { mode, order } = parsePolicy(spec.forest.display.rankingPolicyId)
+  const rankingPolicyId = spec.forest.display.rankingPolicyId ?? "main-transport"
+  const { mode, order } = parsePolicy(rankingPolicyId)
   const mainEdge = (edge: AtlasEdge) =>
     isMainNode(source, spec, edge.source) && isMainNode(source, spec, edge.target)
 
@@ -57,7 +58,13 @@ export function classifyForest(
   }
 
   const primaryParentEdgeIdByNode = idDictionary<string>()
-  const rootSet = new Set(spec.forest.display.roots)
+  const roots =
+    spec.forest.display.roots && spec.forest.display.roots.length > 0
+      ? spec.forest.display.roots
+      : source.nodes[0]
+        ? [source.nodes[0].id]
+        : []
+  const rootSet = new Set(roots)
   for (const node of source.nodes) {
     if (rootSet.has(node.id)) continue
     const candidates = rankEdges(incoming.get(node.id) ?? [], order)
@@ -78,8 +85,8 @@ export function classifyForest(
   return {
     forest: {
       kind: "rooted-backbone",
-      roots: [...spec.forest.display.roots],
-      rankingPolicyId: spec.forest.display.rankingPolicyId,
+      roots: [...roots],
+      rankingPolicyId,
       backboneEdgeIds,
       primaryParentEdgeIdByNode
     },
