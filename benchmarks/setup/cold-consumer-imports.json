@@ -45,8 +45,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 432286,
-      "gzipBytes": 144613,
+      "rawBytes": 433006,
+      "gzipBytes": 144731,
       "packedPackageInputFiles": 70
     },
     {
@@ -54,8 +54,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 431980,
-      "gzipBytes": 145042,
+      "rawBytes": 432700,
+      "gzipBytes": 145191,
       "packedPackageInputFiles": 51
     },
     {
@@ -63,8 +63,8 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 431980,
-      "gzipBytes": 144968,
+      "rawBytes": 432700,
+      "gzipBytes": 145108,
       "packedPackageInputFiles": 44
     },
     {
@@ -90,8 +90,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 439391,
-      "gzipBytes": 145785,
+      "rawBytes": 440112,
+      "gzipBytes": 145926,
       "packedPackageInputFiles": 51
     },
     {
@@ -117,8 +117,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 453840,
-      "gzipBytes": 153398,
+      "rawBytes": 454057,
+      "gzipBytes": 153450,
       "packedPackageInputFiles": 14
     },
     {
@@ -144,8 +144,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 858364,
-      "gzipBytes": 275087,
+      "rawBytes": 859328,
+      "gzipBytes": 275281,
       "packedPackageInputFiles": 3
     },
     {
@@ -153,8 +153,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 389601,
-      "gzipBytes": 122540,
+      "rawBytes": 390297,
+      "gzipBytes": 122699,
       "packedPackageInputFiles": 1
     },
     {
@@ -162,8 +162,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 859995,
-      "gzipBytes": 275830,
+      "rawBytes": 860959,
+      "gzipBytes": 276020,
       "packedPackageInputFiles": 3
     },
     {
@@ -171,8 +171,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 829742,
-      "gzipBytes": 264860,
+      "rawBytes": 830608,
+      "gzipBytes": 265035,
       "packedPackageInputFiles": 72
     },
     {
@@ -317,7 +317,7 @@
       "platform": "browser",
       "rawBytes": 4143,
       "gzipBytes": 1764,
-      "packedPackageInputFiles": 11
+      "packedPackageInputFiles": 15
     },
     {
       "exportKey": "./recipes/core",
@@ -326,7 +326,7 @@
       "platform": "browser",
       "rawBytes": 4143,
       "gzipBytes": 1764,
-      "packedPackageInputFiles": 3
+      "packedPackageInputFiles": 7
     },
     {
       "exportKey": "./recipes/react",
