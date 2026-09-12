@@ -150,6 +150,9 @@ export type {
 export { lineageDagLayout } from "./recipes/lineageDag"
 export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
 
+export { motifBraidLayout } from "./recipes/atlas/motifBraidLayout"
+export type { MotifBraidLayoutConfig } from "./recipes/atlas/motifBraidLayout"
+
 export { mermaidDagLayout } from "./recipes/mermaidDag"
 export type { MermaidDagConfig } from "./recipes/mermaidDag"
 

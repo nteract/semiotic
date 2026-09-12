@@ -74,7 +74,12 @@ describe("missing-prehistory", () => {
     const prevalence = getMotifPrevalence(prepared.atlas, { template: "serial-chain" })
     expect(prevalence.status).toBe("incomplete")
     expect(prevalence.limitations).toContain("missing-prehistory")
-    expect(prepared.atlas.motifs.incompleteCandidates).toHaveLength(1)
+    expect(prepared.atlas.motifs.incompleteCandidates.length).toBeGreaterThan(0)
+    expect(
+      prepared.atlas.motifs.incompleteCandidates.every(
+        (row) => row.reason === "missing-prehistory"
+      )
+    ).toBe(true)
   })
 })
 

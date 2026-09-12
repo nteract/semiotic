@@ -143,6 +143,7 @@ function mobileNetworkChartRecipe(options?: MobileChartFamilyRecipeOptions | und
 function mobileOrdinalChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
+function motifBraidLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").MotifBraidLayoutConfig>): import("../../semiotic-network").NetworkLayoutResult
 function mulberry32(seed: number): () => number
 function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
@@ -2113,6 +2114,7 @@ type LandmarkKind = "arena" | "city" | "culture" | "defense" | "faith" | "knowle
 type LineageLod = "compact" | "dot" | "full" | "icon"
 type MobileAnnotationStrategyMode = "callout-list" | "hybrid" | "plot"
 type MobileChartFamily = "area" | "geo" | "line" | "network" | "ordinal" | "scatter" | "small-multiple"
+type MotifBraidLayoutConfig = {braid: MotifBraidProjection;}
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSymbolName = "chevron" | "circle" | "cross" | "diamond" | "square" | "star" | "triangle" | "wye"
 type NumericScale = (value: number) => number

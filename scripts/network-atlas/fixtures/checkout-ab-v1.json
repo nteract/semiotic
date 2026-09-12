@@ -2,7 +2,7 @@
   "id": "checkout-ab-v1",
   "synthetic": true,
   "label": "Synthetic design fixture. Not a production analysis.",
-  "leadView": "MotifBraidChart (not implemented in Phase 1)",
+  "leadView": "MotifBraidChart",
   "dataDictionary": {
     "assigned": "Assigned users in the experiment partition. The A/B denominator.",
     "loopUsers": "Assigned users with at least one qualifying loop episode. Not raw episode totals.",
@@ -29,6 +29,136 @@
     "limitations": [
       "The motif is a diagnostic, not proof that the loop caused the full four-point mobile decline.",
       "Hold the mobile rollout under its guardrail; inspect the redirect."
+    ]
+  },
+  "spec": {
+    "schemaVersion": "0.2",
+    "coordinate": {
+      "kind": "ordinal",
+      "sectionIds": ["home", "catalog", "checkout", "retry", "outcome"]
+    },
+    "relations": {
+      "directed": true,
+      "edgeIdRequired": true,
+      "parallelEdges": "keep-by-id",
+      "selfLoops": "keep-by-id"
+    },
+    "evidencePolicyId": "atlas-phase2-exact",
+    "measures": {
+      "assigned": { "unitKind": "stock", "countUnit": "entity" },
+      "loop-users": { "unitKind": "stock", "countUnit": "entity" },
+      "purchases": { "unitKind": "stock", "countUnit": "entity" }
+    },
+    "motifs": {
+      "catalogId": "atlas-phase2",
+      "catalogVersion": "0.2.0",
+      "countUnit": "entity",
+      "denominatorRef": "assigned",
+      "anchor": "completion"
+    },
+    "forest": {
+      "display": {
+        "kind": "observed-prefix",
+        "roots": ["home"],
+        "referencePartition": "mobile/control"
+      }
+    },
+    "comparison": {
+      "partitions": ["mobile/control", "mobile/treatment"],
+      "denominatorMeasureId": "assigned",
+      "referencePartition": "mobile/control"
+    },
+    "dataRevision": "checkout-ab-v1",
+    "temporal": { "kind": "snapshot" }
+  },
+  "source": {
+    "graphRef": "checkout-ab-v1",
+    "revision": "checkout-ab-v1",
+    "nodes": [
+      { "id": "home", "sectionId": "home" },
+      { "id": "catalog", "sectionId": "catalog" },
+      { "id": "checkout", "sectionId": "checkout" },
+      { "id": "redirect", "sectionId": "retry" },
+      { "id": "done", "sectionId": "outcome" }
+    ],
+    "edges": [
+      { "id": "e-home-catalog", "source": "home", "target": "catalog" },
+      { "id": "e-catalog-checkout", "source": "catalog", "target": "checkout" },
+      { "id": "e-checkout-done", "source": "checkout", "target": "done" },
+      { "id": "e-checkout-redirect", "source": "checkout", "target": "redirect" },
+      { "id": "e-redirect-checkout", "source": "redirect", "target": "checkout" }
+    ],
+    "occurrences": [
+      {
+        "id": "mc-ordinary",
+        "entityId": "mobile-control-ordinary",
+        "entityCount": 18400,
+        "partition": "mobile/control",
+        "groupKeys": { "device": "mobile", "loop": "no" },
+        "nodePath": ["home", "catalog", "checkout", "done"],
+        "complete": true
+      },
+      {
+        "id": "mc-loop",
+        "entityId": "mobile-control-loop",
+        "entityCount": 1600,
+        "partition": "mobile/control",
+        "groupKeys": { "device": "mobile", "loop": "yes" },
+        "nodePath": ["home", "catalog", "checkout", "redirect", "checkout", "done"],
+        "complete": true
+      },
+      {
+        "id": "mt-ordinary",
+        "entityId": "mobile-treatment-ordinary",
+        "entityCount": 14000,
+        "partition": "mobile/treatment",
+        "groupKeys": { "device": "mobile", "loop": "no" },
+        "nodePath": ["home", "catalog", "checkout", "done"],
+        "complete": true
+      },
+      {
+        "id": "mt-loop",
+        "entityId": "mobile-treatment-loop",
+        "entityCount": 6000,
+        "partition": "mobile/treatment",
+        "groupKeys": { "device": "mobile", "loop": "yes" },
+        "nodePath": ["home", "catalog", "checkout", "redirect", "checkout", "done"],
+        "complete": true
+      },
+      {
+        "id": "dc-ordinary",
+        "entityId": "desktop-control-ordinary",
+        "entityCount": 20000,
+        "partition": "desktop/control",
+        "groupKeys": { "device": "desktop", "loop": "no" },
+        "nodePath": ["home", "catalog", "checkout", "done"],
+        "complete": true
+      },
+      {
+        "id": "dt-ordinary",
+        "entityId": "desktop-treatment-ordinary",
+        "entityCount": 20000,
+        "partition": "desktop/treatment",
+        "groupKeys": { "device": "desktop", "loop": "no" },
+        "nodePath": ["home", "catalog", "checkout", "done"],
+        "complete": true
+      }
+    ],
+    "measureValues": [
+      { "measureId": "assigned", "subjectId": "mobile/control", "value": 20000, "status": "exact" },
+      { "measureId": "assigned", "subjectId": "mobile/treatment", "value": 20000, "status": "exact" },
+      { "measureId": "assigned", "subjectId": "desktop/control", "value": 20000, "status": "exact" },
+      { "measureId": "assigned", "subjectId": "desktop/treatment", "value": 20000, "status": "exact" },
+      { "measureId": "assigned", "subjectId": "control", "value": 40000, "status": "exact" },
+      { "measureId": "assigned", "subjectId": "treatment", "value": 40000, "status": "exact" },
+      { "measureId": "loop-users", "subjectId": "mobile/control", "value": 1600, "status": "exact" },
+      { "measureId": "loop-users", "subjectId": "mobile/treatment", "value": 6000, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "mobile/control", "value": 2000, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "mobile/treatment", "value": 1200, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "desktop/control", "value": 2000, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "desktop/treatment", "value": 3120, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "control", "value": 4000, "status": "exact" },
+      { "measureId": "purchases", "subjectId": "treatment", "value": 4320, "status": "exact" }
     ]
   }
 }

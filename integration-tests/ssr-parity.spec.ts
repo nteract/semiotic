@@ -185,6 +185,15 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
       svg.indexOf('data-lineage-hull="output"'),
     )
   }
+  if (id === "network-custom-motif-braid") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["edge:curved"]).toBeGreaterThan(0)
+    expect(svg).toContain("control")
+    expect(svg).toContain("treatment")
+    expect(svg).toContain('fill="none"')
+    expect(svg).toContain("stroke-width")
+    expect(svg).toContain(" Q")
+  }
   if (id === "orbit") {
     expect(evidence.frameType).toBe("network")
     expect(evidence.markCountByType["node:circle"]).toBeGreaterThanOrEqual(4)

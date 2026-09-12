@@ -231,7 +231,10 @@ const ENTRY_GRAPHS = [
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
   // runway for this accepted public API growth.
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 101 },
+  // Bumped 101→102: motifBraidLayout joins the recipes entry so NetworkCustomChart
+  // SSR/CSR parity can consume the Motif Braid scene. Production measures
+  // 101.4 KiB gzip; keep a sub-KiB runway for this accepted layout export.
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 102 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
   // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB

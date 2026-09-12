@@ -1,12 +1,12 @@
-# Network Atlas Phase 1 (NA0 + NA1)
+# Network Atlas Phase 1–2 (NA0–NA2)
 
-**Status:** Kernel spike. These names are **not** public imports. No chart ships here.
+**Status:** Kernel spike plus Motif Braid recipe. These names are **not** public imports. `MotifBraidChart` is recipe-local.
 
 **Pinned baseline:** package `3.10.0`, commit `ffd5d48fc201c4780d5437e23089814f88e9e6ab`, Volta Node `22.22.1`.
 
 **Synthetic label:** every fixture in `fixtures/` is a design fixture inherited from the Network Atlas proposal. It is not a production analysis. Public demos must keep that label.
 
-Admitted here: the five flagship stories and the counterexamples from the Network Atlas three-designs proposal. TypeScript `prepareNetworkAtlas` is required in Phase 1 only for `etl-snapshot-v1`. The Python checker verifies arithmetic and graph counterexamples for all of them without importing TypeScript.
+Admitted here: the five flagship stories and the counterexamples from the Network Atlas three-designs proposal. TypeScript `prepareNetworkAtlas` is required for `etl-snapshot-v1` (NA1) and for the checkout / search braid stories (NA2). The Python checker verifies arithmetic and graph counterexamples without importing TypeScript.
 
 The ETL kernel conservation identity is `60 = 45 completed + 5 dead-letter + 10 queued`. `write_hot` is over capacity (25 arrivals, 20 capacity).
 
@@ -27,7 +27,7 @@ Inspected on the pinned SHA. Do not rebuild these.
 | `networkAnalysis` | Undirected adjacency, centrality, paths | Not an Atlas substrate. Atlas graphs are directed and keep parallel edges / self-loops **by ID**. |
 | `analyzeNetEnsemble` | Weisfeiler–Leman fingerprints of disconnected components | A different “motif” problem. Do not unify with the typed catalog. |
 
-Proposed chart names `MotifBraidChart`, `DependencyForestChart`, and `FlowCircuitChart` are **not implemented**.
+`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper: a stepped dendrogram of journey types with a hidden false root, parallel offset tracks on shared steps, and per-strand stroke width. `DependencyForestChart` and `FlowCircuitChart` are not implemented. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
 
 ## Layout
 

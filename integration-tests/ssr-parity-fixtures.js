@@ -421,6 +421,159 @@ const lineageHullEdges = [
   { source: "publish", target: "warehouse", edgeType: "internal" },
 ]
 
+const motifBraidOrdinary = "home>checkout>done"
+const motifBraidLoop = "home>checkout>redirect>checkout>done"
+
+function makeMotifBraidProjection() {
+  const groups = [
+    {
+      id: "group:c-ordinary",
+      occurrenceId: "c-ordinary",
+      partition: "control",
+      nodePath: ["home", "checkout", "done"],
+      entityCount: 20,
+      signature: motifBraidOrdinary,
+    },
+    {
+      id: "group:c-loop",
+      occurrenceId: "c-loop",
+      partition: "control",
+      nodePath: ["home", "checkout", "redirect", "checkout", "done"],
+      entityCount: 4,
+      signature: motifBraidLoop,
+    },
+    {
+      id: "group:t-ordinary",
+      occurrenceId: "t-ordinary",
+      partition: "treatment",
+      nodePath: ["home", "checkout", "done"],
+      entityCount: 14,
+      signature: motifBraidOrdinary,
+    },
+    {
+      id: "group:t-loop",
+      occurrenceId: "t-loop",
+      partition: "treatment",
+      nodePath: ["home", "checkout", "redirect", "checkout", "done"],
+      entityCount: 12,
+      signature: motifBraidLoop,
+    },
+  ]
+  return {
+    atlas: {
+      spec: {
+        coordinate: {
+          kind: "ordinal",
+          sectionIds: ["home", "checkout", "retry", "outcome"],
+        },
+        comparison: {
+          partitions: ["control", "treatment"],
+          denominatorMeasureId: "assigned",
+        },
+      },
+      source: {
+        nodes: [
+          { id: "home", sectionId: "home" },
+          { id: "checkout", sectionId: "checkout" },
+          { id: "redirect", sectionId: "retry" },
+          { id: "done", sectionId: "outcome" },
+        ],
+      },
+      motifs: {
+        matches: [
+          {
+            id: "repeated-state-episode:loop:checkout",
+            template: "repeated-state-episode",
+            intersectSectionIds: ["checkout", "retry"],
+          },
+        ],
+      },
+    },
+    groups,
+    signatureOrder: [motifBraidOrdinary, motifBraidLoop],
+    ribbons: [],
+    capsules: [
+      {
+        id: "capsule:repeated-state-episode:loop:checkout",
+        matchId: "repeated-state-episode:loop:checkout",
+        template: "repeated-state-episode",
+        entryState: "checkout",
+        exitState: "done",
+        entityCount: 16,
+        occurrenceIds: ["c-loop", "t-loop"],
+        selected: true,
+      },
+    ],
+    profile: {
+      templates: ["repeated-state-episode"],
+      sections: ["home", "checkout", "retry", "outcome"],
+      cells: [
+        {
+          template: "repeated-state-episode",
+          sectionId: "checkout",
+          intersectionCount: 16,
+          completionCount: 0,
+          denominator: 50,
+          status: "exact",
+        },
+        {
+          template: "repeated-state-episode",
+          sectionId: "retry",
+          intersectionCount: 16,
+          completionCount: 0,
+          denominator: 50,
+          status: "exact",
+        },
+      ],
+    },
+    differences: [
+      {
+        motif: "repeated-state-episode",
+        leftPartition: "control",
+        rightPartition: "treatment",
+        leftCount: 4,
+        rightCount: 12,
+        deltaCount: 8,
+        deltaBps: 1600,
+        denominator: 50,
+      },
+    ],
+    prefixForest: { kind: "observed-prefix", rootIds: [], nodes: [], order: [] },
+    expandedCapsuleIds: [],
+    sceneSeeds: {
+      nodes: groups.map((group) => ({
+        id: group.id,
+        partition: group.partition,
+        signature: group.signature,
+      })),
+      edges: [],
+    },
+  }
+}
+
+function makeMotifBraidParityProps(recipes) {
+  if (typeof recipes.motifBraidLayout !== "function") {
+    throw new Error("recipes.motifBraidLayout is required for the Motif Braid SSR/CSR fixture")
+  }
+  const braid = makeMotifBraidProjection()
+  return {
+    nodes: braid.sceneSeeds.nodes,
+    edges: braid.sceneSeeds.edges,
+    layout: recipes.motifBraidLayout,
+    layoutConfig: { braid },
+    nodeIDAccessor: "id",
+    sourceAccessor: "source",
+    targetAccessor: "target",
+    colorScheme: ["#4e79a7", "#f28e2c"],
+    width: 640,
+    height: 360,
+    margin: { top: 16, right: 16, bottom: 16, left: 16 },
+    title: "SSR motif braid",
+    description:
+      "Synthetic Motif Braid. Stepped dendrogram of journey types; stroke width is per-path magnitude.",
+  }
+}
+
 const customGeoPoints = [
   { city: "Seattle", lon: -122.3321, lat: 47.6062, group: "north", powerMW: 260 },
   { city: "Denver", lon: -104.9903, lat: 39.7392, group: "central", powerMW: 145 },
@@ -1498,6 +1651,11 @@ function makeSsrParityCases(React, recipes = {}) {
         margin: { top: 28, right: 28, bottom: 28, left: 28 },
         title: "SSR lineage sub-topology hulls",
       },
+    },
+    {
+      id: "network-custom-motif-braid",
+      component: "NetworkCustomChart",
+      props: makeMotifBraidParityProps(recipes),
     },
     {
       id: "geo-custom-isotype-glyphs",
