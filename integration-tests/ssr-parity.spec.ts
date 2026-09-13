@@ -185,6 +185,22 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
       svg.indexOf('data-lineage-hull="output"'),
     )
   }
+  if (id === "network-custom-motif-braid") {
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType["node:glyph"]).toBe(36)
+    expect(evidence.markCountByType["edge:curved"]).toBe(46)
+    expect(svg).toContain("control")
+    expect(svg).toContain("treatment")
+    expect(svg).toContain('fill="none"')
+    expect(svg).toContain("stroke-width")
+    expect(svg).toContain(" Q")
+    for (const step of ["home", "catalog", "cart", "redirect", "help", "email", "landing", "Step 6"]) {
+      expect(svg).toContain(step)
+    }
+    // Verify filled tapers as well as transitions at the 1 px visibility floor.
+    expect(svg).toMatch(/<path[^>]*d="M[^"\n]* Z"[^>]*fill="#[^>]+/)
+    expect(svg).toContain('stroke-width="1"')
+  }
   if (id === "orbit") {
     expect(evidence.frameType).toBe("network")
     expect(evidence.markCountByType["node:circle"]).toBeGreaterThanOrEqual(4)

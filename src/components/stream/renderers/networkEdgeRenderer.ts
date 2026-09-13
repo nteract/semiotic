@@ -85,7 +85,11 @@ function renderBezierEdge(
   }
 
   // Stroke the band outline
-  if (edge.style.stroke && edge.style.stroke !== "none") {
+  if (
+    edge.style.stroke &&
+    edge.style.stroke !== "none" &&
+    (edge.style.strokeWidth ?? 0.5) > 0
+  ) {
     ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
     ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.5
@@ -106,6 +110,7 @@ function renderLineEdge(
   ctx: CanvasRenderingContext2D,
   edge: NetworkLineEdge
 ): void {
+  if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return
   ctx.save()
 
   const lineStroke = edge.style.stroke || "#999"
@@ -154,7 +159,11 @@ function renderRibbonEdge(
     ctx.fill(path)
   }
 
-  if (edge.style.stroke && edge.style.stroke !== "none") {
+  if (
+    edge.style.stroke &&
+    edge.style.stroke !== "none" &&
+    (edge.style.strokeWidth ?? 0.5) > 0
+  ) {
     ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
     ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.3
@@ -181,13 +190,17 @@ function renderCurvedEdge(
 
   const path = getOrBuildEdgePath2D(edge)
 
-  const curvedStroke = edge.style.stroke || "#999"
-  ctx.strokeStyle = resolveCSSColor(ctx, curvedStroke) || curvedStroke
-  ctx.lineWidth = edge.style.strokeWidth ?? 1
-  if (edge.style.opacity !== undefined) {
-    ctx.globalAlpha = edge.style.opacity
+  // Canvas ignores lineWidth=0 and the SVG paint "none", retaining an old
+  // width/color. Skip the draw so filled custom paths match their SVG output.
+  if (edge.style.stroke !== "none" && (edge.style.strokeWidth ?? 1) > 0) {
+    const curvedStroke = edge.style.stroke || "#999"
+    ctx.strokeStyle = resolveCSSColor(ctx, curvedStroke) || curvedStroke
+    ctx.lineWidth = edge.style.strokeWidth ?? 1
+    if (edge.style.opacity !== undefined) {
+      ctx.globalAlpha = edge.style.opacity
+    }
+    ctx.stroke(path)
   }
-  ctx.stroke(path)
 
   // Fill if specified (usually not for tree edges)
   if (edge.style.fill && edge.style.fill !== "none") {

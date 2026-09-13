@@ -150,6 +150,33 @@ export type {
 export { lineageDagLayout } from "./recipes/lineageDag"
 export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
 
+export { prepareNetworkAtlasAsync } from "./recipes/atlas/prepareAsync"
+export type {
+  PrepareOptions as PrepareNetworkAtlasOptions,
+  PrepareResult as PrepareNetworkAtlasResult
+} from "./recipes/atlas/prepare"
+export type {
+  NetworkAtlasSpec,
+  NetworkAtlasSource,
+  PreparedNetworkAtlas,
+  AtlasNode,
+  AtlasEdge,
+  AtlasOccurrence,
+  AtlasMeasureValue,
+  AtlasIssue
+} from "./recipes/atlas/types"
+export { prepareMotifBraid } from "./recipes/atlas/prepareAsync"
+export type {
+  MotifBraidProjection,
+  TrajectoryGroup,
+  BraidRibbon,
+  SignedReadout
+} from "./recipes/atlas/braid"
+export type { MotifCapsule } from "./recipes/atlas/capsules"
+export type { MotifProfileCell, MotifProfileStrip } from "./recipes/atlas/profile"
+export { motifBraidLayout } from "./recipes/atlas/motifBraidLayout"
+export type { MotifBraidLayoutConfig } from "./recipes/atlas/motifBraidLayout"
+
 export { mermaidDagLayout } from "./recipes/mermaidDag"
 export type { MermaidDagConfig } from "./recipes/mermaidDag"
 

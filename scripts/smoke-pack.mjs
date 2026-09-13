@@ -960,7 +960,8 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   // force the synchronous fallback despite all module-import checks passing.
   for (const script of [
     "run-force-worker-client.mjs",
-    "run-force-worker-client.cjs"
+    "run-force-worker-client.cjs",
+    "run-motif-braid.mjs"
   ]) {
     try {
       const out = runFixtureScript(fixtureDir, script)

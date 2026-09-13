@@ -39,8 +39,11 @@ export function validateAtlas(
   if (!spec.relations.directed || spec.relations.edgeIdRequired !== true) {
     fatal(issues, "relations", "Phase 1 requires directed edges with ids")
   }
-  if (spec.forest.display.kind !== "rooted-backbone") {
-    fatal(issues, "forest", "Phase 1 supports only rooted-backbone display")
+  if (
+    spec.forest.display.kind !== "rooted-backbone" &&
+    spec.forest.display.kind !== "observed-prefix"
+  ) {
+    fatal(issues, "forest", "supported display kinds: rooted-backbone, observed-prefix")
   }
   if (spec.coordinate.kind !== "ordinal") {
     fatal(issues, "coordinate", "Phase 1 kernel uses ordinal sections")
@@ -88,9 +91,27 @@ export function validateAtlas(
     }
   }
 
-  for (const root of spec.forest.display.roots) {
+  for (const root of spec.forest.display.roots ?? []) {
     if (!nodeIds[root]) {
       fatal(issues, "missing-root", "display root is not a node", root)
+    }
+  }
+  if (
+    spec.forest.display.kind === "rooted-backbone" &&
+    spec.forest.display.roots.length === 0
+  ) {
+    fatal(issues, "missing-root", "rooted-backbone requires at least one root")
+  }
+  if (spec.comparison) {
+    if (spec.comparison.partitions.length < 2) {
+      fatal(issues, "comparison", "comparison requires at least two partitions")
+    }
+    if (!spec.measures[spec.comparison.denominatorMeasureId]) {
+      fatal(
+        issues,
+        "comparison-denominator",
+        "comparison denominatorMeasureId is not a declared measure"
+      )
     }
   }
 
@@ -129,6 +150,21 @@ export function validateAtlas(
     if (!occurrence.id || !occurrence.entityId) {
       fatal(issues, "occurrence", "occurrence needs id and entityId")
       continue
+    }
+    if (
+      occurrence.stepEntityCounts !== undefined &&
+      (!Array.isArray(occurrence.stepEntityCounts) ||
+        occurrence.stepEntityCounts.length !== occurrence.nodePath.length ||
+        Array.from(occurrence.stepEntityCounts).some(
+          (count) => !Number.isFinite(count) || count < 0
+        ))
+    ) {
+      fatal(
+        issues,
+        "occurrence-step-counts",
+        "stepEntityCounts must contain one finite, nonnegative count per nodePath step",
+        occurrence.id
+      )
     }
     for (const nodeId of occurrence.nodePath) {
       if (!nodeIds[nodeId]) {

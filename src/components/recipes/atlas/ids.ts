@@ -27,3 +27,11 @@ export function setOwnValue<T>(
 export function idDictionary<T>(): Record<string, T> {
   return Object.create(null) as Record<string, T>
 }
+
+export function prefixIdFor(path: readonly string[], depth: number): string {
+  // Escape the escape character too, keeping state IDs distinct from separators.
+  return path
+    .slice(0, depth + 1)
+    .map((state) => state.replaceAll("%", "%25").replaceAll(">", "%3E"))
+    .join(">")
+}

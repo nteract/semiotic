@@ -1,12 +1,12 @@
-# Network Atlas Phase 1 (NA0 + NA1)
+# Network Atlas Phase 1–2 (NA0–NA2)
 
-**Status:** Kernel spike. These names are **not** public imports. No chart ships here.
+**Status:** Kernel spike plus Motif Braid recipe. `prepareNetworkAtlasAsync`, `prepareMotifBraid`, `motifBraidLayout`, and their input/output types are public through `semiotic/recipes/core` and `semiotic/recipes`. `MotifBraidChart` remains recipe-local.
 
 **Pinned baseline:** package `3.10.0`, commit `ffd5d48fc201c4780d5437e23089814f88e9e6ab`, Volta Node `22.22.1`.
 
 **Synthetic label:** every fixture in `fixtures/` is a design fixture inherited from the Network Atlas proposal. It is not a production analysis. Public demos must keep that label.
 
-Admitted here: the five flagship stories and the counterexamples from the Network Atlas three-designs proposal. TypeScript `prepareNetworkAtlas` is required in Phase 1 only for `etl-snapshot-v1`. The Python checker verifies arithmetic and graph counterexamples for all of them without importing TypeScript.
+Admitted here: the five flagship stories and the counterexamples from the Network Atlas three-designs proposal. TypeScript `prepareNetworkAtlas` is required for `etl-snapshot-v1` (NA1) and for the checkout / search braid stories (NA2). The Python checker verifies arithmetic and graph counterexamples without importing TypeScript.
 
 The ETL kernel conservation identity is `60 = 45 completed + 5 dead-letter + 10 queued`. `write_hot` is over capacity (25 arrivals, 20 capacity).
 
@@ -27,7 +27,7 @@ Inspected on the pinned SHA. Do not rebuild these.
 | `networkAnalysis` | Undirected adjacency, centrality, paths | Not an Atlas substrate. Atlas graphs are directed and keep parallel edges / self-loops **by ID**. |
 | `analyzeNetEnsemble` | Weisfeiler–Leman fingerprints of disconnected components | A different “motif” problem. Do not unify with the typed catalog. |
 
-Proposed chart names `MotifBraidChart`, `DependencyForestChart`, and `FlowCircuitChart` are **not implemented**.
+`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` and `FlowCircuitChart` are not implemented. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
 
 ## Layout
 
@@ -37,7 +37,7 @@ expected/     Python checker output (stdlib-only)
 independent-check.py
 ```
 
-Headless TypeScript lives at `src/components/recipes/atlas/` and is **not** re-exported from `semiotic/recipes` or any other public barrel.
+Headless TypeScript lives at `src/components/recipes/atlas/`. The public preparation and layout entry points are listed below; other analysis helpers remain internal.
 
 ## Commands
 
@@ -47,3 +47,54 @@ python3 scripts/network-atlas/independent-check.py --write
 npm run check:network-atlas-fixtures
 npx vitest run src/components/recipes/atlas/
 ```
+
+## Public preparation and layout
+
+Pass a `NetworkAtlasSpec` and `NetworkAtlasSource` to `await prepareNetworkAtlasAsync(spec, source)` and
+check the returned `ok` discriminant before using `atlas`. Pass that atlas to
+`await prepareMotifBraid(atlas)` to obtain a `MotifBraidProjection`. Render with
+`NetworkCustomChart` using `nodes={braid.sceneSeeds.nodes}`,
+`edges={braid.sceneSeeds.edges}`, `layout={motifBraidLayout}`, and
+`layoutConfig={{ braid }}`. The same props work with `renderChart` from
+`semiotic/server`. Both public preparation functions load their analysis code on demand; layout
+remains synchronous. All three are available from the core entry; the chart wrapper is local to this recipe.
+
+For changing traffic, supply `stepEntityCounts` on a source occurrence, with one
+finite, nonnegative count for each `nodePath` entry:
+
+```ts
+{ id: "checkout", entityId: "cohort", entityCount: 100,
+  nodePath: ["home", "catalog", "cart", "done"],
+  stepEntityCounts: [100, 80, 50, 10], complete: true }
+```
+
+Widths interpolate between adjacent step counts. The largest visible count maps
+to 10 px; positive traffic has a 1 px visibility floor, and zero maps to zero.
+Omitted arrays retain constant `entityCount` widths. Arrays must match the path
+length; malformed counts are fatal validation issues. `entityCount` remains the
+cohort weight for motif/profile analysis. Projection ribbons expose source-step
+traffic as `entityCount` and destination traffic as optional `toEntityCount`.
+Lane positions use peak widths so different rates of loss do not create bends
+before a split. Both comparison panels use the same traffic scale and glyph
+sizes, excluding hidden partitions.
+
+Repeated-state episodes cover the first through second visit of each repeated
+state, with completion anchored to the second visit's section. Profiles count an
+entity once per cell across episodes and occurrences. Non-comparison profiles
+use the global ledger measure named by `motifs.denominatorRef`. Capsule IDs refer
+to occurrences; capsule expansion is not implemented or exposed as a chart option.
+Trajectory and prefix identifiers escape `%` and `>` within state IDs before
+joining segments with `>`; route queries compare actual consecutive states.
+
+Review regression coverage includes episode completion/intersection queries,
+partitioned and unpartitioned counts, duplicate entities, reference ordering,
+separator-containing state IDs, hidden-panel geometry, analysis revisions, both
+public recipe facades, and React/server SVG rendering.
+
+The `network-custom-motif-braid` SSR/CSR screenshot covers six synthetic journeys
+in two partitions: a shared run, nested branches, repeated vertices, an early
+ending, a separate root, and traffic falling to zero. The related-surface audit
+covers constant-count callers, projection ribbons, async preparation through
+both recipe facades, packed ESM/CJS consumers, and SVG/canvas rendering. Canvas
+edge tests cover suppressed strokes for curved, line, bezier, and ribbon edges;
+zero-width or `none` strokes must not acquire a stray canvas outline.

@@ -421,6 +421,75 @@ const lineageHullEdges = [
   { source: "publish", target: "warehouse", edgeType: "internal" },
 ]
 
+// Synthetic journeys exercise a long shared prefix, nested splits, repeated
+// vertices, a journey ending at a shared prefix, and an independent root.
+function makeMotifBraidProjection() {
+  const journeys = [
+    { id: "direct", path: ["home", "catalog", "cart", "checkout", "done"],
+      control: [100, 85, 60, 35, 10], treatment: [100, 90, 75, 60, 40] },
+    { id: "retry", path: ["home", "catalog", "cart", "redirect", "cart", "done"],
+      control: [60, 45, 30, 20, 12, 6], treatment: [50, 42, 25, 18, 10, 5] },
+    { id: "help", path: ["home", "catalog", "cart", "redirect", "help", "exit"],
+      control: [40, 32, 24, 16, 8, 4], treatment: [30, 24, 18, 12, 6, 0] },
+    { id: "browse", path: ["home", "catalog"],
+      control: [30, 15], treatment: [20, 10] },
+    { id: "search", path: ["home", "catalog", "search", "catalog", "cart", "done"],
+      control: [45, 35, 25, 20, 15, 10], treatment: [40, 30, 24, 18, 12, 8] },
+    { id: "email", path: ["email", "landing", "checkout", "done"],
+      control: [25, 20, 15, 10], treatment: [30, 28, 24, 20] },
+  ]
+  const groups = ["control", "treatment"].flatMap((partition) =>
+    journeys.map((journey) => ({
+      id: `group:${partition}:${journey.id}`,
+      occurrenceId: `${partition}:${journey.id}`,
+      partition,
+      nodePath: journey.path,
+      entityCount: journey[partition][0],
+      stepEntityCounts: journey[partition],
+      signature: journey.path.join(">"),
+    })),
+  )
+  return {
+    atlas: { spec: { comparison: { partitions: ["control", "treatment"] } } },
+    groups,
+    signatureOrder: journeys.map((journey) => journey.path.join(">")),
+    ribbons: [],
+    capsules: [],
+    profile: { templates: [], sections: [], cells: [] },
+    differences: [],
+    prefixForest: { kind: "observed-prefix", rootIds: [], nodes: [], order: [] },
+    sceneSeeds: {
+      nodes: groups.map((group) => ({
+        id: group.id, partition: group.partition, signature: group.signature,
+      })),
+      edges: [],
+    },
+  }
+}
+
+function makeMotifBraidParityProps(recipes) {
+  if (typeof recipes.motifBraidLayout !== "function") {
+    throw new Error("recipes.motifBraidLayout is required for the Motif Braid SSR/CSR fixture")
+  }
+  const braid = makeMotifBraidProjection()
+  return {
+    nodes: braid.sceneSeeds.nodes,
+    edges: braid.sceneSeeds.edges,
+    layout: recipes.motifBraidLayout,
+    layoutConfig: { braid },
+    nodeIDAccessor: "id",
+    sourceAccessor: "source",
+    targetAccessor: "target",
+    colorScheme: ["#4e79a7", "#b75b08", "#39783a", "#8f6091", "#c74749", "#387f7d"],
+    width: 900,
+    height: 940,
+    margin: { top: 16, right: 16, bottom: 16, left: 16 },
+    title: "Synthetic motif braid · traffic at each step",
+    description:
+      "Six synthetic journey types share steps, split, revisit vertices, or end early. Squares mark each depth; strand widths taper with per-step traffic on one scale across both panels.",
+  }
+}
+
 const customGeoPoints = [
   { city: "Seattle", lon: -122.3321, lat: 47.6062, group: "north", powerMW: 260 },
   { city: "Denver", lon: -104.9903, lat: 39.7392, group: "central", powerMW: 145 },
@@ -1498,6 +1567,11 @@ function makeSsrParityCases(React, recipes = {}) {
         margin: { top: 28, right: 28, bottom: 28, left: 28 },
         title: "SSR lineage sub-topology hulls",
       },
+    },
+    {
+      id: "network-custom-motif-braid",
+      component: "NetworkCustomChart",
+      props: makeMotifBraidParityProps(recipes),
     },
     {
       id: "geo-custom-isotype-glyphs",

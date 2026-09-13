@@ -1,6 +1,7 @@
+import { idDictionary, setOwnValue } from "./ids"
 import {
   MOTIF_CATALOG_TEMPLATES,
-  PHASE1_MOTIF_MATCHERS,
+  PHASE2_MOTIF_MATCHERS,
   type AtlasEdge,
   type AtlasOccurrence,
   type MotifMatch,
@@ -113,10 +114,7 @@ function fanMatch(
         : edgesBetween(source.edges, other, hubId)
     edgeIds.push(...pair)
   }
-  const interval = sectionsAlong(source, [
-    hubId,
-    ...others.map((id) => id)
-  ])
+  const interval = sectionsAlong(source, [hubId, ...others.map((id) => id)])
   const bound = entitiesVisiting(source.occurrences ?? [], hubId)
   const roles: Record<string, string | string[]> =
     template === "fan-out"
@@ -132,6 +130,7 @@ function fanMatch(
     completionSectionId: interval[interval.length - 1],
     intersectSectionIds: interval,
     entityIds: bound.entityIds,
+    entityWeights: idDictionary<number>(),
     entityCount: bound.entityCount,
     flags: {
       occurrence: bound.entityIds.length > 0,
@@ -164,7 +163,8 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
     const outN = outs.get(node.id) ?? []
     if (outN.length !== 1) continue
     const predecessorIsInternal =
-      inN.length === 1 && isChainInternal(inN[0], ins.get(inN[0]) ?? [], outs.get(inN[0]) ?? [])
+      inN.length === 1 &&
+      isChainInternal(inN[0], ins.get(inN[0]) ?? [], outs.get(inN[0]) ?? [])
     if (isChainInternal(node.id, inN, outN) && predecessorIsInternal) continue
     const path = [node.id]
     let cursor = node.id
@@ -174,7 +174,8 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
       if (!next || guard.has(next)) break
       path.push(next)
       guard.add(next)
-      if (!isChainInternal(next, ins.get(next) ?? [], outs.get(next) ?? [])) break
+      if (!isChainInternal(next, ins.get(next) ?? [], outs.get(next) ?? []))
+        break
       cursor = next
     }
     if (path.length < 2) continue
@@ -194,6 +195,7 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
       completionSectionId: interval[interval.length - 1],
       intersectSectionIds: interval,
       entityIds: bound.entityIds,
+      entityWeights: idDictionary<number>(),
       entityCount: bound.entityCount,
       flags: {
         occurrence: bound.entityIds.length > 0,
@@ -206,28 +208,82 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
   return matches
 }
 
-function bindOccurrenceEntities(matches: MotifMatch[], source: NetworkAtlasSource): void {
+function bindOccurrenceEntities(
+  matches: MotifMatch[],
+  source: NetworkAtlasSource
+): void {
   const occurrences = source.occurrences ?? []
   if (occurrences.length === 0) return
   for (const match of matches) {
+    if (match.template === "repeated-state-episode") continue
     const roleNodes = match.nodePath
-    const entityIds: string[] = []
-    let entityCount = 0
+    const weights = idDictionary<number>()
     for (const occurrence of occurrences) {
       if (occurrence.missingPrehistory) continue
-      const visitsHub = roleNodes.some((nodeId) => occurrence.nodePath.includes(nodeId))
+      const visitsHub = roleNodes.some((nodeId) =>
+        occurrence.nodePath.includes(nodeId)
+      )
       if (!visitsHub) continue
-      entityIds.push(occurrence.entityId)
-      entityCount += entityCountOf(occurrence)
+      setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
     }
+    const entityIds = Object.keys(weights)
     match.entityIds = entityIds
-    match.entityCount = entityCount
+    match.entityWeights = weights
+    match.entityCount = entityIds.reduce(
+      (sum, id) => sum + (weights[id] ?? 0),
+      0
+    )
     match.flags = {
       ...match.flags,
       occurrence: entityIds.length > 0,
       trajectorySupported: entityIds.length > 0
     }
   }
+}
+
+function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
+  const matches: MotifMatch[] = []
+  for (const occurrence of source.occurrences ?? []) {
+    if (occurrence.missingPrehistory) continue
+    const firstVisits = new Map<string, number>()
+    const completed = new Set<string>()
+    for (const [index, stateId] of occurrence.nodePath.entries()) {
+      const first = firstVisits.get(stateId)
+      if (first == null) {
+        firstVisits.set(stateId, index)
+        continue
+      }
+      if (completed.has(stateId)) continue
+      completed.add(stateId)
+      const episodePath = occurrence.nodePath.slice(first, index + 1)
+      const interval = sectionsAlong(source, episodePath)
+      const weights = idDictionary<number>()
+      setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
+      matches.push({
+        id: `repeated-state-episode:${occurrence.id}:${stateId}`,
+        template: "repeated-state-episode",
+        roles: { state: stateId, occurrence: occurrence.id },
+        nodePath: episodePath,
+        edgeIds: [],
+        startSectionId: sectionOf(source, episodePath[0]),
+        completionSectionId: sectionOf(
+          source,
+          episodePath[episodePath.length - 1]
+        ),
+        intersectSectionIds: interval,
+        entityIds: [occurrence.entityId],
+        entityWeights: weights,
+        entityCount: entityCountOf(occurrence),
+        flags: {
+          occurrence: true,
+          temporal: false,
+          trajectorySupported: true,
+          enriched: false
+        }
+      })
+    }
+  }
+  return matches
 }
 
 export function matchMotifs(
@@ -255,6 +311,7 @@ export function matchMotifs(
     if (fanIn) matches.push(fanIn)
   }
   matches.push(...serialChains(source))
+  matches.push(...repeatedStateEpisodes(source))
   bindOccurrenceEntities(matches, source)
 
   const incompleteCandidates: MotifMatchIndex["incompleteCandidates"] = []
@@ -265,10 +322,15 @@ export function matchMotifs(
       occurrenceId: occurrence.id,
       reason: "missing-prehistory"
     })
+    incompleteCandidates.push({
+      template: "repeated-state-episode",
+      occurrenceId: occurrence.id,
+      reason: "missing-prehistory"
+    })
   }
 
   const unsupportedTemplates = MOTIF_CATALOG_TEMPLATES.filter(
-    (template) => !PHASE1_MOTIF_MATCHERS.includes(template)
+    (template) => !PHASE2_MOTIF_MATCHERS.includes(template)
   )
 
   return {

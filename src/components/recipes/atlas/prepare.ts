@@ -1,7 +1,9 @@
+import { buildComparison } from "./compare"
 import { buildCompleteness } from "./completeness"
 import { assertEdgeCoverage, classifyForest } from "./forests"
 import { buildLedger } from "./ledger"
 import { matchMotifs } from "./motifs"
+import { buildPrefixForest } from "./prefixForest"
 import { buildSections } from "./sections"
 import { buildRouteSupportIndex } from "./support"
 import type {
@@ -25,17 +27,19 @@ function analysisRevision(
   source: NetworkAtlasSource,
   generation: number
 ): string {
-  const sections =
-    spec.coordinate.kind === "ordinal" ? spec.coordinate.sectionIds.join(",") : spec.coordinate.field
-  return [
-    generation,
-    source.revision,
-    spec.dataRevision,
-    spec.motifs.catalogVersion,
-    spec.forest.display.rankingPolicyId,
-    spec.forest.display.roots.join(","),
-    sections
-  ].join("|")
+  // Include the complete spec and preserve array order without delimiter collisions.
+  // Sorting object keys makes equivalent specs independent of property insertion order.
+  return JSON.stringify(
+    [generation, source.graphRef, source.revision, spec],
+    (_, value) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? Object.fromEntries(
+            Object.keys(value)
+              .sort()
+              .map((key) => [key, value[key]])
+          )
+        : value
+  )
 }
 
 export function prepareNetworkAtlas(
@@ -56,6 +60,17 @@ export function prepareNetworkAtlas(
   const completeness = buildCompleteness(source, motifs)
   const ports = buildRouteSupportIndex(source)
   const revision = analysisRevision(spec, source, generation)
+  const prefixForest =
+    spec.forest.display.kind === "observed-prefix" ||
+    (source.occurrences?.length ?? 0) > 0
+      ? buildPrefixForest(source.occurrences ?? [], {
+          referencePartition:
+            spec.forest.display.kind === "observed-prefix"
+              ? (spec.forest.display.referencePartition ??
+                spec.comparison?.referencePartition)
+              : spec.comparison?.referencePartition
+        })
+      : undefined
   const atlas: PreparedNetworkAtlas = {
     sourceGraphRef: source.graphRef,
     analysisRevision: revision,
@@ -78,12 +93,14 @@ export function prepareNetworkAtlas(
         spec.coordinate.kind === "ordinal"
           ? `ordinal:${spec.coordinate.sectionIds.join(",")}`
           : `numeric:${spec.coordinate.field}`,
-      forestRoots: [...spec.forest.display.roots],
-      rankingPolicyId: spec.forest.display.rankingPolicyId,
+      forestRoots: [...(spec.forest.display.roots ?? classified.forest.roots)],
+      rankingPolicyId: classified.forest.rankingPolicyId,
       population: spec.motifs.countUnit,
       temporalHorizon: spec.temporal.kind,
       evidencePolicyId: spec.evidencePolicyId
-    }
+    },
+    prefixForest
   }
+  atlas.comparison = buildComparison(atlas)
   return { ok: true, atlas, issues: validation.issues }
 }

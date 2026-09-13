@@ -1,5 +1,10 @@
+import { countMotifEntities } from "./entityCounts"
 import { ledgerValue } from "./ledger"
-import { graphWalkExists, isSupportedRoute, nextSupportedNodes } from "./support"
+import {
+  graphWalkExists,
+  isSupportedRoute,
+  nextSupportedNodes
+} from "./support"
 import type {
   MotifMatch,
   MotifTemplate,
@@ -33,7 +38,11 @@ export function getSectionMeasures(
       row.subjectId === sectionId &&
       row.subjectKind === "section"
   )
-  const fallback = ledgerValue(atlas.ledger, countingPolicy.measureId, sectionId)
+  const fallback = ledgerValue(
+    atlas.ledger,
+    countingPolicy.measureId,
+    sectionId
+  )
   const resolved = entry ?? fallback
   if (!resolved) {
     return {
@@ -42,7 +51,9 @@ export function getSectionMeasures(
     }
   }
   return {
-    ...baseResult(atlas, sectionId, [`ledger:${resolved.measureId}:${resolved.subjectId}`]),
+    ...baseResult(atlas, sectionId, [
+      `ledger:${resolved.measureId}:${resolved.subjectId}`
+    ]),
     status: resolved.status,
     value: resolved.value,
     units: resolved.timeDenominator
@@ -82,13 +93,7 @@ export function getMotifPrevalence(
     return match.intersectSectionIds.includes(query.window.sectionId)
   })
   const truncated = matches.some((match) => match.truncation)
-  const entityIds = new Set<string>()
-  let entityCount = 0
-  for (const match of matches) {
-    for (const id of match.entityIds) entityIds.add(id)
-    entityCount += match.entityCount
-  }
-  const uniqueEntities = entityIds.size > 0 ? entityIds.size : entityCount
+  const uniqueEntities = countMotifEntities(matches)
   const limitations: string[] = []
   if (incomplete.length > 0) limitations.push("missing-prehistory")
   if (truncated) limitations.push("truncated-match-budget")
@@ -99,7 +104,9 @@ export function getMotifPrevalence(
   return {
     ...baseResult(
       atlas,
-      query.window ? `${query.template}:${query.window.kind}:${query.window.sectionId}` : query.template,
+      query.window
+        ? `${query.template}:${query.window.kind}:${query.window.sectionId}`
+        : query.template,
       matches.map((match) => match.id),
       limitations
     ),
@@ -120,7 +127,12 @@ export function getMotifWitness(
     )
     if (incomplete) {
       return {
-        ...baseResult(atlas, matchId, [incomplete.occurrenceId], ["missing-prehistory"]),
+        ...baseResult(
+          atlas,
+          matchId,
+          [incomplete.occurrenceId],
+          ["missing-prehistory"]
+        ),
         status: "incomplete"
       }
     }
@@ -139,7 +151,11 @@ export function getMotifWitness(
 export function followSupportedRoute(
   atlas: PreparedNetworkAtlas,
   selection: { fromNode?: string; viaNode?: string; route?: string[] }
-): QueryResult<{ nextNodes: string[]; supported: boolean; graphWalkExists: boolean }> {
+): QueryResult<{
+  nextNodes: string[]
+  supported: boolean
+  graphWalkExists: boolean
+}> {
   const scope = selection.route?.join(">") ?? selection.fromNode ?? "route"
   if (!atlas.source.occurrences?.length) {
     return {
@@ -151,7 +167,12 @@ export function followSupportedRoute(
     const supported = isSupportedRoute(atlas.source, selection.route)
     const walk = graphWalkExists(atlas.source, selection.route)
     return {
-      ...baseResult(atlas, selection.route.join(">"), [], supported ? [] : ["unsupported-composite"]),
+      ...baseResult(
+        atlas,
+        selection.route.join(">"),
+        [],
+        supported ? [] : ["unsupported-composite"]
+      ),
       status: "exact",
       value: {
         nextNodes: supported
@@ -174,7 +195,11 @@ export function followSupportedRoute(
     selection.viaNode
   )
   return {
-    ...baseResult(atlas, selection.fromNode, atlas.ports.hops.map((hop) => hop.from)),
+    ...baseResult(
+      atlas,
+      selection.fromNode,
+      atlas.ports.hops.map((hop) => hop.from)
+    ),
     status: "exact",
     value: {
       nextNodes,
@@ -194,7 +219,8 @@ export function getResidualConnections(
   const connections = atlas.source.edges
     .filter(
       (edge) =>
-        residual.has(edge.id) && (edge.source === nodeId || edge.target === nodeId)
+        residual.has(edge.id) &&
+        (edge.source === nodeId || edge.target === nodeId)
     )
     .map((edge) => ({
       edgeId: edge.id,
