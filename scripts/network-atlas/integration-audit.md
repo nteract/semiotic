@@ -65,3 +65,20 @@ Completed checks:
 
 Automated accessibility checks cover semantics, keyboard interactions and axe
 findings; this audit does not claim a manual assistive-technology review.
+
+## Review follow-up: network edge announcements
+
+The network live-region lookup now selects the node or edge collection from
+the hit type before resolving `accessibleDatum`. This also prevents a node's
+reading from masking an edge's reading when both reuse one render datum.
+Authored node readings, raw-data fallbacks, pointer-leave clearing and callback
+payloads are preserved.
+
+Related-surface audit: network edge shapes share the same hover metadata path;
+keyboard navigation explicitly identifies node focus; accessible network tables
+already resolve semantic rows for nodes and edges. Static rendering has no
+hover live region. Regression tests exercise real canvas hit testing, both
+distinct/shared node-edge data, keyboard focus and the outside-image live region.
+All 263 tests across the network frame, hit tester, keyboard navigation,
+accessible tables, custom chart and Atlas integration suites passed, as did
+changed-file ESLint and `typescript:tests`.

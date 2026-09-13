@@ -8,6 +8,7 @@ import StreamNetworkFrame from "./StreamNetworkFrame"
 registerBuiltInNetworkLayouts()
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
+import type { NetworkCustomLayout } from "./networkCustomLayout"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
 import { DARK_THEME, ThemeProvider } from "../ThemeProvider"
 
@@ -294,6 +295,70 @@ describe("StreamNetworkFrame", () => {
     canvas.style.cursor = "pointer"
     unmount()
     expect(canvas.style.cursor).toBe("")
+  })
+
+  it.each([false, true])("announces authored node and edge readings (shared render datum: %s)", async (sharedDatum) => {
+    const scheduler = createFrameScheduler(0)
+    const nodeDatum = { id: "a", geometry: "node render internals" }
+    const edgeDatum = sharedDatum ? nodeDatum : { id: "ab", geometry: "edge render internals" }
+    const fallbackDatum = { route: "B to C", traffic: 3 }
+    const customHoverBehavior = vi.fn()
+    const customLayout: NetworkCustomLayout = () => ({
+      sceneNodes: [{
+        type: "circle", id: "a", cx: 30, cy: 30, r: 10,
+        style: { fill: "#4682b4" }, datum: nodeDatum,
+        accessibleDatum: { vertex: "Arrival" }
+      }],
+      sceneEdges: [{
+        type: "line", x1: 30, y1: 80, x2: 150, y2: 80,
+        style: { stroke: "#4682b4", strokeWidth: 4 }, datum: edgeDatum,
+        accessibleDatum: { route: "A to B", traffic: 8 }
+      }, {
+        type: "line", x1: 30, y1: 130, x2: 150, y2: 130,
+        style: { stroke: "#4682b4", strokeWidth: 4 }, datum: fallbackDatum
+      }]
+    })
+    const { container } = render(
+      <StreamNetworkFrame
+        chartType="force"
+        customNetworkLayout={customLayout}
+        nodes={[{ id: "a" }]}
+        edges={[]}
+        enableHover
+        animate={false}
+        accessibleTable={false}
+        margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+        size={[240, 180]}
+        frameScheduler={scheduler.scheduler}
+        customHoverBehavior={customHoverBehavior}
+      />
+    )
+    await act(async () => scheduler.flush())
+    const image = container.querySelector<HTMLElement>('[role="img"]')!
+    const live = container.querySelector('[aria-live="polite"]')!
+    expect(image.contains(live)).toBe(false)
+
+    fireEvent.mouseMove(image, { clientX: 40, clientY: 40 })
+    await act(async () => scheduler.flush())
+    expect(live).toHaveTextContent("Data point: vertex: Arrival")
+
+    fireEvent.mouseMove(image, { clientX: 100, clientY: 90 })
+    await act(async () => scheduler.flush())
+    expect(live).toHaveTextContent("Data point: route: A to B, traffic: 8")
+    expect(live).not.toHaveTextContent("render internals")
+    expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(edgeDatum)
+
+    fireEvent.mouseMove(image, { clientX: 100, clientY: 140 })
+    await act(async () => scheduler.flush())
+    expect(live).toHaveTextContent("Data point: route: B to C, traffic: 3")
+    expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(fallbackDatum)
+
+    fireEvent.mouseLeave(image)
+    expect(live).toBeEmptyDOMElement()
+
+    fireEvent.keyDown(image, { key: "Home" })
+    expect(live).toHaveTextContent("Data point: vertex: Arrival")
+    expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(nodeDatum)
   })
 
   it("hit-tests a non-centered custom glyph cursor at the painted icon rather than its logical anchor", async () => {

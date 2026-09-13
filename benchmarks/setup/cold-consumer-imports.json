@@ -81,8 +81,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 485588,
-      "gzipBytes": 160789,
+      "rawBytes": 485637,
+      "gzipBytes": 160803,
       "packedPackageInputFiles": 31
     },
     {

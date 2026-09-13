@@ -1518,7 +1518,10 @@ const StreamNetworkFrame = memo(forwardRef<
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
       <AriaLiveTooltip hoverPoint={hoverData && {
-        data: storeRef.current?.sceneNodes.find((node) => node.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
+        data: (hoverData.nodeOrEdge === "edge"
+          ? storeRef.current?.sceneEdges
+          : storeRef.current?.sceneNodes
+        )?.find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
       }} />
       <div
         role="img"
