@@ -46,16 +46,26 @@ describe("cold-consumer named import manifest", () => {
     )
   })
 
-  it("renders a README block that names public imports and the cold-consumer method", () => {
-    const report = sampleReport()
-    const block = renderReadmeBlock(report)
+  it.each([
+    [".", 'import { LineChart } from "semiotic"'],
+    ["./atlas", 'import { MotifBraidChart } from "semiotic/atlas"'],
+    [
+      "./atlas/core",
+      'import { prepareNetworkAtlas } from "semiotic/atlas/core"'
+    ]
+  ])(
+    "renders a README block naming the %s public import and the cold-consumer method",
+    (exportKey, expectedImport) => {
+      const report = sampleReport(exportKey)
+      const block = renderReadmeBlock(report)
 
-    expect(block).toContain(README_MARKER_START)
-    expect(block).toContain(README_MARKER_END)
-    expect(block).toContain("npm pack --ignore-scripts")
-    expect(block).toContain('import { LineChart } from "semiotic"')
-    expect(block).toContain("0.5 KiB")
-  })
+      expect(block).toContain(README_MARKER_START)
+      expect(block).toContain(README_MARKER_END)
+      expect(block).toContain("npm pack --ignore-scripts")
+      expect(block).toContain(expectedImport)
+      expect(block).toContain("0.5 KiB")
+    }
+  )
 
   it("explains when line and XY named imports converge after tree-shaking", () => {
     const lineCases = NAMED_IMPORT_CASES.filter((entry) =>
@@ -305,12 +315,16 @@ describe("cold-consumer named import manifest", () => {
   })
 })
 
-function sampleReport() {
-  const first = NAMED_IMPORT_CASES[0]
+function sampleReport(exportKey = ".") {
+  // Adding or reordering exports must not change a fixture's public identity.
+  const entry = NAMED_IMPORT_CASES.find(
+    (entry) => entry.exportKey === exportKey
+  )
+  if (!entry) throw new Error(`Missing cold-consumer fixture for ${exportKey}`)
   return reportForMeasurements(packageJson, [
     {
-      ...first,
-      importPath: importPathFor(first.exportKey),
+      ...entry,
+      importPath: importPathFor(entry.exportKey),
       rawBytes: 1024,
       gzipBytes: 512,
       packedPackageInputFiles: 1
