@@ -52,6 +52,18 @@ test("the phone dependency reader retains a vertex when a bypass changes require
   await demo.getByLabel("Add zero-capacity bypass").check()
   await expect(demo.getByLabel("Inspect vertex")).toHaveValue("A")
   await expect(table).not.toContainText('"X"')
+  await demo.getByLabel("Add zero-capacity bypass").uncheck()
+  await expect(demo.getByLabel("Inspect vertex")).toHaveValue("A")
+  await expect(table).toContainText('"X"')
+  await demo.getByLabel("Add zero-capacity bypass").check()
+  await demo.getByLabel("Inspect vertex").selectOption("Y")
+  await expect(table.locator("tbody tr")).toHaveCount(1)
+  await demo.getByLabel("Add zero-capacity bypass").uncheck()
+  await expect(demo.getByLabel("Inspect vertex")).toHaveValue("")
+  await expect(table.locator("tbody tr")).toHaveCount(6)
+  await expect(
+    table.getByRole("rowheader", { name: "Y", exact: true })
+  ).toHaveCount(0)
   await expect(demo.getByTestId("atlas-takeaway")).toContainText(
     "70% shortfall"
   )

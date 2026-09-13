@@ -1,74 +1,18 @@
 import { PROP_BAGS, type ChartPropSpec, type ChartSpec } from "./chartSpecCore"
+import {
+  preparedAtlasSchema,
+  dependencyProjectionSchema,
+  circuitProjectionSchema,
+  circuitEditionSchema,
+  circuitReadingSchema
+} from "./chartSpecAtlasSchemas"
 
 const preparedAtlas: ChartPropSpec = {
   type: "object",
   description:
     "PreparedNetworkAtlas returned by prepareNetworkAtlas(spec, source) from semiotic/atlas/core. Prepare upstream, then serialize the complete admitted artifact; never invent derived indices or revisions.",
-  schema: {
-    required: [
-      "sourceGraphRef",
-      "analysisRevision",
-      "spec",
-      "source",
-      "sections",
-      "motifs",
-      "forest",
-      "residualEdges",
-      "ports",
-      "ledger",
-      "completeness",
-      "provenance"
-    ],
-    properties: {
-      sourceGraphRef: { type: "string", minLength: 1 },
-      analysisRevision: { type: "string", minLength: 1 },
-      spec: {
-        type: "object",
-        required: ["schemaVersion", "dataRevision"],
-        properties: {
-          schemaVersion: { const: "0.2" },
-          dataRevision: { type: "string" }
-        }
-      },
-      source: {
-        type: "object",
-        required: ["nodes", "edges"],
-        properties: { nodes: { type: "array" }, edges: { type: "array" } }
-      },
-      provenance: {
-        type: "object",
-        required: ["sourceRevision"],
-        properties: { sourceRevision: { type: "string" } }
-      },
-      ...Object.fromEntries(
-        [
-          "sections",
-          "motifs",
-          "forest",
-          "residualEdges",
-          "ports",
-          "ledger",
-          "completeness"
-        ].map((key) => [key, { type: "object" }])
-      )
-    }
-  }
+  schema: preparedAtlasSchema
 }
-
-const projection = (
-  description: string,
-  required: string[]
-): ChartPropSpec => ({
-  type: "object",
-  description,
-  schema: {
-    required: ["atlas", ...required],
-    properties: {
-      atlas: { type: "object", ...preparedAtlas.schema },
-      order: { type: "array", items: { type: "string" } }
-    }
-  }
-})
 
 // Atlas readers expose only these common props, rather than silently accepting
 // unrelated axes, arbitrary data accessors or simulation controls.
@@ -166,18 +110,12 @@ export const ATLAS_CHART_SPECS: Record<string, ChartSpec> = {
     ownProps: {
       ...common,
       ...linked,
-      forest: projection(
-        "Complete prepareDependencyForest(atlas) result from semiotic/atlas/core.",
-        [
-          "order",
-          "children",
-          "components",
-          "requiredChildren",
-          "sceneSeeds",
-          "forest",
-          "residual"
-        ]
-      ),
+      forest: {
+        type: "object",
+        description:
+          "Complete prepareDependencyForest(atlas) result from semiotic/atlas/core.",
+        schema: dependencyProjectionSchema
+      },
       reading: {
         type: "string",
         enum: ["organize", "required-paths"],
@@ -234,82 +172,23 @@ export const ATLAS_CHART_SPECS: Record<string, ChartSpec> = {
     ownProps: {
       ...common,
       ...linked,
-      circuit: projection(
-        "Complete prepareFlowCircuit(atlas, semantics) result from semiotic/atlas/core.",
-        [
-          "order",
-          "overlapPolicy",
-          "modules",
-          "matches",
-          "backboneEdgeIds",
-          "residualEdgeIds"
-        ]
-      ),
+      circuit: {
+        type: "object",
+        description:
+          "Complete prepareFlowCircuit(atlas, semantics) result from semiotic/atlas/core.",
+        schema: circuitProjectionSchema
+      },
       edition: {
         type: "object",
         description:
           "CircuitEdition validated by admitCircuitEdition(circuit, edition). Null means unmeasured, never zero.",
-        schema: {
-          required: [
-            "id",
-            "synthetic",
-            "sourceRevision",
-            "analysisRevision",
-            "kind",
-            "label",
-            "unit",
-            "timing",
-            "individualTimings",
-            "entries",
-            "assumptions",
-            "evidenceRefs"
-          ],
-          properties: {
-            id: { type: "string" },
-            synthetic: { type: "boolean" },
-            sourceRevision: { type: "string" },
-            analysisRevision: { type: "string" },
-            kind: { enum: ["observed", "modeled"] },
-            label: { type: "string" },
-            unit: { enum: ["records", "roots", "attempts"] },
-            timing: { enum: ["aggregate-intervals", "incomplete"] },
-            individualTimings: { const: "unavailable" },
-            entries: { type: "array", minItems: 1 },
-            assumptions: {
-              type: "array",
-              minItems: 1,
-              items: { type: "string" }
-            },
-            evidenceRefs: { type: "array" }
-          }
-        }
+        schema: circuitEditionSchema
       },
       reading: {
         type: "object",
         description:
           "readCircuitEdition(edition, mode, time) result. Must refer to the same edition and analysis revision as circuit.",
-        schema: {
-          required: [
-            "editionId",
-            "kind",
-            "mode",
-            "requestedTime",
-            "observedAt",
-            "entry",
-            "status"
-          ],
-          properties: {
-            editionId: { type: "string" },
-            kind: { enum: ["observed", "modeled"] },
-            mode: {
-              enum: ["observed-snapshot", "observed-replay", "modeled-scenario"]
-            },
-            requestedTime: { type: "number" },
-            observedAt: { type: "number" },
-            entry: { type: "object" },
-            status: { enum: ["exact", "incomplete"] }
-          }
-        }
+        schema: circuitReadingSchema
       },
       selection,
       colors: {

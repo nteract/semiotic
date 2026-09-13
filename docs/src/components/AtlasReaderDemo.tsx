@@ -134,7 +134,14 @@ export function AtlasReaderDemo({
             <input
               type="checkbox"
               checked={bypass}
-              onChange={(event) => setBypass(event.target.checked)}
+              onChange={(event) => {
+                const nextBypass = event.target.checked
+                const nextNodes = supplierStory(nextBypass).projection.atlas.source.nodes
+                setBypass(nextBypass)
+                setSelected((current) =>
+                  nextNodes.some((node) => node.id === current) ? current : "",
+                )
+              }}
             />{" "}
             Add zero-capacity bypass
           </label>

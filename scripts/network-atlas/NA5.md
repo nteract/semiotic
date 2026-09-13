@@ -124,3 +124,43 @@ Automated accessibility checks do not establish a manual assistive-technology
 review. These synthetic studies establish fixture, reuse and rendering
 contracts; they do not establish the proposal's reader-benefit or large-graph
 latency targets. No full release suite was run.
+
+## Review follow-up: prepared input boundaries
+
+The reference dependency inspector now preserves a selected vertex only when
+the next bypass projection contains it. Removing selected Y clears the filter
+and restores all six baseline rows; A remains selected in both directions.
+The related selection audit covered story switches, the detailed Dependency
+X-Ray page and the Flow Circuit page. Those pages already reset or resolve
+selection against the current topology.
+
+The schema audit covered all three public readers and their shared prepared
+atlas, dependency projection, circuit modules, current tape entry, edition
+history and model provenance. Required properties now carry structural schemas,
+including nested arrays, dictionaries, node readings, flows and totals. The
+current reading and history reuse one tape-entry contract. Unmeasured values
+remain nullable; missing fields and malformed objects are rejected by JSON
+Schema validation. Core preparation and admission still enforce graph identity,
+coverage and relationships between artifacts; the shallow React prop validator
+does not perform this nested JSON Schema validation.
+
+Verification for this follow-up:
+
+- `npx vitest run src/components/recipes/atlas/atlas.schema.test.ts src/components/recipes/atlas/atlas.public.test.tsx`:
+  75 passed, including malformed inputs, nullable observed/modeled editions,
+  serialized public imports, React SSR and SVG rendering with evidence.
+- `npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-atlas-readers.spec.ts`:
+  three passed, including mobile selection recovery and axe checks.
+- Focused MCP protocol schema resource/getSchema tests: four passed.
+- Source and test TypeScript, touched-file ESLint, custom lints, chart-spec
+  round trips, JSON Schema validity, AI contracts/instructions/surface,
+  reference/example coverage, agent skill, Context7, llms and MCP bundle checks
+  passed.
+- `npm run verify:ai-tasks`: 14 source and six browser tests passed; regenerated
+  the task packets and verification receipt. Adoption preparation and both
+  generated-artifact freshness checks passed.
+- `npm run check:website-build:from-dist`: 350 pages prerendered; route checks,
+  documentation asset budgets and protected boundaries passed.
+
+No chart renderer changed. The full release and multi-browser screenshot suites
+were not rerun for this follow-up.
