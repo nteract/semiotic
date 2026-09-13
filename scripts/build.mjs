@@ -8,6 +8,7 @@ import {
   writeFileSync
 } from "fs"
 import { build as tsupBuild } from "tsup"
+import ts from "typescript"
 import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 
 const args = process.argv.slice(2)
@@ -248,6 +249,55 @@ function externalizeExperimentalBridgeStoresPlugin() {
   }
 }
 
+/** Atlas is an opt-in reader graph over the canonical frame/store instances. */
+function externalizeAtlasHostsPlugin() {
+  const hosts = {
+    "charts/custom/NetworkCustomChart": "network.module.min.js",
+    "charts/physics/PhysicsCustomChart": "physics.module.min.js",
+    "store/useSelection": "semiotic-atlas-selection.module.min.js"
+  }
+  return {
+    name: "externalize-atlas-hosts",
+    setup(build) {
+      build.onResolve({ filter: /^\.\.\// }, (args) => {
+        if (!args.importer.replaceAll("\\", "/").includes("/recipes/atlas/")) return null
+        const target = Object.entries(hosts).find(([suffix]) => args.path.endsWith(suffix))?.[1]
+        return target ? { path: `./${target}`, external: true } : null
+      })
+    }
+  }
+}
+
+/**
+ * Reuse an already-shared client binding without adding another primary graph
+ * entry (which would split chunks and charge unrelated chart consumers).
+ * Resolve syntax with TypeScript, rather than depending on minifier aliases.
+ */
+function writeSharedClientSymbolFacade(publicEntry, symbol, output) {
+  const source = ts.createSourceFile(publicEntry, readFileSync(`dist/${publicEntry}`, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+  let localName
+  for (const node of source.statements) {
+    if (!ts.isExportDeclaration(node) || !node.exportClause || !ts.isNamedExports(node.exportClause)) continue
+    const binding = node.exportClause.elements.find(item => item.name.text === symbol)
+    if (!binding) continue
+    if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      writeFileSync(`dist/${output}`, `"use client";\nexport{${binding.propertyName?.text ?? symbol} as ${symbol}}from${JSON.stringify(node.moduleSpecifier.text)};\n`)
+      return
+    }
+    localName = binding.propertyName?.text ?? symbol
+  }
+  for (const node of source.statements) {
+    if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) continue
+    const bindings = node.importClause?.namedBindings
+    if (!bindings || !ts.isNamedImports(bindings)) continue
+    const binding = bindings.elements.find(item => item.name.text === localName)
+    if (!binding) continue
+    writeFileSync(`dist/${output}`, `"use client";\nexport{${binding.propertyName?.text ?? binding.name.text} as ${symbol}}from${JSON.stringify(node.moduleSpecifier.text)};\n`)
+    return
+  }
+  throw new Error(`${publicEntry} does not expose a shared binding for ${symbol}`)
+}
+
 /**
  * Geo remains a lazy CommonJS implementation so importing an ordinary chart
  * does not eagerly load d3-geo. Its React contexts and module-scoped stores,
@@ -327,6 +377,7 @@ async function createCjsBundlesWithConcurrency(bundles, concurrency) {
 }
 
 const clientCjsNamespaces = {
+  "semiotic-atlas": "atlas",
   semiotic: "semiotic",
   xy: "xy",
   "semiotic-line": "line",
@@ -657,6 +708,22 @@ const generatedBundleMetadata = {
     native: false,
     stability: "stable",
     loading: "eager"
+  },
+  "semiotic-atlas": {
+    "platform": "browser",
+    "rsc": false,
+    "edge": false,
+    "native": false,
+    "stability": "stable",
+    "loading": "eager"
+  },
+  "semiotic-atlas-core": {
+    "platform": "neutral",
+    "rsc": true,
+    "edge": true,
+    "native": false,
+    "stability": "stable",
+    "loading": "eager"
   },
   "semiotic-recipes": {
     platform: "browser",
@@ -1065,6 +1132,8 @@ async function build() {
       minify,
       clientOnly: true
     },
+    { input: "src/components/semiotic-atlas.ts", name: "semiotic-atlas", minify, serverOnly: false, clientOnly: true },
+    { input: "src/components/semiotic-atlas-core.ts", name: "semiotic-atlas-core", minify, serverOnly: false, clientOnly: false },
     {
       input: "src/components/semiotic-network.ts",
       name: "network",
@@ -1311,6 +1380,7 @@ async function build() {
       .map((b) => [b.name, b.input])
   )
   const isolatedNeutralEntryNames = new Set([
+    "semiotic-atlas-core",
     "semiotic-artifact",
     "semiotic-evidence",
     "semiotic-utils-core"
@@ -1357,6 +1427,7 @@ async function build() {
   const primaryClientEntries = Object.fromEntries(
     Object.entries(clientEntries).filter(
       ([name]) =>
+        name !== "semiotic-atlas" &&
         !auxiliaryClientEntryNames.has(name) &&
         !passThroughClientEntryNames.has(name)
     )
@@ -1393,6 +1464,14 @@ async function build() {
     clientOnly: true,
     groupName: "client-primary",
     analyze
+  })
+  writeSharedClientSymbolFacade("semiotic-ai.module.min.js", "useSelection", "semiotic-atlas-selection.module.min.js")
+  await createSharedEsmGroup({
+    entries: { "semiotic-atlas": clientEntries["semiotic-atlas"] },
+    minify,
+    clientOnly: true,
+    groupName: "client-atlas",
+    esbuildPlugins: [externalizeAtlasHostsPlugin()]
   })
   await createSharedEsmGroup({
     entries: auxiliaryClientEntries,

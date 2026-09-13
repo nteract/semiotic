@@ -4,6 +4,7 @@ import {
 } from "../charts/shared/knownChartComponents"
 import type { SerializedSelections } from "./selectionSerializer"
 import type { Datum } from "../charts/shared/datumTypes"
+import { isChartDataProp } from "../charts/shared/chartDataProps"
 import {
   getChartRecipe,
   getRecipeLayout,
@@ -136,17 +137,6 @@ const ALWAYS_EXCLUDE = new Set([
   "layout"
 ])
 
-/** Public row/feature collections excluded when includeData is false. */
-const DATA_PROPS = new Set([
-  "data",
-  "nodes",
-  "edges",
-  "points",
-  "areas",
-  "lines",
-  "flows"
-])
-
 function setOwnValue(
   target: Record<string, unknown>,
   key: string,
@@ -161,7 +151,7 @@ function setOwnValue(
 }
 
 function shouldExcludeDataProp(key: string, value: unknown): boolean {
-  if (!DATA_PROPS.has(key)) return false
+  if (!isChartDataProp(key, value)) return false
   // `areas` can be a reference geography id (e.g. "world-110m"), which is
   // lightweight config rather than raw GeoJSON features.
   if (key === "areas" && typeof value === "string") return false

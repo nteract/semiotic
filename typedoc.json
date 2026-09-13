@@ -5,6 +5,8 @@
     "src/components/semiotic-xy.ts",
     "src/components/semiotic-ordinal.ts",
     "src/components/semiotic-network.ts",
+    "src/components/semiotic-atlas.ts",
+    "src/components/semiotic-atlas-core.ts",
     "src/components/semiotic-geo.ts",
     "src/components/semiotic-physics.ts",
     "src/components/semiotic-physics-matter.ts",

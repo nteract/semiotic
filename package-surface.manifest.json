@@ -200,6 +200,68 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./atlas",
+      "path": "dist/semiotic-atlas.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-atlas.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-atlas.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-atlas.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-atlas.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-atlas.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./atlas/core",
+      "path": "dist/semiotic-atlas-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-atlas-core.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-atlas-core.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-atlas-core.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-atlas-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-atlas-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./controls",
       "path": "dist/controls.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1290,6 +1352,20 @@
         "path": "dist/semiotic-artifact.d.ts",
         "exports": [
           "./artifact"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-atlas-core.d.ts",
+        "exports": [
+          "./atlas/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-atlas.d.ts",
+        "exports": [
+          "./atlas"
         ],
         "reason": "Public type entry from `exports` map"
       },

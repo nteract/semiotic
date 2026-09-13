@@ -1,22 +1,13 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { isChartDataProp } from "../charts/shared/chartDataProps"
 import { fingerprintValue } from "./fingerprint"
 import { nonJsonValuePaths } from "./jsonCompatibility"
 import type { ArtifactContract, EvidenceRef } from "./types"
 
-const DATA_KEYS: ReadonlyArray<string> = [
-  "data",
-  "nodes",
-  "edges",
-  "points",
-  "areas",
-  "lines",
-  "flows"
-]
-
 /** Select the data-bearing props used by artifact identity checks. */
 export function artifactDataValue(props: Datum): unknown {
   const present = Object.entries(props).filter(
-    ([key, value]) => DATA_KEYS.includes(key) && value !== undefined
+    ([key, value]) => isChartDataProp(key, value) && value !== undefined
   )
   if (present.length === 0) return undefined
   if (present.length === 1 && present[0][0] === "data") return present[0][1]
@@ -54,7 +45,7 @@ export function artifactDataFingerprint(
 export function artifactConfigurationValue(props: Datum): Datum {
   return Object.fromEntries(
     Object.entries(props).filter(
-      ([key]) => !DATA_KEYS.includes(key) && key !== "recipeId"
+      ([key, value]) => !isChartDataProp(key, value) && key !== "recipeId"
     )
   ) as Datum
 }

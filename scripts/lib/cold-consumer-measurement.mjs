@@ -84,6 +84,8 @@ export const EXTERNAL_RUNTIME_PACKAGES = Object.freeze([
  * Node target, not a browser payload.
  */
 export const NAMED_IMPORT_CASES = Object.freeze([
+  { exportKey: "./atlas", symbol: "MotifBraidChart", platform: "browser" },
+  { exportKey: "./atlas/core", symbol: "prepareNetworkAtlas", platform: "browser" },
   { exportKey: ".", symbol: "LineChart", platform: "browser" },
   { exportKey: "./xy", symbol: "LineChart", platform: "browser" },
   { exportKey: "./line", symbol: "LineChart", platform: "browser" },

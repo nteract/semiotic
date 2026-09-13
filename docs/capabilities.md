@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-09-10 · 59 charts indexed.
+Last regen: 2026-09-13 · 62 charts indexed.
 
 **Column key**
 
@@ -63,7 +63,9 @@ Last regen: 2026-09-10 · 59 charts indexed.
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **ChordDiagram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
 | **CirclePack** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` |
+| **DependencyForestChart** | — | ✓ | ✓ | — | ✓ | categorical | custom | `network-atlas` `prepared-evidence` `revision-scoped-selection` |
 | **ForceDirectedGraph** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `force-simulation` |
+| **MotifBraidChart** | — | ✓ | ✓ | — | ✓ | categorical | custom | `network-atlas` `prepared-evidence` `revision-scoped-selection` |
 | **OrbitDiagram** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `hierarchy` `animated` |
 | **ProcessSankey** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | custom | `temporal` `particles` `lane-reuse` `quality-metrics` `slack-aware-placement` `vertical-orientation` `style-rules` `worker-layout` |
 | **SankeyDiagram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | — |
@@ -98,6 +100,7 @@ Last regen: 2026-09-10 · 59 charts indexed.
 | **CollisionSwarmChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `collision-layout` `settled-projection` |
 | **CrucibleChart** | — | ✓ | ✓ | — | ✓ | categorical | synthetic | `physics-simulation` `authored-event-tape` `forming-products` `reason-labelled-outlets` `settled-projection` `deterministic-snapshot` |
 | **EventDropChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `event-time` `watermark` `arrival-pacing` `settled-projection` |
+| **FlowCircuitChart** | — | ✓ | ✓ | — | ✓ | categorical | custom | `network-atlas` `prepared-evidence` `revision-scoped-selection` |
 | **GaltonBoardChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `settled-projection` `deterministic-seed` |
 | **GauntletChart** | — | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `process-gauntlet` `settled-projection` |
 | **PacketFlowChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | synthetic | `physics-simulation` `path-constrained-flow` `static-flow` `proximity-sensors` `settled-projection` |
@@ -114,8 +117,8 @@ Last regen: 2026-09-10 · 59 charts indexed.
 
 ## Aggregate counts
 
-- 54/59 charts render a top-level legend.
-- 47/59 charts expose a push API.
-- 54/59 charts SSR via the `renderChart()` registry.
-- 2/59 charts use the customLayout escape hatch.
-- 11/59 charts use synthetic (no-layout) construction.
+- 54/62 charts render a top-level legend.
+- 47/62 charts expose a push API.
+- 57/62 charts SSR via the `renderChart()` registry.
+- 5/62 charts use the customLayout escape hatch.
+- 11/62 charts use synthetic (no-layout) construction.

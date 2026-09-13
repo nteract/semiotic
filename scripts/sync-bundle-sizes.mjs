@@ -63,6 +63,8 @@ const IGNORED_EXPORTS = new Set([
 // each bundle ships, not implementation detail.
 const BLURBS = {
   ".": "Full chart API and shared utilities",
+  "./atlas": "Motif Braid, Dependency Forest, and Flow Circuit readers",
+  "./atlas/core": "Network Atlas preparation, projections, and evidence queries",
   "./access": "Chart Access Contract factory and first-wave baseline contracts",
   "./evidence":
     "Chart Evidence Envelope, deterministic hashing, and publication gate",
@@ -123,6 +125,8 @@ const BLURBS = {
 // (XY, ordinal, network, geo, realtime, server) so the "pick the
 // smallest sub-path that fits your charts" message lands clearly.
 const ORDER = [
+  "./atlas",
+  "./atlas/core",
   "./access",
   "./evidence",
   "./artifact",

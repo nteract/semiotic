@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { CHART_DATA_PROPS as DATA_PROPS } from "../charts/shared/chartDataProps"
 import {
   ARTIFACT_CONTRACT_VERSION,
   type ArtifactContract
@@ -19,16 +20,6 @@ import type {
   ChartConfig,
   FromConfigResult
 } from "./chartConfig"
-
-const DATA_PROPS = new Set([
-  "data",
-  "nodes",
-  "edges",
-  "points",
-  "areas",
-  "lines",
-  "flows"
-])
 
 export type ChartArtifactBindingContext = Pick<
   ChartConfig,

@@ -47,6 +47,9 @@ const DotPlotPage = lazy(() => import("./pages/charts/DotPlotPage"))
 const ForceDirectedGraphPage = lazy(() => import("./pages/charts/ForceDirectedGraphPage"))
 const ChordDiagramPage = lazy(() => import("./pages/charts/ChordDiagramPage"))
 const SankeyDiagramPage = lazy(() => import("./pages/charts/SankeyDiagramPage"))
+const MotifBraidChartPage = lazy(() => import("./pages/charts/MotifBraidChartPage"))
+const DependencyForestChartPage = lazy(() => import("./pages/charts/DependencyForestChartPage"))
+const FlowCircuitChartPage = lazy(() => import("./pages/charts/FlowCircuitChartPage"))
 const ProcessSankeyPage = lazy(() => import("./pages/charts/ProcessSankeyPage"))
 const TreeDiagramPage = lazy(() => import("./pages/charts/TreeDiagramPage"))
 const RealtimeLineChartPage = lazy(() => import("./pages/charts/RealtimeLineChartPage"))
@@ -1048,6 +1051,9 @@ export default function DocsApp() {
                 <Route path="force-directed-graph" element={<ForceDirectedGraphPage />} />
                 <Route path="chord-diagram" element={<ChordDiagramPage />} />
                 <Route path="sankey-diagram" element={<SankeyDiagramPage />} />
+                <Route path="motif-braid-chart" element={<MotifBraidChartPage />} />
+                <Route path="dependency-forest-chart" element={<DependencyForestChartPage />} />
+                <Route path="flow-circuit-chart" element={<FlowCircuitChartPage />} />
                 <Route path="process-sankey" element={<ProcessSankeyPage />} />
                 <Route path="tree-diagram" element={<TreeDiagramPage />} />
                 <Route path="treemap" element={<TreemapPage />} />

@@ -59,7 +59,19 @@ const linkedHoverCharts = sortedSet(
 const ssrParitySpecPath = "integration-tests/ssr-parity.spec.ts"
 const ssrParityFixturePath = "integration-tests/ssr-parity-fixtures.js"
 const ssrParitySource = readRepoFile(ssrParitySpecPath)
-const ssrParityFixtureSource = readRepoFile(ssrParityFixturePath)
+const atlasParityFixtures = [
+  "atlas-story-parity-fixtures",
+  "dependency-xray-parity-fixtures",
+  "flow-circuit-parity-fixtures"
+]
+for (const fixture of atlasParityFixtures) {
+  if (!ssrParitySource.includes(`from "./${fixture}"`))
+    note(`${ssrParitySpecPath} no longer imports ${fixture}.`)
+}
+const ssrParityFixtureSource = [
+  readRepoFile(ssrParityFixturePath),
+  ...atlasParityFixtures.map((name) => readRepoFile(`integration-tests/${name}.ts`))
+].join("\n")
 const SSR_COMPONENT_RE = /component:\s*"([^"]+)"/g
 const ssrParityCharts = sortedSet(
   [...ssrParityFixtureSource.matchAll(SSR_COMPONENT_RE)].map((match) => match[1])
@@ -135,6 +147,16 @@ if (staleSsrBurnDown.length) {
 // ── Linked-hover interaction-state coverage ─────────────────────────
 
 const linkedHoverEvidence = [
+  {
+    charts: ["MotifBraidChart", "DependencyForestChart", "FlowCircuitChart"],
+    source: "integration-tests/atlas-linked-hover.spec.ts",
+    fixture: "integration-tests/ssr-parity-examples/index.js",
+    requiredSnippets: [
+      "linked-hover changes the public",
+      "must redraw when its linked-hover selection becomes active",
+      "atlas-linked-hover-${component}.png"
+    ]
+  },
   {
     charts: ["Scatterplot", "BarChart"],
     source: "integration-tests/brush-selection.spec.ts",

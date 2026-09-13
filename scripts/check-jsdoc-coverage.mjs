@@ -71,7 +71,10 @@ for (const chartSpecsPath of chartSpecFiles) {
     // "realtime" in the spec — the directory and category line up by
     // convention.
     const category = categoryMatch[1]
-    const filePath = join(repoRoot, `src/components/charts/${category}/${name}.tsx`)
+    const directory = /importPath:\s*"semiotic\/atlas"/.test(body)
+      ? "src/components/recipes/atlas"
+      : `src/components/charts/${category}`
+    const filePath = join(repoRoot, directory, `${name}.tsx`)
     if (!existsSync(filePath)) {
       // Defer this to check:chart-specs / check:surface — they catch
       // missing files with a clearer error. We only fail when the file

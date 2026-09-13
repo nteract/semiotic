@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { flowCircuitStory } from "./flowCircuitStories"
+import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { prepareFlowCircuit, explainCircuitModule } from "./flowCircuit"
 import {
   admitCircuitEdition,

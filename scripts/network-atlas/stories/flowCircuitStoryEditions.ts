@@ -3,8 +3,8 @@ import type {
   CircuitNodeReading,
   CircuitTotals,
   FlowCircuitProjection
-} from "./flowCircuitTypes"
-import tapeFixture from "../../../../scripts/network-atlas/fixtures/flow-circuit-intervals-v1.json"
+} from "semiotic/atlas/core"
+import tapeFixture from "../fixtures/flow-circuit-intervals-v1.json"
 
 const absentTotals: CircuitTotals = {
   arrivals: null,

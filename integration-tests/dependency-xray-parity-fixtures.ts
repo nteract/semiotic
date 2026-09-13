@@ -1,8 +1,7 @@
-import { dependencyForestChartProps } from "../src/components/recipes/atlas/dependencyForestChartProps"
-import { prepareDependencyForest } from "../src/components/recipes/atlas/dependencyForest"
-import { prepareNetworkAtlas } from "../src/components/recipes/atlas/prepare"
-import { supplierStory } from "../src/components/recipes/atlas/supplierStory"
-import type { DependencyForestLayoutConfig } from "../src/components/recipes/atlas/dependencyForestLayout"
+import { prepareDependencyForest } from "semiotic/atlas/core"
+import { prepareNetworkAtlas } from "semiotic/atlas/core"
+import { supplierStory } from "../scripts/network-atlas/stories/supplierStory"
+import type { DependencyForestChartProps as DependencyForestLayoutConfig } from "semiotic/atlas"
 
 export interface DependencyXRayEvidence {
   nodeCount: number
@@ -11,8 +10,7 @@ export interface DependencyXRayEvidence {
   brackets: number
 }
 
-// NA3 layouts are source recipes; both sides still use the built public
-// NetworkCustomChart renderer. No unreleased chart export is assumed here.
+// Public prepared reader props on both renderers, including multigraphs.
 export function makeDependencyXRayParityCases() {
   const original = supplierStory().projection
   const bypass = supplierStory(true).projection
@@ -83,13 +81,13 @@ export function makeDependencyXRayParityCases() {
     edges = config.forest.atlas.source.edges
   ) => ({
     id: `network-custom-dependency-xray-${name}`,
-    component: "NetworkCustomChart",
-    props: dependencyForestChartProps({
+    component: "DependencyForestChart",
+    props: {
       ...config,
       width: 720,
       height: 420,
       title: `Dependency X-Ray: ${name}`
-    }),
+    },
     dependencyEvidence: { nodeCount, edges, labels, brackets }
   })
   return [

@@ -32302,6 +32302,1071 @@
     {
       "type": "function",
       "function": {
+        "name": "MotifBraidChart",
+        "description": "Evidence-backed journey reader from semiotic/atlas. Labeled rounded squares mark each depth, shared prefixes split only when paths diverge, and strand widths taper with per-step counts. Motif overlap is not a population partition.",
+        "x-semiotic-import-path": "semiotic/atlas",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "portalTarget"
+                  ],
+                  "properties": {
+                    "portalTarget": {
+                      "type": "string",
+                      "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                    }
+                  }
+                }
+              ]
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "atlas": {
+              "type": "object",
+              "description": "PreparedNetworkAtlas returned by prepareNetworkAtlas(spec, source) from semiotic/atlas/core. Prepare upstream, then serialize the complete admitted artifact; never invent derived indices or revisions.",
+              "required": [
+                "sourceGraphRef",
+                "analysisRevision",
+                "spec",
+                "source",
+                "sections",
+                "motifs",
+                "forest",
+                "residualEdges",
+                "ports",
+                "ledger",
+                "completeness",
+                "provenance"
+              ],
+              "properties": {
+                "sourceGraphRef": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "analysisRevision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "spec": {
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "dataRevision"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": "0.2"
+                    },
+                    "dataRevision": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "source": {
+                  "type": "object",
+                  "required": [
+                    "nodes",
+                    "edges"
+                  ],
+                  "properties": {
+                    "nodes": {
+                      "type": "array"
+                    },
+                    "edges": {
+                      "type": "array"
+                    }
+                  }
+                },
+                "provenance": {
+                  "type": "object",
+                  "required": [
+                    "sourceRevision"
+                  ],
+                  "properties": {
+                    "sourceRevision": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "sections": {
+                  "type": "object"
+                },
+                "motifs": {
+                  "type": "object"
+                },
+                "forest": {
+                  "type": "object"
+                },
+                "residualEdges": {
+                  "type": "object"
+                },
+                "ports": {
+                  "type": "object"
+                },
+                "ledger": {
+                  "type": "object"
+                },
+                "completeness": {
+                  "type": "object"
+                }
+              }
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array",
+                "object"
+              ],
+              "default": "category10"
+            },
+            "linkedHover": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Link hover by canonical nodeId through LinkedCharts."
+            }
+          },
+          "required": [
+            "atlas"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "DependencyForestChart",
+        "description": "Dependency X-Ray reader from semiotic/atlas. Distinguishes display backbone, residual original edges and declared-root required paths. Inspect a local matrix and bypass witnesses using semiotic/atlas/core.",
+        "x-semiotic-import-path": "semiotic/atlas",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "portalTarget"
+                  ],
+                  "properties": {
+                    "portalTarget": {
+                      "type": "string",
+                      "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                    }
+                  }
+                }
+              ]
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "linkedHover": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Link hover by canonical nodeId through LinkedCharts."
+            },
+            "linkedSelection": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "forest": {
+              "type": "object",
+              "description": "Complete prepareDependencyForest(atlas) result from semiotic/atlas/core.",
+              "required": [
+                "atlas",
+                "order",
+                "children",
+                "components",
+                "requiredChildren",
+                "sceneSeeds",
+                "forest",
+                "residual"
+              ],
+              "properties": {
+                "atlas": {
+                  "type": "object",
+                  "required": [
+                    "sourceGraphRef",
+                    "analysisRevision",
+                    "spec",
+                    "source",
+                    "sections",
+                    "motifs",
+                    "forest",
+                    "residualEdges",
+                    "ports",
+                    "ledger",
+                    "completeness",
+                    "provenance"
+                  ],
+                  "properties": {
+                    "sourceGraphRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "analysisRevision": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "spec": {
+                      "type": "object",
+                      "required": [
+                        "schemaVersion",
+                        "dataRevision"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": "0.2"
+                        },
+                        "dataRevision": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "source": {
+                      "type": "object",
+                      "required": [
+                        "nodes",
+                        "edges"
+                      ],
+                      "properties": {
+                        "nodes": {
+                          "type": "array"
+                        },
+                        "edges": {
+                          "type": "array"
+                        }
+                      }
+                    },
+                    "provenance": {
+                      "type": "object",
+                      "required": [
+                        "sourceRevision"
+                      ],
+                      "properties": {
+                        "sourceRevision": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "sections": {
+                      "type": "object"
+                    },
+                    "motifs": {
+                      "type": "object"
+                    },
+                    "forest": {
+                      "type": "object"
+                    },
+                    "residualEdges": {
+                      "type": "object"
+                    },
+                    "ports": {
+                      "type": "object"
+                    },
+                    "ledger": {
+                      "type": "object"
+                    },
+                    "completeness": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "order": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "reading": {
+              "type": "string",
+              "enum": [
+                "organize",
+                "required-paths"
+              ],
+              "default": "organize"
+            },
+            "selection": {
+              "type": "object",
+              "description": "Canonical local graph selection. A stale revision or relation scope never selects a different graph.",
+              "required": [
+                "nodeId",
+                "analysisRevision",
+                "relationScopeId"
+              ],
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                },
+                "analysisRevision": {
+                  "type": "string"
+                },
+                "relationScopeId": {
+                  "const": "directed-admitted"
+                }
+              }
+            },
+            "collapsedNodeIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "highlightedEdgeIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "colors": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "backbone": {
+                  "type": "string"
+                },
+                "residual": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "forest"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "FlowCircuitChart",
+        "description": "Flow Circuit reader from semiotic/atlas. Renders an admitted aggregate interval tape using fixed apparatus. Observed and modeled editions stay separate; missing measurements remain null. Replay never infers process dynamics from physics.",
+        "x-semiotic-import-path": "semiotic/atlas",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "number",
+              "default": 600
+            },
+            "height": {
+              "type": "number",
+              "default": 400
+            },
+            "className": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string",
+              "description": "Visible chart title and the chart's accessible name."
+            },
+            "description": {
+              "type": "string",
+              "description": "Concise accessible description that overrides the chart's generated aria-label."
+            },
+            "summary": {
+              "type": "string",
+              "description": "Screen-reader-only summary of the chart's key takeaway; include keyboard interaction guidance when relevant."
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "description": "Expose the chart data through Semiotic's screen-reader data table. Object form `{ portalTarget: string }` relocates its interactive UI to the DOM element with that ID.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "portalTarget"
+                  ],
+                  "properties": {
+                    "portalTarget": {
+                      "type": "string",
+                      "description": "ID of a DOM element outside any consumer-owned role=img wrapper. React callers may also pass an Element or a callback through the typed API."
+                    }
+                  }
+                }
+              ]
+            },
+            "chartId": {
+              "type": "string",
+              "description": "Stable id for linked selection / observation / nav sync."
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "frameProps": {
+              "type": "object",
+              "description": "Advanced Stream Frame overrides. `legendLayout` is structured below; other frame props remain pass-through values.",
+              "additionalProperties": true,
+              "properties": {
+                "legendLayout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "align": {
+                      "type": "string",
+                      "enum": [
+                        "start",
+                        "center",
+                        "end",
+                        "left",
+                        "right"
+                      ]
+                    },
+                    "swatchSize": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "labelGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "itemGap": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "rowHeight": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "maxWidth": {
+                      "type": "number",
+                      "minimum": 1
+                    },
+                    "edgeGutter": {
+                      "type": "number",
+                      "minimum": 0,
+                      "default": 3
+                    },
+                    "sideGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "axisGutter": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "linkedHover": {
+              "type": [
+                "boolean",
+                "string",
+                "object"
+              ],
+              "description": "Link hover by canonical nodeId through LinkedCharts."
+            },
+            "linkedSelection": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "circuit": {
+              "type": "object",
+              "description": "Complete prepareFlowCircuit(atlas, semantics) result from semiotic/atlas/core.",
+              "required": [
+                "atlas",
+                "order",
+                "overlapPolicy",
+                "modules",
+                "matches",
+                "backboneEdgeIds",
+                "residualEdgeIds"
+              ],
+              "properties": {
+                "atlas": {
+                  "type": "object",
+                  "required": [
+                    "sourceGraphRef",
+                    "analysisRevision",
+                    "spec",
+                    "source",
+                    "sections",
+                    "motifs",
+                    "forest",
+                    "residualEdges",
+                    "ports",
+                    "ledger",
+                    "completeness",
+                    "provenance"
+                  ],
+                  "properties": {
+                    "sourceGraphRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "analysisRevision": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "spec": {
+                      "type": "object",
+                      "required": [
+                        "schemaVersion",
+                        "dataRevision"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": "0.2"
+                        },
+                        "dataRevision": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "source": {
+                      "type": "object",
+                      "required": [
+                        "nodes",
+                        "edges"
+                      ],
+                      "properties": {
+                        "nodes": {
+                          "type": "array"
+                        },
+                        "edges": {
+                          "type": "array"
+                        }
+                      }
+                    },
+                    "provenance": {
+                      "type": "object",
+                      "required": [
+                        "sourceRevision"
+                      ],
+                      "properties": {
+                        "sourceRevision": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "sections": {
+                      "type": "object"
+                    },
+                    "motifs": {
+                      "type": "object"
+                    },
+                    "forest": {
+                      "type": "object"
+                    },
+                    "residualEdges": {
+                      "type": "object"
+                    },
+                    "ports": {
+                      "type": "object"
+                    },
+                    "ledger": {
+                      "type": "object"
+                    },
+                    "completeness": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "order": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "edition": {
+              "type": "object",
+              "description": "CircuitEdition validated by admitCircuitEdition(circuit, edition). Null means unmeasured, never zero.",
+              "required": [
+                "id",
+                "synthetic",
+                "sourceRevision",
+                "analysisRevision",
+                "kind",
+                "label",
+                "unit",
+                "timing",
+                "individualTimings",
+                "entries",
+                "assumptions",
+                "evidenceRefs"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "synthetic": {
+                  "type": "boolean"
+                },
+                "sourceRevision": {
+                  "type": "string"
+                },
+                "analysisRevision": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "observed",
+                    "modeled"
+                  ]
+                },
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "enum": [
+                    "records",
+                    "roots",
+                    "attempts"
+                  ]
+                },
+                "timing": {
+                  "enum": [
+                    "aggregate-intervals",
+                    "incomplete"
+                  ]
+                },
+                "individualTimings": {
+                  "const": "unavailable"
+                },
+                "entries": {
+                  "type": "array",
+                  "minItems": 1
+                },
+                "assumptions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "evidenceRefs": {
+                  "type": "array"
+                }
+              }
+            },
+            "reading": {
+              "type": "object",
+              "description": "readCircuitEdition(edition, mode, time) result. Must refer to the same edition and analysis revision as circuit.",
+              "required": [
+                "editionId",
+                "kind",
+                "mode",
+                "requestedTime",
+                "observedAt",
+                "entry",
+                "status"
+              ],
+              "properties": {
+                "editionId": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "observed",
+                    "modeled"
+                  ]
+                },
+                "mode": {
+                  "enum": [
+                    "observed-snapshot",
+                    "observed-replay",
+                    "modeled-scenario"
+                  ]
+                },
+                "requestedTime": {
+                  "type": "number"
+                },
+                "observedAt": {
+                  "type": "number"
+                },
+                "entry": {
+                  "type": "object"
+                },
+                "status": {
+                  "enum": [
+                    "exact",
+                    "incomplete"
+                  ]
+                }
+              }
+            },
+            "selection": {
+              "type": "object",
+              "description": "Canonical local graph selection. A stale revision or relation scope never selects a different graph.",
+              "required": [
+                "nodeId",
+                "analysisRevision",
+                "relationScopeId"
+              ],
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                },
+                "analysisRevision": {
+                  "type": "string"
+                },
+                "relationScopeId": {
+                  "const": "directed-admitted"
+                }
+              }
+            },
+            "colors": {
+              "type": "object",
+              "description": "Semantic role overrides: observed, modeled, required, residual."
+            },
+            "particleBudget": {
+              "type": "number",
+              "default": 24,
+              "minimum": 0,
+              "maximum": 200
+            },
+            "placementSeed": {
+              "type": "number",
+              "default": 1
+            },
+            "reducedMotion": {
+              "type": "boolean",
+              "default": false
+            },
+            "highlightedEdgeIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "circuit",
+            "edition",
+            "reading"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "ParallelCoordinatesRecipe",
         "description": "Parallel Coordinates. The task is to compare whole multivariate profiles, not isolated pairwise projections.",
         "parameters": {

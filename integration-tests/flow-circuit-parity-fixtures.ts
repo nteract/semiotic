@@ -1,12 +1,11 @@
-import { flowCircuitChartProps } from "../src/components/recipes/atlas/flowCircuitChartProps"
-import { flowCircuitStory } from "../src/components/recipes/atlas/flowCircuitStories"
-import { flowCircuitGrammar } from "../src/components/recipes/atlas/flowCircuitGrammar"
-import { readCircuitEdition } from "../src/components/recipes/atlas/flowCircuitTape"
+import { flowCircuitStory } from "../scripts/network-atlas/stories/flowCircuitStories"
+import { flowCircuitGrammar } from "../scripts/network-atlas/stories/flowCircuitGrammar"
+import { readCircuitEdition } from "semiotic/atlas/core"
 import type {
   CircuitEdition,
   CircuitMode,
   FlowCircuitProjection
-} from "../src/components/recipes/atlas/flowCircuitTypes"
+} from "semiotic/atlas/core"
 
 export interface FlowCircuitEvidence {
   nodeCount: number
@@ -23,8 +22,7 @@ export interface FlowCircuitEvidence {
   labels: string[]
 }
 
-// Source recipes, built public PhysicsCustomChart on both renderers. Keep the
-// fixture free of source HOC imports so Playwright and Vite share pure layouts.
+// Public prepared reader props on both renderers, with no source layouts.
 export function makeFlowCircuitParityCases() {
   const etl = flowCircuitStory("etl")
   const retry = flowCircuitStory("retry")
@@ -41,8 +39,8 @@ export function makeFlowCircuitParityCases() {
     const reading = readCircuitEdition(edition, mode, time)
     return {
       id: `physics-custom-flow-circuit-${name}`,
-      component: "PhysicsCustomChart",
-      props: flowCircuitChartProps({
+      component: "FlowCircuitChart",
+      props: {
         circuit,
         edition,
         reading,
@@ -50,7 +48,7 @@ export function makeFlowCircuitParityCases() {
         height,
         particleBudget: 12,
         placementSeed: 7
-      }),
+      },
       circuitEvidence: {
         nodeCount: circuit.modules.length,
         edges: circuit.atlas.source.edges.map(({ id, source, target }) => {

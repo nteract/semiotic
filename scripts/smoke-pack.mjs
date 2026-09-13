@@ -17,6 +17,7 @@
  * import failure.
  */
 import { execFileSync, execSync } from "node:child_process"
+import { buildSync } from "esbuild"
 import {
   cpSync,
   mkdtempSync,
@@ -127,7 +128,8 @@ function checkReactServerCoreImports(proj, failures) {
     "semiotic/ai/core",
     "semiotic/themes/core",
     "semiotic/utils/core",
-    "semiotic/recipes/core"
+    "semiotic/recipes/core",
+    "semiotic/atlas/core"
   ]
   const code = `
     const entries = ${JSON.stringify(entries)}
@@ -1003,7 +1005,21 @@ function checkPackedExampleConsumer(proj, failures) {
   const fixtureDir = join(proj, "packed-example-consumer")
   cpSync(packedExampleConsumerFixture, fixtureDir, { recursive: true })
 
-  for (const script of ["run-pilot-examples.mjs", "run-task-resources.mjs"]) {
+  // Only authored synthetic input builders are copied into this consumer.
+  // Preparation, queries and rendering must resolve through the installed
+  // package, never the checkout's library source or Vite aliases.
+  const atlasInputs = buildSync({
+    entryPoints: [join(__dirname, "network-atlas/stories/atlasStories.ts")],
+    outfile: join(fixtureDir, "atlas-stories.mjs"),
+    bundle: true, platform: "node", format: "esm", metafile: true,
+    external: ["semiotic/*"]
+  })
+  for (const input of Object.keys(atlasInputs.metafile.inputs)) {
+    if (!resolve(input).startsWith(join(__dirname, "network-atlas") + "/"))
+      throw new Error(`Atlas consumer input bypassed public imports: ${input}`)
+  }
+
+  for (const script of ["run-pilot-examples.mjs", "run-task-resources.mjs", "run-atlas-examples.mjs"]) {
     try {
       const out = runFixtureScript(fixtureDir, script)
       console.log(`  ✓ ${out.trim()}`)

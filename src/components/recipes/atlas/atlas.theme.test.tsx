@@ -16,9 +16,9 @@ import {
   DependencyForestChart,
   dependencyForestChartProps
 } from "./DependencyForestChart"
-import { flowCircuitStory } from "./flowCircuitStories"
+import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { readCircuitEdition } from "./flowCircuitTape"
-import { supplierStory } from "./supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import { motifBraidLayout } from "./motifBraidLayout"
 import { prepareNetworkAtlas } from "./prepare"
 import { prepareMotifBraid } from "./braid"

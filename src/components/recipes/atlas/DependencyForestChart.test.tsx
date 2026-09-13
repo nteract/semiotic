@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { auditAccessibility } from "../../charts/shared/auditAccessibility"
-import { supplierStory } from "./supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import {
   DependencyForestChart,
   dependencyForestChartProps

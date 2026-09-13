@@ -10,7 +10,21 @@ import {
 export { flowCircuitChartProps }
 export type { FlowCircuitChartProps }
 
-/** NA4 source recipe: replay/model state lives in its admitted upstream tape. */
+/**
+ * Flow Circuit reader: replay/model state lives in its admitted upstream tape.
+ *
+ * @example
+ * import { FlowCircuitChart } from "semiotic/atlas"
+ * import { readCircuitEdition } from "semiotic/atlas/core"
+ * const reading = readCircuitEdition(edition, "observed-replay", 60)
+ * <FlowCircuitChart circuit={circuit} edition={edition} reading={reading} />
+ *
+ * @example
+ * import { renderChartWithEvidence } from "semiotic/server"
+ * const { svg, evidence } = renderChartWithEvidence("FlowCircuitChart", {
+ *   circuit, edition, reading, title: "Observed process", reducedMotion: true
+ * })
+ */
 export function FlowCircuitChart(props: FlowCircuitChartProps) {
   const linked = useSelection({
     name: props.linkedSelection?.name ?? "__atlas_unused__",

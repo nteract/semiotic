@@ -580,7 +580,8 @@ function loadPublicChartPropTypes() {
 
   for (const sourceFile of program.getSourceFiles()) {
     if (
-      !sourceFile.fileName.includes("/src/components/charts/") ||
+      (!sourceFile.fileName.includes("/src/components/charts/") &&
+        !sourceFile.fileName.includes("/src/components/recipes/atlas/")) ||
       sourceFile.isDeclarationFile
     )
       continue
