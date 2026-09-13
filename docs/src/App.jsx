@@ -336,6 +336,7 @@ const MobileDataVisualizationExamplePage = lazy(
   () => import("./pages/examples/MobileDataVisualizationExamplePage"),
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
+const DependencyXRayExamplePage = lazy(() => import("./pages/examples/DependencyXRayExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
 const EarthquakesExamplePage = lazy(() => import("./pages/examples/EarthquakesExamplePage"))
 const EuropaLanguagesExamplePage = lazy(() => import("./pages/examples/EuropaLanguagesExamplePage"))
@@ -343,6 +344,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "DependencyXRayExamplePage.tsx": DependencyXRayExamplePage,
   "SuperpersuasionExamplePage.tsx": SuperpersuasionExamplePage,
   "JobsReportExamplePage.tsx": JobsReportExamplePage,
   "GroceryBillExamplePage.jsx": GroceryBillExamplePage,

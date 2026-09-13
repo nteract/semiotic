@@ -1,3 +1,5 @@
+import type { DominatorResult, RequiredPathsSpec } from "./dependencyTypes"
+
 export const NETWORK_ATLAS_SCHEMA_VERSION = "0.2" as const
 
 export type CompletenessStatus =
@@ -97,7 +99,7 @@ export type NetworkAtlasSpec = {
   evidencePolicyId: string
   measures: Record<string, MeasureSpec>
   motifs: MotifSpec
-  forest: { display: DisplayForestSpec }
+  forest: { display: DisplayForestSpec; requiredPaths?: RequiredPathsSpec }
   comparison?: SharedPartitionComparison
   dataRevision: string
   temporal: TemporalContract
@@ -301,6 +303,7 @@ export type PreparedNetworkAtlas = {
   provenance: AtlasProvenance
   prefixForest?: PrefixForest
   comparison?: PreparedComparison
+  requiredPaths?: DominatorResult
 }
 
 export type QueryResult<T> = {

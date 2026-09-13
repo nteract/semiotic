@@ -1998,6 +1998,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Dependency X-Ray",
+    path: "/examples/dependency-xray",
+    publishedAt: "2026-09-12T19:00:00-07:00",
+    eyebrow: "Network Atlas · synthetic supplier study",
+    description: "Inspect shared supplier dependencies, required paths, cross-links, and a zero-capacity bypass without confusing topology with available capacity.",
+    preview: "networkviz",
+    badges: ["NetworkCustomChart", "Required paths", "Original edge evidence"],
+    frames: ["network"],
+    topics: ["business", "design"],
+  },
+  {
     title: "The jobs report has a second draft",
     path: "/examples/jobs-report",
     publishedAt: "2026-09-07T22:00:00Z",
@@ -2845,6 +2856,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/dependency-xray": "DependencyXRayExamplePage.tsx",
   "/examples/lines-of-thought": "TransitDiagramExamplePage.jsx",
   "/examples/aesthetic-policy-studio": "AestheticPolicyStudioExamplePage.jsx",
   "/examples/bad-chart-autopsy": "BadChartAutopsyExamplePage.jsx",

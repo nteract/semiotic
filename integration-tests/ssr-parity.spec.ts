@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test"
 import { createRequire } from "node:module"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
+import {
+  makeDependencyXRayParityCases,
+  type DependencyXRayEvidence,
+} from "./dependency-xray-parity-fixtures"
 
 /**
  * SSR / CSR visual parity gate.
@@ -35,6 +39,7 @@ interface ParityCase {
   comparison?: "pixel" | "structural"
   /** Legend text that must remain fully inside both fixed chart viewports. */
   visibleLegendLabel?: string
+  dependencyEvidence?: DependencyXRayEvidence
 }
 
 interface RenderEvidence {
@@ -68,7 +73,10 @@ const { makeSsrParityCases } = cjsRequire("./ssr-parity-fixtures.js") as {
   ) => ParityCase[]
 }
 const recipes = cjsRequire("../dist/semiotic-recipes.min.js") as Record<string, unknown>
-const cases = makeSsrParityCases(React, recipes)
+const cases: ParityCase[] = [
+  ...makeSsrParityCases(React, recipes),
+  ...makeDependencyXRayParityCases(),
+]
 
 // Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
@@ -604,6 +612,11 @@ test.describe("SSR / CSR parity", () => {
         : { ...c.props, animate: false }
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
+      if (c.dependencyEvidence) {
+        expect(evidence.frameType).toBe("network")
+        expect(evidence.markCountByType["node:glyph"]).toBe(c.dependencyEvidence.nodeCount)
+        expect(evidence.markCountByType["edge:curved"]).toBe(c.dependencyEvidence.edges.length)
+      }
       if (c.id === "network-custom-transit-modes") {
         expect(getRenderChartWithEvidence()(c.component, ssrProps).svg).toBe(ssrSvg)
       }
@@ -672,6 +685,26 @@ test.describe("SSR / CSR parity", () => {
       // the fixed-size visual frame and would make wrapper crops differ.
       const ssrVisual = chartPanels.nth(0).locator("svg").first()
       const csrVisual = chartPanels.nth(1).locator('[role="group"]').first()
+      if (c.dependencyEvidence) {
+        for (const visual of [ssrVisual, csrVisual]) {
+          for (const label of c.dependencyEvidence.labels) {
+            await expect(visual.getByText(label, { exact: true })).toBeVisible()
+          }
+          await expect(visual.locator('[data-kind="dominator-bracket"]')).toHaveCount(
+            c.dependencyEvidence.brackets,
+          )
+          const edges = await visual.locator("[data-dependency-edge]").evaluateAll((paths) =>
+            paths.map((path) => ({
+              id: path.getAttribute("data-dependency-edge"),
+              source: path.getAttribute("data-source"),
+              target: path.getAttribute("data-target"),
+            })),
+          )
+          expect(edges).toEqual(c.dependencyEvidence.edges.map(({ id, source, target }) =>
+            ({ id, source, target }),
+          ))
+        }
+      }
       if (c.visibleLegendLabel) {
         for (const visual of [ssrVisual, csrVisual]) {
           const visualBox = await visual.boundingBox()

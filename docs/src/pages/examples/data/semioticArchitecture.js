@@ -1660,6 +1660,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "dependency-xray",
+    shortLabel: "Dependency X-Ray",
+    note: "A prepared dependency atlas feeds a sectioned NetworkCustomChart, original-edge cross-links, required-path overlays, an accessible adjacency matrix, and static SVG/evidence exports.",
+    uses: ["input-static", "hoc-network-custom", "feature-accessors", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+  },
+  {
     id: "network-visualization",
     shortLabel: "Drawing Networks",
     note: "A network-visualization primer across the whole family — ForceDirectedGraph, TreeDiagram, ChordDiagram and SankeyDiagram, plus NetworkCustomChart arc/matrix/circular recipes — closing on an interactive analysis toy driven by observation and accessible hit targets.",

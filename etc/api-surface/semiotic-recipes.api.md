@@ -2128,7 +2128,7 @@ type MotifCapsule = {id: string; matchId: string; template: MotifTemplate; entry
 type MotifProfileCell = {template: MotifTemplate; sectionId: string; partition?: string; completionCount: number; intersectionCount: number; denominator: number; status: EvidenceStatus;}
 type MotifProfileStrip = {templates: MotifTemplate[]; sections: string[]; cells: MotifProfileCell[];}
 type NetworkAtlasSource = {graphRef: string; revision: string; nodes: AtlasNode[]; edges: AtlasEdge[]; occurrences?: AtlasOccurrence[]; measureValues: AtlasMeasureValue[];}
-type NetworkAtlasSpec = {schemaVersion: typeof NETWORK_ATLAS_SCHEMA_VERSION; coordinate: CoordinateSpec; relations: RelationPolicy; evidencePolicyId: string; measures: Record<string, MeasureSpec>; motifs: MotifSpec; forest: {display: DisplayForestSpec;}; comparison?: SharedPartitionComparison; dataRevision: string; temporal: TemporalContract;}
+type NetworkAtlasSpec = {schemaVersion: typeof NETWORK_ATLAS_SCHEMA_VERSION; coordinate: CoordinateSpec; relations: RelationPolicy; evidencePolicyId: string; measures: Record<string, MeasureSpec>; motifs: MotifSpec; forest: {display: DisplayForestSpec; requiredPaths?: RequiredPathsSpec;}; comparison?: SharedPartitionComparison; dataRevision: string; temporal: TemporalContract;}
 type NetworkCustomLayout<C extends object = Record<string, unknown>> = (ctx: NetworkLayoutContext<C>) => NetworkLayoutResult
 type NetworkSymbolName = "chevron" | "circle" | "cross" | "diamond" | "square" | "star" | "triangle" | "wye"
 type NumericScale = (value: number) => number
@@ -2142,7 +2142,7 @@ type PhysicsTraceInterpolation = "linear" | "step"
 type PhysicsTraceOutsideDomain = "clamp" | "omit"
 type PrepareNetworkAtlasOptions = {generation?: number;}
 type PrepareNetworkAtlasResult = {ok: false; atlas?: undefined; issues: AtlasIssue[];} | {ok: true; atlas: PreparedNetworkAtlas; issues: AtlasIssue[];}
-type PreparedNetworkAtlas = {sourceGraphRef: string; analysisRevision: string; spec: NetworkAtlasSpec; source: NetworkAtlasSource; sections: SectionIndex; motifs: MotifMatchIndex; forest: DisplayForest; residualEdges: OriginalEdgeIndex; ports: RouteSupportIndex; ledger: MeasureLedger; completeness: CompletenessReport; provenance: AtlasProvenance; prefixForest?: PrefixForest; comparison?: PreparedComparison;}
+type PreparedNetworkAtlas = {sourceGraphRef: string; analysisRevision: string; spec: NetworkAtlasSpec; source: NetworkAtlasSource; sections: SectionIndex; motifs: MotifMatchIndex; forest: DisplayForest; residualEdges: OriginalEdgeIndex; ports: RouteSupportIndex; ledger: MeasureLedger; completeness: CompletenessReport; provenance: AtlasProvenance; prefixForest?: PrefixForest; comparison?: PreparedComparison; requiredPaths?: DominatorResult;}
 type ProcessVolumePoint = [x: number, y: number]
 type ProcessVolumePolygonRole = "center" | "incoming" | "outgoing" | "volume"
 type ProcessVolumeShape = "bowtie" | "funnel" | "lane"

@@ -5,6 +5,7 @@ import * as SemioticRecipes from "../../dist/semiotic-recipes.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
 import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
+import { makeDependencyXRayParityCases } from "../dependency-xray-parity-fixtures"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics }
@@ -18,7 +19,10 @@ const TestCase = ({ title, testId, children }) =>
   )
 
 const requestedCase = new URLSearchParams(window.location.search).get("case")
-const parityCases = makeSsrParityCases(React, SemioticRecipes)
+const parityCases = [
+  ...makeSsrParityCases(React, SemioticRecipes),
+  ...makeDependencyXRayParityCases(),
+]
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)
   : parityCases

@@ -1,4 +1,5 @@
 import { idDictionary, setOwnValue } from "./ids"
+import { buildRootedForest } from "./rootedForest"
 import type {
   AtlasEdge,
   DisplayForest,
@@ -44,6 +45,9 @@ export function classifyForest(
   spec: NetworkAtlasSpec,
   source: NetworkAtlasSource
 ): ForestClassification {
+  if (spec.forest.display.rankingPolicyId?.startsWith("rooted-traversal")) {
+    return buildRootedForest(source, spec.forest.display.roots ?? [], spec.forest.display.rankingPolicyId)
+  }
   const originalEdgeIds = source.edges.map((edge) => edge.id)
   const rankingPolicyId = spec.forest.display.rankingPolicyId ?? "main-transport"
   const { mode, order } = parsePolicy(rankingPolicyId)

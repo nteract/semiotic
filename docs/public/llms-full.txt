@@ -263,6 +263,20 @@ Episodes end at the second visit to a repeated state; profile
 cells count each entity once and use the declared assigned denominator. Capsule
 expansion is not supported. `MotifBraidChart` itself is recipe-local.
 
+For Dependency X-Ray preparation, optionally set
+`forest.requiredPaths: { roots: ["world"], relationScopeId: "directed-admitted" }`.
+The existing public `prepareNetworkAtlasAsync` facades then return
+`atlas.requiredPaths`: original-graph immediate dominators, reachable and
+unreachable node IDs, and an exact/incomplete status. Null parents refer to the
+analytical synthetic root, not source edges. The scope currently admits only
+the full directed graph. `rooted-traversal:id-asc` and
+`rooted-traversal:id-desc` select an acyclic display backbone while retaining
+every other original edge as residual. Neither dominance nor a structural
+bypass proves usable capacity or AND-prerequisite completion. The X-Ray chart,
+projection, layout and queries remain source recipes; `/examples/dependency-xray`
+demonstrates the synthetic supplier study. Do not invent a packaged
+`DependencyForestChart` import or serialized component name.
+
 **Decoration (labels/axes/legends): the recipe owns it.** Recipes emit own decoration via `overlays` return field (ReactNode painted on top). Built-in axes via `showAxes` on the HOC work for layouts respecting the standard scale. Recipe convention: `showXxx` boolean toggles, `xxxFormat` callbacks. Shipped recipes' toggles: marimekko `showCategoryLabels`, bullet `showLabels`+`showTicks`, parallelCoordinates `showAxes`, flextree/dagre `showLabels`, waffle/calendar none.
 
 **Interaction (hover/brush/selection): the parent owns it.** Recipes are pure — they take predicate props (e.g. `parallelCoordinatesLayout`'s `highlightFn?`) and the parent manages state via `onObservation` (`{type: "hover" | "hover-end" | ...}`), feeding a derived predicate back into `layoutConfig`. Matching rows render at full opacity; non-matching dim; highlighted z-order on top.

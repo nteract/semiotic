@@ -47,3 +47,8 @@ export type {
 } from "./braid"
 export { motifBraidLayout } from "./motifBraidLayout"
 export type { MotifBraidLayoutConfig } from "./motifBraidLayout"
+export { prepareDependencyForest, dependencyMatrix, getBranchResidualConnections } from "./dependencyForest"
+export { getRequiredPaths, getBypassWitness, getDependencyExclusion } from "./dependencyQueries"
+export { dependencyForestLayout } from "./dependencyForestLayout"
+export type { DependencyForestProjection } from "./dependencyForest"
+export type { DependencySelection, DominatorResult, RequiredPathsSpec } from "./dependencyTypes"

@@ -6,6 +6,7 @@ import { matchMotifs } from "./motifs"
 import { buildPrefixForest } from "./prefixForest"
 import { buildSections } from "./sections"
 import { buildRouteSupportIndex } from "./support"
+import { buildRequiredPaths } from "./requiredPaths"
 import type {
   AtlasIssue,
   NetworkAtlasSource,
@@ -99,7 +100,10 @@ export function prepareNetworkAtlas(
       temporalHorizon: spec.temporal.kind,
       evidencePolicyId: spec.evidencePolicyId
     },
-    prefixForest
+    prefixForest,
+    ...(spec.forest.requiredPaths && {
+      requiredPaths: buildRequiredPaths(source, spec.forest.requiredPaths)
+    })
   }
   atlas.comparison = buildComparison(atlas)
   return { ok: true, atlas, issues: validation.issues }

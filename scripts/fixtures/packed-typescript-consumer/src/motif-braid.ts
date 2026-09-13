@@ -41,6 +41,11 @@ export type MixedProjection = recipes.MotifBraidProjection
 export type MixedSpec = recipes.NetworkAtlasSpec
 export type MixedSource = recipes.NetworkAtlasSource
 
+export const requiredPathScope: NetworkAtlasSpec["forest"]["requiredPaths"] = {
+  roots: ["A"],
+  relationScopeId: "directed-admitted"
+}
+
 export const countedOccurrence: NonNullable<
   NetworkAtlasSource["occurrences"]
 >[number] = {

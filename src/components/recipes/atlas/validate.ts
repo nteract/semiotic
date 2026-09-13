@@ -96,6 +96,19 @@ export function validateAtlas(
       fatal(issues, "missing-root", "display root is not a node", root)
     }
   }
+  const required = spec.forest.requiredPaths
+  if (required) {
+    if (required.relationScopeId !== "directed-admitted") {
+      fatal(issues, "required-path-scope", "required paths use the full directed-admitted relation scope")
+    }
+    if (!Array.isArray(required.roots) || required.roots.length === 0) {
+      fatal(issues, "required-path-roots", "required paths need declared roots")
+    } else {
+      for (const root of required.roots) {
+        if (!nodeIds[root]) fatal(issues, "required-path-roots", "required-path root is not a node", root)
+      }
+    }
+  }
   if (
     spec.forest.display.kind === "rooted-backbone" &&
     spec.forest.display.roots.length === 0

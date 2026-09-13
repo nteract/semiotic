@@ -20,7 +20,10 @@ const spec = {
     denominatorRef: "assigned",
     anchor: "completion"
   },
-  forest: { display: { kind: "observed-prefix" } },
+  forest: {
+    display: { kind: "observed-prefix" },
+    requiredPaths: { roots: ["A"], relationScopeId: "directed-admitted" }
+  },
   dataRevision: "packed-consumer",
   temporal: { kind: "snapshot" }
 }
@@ -65,6 +68,8 @@ for (const [condition, load] of [
       await load(entry)
     const prepared = await prepareNetworkAtlasAsync(spec, source)
     assert.equal(prepared.ok, true, JSON.stringify(prepared.issues))
+    assert.deepEqual(prepared.atlas.requiredPaths.immediateDominatorByNode, { A: null, B: "A" })
+    assert.equal(prepared.atlas.requiredPaths.status, "exact")
     const braid = await prepareMotifBraid(prepared.atlas)
     assert.equal(braid.profile.cells[0].completionCount, 7)
     assert.equal(braid.profile.cells[0].denominator, 50)

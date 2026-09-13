@@ -1,6 +1,6 @@
-# Network Atlas Phase 1–2 (NA0–NA2)
+# Network Atlas Phase 1–3 (NA0–NA3)
 
-**Status:** Kernel spike plus Motif Braid recipe. `prepareNetworkAtlasAsync`, `prepareMotifBraid`, `motifBraidLayout`, and their input/output types are public through `semiotic/recipes/core` and `semiotic/recipes`. `MotifBraidChart` remains recipe-local.
+**Status:** Kernel, Motif Braid, and Dependency X-Ray source recipes. `prepareNetworkAtlasAsync`, `prepareMotifBraid`, `motifBraidLayout`, and their input/output types are public through `semiotic/recipes/core` and `semiotic/recipes`. Chart wrappers and the new X-Ray projection/layout/queries remain recipe-local. The supplier study is at `/examples/dependency-xray`.
 
 **Pinned baseline:** package `3.10.0`, commit `ffd5d48fc201c4780d5437e23089814f88e9e6ab`, Volta Node `22.22.1`.
 
@@ -10,7 +10,7 @@ Admitted here: the five flagship stories and the counterexamples from the Networ
 
 The ETL kernel conservation identity is `60 = 45 completed + 5 dead-letter + 10 queued`. `write_hot` is over capacity (25 arrivals, 20 capacity).
 
-Performance targets from the proposal (50 ms p95 selection, 10k vertices / 50k edges) are **targets, not measurements**. Phase 1 has no overview renderer, so those benchmarks are out of scope.
+Performance targets from the proposal (50 ms p95 selection, 10k vertices / 50k edges) are **targets, not measurements**. NA3 verifies the small supplier reader and iterative deep-graph analysis; it does not establish those interactive performance targets.
 
 ## What already exists vs what Atlas adds
 
@@ -27,7 +27,7 @@ Inspected on the pinned SHA. Do not rebuild these.
 | `networkAnalysis` | Undirected adjacency, centrality, paths | Not an Atlas substrate. Atlas graphs are directed and keep parallel edges / self-loops **by ID**. |
 | `analyzeNetEnsemble` | Weisfeiler–Leman fingerprints of disconnected components | A different “motif” problem. Do not unify with the typed catalog. |
 
-`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` and `FlowCircuitChart` are not implemented. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
+`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` adds the sectioned forest reader; `FlowCircuitChart` is the next gate. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
 
 ## Layout
 
@@ -98,3 +98,20 @@ covers constant-count callers, projection ribbons, async preparation through
 both recipe facades, packed ESM/CJS consumers, and SVG/canvas rendering. Canvas
 edge tests cover suppressed strokes for curved, line, bezier, and ribbon edges;
 zero-width or `none` strokes must not acquire a stray canvas outline.
+
+## Dependency X-Ray (NA3)
+
+Set `forest.requiredPaths` to `{ roots: ["world"], relationScopeId:
+"directed-admitted" }` before preparation. `atlas.requiredPaths` contains the
+original-graph dominator relation and explicit unreachable nodes. Use
+`rooted-traversal:id-asc` or `rooted-traversal:id-desc` for a true display tree;
+all other original edges stay residual. Dominators are derived ancestry, not
+transport edges, capacity claims or AND prerequisites.
+
+The source-only `prepareDependencyForest` projection feeds
+`DependencyForestChart`, `dependencyForestLayout`, and `DependencyMatrix`.
+Queries in `dependencyQueries.ts` carry scope and revisions. The shared
+`supplierStory.ts` adapter uses the frozen supplier fixture for React, SVG,
+browser interactions and tests. See
+[`NA3.md`](NA3.md)
+for delivery scope and the related-surface audit.
