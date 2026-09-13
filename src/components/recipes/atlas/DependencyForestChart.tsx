@@ -13,9 +13,10 @@ export function DependencyForestChart(props: DependencyForestChartProps) {
   return (
     <NetworkCustomChart
       {...dependencyForestChartProps(props)}
-      onClick={(observation) => {
-        const id = observation?.datum?.id
+      onClick={(datum) => {
+        const id = datum?.id
         if (
+          datum?.kind === "dependency-node" &&
           typeof id === "string" &&
           props.forest.atlas.source.nodes.some((node) => node.id === id)
         ) {

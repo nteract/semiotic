@@ -16,6 +16,30 @@ test("supplier topology, capacity, branch detail and exports remain consistent",
   await expect(page.getByRole("status")).toHaveText(
     "No admitted path to A avoids X."
   )
+  const overview = page.getByTestId("dependency-overview")
+  const frame = overview.locator(".stream-network-frame")
+  await frame.press("Home")
+  await frame.press("Space")
+  await expect(
+    page.getByRole("combobox", { name: "Dependency", exact: true })
+  ).toHaveValue("world")
+  await expect(page.getByTestId("required-targets")).toContainText(
+    "world is required for:"
+  )
+  const nodeBox = await overview
+    .locator("text")
+    .filter({ hasText: /^X$/ })
+    .boundingBox()
+  await page.mouse.click(
+    nodeBox!.x + nodeBox!.width / 2,
+    nodeBox!.y + nodeBox!.height / 2
+  )
+  await expect(
+    page.getByRole("combobox", { name: "Dependency", exact: true })
+  ).toHaveValue("X")
+  await expect(page.getByTestId("required-targets")).toHaveText(
+    "X is required for: A, B."
+  )
   await page.screenshot({
     path: testInfo.outputPath("dependency-xray-supplier.png"),
     fullPage: true,

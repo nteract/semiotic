@@ -18,8 +18,14 @@ export function flowCircuitChartProps({
   ...config
 }: FlowCircuitChartProps) {
   return {
-    // Apparatus can remount after a display-backbone change. Tape state is external.
-    key: config.circuit.backboneEdgeIds.join("|") + `:${width}:${height}`,
+    // Fixed bodies must follow projection geometry. Tape state is external.
+    key: JSON.stringify([
+      config.circuit.atlas.analysisRevision,
+      config.circuit.order,
+      config.circuit.backboneEdgeIds,
+      width,
+      height
+    ]),
     data: config.circuit.modules.map((module) => ({ id: module.nodeId })),
     layout: flowCircuitLayout,
     layoutConfig: config,

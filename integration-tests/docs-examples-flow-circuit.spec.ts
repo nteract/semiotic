@@ -12,6 +12,37 @@ async function evidencePacket(page: Page) {
   return JSON.parse(readFileSync((await (await downloaded).path())!, "utf8"))
 }
 
+test("keyboard activation updates the inspector and history in both studies", async ({
+  page
+}) => {
+  await page.goto("/examples/flow-circuit")
+  const surface = page.getByTestId("circuit-overview")
+  const frame = surface.locator(".stream-physics-frame")
+  const selected = page.getByRole("combobox", { name: "Module", exact: true })
+  for (const [story, first, second] of [
+    ["etl", "source", "router"],
+    ["retry", "boundary", "inventory"]
+  ]) {
+    await page
+      .getByRole("combobox", { name: "Study", exact: true })
+      .selectOption(story)
+    await frame.press("Home")
+    await frame.press("Enter")
+    await expect(selected).toHaveValue(first)
+    await expect(surface.locator("[data-history-module]")).toHaveAttribute(
+      "data-history-module",
+      first
+    )
+    await frame.press("ArrowRight")
+    await frame.press("Space")
+    await expect(selected).toHaveValue(second)
+    await expect(surface.locator("[data-history-module]")).toHaveAttribute(
+      "data-history-module",
+      second
+    )
+  }
+})
+
 test("ETL observation and modeled candidate retain counts through display changes and exports", async ({
   page
 }, info) => {
@@ -163,9 +194,11 @@ test("module grammar preserves original multigraph ports and requires explicit j
     1
   )
   await expect(surface.locator("[data-circuit-edge]")).toHaveCount(12)
-  await grammar
-    .getByRole("combobox", { name: "Module", exact: true })
-    .selectOption("source")
+  await surface.locator(".stream-physics-frame").press("Home")
+  await surface.locator(".stream-physics-frame").press("Enter")
+  await expect(
+    grammar.getByRole("combobox", { name: "Module", exact: true })
+  ).toHaveValue("source")
   await grammar
     .getByRole("button", { name: "source to a: sa, sa-parallel", exact: true })
     .click()

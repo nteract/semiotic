@@ -125,3 +125,29 @@ suite or reader-benefit study was run.
 NA5 still owns packaged reuse across the five stories, machine schemas and
 independent public consumers. These tests establish the admitted fixture and
 renderer contracts, not reader-benefit or performance claims.
+
+Review regression verification, September 13, 2026: the recipe now routes
+pointer and Enter/Space activation through one canonical-module selector.
+Its mount identity includes the atlas analysis revision, circuit order,
+backbone and dimensions, serialized without delimiter collisions. Fixed bodies
+and hit targets therefore follow replacement projections; tape, selection and
+particle changes retain the mounted frame and keyboard focus.
+
+The related-surface audit covered the observed/model reader, module grammar,
+static SVG helper, sibling atlas wrappers and shared frame interaction paths.
+Dependency Forest forwards Space activation through its network click path,
+but its recipe expected a nested observation instead of the supplied node
+datum. That wrapper now reads the canonical node directly and excludes edge
+datums. Motif Braid exposes no module-selection callback. Native inspector
+selects and adjacency buttons use browser keyboard activation. The physics
+frame's general policy of retaining initial bodies across layout-configuration
+changes remains intentional and covered by its live-geometry test.
+
+All seven new live-chart regressions reproduced the defects before the fixes.
+Afterward, 144 focused unit tests and the separate network keyboard regression
+passed, along with seven Flow Circuit/Dependency X-Ray documentation browser
+tests and 30 CSR/SSR parity cases across Chromium, Firefox and WebKit on macOS.
+Source/test TypeScript, focused ESLint and custom lints passed. Task verification
+reran its 14 unit and six browser checks and regenerated its receipts and
+mirrored views. Adoption output was regenerated for those task identities.
+This review did not rerun the full release suite or Linux visual comparisons.
