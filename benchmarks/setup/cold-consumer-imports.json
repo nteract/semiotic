@@ -81,8 +81,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 485237,
-      "gzipBytes": 160688,
+      "rawBytes": 485418,
+      "gzipBytes": 160715,
       "packedPackageInputFiles": 31
     },
     {
@@ -317,7 +317,7 @@
       "platform": "browser",
       "rawBytes": 4143,
       "gzipBytes": 1764,
-      "packedPackageInputFiles": 15
+      "packedPackageInputFiles": 14
     },
     {
       "exportKey": "./recipes/core",
@@ -326,7 +326,7 @@
       "platform": "browser",
       "rawBytes": 4143,
       "gzipBytes": 1764,
-      "packedPackageInputFiles": 7
+      "packedPackageInputFiles": 6
     },
     {
       "exportKey": "./recipes/react",
