@@ -9,14 +9,14 @@
     "packageName": "semiotic",
     "packageVersion": "3.10.0",
     "channel": "source",
-    "sourceRevision": "sha256:c737685eb6882ed22fbc52f883c31e5bd2bdf65453097a9e8bc6c67d112b17aa",
+    "sourceRevision": "sha256:2ac88eca99f8b69bc7934f9dc031df4a075b1f8973f9e8dca0b03498a734b0a2",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:14c76c07d5a2bd45dcd43653262c88dae9f8d32508be901b047b6addd0b7864a",
-      "fileCount": 1127
+      "digest": "sha256:28fdfdbfeab5cbae5646c9c7634dbc44687c2050a546a88b5308ff93b25cf7c1",
+      "fileCount": 1129
     },
     "taskSources": {
-      "digest": "sha256:69ed7ff442a1c1b37045d8d9ff2fb96dfecf3f4334a065900e660f5a2cb83966",
+      "digest": "sha256:b14f5704aea24c3db9ca7c716a4d2481a686c2c715d24ac6dcb2ac4207a390fe",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
@@ -184,7 +184,7 @@
     "owner": "Semiotic repository maintainers",
     "status": "supported-in-scope",
     "observed": {
-      "verifiedAt": "2026-09-13T15:26:17.789Z",
+      "verifiedAt": "2026-09-13T19:42:40.818Z",
       "environment": {
         "node": "v22.22.1",
         "platform": "darwin",

@@ -149,6 +149,8 @@ export function usePhysicsSelection(
   const storeSelection = isSelectionConfig(selection) ? selection : undefined
 
   const { activeSelectionHook, customHoverBehavior } = useChartSelection({
+    // StreamPhysicsFrame publishes each physical/semantic interaction once.
+    emitObservations: false,
     selection: storeSelection,
     linkedHover,
     fallbackFields: colorByField ? [colorByField] : fallbackFields,

@@ -1,6 +1,10 @@
 import * as React from "react"
 import { useMemo, useState } from "react"
 import ExamplePageLayout from "./ExamplePageLayout"
+import { ThemeProvider } from "semiotic/themes/react"
+import { LinkedCharts } from "semiotic/ai"
+import { useDocsTheme } from "../../hooks/useDocsTheme"
+import { AtlasObservation } from "../../components/AtlasObservation"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import { supplierStory } from "../../../../src/components/recipes/atlas/supplierStory"
 import {
@@ -30,6 +34,8 @@ function download(name: string, content: string, type: string) {
 }
 
 export default function DependencyXRayExamplePage() {
+  const [docsTheme] = useDocsTheme()
+  const theme = docsTheme === "light" ? "light" : "dark"
   const [bypass, setBypass] = useState(false)
   const [reverse, setReverse] = useState(false)
   const [nodeId, setNodeId] = useState("X")
@@ -66,6 +72,7 @@ export default function DependencyXRayExamplePage() {
     ),
   )
   const chartProps = {
+    chartId: "dependency-xray",
     forest,
     selection,
     reading,
@@ -99,188 +106,209 @@ export default function DependencyXRayExamplePage() {
   }
   return (
     <ExamplePageLayout title="Dependency X-Ray">
-      <div className="dependency-xray" ref={container}>
-        <p className="dependency-xray__eyebrow">Network Atlas · synthetic supplier study</p>
-        <h1>Three suppliers. Two share one dependency.</h1>
-        <p>Network Atlas source preview. This example runs from the repository; public recipe imports and serialized configurations are planned for NA5.</p>
-        <p>
-          A and B obtain their component through X. C has a separate admitted route. Inspect the
-          original links, then add a bypass with no usable capacity.
-        </p>
-        <dl className="dependency-xray__metrics">
-          <div>
-            <dt>Current allocation exposed to X</dt>
-            <dd>{story.measures.exposureBps / 100}%</dd>
-          </div>
-          <div>
-            <dt>Demand shortfall if X is unavailable</dt>
-            <dd>{story.measures.shortfallBps / 100}%</dd>
-          </div>
-          <div>
-            <dt>Additional independent units/week for 70% output</dt>
-            <dd>{story.measures.additional.toLocaleString("en-US")}</dd>
-          </div>
-        </dl>
-        <div className="dependency-xray__controls">
-          <label>
-            Reading{" "}
-            <select
-              value={reading}
-              onChange={(event) => setReading(event.target.value as typeof reading)}
-            >
-              <option value="organize">Organize</option>
-              <option value="required-paths">Required paths</option>
-            </select>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={bypass}
-              onChange={(event) => {
-                setBypass(event.target.checked)
-                setHighlightedEdgeIds([])
-              }}
-            />{" "}
-            Add Y → A bypass (0 units/week)
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={reverse}
-              onChange={(event) => setReverse(event.target.checked)}
-            />{" "}
-            Reverse backbone ranking
-          </label>
-        </div>
-        <p>
-          {reading === "organize"
-            ? "Gray links are chosen for this drawing. Rust links preserve the other original connections."
-            : "Blue brackets mark required ancestry in the full admitted graph. They are separate from the directed links."}
-        </p>
-        <div className="dependency-xray__overview" data-testid="dependency-overview">
-          <DependencyForestChart
-            {...chartProps}
-            onSelectNode={(id) => {
-              setNodeId(id)
-              setCollapsed(false)
-            }}
-          />
-        </div>
-        <section className="dependency-xray__inspector" aria-label="Branch and bypass inspector">
-          <div>
-            <h2>Inspect a dependency</h2>
-            <label>
-              Dependency{" "}
-              <select
-                aria-label="Dependency"
-                value={selected}
-                onChange={(event) => {
-                  setNodeId(event.target.value)
+      <ThemeProvider theme={theme}>
+        <LinkedCharts>
+          <div className="dependency-xray" ref={container}>
+            <p className="dependency-xray__eyebrow">Network Atlas · synthetic supplier study</p>
+            <h1>Three suppliers. Two share one dependency.</h1>
+            <p>
+              Network Atlas source preview. This example runs from the repository; public recipe
+              imports and serialized configurations are planned for NA5.
+            </p>
+            <p>
+              A and B obtain their component through X. C has a separate admitted route. Inspect the
+              original links, then add a bypass with no usable capacity.
+            </p>
+            <dl className="dependency-xray__metrics">
+              <div>
+                <dt>Current allocation exposed to X</dt>
+                <dd>{story.measures.exposureBps / 100}%</dd>
+              </div>
+              <div>
+                <dt>Demand shortfall if X is unavailable</dt>
+                <dd>{story.measures.shortfallBps / 100}%</dd>
+              </div>
+              <div>
+                <dt>Additional independent units/week for 70% output</dt>
+                <dd>{story.measures.additional.toLocaleString("en-US")}</dd>
+              </div>
+            </dl>
+            <div className="dependency-xray__controls">
+              <label>
+                Reading{" "}
+                <select
+                  value={reading}
+                  onChange={(event) => setReading(event.target.value as typeof reading)}
+                >
+                  <option value="organize">Organize</option>
+                  <option value="required-paths">Required paths</option>
+                </select>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={bypass}
+                  onChange={(event) => {
+                    setBypass(event.target.checked)
+                    setHighlightedEdgeIds([])
+                  }}
+                />{" "}
+                Add Y → A bypass (0 units/week)
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={reverse}
+                  onChange={(event) => setReverse(event.target.checked)}
+                />{" "}
+                Reverse backbone ranking
+              </label>
+            </div>
+            <p>
+              {reading === "organize"
+                ? "Gray links are chosen for this drawing. Rust links preserve the other original connections."
+                : "Blue brackets mark required ancestry in the full admitted graph. They are separate from the directed links."}
+            </p>
+            <div className="dependency-xray__overview" data-testid="dependency-overview">
+              <DependencyForestChart
+                {...chartProps}
+                onSelectNode={(id) => {
+                  setNodeId(id)
                   setCollapsed(false)
                 }}
-              >
-                {atlas.source.nodes.map((node) => (
-                  <option key={node.id}>{node.id}</option>
-                ))}
-              </select>
-            </label>{" "}
-            <label>
-              Target{" "}
-              <select
-                aria-label="Target"
-                value={target}
-                onChange={(event) => setTarget(event.target.value)}
-              >
-                {["A", "B", "C", "product"].map((id) => (
-                  <option key={id}>{id}</option>
-                ))}
-              </select>
-            </label>
-            <p data-testid="required-targets">
-              {selected} is required for:{" "}
-              {requiredTargets(forest, selected).join(", ") || "no other targets in this graph"}.
-            </p>
-            <p role="status">
-              {witness.value?.exists
-                ? `Bypass: ${witness.value.path!.nodeIds.join(" → ")}.`
-                : `No admitted path to ${target} avoids ${selected}.`}
+              />
+            </div>
+            <section
+              className="dependency-xray__inspector"
+              aria-label="Branch and bypass inspector"
+            >
+              <div>
+                <h2>Inspect a dependency</h2>
+                <label>
+                  Dependency{" "}
+                  <select
+                    aria-label="Dependency"
+                    value={selected}
+                    onChange={(event) => {
+                      setNodeId(event.target.value)
+                      setCollapsed(false)
+                    }}
+                  >
+                    {atlas.source.nodes.map((node) => (
+                      <option key={node.id}>{node.id}</option>
+                    ))}
+                  </select>
+                </label>{" "}
+                <label>
+                  Target{" "}
+                  <select
+                    aria-label="Target"
+                    value={target}
+                    onChange={(event) => setTarget(event.target.value)}
+                  >
+                    {["A", "B", "C", "product"].map((id) => (
+                      <option key={id}>{id}</option>
+                    ))}
+                  </select>
+                </label>
+                <p data-testid="required-targets">
+                  {selected} is required for:{" "}
+                  {requiredTargets(forest, selected).join(", ") || "no other targets in this graph"}
+                  .
+                </p>
+                <p role="status">
+                  {witness.value?.exists
+                    ? `Bypass: ${witness.value.path!.nodeIds.join(" → ")}.`
+                    : `No admitted path to ${target} avoids ${selected}.`}
+                </p>
+                <button
+                  type="button"
+                  disabled={!witness.value?.exists}
+                  onClick={() => setHighlightedEdgeIds(witness.value?.path?.edgeIds ?? [])}
+                >
+                  Show bypass on chart
+                </button>{" "}
+                <button type="button" onClick={() => setCollapsed(!collapsed)}>
+                  {collapsed ? "Open branch" : "Collapse branch"}
+                </button>
+                <p>
+                  Excluding {selected} removes all admitted paths to:{" "}
+                  {loss.value?.lostNodeIds.join(", ") || "none"}.
+                </p>
+                <p>
+                  <strong>Capacity reading:</strong>{" "}
+                  {story.measures.remaining.toLocaleString("en-US")} units/week remain under the
+                  stated no-inventory X-outage scenario.{" "}
+                  {bypass
+                    ? "Y has zero usable capacity, so the shortfall stays 70%."
+                    : "A path through C prevents X from dominating the product."}
+                </p>
+                <h3>Cross-links touching this branch</h3>
+                <ul>
+                  {ties.map((edge) => (
+                    <li key={edge.id}>
+                      <button type="button" onClick={() => setHighlightedEdgeIds([edge.id])}>
+                        {edge.id}: {edge.source} → {edge.target}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h2>Local adjacency</h2>
+                <DependencyMatrix
+                  forest={forest}
+                  nodeIds={matrixIds}
+                  onSelectEdges={setHighlightedEdgeIds}
+                />
+                <p>
+                  Boundary endpoints remain in the matrix when the branch closes. Empty cells
+                  indicate no admitted edge, not independent suppliers.
+                </p>
+              </div>
+            </section>
+            <p>
+              The 75% exposure is an allocation share, not an outage probability. The capacity
+              scenario assumes one fungible component, no inventory, and expansion of C to 3,000
+              units/week.
             </p>
             <button
               type="button"
-              disabled={!witness.value?.exists}
-              onClick={() => setHighlightedEdgeIds(witness.value?.path?.edgeIds ?? [])}
+              onClick={() =>
+                download(
+                  "supplier-evidence.json",
+                  JSON.stringify(packet, null, 2),
+                  "application/json",
+                )
+              }
             >
-              Show bypass on chart
+              Export evidence
             </button>{" "}
-            <button type="button" onClick={() => setCollapsed(!collapsed)}>
-              {collapsed ? "Open branch" : "Collapse branch"}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const { renderChart } = await import("semiotic/server")
+                  download(
+                    "supplier-dependencies.svg",
+                    renderChart("NetworkCustomChart", {
+                      ...dependencyForestChartProps(chartProps),
+                      theme,
+                    }),
+                    "image/svg+xml",
+                  )
+                } catch (error) {
+                  setExportError(String(error))
+                }
+              }}
+            >
+              Export static SVG
             </button>
-            <p>
-              Excluding {selected} removes all admitted paths to:{" "}
-              {loss.value?.lostNodeIds.join(", ") || "none"}.
-            </p>
-            <p>
-              <strong>Capacity reading:</strong> {story.measures.remaining.toLocaleString("en-US")}{" "}
-              units/week remain under the stated no-inventory X-outage scenario.{" "}
-              {bypass
-                ? "Y has zero usable capacity, so the shortfall stays 70%."
-                : "A path through C prevents X from dominating the product."}
-            </p>
-            <h3>Cross-links touching this branch</h3>
-            <ul>
-              {ties.map((edge) => (
-                <li key={edge.id}>
-                  <button type="button" onClick={() => setHighlightedEdgeIds([edge.id])}>
-                    {edge.id}: {edge.source} → {edge.target}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            {exportError && <p role="alert">{exportError}</p>}
+            <AtlasObservation chartId={chartProps.chartId} />
           </div>
-          <div>
-            <h2>Local adjacency</h2>
-            <DependencyMatrix
-              forest={forest}
-              nodeIds={matrixIds}
-              onSelectEdges={setHighlightedEdgeIds}
-            />
-            <p>
-              Boundary endpoints remain in the matrix when the branch closes. Empty cells indicate
-              no admitted edge, not independent suppliers.
-            </p>
-          </div>
-        </section>
-        <p>
-          The 75% exposure is an allocation share, not an outage probability. The capacity scenario
-          assumes one fungible component, no inventory, and expansion of C to 3,000 units/week.
-        </p>
-        <button
-          type="button"
-          onClick={() =>
-            download("supplier-evidence.json", JSON.stringify(packet, null, 2), "application/json")
-          }
-        >
-          Export evidence
-        </button>{" "}
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              const { renderChart } = await import("semiotic/server")
-              download(
-                "supplier-dependencies.svg",
-                renderChart("NetworkCustomChart", dependencyForestChartProps(chartProps)),
-                "image/svg+xml",
-              )
-            } catch (error) {
-              setExportError(String(error))
-            }
-          }}
-        >
-          Export static SVG
-        </button>
-        {exportError && <p role="alert">{exportError}</p>}
-      </div>
+        </LinkedCharts>
+      </ThemeProvider>
     </ExamplePageLayout>
   )
 }

@@ -275,7 +275,8 @@ export function useChartSelection({
   onClick,
   hoverHighlight,
   colorByField,
-  mobileInteraction
+  mobileInteraction,
+  emitObservations = true
 }: {
   selection?: SelectionConfig
   linkedHover?: LinkedHoverProp
@@ -288,6 +289,8 @@ export function useChartSelection({
   hoverHighlight?: HoverHighlightMode
   colorByField?: string
   mobileInteraction?: ResolvedMobileInteractionConfig
+  /** Frames that own observation publication can use these callbacks only for linking. */
+  emitObservations?: boolean
 }): {
   activeSelectionHook: SelectionHookResult | null
   hoverSelectionHook: SelectionHookResult | null
@@ -419,7 +422,7 @@ export function useChartSelection({
       }
 
       // Emit observation events
-      if (onObservation || pushObservation) {
+      if (emitObservations && (onObservation || pushObservation)) {
         emitHoverObservations({
           onObservation: publishObservation,
           datum: d ? observationDatum(d) : null,
@@ -441,6 +444,7 @@ export function useChartSelection({
       chartId,
       pushObservation,
       publishObservation,
+      emitObservations,
       hoverHighlight,
       seriesField,
       mobileInteraction
@@ -540,7 +544,7 @@ export function useChartSelection({
         onClick(datum, { x: d.x ?? 0, y: d.y ?? 0 })
       }
 
-      if (onObservation || pushObservation) {
+      if (emitObservations && (onObservation || pushObservation)) {
         emitClickObservations({
           onObservation: publishObservation,
           datum: d ? observationDatum(d) : null,
@@ -554,6 +558,7 @@ export function useChartSelection({
     },
     [
       onClick,
+      emitObservations,
       onObservation,
       pushObservation,
       publishObservation,

@@ -1517,7 +1517,12 @@ const StreamNetworkFrame = memo(forwardRef<
       <ScreenReaderSummary summary={summary} />
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
-      <AriaLiveTooltip hoverPoint={hoverData} />
+      <AriaLiveTooltip hoverPoint={hoverData && {
+        data: (hoverData.nodeOrEdge === "edge"
+          ? storeRef.current?.sceneEdges
+          : storeRef.current?.sceneNodes
+        )?.find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
+      }} />
       <div
         role="img"
         aria-label={

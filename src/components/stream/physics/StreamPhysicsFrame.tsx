@@ -541,11 +541,13 @@ export const StreamPhysicsFrame = memo(
         wallClockRef
       })
       const {
+        resolveSemanticBody,
         clearHover,
         focusedBodyIdRef,
         focusedSemanticItem,
         handleCanvasPointerDown,
         hoverData,
+        hoverDataRef,
         onKeyDown,
         setFocusedSemanticItem,
         setHoverData,
@@ -596,6 +598,8 @@ export const StreamPhysicsFrame = memo(
         ]
       })
       const physicsCanvasPointer = usePhysicsCanvasPointer({
+        hoverDataRef,
+        resolveSemanticBody,
         canvasRef,
         clearHover,
         emitObservation,
@@ -1507,7 +1511,11 @@ export const StreamPhysicsFrame = memo(
           ) : null}
           <ScreenReaderSummary summary={summary} />
           {/* Live region must sit outside role="img" so AT announces hover/focus. */}
-          <AriaLiveTooltip hoverPoint={hoverData} />
+          <AriaLiveTooltip hoverPoint={focusedSemanticItem ? null : hoverData && {
+            data: allSemanticItems.find((item) => item.bodyId === hoverData.id)?.description
+              ? { reading: allSemanticItems.find((item) => item.bodyId === hoverData.id)!.description }
+              : hoverData.data
+          }} />
           <div
             id={liveRegionId}
             aria-live="polite"

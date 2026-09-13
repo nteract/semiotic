@@ -49,10 +49,22 @@ export function DependencyMatrix({
                 return (
                   <td
                     key={target}
-                    style={{ border: "1px solid #c6cdd3", padding: 5 }}
+                    style={{
+                      border: "1px solid var(--semiotic-border, currentColor)",
+                      padding: 5
+                    }}
                   >
                     {cell ? (
                       <button
+                        style={{
+                          color: "var(--semiotic-text, inherit)",
+                          background: "var(--semiotic-surface, transparent)",
+                          border:
+                            "1px solid var(--semiotic-border, currentColor)",
+                          borderRadius: 4,
+                          minWidth: 32,
+                          minHeight: 32
+                        }}
                         type="button"
                         title={cell.edgeIds.join(", ")}
                         aria-label={`${source} to ${target}: ${cell.edgeIds.join(", ")}`}

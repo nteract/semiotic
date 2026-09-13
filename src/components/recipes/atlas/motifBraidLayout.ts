@@ -1,4 +1,7 @@
-import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
+import type {
+  NetworkCustomLayout,
+  NetworkLayoutResult
+} from "../../stream/networkCustomLayout"
 import type { GlyphDef } from "../../stream/glyphDef"
 import { getMax } from "../../charts/shared/minMax"
 import { mean } from "../recipeUtils"
@@ -63,6 +66,16 @@ function prefixSteps(groups: readonly TrajectoryGroup[]): PrefixStep[] {
 const trafficAt = (group: TrajectoryGroup, step: number) =>
   group.stepEntityCounts?.[step] ?? group.entityCount
 
+const restyleMark: NonNullable<NetworkLayoutResult["restyle"]> &
+  NonNullable<NetworkLayoutResult["restyleEdge"]> = ({ datum }, selection) => ({
+  opacity:
+    selection?.isActive &&
+    !selection.predicate(datum!) &&
+    !(datum?.fromNodeId != null && selection.predicate({ ...datum, nodeId: datum.fromNodeId }))
+      ? 0.2
+      : 1
+})
+
 /**
  * Depth-aligned prefix steps with one labeled square per vertex visit. Each
  * journey keeps its own lane through shared steps and splits only when its
@@ -86,10 +99,8 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
 
   const signatures = new Set(groups.map((group) => group.signature))
   const signatureOrder = [
-    ...new Set([
-      ...braid.signatureOrder.filter((signature) => signatures.has(signature)),
-      ...signatures
-    ])
+    ...braid.signatureOrder.filter((signature) => signatures.delete(signature)),
+    ...signatures
   ]
   const rank = new Map(signatureOrder.map((signature, i) => [signature, i]))
   const ordered = [...groups].sort(
@@ -100,19 +111,17 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
   )
   const nodes = prefixSteps(ordered)
   const maxDepth = getMax(nodes.map((node) => node.depth))
-  const maxCount = getMax(
-    groups.flatMap((group) => group.stepEntityCounts ?? [group.entityCount])
+  const peakCounts = groups.map((group) =>
+    getMax(group.stepEntityCounts ?? [group.entityCount])
   )
+  const maxCount = getMax(peakCounts)
   const strokeWidth = (count: number) =>
     count <= 0 ? 0 : Math.max(1, (10 * count) / maxCount)
   const peakWidth = new Map(
-    groups.map((group) => [
-      group.id,
-      strokeWidth(getMax(group.stepEntityCounts ?? [group.entityCount]))
-    ])
+    groups.map((group, index) => [group.id, strokeWidth(peakCounts[index])])
   )
-  const panelHeight = plot.height / Math.max(partitions.length, 1)
-  const ink = ctx.theme.semantic.text ?? "#333"
+  const panelHeight = plot.height / partitions.length
+  const { semantic } = ctx.theme
   const label = (
     x: number,
     y: number,
@@ -123,14 +132,16 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
       x,
       y,
       text,
-      fill: ink,
+      fill: semantic.text ?? "#333",
       fontSize: 10,
       anchor: "middle",
       ...style
     })
-  const strandColor = (group: TrajectoryGroup) =>
-    ctx.theme.categorical[rank.get(group.signature)!] ??
-    ctx.resolveColor(`strand:${group.signature}`)
+  const provenance = {
+    sourceRevision: braid.atlas.provenance.sourceRevision,
+    analysisRevision: braid.atlas.analysisRevision,
+    relationScopeId: "directed-admitted"
+  }
 
   // Reserve the same square size in every comparison panel. This keeps the
   // step columns and lane topology comparable when traffic differs.
@@ -177,7 +188,7 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
     const toWidth = strokeWidth(toCount)
     if (fromWidth === 0 && toWidth === 0) return
     const tapered = fromWidth !== toWidth
-    const color = strandColor(group)
+    const color = ctx.resolveColor(group.signature)
     sceneEdges.push({
       type: "curved",
       id,
@@ -191,7 +202,11 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
         strokeWidth: tapered ? 0 : fromWidth
       },
       datum: {
+        ...provenance,
+        id,
         kind: "braid-track",
+        nodeId: group.nodePath[toStep],
+        fromNodeId: group.nodePath[fromStep],
         groupId: group.id,
         signature: group.signature,
         partition: group.partition,
@@ -256,18 +271,22 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
         step: node.depth,
         partition: partition ?? "all"
       }
+      const id = `vertex:${partition ?? "all"}:${node.id}`
       sceneNodes.push({
         type: "glyph",
-        id: `vertex:${partition ?? "all"}:${node.id}`,
+        id,
         cx: x,
         cy: y,
         size,
         depth: node.depth,
         label: `${node.state} (step ${node.depth})`,
         glyph: STEP_GLYPH,
-        accent: ctx.theme.semantic.border ?? "#888",
-        style: { fill: ctx.theme.semantic.surface ?? "#fff" },
+        accent: semantic.border ?? "#888",
+        style: { fill: semantic.surface ?? "#fff" },
         datum: {
+          ...provenance,
+          id,
+          nodeId: node.state,
           kind: "braid-step",
           prefixId: node.id,
           ...accessibleDatum
@@ -297,5 +316,11 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
       }
     }
   })
-  return { sceneNodes, sceneEdges, labels }
+  return {
+    sceneNodes,
+    sceneEdges,
+    labels,
+    restyle: restyleMark,
+    restyleEdge: restyleMark
+  }
 }

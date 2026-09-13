@@ -87,27 +87,19 @@ function checkEmptyData(
 }
 
 function checkBadDimensions(
-  _component: string,
   props: Datum,
   out: Diagnosis[]
 ): void {
-  const w = props.width
-  const h = props.height
-  if (w !== undefined && (typeof w !== "number" || w <= 0)) {
-    out.push({
-      severity: "error",
-      code: "BAD_WIDTH",
-      message: `width=${JSON.stringify(w)} — chart needs a positive number.`,
-      fix: `Set width={600} or use responsiveWidth={true}.`,
-    })
-  }
-  if (h !== undefined && (typeof h !== "number" || h <= 0)) {
-    out.push({
-      severity: "error",
-      code: "BAD_HEIGHT",
-      message: `height=${JSON.stringify(h)} — chart needs a positive number.`,
-      fix: `Set height={400} or use responsiveHeight={true}.`,
-    })
+  for (const [dimension, fallback] of [["width", 600], ["height", 400]] as const) {
+    const value = props[dimension]
+    if (value !== undefined && (typeof value !== "number" || value <= 0)) {
+      out.push({
+        severity: "error",
+        code: dimension === "width" ? "BAD_WIDTH" : "BAD_HEIGHT",
+        message: `${dimension}=${JSON.stringify(value)} — chart needs a positive number.`,
+        fix: `Set ${dimension}={${fallback}}.`,
+      })
+    }
   }
   if (props.size && Array.isArray(props.size)) {
     const [sw, sh] = props.size
@@ -336,13 +328,12 @@ function checkColorContrast(
       severity: "warning",
       code: "LOW_COLOR_CONTRAST",
       message: `${lowContrast.length} color(s) in colorScheme have < 3:1 contrast against background "${bg}": ${lowContrast.join(", ")}. Data marks may be hard to see.`,
-      fix: `Use darker colors on light backgrounds or lighter colors on dark backgrounds. Import COLOR_BLIND_SAFE_CATEGORICAL from "semiotic" for an accessible preset.`,
+      fix: `Choose colors with at least 3:1 contrast against the chart background.`,
     })
   }
 }
 
 function checkMarginOverflow(
-  _component: string,
   props: Datum,
   out: Diagnosis[]
 ): void {
@@ -640,9 +631,31 @@ export function diagnoseConfig(
   props: Datum
 ): DiagnosisResult {
   const diagnoses: Diagnosis[] = []
+  const result = (): DiagnosisResult => ({
+    ok: diagnoses.every((finding) => finding.severity === "warning"),
+    diagnoses,
+  })
 
-  const validation = validateProps(componentName, propsForValidation(props))
-  for (const err of validation.errors) {
+  // Custom charts take executable layout callbacks, so they deliberately do
+  // not enter the serialized chart schema. Diagnose their JavaScript configs
+  // without pretending that the schema can validate arbitrary layout code.
+  const custom = /^(XY|Ordinal|Network|Physics|Geo)CustomChart$/.test(componentName)
+  const errors: string[] = custom
+    ? []
+    : validateProps(componentName, propsForValidation(props)).errors
+  if (custom) {
+    if (typeof props.layout !== "function") {
+      errors.push("Provide a layout function.")
+    }
+    const fields = componentName === "NetworkCustomChart" ? ["nodes", "edges"] : componentName === "GeoCustomChart" ? ["points", "areas", "lines"] : ["data"]
+    for (const field of fields) {
+      if (props[field] != null && !Array.isArray(props[field])) {
+        errors.push(`Provide an array for ${field}.`)
+      }
+    }
+  }
+
+  for (const err of errors) {
     if (
       componentName === "BigNumber" &&
       props.accessibleTable !== undefined &&
@@ -654,7 +667,7 @@ export function diagnoseConfig(
       severity: "error",
       code: "VALIDATION",
       message: err,
-      fix: validationFix(componentName, err),
+      fix: custom ? err : validationFix(componentName, err),
     })
   }
 
@@ -662,12 +675,14 @@ export function diagnoseConfig(
     checkBigNumberChartOnlyProps(props, diagnoses)
   }
 
-  if (!VALIDATION_MAP[componentName]) {
-    return { ok: diagnoses.length === 0, diagnoses }
+  if (custom || VALIDATION_MAP[componentName]) {
+    checkBadDimensions(props, diagnoses)
+    checkMarginOverflow(props, diagnoses)
+    checkInteractiveAnnotationIds(componentName, props, diagnoses)
   }
+  if (!VALIDATION_MAP[componentName]) return result()
 
   checkEmptyData(componentName, props, diagnoses)
-  checkBadDimensions(componentName, props, diagnoses)
   checkAccessorFieldMissing(componentName, props, diagnoses)
   checkHierarchyDataAsArray(componentName, props, diagnoses)
   checkNetworkMissingEdges(componentName, props, diagnoses)
@@ -675,7 +690,6 @@ export function diagnoseConfig(
   checkLinkedChartsWithoutSelection(componentName, props, diagnoses)
   checkNonZeroBaseline(componentName, props, diagnoses)
   checkDataGaps(componentName, props, diagnoses)
-  checkMarginOverflow(componentName, props, diagnoses)
   // Keep the always-on doctor pass linear. Exact IQR outlier checks remain
   // available through auditData() and the opt-in ChartContainer dataAudit.
   const numericDiagnoses = auditData(componentName, props, undefined, {
@@ -703,7 +717,6 @@ export function diagnoseConfig(
   checkTokenEncodingDiagnostics(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
-  checkInteractiveAnnotationIds(componentName, props, diagnoses)
 
   checkInvertedAxis(componentName, props, diagnoses)
   checkDualAxisUnlabeled(componentName, props, diagnoses)
@@ -727,8 +740,5 @@ export function diagnoseConfig(
     }
   }
 
-  return {
-    ok: diagnoses.every(d => d.severity === "warning"),
-    diagnoses,
-  }
+  return result()
 }

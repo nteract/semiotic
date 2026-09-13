@@ -2338,7 +2338,7 @@ interface-member StreamPhysicsFrameProps::property::legendLayout = optional lege
 interface-member StreamPhysicsFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member StreamPhysicsFrameProps::property::margin = optional margin: Partial<FrameMargin> | undefined
 interface-member StreamPhysicsFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
-interface-member StreamPhysicsFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: import("../../semiotic-ai").OnAnnotationActivateCallback | undefined
+interface-member StreamPhysicsFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: import("../../semiotic").OnAnnotationActivateCallback | undefined
 interface-member StreamPhysicsFrameProps::property::onBodyHover = optional onBodyHover: ((body: PhysicsBodyState | null, hover: PhysicsHoverData | null) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onBodyPointerDown = optional onBodyPointerDown: ((body: PhysicsBodyState | null, event: React.PointerEvent<HTMLCanvasElement>) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onClick = optional onClick: ((datum: Datum | null, event: {x: number; y: number; body: PhysicsBodyState | null;}) => void) | undefined

@@ -450,7 +450,11 @@ function makeMotifBraidProjection() {
     })),
   )
   return {
-    atlas: { spec: { comparison: { partitions: ["control", "treatment"] } } },
+    atlas: {
+      spec: { comparison: { partitions: ["control", "treatment"] } },
+      provenance: { sourceRevision: "synthetic-braid-traffic-v1" },
+      analysisRevision: "synthetic-braid-traffic-analysis-v1",
+    },
     groups,
     signatureOrder: journeys.map((journey) => journey.path.join(">")),
     ribbons: [],
@@ -480,7 +484,9 @@ function makeMotifBraidParityProps(recipes) {
     nodeIDAccessor: "id",
     sourceAccessor: "source",
     targetAccessor: "target",
-    colorScheme: ["#4e79a7", "#b75b08", "#39783a", "#8f6091", "#c74749", "#387f7d"],
+    colorScheme: Object.fromEntries(braid.signatureOrder.map((signature, index) => [
+      signature, ["#4e79a7", "#b75b08", "#39783a", "#8f6091", "#c74749", "#387f7d"][index]
+    ])),
     width: 900,
     height: 940,
     margin: { top: 16, right: 16, bottom: 16, left: 16 },

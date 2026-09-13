@@ -25,11 +25,13 @@ type PhysicsFrameObservationEmitter = (
 ) => void
 
 interface PhysicsCanvasPointerOptions {
+  resolveSemanticBody?: (body: PhysicsBodyState) => PhysicsBodyState
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   clearHover: () => void
   emitObservation: PhysicsFrameObservationEmitter
   enableHover: boolean
   hoverRadius: number
+  hoverDataRef: React.MutableRefObject<PhysicsHoverData | null>
   onBodyHover: StreamPhysicsFrameProps["onBodyHover"]
   setHoverData: React.Dispatch<React.SetStateAction<PhysicsHoverData | null>>
   storeRef: React.RefObject<PhysicsPipelineStore | null>
@@ -60,11 +62,13 @@ function collectPhysicsBodyCursor(
 
 /** Owns canvas hit-testing that is shared by physics hover and authored cursors. */
 export function usePhysicsCanvasPointer({
+  resolveSemanticBody,
   canvasRef,
   clearHover,
   emitObservation,
   enableHover,
   hoverRadius,
+  hoverDataRef,
   onBodyHover,
   setHoverData,
   storeRef
@@ -145,30 +149,33 @@ export function usePhysicsCanvasPointer({
       if (!enableHover) return
       // Cursor geometry is presentation-only and may use an authored visual
       // radius. It must not change the established collision/hover selection.
-      const body = store.hitTest(x, y, hoverRadius)
+      const hit = store.hitTest(x, y, hoverRadius)
+      const body = hit && resolveSemanticBody ? resolveSemanticBody(hit) : hit
       if (!body) {
         clearHover()
         return
       }
       const hover = physicsHoverData(body)
-      setHoverData((current) => {
-        if (
-          current?.id === hover.id &&
-          current.x === hover.x &&
-          current.y === hover.y
-        )
-          return current
-        onBodyHover?.(body, hover)
-        emitObservation("hover", { datum: body.datum, x: body.x, y: body.y })
-        return hover
-      })
+      const current = hoverDataRef.current
+      if (
+        current?.id === hover.id &&
+        current.data === hover.data &&
+        current.x === hover.x &&
+        current.y === hover.y
+      ) return
+      hoverDataRef.current = hover
+      setHoverData(hover)
+      onBodyHover?.(body, hover)
+      emitObservation("hover", { datum: body.datum, x: body.x, y: body.y })
     },
     [
       clearHover,
       emitObservation,
       enableHover,
       hoverRadius,
+      hoverDataRef,
       onBodyHover,
+      resolveSemanticBody,
       setCursorAt,
       setHoverData,
       storeRef

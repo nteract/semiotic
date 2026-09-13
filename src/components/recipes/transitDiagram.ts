@@ -113,8 +113,10 @@ interface PhysicalSegment {
   authoredOrder?: string[]
 }
 
-function rawDatum(value: RealtimeNode | RealtimeEdge): Datum {
-  return (unwrapDatum<Datum>(value) ?? value) as Datum
+function readStationLabel(node: PreparedNode, config: TransitDiagramConfig): unknown {
+  return typeof config.labelAccessor === "function"
+    ? config.labelAccessor(node.data)
+    : readField(node.data, config.labelAccessor ?? "label", node.id)
 }
 
 function edgeEndpoint(value: RealtimeEdge["source"]): string {
@@ -181,26 +183,18 @@ function deriveSourceRootedLines(
     indegree.set(edge.target, (indegree.get(edge.target) ?? 0) + 1)
     outgoing.get(edge.source)?.push(edge)
   }
-  for (const next of outgoing.values()) {
-    next.sort((a, b) => a.target.localeCompare(b.target) || a.source.localeCompare(b.source))
-  }
-
-  const roots = nodes
-    .filter((node) => (indegree.get(node.id) ?? 0) === 0)
-    .sort((a, b) => a.id.localeCompare(b.id))
+  // Preparation already sorts nodes by ID and edges by source/target. Filtering
+  // preserves those orders, including each source's outgoing edge list.
+  const roots = nodes.filter((node) => (indegree.get(node.id) ?? 0) === 0)
   const edgeLines = new Map<PreparedEdge, Map<string, TransitDiagramLineDescriptor>>()
   const nodeLines = new Map(
     nodes.map((node) => [node.id, new Map<string, TransitDiagramLineDescriptor>()]),
   )
 
   for (const root of roots) {
-    const rootLabel =
-      typeof config.labelAccessor === "function"
-        ? config.labelAccessor(root.data)
-        : readField(root.data, config.labelAccessor ?? "label", root.id)
     const descriptor: TransitDiagramLineDescriptor = {
       id: root.id,
-      label: String(rootLabel),
+      label: String(readStationLabel(root, config)),
       color: sourceLineColor(root, config, resolveColor),
     }
     const visited = new Set<string>()
@@ -457,12 +451,12 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
   const config = ctx.config ?? {}
   const mode = config.mode ?? "primary"
   const dimOpacity = config.dimOpacity ?? 0.14
-  const opacityFor = (datum: Datum) =>
-    ctx.selection?.isActive && !ctx.selection.predicate(datum) ? dimOpacity : 1
+  const opacityFor = (datum: Datum, selection = ctx.selection) =>
+    selection?.isActive && !selection.predicate(datum) ? dimOpacity : 1
   const nodes: PreparedNode[] = ctx.nodes
     .map((wrapper) => ({
       id: wrapper.id,
-      data: rawDatum(wrapper),
+      data: unwrapDatum<Datum>(wrapper)!,
       wrapper,
     }))
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -470,7 +464,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     .map((wrapper) => ({
       source: edgeEndpoint(wrapper.source),
       target: edgeEndpoint(wrapper.target),
-      data: rawDatum(wrapper),
+      data: unwrapDatum<Datum>(wrapper)!,
       wrapper,
     }))
     .sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target))
@@ -559,13 +553,8 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
   const stationRadii = new Map<string, number>()
   const sceneNodes: NetworkSceneNode[] = []
   const stationGlyphs: ReactNode[] = []
-  const stationLabel = (node: PreparedNode) => {
-    const value =
-      typeof config.labelAccessor === "function"
-        ? config.labelAccessor(node.data)
-        : readField(node.data, config.labelAccessor ?? "label", node.id)
-    return String(value || node.id)
-  }
+  const stationLabel = (node: PreparedNode) =>
+    String(readStationLabel(node, config) || node.id)
 
   if (mode === "minimap") {
     const stops = new Map<
@@ -773,16 +762,12 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     ),
   }
   if (stationGlyphs.length > 0 || mode === "minimap") return result
+  const restyle = (mark: { datum?: unknown }, selection: typeof ctx.selection) =>
+    ({ opacity: opacityFor(mark.datum as Datum, selection) })
   return {
     ...result,
-    restyle: (node, selection) =>
-      selection?.isActive && !selection.predicate(node.datum as Datum)
-        ? { opacity: dimOpacity }
-        : { opacity: 1 },
-    restyleEdge: (edge, selection) =>
-      selection?.isActive && !selection.predicate(edge.datum as Datum)
-        ? { opacity: dimOpacity }
-        : { opacity: 1 },
+    restyle,
+    restyleEdge: restyle,
   }
 }
 

@@ -5,15 +5,17 @@ import type { NetworkCustomChartProps } from "../../charts/custom/NetworkCustomC
 import { prepareMotifBraid } from "./braid"
 import { motifBraidLayout } from "./motifBraidLayout"
 import type { PreparedNetworkAtlas } from "./types"
+import { atlasLinkedHover, type AtlasChartOptions } from "./atlasChartOptions"
 
-export type MotifBraidChartProps = {
+export type MotifBraidChartProps = AtlasChartOptions & {
   atlas: PreparedNetworkAtlas
   width?: number
   height?: number
   colorScheme?: NetworkCustomChartProps["colorScheme"]
-  title?: string
-  description?: string
-  summary?: string
+  selection?: NetworkCustomChartProps["selection"]
+  onClick?: NetworkCustomChartProps["onClick"]
+  annotations?: NetworkCustomChartProps["annotations"]
+  frameProps?: NetworkCustomChartProps["frameProps"]
 }
 
 /**
@@ -27,19 +29,28 @@ export function MotifBraidChart({
   description,
   summary,
   width,
-  height
+  height,
+  accessibleTable = true,
+  linkedHover,
+  ...chartOptions
 }: MotifBraidChartProps) {
   const braid = useMemo(() => prepareMotifBraid(atlas), [atlas])
   return (
     <NetworkCustomChart
+      {...chartOptions}
+      linkedHover={atlasLinkedHover(linkedHover)}
       width={width}
       height={height}
       title={title ?? atlas.spec.dataRevision}
       description={
         description ??
-        "Synthetic Motif Braid. Labeled squares show successive journey steps; parallel strands split at diverging prefixes and taper with per-step traffic."
+        "Motif Braid. Labeled squares show successive journey steps; parallel strands split at diverging prefixes and taper with per-step traffic."
       }
-      summary={summary}
+      summary={
+        summary ??
+        `${braid.groups.length} supported journey groups. Counts use ${atlas.spec.motifs.countUnit}; overlapping motifs do not partition the population. Source revision: ${atlas.provenance.sourceRevision}.`
+      }
+      accessibleTable={accessibleTable}
       nodes={braid.sceneSeeds.nodes}
       edges={braid.sceneSeeds.edges}
       layout={motifBraidLayout}

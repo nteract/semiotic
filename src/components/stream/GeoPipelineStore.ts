@@ -993,8 +993,12 @@ export class GeoPipelineStore implements UpdateResultStore {
       this.hasCustomRestyle = !!result.restyle
       this._baseStyles = new WeakMap()
       if (this.hasCustomRestyle) {
-        for (const node of nodes) this._baseStyles.set(node, node.style)
-        this.restyleScene(config.layoutSelection ?? null)
+        // These are the new nodes; this.scene still holds the previous layout.
+        for (const node of nodes) {
+          this._baseStyles.set(node, node.style)
+          const patch = result.restyle?.(node, config.layoutSelection ?? null)
+          if (patch) node.style = { ...node.style, ...patch }
+        }
       }
       warnCustomLayoutDiagnostics({
         label: "geo customLayout",

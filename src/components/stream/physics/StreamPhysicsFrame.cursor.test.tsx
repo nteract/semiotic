@@ -108,6 +108,7 @@ describe("StreamPhysicsFrame authored cursors", () => {
   it("reuses and resets its lazy cursor collection between paints", () => {
     const { result } = renderHook(() =>
       usePhysicsCanvasPointer({
+        hoverDataRef: { current: null },
         canvasRef: React.createRef<HTMLCanvasElement>(),
         clearHover: vi.fn(),
         emitObservation: vi.fn(),
