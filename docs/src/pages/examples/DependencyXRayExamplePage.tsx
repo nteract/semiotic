@@ -6,22 +6,21 @@ import { LinkedCharts } from "semiotic/ai"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 import { AtlasObservation } from "../../components/AtlasObservation"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
-import { supplierStory } from "../../../../src/components/recipes/atlas/supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import {
   DependencyForestChart,
-  dependencyForestChartProps,
-} from "../../../../src/components/recipes/atlas/DependencyForestChart"
-import { DependencyMatrix } from "../../../../src/components/recipes/atlas/DependencyMatrix"
+} from "semiotic/atlas"
+import { DependencyMatrix } from "semiotic/atlas"
 import {
   branchMembers,
   getBranchResidualConnections,
   requiredTargets,
-} from "../../../../src/components/recipes/atlas/dependencyForest"
+} from "semiotic/atlas/core"
 import {
   getBypassWitness,
   getDependencyExclusion,
   getRequiredPaths,
-} from "../../../../src/components/recipes/atlas/dependencyQueries"
+} from "semiotic/atlas/core"
 import "./DependencyXRayExamplePage.css"
 
 function download(name: string, content: string, type: string) {
@@ -112,8 +111,8 @@ export default function DependencyXRayExamplePage() {
             <p className="dependency-xray__eyebrow">Network Atlas · synthetic supplier study</p>
             <h1>Three suppliers. Two share one dependency.</h1>
             <p>
-              Network Atlas source preview. This example runs from the repository; public recipe
-              imports and serialized configurations are planned for NA5.
+              Network Atlas public reader. Import DependencyForestChart from semiotic/atlas;
+              prepare and query its evidence with semiotic/atlas/core.
             </p>
             <p>
               A and B obtain their component through X. C has a separate admitted route. Inspect the
@@ -291,8 +290,8 @@ export default function DependencyXRayExamplePage() {
                   const { renderChart } = await import("semiotic/server")
                   download(
                     "supplier-dependencies.svg",
-                    renderChart("NetworkCustomChart", {
-                      ...dependencyForestChartProps(chartProps),
+                    renderChart("DependencyForestChart", {
+                      ...chartProps,
                       theme,
                     }),
                     "image/svg+xml",

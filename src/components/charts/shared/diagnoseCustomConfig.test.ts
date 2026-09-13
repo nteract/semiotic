@@ -56,7 +56,7 @@ describe("programmatic custom-chart diagnostics", () => {
       )
     }
   )
-  it("keeps unpublished atlas reader names outside the serialized and programmatic chart registries", () => {
+  it("requires prepared Atlas inputs rather than a custom layout callback", () => {
     expect(diagnoseConfig("FlowCircuitChart", { layout: () => ({}) }).ok).toBe(
       false
     )

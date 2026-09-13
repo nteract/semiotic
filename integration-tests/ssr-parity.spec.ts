@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test"
 import { createRequire } from "node:module"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
+import { makeAtlasStoryParityCases } from "./atlas-story-parity-fixtures"
 import {
   makeFlowCircuitParityCases,
   type FlowCircuitEvidence,
@@ -80,6 +81,7 @@ const { makeSsrParityCases } = cjsRequire("./ssr-parity-fixtures.js") as {
 }
 const recipes = cjsRequire("../dist/semiotic-recipes.min.js") as Record<string, unknown>
 const cases: ParityCase[] = [
+  ...makeAtlasStoryParityCases(),
   ...makeSsrParityCases(React, recipes),
   ...makeDependencyXRayParityCases(),
   ...makeFlowCircuitParityCases(),

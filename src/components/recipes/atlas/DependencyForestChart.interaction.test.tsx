@@ -3,7 +3,7 @@ import { fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { DependencyForestChart } from "./DependencyForestChart"
-import { supplierStory } from "./supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 
 describe("Dependency Forest node activation", () => {
   let cleanupCanvas: () => void

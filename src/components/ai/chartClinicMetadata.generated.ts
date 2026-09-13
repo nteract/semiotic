@@ -14,6 +14,9 @@ interface ChartClinicMetadata {
 }
 
 export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>> = {
+  "MotifBraidChart": {"category":"network","recommendedImport":"semiotic/atlas","docsRoute":"/charts/motif-braid-chart","serverImport":"semiotic/server"},
+  "DependencyForestChart": {"category":"network","recommendedImport":"semiotic/atlas","docsRoute":"/charts/dependency-forest-chart","serverImport":"semiotic/server"},
+  "FlowCircuitChart": {"category":"physics","recommendedImport":"semiotic/atlas","docsRoute":"/charts/flow-circuit-chart","serverImport":"semiotic/server"},
   "BarChart": {"category":"ordinal","recommendedImport":"semiotic/ordinal","serverImport":"semiotic/server","docsRoute":"/charts/bar-chart","pilot":true},
   "StackedBarChart": {"category":"ordinal","recommendedImport":"semiotic/ordinal","serverImport":"semiotic/server"},
   "GroupedBarChart": {"category":"ordinal","recommendedImport":"semiotic/ordinal","serverImport":"semiotic/server"},

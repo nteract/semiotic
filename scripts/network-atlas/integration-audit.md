@@ -3,7 +3,8 @@
 Scope: the delivered Motif Braid, Dependency X-Ray and Flow Circuit readers,
 their shared custom-chart hosts, current public preparation/layout facades,
 documentation examples, static SVG/evidence and generated consumer contracts.
-This sweep does not publish the NA5 reader APIs or serialized chart names.
+This initial sweep preceded publication. [NA5 delivery notes](NA5.md) record
+the subsequent public reader APIs, serialized chart names and package audit.
 
 ## Findings and fixes
 

@@ -200,6 +200,10 @@ const semioticAI = parseSemioticAIChartExports()
 const mcpRegistry = parseComponentRegistry()
 const serverConfigs = parseServerConfigs()
 const geoCharts = discoverChartFiles("geo")
+// Atlas has a dedicated optional client boundary, like geo. Its MCP registry
+// imports from that boundary so unrelated AI consumers retain their entry graph.
+const atlasSource = read(path.join(ROOT, "src/components/semiotic-atlas.ts"))
+const atlasCharts = new Set([...atlasSource.matchAll(/export \{ (\w+Chart) \}/g)].map(match => match[1]))
 // Value-family HOCs use the native value SVG registry rather than the
 // frame-driven CHART_CONFIGS registry, but remain MCP-renderable.
 const valueCharts = discoverChartFiles("value")
@@ -218,7 +222,7 @@ const metadataRenderable = new Set(
 // AI exports set. Geo charts stay excluded because they ship under a
 // separate subpath and aren't re-exported from `semiotic/ai`.
 const expectedAIExports = new Set(
-  [...validation, ...AI_EXPORT_ONLY].filter(name => !geoCharts.has(name))
+  [...validation, ...AI_EXPORT_ONLY].filter(name => !geoCharts.has(name) && !atlasCharts.has(name))
 )
 const expectedMCPRegistry = new Set(
   [...validation, ...recipeComponents].filter(name => !realtimeCharts.has(name))
@@ -269,6 +273,7 @@ assertNoUnexpected("serverChartConfigs", serverConfigs, allowedServerConfigs)
 // Registry-independent sweep: anything users can import must be registered, or
 // the registry-derived gates above never see it at all.
 const publiclyExported = parsePubliclyExportedCharts()
+for (const name of atlasCharts) publiclyExported.set(name, ["semiotic-atlas.ts"])
 for (const [name, entries] of publiclyExported) {
   if (validation.has(name) || SERVER_ONLY.has(name)) continue
   errors.push(
@@ -282,7 +287,7 @@ for (const name of mcpRegistry) {
   if (!schema.has(name)) {
     errors.push(`MCP component registry includes ${name}, but schema.json does not`)
   }
-  if (!geoCharts.has(name) && !recipeComponents.has(name) && !semioticAI.has(name)) {
+  if (!geoCharts.has(name) && !atlasCharts.has(name) && !recipeComponents.has(name) && !semioticAI.has(name)) {
     errors.push(`MCP component registry includes ${name}, but semiotic/ai does not export it`)
   }
   if (

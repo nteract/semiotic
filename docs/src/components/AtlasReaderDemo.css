@@ -1,0 +1,58 @@
+.atlas-reader-demo {
+  min-width: 0;
+}
+.atlas-reader-demo code {
+  overflow-wrap: anywhere;
+}
+.atlas-reader-demo__controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 16px 0;
+}
+.atlas-reader-demo button,
+.atlas-reader-demo select {
+  min-height: 44px;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--text-secondary);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.atlas-reader-demo__chart,
+.atlas-reader-demo__table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.atlas-reader-demo table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+.atlas-reader-demo th,
+.atlas-reader-demo td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--surface-3);
+  overflow-wrap: anywhere;
+}
+.atlas-reader-demo caption {
+  text-align: left;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+.atlas-reader-demo details {
+  margin: 12px 0;
+}
+.atlas-reader-demo pre {
+  max-width: 100%;
+  overflow: auto;
+  max-height: 440px;
+}
+@media (max-width: 600px) {
+  .atlas-reader-demo__chart {
+    display: none;
+  }
+}

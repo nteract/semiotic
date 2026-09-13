@@ -5,7 +5,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { FlowCircuitChart } from "./FlowCircuitChart"
 import { prepareNetworkAtlas } from "./prepare"
 import { prepareFlowCircuit } from "./flowCircuit"
-import { flowCircuitStory } from "./flowCircuitStories"
+import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { readCircuitEdition } from "./flowCircuitTape"
 
 /** Click the visible module center through the real physics hit-test path. */

@@ -1,16 +1,16 @@
-import etlFixture from "../../../../scripts/network-atlas/fixtures/etl-hot-partition-v1.json"
-import retryFixture from "../../../../scripts/network-atlas/fixtures/retry-incident-v1.json"
-import { prepareNetworkAtlas } from "./prepare"
-import { prepareFlowCircuit } from "./flowCircuit"
-import { admitCircuitEdition } from "./flowCircuitTape"
+import etlFixture from "../fixtures/etl-hot-partition-v1.json"
+import retryFixture from "../fixtures/retry-incident-v1.json"
+import { prepareNetworkAtlas } from "semiotic/atlas/core"
+import { prepareFlowCircuit } from "semiotic/atlas/core"
+import { admitCircuitEdition } from "semiotic/atlas/core"
 import { buildEtlEdition, buildRetryEdition } from "./flowCircuitStoryEditions"
 import type {
   AtlasNode,
   AtlasEdge,
   AtlasOccurrence,
   NetworkAtlasSpec
-} from "./types"
-import type { CircuitNodeSemantics } from "./flowCircuitTypes"
+} from "semiotic/atlas/core"
+import type { CircuitNodeSemantics } from "semiotic/atlas/core"
 
 export const circuitStoryDictionary = {
   rate: "Transferred volume during the declared interval, per second; every pipe names its unit.",

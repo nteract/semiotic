@@ -109,7 +109,9 @@ const ENTRY_GRAPHS = [
   {
     entry: "semiotic-artifact.module.min.js",
     label: "artifact",
-    limitKb: 121
+    // NA5 binds prepared Atlas payloads as data and registers three chart
+    // identities. Same-runner baseline: 121.0 KiB; new graph: 121.2 KiB.
+    limitKb: 121.5
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -234,7 +236,14 @@ const ENTRY_GRAPHS = [
   // Bumped 101→102: motifBraidLayout joins the recipes entry so NetworkCustomChart
   // SSR/CSR parity can consume the Motif Braid scene. Production measures
   // 101.4 KiB gzip; keep a sub-KiB runway for this accepted layout export.
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 102 },
+  // NA5's public static readers repartition the shared layout chunk: +292
+  // gzip bytes for this complete facade. The retained waffleLayout consumer
+  // remains 1,765 bytes (+1 gzip byte / -1 raw byte); no new retained runtime.
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 102.5 },
+  // Optional readers reuse the existing network/physics hosts and stores.
+  // Initial complete graphs: 272.3 KiB for readers, 13.4 KiB for pure Core.
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 275 },
+  { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
   // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB

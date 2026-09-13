@@ -6,6 +6,9 @@
  * config serialization only needs chart-name membership.
  */
 export const KNOWN_CHART_COMPONENTS = [
+  "MotifBraidChart",
+  "DependencyForestChart",
+  "FlowCircuitChart",
   "BarChart",
   "StackedBarChart",
   "GroupedBarChart",

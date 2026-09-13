@@ -53,6 +53,8 @@
 
 ## Charts — Network
 
+- [MotifBraidChart](/charts/motif-braid-chart): Evidence-backed journey reader from semiotic/atlas.
+- [DependencyForestChart](/charts/dependency-forest-chart): Dependency X-Ray reader from semiotic/atlas.
 - [ForceDirectedGraph](/charts/force-directed-graph): Physics-based node-link diagram. _(act: tracing)_
 - [SankeyDiagram](/charts/sankey-diagram): Flow diagram showing weighted connections between nodes. _(act: tracing)_
 - [ProcessSankey](/charts/process-sankey): Temporal sankey with a real time axis. _(act: tracing)_
@@ -83,6 +85,7 @@
 
 ## Charts — Physics
 
+- [FlowCircuitChart](/charts/flow-circuit-chart): Flow Circuit reader from semiotic/atlas.
 - [GaltonBoardChart](/charts/galton-board-chart): Distribution drop with values assigned to bins before replay. _(act: characterizing)_
 - [EventDropChart](/charts/event-drop-chart): Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling. _(act: alerting)_
 - [UnitPileChart](/charts/unit-pile-chart): Physics-backed unit pile chart. _(act: comparing)_

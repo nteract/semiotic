@@ -50,6 +50,9 @@ while ((match = importRe.exec(registrySrc)) !== null) {
 //    (XY/Ordinal/NetworkCustomChart) and LinkedCharts aren't in capabilities.json
 //    because they don't fit the standard chart-spec model.
 const DELIBERATELY_EXCLUDED = new Map([
+  ["MotifBraidChart", "requires an admitted prepared atlas, not a profiled flat dataset"],
+  ["DependencyForestChart", "requires a prepared forest and declared relation/root scope"],
+  ["FlowCircuitChart", "requires admitted module semantics and an observed or modeled edition"],
   [
     "RealtimeLineChart",
     "realtime — streaming source, static suggestion engine doesn't apply"

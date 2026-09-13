@@ -1,7 +1,7 @@
-import fixture from "../../../../scripts/network-atlas/fixtures/supplier-redundancy-v1.json"
-import { prepareNetworkAtlas } from "./prepare"
-import { prepareDependencyForest } from "./dependencyForest"
-import type { NetworkAtlasSource, NetworkAtlasSpec } from "./types"
+import fixture from "../fixtures/supplier-redundancy-v1.json"
+import { prepareNetworkAtlas } from "semiotic/atlas/core"
+import { prepareDependencyForest } from "semiotic/atlas/core"
+import type { NetworkAtlasSource, NetworkAtlasSpec } from "semiotic/atlas/core"
 
 /** The browser, static edition and tests share the admitted synthetic fixture. */
 export function supplierStory(bypass = false, reverseBackbone = false) {

@@ -32,8 +32,10 @@ import { GEO_CHART_SPECS } from "./chartSpecsGeo"
 import { REALTIME_CHART_SPECS } from "./chartSpecsRealtime"
 import { PHYSICS_CHART_SPECS } from "./chartSpecsPhysics"
 import { VALUE_CHART_SPECS } from "./chartSpecsValue"
+import { ATLAS_CHART_SPECS } from "./chartSpecsAtlas"
 
 export const CHART_SPECS: Record<string, ChartSpec> = {
+  ...ATLAS_CHART_SPECS,
   ...ORDINAL_CHART_SPECS,
   ...XY_CHART_SPECS,
   ...NETWORK_CHART_SPECS,

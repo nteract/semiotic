@@ -1,8 +1,8 @@
 import * as React from "react"
 import { useMemo, useState } from "react"
-import { flowCircuitGrammar } from "../../../../../src/components/recipes/atlas/flowCircuitGrammar"
-import { FlowCircuitChart } from "../../../../../src/components/recipes/atlas/FlowCircuitChart"
-import { readCircuitEdition } from "../../../../../src/components/recipes/atlas/flowCircuitTape"
+import { flowCircuitGrammar } from "../../../../../scripts/network-atlas/stories/flowCircuitGrammar"
+import { FlowCircuitChart } from "semiotic/atlas"
+import { readCircuitEdition } from "semiotic/atlas/core"
 import { CircuitInspector } from "./CircuitInspector"
 
 export function CircuitGrammar({ width }: { width: number }) {

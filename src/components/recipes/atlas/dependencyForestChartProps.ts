@@ -15,7 +15,7 @@ export type DependencyForestChartProps = DependencyForestLayoutConfig &
     onSelectNode?: (id: string) => void
   }
 
-/** Shared props for the recipe-local React wrapper and the public SVG renderer. */
+/** Shared props for the React reader and the public SVG renderer. */
 export function dependencyForestChartProps({
   width = 920,
   height = 440,

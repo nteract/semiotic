@@ -73,6 +73,18 @@ for (const dir of HOC_DIRS) {
   }
 }
 
+// Prepared Atlas readers live with their layouts and are published through a
+// dedicated entry. Discover its chart exports so the same registry checks
+// apply without treating helpers such as DependencyMatrix as standalone charts.
+const atlasEntry = path.join(ROOT, "src/components/semiotic-atlas.ts")
+const atlasSource = fs.readFileSync(atlasEntry, "utf8")
+for (const exportMatch of atlasSource.matchAll(
+  /export\s*\{\s*(\w+Chart)\s*\}\s*from\s*"([^\"]+)"/g
+)) {
+  const chartSource = path.resolve(path.dirname(atlasEntry), `${exportMatch[2]}.tsx`)
+  if (fs.existsSync(chartSource)) hocsOnDisk.add(exportMatch[1])
+}
+
 // ── 2. Extract SSR config chart names ──────────────────────────────────
 
 const ssrSource = fs.readFileSync(SSR_CONFIGS, "utf8")
@@ -153,7 +165,7 @@ for (const hoc of hocsOnDisk) {
 for (const name of ssrNames) {
   if (!hocsOnDisk.has(name) && !recipeNames.has(name) && name !== "Sparkline") {
     // Sparkline is SSR-only, not an HOC
-    errors.push(`SSR config "${name}" has no matching HOC in src/components/charts/`)
+    errors.push(`SSR config "${name}" has no matching HOC in the chart families or public Atlas entry`)
   }
 }
 
@@ -183,6 +195,7 @@ const FAMILY_CONFIG_SOURCES = [
   "serverChartConfigsGeo.ts",
   "serverChartConfigsPhysics.ts",
   "serverChartConfigsCustom.ts",
+  "serverChartConfigsAtlas.ts",
   "staticXY.tsx",
   "staticOrdinal.tsx",
   "staticNetwork.tsx",

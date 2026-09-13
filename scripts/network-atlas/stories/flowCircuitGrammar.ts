@@ -1,8 +1,8 @@
-import { prepareNetworkAtlas } from "./prepare"
-import { prepareFlowCircuit } from "./flowCircuit"
-import { admitCircuitEdition } from "./flowCircuitTape"
-import type { NetworkAtlasSpec } from "./types"
-import type { CircuitEdition, CircuitNodeSemantics } from "./flowCircuitTypes"
+import { prepareNetworkAtlas } from "semiotic/atlas/core"
+import { prepareFlowCircuit } from "semiotic/atlas/core"
+import { admitCircuitEdition } from "semiotic/atlas/core"
+import type { NetworkAtlasSpec } from "semiotic/atlas/core"
+import type { CircuitEdition, CircuitNodeSemantics } from "semiotic/atlas/core"
 
 /** Adversarial module vocabulary: declarations are explicit; readings are unknown. */
 export function flowCircuitGrammar(declareJoins = true) {

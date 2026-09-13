@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest"
 import { renderHOCToSVG } from "./renderHOCToSVG"
+import {
+  atlasStory,
+  atlasStoryNames,
+  type AtlasStoryId
+} from "../scripts/network-atlas/stories/atlasStories"
 
 describe("MCP recipe rendering", () => {
+  it.each(Object.keys(atlasStoryNames) as AtlasStoryId[])(
+    "renders the %s Atlas story through MCP's component registry",
+    (id) => {
+      const story = atlasStory(id)
+      const props = JSON.parse(JSON.stringify(story.props))
+      const result = renderHOCToSVG(story.component, props)
+      expect(result.error).toBeNull()
+      expect(result.svg).toContain('role="img"')
+      const expectedDatum =
+        story.component === "MotifBraidChart"
+          ? "Step 1"
+          : story.component === "DependencyForestChart"
+            ? "world"
+            : story.props.edition.label
+      expect(result.svg).toContain(expectedDatum)
+      expect(result.svg).not.toMatch(/NaN|Infinity/)
+    }
+  )
+
   it("renders both schema-visible recipes through the generic registry host", () => {
     const parallel = renderHOCToSVG("ParallelCoordinatesRecipe", {
       data: [

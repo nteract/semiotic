@@ -39,6 +39,18 @@
       "require": "./dist/ordinal.min.js",
       "default": "./dist/ordinal.module.min.js"
     },
+    "./atlas": {
+      "types": "./dist/semiotic-atlas.d.ts",
+      "import": "./dist/semiotic-atlas.module.min.js",
+      "require": "./dist/semiotic-atlas.min.js",
+      "default": "./dist/semiotic-atlas.module.min.js"
+    },
+    "./atlas/core": {
+      "types": "./dist/semiotic-atlas-core.d.ts",
+      "import": "./dist/semiotic-atlas-core.module.min.js",
+      "require": "./dist/semiotic-atlas-core.min.js",
+      "default": "./dist/semiotic-atlas-core.module.min.js"
+    },
     "./network": {
       "types": "./dist/semiotic-network.d.ts",
       "import": "./dist/network.module.min.js",

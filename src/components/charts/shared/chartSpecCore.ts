@@ -140,6 +140,10 @@ export interface ChartPropSpec {
 }
 
 export interface ChartSpec {
+  /** Optional dedicated public boundary when it differs from the family. */
+  importPath?: string
+  /** Public interactive reference for this reader. */
+  docsRoute?: string
   /** Component name, must match the React export. */
   name: string
   category: ChartCategory

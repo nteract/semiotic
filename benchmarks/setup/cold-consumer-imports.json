@@ -41,6 +41,24 @@
   ],
   "measurements": [
     {
+      "exportKey": "./atlas",
+      "importPath": "semiotic/atlas",
+      "symbol": "MotifBraidChart",
+      "platform": "browser",
+      "rawBytes": 497372,
+      "gzipBytes": 165380,
+      "packedPackageInputFiles": 36
+    },
+    {
+      "exportKey": "./atlas/core",
+      "importPath": "semiotic/atlas/core",
+      "symbol": "prepareNetworkAtlas",
+      "platform": "browser",
+      "rawBytes": 18051,
+      "gzipBytes": 6479,
+      "packedPackageInputFiles": 5
+    },
+    {
       "exportKey": ".",
       "importPath": "semiotic",
       "symbol": "LineChart",
@@ -144,8 +162,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 859812,
-      "gzipBytes": 275458,
+      "rawBytes": 890849,
+      "gzipBytes": 287559,
       "packedPackageInputFiles": 3
     },
     {
@@ -153,8 +171,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 390330,
-      "gzipBytes": 122707,
+      "rawBytes": 470733,
+      "gzipBytes": 150247,
       "packedPackageInputFiles": 1
     },
     {
@@ -162,8 +180,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 861443,
-      "gzipBytes": 276211,
+      "rawBytes": 892480,
+      "gzipBytes": 288266,
       "packedPackageInputFiles": 3
     },
     {
@@ -171,8 +189,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 830665,
-      "gzipBytes": 265040,
+      "rawBytes": 831721,
+      "gzipBytes": 265265,
       "packedPackageInputFiles": 72
     },
     {
@@ -180,8 +198,8 @@
       "importPath": "semiotic/ai/core",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 164394,
-      "gzipBytes": 47373,
+      "rawBytes": 165450,
+      "gzipBytes": 47588,
       "packedPackageInputFiles": 2
     },
     {
@@ -189,8 +207,8 @@
       "importPath": "semiotic/artifact",
       "symbol": "buildArtifactContract",
       "platform": "browser",
-      "rawBytes": 78618,
-      "gzipBytes": 19954,
+      "rawBytes": 79729,
+      "gzipBytes": 20199,
       "packedPackageInputFiles": 1
     },
     {
@@ -207,8 +225,8 @@
       "importPath": "semiotic/access",
       "symbol": "createChartAccessContract",
       "platform": "browser",
-      "rawBytes": 107634,
-      "gzipBytes": 33996,
+      "rawBytes": 108702,
+      "gzipBytes": 34205,
       "packedPackageInputFiles": 3
     },
     {
@@ -216,8 +234,8 @@
       "importPath": "semiotic/evidence",
       "symbol": "toEvidenceEnvelope",
       "platform": "browser",
-      "rawBytes": 158579,
-      "gzipBytes": 50058,
+      "rawBytes": 159763,
+      "gzipBytes": 50300,
       "packedPackageInputFiles": 1
     },
     {
@@ -288,8 +306,8 @@
       "importPath": "semiotic/utils",
       "symbol": "validateProps",
       "platform": "browser",
-      "rawBytes": 39754,
-      "gzipBytes": 10438,
+      "rawBytes": 40810,
+      "gzipBytes": 10659,
       "packedPackageInputFiles": 8
     },
     {
@@ -297,8 +315,8 @@
       "importPath": "semiotic/utils/core",
       "symbol": "smartTickFormat",
       "platform": "browser",
-      "rawBytes": 32906,
-      "gzipBytes": 8106,
+      "rawBytes": 33962,
+      "gzipBytes": 8313,
       "packedPackageInputFiles": 1
     },
     {
@@ -315,18 +333,18 @@
       "importPath": "semiotic/recipes",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 4143,
-      "gzipBytes": 1764,
-      "packedPackageInputFiles": 14
+      "rawBytes": 4142,
+      "gzipBytes": 1765,
+      "packedPackageInputFiles": 16
     },
     {
       "exportKey": "./recipes/core",
       "importPath": "semiotic/recipes/core",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 4143,
-      "gzipBytes": 1764,
-      "packedPackageInputFiles": 6
+      "rawBytes": 4142,
+      "gzipBytes": 1765,
+      "packedPackageInputFiles": 8
     },
     {
       "exportKey": "./recipes/react",

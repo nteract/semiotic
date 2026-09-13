@@ -1918,3 +1918,70 @@ import { BigNumber } from "semiotic/value"
 ```
 
 Key props: `direction: "lower-is-better"` flips sentiment colouring — a value that went UP now reads as negative (danger). Same pattern for error rate, churn, complaint count, etc.
+
+
+## Network Atlas readers
+
+These examples consume admitted inputs supplied by the application. Prepare once upstream, check admission issues, and pass the same artifact to React and static rendering. The interactive reference pages provide complete synthetic inputs and downloadable JSON readings.
+
+### MotifBraidChart
+
+```tsx
+import { MotifBraidChart } from "semiotic/atlas"
+import { prepareNetworkAtlas, type NetworkAtlasSpec, type NetworkAtlasSource } from "semiotic/atlas/core"
+
+export function prepareJourneys(spec: NetworkAtlasSpec, source: NetworkAtlasSource) {
+  const result = prepareNetworkAtlas(spec, source)
+  if (!result.ok) throw new Error(JSON.stringify(result.issues))
+  return result.atlas
+}
+// Run preparation upstream. Optional occurrence.stepEntityCounts aligns with
+// nodePath; omitted counts retain a constant entityCount at every step.
+export function Journeys({ atlas }: { atlas: ReturnType<typeof prepareJourneys> }) {
+  return <MotifBraidChart atlas={atlas} title="Supported journeys" accessibleTable />
+}
+```
+
+### DependencyForestChart
+
+```tsx
+import { DependencyForestChart, DependencyMatrix } from "semiotic/atlas"
+import { prepareDependencyForest, type PreparedNetworkAtlas } from "semiotic/atlas/core"
+
+export function prepareDependencies(atlas: PreparedNetworkAtlas) {
+  return prepareDependencyForest(atlas)
+}
+export function Dependencies({ forest }: { forest: ReturnType<typeof prepareDependencies> }) {
+  return <>
+    <DependencyForestChart forest={forest} reading="required-paths"
+      title="Required supplier paths" summary="Required paths describe topology; capacity remains a separate measurement." />
+    <DependencyMatrix forest={forest} nodeIds={forest.order.slice(0, 6)} />
+  </>
+}
+```
+
+### FlowCircuitChart
+
+```tsx
+import { FlowCircuitChart } from "semiotic/atlas"
+import { readCircuitEdition, type FlowCircuitProjection, type CircuitEdition } from "semiotic/atlas/core"
+import { renderChartWithEvidence } from "semiotic/server"
+
+// circuit comes from prepareFlowCircuit(atlas, authoredSemantics).
+// edition has passed admitCircuitEdition(circuit, authoredTape).
+export function ProcessReading({ circuit, edition, time }: {
+  circuit: FlowCircuitProjection; edition: CircuitEdition; time: number
+}) {
+  const mode = edition.kind === "modeled" ? "modeled-scenario" : "observed-replay"
+  const reading = readCircuitEdition(edition, mode, time)
+  return <FlowCircuitChart circuit={circuit} edition={edition} reading={reading}
+    title={edition.label} reducedMotion accessibleTable />
+}
+export function staticProcess(circuit: FlowCircuitProjection, edition: CircuitEdition, time: number) {
+  const mode = edition.kind === "modeled" ? "modeled-scenario" : "observed-replay"
+  return renderChartWithEvidence("FlowCircuitChart", {
+    circuit, edition, reading: readCircuitEdition(edition, mode, time),
+    title: edition.label, reducedMotion: true
+  })
+}
+```

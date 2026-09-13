@@ -7,14 +7,13 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 import { AtlasObservation } from "../../components/AtlasObservation"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import useExplainerMotion from "../../hooks/useExplainerMotion"
-import { FlowCircuitChart } from "../../../../src/components/recipes/atlas/FlowCircuitChart"
-import { flowCircuitChartProps } from "../../../../src/components/recipes/atlas/flowCircuitChartProps"
-import { flowCircuitStory } from "../../../../src/components/recipes/atlas/flowCircuitStories"
+import { FlowCircuitChart } from "semiotic/atlas"
+import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import {
   exportCircuitEvidence,
   readCircuitEdition,
-} from "../../../../src/components/recipes/atlas/flowCircuitTape"
-import type { CircuitMode } from "../../../../src/components/recipes/atlas/flowCircuitTypes"
+} from "semiotic/atlas/core"
+import type { CircuitMode } from "semiotic/atlas/core"
 import {
   CircuitAssumptions,
   CircuitInspector,
@@ -335,8 +334,8 @@ export default function FlowCircuitExamplePage() {
                   const { renderChart } = await import("semiotic/server")
                   download(
                     `${story}-circuit.svg`,
-                    renderChart("PhysicsCustomChart", {
-                      ...flowCircuitChartProps(chartProps),
+                    renderChart("FlowCircuitChart", {
+                      ...chartProps,
                       theme,
                     }),
                     "image/svg+xml",
@@ -352,8 +351,8 @@ export default function FlowCircuitExamplePage() {
             {error && <p role="alert">{error}</p>}
             <CircuitGrammar width={chartWidth} />
             <p>
-              Network Atlas source preview. This example runs from the repository; public recipe
-              imports and serialized configurations are planned for NA5.
+              Network Atlas public reader. Import FlowCircuitChart from semiotic/atlas;
+              prepare its circuit and admitted editions with semiotic/atlas/core.
             </p>
           </div>
         </LinkedCharts>

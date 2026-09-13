@@ -1,6 +1,6 @@
 import type { BaseChartProps } from "../../charts/shared/types"
 
-/** Shared chart contracts retained by the source Atlas readers. */
+/** Shared chart contracts retained by the public Atlas readers. */
 export type AtlasChartOptions = Pick<
   BaseChartProps,
   | "chartId"

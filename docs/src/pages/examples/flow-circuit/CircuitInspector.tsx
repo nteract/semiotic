@@ -1,14 +1,14 @@
 import * as React from "react"
 import { useMemo } from "react"
-import { DependencyMatrix } from "../../../../../src/components/recipes/atlas/DependencyMatrix"
-import { prepareDependencyForest } from "../../../../../src/components/recipes/atlas/dependencyForest"
-import { explainCircuitModule } from "../../../../../src/components/recipes/atlas/flowCircuit"
-import { getRequiredPaths } from "../../../../../src/components/recipes/atlas/dependencyQueries"
+import { DependencyMatrix } from "semiotic/atlas"
+import { prepareDependencyForest } from "semiotic/atlas/core"
+import { explainCircuitModule } from "semiotic/atlas/core"
+import { getRequiredPaths } from "semiotic/atlas/core"
 import type {
   FlowCircuitProjection,
   CircuitReading,
   CircuitEdition,
-} from "../../../../../src/components/recipes/atlas/flowCircuitTypes"
+} from "semiotic/atlas/core"
 
 export const fullNumber = (value: number | null) =>
   value === null ? "Unmeasured" : value.toLocaleString("en-US", { maximumFractionDigits: 0 })

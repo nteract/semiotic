@@ -9,9 +9,9 @@
   ],
   "version": "3.10.0",
   "components": {
-    "schema": 61,
+    "schema": 64,
     "aiChartExports": 56,
-    "mcpRenderable": 56,
+    "mcpRenderable": 59,
     "browserOnly": 5,
     "requiresLiveData": [
       "RealtimeHeatmap",
@@ -59,7 +59,9 @@
       "network": [
         "ChordDiagram",
         "CirclePack",
+        "DependencyForestChart",
         "ForceDirectedGraph",
+        "MotifBraidChart",
         "OrbitDiagram",
         "ProcessSankey",
         "SankeyDiagram",
@@ -85,6 +87,7 @@
         "CollisionSwarmChart",
         "CrucibleChart",
         "EventDropChart",
+        "FlowCircuitChart",
         "GaltonBoardChart",
         "GauntletChart",
         "PacketFlowChart",
@@ -260,6 +263,12 @@
           "mobile"
         ]
       },
+      "DependencyForestChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
+      },
       "DifferenceChart": {
         "componentKind": "chart-hoc",
         "commonChartProps": "supported",
@@ -314,6 +323,12 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "FlowCircuitChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
       },
       "FlowMap": {
         "componentKind": "chart-hoc",
@@ -448,6 +463,12 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "MotifBraidChart": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
       },
       "MultiAxisLineChart": {
         "componentKind": "chart-hoc",

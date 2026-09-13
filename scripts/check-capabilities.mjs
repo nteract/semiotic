@@ -150,7 +150,7 @@ const SERVER_CONFIG_ONLY = new Map([
 // `supportsPush: true` charts must invoke one of the narrowly recognized
 // imperative-handle bridges. Read each HOC's source and check for the call;
 // importing a helper without invoking it does not satisfy the gate.
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "realtime", "physics"]
+const HOC_DIRS = ["../recipes/atlas", "xy", "ordinal", "network", "geo", "realtime", "physics"]
 const hocSources = new Map()
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -160,7 +160,14 @@ for (const dir of HOC_DIRS) {
     if (file === "index.ts" || file === "index.tsx") continue
     if (!file.endsWith(".tsx")) continue
     const name = file.replace(".tsx", "")
-    hocSources.set(name, fs.readFileSync(path.join(fullDir, file), "utf8"))
+    let source = fs.readFileSync(path.join(fullDir, file), "utf8")
+    // Atlas shares a pure prop mapper with static rendering. Follow that
+    // direct local import so a real `layout: …` dispatch remains auditable.
+    for (const match of source.matchAll(/from "\.\/(\w+ChartProps)"/g)) {
+      const mapper = path.join(fullDir, `${match[1]}.ts`)
+      if (fs.existsSync(mapper)) source += "\n" + fs.readFileSync(mapper, "utf8")
+    }
+    hocSources.set(name, source)
   }
 }
 
@@ -245,7 +252,7 @@ for (const e of specEntries) {
   // because their internals also reason about selection.
   if (e.category === "physics") {
     const wiresPhysicsSelection =
-      source !== undefined && /\busePhysicsSelection\s*\(/.test(source)
+      source !== undefined && (/\busePhysicsSelection\s*\(/.test(source) || /<PhysicsCustomChart\b/.test(source))
     if (e.supportsSelection !== wiresPhysicsSelection) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsSelection=${e.supportsSelection} but ` +
@@ -285,7 +292,7 @@ for (const e of specEntries) {
       // A HOC that delegates to a custom-layout wrapper inherits selection
       // wiring: the wrapper runs useCustomChartSetup → useChartSetup →
       // useChartSelection. (e.g. BumpChart renders <XYCustomChart>.)
-      /\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(source)
+      /\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart|PhysicsCustomChart)\b/.test(source)
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
@@ -307,10 +314,10 @@ for (const e of specEntries) {
       // A HOC can dispatch a custom layout by rendering a *CustomChart
       // wrapper and handing it a `layout` function — the wrapper's `layout`
       // prop IS the escape hatch. (e.g. BumpChart → <XYCustomChart layout={…}>.)
-      (/\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart)\b/.test(
+      (/\b(XYCustomChart|OrdinalCustomChart|NetworkCustomChart|PhysicsCustomChart)\b/.test(
         source
       ) &&
-        /\blayout=\{/.test(source))
+        /\blayout(?:=\{|:\s*\w+)/.test(source))
     if (!wired) {
       errors.push(
         `✗ ${e.name}: capabilities.layoutMode="custom" but does not reference any customLayout ` +

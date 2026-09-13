@@ -9,7 +9,21 @@ import {
 export { dependencyForestChartProps }
 export type { DependencyForestChartProps }
 
-/** NA3 recipe; graph preparation belongs outside the rendering callback. */
+/**
+ * Dependency reader; graph preparation belongs outside the rendering callback.
+ *
+ * @example
+ * import { DependencyForestChart } from "semiotic/atlas"
+ * import { prepareDependencyForest } from "semiotic/atlas/core"
+ * const forest = prepareDependencyForest(atlas)
+ * <DependencyForestChart forest={forest} reading="required-paths" />
+ *
+ * @example
+ * import { renderChartWithEvidence } from "semiotic/server"
+ * const { svg, evidence } = renderChartWithEvidence("DependencyForestChart", {
+ *   forest, reading: "organize", title: "Original supply paths"
+ * })
+ */
 export function DependencyForestChart(props: DependencyForestChartProps) {
   return (
     <NetworkCustomChart

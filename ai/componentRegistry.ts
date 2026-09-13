@@ -3,6 +3,7 @@
  * Used by the MCP server to look up components for rendering.
  */
 import type { ComponentType } from "react"
+import { MotifBraidChart, DependencyForestChart, FlowCircuitChart } from "semiotic/atlas"
 
 import {
   LineChart,
@@ -72,6 +73,9 @@ export interface RegistryEntry {
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
+  MotifBraidChart: { component: MotifBraidChart, category: "network" },
+  DependencyForestChart: { component: DependencyForestChart, category: "network" },
+  FlowCircuitChart: { component: FlowCircuitChart, category: "physics" },
   LineChart: { component: LineChart, category: "xy" },
   AreaChart: { component: AreaChart, category: "xy" },
   BumpChart: { component: BumpChart, category: "xy" },

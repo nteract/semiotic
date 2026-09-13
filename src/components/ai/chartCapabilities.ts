@@ -82,6 +82,8 @@ import { BigNumberCapability } from "../charts/value/BigNumber.capability"
  * and append it here.
  *
  * Charts intentionally NOT in this registry:
+ *   • Atlas readers — schemas accept prepared artifacts; flat-data profiling
+ *     cannot infer evidence admission, required roots or circuit editions.
  *   • Realtime variants (RealtimeLineChart, RealtimeHistogram, ...) — they're for
  *     streaming data, while `suggestCharts` operates on static datasets.
  *   • Custom-layout charts (XYCustomChart, OrdinalCustomChart, NetworkCustomChart) —

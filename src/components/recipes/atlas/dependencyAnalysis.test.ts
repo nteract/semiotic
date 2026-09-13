@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { supplierStory } from "./supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import { prepareNetworkAtlas } from "./prepare"
 import { buildRequiredPaths } from "./requiredPaths"
 import { stronglyConnectedComponents } from "./directedGraph"

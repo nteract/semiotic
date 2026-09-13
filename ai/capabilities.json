@@ -449,6 +449,21 @@
         "hierarchy"
       ]
     },
+    "DependencyForestChart": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "custom",
+      "specialFeatures": [
+        "network-atlas",
+        "prepared-evidence",
+        "revision-scoped-selection"
+      ]
+    },
     "ForceDirectedGraph": {
       "category": "network",
       "supportsLegend": true,
@@ -460,6 +475,21 @@
       "layoutMode": "plugin",
       "specialFeatures": [
         "force-simulation"
+      ]
+    },
+    "MotifBraidChart": {
+      "category": "network",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "custom",
+      "specialFeatures": [
+        "network-atlas",
+        "prepared-evidence",
+        "revision-scoped-selection"
       ]
     },
     "OrbitDiagram": {
@@ -728,6 +758,21 @@
         "watermark",
         "arrival-pacing",
         "settled-projection"
+      ]
+    },
+    "FlowCircuitChart": {
+      "category": "physics",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "custom",
+      "specialFeatures": [
+        "network-atlas",
+        "prepared-evidence",
+        "revision-scoped-selection"
       ]
     },
     "GaltonBoardChart": {

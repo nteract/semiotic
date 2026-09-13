@@ -107,7 +107,8 @@ const SIGNALS = {
   // The reader/agent grounding panel (act + description + caveats + a11y),
   // required on every static chart page.
   grounding: (src, chart) =>
-    GROUNDING_EXCLUDE.has(chart) || /<ChartGrounding[\s/>]/.test(src),
+    GROUNDING_EXCLUDE.has(chart) || /<ChartGrounding[\s/>]/.test(src) ||
+    (/<AtlasReaderDemo[\s/>]/.test(src) && /<ChartGrounding[\s/>]/.test(readFileSync(join(repoRoot, "docs/src/components/AtlasReaderDemo.tsx"), "utf8"))),
 }
 const SIGNAL_LABEL = {
   meta: "a <ComponentMeta> header",

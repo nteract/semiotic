@@ -14,9 +14,9 @@ import type { ChartObservation } from "../../store/ObservationStore"
 import { FlowCircuitChart } from "./FlowCircuitChart"
 import { DependencyForestChart } from "./DependencyForestChart"
 import { MotifBraidChart } from "./MotifBraidChart"
-import { flowCircuitStory } from "./flowCircuitStories"
+import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { readCircuitEdition } from "./flowCircuitTape"
-import { supplierStory } from "./supplierStory"
+import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import { prepareNetworkAtlas } from "./prepare"
 
 const fixture = JSON.parse(

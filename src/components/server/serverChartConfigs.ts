@@ -4,6 +4,7 @@
  * Family implementations live in serverChartConfigs{XY,Ordinal,Network,Geo,Custom,Physics}.ts.
  */
 import type { ChartConfig } from "./serverChartConfigShared"
+import { motifBraidChart, dependencyForestChart, flowCircuitChart } from "./serverChartConfigsAtlas"
 import {
   sparkline,
   bumpChart,
@@ -87,6 +88,9 @@ import {
 // `keyof typeof CHART_CONFIGS` and stays in lockstep automatically — adding
 // a chart here makes it available to renderChart() without a second edit.
 export const CHART_CONFIGS = {
+  MotifBraidChart: motifBraidChart,
+  DependencyForestChart: dependencyForestChart,
+  FlowCircuitChart: flowCircuitChart,
   Sparkline: sparkline,
   BumpChart: bumpChart,
   LineChart: lineChart,

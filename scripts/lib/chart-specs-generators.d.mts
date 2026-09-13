@@ -5,6 +5,8 @@ export interface ChartSpecLike {
   dataShape?: unknown
   dataAccessors: string[]
   category: string
+  importPath?: string
+  docsRoute?: string
 }
 
 export interface PropSpecLike {
@@ -20,6 +22,7 @@ export interface GeneratedSchemaToolEntry {
   function: {
     name: string
     description: string
+    "x-semiotic-import-path"?: string
     parameters: {
       type: "object"
       properties: Record<string, unknown>

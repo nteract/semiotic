@@ -1,6 +1,13 @@
-# Network Atlas Phase 1–3 (NA0–NA3)
+# Network Atlas (NA0–NA5)
 
-**Status:** Kernel, Motif Braid, and Dependency X-Ray source recipes. `prepareNetworkAtlasAsync`, `prepareMotifBraid`, `motifBraidLayout`, and their input/output types are public through `semiotic/recipes/core` and `semiotic/recipes`. Chart wrappers and the new X-Ray projection/layout/queries remain recipe-local. The supplier study is at `/examples/dependency-xray`.
+**Status:** Motif Braid, Dependency Forest and Flow Circuit are public readers
+from `semiotic/atlas`, with React-free preparation and queries from
+`semiotic/atlas/core`. All five synthetic stories reproduce through public
+imports, serialized chart configs and static rendering. See [NA5 delivery
+notes](NA5.md) for package decisions, measurements and verification. Existing
+asynchronous preparation and layout APIs in `semiotic/recipes/core` and
+`semiotic/recipes` remain compatible. The kernel history below records the
+original design boundaries.
 
 **Pinned baseline:** package `3.10.0`, commit `ffd5d48fc201c4780d5437e23089814f88e9e6ab`, Volta Node `22.22.1`.
 
@@ -27,7 +34,7 @@ Inspected on the pinned SHA. Do not rebuild these.
 | `networkAnalysis` | Undirected adjacency, centrality, paths | Not an Atlas substrate. Atlas graphs are directed and keep parallel edges / self-loops **by ID**. |
 | `analyzeNetEnsemble` | Weisfeiler–Leman fingerprints of disconnected components | A different “motif” problem. Do not unify with the typed catalog. |
 
-`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` adds the sectioned forest reader; `FlowCircuitChart` is the next gate. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
+`MotifBraidChart` is a public `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` adds the sectioned forest reader; `FlowCircuitChart` reads admitted observed and modeled tapes. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
 
 ## Layout
 
@@ -37,7 +44,11 @@ expected/     Python checker output (stdlib-only)
 independent-check.py
 ```
 
-Headless TypeScript lives at `src/components/recipes/atlas/`. The public preparation and layout entry points are listed below; other analysis helpers remain internal.
+Headless TypeScript lives at `src/components/recipes/atlas/`. Authored study
+builders live in `stories/` and import the public Core entry; they are not part
+of the library runtime. The compatibility preparation/layout entry points are
+listed below. New consumers can use the synchronous preparation functions and
+queries from `semiotic/atlas/core` with the high-level readers.
 
 ## Commands
 
@@ -57,7 +68,8 @@ check the returned `ok` discriminant before using `atlas`. Pass that atlas to
 `edges={braid.sceneSeeds.edges}`, `layout={motifBraidLayout}`, and
 `layoutConfig={{ braid }}`. The same props work with `renderChart` from
 `semiotic/server`. Both public preparation functions load their analysis code on demand; layout
-remains synchronous. All three are available from the core entry; the chart wrapper is local to this recipe.
+remains synchronous. All three remain available from `semiotic/recipes/core`.
+`MotifBraidChart` from `semiotic/atlas` accepts the prepared `{ atlas }` directly.
 
 For changing traffic, supply `stepEntityCounts` on a source occurrence, with one
 finite, nonnegative count for each `nodePath` entry:

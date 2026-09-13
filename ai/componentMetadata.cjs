@@ -14,6 +14,7 @@ const COMPONENTS_BY_CATEGORY = {
     "DonutChart", "GaugeChart", "FunnelChart", "RadarChart", "SwimlaneChart",
   ],
   network: [
+    "MotifBraidChart", "DependencyForestChart",
     "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
     "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram",
   ],
@@ -25,6 +26,7 @@ const COMPONENTS_BY_CATEGORY = {
     "RealtimeWaterfallChart", "RealtimeHeatmap",
   ],
   physics: [
+    "FlowCircuitChart",
     "GaltonBoardChart", "EventDropChart", "UnitPileChart", "CollisionSwarmChart",
     "PacketFlowChart", "ProcessFlowChart", "GauntletChart", "CrucibleChart",
     "ChainReactionChart",
@@ -91,7 +93,7 @@ function metadataForComponent(entryOrName) {
   return {
     name,
     category,
-    importPath: importPathForCategory(category),
+    importPath: ["MotifBraidChart", "DependencyForestChart", "FlowCircuitChart"].includes(name) ? "semiotic/atlas" : importPathForCategory(category),
     schemaResourceUri: schemaResourceUriForComponent(name),
     renderable: !isPushOnly,
     requiresLiveData: isPushOnly,

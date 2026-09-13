@@ -94,6 +94,7 @@ export function generateSchemaToolEntry(spec, composedProps) {
     function: {
       name: spec.name,
       description: spec.description,
+      ...(spec.importPath ? { "x-semiotic-import-path": spec.importPath } : {}),
       parameters: {
         type: "object",
         properties,
@@ -340,7 +341,8 @@ export function generateChartClinicMetadata(chartSpecs, chartDefinitionPilot) {
 
     metadata[name] = {
       category: spec.category,
-      recommendedImport: `semiotic/${spec.category}`,
+      recommendedImport: spec.importPath ?? `semiotic/${spec.category}`,
+      ...(spec.docsRoute ? { docsRoute: spec.docsRoute } : {}),
       ...(spec.capabilities.supportsSSR
         ? { serverImport: "semiotic/server" }
         : {}),

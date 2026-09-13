@@ -14,7 +14,6 @@ import { dirname, extname, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { build } from "esbuild"
-import { isAtlasSourcePreviewImport } from "./network-atlas/source-previews.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
@@ -378,7 +377,7 @@ function validateNoPrivateSourceImports(failures, directory, root) {
     for (const match of source.matchAll(
       /(?:\bfrom\s+|\bimport\s*\(\s*)["']([^"']*\/src\/components(?:\/[^"']*)?)["']/g
     )) {
-      if (!isAtlasSourcePreviewImport(root, filePath, match[1])) {
+      {
         failures.push(
           `Example source imports a private src/components module: ${relativeToRoot(filePath)}`
         )
