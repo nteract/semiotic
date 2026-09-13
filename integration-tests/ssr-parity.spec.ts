@@ -3,6 +3,11 @@ import { createRequire } from "node:module"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
 import {
+  makeFlowCircuitParityCases,
+  type FlowCircuitEvidence,
+} from "./flow-circuit-parity-fixtures"
+import { assertFlowCircuitSurface } from "./flow-circuit-parity-assertions"
+import {
   makeDependencyXRayParityCases,
   type DependencyXRayEvidence,
 } from "./dependency-xray-parity-fixtures"
@@ -40,6 +45,7 @@ interface ParityCase {
   /** Legend text that must remain fully inside both fixed chart viewports. */
   visibleLegendLabel?: string
   dependencyEvidence?: DependencyXRayEvidence
+  circuitEvidence?: FlowCircuitEvidence
 }
 
 interface RenderEvidence {
@@ -76,6 +82,7 @@ const recipes = cjsRequire("../dist/semiotic-recipes.min.js") as Record<string, 
 const cases: ParityCase[] = [
   ...makeSsrParityCases(React, recipes),
   ...makeDependencyXRayParityCases(),
+  ...makeFlowCircuitParityCases(),
 ]
 
 // Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
@@ -612,6 +619,11 @@ test.describe("SSR / CSR parity", () => {
         : { ...c.props, animate: false }
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
+      if (c.circuitEvidence) {
+        expect(evidence.frameType).toBe("physics")
+        expect(evidence.markCount).toBe(c.circuitEvidence.nodeCount)
+        expect(getRenderChartWithEvidence()(c.component, ssrProps).svg).toBe(ssrSvg)
+      }
       if (c.dependencyEvidence) {
         expect(evidence.frameType).toBe("network")
         expect(evidence.markCountByType["node:glyph"]).toBe(c.dependencyEvidence.nodeCount)
@@ -685,6 +697,11 @@ test.describe("SSR / CSR parity", () => {
       // the fixed-size visual frame and would make wrapper crops differ.
       const ssrVisual = chartPanels.nth(0).locator("svg").first()
       const csrVisual = chartPanels.nth(1).locator('[role="group"]').first()
+      if (c.circuitEvidence) {
+        for (const visual of [ssrVisual, csrVisual]) {
+          await assertFlowCircuitSurface(visual, c.circuitEvidence)
+        }
+      }
       if (c.dependencyEvidence) {
         for (const visual of [ssrVisual, csrVisual]) {
           for (const label of c.dependencyEvidence.labels) {

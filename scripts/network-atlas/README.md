@@ -115,3 +115,19 @@ Queries in `dependencyQueries.ts` carry scope and revisions. The shared
 browser interactions and tests. See
 [`NA3.md`](NA3.md)
 for delivery scope and the related-surface audit.
+
+## Flow Circuit (NA4)
+
+The source-only `prepareFlowCircuit` compiler binds motif roles and explicitly
+declared process rules to canonical module nodes and original-edge ports.
+`FlowCircuitChart` uses the existing `PhysicsCustomChart` and process kit.
+`flowCircuitTape.ts` admits observed or separately identified modeled editions;
+snapshot and replay hold supplied aggregate readings instead of simulating
+unobserved completions. Direction particles never count analytical jobs.
+
+The interactive `/examples/flow-circuit` reader includes the ETL and retry
+studies, model guardrails, a module grammar with joins and dependencies,
+original-edge inspection, accessible tables, reduced motion and evidence/SVG
+exports. The interval fixture adds independent ETL queue and retry arithmetic.
+See [`NA4.md`](NA4.md) for delivery boundaries and CSR/SSR verification. Public
+recipe imports and serialized configurations are planned for NA5.

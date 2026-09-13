@@ -6,6 +6,7 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
 import { makeDependencyXRayParityCases } from "../dependency-xray-parity-fixtures"
+import { makeFlowCircuitParityCases } from "../flow-circuit-parity-fixtures"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics }
@@ -22,6 +23,7 @@ const requestedCase = new URLSearchParams(window.location.search).get("case")
 const parityCases = [
   ...makeSsrParityCases(React, SemioticRecipes),
   ...makeDependencyXRayParityCases(),
+  ...makeFlowCircuitParityCases(),
 ]
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)

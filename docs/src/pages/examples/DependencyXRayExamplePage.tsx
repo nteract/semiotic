@@ -102,6 +102,7 @@ export default function DependencyXRayExamplePage() {
       <div className="dependency-xray" ref={container}>
         <p className="dependency-xray__eyebrow">Network Atlas · synthetic supplier study</p>
         <h1>Three suppliers. Two share one dependency.</h1>
+        <p>Network Atlas source preview. This example runs from the repository; public recipe imports and serialized configurations are planned for NA5.</p>
         <p>
           A and B obtain their component through X. C has a separate admitted route. Inspect the
           original links, then add a bypass with no usable capacity.

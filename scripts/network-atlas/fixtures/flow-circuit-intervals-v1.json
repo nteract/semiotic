@@ -1,0 +1,23 @@
+{
+  "id": "flow-circuit-intervals-v1",
+  "synthetic": true,
+  "label": "Authored aggregate interval tape for Flow Circuit. Not a production event history.",
+  "dataDictionary": {
+    "atSeconds": "Observation times. The preceding observed sample is held until the next sample; individual timings are unavailable.",
+    "retryRates": "Measured offered retry attempts/second at each observation, with one first attempt per root.",
+    "etlQueued": "Queue stock under the declared initially empty, constant-rate, complete no-loss ETL ledger.",
+    "retryModel": "Conditional outcome model; 80% first-attempt success and 50% success on each allowed retry. This does not measure the observed incident's outcomes."
+  },
+  "atSeconds": [0, 10, 20, 30, 40, 50, 60],
+  "retryRates": [0, 10000, 20000, 20000, 20000, 20000, 20000],
+  "expected": {
+    "etlQueued": [0, 200000, 400000, 600000, 800000, 1000000, 1200000],
+    "retryAttemptRates": [10000, 20000, 30000, 30000, 30000, 30000, 30000],
+    "etlFourHotPartitions": { "completionsPerSecond": 60000, "queuedAt60": 0 },
+    "retryModel": [
+      { "budget": 0, "attemptsPerSecond": 10000, "successesPerSecond": 8000, "errorsPerSecond": 2000 },
+      { "budget": 1, "attemptsPerSecond": 12000, "successesPerSecond": 9000, "errorsPerSecond": 1000 },
+      { "budget": 2, "attemptsPerSecond": 13000, "successesPerSecond": 9500, "errorsPerSecond": 500 }
+    ]
+  }
+}

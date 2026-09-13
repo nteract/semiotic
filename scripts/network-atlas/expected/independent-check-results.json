@@ -70,6 +70,50 @@
         "upstream"
       ]
     },
+    "flow-circuit-intervals-v1": {
+      "etlFourHotPartitions": {
+        "completionsPerSecond": 60000,
+        "queuedAt60": 0
+      },
+      "etlQueued": [
+        0,
+        200000,
+        400000,
+        600000,
+        800000,
+        1000000,
+        1200000
+      ],
+      "retryAttemptRates": [
+        10000,
+        20000,
+        30000,
+        30000,
+        30000,
+        30000,
+        30000
+      ],
+      "retryModel": [
+        {
+          "attemptsPerSecond": 10000,
+          "budget": 0,
+          "errorsPerSecond": 2000,
+          "successesPerSecond": 8000
+        },
+        {
+          "attemptsPerSecond": 12000,
+          "budget": 1,
+          "errorsPerSecond": 1000,
+          "successesPerSecond": 9000
+        },
+        {
+          "attemptsPerSecond": 13000,
+          "budget": 2,
+          "errorsPerSecond": 500,
+          "successesPerSecond": 9500
+        }
+      ]
+    },
     "ghost-route": {
       "graphWalkNotAJourney": true,
       "unsupportedRejected": true

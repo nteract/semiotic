@@ -246,6 +246,29 @@ def check_permutation(data: dict) -> dict:
     return {"invariant": data["expected"]["invariant"]}
 
 
+def check_circuit_intervals(data: dict) -> dict:
+    expected = data["expected"]
+    times = data["atSeconds"]
+    assert times == sorted(set(times)) and times[0] == 0 and times[-1] == 60
+    etl_queued = [20000 * at for at in times]
+    assert etl_queued == expected["etlQueued"]
+    attempts = [10000 + retries for retries in data["retryRates"]]
+    assert attempts == expected["retryAttemptRates"]
+    split_completions = 8 * min(7500, 10000)
+    assert split_completions == expected["etlFourHotPartitions"]["completionsPerSecond"]
+    assert (60000 - split_completions) * 60 == expected["etlFourHotPartitions"]["queuedAt60"]
+    for model in expected["retryModel"]:
+        failures = 2000
+        offered = 10000
+        for _ in range(model["budget"]):
+            offered += failures
+            failures //= 2
+        assert offered == model["attemptsPerSecond"]
+        assert 10000 - failures == model["successesPerSecond"]
+        assert failures == model["errorsPerSecond"]
+    return expected
+
+
 def main() -> int:
     write = "--write" in sys.argv
     results = {
@@ -256,6 +279,7 @@ def main() -> int:
             "search-no-result-v1": check_search(load("search-no-result-v1.json")),
             "etl-hot-partition-v1": check_hot_partition(load("etl-hot-partition-v1.json")),
             "retry-incident-v1": check_retry(load("retry-incident-v1.json")),
+            "flow-circuit-intervals-v1": check_circuit_intervals(load("flow-circuit-intervals-v1.json")),
             "supplier-redundancy-v1": check_supplier(load("supplier-redundancy-v1.json")),
             "etl-snapshot-v1": check_etl_kernel(load("etl-snapshot-v1.json")),
             "ghost-route": check_ghost(load("ghost-route.json")),

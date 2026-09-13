@@ -5,12 +5,13 @@ import { VALIDATION_MAP } from "./validateProps"
 
 const ACCESSIBILITY_TEXT_PROPS = ["title", "description", "summary"] as const
 // React-only custom layouts are intentionally absent from the JSON prop schema.
-// All four wrappers forward BaseChartProps text through buildBaseMetadataProps.
+// The frame wrappers forward BaseChartProps text through their metadata helpers.
 const CUSTOM_TEXT_COMPONENTS = new Set([
   "XYCustomChart",
   "OrdinalCustomChart",
   "NetworkCustomChart",
-  "GeoCustomChart"
+  "GeoCustomChart",
+  "PhysicsCustomChart"
 ])
 // ChartRecipe also routes these legacy family names through the same wrappers.
 const RECIPE_TEXT_FAMILIES = new Set([
