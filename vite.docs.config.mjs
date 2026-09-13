@@ -75,6 +75,9 @@ function docsDevEntrypoint() {
 }
 
 export default defineConfig(({ mode }) => ({
+  // Docs and package examples can run together with different source aliases.
+  // Sharing Vite's optimized-dependency cache invalidates lazy SVG exports.
+  cacheDir: resolve(repoRoot, "node_modules/.vite-docs"),
   root: docsRoot,
   base: "./",
   publicDir: false,

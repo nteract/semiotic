@@ -1,4 +1,5 @@
 import * as React from "react"
+import type { ThemeSemanticColors } from "../../stream/types"
 import type {
   CircuitGeometry,
   CircuitModuleKind,
@@ -13,6 +14,24 @@ export const circuitColors = {
   residual: "#a56537",
   muted: "#778796",
   alarm: "#bb5149"
+}
+export type CircuitColors = typeof circuitColors
+
+export function resolveCircuitColors(
+  semantic: ThemeSemanticColors,
+  colors: Partial<CircuitColors> = {}
+): CircuitColors {
+  return {
+    observed:
+      colors.observed ??
+      semantic.info ??
+      semantic.primary ??
+      circuitColors.observed,
+    modeled: colors.modeled ?? semantic.secondary ?? circuitColors.modeled,
+    residual: colors.residual ?? semantic.warning ?? circuitColors.residual,
+    muted: colors.muted ?? semantic.textSecondary ?? circuitColors.muted,
+    alarm: colors.alarm ?? semantic.danger ?? circuitColors.alarm
+  }
 }
 export const circuitNumber = (value: number | null) =>
   value === null
@@ -49,7 +68,9 @@ export function circuitModuleChrome(
   reading: CircuitReading,
   color: string,
   text: string,
-  selected?: string
+  selected?: string,
+  colors: CircuitColors = circuitColors,
+  nodeOpacity?: (id: string) => number
 ) {
   const queues = Object.values(reading.entry.nodes).map(
     (node) => node.queued ?? 0
@@ -62,8 +83,8 @@ export function circuitModuleChrome(
       selected === module.nodeId
         ? color
         : (value.queued ?? 0) > 0
-          ? circuitColors.alarm
-          : circuitColors.muted
+          ? colors.alarm
+          : colors.muted
     const cx = x + width / 2
     const unit =
       module.semantics.unit === "records"
@@ -83,6 +104,7 @@ export function circuitModuleChrome(
         key: module.id,
         "data-circuit-module": module.nodeId,
         "data-module-kind": module.kind,
+        opacity: nodeOpacity?.(module.nodeId),
         "data-queued": value.queued ?? "unmeasured"
       },
       h("rect", {

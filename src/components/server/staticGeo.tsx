@@ -94,6 +94,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     projectionTransform: props.projectionTransform,
     customLayout: props.customLayout,
     layoutConfig: props.layoutConfig,
+    layoutSelection: props.layoutSelection,
     layoutMargin: margin,
     onLayoutError: props.onLayoutError,
     themeCategorical: theme.colors.categorical,

@@ -4,7 +4,8 @@ import { processLaneWalls } from "../processPhysics"
 import { seededRandom } from "../../charts/physics/physicsChartShared"
 import { layoutFlowCircuit, circuitRoutePoint } from "./flowCircuitGeometry"
 import {
-  circuitColors,
+  resolveCircuitColors,
+  type CircuitColors,
   circuitNumber,
   circuitModuleChrome,
   circuitHistoryChrome
@@ -15,8 +16,15 @@ import type {
   CircuitReading,
   CircuitSelection
 } from "./flowCircuitTypes"
+import {
+  circuitModuleDatum,
+  circuitSemanticItems
+} from "./flowCircuitSemantics"
+import type { CustomLayoutSelection } from "../../stream/customLayoutSelection"
 
 export interface FlowCircuitLayoutConfig {
+  layoutSelection?: CustomLayoutSelection | null
+  colors?: Partial<CircuitColors>
   circuit: FlowCircuitProjection
   edition: CircuitEdition
   reading: CircuitReading
@@ -49,6 +57,10 @@ export const flowCircuitLayout: PhysicsCustomLayout<
   )
   const text = ctx.theme.semantic.text ?? "#273442"
   const surface = ctx.theme.semantic.surface ?? "#fff"
+  const circuitColors = resolveCircuitColors(
+    ctx.theme.semantic,
+    ctx.config.colors
+  )
   const color =
     edition.kind === "modeled" ? circuitColors.modeled : circuitColors.observed
   // Physics graphics occupy an HTML layer; each overlay owns its SVG shell.
@@ -73,6 +85,17 @@ export const flowCircuitLayout: PhysicsCustomLayout<
     ...reading.entry.flows.map((flow) => flow.perSecond ?? 0)
   )
   const flows = new Map(reading.entry.flows.map((flow) => [flow.edgeId, flow]))
+  const moduleData = new Map(
+    circuit.modules.map((module) => [
+      module.nodeId,
+      circuitModuleDatum(circuit, edition, reading, module)
+    ])
+  )
+  const nodeOpacity = (id: string) =>
+    ctx.config.layoutSelection?.isActive &&
+    !ctx.config.layoutSelection.predicate(moduleData.get(id)!)
+      ? 0.2
+      : 1
   const budget = Math.max(
     0,
     Math.min(200, Math.floor(ctx.config.particleBudget ?? 24))
@@ -95,6 +118,10 @@ export const flowCircuitLayout: PhysicsCustomLayout<
           cy: point.y,
           r: 2.3,
           fill: text,
+          opacity: Math.max(
+            nodeOpacity(route.source),
+            nodeOpacity(route.target)
+          ),
           "data-circuit-particle": route.edgeId
         })
       })
@@ -112,7 +139,7 @@ export const flowCircuitLayout: PhysicsCustomLayout<
       height: region.height
     },
     bodyCollisions: false,
-    datum: { id: region.module.nodeId, kind: "circuit-module" }
+    datum: circuitModuleDatum(circuit, edition, reading, region.module)
   }))
   return {
     bodies,
@@ -128,12 +155,12 @@ export const flowCircuitLayout: PhysicsCustomLayout<
       sediment: false,
       settleStepLimit: 4
     },
-    bodyStyle: {
+    bodyStyle: (body) => ({
       fill: surface,
       stroke: circuitColors.muted,
       strokeWidth: 1,
-      opacity: 1
-    },
+      opacity: nodeOpacity(body.id)
+    }),
     colliders: geometry.modules.flatMap((region) =>
       processLaneWalls({
         idPrefix: `queue:${region.module.nodeId}`,
@@ -155,17 +182,7 @@ export const flowCircuitLayout: PhysicsCustomLayout<
         height: region.sensor.height
       }
     })),
-    semanticItems: geometry.modules.map((region) => ({
-      id: region.module.nodeId,
-      datum: { id: region.module.nodeId },
-      x: region.x + region.width / 2,
-      y: region.y + region.height / 2,
-      width: region.width,
-      height: region.height,
-      shape: "rect" as const,
-      label: `${region.module.semantics.label}: ${region.module.kind}; ${circuitNumber(reading.entry.nodes[region.module.nodeId].completions)} ${region.module.semantics.unit}/s completed; queue ${circuitNumber(reading.entry.nodes[region.module.nodeId].queued)}`,
-      group: "circuit modules"
-    })),
+    semanticItems: circuitSemanticItems(circuit, geometry, edition, reading),
     backgroundOverlays: h(
       "svg",
       overlayProps,
@@ -210,6 +227,10 @@ export const flowCircuitLayout: PhysicsCustomLayout<
           {
             key: route.edgeId,
             "data-circuit-edge": route.edgeId,
+            opacity: Math.max(
+              nodeOpacity(route.source),
+              nodeOpacity(route.target)
+            ),
             "data-source": route.source,
             "data-target": route.target,
             "data-flow": flow.perSecond ?? "unmeasured",
@@ -274,7 +295,15 @@ export const flowCircuitLayout: PhysicsCustomLayout<
           section.id
         )
       ),
-      ...circuitModuleChrome(geometry, reading, color, text, selected),
+      ...circuitModuleChrome(
+        geometry,
+        reading,
+        color,
+        text,
+        selected,
+        circuitColors,
+        nodeOpacity
+      ),
       ...particles,
       circuitHistoryChrome(geometry, edition, reading, color, text, selected),
       h(

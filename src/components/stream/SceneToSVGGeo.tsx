@@ -40,7 +40,7 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
             stroke={n.style.stroke || "none"}
             strokeWidth={n.style.strokeWidth ?? 0.5}
             strokeDasharray={n.style.strokeDasharray}
-            opacity={n._decayOpacity ?? 1}
+            opacity={(n.style.opacity ?? 1) * (n._decayOpacity ?? 1)}
           />
         </React.Fragment>
       )

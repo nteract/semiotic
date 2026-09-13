@@ -1,5 +1,7 @@
+"use client"
 import * as React from "react"
 import { PhysicsCustomChart } from "../../charts/physics/PhysicsCustomChart"
+import { useSelection } from "../../store/useSelection"
 import {
   flowCircuitChartProps,
   type FlowCircuitChartProps
@@ -10,7 +12,15 @@ export type { FlowCircuitChartProps }
 
 /** NA4 source recipe: replay/model state lives in its admitted upstream tape. */
 export function FlowCircuitChart(props: FlowCircuitChartProps) {
-  const { key, ...chartProps } = flowCircuitChartProps(props)
+  const linked = useSelection({
+    name: props.linkedSelection?.name ?? "__atlas_unused__",
+    fields: ["nodeId"]
+  })
+  const { key, ...chartProps } = flowCircuitChartProps({
+    ...props,
+    layoutSelection:
+      props.linkedSelection && linked.isActive ? linked : props.layoutSelection
+  })
   const selectNode = (id: unknown) => {
     if (
       typeof id === "string" &&
@@ -24,7 +34,11 @@ export function FlowCircuitChart(props: FlowCircuitChartProps) {
       {...chartProps}
       onClick={(datum) => selectNode(datum?.id)}
       frameProps={{
-        onSemanticItemActivate: (item) => selectNode(item.id)
+        ...props.frameProps,
+        onSemanticItemActivate: (item) => {
+          if (item.bodyId) selectNode(item.bodyId)
+          props.frameProps?.onSemanticItemActivate?.(item)
+        }
       }}
     />
   )

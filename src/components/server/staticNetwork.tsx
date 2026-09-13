@@ -1,5 +1,6 @@
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
+import { restyleNetworkCustomScene } from "../stream/networkCustomRestyle"
 import * as ReactDOMServer from "react-dom/server"
 import type {
   NetworkPipelineConfig,
@@ -400,10 +401,19 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       },
       resolveColor,
       config: (config.layoutConfig ?? {}) as Record<string, unknown>,
+      selection: props.layoutSelection ?? null,
     }
     const result = config.customNetworkLayout(ctx)
     sceneNodes = result.sceneNodes ?? []
     sceneEdges = result.sceneEdges ?? []
+    restyleNetworkCustomScene({
+      nodes: sceneNodes,
+      edges: sceneEdges,
+      restyle: result.restyle,
+      restyleEdge: result.restyleEdge,
+      selection: props.layoutSelection ?? null,
+      baseStyles: new WeakMap()
+    })
     labels = result.labels ?? []
     customLayoutBackgrounds = result.backgrounds ?? null
     customLayoutOverlays = result.overlays ?? null

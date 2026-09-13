@@ -131,3 +131,6 @@ original-edge inspection, accessible tables, reduced motion and evidence/SVG
 exports. The interval fixture adds independent ETL queue and retry arithmetic.
 See [`NA4.md`](NA4.md) for delivery boundaries and CSR/SSR verification. Public
 recipe imports and serialized configurations are planned for NA5.
+
+The [integration audit](integration-audit.md) records the accessibility, theme,
+observation, linked-selection and server-rendering sweep before NA5.

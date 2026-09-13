@@ -243,6 +243,10 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     // the built-in network HOC gating while still honoring mobile
     // tap-to-select / tap-to-lock predicates.
     ...buildCustomBehaviorProps({
+      // An identified custom chart is observable through the shared store even
+      // when the host consumes events with useChartObserver instead of a callback.
+      forceHoverBehavior: chartId != null,
+      forceClickBehavior: chartId != null,
       linkedHover,
       selection,
       onObservation,

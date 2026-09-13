@@ -1,9 +1,11 @@
 import { useCallback } from "react"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type {
+  ChartObservation,
   ObservationInputType,
   OnObservationCallback
 } from "../../store/ObservationStore"
+import { useObservationSelector } from "../../store/ObservationStore"
 
 const CHART_TYPE = "StreamPhysicsFrame"
 
@@ -12,12 +14,7 @@ interface CurrentRef<T> {
 }
 
 export type PhysicsFrameObservationType =
-  | "hover"
-  | "hover-end"
-  | "click"
-  | "click-end"
-  | "focus"
-  | "activate"
+  "hover" | "hover-end" | "click" | "click-end" | "focus" | "activate"
 
 export interface PhysicsFrameObservationPayload {
   datum?: unknown
@@ -41,42 +38,50 @@ export function usePhysicsFrameObservationEmitter({
   type: PhysicsFrameObservationType,
   payload?: PhysicsFrameObservationPayload
 ) => void {
-  return useCallback((type, payload) => {
-    const onObservation = onObservationRef.current
-    if (!onObservation) return
+  const pushObservation = useObservationSelector(
+    (state) => state.pushObservation
+  )
+  return useCallback(
+    (type, payload) => {
+      const onObservation = (observation: ChartObservation) => {
+        onObservationRef.current?.(observation)
+        pushObservation(observation)
+      }
 
-    const base = {
-      timestamp: wallClockRef.current(),
-      chartType: CHART_TYPE,
-      chartId: chartIdRef.current
-    }
-    if (type === "hover" || type === "click") {
-      onObservation({
-        ...base,
-        type,
-        datum: (payload?.datum as Datum) ?? {},
-        x: payload?.x ?? 0,
-        y: payload?.y ?? 0
-      })
-    } else if (type === "focus") {
-      onObservation({
-        ...base,
-        type,
-        datum: (payload?.datum as Datum) ?? {},
-        inputType:
-          payload?.inputType === "touch"
-            ? "pointer"
-            : payload?.inputType ?? "keyboard"
-      })
-    } else if (type === "activate") {
-      onObservation({
-        ...base,
-        type,
-        datum: (payload?.datum as Datum) ?? {},
-        inputType: payload?.inputType ?? "keyboard"
-      })
-    } else {
-      onObservation({ ...base, type })
-    }
-  }, [chartIdRef, onObservationRef, wallClockRef])
+      const base = {
+        timestamp: wallClockRef.current(),
+        chartType: CHART_TYPE,
+        chartId: chartIdRef.current
+      }
+      if (type === "hover" || type === "click") {
+        onObservation({
+          ...base,
+          type,
+          datum: (payload?.datum as Datum) ?? {},
+          x: payload?.x ?? 0,
+          y: payload?.y ?? 0
+        })
+      } else if (type === "focus") {
+        onObservation({
+          ...base,
+          type,
+          datum: (payload?.datum as Datum) ?? {},
+          inputType:
+            payload?.inputType === "touch"
+              ? "pointer"
+              : (payload?.inputType ?? "keyboard")
+        })
+      } else if (type === "activate") {
+        onObservation({
+          ...base,
+          type,
+          datum: (payload?.datum as Datum) ?? {},
+          inputType: payload?.inputType ?? "keyboard"
+        })
+      } else {
+        onObservation({ ...base, type })
+      }
+    },
+    [chartIdRef, onObservationRef, wallClockRef, pushObservation]
+  )
 }

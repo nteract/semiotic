@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -64,11 +65,13 @@ interface PhysicsSemanticNavigationOptions {
 }
 
 export interface PhysicsSemanticNavigationResult {
+  resolveSemanticBody: (body: PhysicsBodyState) => PhysicsBodyState
   clearHover: () => void
   focusedBodyIdRef: MutableRefObject<string | null>
   focusedSemanticItem: PhysicsSemanticItem | null
   handleCanvasPointerDown: (event: PointerEvent<HTMLCanvasElement>) => void
   hoverData: PhysicsHoverData | null
+  hoverDataRef: MutableRefObject<PhysicsHoverData | null>
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
   setFocusedSemanticItem: Dispatch<SetStateAction<PhysicsSemanticItem | null>>
   setHoverData: Dispatch<SetStateAction<PhysicsHoverData | null>>
@@ -101,8 +104,30 @@ export function usePhysicsSemanticNavigation({
   const [focusedSemanticItem, setFocusedSemanticItem] =
     useState<PhysicsSemanticItem | null>(null)
   const [hoverData, setHoverData] = useState<PhysicsHoverData | null>(null)
+  const hoverDataRef = useRef(hoverData)
+  hoverDataRef.current = hoverData
   const focusedBodyIdRef = useRef<string | null>(null)
   const lastBodySemanticUpdateRef = useRef(0)
+  // Authored semantic data can change while fixed physical bodies retain their
+  // initial spawns. Use the current semantic record for every input channel.
+  const semanticByBody = useMemo(
+    () =>
+      new Map(
+        allSemanticItems
+          .filter((item) => item.bodyId)
+          .map((item) => [item.bodyId!, item])
+      ),
+    [allSemanticItems]
+  )
+  const resolveSemanticBody = useCallback(
+    (body: PhysicsBodyState) => {
+      const datum = semanticByBody.get(body.id)?.datum
+      return datum === undefined || datum === body.datum
+        ? body
+        : { ...body, datum }
+    },
+    [semanticByBody]
+  )
 
   const syncBodySemanticItems = useCallback(
     (
@@ -161,13 +186,25 @@ export function usePhysicsSemanticNavigation({
           .readBodies()
           .find((candidate) => candidate.id === item.bodyId)
         if (body) {
-          const hover = physicsHoverData(body)
+          const currentBody = resolveSemanticBody(body)
+          const hover = physicsHoverData(currentBody)
+          hoverDataRef.current = hover
           setHoverData(hover)
-          onBodyHover?.(body, hover)
+          onBodyHover?.(currentBody, hover)
         }
+      } else {
+        hoverDataRef.current = null
+        setHoverData(null)
+        onBodyHover?.(null, null)
       }
     },
-    [allSemanticItems, onBodyHover, onSemanticItemFocus, storeRef]
+    [
+      allSemanticItems,
+      onBodyHover,
+      onSemanticItemFocus,
+      storeRef,
+      resolveSemanticBody
+    ]
   )
 
   const clearSemanticFocus = useCallback(() => {
@@ -178,12 +215,11 @@ export function usePhysicsSemanticNavigation({
   }, [onSemanticItemFocus])
 
   const clearHover = useCallback(() => {
-    setHoverData((current) => {
-      if (!current) return current
-      onBodyHover?.(null, null)
-      emitObservation("hover-end")
-      return null
-    })
+    if (!hoverDataRef.current) return
+    hoverDataRef.current = null
+    setHoverData(null)
+    onBodyHover?.(null, null)
+    emitObservation("hover-end")
   }, [emitObservation, onBodyHover])
 
   const handleCanvasPointerDown = useCallback(
@@ -195,7 +231,8 @@ export function usePhysicsSemanticNavigation({
         event.clientX,
         event.clientY
       )
-      const body = store ? store.hitTest(x, y, Math.max(16, hoverRadius)) : null
+      const hit = store ? store.hitTest(x, y, Math.max(16, hoverRadius)) : null
+      const body = hit ? resolveSemanticBody(hit) : null
       onBodyPointerDown?.(body, event)
       if (body) {
         emitObservation("click", { datum: body.datum, x: body.x, y: body.y })
@@ -217,6 +254,7 @@ export function usePhysicsSemanticNavigation({
       hoverRadius,
       onBodyPointerDown,
       onClick,
+      resolveSemanticBody,
       storeRef
     ]
   )
@@ -236,6 +274,9 @@ export function usePhysicsSemanticNavigation({
         if (
           previous != null &&
           previous.id === item.id &&
+          previous.label === item.label &&
+          previous.description === item.description &&
+          previous.datum === item.datum &&
           Math.round(previous.x) === Math.round(item.x) &&
           Math.round(previous.y) === Math.round(item.y)
         ) {
@@ -248,9 +289,10 @@ export function usePhysicsSemanticNavigation({
           .readBodies()
           .find((candidate) => candidate.id === item.bodyId)
         if (body) {
-          const hover = physicsHoverData(body)
+          const hover = physicsHoverData(resolveSemanticBody(body))
           setHoverData((previous) =>
             previous?.id === hover.id &&
+            previous.data === hover.data &&
             Math.round(previous.x) === Math.round(hover.x) &&
             Math.round(previous.y) === Math.round(hover.y)
               ? previous
@@ -259,7 +301,13 @@ export function usePhysicsSemanticNavigation({
         }
       }
     }
-  }, [allSemanticItems, clearSemanticFocus, focusSemanticItem, storeRef])
+  }, [
+    allSemanticItems,
+    clearSemanticFocus,
+    focusSemanticItem,
+    storeRef,
+    resolveSemanticBody
+  ])
 
   useEffect(() => {
     if (!enableHover) clearHover()
@@ -270,6 +318,8 @@ export function usePhysicsSemanticNavigation({
       if (isInteractiveKeyboardTarget(event) || !allSemanticItems.length) return
       if (event.key === "Escape") {
         event.preventDefault()
+        if (hoverDataRef.current) clearHover()
+        else if (semanticFocusIndexRef.current >= 0) emitObservation("hover-end")
         clearSemanticFocus()
         return
       }
@@ -279,6 +329,11 @@ export function usePhysicsSemanticNavigation({
       ) {
         event.preventDefault()
         const item = allSemanticItems[semanticFocusIndexRef.current]
+        emitObservation("click", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          x: item.x,
+          y: item.y
+        })
         emitObservation("activate", {
           datum: item.datum ?? { id: item.id, label: item.label },
           inputType: "keyboard"
@@ -292,6 +347,11 @@ export function usePhysicsSemanticNavigation({
       if (current < 0) {
         focusSemanticItem(0)
         const item = allSemanticItems[0]
+        emitObservation("hover", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          x: item.x,
+          y: item.y
+        })
         emitObservation("focus", {
           datum: item.datum ?? { id: item.id, label: item.label },
           inputType: "keyboard"
@@ -312,6 +372,11 @@ export function usePhysicsSemanticNavigation({
       focusSemanticItem(next)
       if (next !== current) {
         const item = allSemanticItems[next]
+        emitObservation("hover", {
+          datum: item.datum ?? { id: item.id, label: item.label },
+          x: item.x,
+          y: item.y
+        })
         emitObservation("focus", {
           datum: item.datum ?? { id: item.id, label: item.label },
           inputType: "keyboard"
@@ -320,6 +385,7 @@ export function usePhysicsSemanticNavigation({
     },
     [
       allSemanticItems,
+      clearHover,
       clearSemanticFocus,
       emitObservation,
       focusSemanticItem,
@@ -328,11 +394,13 @@ export function usePhysicsSemanticNavigation({
   )
 
   return {
+    resolveSemanticBody,
     clearHover,
     focusedBodyIdRef,
     focusedSemanticItem,
     handleCanvasPointerDown,
     hoverData,
+    hoverDataRef,
     onKeyDown,
     setFocusedSemanticItem,
     setHoverData,

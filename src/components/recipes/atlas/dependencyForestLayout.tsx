@@ -13,6 +13,7 @@ import {
 import type { DependencySelection } from "./dependencyTypes"
 
 export type DependencyForestLayoutConfig = {
+  colors?: { backbone?: string; residual?: string; required?: string }
   forest: DependencyForestProjection
   reading?: "organize" | "required-paths"
   selection?: DependencySelection
@@ -28,9 +29,12 @@ export const dependencyForestLayout: NetworkCustomLayout<
   const { atlas } = forest
   const plot = ctx.dimensions.plot
   const text = ctx.theme.semantic.text ?? "#273442"
-  const quiet = "#8995a3"
-  const tie = "#b66631"
-  const required = "#3983a5"
+  const quiet =
+    ctx.config.colors?.backbone ?? ctx.theme.semantic.textSecondary ?? "#8995a3"
+  const tie =
+    ctx.config.colors?.residual ?? ctx.theme.semantic.warning ?? "#b66631"
+  const required =
+    ctx.config.colors?.required ?? ctx.theme.semantic.primary ?? "#3983a5"
   const selected =
     selection?.analysisRevision === atlas.analysisRevision &&
     selection.relationScopeId === "directed-admitted" &&
@@ -130,8 +134,11 @@ export const dependencyForestLayout: NetworkCustomLayout<
       label: id,
       datum: {
         ...node,
+        nodeId: id,
         kind: "dependency-node",
+        sourceRevision: atlas.provenance.sourceRevision,
         analysisRevision: atlas.analysisRevision,
+        relationScopeId: "directed-admitted",
         hiddenCount,
         internalEdgeIds
       },
@@ -220,6 +227,9 @@ export const dependencyForestLayout: NetworkCustomLayout<
       },
       datum: {
         ...edge,
+        sourceRevision: atlas.provenance.sourceRevision,
+        analysisRevision: atlas.analysisRevision,
+        relationScopeId: "directed-admitted",
         kind: "dependency-edge",
         edgeClass: isBackbone ? "backbone" : "residual"
       },
@@ -281,10 +291,26 @@ export const dependencyForestLayout: NetworkCustomLayout<
           : "Required paths have not been prepared"
     )
   }
+  const nodeData = new Map(sceneNodes.map((node) => [node.id, node.datum]))
   return {
     sceneNodes,
     sceneEdges,
     labels,
+    restyle: (node, selection) => ({
+      opacity:
+        selection?.isActive && !selection.predicate(node.datum!) ? 0.2 : 1
+    }),
+    restyleEdge: (edge, selection) => ({
+      opacity:
+        selection?.isActive &&
+        ![
+          edge.datum,
+          nodeData.get(String(edge.datum?.source)),
+          nodeData.get(String(edge.datum?.target))
+        ].some((datum) => datum && selection.predicate(datum))
+          ? 0.2
+          : 1
+    }),
     overlays: React.createElement("g", { "aria-hidden": true }, overlays)
   }
 }
