@@ -249,9 +249,17 @@ For fitted lineage regions, set `lineageDagLayout`'s `hullGroupAccessor` (for ex
 `NetworkCustomChart` with `nodes={braid.sceneSeeds.nodes}`,
 `edges={braid.sceneSeeds.edges}`, `layout={motifBraidLayout}`, and
 `layoutConfig={{ braid }}`; the same props support `renderChart` from
-`semiotic/server`. The layout draws stepped journey tracks, shares reference
-prefix ordering across selected comparison partitions, and scales widths from
-visible groups. Episodes end at the second visit to a repeated state; profile
+`semiotic/server`. The layout labels every prefix step with a rounded square
+at its depth, shares reference prefix ordering across selected comparison
+partitions, and keeps separate parallel strands until their prefixes diverge.
+Supply optional `stepEntityCounts` on each source occurrence: one finite,
+nonnegative traffic count per `nodePath` entry. Width tapers between adjacent
+counts using one scale across visible partitions (maximum 10 px, minimum 1 px
+for positive traffic; zero traffic has zero width). Omit the array to use
+`entityCount` at every step. Cohort weights and profile counts still use
+`entityCount`; step traffic does not change motif prevalence. Repeated vertices
+remain separate visits and short journeys end at their actual depth.
+Episodes end at the second visit to a repeated state; profile
 cells count each entity once and use the declared assigned denominator. Capsule
 expansion is not supported. `MotifBraidChart` itself is recipe-local.
 

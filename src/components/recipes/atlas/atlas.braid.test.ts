@@ -130,22 +130,22 @@ describe("Motif Braid checkout A/B", () => {
 
     const sharedHome = edges.filter(
       (edge) =>
-        String(edge.id).includes(":home") &&
-        String(edge.id).startsWith("lead:mobile/control:")
+        String(edge.id).includes(":home>catalog:") &&
+        String(edge.id).startsWith("step:mobile/control:")
     )
     expect(sharedHome.length).toBe(2)
     const ordinary = braid.groups.find(
       (group) => group.id === "group:mc-ordinary"
     )!
     const loop = braid.groups.find((group) => group.id === "group:mc-loop")!
-    const ordinaryTail = edges.find(
-      (edge) => edge.id === `tail:${ordinary.id}:${ordinary.id}`
+    const ordinaryTrack = sharedHome.find(
+      (edge) => (edge.datum as { groupId: string }).groupId === ordinary.id
     )
-    const loopTail = edges.find(
-      (edge) => edge.id === `tail:${loop.id}:${loop.id}`
+    const loopTrack = sharedHome.find(
+      (edge) => (edge.datum as { groupId: string }).groupId === loop.id
     )
-    expect(ordinaryTail?.style.strokeWidth ?? 0).toBeGreaterThan(
-      loopTail?.style.strokeWidth ?? 0
+    expect(ordinaryTrack?.style.strokeWidth ?? 0).toBeGreaterThan(
+      loopTrack?.style.strokeWidth ?? 0
     )
   })
 })
@@ -422,7 +422,7 @@ describe("Motif Braid review regressions", () => {
         edges.filter(
           (edge) => (edge.datum as { groupId: string }).groupId === group.id
         )
-      ).toHaveLength(group.nodePath.length + 1)
+      ).toHaveLength(group.nodePath.length - 1)
     }
   })
 

@@ -2094,12 +2094,12 @@ type AtlasEdge = {id: string; source: string; target: string;}
 type AtlasIssue = {kind: string; severity: AtlasIssueSeverity; message: string; id?: string;}
 type AtlasMeasureValue = {measureId: string; subjectId: string; value: number; status: EvidenceStatus;}
 type AtlasNode = {id: string; sectionId?: string; completeness?: CompletenessStatus;}
-type AtlasOccurrence = {id: string; entityId: string; entityCount?: number; nodePath: string[]; complete: boolean; missingPrehistory?: boolean; partition?: string; groupKeys?: Record<string, string>;}
+type AtlasOccurrence = {id: string; entityId: string; entityCount?: number; nodePath: string[]; /** Traffic at each nodePath step. Omit to use entityCount at every step. */ stepEntityCounts?: number[]; complete: boolean; missingPrehistory?: boolean; partition?: string; groupKeys?: Record<string, string>;}
 type AutoPlaceAnnotations = AutoPlaceAnnotationsConfig | boolean
 type AutoPlaceAnnotationsConfig = AnnotationLayoutConfig
 type AxisOrient = "bottom" | "left" | "right" | "top"
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {bandwidth?: () => number;}
-type BraidRibbon = {id: string; groupId: string; partition?: string; fromPrefixId: string; toPrefixId: string; fromState: string; toState: string; entityCount: number;}
+type BraidRibbon = {id: string; groupId: string; partition?: string; fromPrefixId: string; toPrefixId: string; fromState: string; toState: string; entityCount: number; /** Traffic at the destination step. Omit for a constant-width transition. */ toEntityCount?: number;}
 type CalloutConnector = "curve" | "elbow" | "straight"
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
@@ -2162,7 +2162,7 @@ type TokenLayout = "bar-segment" | "beeswarm" | "column" | "dotplot" | "grid" | 
 type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "possible-outcome" | "posterior-sample" | "risk-case" | "topic-anchor" | "unitized-measure"
 type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
 type TokenType = "dot" | "glyph" | "icon"
-type TrajectoryGroup = {id: string; occurrenceId: string; partition?: string; nodePath: string[]; entityCount: number; signature: string;}
+type TrajectoryGroup = {id: string; occurrenceId: string; partition?: string; nodePath: string[]; entityCount: number; /** Traffic at each nodePath step; entityCount remains the cohort weight. */ stepEntityCounts?: number[]; /** Canonical escaped nodePath key produced by prepareMotifBraid. */ signature: string;}
 type TransitDiagramLineValue = ReadonlyArray<TransitDiagramLineDescriptor | number | string> | TransitDiagramLineDescriptor | number | string
 type TransitDiagramMode = "compact" | "minimap" | "primary"
 ```

@@ -19,6 +19,9 @@ export type TrajectoryGroup = {
   partition?: string
   nodePath: string[]
   entityCount: number
+  /** Traffic at each nodePath step; entityCount remains the cohort weight. */
+  stepEntityCounts?: number[]
+  /** Canonical escaped nodePath key produced by prepareMotifBraid. */
   signature: string
 }
 
@@ -31,6 +34,8 @@ export type BraidRibbon = {
   fromState: string
   toState: string
   entityCount: number
+  /** Traffic at the destination step. Omit for a constant-width transition. */
+  toEntityCount?: number
 }
 
 export type SignedReadout = {
@@ -73,6 +78,9 @@ function groupFromOccurrence(
     partition: occurrence.partition,
     nodePath: occurrence.nodePath,
     entityCount: entityCountOf(occurrence),
+    ...(occurrence.stepEntityCounts && {
+      stepEntityCounts: [...occurrence.stepEntityCounts]
+    }),
     signature: prefixIdFor(occurrence.nodePath, occurrence.nodePath.length - 1)
   }
 }
@@ -133,7 +141,10 @@ export function prepareMotifBraid(
         toPrefixId,
         fromState: group.nodePath[i],
         toState: group.nodePath[i + 1],
-        entityCount: group.entityCount
+        entityCount: group.stepEntityCounts?.[i] ?? group.entityCount,
+        ...(group.stepEntityCounts && {
+          toEntityCount: group.stepEntityCounts[i + 1]
+        })
       })
     }
   }

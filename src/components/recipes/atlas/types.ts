@@ -120,6 +120,8 @@ export type AtlasOccurrence = {
   entityId: string
   entityCount?: number
   nodePath: string[]
+  /** Traffic at each nodePath step. Omit to use entityCount at every step. */
+  stepEntityCounts?: number[]
   complete: boolean
   missingPrehistory?: boolean
   partition?: string

@@ -37,7 +37,7 @@ export function MotifBraidChart({
       title={title ?? atlas.spec.dataRevision}
       description={
         description ??
-        "Synthetic Motif Braid. Stepped dendrogram of journey types; stroke width is per-path magnitude."
+        "Synthetic Motif Braid. Labeled squares show successive journey steps; parallel strands split at diverging prefixes and taper with per-step traffic."
       }
       summary={summary}
       nodes={braid.sceneSeeds.nodes}

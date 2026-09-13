@@ -27,7 +27,7 @@ Inspected on the pinned SHA. Do not rebuild these.
 | `networkAnalysis` | Undirected adjacency, centrality, paths | Not an Atlas substrate. Atlas graphs are directed and keep parallel edges / self-loops **by ID**. |
 | `analyzeNetEnsemble` | Weisfeiler–Leman fingerprints of disconnected components | A different “motif” problem. Do not unify with the typed catalog. |
 
-`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper: a stepped dendrogram of journey types with a hidden false root, parallel offset tracks on shared steps, and per-strand stroke width. `DependencyForestChart` and `FlowCircuitChart` are not implemented. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
+`MotifBraidChart` is a recipe-local `NetworkCustomChart` wrapper. Every prefix step has a labeled rounded square aligned to its depth. Separate strands stay parallel through shared steps and branch when their prefixes diverge. Repeated vertices retain separate visits; short journeys stop at their terminal step. `DependencyForestChart` and `FlowCircuitChart` are not implemented. Pass a matching `colorScheme`; `resolveColor` does not honor `CategoryColorProvider`.
 
 ## Layout
 
@@ -37,7 +37,7 @@ expected/     Python checker output (stdlib-only)
 independent-check.py
 ```
 
-Headless TypeScript lives at `src/components/recipes/atlas/` and is **not** re-exported from `semiotic/recipes` or any other public barrel.
+Headless TypeScript lives at `src/components/recipes/atlas/`. The public preparation and layout entry points are listed below; other analysis helpers remain internal.
 
 ## Commands
 
@@ -59,6 +59,25 @@ check the returned `ok` discriminant before using `atlas`. Pass that atlas to
 `semiotic/server`. Both public preparation functions load their analysis code on demand; layout
 remains synchronous. All three are available from the core entry; the chart wrapper is local to this recipe.
 
+For changing traffic, supply `stepEntityCounts` on a source occurrence, with one
+finite, nonnegative count for each `nodePath` entry:
+
+```ts
+{ id: "checkout", entityId: "cohort", entityCount: 100,
+  nodePath: ["home", "catalog", "cart", "done"],
+  stepEntityCounts: [100, 80, 50, 10], complete: true }
+```
+
+Widths interpolate between adjacent step counts. The largest visible count maps
+to 10 px; positive traffic has a 1 px visibility floor, and zero maps to zero.
+Omitted arrays retain constant `entityCount` widths. Arrays must match the path
+length; malformed counts are fatal validation issues. `entityCount` remains the
+cohort weight for motif/profile analysis. Projection ribbons expose source-step
+traffic as `entityCount` and destination traffic as optional `toEntityCount`.
+Lane positions use peak widths so different rates of loss do not create bends
+before a split. Both comparison panels use the same traffic scale and glyph
+sizes, excluding hidden partitions.
+
 Repeated-state episodes cover the first through second visit of each repeated
 state, with completion anchored to the second visit's section. Profiles count an
 entity once per cell across episodes and occurrences. Non-comparison profiles
@@ -71,3 +90,11 @@ Review regression coverage includes episode completion/intersection queries,
 partitioned and unpartitioned counts, duplicate entities, reference ordering,
 separator-containing state IDs, hidden-panel geometry, analysis revisions, both
 public recipe facades, and React/server SVG rendering.
+
+The `network-custom-motif-braid` SSR/CSR screenshot covers six synthetic journeys
+in two partitions: a shared run, nested branches, repeated vertices, an early
+ending, a separate root, and traffic falling to zero. The related-surface audit
+covers constant-count callers, projection ribbons, async preparation through
+both recipe facades, packed ESM/CJS consumers, and SVG/canvas rendering. Canvas
+edge tests cover suppressed strokes for curved, line, bezier, and ribbon edges;
+zero-width or `none` strokes must not acquire a stray canvas outline.

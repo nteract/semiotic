@@ -40,3 +40,14 @@ export const mixedLayout: typeof motifBraidLayout = recipes.motifBraidLayout
 export type MixedProjection = recipes.MotifBraidProjection
 export type MixedSpec = recipes.NetworkAtlasSpec
 export type MixedSource = recipes.NetworkAtlasSource
+
+export const countedOccurrence: NonNullable<
+  NetworkAtlasSource["occurrences"]
+>[number] = {
+  id: "counted",
+  entityId: "cohort",
+  entityCount: 7,
+  nodePath: ["A", "B", "A"],
+  stepEntityCounts: [100, 50, 10],
+  complete: true
+}

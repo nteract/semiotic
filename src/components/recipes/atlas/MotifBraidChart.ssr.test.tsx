@@ -5,7 +5,11 @@ import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { NetworkCustomChart } from "../../charts/custom/NetworkCustomChart"
-import { renderChart } from "../../server/renderToStaticSVG"
+import {
+  renderChart,
+  renderChartWithEvidence
+} from "../../server/renderToStaticSVG"
+import { auditAccessibility } from "../../charts/shared/auditAccessibility"
 import { MotifBraidChart } from "./MotifBraidChart"
 import {
   prepareMotifBraid,
@@ -45,7 +49,7 @@ describe("Motif Braid SSR", () => {
     width: 640,
     height: 360,
     animate: false as const,
-    colorScheme: ["#4e79a7", "#f28e2c"],
+    colorScheme: ["#4e79a7", "#b75b08"],
     title: "SSR motif braid"
   }
 
@@ -88,6 +92,74 @@ describe("Motif Braid SSR", () => {
       expect(svg).toContain("mobile/control")
       expect(svg).toContain("mobile/treatment")
       expect(svg).toContain(" Q")
+      expect(svg).toContain("Step 1")
+      expect(svg).toContain("catalog")
+      expect(svg).toContain("redirect")
+    }
+  })
+
+  it("renders tapered traffic and every step through the public server and React paths", async () => {
+    const trafficFixture = loadCheckout()
+    for (const occurrence of trafficFixture.source.occurrences!) {
+      occurrence.stepEntityCounts = occurrence.nodePath.map(
+        (_, step) =>
+          (occurrence.entityCount ?? 1) *
+          (1 - step / occurrence.nodePath.length)
+      )
+    }
+    const preparedTraffic = await prepareNetworkAtlasAsync(
+      trafficFixture.spec,
+      trafficFixture.source
+    )
+    if (!preparedTraffic.ok)
+      throw new Error(JSON.stringify(preparedTraffic.issues))
+    const trafficBraid = await prepareMotifBraid(preparedTraffic.atlas)
+    const trafficProps = {
+      ...props,
+      nodes: trafficBraid.sceneSeeds.nodes,
+      edges: trafficBraid.sceneSeeds.edges,
+      layoutConfig: { braid: trafficBraid },
+      description:
+        "Synthetic journeys with labeled steps and per-step traffic.",
+      summary: "Both cohorts share a prefix before checkout redirects diverge."
+    }
+    const { svg, evidence } = renderChartWithEvidence(
+      "NetworkCustomChart",
+      trafficProps
+    )
+    const expectedSteps =
+      2 *
+      new Set(
+        trafficBraid.ribbons.flatMap((ribbon) => [
+          ribbon.fromPrefixId,
+          ribbon.toPrefixId
+        ])
+      ).size
+    expect(evidence.markCountByType["node:glyph"]).toBe(expectedSteps)
+    expect(evidence.markCountByType["edge:curved"]).toBeGreaterThan(0)
+    expect(
+      auditAccessibility("NetworkCustomChart", trafficProps).findings.filter(
+        (finding) => finding.critical && finding.status === "fail"
+      )
+    ).toEqual([])
+    const live = renderToStaticMarkup(<NetworkCustomChart {...trafficProps} />)
+    const hoc = renderToStaticMarkup(
+      <MotifBraidChart
+        atlas={preparedTraffic.atlas}
+        width={640}
+        height={360}
+        colorScheme={props.colorScheme}
+      />
+    )
+    const filledTracks = (markup: string) =>
+      markup.match(/<path[^>]*d="M[^"\n]* Z"[^>]*fill="#[^>]+/g) ?? []
+    expect(filledTracks(svg).length).toBeGreaterThan(0)
+    expect(filledTracks(live)).toHaveLength(filledTracks(svg).length)
+    expect(filledTracks(hoc)).toHaveLength(filledTracks(svg).length)
+    for (const markup of [svg, live, hoc]) {
+      expect(markup).toContain("catalog")
+      expect(markup).toContain("redirect")
+      expect(markup).toContain("Step 3")
     }
   })
 
@@ -98,7 +170,7 @@ describe("Motif Braid SSR", () => {
         atlas={prepared.atlas}
         width={640}
         height={360}
-        colorScheme={["#4e79a7", "#f28e2c"]}
+        colorScheme={["#4e79a7", "#b75b08"]}
         title="SSR motif braid"
       />
     )

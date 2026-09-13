@@ -151,6 +151,21 @@ export function validateAtlas(
       fatal(issues, "occurrence", "occurrence needs id and entityId")
       continue
     }
+    if (
+      occurrence.stepEntityCounts !== undefined &&
+      (!Array.isArray(occurrence.stepEntityCounts) ||
+        occurrence.stepEntityCounts.length !== occurrence.nodePath.length ||
+        Array.from(occurrence.stepEntityCounts).some(
+          (count) => !Number.isFinite(count) || count < 0
+        ))
+    ) {
+      fatal(
+        issues,
+        "occurrence-step-counts",
+        "stepEntityCounts must contain one finite, nonnegative count per nodePath step",
+        occurrence.id
+      )
+    }
     for (const nodeId of occurrence.nodePath) {
       if (!nodeIds[nodeId]) {
         fatal(

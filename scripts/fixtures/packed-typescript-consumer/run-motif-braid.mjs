@@ -41,6 +41,7 @@ const source = {
       entityId: "people",
       entityCount: 7,
       nodePath: ["A", "B", "A"],
+      stepEntityCounts: [100, 50, 10],
       complete: true
     }
   ],
@@ -68,6 +69,8 @@ for (const [condition, load] of [
     assert.equal(braid.profile.cells[0].completionCount, 7)
     assert.equal(braid.profile.cells[0].denominator, 50)
     assert.deepEqual(braid.capsules[0].occurrenceIds, ["loop"])
+    assert.deepEqual(braid.groups[0].stepEntityCounts, [100, 50, 10])
+    assert.equal(braid.ribbons[1].toEntityCount, 10)
     const svg = renderChart("NetworkCustomChart", {
       nodes: braid.sceneSeeds.nodes,
       edges: braid.sceneSeeds.edges,
@@ -78,6 +81,8 @@ for (const [condition, load] of [
     })
     assert.match(svg, /<path[^>]*d="M/)
     assert.match(svg, /stroke-width/)
+    assert.match(svg, /Step 3/)
+    assert.match(svg, /<path[^>]*d="M[^"\n]* Z"[^>]*fill="#[^>]+/)
     console.log(
       `Motif Braid ${entry} ${condition}: async analysis, projection and server rendering passed`
     )
