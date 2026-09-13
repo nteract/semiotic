@@ -10,7 +10,8 @@ const customComponents = [
   "XYCustomChart",
   "OrdinalCustomChart",
   "NetworkCustomChart",
-  "GeoCustomChart"
+  "GeoCustomChart",
+  "PhysicsCustomChart"
 ]
 const textProps = {
   title: "Reported flights for one aircraft",

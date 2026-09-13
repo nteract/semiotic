@@ -7,8 +7,11 @@ import PlanePreview from "./plane-day/PlanePreview"
 import ReservoirPreview from "./reservoir-guide/ReservoirPreview"
 import SuperpersuasionPreview from "./superpersuasion/SuperpersuasionPreview"
 import JobsReportPreview from "./jobs-report/JobsReportPreview"
+import { FlowCircuitPreview, DependencyXRayPreview } from "./flow-circuit/AtlasPreviews"
 
 const PREVIEW_COMPONENTS = {
+  "flow-circuit": FlowCircuitPreview,
+  "dependency-xray": DependencyXRayPreview,
   superpersuasion: SuperpersuasionPreview,
   "jobs-report": JobsReportPreview,
   "plane-day": PlanePreview,

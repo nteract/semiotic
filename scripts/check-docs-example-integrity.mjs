@@ -14,6 +14,7 @@ import { dirname, extname, resolve } from "node:path"
 import process from "node:process"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { build } from "esbuild"
+import { isAtlasSourcePreviewImport } from "./network-atlas/source-previews.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, "..")
@@ -114,7 +115,7 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     }
   }
 
-  validateNoPrivateSourceImports(failures, paths.examplesDirectory)
+  validateNoPrivateSourceImports(failures, paths.examplesDirectory, root)
   validateStaticExampleLinks(failures, paths.docsSource, examplePaths)
 
   return {
@@ -370,14 +371,18 @@ function validateDuplicatePaths(failures, label, paths) {
   }
 }
 
-function validateNoPrivateSourceImports(failures, directory) {
+function validateNoPrivateSourceImports(failures, directory, root) {
   for (const filePath of collectCodeFiles(directory)) {
     if (/\.test\.[^.]+$/.test(filePath)) continue
     const source = read(filePath)
-    if (/\bfrom\s+["'][^"']*\/src\/components(?:\/|["'])/.test(source)) {
-      failures.push(
-        `Example source imports a private src/components module: ${relativeToRoot(filePath)}`
-      )
+    for (const match of source.matchAll(
+      /(?:\bfrom\s+|\bimport\s*\(\s*)["']([^"']*\/src\/components(?:\/[^"']*)?)["']/g
+    )) {
+      if (!isAtlasSourcePreviewImport(root, filePath, match[1])) {
+        failures.push(
+          `Example source imports a private src/components module: ${relativeToRoot(filePath)}`
+        )
+      }
     }
   }
 }

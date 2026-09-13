@@ -1666,6 +1666,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-network-custom", "feature-accessors", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
+    id: "flow-circuit",
+    shortLabel: "Flow Circuit",
+    note: "An admitted atlas compiles into physics apparatus with original routes, aggregate observed replay, separate modeled editions, accessible inspection and static exports.",
+    uses: ["input-static", "hoc-physics-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
+  },
+  {
     id: "network-visualization",
     shortLabel: "Drawing Networks",
     note: "A network-visualization primer across the whole family — ForceDirectedGraph, TreeDiagram, ChordDiagram and SankeyDiagram, plus NetworkCustomChart arc/matrix/circular recipes — closing on an interactive analysis toy driven by observation and accessible hit targets.",
