@@ -45,8 +45,8 @@
       "importPath": "semiotic/atlas",
       "symbol": "MotifBraidChart",
       "platform": "browser",
-      "rawBytes": 497372,
-      "gzipBytes": 165380,
+      "rawBytes": 496428,
+      "gzipBytes": 165270,
       "packedPackageInputFiles": 36
     },
     {
@@ -63,8 +63,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 433038,
-      "gzipBytes": 144753,
+      "rawBytes": 433091,
+      "gzipBytes": 144791,
       "packedPackageInputFiles": 70
     },
     {
@@ -72,8 +72,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 432730,
-      "gzipBytes": 145208,
+      "rawBytes": 432783,
+      "gzipBytes": 145199,
       "packedPackageInputFiles": 51
     },
     {
@@ -81,8 +81,8 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 432730,
-      "gzipBytes": 145127,
+      "rawBytes": 432783,
+      "gzipBytes": 145131,
       "packedPackageInputFiles": 44
     },
     {
@@ -90,8 +90,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 440932,
-      "gzipBytes": 136754,
+      "rawBytes": 440935,
+      "gzipBytes": 136750,
       "packedPackageInputFiles": 32
     },
     {
@@ -99,8 +99,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 485637,
-      "gzipBytes": 160803,
+      "rawBytes": 484694,
+      "gzipBytes": 160656,
       "packedPackageInputFiles": 31
     },
     {
@@ -108,8 +108,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 440142,
-      "gzipBytes": 145941,
+      "rawBytes": 440195,
+      "gzipBytes": 145936,
       "packedPackageInputFiles": 51
     },
     {
@@ -135,8 +135,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 455173,
-      "gzipBytes": 153866,
+      "rawBytes": 455224,
+      "gzipBytes": 153887,
       "packedPackageInputFiles": 14
     },
     {
@@ -189,8 +189,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 831721,
-      "gzipBytes": 265265,
+      "rawBytes": 831774,
+      "gzipBytes": 265292,
       "packedPackageInputFiles": 72
     },
     {
@@ -252,8 +252,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 352337,
-      "gzipBytes": 119431,
+      "rawBytes": 352502,
+      "gzipBytes": 119475,
       "packedPackageInputFiles": 24
     },
     {
@@ -261,9 +261,9 @@
       "importPath": "semiotic/text",
       "symbol": "usePretextAnnotations",
       "platform": "browser",
-      "rawBytes": 3016,
-      "gzipBytes": 1563,
-      "packedPackageInputFiles": 1
+      "rawBytes": 3068,
+      "gzipBytes": 1585,
+      "packedPackageInputFiles": 2
     },
     {
       "exportKey": "./rough",

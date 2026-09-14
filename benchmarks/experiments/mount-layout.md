@@ -113,16 +113,17 @@ overlay alignment, glyph hit-testing, and visual baseline tests cover the
 shared first-paint change. Mount counters also cover the fixed and responsive
 XY custom fixtures, rejecting repeated layouts at the same measured width.
 
-No public prop shapes or serialized chart formats changed. Schema/spec and
-generated API surfaces therefore need no manual edits. Empty lower-level or
-unseeded push-mode layouts remain supported because they can emit decorations;
+No public prop shapes or serialized chart formats changed. Schema/spec
+definitions remain unchanged; the API snapshot generator correction described
+below requires regenerating snapshots. Empty lower-level or unseeded push-mode
+layouts remain supported because they can emit decorations;
 the high-level explicit-empty state still skips layout. Layout inputs must
 remain immutable, with new references for changed authored values.
 
 The cache logic lives in its own helper instead of growing the store's layout
 branch. The file-size gate passes; the grandfathered NetworkPipelineStore
-still carries a one-line warning above its reviewed ceiling. No limits,
-snapshots, or regression baselines were raised.
+still carries a one-line warning above its reviewed ceiling. No work-count
+ceilings or size thresholds were loosened.
 
 ## Verification completed
 
@@ -145,3 +146,49 @@ snapshots, or regression baselines were raised.
 The same mount suite intentionally fails 27 of 30 cases against the before
 checkout, confirming the new budgets detect the original extra work. The full
 release/publish suite and the downstream consumer's own application were not run.
+
+## Generated artifacts and CI follow-up
+
+The lifecycle JSDoc exposed an existing API snapshot generator defect:
+parameters of imported callable types were read at their definition's offsets
+in the exporting file. Comments could therefore turn `ctx` into unrelated text
+or an empty name. The generator now reads the parameter's own declaration file.
+An audit of all 37 stable entries corrected names in 11 snapshots, including
+recipe layouts and React frame components. Public types remain unchanged.
+Regression coverage verifies imported generic, overloaded, optional/rest, and
+destructured parameters across re-exports, stability after documentation-only
+edits, and continued detection of a real parameter contract change. The new
+fixture fails against the original generator.
+
+The cold-consumer input-count change is intentional: `semiotic/text` now imports
+the shared 77-byte `hasLoadedFontFaces` chunk. This retains the empty-font-event
+mount fix without importing the canvas infrastructure. Compared with the
+committed measurement, its bundled import grows by 52 raw bytes / 22 gzip bytes;
+the measured network import shrinks by 943 raw bytes / 147 gzip bytes. The
+owning generator refreshed the measurements and README after graph review.
+All existing bundle budgets and measurement tolerances remain unchanged.
+
+Task identities include a digest of production source, so the mount fixes also
+invalidated their recorded evidence. Task verification was rerun and all three
+JSON/Markdown packets and website mirrors were regenerated with current hashes
+and observed passing results. An initial browser run encountered stale Vite
+dependency responses (HTTP 504); restarting the local docs server resolved it
+without changing assertions or application code.
+
+Follow-up checks completed successfully:
+
+- `npm run docs:api-surface`, `npm run check:api-surface`, and
+  `npm run check:api-compat` (compatible with the published v3.10.0 artifact).
+- `node --test scripts/api-compatibility.test.mjs`: 8 tests passed.
+- `npm run dist:prod`, `npm run docs:cold-consumer`,
+  `npm run check:cold-consumer` (37 exports), `npm run check:bundle-sizes`,
+  `npm run size`, and `npm run check:pack`.
+- `npx vitest run scripts/lib/cold-consumer-measurement.test.js src/components/stream/mountLayout.test.tsx src/components/stream/NetworkPipelineStore.layoutCache.test.ts`:
+  59 tests passed, preserving the mount and cache budgets above.
+- `npm run verify:ai-tasks`: 14 unit tests and 6 Chromium tests passed;
+  `npm run docs:ai-tasks` and `npm run check:ai-tasks`: 42 generator tests passed,
+  with current task identities and matching mirrors.
+- Targeted ESLint for both changed scripts and `git diff --check` passed.
+
+This follow-up used macOS/arm64, Node v22.22.1, and esbuild 0.28.2. The full
+release suite and the Linux CI runner were not rerun locally.

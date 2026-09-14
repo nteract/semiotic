@@ -5,7 +5,7 @@
 Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.
 
 Source package: semiotic@3.10.0. Channel: source.
-Source revision: sha256:e97e88049d1795b6aa2ecbb9f4b97f5e61471a90b032d8ea68dd9da52eb65cef. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:d9025cb86ba581e71adad2d207a72ac433199768e72b6f16cd4c8c6c1710c869. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -358,7 +358,7 @@ npx vitest run docs/src/pages/tasks/examples/live-chart.test.tsx
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-task-live.spec.ts
 ```
 
-Recorded execution: 2026-09-14T19:17:58.482Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-09-14T22:46:43.901Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 

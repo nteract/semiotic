@@ -11,14 +11,14 @@ function FlowMap<TDatum extends Datum = Datum>(props: FlowMapProps<TDatum> & Rea
 function GeoCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: GeoCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function StreamGeoFrame(: React.RefAttributes<import("semiotic-internal/semiotic-geo").StreamGeoFrameHandle> & import("semiotic-internal/semiotic-geo").StreamGeoFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function StreamGeoFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-geo").StreamGeoFrameHandle> & import("semiotic-internal/semiotic-geo").StreamGeoFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function composeStyleRules<A = string>(baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined, rules: readonly StyleRule[] | undefined, buildContext: (raw: Datum, arg?: A) => StyleRuleContext, unwrap?: ((d: Datum) => Datum) | undefined): (d: Datum, arg?: A) => Datum
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
-function geographicDotGridLayout(ce: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
-function geographicGridLayout(d a: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicDotGridLayout(ctx: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicGridLayout(ctx: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
 function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]

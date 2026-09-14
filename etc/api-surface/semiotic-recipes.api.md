@@ -34,7 +34,7 @@ function Glyph({ def, size, color, accent, fraction, fractionStart, fractionDire
 function absorbRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
 function activeCountOverDomain<T = Datum>(items: readonly T[], options: ActiveCountOptions<T>): ActiveCount[]
 function addPoints(a: Point, b: Point): Point
-function adjacencyFlowLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").AdjacencyFlowConfig>): import("../semiotic-network").NetworkLayoutResult
+function adjacencyFlowLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").AdjacencyFlowConfig>): import("../semiotic-network").NetworkLayoutResult
 function adjacencyMatrix(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: AdjacencyMatrixOptions | undefined): AdjacencyMatrix
 function aggregateAdjacencyFlow(inputNodes: readonly Datum[], inputEdges: readonly Datum[], options?: AggregateAdjacencyFlowOptions | undefined): AggregatedAdjacencyFlowResult
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "region" | "type">): RegionCountMap
@@ -47,20 +47,20 @@ function annotationLayout(options: AnnotationLayoutOptions): Datum[]
 function arcLayout(ids: readonly string[], options?: ArcLayoutOptions | undefined): Record<string, Point>
 function arcPath(a: Point, b: Point, heightRatio?: number | undefined): string
 function arrivalReplay(spawns: readonly PhysicsQueuedSpawn[], options?: ArrivalReplayOptions | undefined): {initialSpawns: PhysicsQueuedSpawn[]; initialSpawnPacing: PhysicsSpawnPacingOptions;}
-function axisFixedForceLayout(s):: NetworkLayoutContext<import("../semiotic-recipes-core").AxisFixedForceConfig>): import("../semiotic-network").NetworkLayoutResult
+function axisFixedForceLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").AxisFixedForceConfig>): import("../semiotic-network").NetworkLayoutResult
 function axisFixedForcePositions(nodes: readonly Datum[], edges: readonly Datum[], plot: PlotRect, config: AxisFixedForceConfig): AxisFixedForceResult
 function balanceSnapshotsToFlows<TBefore, TAfter = TBefore>(before: readonly TBefore[], after: readonly TAfter[], options: BalanceSnapshotsToFlowsOptions<TBefore, TAfter>): BalancedSnapshotsResult
 function bandLabel(p: BandLabelProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string> | null
 function betweenness(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function bfsDistances(adjacency: Map<string, Set<string>>, start: string): Record<string, number>
-function bobaLayout(r);: OrdinalLayoutContext<import("../semiotic-recipes-core").BobaConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function bobaLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").BobaConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function bodyGroupSpec<TDatum extends Datum = Datum>(options: BodyGroupSpecOptions<TDatum>): BodyGroupSpec<TDatum>
 function boundsOf(points: readonly {x: number; y: number; r?: number;}[], pad?: number | undefined): null | {x: number; y: number; width: number; height: number;}
 function boxEdgeAnchors(source: CenteredBox, target: CenteredBox, opts?: BoxEdgeAnchorOptions | undefined): {from: Point; to: Point;}
 function buildAdjacency(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Map<string, Set<string>>
 function buildTooltipEntries(payload: unknown, options?: CustomTooltipEntryOptions | undefined): CustomTooltipEntry[]
-function bulletLayout(y. : OrdinalLayoutContext<import("../semiotic-recipes-core").BulletConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
-function calendarLayout(: LayoutContext<import("../semiotic-recipes-core").CalendarConfig>): import("../semiotic-recipes-core").LayoutResult
+function bulletLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").BulletConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function calendarLayout(ctx: LayoutContext<import("../semiotic-recipes-core").CalendarConfig>): import("../semiotic-recipes-core").LayoutResult
 function capacitatedRegion(options: ProcessRegionBaseOptions & {capacity: number; unitsPerSecond?: number; force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
 function chargeGateRegion(options: ProcessRegionBaseOptions & {charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
 function circularLayout(ids: readonly string[], options?: CircularLayoutOptions | undefined): Record<string, Point>
@@ -83,7 +83,7 @@ function cubicPoint(curve: CubicCurve, t: number): Point
 function cubicTangent(curve: CubicCurve, t: number): Point
 function curvedEdgePath(from: Point, to: Point, opts?: CurvedEdgeOptions | undefined): string
 function cyclicRangeContains(value: number, start: number, end: number): boolean
-function dagreLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").DagreConfig>): import("../semiotic-network").NetworkLayoutResult
+function dagreLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").DagreConfig>): import("../semiotic-network").NetworkLayoutResult
 function degree(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function demandForecastRows(hours: readonly GridHour[]): DemandForecastRow[]
 function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: undefined | {charge?: string; apparatus?: string; destination?: string;}): string
@@ -93,7 +93,7 @@ function egoNetwork(nodes: readonly GraphNode[], edges: readonly GraphEdge[], id
 function estimateLabelWidth(text: unknown, minimum?: number | undefined, charWidth?: number | undefined, pad?: number | undefined): number
 function extractTooltipDatum(payload: unknown): Record<string, unknown> | null
 function fanOutBend(index: number, opts?: FanOutBendOptions | undefined): number
-function flextreeLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").FlextreeConfig>): import("../semiotic-network").NetworkLayoutResult
+function flextreeLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").FlextreeConfig>): import("../semiotic-network").NetworkLayoutResult
 function forceFieldRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number;}): StreamPhysicsRegionEffect
 function forceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutOptions | undefined): Record<string, Point>
 function forceLayoutAsync(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: ForceLayoutAsyncOptions | undefined): Promise<Record<string, Point>>
@@ -104,8 +104,8 @@ function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
 function generateTokens<D = unknown>(input: TokenGeneratorInput<D> | number | readonly number[], encoding: TokenEncoding): TokenSet<D>
 function geoAreaHitTarget(props: GeoAreaHitTargetProps): GeoAreaSceneNode
 function geoHitTarget(props: HitTargetPointProps): PointSceneNode
-function geographicDotGridLayout(ce: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
-function geographicGridLayout(d a: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicDotGridLayout(ctx: GeoLayoutContext<import("../semiotic-geo").GeographicDotGridConfig>): import("../semiotic-geo").GeoLayoutResult
+function geographicGridLayout(ctx: GeoLayoutContext<import("../semiotic-geo").GeographicGridConfig>): import("../semiotic-geo").GeoLayoutResult
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "horizontal" | "vertical" | undefined): null | {x: number; y: number; width: number; height: number;}
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
@@ -117,22 +117,22 @@ function hatchFill(opts: HatchFillOptions): {def: ReactElement; fill: string;}
 function hitTargetPoint(props: HitTargetPointProps): PointSceneNode
 function hitTargetRect(props: HitTargetRectProps): RectSceneNode
 function hullFromBoxes(boxes: readonly HullBox[], padding?: HullPadding | undefined): HullBox | null
-function intervalLanesLayout(fig: OrdinalLayoutContext<import("../semiotic-recipes-core").IntervalLanesConfig<Datum>>): import("../semiotic-ordinal").OrdinalLayoutResult
-function isometricLandmarkLayout(nu: GeoLayoutContext<import("../semiotic-recipes-core").IsometricLandmarkConfig>): import("../semiotic-geo").GeoLayoutResult
+function intervalLanesLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").IntervalLanesConfig<Datum>>): import("../semiotic-ordinal").OrdinalLayoutResult
+function isometricLandmarkLayout(ctx: GeoLayoutContext<import("../semiotic-recipes-core").IsometricLandmarkConfig>): import("../semiotic-geo").GeoLayoutResult
 function layoutChipStrip(items: readonly ChipStripItem[], options: LayoutChipStripOptions): Map<string, ChipStripPosition>
 function layoutSequence(items: readonly SequenceItem[], options: LayoutSequenceOptions): Map<string, SequencePosition>
 function layoutTokenGrid<D = unknown>(tokenSetOrTokens: TokenSet<D> | readonly VisualToken<D>[], options?: TokenGridOptions | undefined): PositionedToken<D>[]
 function legendGroupsFrom(input: LegendGroupsInput): LegendGroup[]
 function legendSwatches(p: LegendSwatchesProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
-function lineageDagLayout(man: NetworkLayoutContext<import("../semiotic-recipes-core").LineageDagConfig>): import("../semiotic-network").NetworkLayoutResult
+function lineageDagLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").LineageDagConfig>): import("../semiotic-network").NetworkLayoutResult
 function linearAxis(p: LinearAxisProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
 function makeShade(baseColor: string, strength?: number | undefined): (t: number) => string
-function marimekkoLayout(han: OrdinalLayoutContext<import("../semiotic-recipes-core").MarimekkoConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function marimekkoLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").MarimekkoConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function markCallout(p: MarkCalloutProps): ReactElement<unknown, import("react").JSXElementConstructor<any> | string>
 function matchesHighlight(datum: Datum, highlight: HighlightMatch | null | undefined): boolean
 function mean(values: readonly number[]): number
 function membraneRegion(options: ProcessRegionBaseOptions & {cost: number; dampingScale?: number; energyScale?: number; color?: string;}): StreamPhysicsRegionEffect
-function mermaidDagLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").MermaidDagConfig>): import("../semiotic-network").NetworkLayoutResult
+function mermaidDagLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").MermaidDagConfig>): import("../semiotic-network").NetworkLayoutResult
 function mobileAnnotationStrategy(annotations: readonly Datum[] | undefined, config?: MobileAnnotationStrategyConfig | undefined): MobileAnnotationStrategyResult
 function mobileAreaChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileBrushAlternatives(options?: MobileBrushAlternativeOptions | undefined): {mobileInteraction: {enabled: boolean; targetSize: number; tapToSelect: boolean; tapToLockTooltip: boolean; standardControls: "brush";}; mobileSemantics: {interaction: {primary: "filter"; alternatives: ("chip-filter" | "clear" | "range-inputs" | "stepper")[]; summary: string;};}; controls: ("chip-filter" | "clear" | "range-inputs" | "stepper")[];}
@@ -143,9 +143,9 @@ function mobileNetworkChartRecipe(options?: MobileChartFamilyRecipeOptions | und
 function mobileOrdinalChartRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
-function motifBraidLayout(: NetworkLayoutContext<import("../semiotic-recipes-core").MotifBraidLayoutConfig>): import("../../semiotic-network").NetworkLayoutResult
+function motifBraidLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").MotifBraidLayoutConfig>): import("../../semiotic-network").NetworkLayoutResult
 function mulberry32(seed: number): () => number
-function netEnsembleLayout(@d: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
+function netEnsembleLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
 function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkCurvedEdge | NetworkRibbonEdge
 function networkHitTarget(props: NetworkHitTargetCircleProps): NetworkCircleNode
@@ -163,8 +163,8 @@ function orthogonalEdgePath(from: Point, to: Point, opts?: undefined | {orientat
 function packBandsBySilhouette(bands: readonly (readonly SilhouetteSample[])[], gap?: number | undefined): PackedBands
 function packIntervals<T = Datum>(items: readonly T[], options?: PackIntervalsOptions<T> | undefined): PackIntervalsResult<T>
 function packSpanLevels<T extends SpanInterval>(spans: readonly T[]): PackSpanLevelsResult<T>
-function packedClusterMatrix(do: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
-function parallelCoordinatesLayout(*: OrdinalLayoutContext<import("../semiotic-recipes-core").ParallelCoordinatesConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function packedClusterMatrix(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").PackedClusterMatrixConfig>): import("../semiotic-network").NetworkLayoutResult
+function parallelCoordinatesLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").ParallelCoordinatesConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function partitionSharedEdges<T>(edgeSets: readonly (readonly T[])[], keyOf?: EdgeKeyFn<T> | undefined): {shared: T[]; exclusive: T[][];}
 function physicsChargePoint(geography: PhysicsStageGeography, index: number, count: number): {x: number; y: number;}
 function physicsDestination(geography: PhysicsStageGeography, id: string): PhysicsDestinationZone | undefined
@@ -224,16 +224,15 @@ function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: 
 function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
-function transitDiagramLayout(ces: NetworkLayoutContext<import("../semiotic-recipes-core").TransitDiagramConfig>): import("../semiotic-network").NetworkLayoutResult
+function transitDiagramLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").TransitDiagramConfig>): import("../semiotic-network").NetworkLayoutResult
 function unitize(value: number, options: UnitizeOptions): UnitizeResult
 function unitizeRange(value: number, rangeValue: number, options: UnitizeOptions): UnitizeRangeResult
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 function useCustomLayoutSelection(): CustomLayoutSelection
-function waffleLayout( : LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
+function waffleLayout(ctx: LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
-function wordTrailsLayout(ve
-: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function wordTrailsLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
 function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "weightOpacity" | "wordOpacity">
 function wrapValue(value: number, period: number, min?: number | undefined): number
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number

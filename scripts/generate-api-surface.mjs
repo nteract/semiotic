@@ -315,7 +315,9 @@ function formatParameterSymbol(parameter, checker, location) {
   if (parameter.valueDeclaration && ts.isParameter(parameter.valueDeclaration)) {
     const declaration = parameter.valueDeclaration
     const type = checker.getTypeOfSymbolAtLocation(parameter, declaration)
-    const name = declaration.name.getText(sourceFileForLocation(location))
+    // Imported callable aliases keep parameter offsets in their definition
+    // file, which can differ from the file exporting the function value.
+    const name = declaration.name.getText(declaration.getSourceFile())
     const isRest = Boolean(declaration.dotDotDotToken)
     const isOptional = Boolean(declaration.questionToken || declaration.initializer)
     const typeText = formatType(type, checker, declaration)
