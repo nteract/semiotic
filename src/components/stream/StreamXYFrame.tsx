@@ -507,7 +507,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onColorDomainChange(next)
     }, [])
 
-    useEnsureXYPlugins(chartType, customLayout, dirtyRef, scheduleRender)
+    useEnsureXYPlugins(chartType, customLayout, dirtyRef, scheduleRender, storeRef)
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
     // Bridge the resolved custom-layout selection into the scene store +

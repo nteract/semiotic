@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { hasLoadedFontFaces } from "../stream/fontLoading"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AnnotationNoteText } from "./annotationTextLayout"
 import {
@@ -77,8 +78,8 @@ export function usePretextAnnotations<T extends Datum>(
         }
       }
     }
-    const onFontsLoaded = () => {
-      void refresh(true)
+    const onFontsLoaded = (event: Event) => {
+      if (hasLoadedFontFaces(event)) void refresh(true)
     }
     fontSet?.addEventListener("loadingdone", onFontsLoaded)
     void refresh()

@@ -113,7 +113,7 @@ describe("useHydrationLifecycle cleanup", () => {
       const r = render(<Probe />)
       unmount = r.unmount
     })
-    expect(calls).toEqual(["renderFn(hydrated=false)"])
+    expect(calls).toEqual([])
     // Flip the hydrated flag — exactly the transition that previously
     // fired the cleanup.
     await act(async () => {
@@ -122,12 +122,10 @@ describe("useHydrationLifecycle cleanup", () => {
     // The layout effect re-fires (new renderFn call), but the
     // cleanup must NOT fire — that was the regression.
     expect(calls).toEqual([
-      "renderFn(hydrated=false)",
       "renderFn(hydrated=true)",
     ])
     unmount()
     expect(calls).toEqual([
-      "renderFn(hydrated=false)",
       "renderFn(hydrated=true)",
       "cleanup",
     ])

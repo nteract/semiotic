@@ -74,10 +74,7 @@ import {
 
 // Canvas renderers
 import { DefaultNetworkTooltip } from "./networkDefaultTooltip"
-import {
-  buildNetworkPipelineConfig,
-  buildNetworkLayoutConfigSignature
-} from "./networkPipelineConfig"
+import { buildNetworkPipelineConfig } from "./networkPipelineConfig"
 
 import { paintNetworkFrame } from "./networkFramePaint"
 import {
@@ -285,9 +282,16 @@ const StreamNetworkFrame = memo(forwardRef<
     [edgesProp]
   )
 
+  const animationsDisabled = animate === false
   const tensionConfig = useMemo(
-    () => ({ ...DEFAULT_TENSION_CONFIG, ...tensionConfigProp }),
-    [tensionConfigProp]
+    () => ({
+      ...DEFAULT_TENSION_CONFIG,
+      ...tensionConfigProp,
+      // The store falls back to tensionConfig when transition is absent.
+      // Honor the explicit opt-out for resize/data-change transitions too.
+      ...(animationsDisabled ? { transitionDuration: 0 } : {})
+    }),
+    [tensionConfigProp, animationsDisabled]
   )
 
   const particleStyle = useMemo(
@@ -400,39 +404,37 @@ const StreamNetworkFrame = memo(forwardRef<
   // `updateConfig` effect → render-loop `buildScene` (an in-place re-layout),
   // with no topology re-ingest. That makes config-driven custom-layout updates
   // — interaction state, styling, animation progress — cheap to drive per frame.
-  const stableLayoutConfig = useStableShallow(
-    buildNetworkLayoutConfigSignature({
-      chartType,
-      nodeIDAccessor,
-      sourceAccessor,
-      targetAccessor,
-      valueAccessor,
-      edgeIdAccessor,
-      childrenAccessor,
-      hierarchySum,
-      orientation,
-      nodeAlign,
-      nodePaddingRatio,
-      nodeWidth,
-      iterations,
-      forceStrength,
-      padAngle,
-      groupWidth,
-      sortGroups,
-      edgeSort,
-      treeOrientation,
-      edgeType,
-      padding,
-      paddingTop,
-      random: randomProp,
-      seed,
-      tensionConfig,
-      customNetworkLayout,
-      orbitMode,
-      orbitSize,
-      orbitEccentricity
-    })
-  )
+  const stableLayoutConfig = useStableShallow({
+    chartType,
+    nodeIDAccessor,
+    sourceAccessor,
+    targetAccessor,
+    valueAccessor,
+    edgeIdAccessor,
+    childrenAccessor,
+    hierarchySum,
+    orientation,
+    nodeAlign,
+    nodePaddingRatio,
+    nodeWidth,
+    iterations,
+    forceStrength,
+    padAngle,
+    groupWidth,
+    sortGroups,
+    edgeSort,
+    treeOrientation,
+    edgeType,
+    padding,
+    paddingTop,
+    random: randomProp,
+    seed,
+    tensionConfig,
+    customNetworkLayout,
+    orbitMode,
+    orbitSize,
+    orbitEccentricity
+  })
 
   const lastFrameTimeRef = useRef(0)
   const lastAnnotationFrameTimeRef = useRef(0)
@@ -476,6 +478,8 @@ const StreamNetworkFrame = memo(forwardRef<
 
   const nodeColorMap = useRef(new Map<string, string>())
   const colorIndexRef = useRef(0)
+  const colorSchemeRef = useRef(colorScheme)
+  colorSchemeRef.current = colorScheme
 
   const getNodeColor = useCallback(
     (node: RealtimeNode): string =>
@@ -499,10 +503,10 @@ const StreamNetworkFrame = memo(forwardRef<
         sceneNodes: store.sceneNodes,
         nodes: store.nodes.values(),
         nodeColorMap: nodeColorMap.current,
-        colorScheme
+        colorScheme: colorSchemeRef.current
       })
     },
-    [colorScheme]
+    []
   )
 
   // Ingest/layout/theme changes rebuild the scene **synchronously** so
@@ -517,9 +521,11 @@ const StreamNetworkFrame = memo(forwardRef<
   // is taught to repaint-not-rebuild when a scene already exists (see the
   // `skipInitialCanvasPaintInvalidation` note below and `useHydration.ts`).
   // Transition/animation frames still rebuild via the paint loop's own gates.
+  const lastSceneSizeRef = useRef<[number, number] | null>(null)
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
+      lastSceneSizeRef.current = sceneSize
       emitLegendCategories()
       syncColorMap(store)
       refreshNetworkCursorInventory(
@@ -631,26 +637,6 @@ const StreamNetworkFrame = memo(forwardRef<
   // repaint. See useLayoutSelectionSync for why this is a legitimate
   // React→canvas sync (selection is React-assembled), not a store relay.
   useLayoutSelectionSync(storeRef, layoutSelection, dirtyRef, scheduleRender)
-
-  // Theme-change repaint (clearCSSColorCache + dirty + scheduleRender)
-  // is handled by useFrame above when themeDirtyRef is provided. But there's
-  // a second surface to refresh: `nodeColorMap` caches the palette color per
-  // node id and is only resynced inside `runLayout`. Theme changes hit
-  // `updateConfig` + the useFrame repaint, but not `runLayout` — without the
-  // resync below, particle/hover colors (which read from nodeColorMap) would
-  // stay on the previous theme's palette. Rebuild the scene (cheap — just
-  // re-runs the layout plugin's scene-emit step against existing node
-  // positions) and copy the fresh fills into the map.
-  useEffect(() => {
-    const store = storeRef.current
-    if (!store) return
-    rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-    // Custom-layout labels/HTML marks live in React overlays and are read
-    // directly from the imperative store. Publish scene-only theme rebuilds
-    // even when the topology layoutVersion itself did not advance.
-    setLayoutVersion((version) => version + 1)
-    scheduleRender()
-  }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
 
   // ── Layout execution ─────────────────────────────────────────────────
 
@@ -804,7 +790,6 @@ const StreamNetworkFrame = memo(forwardRef<
           nodeColorMap.current.delete(id)
         }
         if (commitLayout(removed)) {
-          dirtyRef.current = true
           scheduleRender()
         }
         return removed
@@ -843,7 +828,6 @@ const StreamNetworkFrame = memo(forwardRef<
           }
         }
         if (commitLayout(removed)) {
-          dirtyRef.current = true
           scheduleRender()
         }
         return removed
@@ -853,7 +837,6 @@ const StreamNetworkFrame = memo(forwardRef<
         // Match updateEdge/remove: node field updates (size, force weights)
         // can change geometry; style-only paints are insufficient.
         if (commitLayout(previous !== null)) {
-          dirtyRef.current = true
           scheduleRender()
         }
         return previous
@@ -866,7 +849,6 @@ const StreamNetworkFrame = memo(forwardRef<
         const previous =
           storeRef.current?.updateEdge(sourceId, targetId, updater) ?? []
         if (commitLayout(previous.length > 0)) {
-          dirtyRef.current = true
           scheduleRender()
         }
         return previous
@@ -1029,6 +1011,7 @@ const StreamNetworkFrame = memo(forwardRef<
           .then(({ runForceLayoutWorker }) => runForceLayoutWorker(request, controller.signal))
           .then(({ positions }) => {
             if (requestId !== layoutRequestRef.current) return
+            layoutAbortRef.current = null
             store.applyForceLayoutPositions(positions, size)
             rebuildSceneNow(store, size)
             setLayoutPending(false)
@@ -1039,6 +1022,7 @@ const StreamNetworkFrame = memo(forwardRef<
           .catch((error: Error) => {
             if (error.name === "AbortError") return
             if (requestId !== layoutRequestRef.current) return
+            layoutAbortRef.current = null
             // Worker construction/runtime failures retain correctness through
             // the established synchronous plugin path.
             store.runLayout(size)
@@ -1067,8 +1051,8 @@ const StreamNetworkFrame = memo(forwardRef<
     // the full `stablePipelineConfig`. Render-only style/animation function
     // props are excluded there, so their identity churn no longer re-ingests +
     // setState every render (the loop that crashed continuously-animated
-    // charts); genuine layout-parameter, data, dimension, and palette changes
-    // still re-ingest. See the `stableLayoutConfig` definition above.
+    // charts); genuine layout-parameter, data, and dimension changes still
+    // re-ingest. Palette changes only rebuild the scene.
   }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow])
 
   // ── Initial streaming data ───────────────────────────────────────────
@@ -1084,6 +1068,23 @@ const StreamNetworkFrame = memo(forwardRef<
       pushManyEdges(initialEdges)
     }
   }, [initialEdges, pushManyEdges])
+
+  // Run after data/seed ingestion so mount and resize never project the old
+  // topology first. Those effects already refresh geometry and color caches;
+  // theme-only changes still need a synchronous build for HTML marks/labels.
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store || layoutAbortRef.current) return
+    const previousSize = lastSceneSizeRef.current
+    const resized = previousSize !== null &&
+      (previousSize[0] !== adjustedWidth || previousSize[1] !== adjustedHeight)
+    if (!dirtyRef.current && !resized) return
+    // Push-mode topology survives resize without bounded re-ingestion.
+    if (resized) store.runLayout([adjustedWidth, adjustedHeight])
+    rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
+    setLayoutVersion((version) => version + 1)
+    scheduleRender()
+  }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
 
   // ── Observation wrappers ─────────────────────────────────────────────
 
@@ -1367,6 +1368,10 @@ const StreamNetworkFrame = memo(forwardRef<
     // whether this particular frame has a paint surface.
     flushPendingLayout()
     if (!frameRuntime.isActive) return
+    // Retain the previous scene while a worker owns the next geometry.
+    // Its completion builds and schedules paint; projecting before then
+    // duplicates scene work and exposes nodes without final positions.
+    if (layoutAbortRef.current) return
     const canvas = canvasRef.current
     if (!canvas) return
     const store = storeRef.current

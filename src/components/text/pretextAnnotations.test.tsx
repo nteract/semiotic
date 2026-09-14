@@ -269,6 +269,12 @@ describe("usePretextAnnotations", () => {
       )
     )
     const initial = (result.current[0] as AnnotationNoteText)._noteLayout
+    const loadCount = fontSet.load.mock.calls.length
+    await act(async () => {
+      fontSet.dispatchEvent(Object.assign(new Event("loadingdone"), { fontfaces: [] }))
+    })
+    expect((result.current[0] as AnnotationNoteText)._noteLayout).toBe(initial)
+    expect(fontSet.load).toHaveBeenCalledTimes(loadCount)
     await act(async () => {
       fontSet.dispatchEvent(new Event("loadingdone"))
     })

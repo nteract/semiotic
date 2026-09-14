@@ -27,11 +27,23 @@ describe("canvas device pixel ratio", () => {
     const unsubscribe = subscribeToCanvasFontInvalidation(listener)
 
     try {
+      const emptyLoad = Object.assign(new Event("loadingdone"), { fontfaces: [] })
+      for (const registered of listeners) {
+        if (typeof registered === "function") registered(emptyLoad)
+        else registered.handleEvent(emptyLoad)
+      }
+      expect(listener).not.toHaveBeenCalled()
       for (const registered of listeners) {
         if (typeof registered === "function") registered(new Event("loadingdone"))
         else registered.handleEvent(new Event("loadingdone"))
       }
       expect(listener).toHaveBeenCalledTimes(1)
+      const loaded = Object.assign(new Event("loadingdone"), { fontfaces: [{}] })
+      for (const registered of listeners) {
+        if (typeof registered === "function") registered(loaded)
+        else registered.handleEvent(loaded)
+      }
+      expect(listener).toHaveBeenCalledTimes(2)
       unsubscribe()
       expect(listeners.size).toBe(0)
       expect(fontSet.removeEventListener).toHaveBeenCalledWith(

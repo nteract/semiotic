@@ -45,6 +45,14 @@ export interface NetworkLayoutSelection {
  * rects, lines, beziers — and optional labels/overlays. The frame still
  * owns hit testing, decay, accessibility, and SSR.
  *
+ * Bounded client mounts ingest data before invoking the layout. The retained
+ * scene is reused while data, plot dimensions, layout/config identity, theme,
+ * and geometry-driving selection are unchanged. A measured container can
+ * require a second call at its measured size. Treat inputs as immutable;
+ * replace changed data/config references. `ref.relayout()` forces a fresh
+ * call, and failed calls remain retriable. Empty push-mode frames may invoke
+ * the layout for decorations. SSR and client hydration execute separately.
+ *
  * Mirrors the XY `CustomLayout` pattern. Reach for it when the catalog
  * (force, sankey, chord, tree, treemap, circle-pack, orbit) doesn't fit
  * — e.g. `d3-flextree`, `dagre`, custom radial layouts.

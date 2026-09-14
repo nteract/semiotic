@@ -412,6 +412,44 @@ export default function CustomChartsPage() {
       </section>
 
       <section>
+        <h2>When layouts run</h2>
+        <p>
+          On a client mount with bounded data, the frame ingests the data before its first
+          layout. A fixed-size <code>NetworkCustomChart</code> runs its layout once. A
+          responsive container can add a call when its measured plot size replaces the
+          initial size. If measurement arrives before the first layout, there is no
+          fallback-size pass. Stable rerenders and repeated measurements at the same size reuse
+          the scene. Server rendering and client hydration execute separately, and React
+          development StrictMode can replay mounting work.
+        </p>
+        <p>
+          Network layouts reuse their last successful scene while data, plot dimensions,
+          layout function, <code>layoutConfig</code>, theme/palette, and geometry-driving
+          selection are unchanged. Keep data and configuration immutable; replace their
+          references when values change. Memoize layout functions and configuration objects
+          created inside your component. Pass changing geometry inputs through{" "}
+          <code>layoutConfig</code> instead of hiding them in mutable closures. An explicit{" "}
+          <code>ref.current.relayout()</code> forces a new call; a failed call can be retried.
+        </p>
+        <p>
+          Selection changes use the returned <code>restyle</code>/<code>restyleEdge</code>{" "}
+          callbacks when supplied, so highlighting can repaint without recomputing geometry.
+          Without these callbacks, a changed selection reaches the next layout through{" "}
+          <code>ctx.selection</code>. Palette changes update network scenes without rerunning
+          built-in topology solvers. <code>{"animate={false}"}</code> also disables network
+          transitions after data or size changes.
+        </p>
+        <p>
+          Nonempty bounded graphs no longer receive a preliminary empty-data layout.
+          Empty data is still a valid layout input on a lower-level frame or an unseeded
+          push-mode chart: layouts can emit decorations without nodes. An explicitly empty
+          bounded <code>NetworkCustomChart</code> displays its empty state. Edges alone can
+          create endpoint nodes, so an empty authored nodes array does not always mean an
+          empty graph.
+        </p>
+      </section>
+
+      <section>
         <h2>Isometric geographic board</h2>
         <p>
           <code>GeoCustomChart</code> receives the frame&rsquo;s fitted projection helpers plus raw
