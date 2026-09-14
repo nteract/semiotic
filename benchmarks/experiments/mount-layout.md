@@ -175,6 +175,11 @@ and observed passing results. An initial browser run encountered stale Vite
 dependency responses (HTTP 504); restarting the local docs server resolved it
 without changing assertions or application code.
 
+The adoption baseline inventories the README and generated task packets, so
+`npm run prepare:adoption-evals` must follow their final refresh. Regenerating
+it updated only source hashes; the 24 development jobs and measurement values
+were unchanged. No other generated outputs consume this baseline.
+
 Follow-up checks completed successfully:
 
 - `npm run docs:api-surface`, `npm run check:api-surface`, and
@@ -188,6 +193,12 @@ Follow-up checks completed successfully:
 - `npm run verify:ai-tasks`: 14 unit tests and 6 Chromium tests passed;
   `npm run docs:ai-tasks` and `npm run check:ai-tasks`: 42 generator tests passed,
   with current task identities and matching mirrors.
+- `npm run test:adoption-evals`: 6 tests passed;
+  `npm run check:adoption-evals` and a subsequent `npm run check:ai-tasks` passed.
+- The remaining commands in CI's AI/SSR/documentation step passed: TypeScript
+  checks for `scripts/ai-tasks`, `scripts/superpersuasion`, and
+  `scripts/jobs-report`; `check:ssr`, `check:jsdoc-coverage`,
+  `check:ai-examples-coverage`, and `check:protected-doc-boundaries`.
 - Targeted ESLint for both changed scripts and `git diff --check` passed.
 
 This follow-up used macOS/arm64, Node v22.22.1, and esbuild 0.28.2. The full
