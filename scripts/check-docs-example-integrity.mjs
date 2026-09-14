@@ -84,14 +84,9 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     architecturePaths,
     examplePaths
   )
+  failures.push(...validateExamplePreviews(examples, previewKeys))
 
   for (const example of examples) {
-    if (!previewKeys.has(example.preview)) {
-      failures.push(
-        `Example ${example.path} has no explicit preview renderer for "${example.preview}"`
-      )
-    }
-
     const sourceFile = sourceLoaders.get(example.path)
     if (!sourceFile) continue
     const sourcePath = resolve(paths.examplesDirectory, sourceFile)
@@ -126,6 +121,34 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     previewCount: previewKeys.size,
     architectureProfileCount: architecturePaths.size
   }
+}
+
+export function validateExamplePreviews(examples, previewKeys) {
+  const failures = []
+  const owners = new Map()
+
+  for (const example of examples) {
+    if (!previewKeys.has(example.preview)) {
+      failures.push(
+        `Example ${example.path} has no explicit preview renderer for "${example.preview}"`
+      )
+    }
+    if (owners.has(example.preview)) {
+      failures.push(
+        `Examples ${owners.get(example.preview)} and ${example.path} share preview key "${example.preview}"; register a distinct key for each example (renderer components may be shared)`
+      )
+    } else {
+      owners.set(example.preview, example.path)
+    }
+  }
+
+  for (const key of previewKeys) {
+    if (!owners.has(key)) {
+      failures.push(`Preview renderer "${key}" has no example in the manifest`)
+    }
+  }
+
+  return failures
 }
 
 function resolvePaths(root) {

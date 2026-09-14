@@ -432,6 +432,8 @@
     "test:mcp-registry-live": "node --test scripts/mcp-registry-live.test.mjs",
     "check:file-size": "node scripts/check-file-size.mjs",
     "check:network-atlas-fixtures": "python3 scripts/network-atlas/independent-check.py",
+    "check:network-atlas-acceptance": "npm run check:network-atlas-fixtures && tsc -p scripts/network-atlas/tsconfig.json && vitest run src/components/recipes/atlas scripts/network-atlas/acceptance.test.tsx docs/src/pages/examples/atlas-evaluation",
+    "bench:network-atlas": "tsx scripts/network-atlas/measure-performance.ts",
     "check:jsdoc-coverage": "node scripts/check-jsdoc-coverage.mjs",
     "check:ai-examples-coverage": "node scripts/check-ai-examples-coverage.mjs",
     "check:docs-routes": "node scripts/check-docs-routes.mjs",

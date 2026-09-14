@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "resolveJsonModule": true,
+    "types": ["node", "vitest/globals", "vite/client"],
+    "paths": {
+      "semiotic/atlas": ["../../src/components/semiotic-atlas.ts"],
+      "semiotic/atlas/core": ["../../src/components/semiotic-atlas-core.ts"],
+      "semiotic/ai": ["../../src/components/semiotic-ai.ts"],
+      "semiotic/server": ["../../src/components/semiotic-server.ts"],
+      "semiotic/themes/react": ["../../src/components/semiotic-themes-react.ts"]
+    }
+  },
+  "include": [
+    "../../docs/src/pages/examples/AtlasEvaluationExamplePage.tsx",
+    "../../docs/src/pages/examples/atlas-evaluation/**/*.ts",
+    "../../docs/src/pages/examples/atlas-evaluation/**/*.tsx",
+    "../../benchmarks/setup/network-atlas-workloads.ts",
+    "../../benchmarks/unit/network-atlas.bench.ts",
+    "./acceptance.ts",
+    "./acceptance.test.tsx",
+    "./measure-performance.ts"
+  ],
+  "exclude": []
+}

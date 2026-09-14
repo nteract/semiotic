@@ -1,4 +1,4 @@
-# Network Atlas (NA0–NA5)
+# Network Atlas (NA0–NA5 and acceptance)
 
 **Status:** Motif Braid, Dependency Forest and Flow Circuit are public readers
 from `semiotic/atlas`, with React-free preparation and queries from
@@ -17,7 +17,11 @@ Admitted here: the five flagship stories and the counterexamples from the Networ
 
 The ETL kernel conservation identity is `60 = 45 completed + 5 dead-letter + 10 queued`. `write_hot` is over capacity (25 arrivals, 20 capacity).
 
-Performance targets from the proposal (50 ms p95 selection, 10k vertices / 50k edges) are **targets, not measurements**. NA3 verifies the small supplier reader and iterative deep-graph analysis; it does not establish those interactive performance targets.
+The [acceptance phase](acceptance.md) now exercises 10k vertices / 50k edges /
+20 bands, records kernel and browser timings, and supplies an interactive
+worker-backed lab at `/examples/atlas-acceptance`. The reference desktop run met
+the 50 ms p95 selection target; that local result does not establish latency on
+other devices or the separate human reader-benefit target.
 
 ## What already exists vs what Atlas adds
 
@@ -56,6 +60,8 @@ queries from `semiotic/atlas/core` with the high-level readers.
 python3 scripts/network-atlas/independent-check.py
 python3 scripts/network-atlas/independent-check.py --write
 npm run check:network-atlas-fixtures
+npm run check:network-atlas-acceptance
+npm run bench:network-atlas -- --out /tmp/atlas-performance.json
 npx vitest run src/components/recipes/atlas/
 ```
 

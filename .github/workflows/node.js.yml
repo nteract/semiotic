@@ -202,6 +202,11 @@ jobs:
       - name: Run test type check
         run: npm run typescript:tests
 
+      - name: Check Atlas acceptance fixtures and documentation types
+        run: |
+          npm run check:network-atlas-fixtures
+          npx tsc -p scripts/network-atlas/tsconfig.json
+
       - name: Run MCP type check
         run: npm run typescript:mcp
 

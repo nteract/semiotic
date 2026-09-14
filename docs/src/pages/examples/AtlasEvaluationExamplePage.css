@@ -1,0 +1,110 @@
+.atlas-evaluation {
+  color: var(--text-primary);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.atlas-evaluation h1 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.15;
+}
+.atlas-evaluation__eyebrow {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.atlas-evaluation__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  background: var(--surface-1);
+}
+.atlas-evaluation__controls label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.atlas-evaluation button,
+.atlas-evaluation select {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  min-height: 44px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 5px;
+}
+.atlas-evaluation button {
+  cursor: pointer;
+}
+.atlas-evaluation button:disabled,
+.atlas-evaluation select:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.atlas-evaluation :focus-visible {
+  outline: 3px solid var(--accent, #168bba);
+  outline-offset: 3px;
+}
+.atlas-evaluation__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 20px 0;
+}
+.atlas-evaluation__facts dt {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.atlas-evaluation__facts dd {
+  margin: 0;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.atlas-evaluation table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.atlas-evaluation th,
+.atlas-evaluation td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color, #999);
+}
+.atlas-evaluation__diagram {
+  max-width: 100%;
+  overflow: auto;
+}
+.atlas-evaluation__diagram > div {
+  min-width: 2400px;
+}
+@media (max-width: 600px) {
+  .atlas-evaluation__measure {
+    display: none;
+  }
+  .atlas-evaluation__diagram {
+    display: none;
+  }
+  .atlas-evaluation__controls {
+    padding: 10px;
+  }
+  .atlas-evaluation th,
+  .atlas-evaluation td {
+    padding: 6px 4px;
+    font-size: 13px;
+  }
+}
+@media (forced-colors: active) {
+  .atlas-evaluation button,
+  .atlas-evaluation select {
+    border-color: ButtonText;
+  }
+  .atlas-evaluation :focus-visible {
+    outline-color: Highlight;
+  }
+}

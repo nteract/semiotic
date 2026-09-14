@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "recordedAt": "2026-09-14T05:00:00.253Z",
+  "source": {
+    "kind": "worktree-at-recording",
+    "revision": "321d8d6a2528b8d4a5b2a6817ead17760cee41b0",
+    "sourceDigest": "ada9383606acb473e3c04cfef56af462e99d2f95595ed5c903e20b2563eb26e0"
+  },
+  "environment": {
+    "node": "v22.22.1",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3 Pro"
+  },
+  "method": "One warm-up, then independent samples on the same generated input. Node synchronous kernel and projection, no rendering or browser scheduling. Matching runs the supported catalog; counts and output bytes are reported separately from timing. No reader-benefit measurement.",
+  "workloads": [
+    {
+      "nodes": 1000,
+      "edges": 5000,
+      "sections": 20,
+      "fixtureDigest": "6c0554942e3c63273c6a0a10502209bc4f3063a0a20de01d33e1a65576a790a0",
+      "evidenceDigest": "6b3b2dac2cce9d672914e267306b1eae80df7b011ac4624c2de2ee34a0f14375",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 1000,
+        "fan-in": 1000,
+        "repeated-state-episode": 0
+      },
+      "matchOutputBytes": 1035100,
+      "preparation": {
+        "samples": 5,
+        "medianMs": 7.071041000000008,
+        "p95Ms": 9.95404099999999
+      },
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 2.007374999999996,
+        "p95Ms": 2.211166999999989
+      },
+      "dependencyProjection": {
+        "samples": 5,
+        "medianMs": 3.23599999999999,
+        "p95Ms": 3.7202920000000006
+      }
+    },
+    {
+      "nodes": 10000,
+      "edges": 50000,
+      "sections": 20,
+      "fixtureDigest": "43f91cb98dea580d1534eaeceb218d1161a0c2ca33b70dda9b92506440c87553",
+      "evidenceDigest": "cc9e9d551eb3b37c5273f583ce4d4276f8911463a70e1f95d4749053c30f06b0",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 10000,
+        "fan-in": 10000,
+        "repeated-state-episode": 0
+      },
+      "matchOutputBytes": 10644977,
+      "preparation": {
+        "samples": 5,
+        "medianMs": 71.15329199999996,
+        "p95Ms": 96.415167
+      },
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 26.291666000000077,
+        "p95Ms": 49.83583300000009
+      },
+      "dependencyProjection": {
+        "samples": 5,
+        "medianMs": 31.173459000000094,
+        "p95Ms": 34.95379100000014
+      }
+    }
+  ],
+  "motifWorkloads": [
+    {
+      "name": "serial-chain-1000-full",
+      "nodes": 1000,
+      "edges": 999,
+      "occurrences": 0,
+      "witnessLimit": 1000,
+      "fixtureDigest": "69cc70fc503e7a2332a209165be2fb5597edb699c4e937731a7ff9904fdff50b",
+      "evidenceDigest": "8109752be873585e02de4ca041616dbf2d4280850fed79d8c0340a6260409d7a",
+      "matchesByTemplate": {
+        "serial-chain": 2,
+        "fan-out": 0,
+        "fan-in": 0,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 52330,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 1.0369590000000244,
+        "p95Ms": 2.6389580000000024
+      }
+    },
+    {
+      "name": "serial-chain-10000-full",
+      "nodes": 10000,
+      "edges": 9999,
+      "occurrences": 0,
+      "witnessLimit": 10000,
+      "fixtureDigest": "b3193019fe5a457426fc28e7567a598351109c441831aece927003dac6e1e421",
+      "evidenceDigest": "a3c3553c43c95834614df470813593669296759d1738643140ef8cb6358a9f14",
+      "matchesByTemplate": {
+        "serial-chain": 2,
+        "fan-out": 0,
+        "fan-in": 0,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 592330,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 9.20458399999984,
+        "p95Ms": 9.64587500000016
+      }
+    },
+    {
+      "name": "fan-out-10000-bounded",
+      "nodes": 10000,
+      "edges": 9999,
+      "occurrences": 0,
+      "witnessLimit": 32,
+      "fixtureDigest": "cbea53523bc3020ff29307a1e4480812be86217bbe870ae9f163abc919770046",
+      "evidenceDigest": "9877ecf265cc93a5756ecb62d57a6d710adba6106110363bec84983b20872206",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 1,
+        "fan-in": 0,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 1,
+      "matchOutputBytes": 1315,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 5.152417000000014,
+        "p95Ms": 5.316125000000056
+      }
+    },
+    {
+      "name": "fan-out-10000-full",
+      "nodes": 10000,
+      "edges": 9999,
+      "occurrences": 0,
+      "witnessLimit": 10000,
+      "fixtureDigest": "7dcbbe671a431637a8ddbcddd58b0bdecbcc9929e5d4f0784e30a9422b2ebb9c",
+      "evidenceDigest": "05ed77a4125ce7a9014361d77d70175c695c3887802f97301ed7495e99af9c36",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 1,
+        "fan-in": 0,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 237355,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 5.6555419999999685,
+        "p95Ms": 5.99391700000001
+      }
+    },
+    {
+      "name": "fan-in-10000-bounded",
+      "nodes": 10000,
+      "edges": 9999,
+      "occurrences": 0,
+      "witnessLimit": 32,
+      "fixtureDigest": "edd7e32679105d9b945095489512016abfcbfcb7d0af9853f9f581c4214d899d",
+      "evidenceDigest": "8b91d31720a4ac99bbe94a66322bf3da78488aeaea6e1cc18b935610205bd4ae",
+      "matchesByTemplate": {
+        "serial-chain": 9999,
+        "fan-out": 0,
+        "fan-in": 1,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 1,
+      "matchOutputBytes": 4031881,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 11.233166999999867,
+        "p95Ms": 11.916541999999936
+      }
+    },
+    {
+      "name": "fan-in-10000-full",
+      "nodes": 10000,
+      "edges": 9999,
+      "occurrences": 0,
+      "witnessLimit": 10000,
+      "fixtureDigest": "5cfbfaa5196cb7d1432b9d1de2c018a94230cd19b52bb92a4eba94014d4f2afe",
+      "evidenceDigest": "94f9eb60560a577a499d60956bbaa1e261fff2aaba704e8ab873044108dc3f47",
+      "matchesByTemplate": {
+        "serial-chain": 9999,
+        "fan-out": 0,
+        "fan-in": 1,
+        "repeated-state-episode": 0
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 4267921,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 11.313499999999976,
+        "p95Ms": 11.63495899999998
+      }
+    },
+    {
+      "name": "repeated-state-episode-1000-full",
+      "nodes": 2,
+      "edges": 2,
+      "occurrences": 1000,
+      "witnessLimit": 1000,
+      "fixtureDigest": "6ece12977ea58df8051f75ab7551a9ba4c2e3f5cbfdc01598208cc9fd8ed6b1a",
+      "evidenceDigest": "422ba9dc6a5bdb880b863cae15e8298bbcc67e8654466abe6377d1a67254c02e",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 0,
+        "fan-in": 0,
+        "repeated-state-episode": 1000
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 437737,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 0.8361250000000382,
+        "p95Ms": 0.8518329999999423
+      }
+    },
+    {
+      "name": "repeated-state-episode-10000-full",
+      "nodes": 2,
+      "edges": 2,
+      "occurrences": 10000,
+      "witnessLimit": 10000,
+      "fixtureDigest": "7201e1ad3da9b430f5a5c4178d50427d6592686436e844e6e171ac748bd29127",
+      "evidenceDigest": "038b3cc3d1496db86f6583e6dac7ac8eae65e375aa370361f6cc5aaeda36e3f2",
+      "matchesByTemplate": {
+        "serial-chain": 0,
+        "fan-out": 0,
+        "fan-in": 0,
+        "repeated-state-episode": 10000
+      },
+      "truncatedMatches": 0,
+      "matchOutputBytes": 4415737,
+      "motifMatching": {
+        "samples": 5,
+        "medianMs": 4.0560830000001715,
+        "p95Ms": 5.0612500000002
+      }
+    }
+  ],
+  "browserSelection": {
+    "recordedAt": "2026-09-14T04:59:15.414Z",
+    "method": "Three warm-ups, then 50 selections. Each sample waits for two animation frames after selection; preparation is already complete.",
+    "samples": 50,
+    "sampleDurationsMs": [
+      36.799999952316284,
+      37.60000002384186,
+      37.200000047683716,
+      35.299999952316284,
+      36.10000002384186,
+      36.199999928474426,
+      35.60000002384186,
+      35.800000071525574,
+      36.799999952316284,
+      33.799999952316284,
+      34.60000002384186,
+      27.800000071525574,
+      30.699999928474426,
+      28.600000023841858,
+      29,
+      27.799999952316284,
+      27.90000009536743,
+      29.199999928474426,
+      28.600000023841858,
+      28.700000047683716,
+      28,
+      29.799999952316284,
+      27.600000023841858,
+      31.399999976158142,
+      27.5,
+      29.100000023841858,
+      29.199999928474426,
+      30.5,
+      28.200000047683716,
+      30.399999976158142,
+      28.5,
+      33.10000002384186,
+      33.60000002384186,
+      33.799999952316284,
+      33.700000047683716,
+      33.299999952316284,
+      35.300000071525574,
+      33.799999952316284,
+      33.200000047683716,
+      34,
+      33.199999928474426,
+      34.60000002384186,
+      33.799999952316284,
+      29.200000047683716,
+      27.799999952316284,
+      28.40000009536743,
+      31,
+      27.899999976158142,
+      30.199999928474426,
+      27.700000047683716
+    ],
+    "medianMs": 30.849999964237213,
+    "p95Ms": 36.799999952316284,
+    "targetMs": 50,
+    "targetMet": true,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36",
+    "devicePixelRatio": 1,
+    "hardwareConcurrency": 12,
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "nodes": 10000,
+    "edges": 50000,
+    "visibleGlyphs": 397
+  },
+  "baseline": {
+    "schemaVersion": 1,
+    "synthetic": true,
+    "recordedAt": "2026-09-13T23:47:45.441Z",
+    "source": {
+      "revision": "321d8d6a2528b8d4a5b2a6817ead17760cee41b0",
+      "sourceDigest": "004643213f2dde1f2bb31c14edead755647438c360c87be7cff6f4c7cd5f9257"
+    },
+    "environment": {
+      "node": "v22.22.1",
+      "platform": "darwin",
+      "arch": "arm64",
+      "cpu": "Apple M3 Pro"
+    },
+    "method": "One warm-up, then independent samples on the same generated input. Node synchronous kernel and projection, no rendering or browser scheduling. Matching runs the supported catalog; counts and output bytes are reported separately from timing. No reader-benefit measurement.",
+    "workloads": [
+      {
+        "nodes": 1000,
+        "edges": 5000,
+        "sections": 20,
+        "fixtureDigest": "6c0554942e3c63273c6a0a10502209bc4f3063a0a20de01d33e1a65576a790a0",
+        "evidenceDigest": "6b3b2dac2cce9d672914e267306b1eae80df7b011ac4624c2de2ee34a0f14375",
+        "matchesByTemplate": {
+          "serial-chain": 0,
+          "fan-out": 1000,
+          "fan-in": 1000,
+          "repeated-state-episode": 0
+        },
+        "matchOutputBytes": 1035100,
+        "preparation": {
+          "samples": 3,
+          "medianMs": 214.68108399999983,
+          "p95Ms": 216.916833
+        },
+        "motifMatching": {
+          "samples": 3,
+          "medianMs": 202.49216699999988,
+          "p95Ms": 203.04487500000027
+        },
+        "dependencyProjection": {
+          "samples": 3,
+          "medianMs": 3.296624999999949,
+          "p95Ms": 3.346958000000086
+        }
+      },
+      {
+        "nodes": 10000,
+        "edges": 50000,
+        "sections": 20,
+        "fixtureDigest": "43f91cb98dea580d1534eaeceb218d1161a0c2ca33b70dda9b92506440c87553",
+        "evidenceDigest": "cc9e9d551eb3b37c5273f583ce4d4276f8911463a70e1f95d4749053c30f06b0",
+        "matchesByTemplate": {
+          "serial-chain": 0,
+          "fan-out": 10000,
+          "fan-in": 10000,
+          "repeated-state-episode": 0
+        },
+        "matchOutputBytes": 10644977,
+        "preparation": {
+          "samples": 3,
+          "medianMs": 20077.817958,
+          "p95Ms": 20137.670167000004
+        },
+        "motifMatching": {
+          "samples": 3,
+          "medianMs": 20016.778791999997,
+          "p95Ms": 20043.327583000006
+        },
+        "dependencyProjection": {
+          "samples": 3,
+          "medianMs": 39.535834000009345,
+          "p95Ms": 40.56883300002664
+        }
+      }
+    ]
+  }
+}

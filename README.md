@@ -467,7 +467,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
 | `import { MotifBraidChart } from "semiotic/atlas"` | browser | **161.5 KiB** |
-| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **6.3 KiB** |
+| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **6.4 KiB** |
 | `import { LineChart } from "semiotic"` | browser | **141.4 KiB** |
 | `import { LineChart } from "semiotic/xy"` | browser | **141.8 KiB** |
 | `import { LineChart } from "semiotic/line"` | browser | **141.7 KiB** |

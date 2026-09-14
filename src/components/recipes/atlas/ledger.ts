@@ -9,10 +9,10 @@ import type {
 
 function nodeKind(
   subjectId: string,
-  source: NetworkAtlasSource,
+  nodeIds: ReadonlySet<string>,
   sections: SectionIndex
 ): LedgerEntry["subjectKind"] {
-  if (source.nodes.some((node) => node.id === subjectId)) return "node"
+  if (nodeIds.has(subjectId)) return "node"
   if (ownValue(sections.nodeIdsBySection, subjectId)) return "section"
   return "global"
 }
@@ -27,12 +27,13 @@ export function buildLedger(
   sections: SectionIndex
 ): MeasureLedger {
   const entries: LedgerEntry[] = []
+  const nodeIds = new Set(source.nodes.map((node) => node.id))
   const authoredSectionKeys = new Set<string>()
 
   for (const row of source.measureValues) {
     const measure = spec.measures[row.measureId]
     if (!measure) continue
-    const subjectKind = nodeKind(row.subjectId, source, sections)
+    const subjectKind = nodeKind(row.subjectId, nodeIds, sections)
     entries.push({
       measureId: row.measureId,
       subjectId: row.subjectId,

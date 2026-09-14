@@ -8,6 +8,7 @@ import { useDataSummary } from "../../DataSummaryContext"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
+import { AriaLiveTooltip } from "../AriaLiveTooltip"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { PhysicsSimulationState } from "./PhysicsPipelineStore"
 import type {
@@ -140,6 +141,44 @@ const TABLE_SHOW_MORE_STYLE: React.CSSProperties = {
     "var(--semiotic-data-table-bg, var(--semiotic-surface, var(--semiotic-bg, #fff)))",
   color: "var(--semiotic-data-table-text, var(--semiotic-text, #333))",
   fontFamily: "inherit"
+}
+
+/** Announce hover or focus once, outside the frame's atomic role="img". */
+export function renderPhysicsAnnouncements(
+  items: PhysicsSemanticItem[],
+  focusedSemanticItem: PhysicsSemanticItem | null,
+  hoverData: PhysicsHoverData | null,
+  liveRegionId: string
+) {
+  const hoverDescription =
+    !focusedSemanticItem && hoverData
+      ? items.find((item) => item.bodyId === hoverData.id)?.description
+      : undefined
+  return (
+    <>
+      <AriaLiveTooltip
+        hoverPoint={
+          focusedSemanticItem
+            ? null
+            : hoverData && {
+                data: hoverDescription
+                  ? { reading: hoverDescription }
+                  : hoverData.data
+              }
+        }
+      />
+      <div
+        id={liveRegionId}
+        aria-live="polite"
+        aria-atomic="true"
+        style={SR_ONLY_STYLE}
+      >
+        {focusedSemanticItem
+          ? (focusedSemanticItem.description ?? focusedSemanticItem.label)
+          : ""}
+      </div>
+    </>
+  )
 }
 
 function primitiveValueText(value: unknown): string | null {
