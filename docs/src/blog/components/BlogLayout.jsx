@@ -4,7 +4,10 @@ import { useDocsTheme } from "../../hooks/useDocsTheme"
 import ThemeToggle from "../../components/ThemeToggle"
 
 const semioticLogo = new URL("../../../public/assets/img/semiotic.png", import.meta.url).href
-const semioticLogoDark = new URL("../../../public/assets/img/semiotic-darkmode.png", import.meta.url).href
+const semioticLogoDark = new URL(
+  "../../../public/assets/img/semiotic-darkmode.png",
+  import.meta.url,
+).href
 
 /**
  * BlogLayout — decoration for /blog/ and /blog/:slug/.
@@ -30,7 +33,9 @@ export default function BlogLayout({ children }) {
             style={styles.logoImg}
           />
         </Link>
-        <Link to="/blog" style={styles.blogLink}>Blog</Link>
+        <Link to="/blog" style={styles.blogLink}>
+          Blog
+        </Link>
         <div style={styles.topBarRight}>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <a
@@ -57,11 +62,17 @@ export default function BlogLayout({ children }) {
       <footer style={styles.footer}>
         <div style={styles.footerInner}>
           <span>
-            <Link to="/" style={styles.footerLink}>← Semiotic home</Link>
+            <Link to="/" style={styles.footerLink}>
+              ← Semiotic home
+            </Link>
             <span style={styles.footerSep}>·</span>
-            <Link to="/getting-started" style={styles.footerLink}>Documentation</Link>
+            <Link to="/getting-started" style={styles.footerLink}>
+              Documentation
+            </Link>
             <span style={styles.footerSep}>·</span>
-            <a href="/blog/feed.xml" style={styles.footerLink}>RSS</a>
+            <a href="/blog/feed.xml" style={styles.footerLink}>
+              RSS
+            </a>
             <span style={styles.footerSep}>·</span>
             <a
               href="https://github.com/nteract/semiotic"
@@ -96,9 +107,11 @@ const styles = {
   topBar: {
     maxWidth: 1100,
     width: "100%",
+    boxSizing: "border-box",
     margin: "0 auto",
     padding: "22px 32px 0",
     display: "flex",
+    flexWrap: "wrap",
     alignItems: "center",
     gap: 18,
   },

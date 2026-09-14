@@ -498,12 +498,11 @@ export default function ParisIsometricLandmarksExamplePage() {
       <section style={styles.editorial}>
         <h2>From coordinates to grid cells</h2>
         <p>
-          The layout receives ordinary longitude and latitude records. It converts them into local
-          kilometer offsets, assigns each landmark to a grid cell, and chooses one representative
-          per cell using an explicit civic-interest rank followed by proximity. This lets a city
-          such as Oakland take precedence over a less distinctive feature in the same cell.{" "}
-          {city.label} is explicitly pinned to the center. Zooming changes grid resolution without
-          changing geographic extent; count badges expose cells containing additional candidates.
+          Each cell shows one representative landmark, so the board is a selection rather
+          than a complete inventory. Number badges reveal cells with more candidates. Zoom
+          changes the size of the cells while keeping the geographic area fixed; compare two
+          zoom levels to see which places gain a mark. The city center stays pinned as a
+          reference.
         </p>
 
         <h2>A GeoFrame custom layout</h2>

@@ -301,10 +301,10 @@ export default function DataVizForDummiesFourExamplePage() {
             <p className="dvd-kicker">Special teams · complete the core chart roster</p>
             <h2>The last charts are not obscure. They are specific.</h2>
             <p className="dvd-hero__lede">
-              Parts I through III covered the reliable starters and their sharpest substitutes.
-              Part IV finishes the core Semiotic roster: fifteen charts whose value appears when
-              the question includes a whole, a threshold, a third variable, a long timeline, or a
-              system moving through time.
+              Some questions need a specialist: a rating scale, progress toward a threshold,
+              several measurements at once, or a process moving through time. This guide
+              explains those forms one at a time. Start with the reading instructions, then ask
+              whether the specialist reveals something a simpler chart would leave unclear.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>15 remaining charts</span>

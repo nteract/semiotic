@@ -976,11 +976,10 @@ export default function SemioticStandardExamplePage() {
               <h2>The chart is not the data. It is the sign system.</h2>
             </div>
             <p>
-              Sixteen real Semiotic charts carry the same incoming signal through five frame
-              families.
-              <code> mode=&quot;context&quot;</code> removes explanatory decoration so encoding has
-              to do the work. Change the signal below; the visual task—and the warning attached to
-              it—stays fixed.
+              The same incoming signal can be a full chart or a small status mark. Change the
+              signal, compare the sixteen forms, and read the question each is intended to
+              answer. Context mode pares back labels and decoration, so check which comparisons
+              remain clear before using that treatment in an application.
             </p>
           </section>
 

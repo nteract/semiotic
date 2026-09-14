@@ -97,10 +97,11 @@ export default function NetworkVizExamplePage() {
         <div className="nv-cover">
           <span className="nv-imprint">A Visual Primer</span>
           <p className="nv-blurb">
-            A node-link diagram is the easiest network picture to make and the hardest to read. This
-            primer rebuilds a 2015 network-visualization workshop—every technique as a working
-            chart—and ends with an interactive toy for thinking <em>with</em> a graph instead of
-            only looking at one.
+            A network drawing answers different questions depending on how it is arranged.
+            Lines can make a path easy to trace, while a matrix can make a dense set of
+            connections easier to compare. This primer rebuilds a 2015 workshop as working
+            charts. Try the same reading task in each view, then use the playground to inspect
+            a graph of your own.
           </p>
         </div>
 

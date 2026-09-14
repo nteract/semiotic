@@ -424,9 +424,10 @@ export default function DataVizForDummiesSixExamplePage() {
             <p className="dvd-kicker">The basement laboratory · please secure loose scarves</p>
             <h2>Physics earns its CPU when the mechanism is part of the evidence.</h2>
             <p className="dvd-hero__lede">
-              Part VI opens the cabinet marked “probably unnecessary, occasionally perfect.”
-              Ten physics charts turn collision, arrival, capacity, dependency, and conservation
-              into visible mechanisms. The balls may bounce; the analytical contract may not.
+              Motion can explain an arrival, a queue, or a dependency when its behavior matches
+              the data. Try these physics charts, then pause and read the counts or settled
+              state. The useful question is what the movement lets you understand; the tables
+              and explanations keep that answer available without watching an animation.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>10 physical mechanisms</span>

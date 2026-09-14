@@ -313,9 +313,11 @@ export default function DebateConceptCrucibleExamplePage() {
               The Rhetorical <span>Crucible</span>
             </h2>
             <p className="rc-deck">
-              A debate is commonly advertised as an exchange of ideas, a description so hygienic as
-              to miss the smoke. Here the words enter separately, endure the same hour, and leave
-              either in company or in the tray reserved for the rhetorically unattached.
+              A word can sound different depending on who says it, what comes before it, and
+              when it appears. Choose a word from the debate transcripts and follow it through
+              three views: isolated uses, surrounding context, and a timeline of appearances.
+              The visual patterns invite a closer reading of the transcript; they do not reveal
+              a speaker’s intentions.
             </p>
           </div>
           <aside className="rc-issue-box">

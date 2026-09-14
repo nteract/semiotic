@@ -248,10 +248,10 @@ export default function DataVizForDummiesThreeExamplePage() {
             <p className="dvd-kicker">The matchup lab · same questions, sharper substitutions</p>
             <h2>Every good chart has a good reason to sit down.</h2>
             <p className="dvd-hero__lede">
-              Parts I and II built the roster. Part III studies substitutions. A bar becomes a dot
-              when ink should recede; a box unfurls into a violin when shape matters; a scatterplot
-              grows a path when sequence enters the arena. The question is no longer “can this chart
-              work?” but “what does it reveal that the starter leaves on the bench?”
+              Keep the question and try a different chart. A dot can make ranking easier to
+              scan; a violin can reveal a distribution that a box summarizes; a path through a
+              scatterplot can reveal sequence. Compare each substitution with the familiar form
+              and decide whether the extra detail helps the reader.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>7 chart matchups</span>

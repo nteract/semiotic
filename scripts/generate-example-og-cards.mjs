@@ -189,9 +189,21 @@ function buildCardSVG(entry) {
   </svg>`
 }
 
-function normalizePreviewSvg(svg) {
+export function normalizePreviewSvg(svg) {
   return svg
-    .replace("<svg ", `<svg width="${PREVIEW_W}" height="${PREVIEW_H}" preserveAspectRatio="xMidYMid meet" `)
+    .replace(/<svg\b[^>]*>/, (root) => {
+      // Browser percentages have no containing element in a standalone SVG.
+      // Give the export one viewport, retaining styles on the artwork itself.
+      const attributes = root
+        .replace(/\s(?:width|height|preserveAspectRatio)=("[^"]*"|'[^']*')/g, "")
+        .replace(/\sstyle=("[^"]*"|'[^']*')/, (_, quoted) => {
+          const style = quoted.slice(1, -1).split(";")
+            .filter((rule) => !/^\s*(?:width|height)\s*:/.test(rule))
+            .join(";")
+          return style ? ` style="${style}"` : ""
+        })
+      return attributes.replace("<svg", `<svg width="${PREVIEW_W}" height="${PREVIEW_H}" preserveAspectRatio="xMidYMid meet"`)
+    })
     .replaceAll("var(--surface-0)", "#ffffff")
     .replaceAll("var(--surface-1)", "#f8fafc")
     .replaceAll("var(--surface-2)", "#eef2f7")
@@ -280,7 +292,9 @@ async function main() {
   if (failed > 0) process.exit(1)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

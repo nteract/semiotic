@@ -578,9 +578,11 @@ export default function LDATopicCrucibleExamplePage() {
               <span>Crucible</span>
             </h2>
             <p className="ltc-lede">
-              We observe the words. We do not observe the topics. LDA proposes that documents are
-              mixtures, topics are distributions, and every token is a small act of probabilistic
-              allegiance. Then inference begins the long business of revising its guesses.
+              A topic model starts with words and guesses which tend to belong together. In this
+              example, documents can mix topics, and each topic gives different weights to
+              words. Step through the sampler to watch those guesses change. The colors identify
+              learned groups; their meaning comes from inspecting the words, not from a label
+              supplied in advance.
             </p>
           </div>
           <aside className="ltc-hero-note">

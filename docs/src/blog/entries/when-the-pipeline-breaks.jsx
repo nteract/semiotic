@@ -1,7 +1,6 @@
-
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { LineChart } from "semiotic"
+import { LineChart } from "semiotic/line"
 import {
   fromDbtArtifacts,
   fromGreatExpectations,
@@ -78,7 +77,7 @@ const preStyle = {
 
 function BridgeDemo() {
   const [on, setOn] = useState(true)
-  const { annotations } = useMemo(() => {
+  const { annotations, unplaced } = useMemo(() => {
     const opts = { ttlHint: "P2D" }
     const dbt = fromDbtArtifacts({ sources: DBT_SOURCES }, opts)
     const ge = fromGreatExpectations(GE_VALIDATION, opts)
@@ -86,7 +85,7 @@ function BridgeDemo() {
     const aged = applyAnnotationStatus(
       applyAnnotationLifecycle(merged, { now: Date.parse("2026-06-21T08:00:00Z") }),
     )
-    return { annotations: aged }
+    return { annotations: aged, unplaced: [...dbt.unplaced, ...ge.unplaced] }
   }, [])
 
   return (
@@ -96,14 +95,25 @@ function BridgeDemo() {
         xAccessor="t"
         yAccessor="value"
         xScaleType="time"
-        title={on ? "Transaction volume — 1 alert" : "Transaction volume"}
-        width={560}
+        title="Daily transaction volume"
+        description="Fourteen synthetic daily readings. Volume drops after the tenth reading; the sample quality checks report stale data and values outside the expected range."
+        summary={
+          on
+            ? "The vertical marker identifies the last load. The shaded band spans 800 to 1,200 transactions. A duplicate-ID check is listed below the chart."
+            : "Annotations are hidden. The quality warnings remain listed below the chart."
+        }
+        accessibleTable
+        responsiveWidth
         height={300}
         lineWidth={2}
         annotations={on ? annotations : []}
         margin={{ top: 30, right: 24, bottom: 40, left: 56 }}
         xFormat={(t) =>
-          new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+          new Date(t).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          })
         }
       />
       <label
@@ -119,11 +129,19 @@ function BridgeDemo() {
         <input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} />
         Bridge the dbt freshness + Great Expectations failures onto the chart
       </label>
-      <p style={{ fontSize: 12, color: "var(--text-2)", margin: "6px 6px 0" }}>
-        Off, it's just a line that drops. On, the dbt freshness failure becomes a danger threshold
-        at the last good load and the Great Expectations range check becomes a band marking where
-        volume should have been — each with a provenanced, proposed-status label.
+      <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 6px 0" }}>
+        {on ? `${annotations.length} annotations shown.` : "Annotations hidden."} The source checks
+        report a stale feed and a value outside the expected range. The drop alone cannot establish
+        why either condition occurred.
       </p>
+      <p>
+        <strong>Checks without a chart coordinate</strong>
+      </p>
+      <ul>
+        {unplaced.map(({ reason }, index) => (
+          <li key={index}>{reason}</li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -136,111 +154,81 @@ function Body() {
   return (
     <>
       <p>
-        A dashboard that silently renders broken data is worse than no dashboard — it launders a
-        pipeline failure into a confident-looking chart. The fix isn't a separate "data quality" tab
-        nobody opens. It's putting the quality signal where the reader is already looking:{" "}
-        <em>on</em> the chart, as an annotation that says who found the problem, how, when, and
-        against which data snapshot. Semiotic's new data-truth bridge does that from the artifacts
-        your pipeline already produces — a dbt source-freshness result, a Great Expectations
-        validation — with no new infrastructure.
+        The transaction line drops sharply. Did customers stop buying, or did the data stop
+        arriving? The numbers alone cannot answer that. A data-quality annotation puts a known
+        problem beside the values it affects, so the reader can investigate before interpreting the
+        drop as a change in the business.
       </p>
-
       <h2 id="why-care">Why this matters</h2>
       <p>
-        Every BI tool will generate insight text <em>beside</em> a chart. Almost none put a
-        provenance-tracked claim <em>on</em> it — and provenance is the whole game when a chart
-        accumulates signals from a deterministic rule, a statistical expectation, and (increasingly)
-        an AI guess. A reader needs to tell those apart. A failed <code>not_null</code> test is a
-        hard rule (confidence 1). A drift threshold from a model monitor is a probabilistic claim
-        (confidence 0.7, and you want to see the 0.7). Collapsing them into one undifferentiated
-        "alert" is how dashboards lose trust. The bridge keeps the distinction by stamping each
-        annotation with a <code>basis</code> and a <code>confidence</code>, and it keeps alerts from
-        crying wolf forever by giving each one a lifecycle, so a week-old freshness warning dims and
-        dashes on its own.
+        A dashboard and its data pipeline are often checked in different places. The person reading
+        the dashboard may never see a failed freshness check. Semiotic's data-quality bridge reads
+        dbt and Great Expectations results and turns supported checks into chart annotations,
+        preserving the system and run that reported them.
       </p>
+      <h2 id="demo">Read the drop with its context</h2>
       <p>
-        It's also, deliberately, a <strong>read-only overlay</strong>. The bridge parses what your
-        data-quality system emits and never writes back into it. dbt and Great Expectations own the
-        checks, the governance, and the execution; Semiotic owns only the visual and its provenance.
-        Clicking the chart does not trigger a dbt run.
+        This synthetic example has fourteen daily readings. The vertical threshold marks the last
+        recorded load; the horizontal band marks the expected range of 800–1,200 transactions.
+        Toggle the annotations to compare the line on its own with the line and those
+        qualifications. The data stays the same.
       </p>
-
-      <h2 id="demo">Report, then alert</h2>
       <BridgeDemo />
-
-      <h2 id="provenance">What the annotation carries</h2>
+      <h2 id="provenance">How the alert stays attached to its source</h2>
       <p>
-        Each generated annotation is an ordinary Semiotic annotation with two extra blocks.{" "}
-        <code>provenance</code> records a system author, a rule basis, and the dbt{" "}
-        <code>invocation_id</code> as the <code>dataVersion</code> — so a reader can trace the alert
-        back to the exact run that produced it. <code>lifecycle</code> records a{" "}
-        <code>proposed</code> status, a TTL, and a <code>semantic</code> anchor so the note
-        re-resolves to the right point after the data refreshes.
+        Each annotation carries provenance: who reported the check, its basis, and an available run
+        identifier. Lifecycle metadata records a proposed status and a time-to-live hint. Calling{" "}
+        <code>applyAnnotationLifecycle</code> with a later time changes the treatment of an aging
+        note. The host must refresh that time; the metadata does not start a clock by itself. This
+        demo fixes the clock so its historical sample remains reproducible.
       </p>
+      <p>
+        A failed rule is evidence about that rule, not proof of the cause of a business change. The
+        bridge also does not run checks, repair data, or write back to either quality system. Those
+        responsibilities remain with the pipeline and its owner.
+      </p>
+      <h2 id="unplaced">Some failures belong beside the chart</h2>
+      <p>
+        A duplicate-ID check has no single time or value to point to. The bridge returns it in
+        <code> unplaced</code>, with a reason, instead of inventing a coordinate. The demo shows
+        that warning in text below the plot. A complete host should display these results too; an
+        empty annotation list does not mean the source passed every check.
+      </p>
+      <h2 id="wiring">Wiring it up</h2>
       <pre style={preStyle}>{`import {
-  fromDbtArtifacts,
-  fromGreatExpectations,
-  applyAnnotationLifecycle,
+  fromDbtArtifacts, fromGreatExpectations, applyAnnotationLifecycle,
 } from "semiotic/ai"
 
-const dbt = fromDbtArtifacts({ sources, runResults }, { ttlHint: "P2D" })
-const ge  = fromGreatExpectations(validation, { ttlHint: "P2D" })
-
+const dbt = fromDbtArtifacts({ sources }, { ttlHint: "P2D" })
+const ge = fromGreatExpectations(validation, { ttlHint: "P2D" })
 const annotations = applyAnnotationLifecycle(
-  [...dbt.annotations, ...ge.annotations],
-  { now: Date.now() }            // ages the alerts: fresh -> aging -> stale
-)`}</pre>
-
-      <h2 id="refuses">What it refuses to place</h2>
-      <p>
-        Not every check has a place on a chart. A uniqueness expectation or a <code>not_null</code>{" "}
-        test asserts a property of a column with no single coordinate. The bridge could drop a
-        marker somewhere plausible — and that's exactly the failure mode to avoid, because a
-        plausible-but-wrong mark lands right where a non-expert reader will trust it. So instead it
-        returns those in an <code>unplaced</code> list <em>with a reason</em>, for the host to
-        render as a chart-level badge it has the context to place. A 70%-faithful adapter that
-        announces its 30% gap is an asset; a 95%-faithful one that hides its 5% is a liability.
-      </p>
-      <pre style={preStyle}>{`const { annotations, unplaced } = fromGreatExpectations(validation)
-
-unplaced // [{ result: {...}, reason: "uniqueness check on \\"id\\" has no
-         //    single chart coordinate; surface it as a chart-level badge" }]`}</pre>
-
+  [...dbt.annotations, ...ge.annotations], { now: Date.now() },
+)
+const unplaced = [...dbt.unplaced, ...ge.unplaced]
+// Pass annotations to the chart; show unplaced as text alongside it.`}</pre>
       <h2 id="when">When to reach for it</h2>
       <p>
-        Reach for it when a chart sits downstream of a quality gate and the reader needs to know
-        whether to trust what they're seeing: a metrics dashboard fed by dbt, an analytics view
-        validated by Great Expectations, a model-monitoring chart where a drift breach should be
-        visible and distinct from the hard rules around it. Don't reach for it as a replacement for
-        your data-quality system — it has no opinion about <em>what</em> to test, only about how to
-        show the result. And don't expect it to place every check; the ones with no coordinate are
-        handed back on purpose.
+        Use the bridge when a known quality result helps a reader interpret a dashboard or report.
+        Check that its time and value fields match the chart's accessors. For a result that
+        describes the whole dataset, use a visible status message or table. Keep your existing
+        data-quality system to define and execute the tests.
       </p>
-
-      <h2 id="where-this-goes">Where this goes</h2>
+      <h2 id="other-domains">Other places this helps</h2>
       <p>
-        The same shape recurs anywhere a chart is downstream of a gate. A SOC dashboard annotates a
-        metric the moment a detection rule fires. A financial report marks a figure that failed
-        reconciliation, with the reconciliation run id baked in so a regulator can trace it. A
-        scientific figure travels into a paper carrying a provenanced caveat that survives the trip.
-        In each case the chart stops merely showing the data and starts telling you whether to
-        believe it — which is the difference between a chart that renders and a chart that
-        communicates.
+        A delayed sensor, a failed financial reconciliation, and a laboratory value awaiting review
+        all change how a number should be read. A dated, attributable note lets the next reader see
+        the qualification even when they were not present for the original check.
       </p>
-
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/interoperability/data-quality-bridge">Data-Truth Bridge</Link> — the
-          interactive page with the freshness-decay control and the full provenance payload.
+          <Link to="/interoperability/data-quality-bridge">Data-quality bridge reference</Link>
         </li>
         <li>
-          <Link to="/annotations/provenance-lifecycle">Provenance &amp; Lifecycle</Link> — the
-          annotation metadata this bridge stamps, and the treatments it composes with.
+          <Link to="/annotations/provenance-lifecycle">Annotation provenance and lifecycle</Link>
         </li>
         <li>
-          <Link to="/interoperability/portability-spec">Portability Spec</Link> — the
-          library-neutral schema that lets this provenance travel beyond Semiotic.
+          <Link to="/interoperability/portability-spec">Portable metadata</Link>
         </li>
       </ul>
     </>
@@ -251,13 +239,12 @@ export default {
   slug: "when-the-pipeline-breaks",
   title: "When the Pipeline Breaks, the Chart Should Say So",
   subtitle:
-    "Semiotic's data-truth bridge turns dbt freshness failures and Great Expectations validations into provenanced, lifecycled annotations on the chart — so a stale or out-of-bounds series announces itself instead of laundering a pipeline failure into a confident-looking line.",
+    "Put a known data-quality problem beside the values it affects, with its source, date, and limits intact.",
   author: "Elijah Meeks",
   date: "2026-06-21",
   tags: ["case-study", "xy"],
   excerpt:
-    "A dashboard that silently renders broken data is worse than none. The data-truth bridge puts the quality signal where the reader is already looking — on the chart, as an annotation carrying who found the problem, how, when, and against which data snapshot — from the dbt and Great Expectations artifacts your pipeline already produces. Read-only, and honest about what it can't place.",
+    "A falling line could describe a business change or a broken feed. Toggle annotations from sample dbt and Great Expectations results to see how a reader can tell what needs investigation.",
   component: Body,
   ogChart: { component: "LineChart" },
-  draft: true,
 }

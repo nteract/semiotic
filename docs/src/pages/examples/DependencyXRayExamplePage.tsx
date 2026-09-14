@@ -111,12 +111,15 @@ export default function DependencyXRayExamplePage() {
             <p className="dependency-xray__eyebrow">Network Atlas · synthetic supplier study</p>
             <h1>Three suppliers. Two share one dependency.</h1>
             <p>
-              Network Atlas public reader. Import DependencyForestChart from semiotic/atlas;
-              prepare and query its evidence with semiotic/atlas/core.
+              Three suppliers can look like three alternatives until you follow the parts
+              upstream. A and B both depend on X; C has a separate route. If X stops, how much
+              of the order can still be filled?
             </p>
             <p>
-              A and B obtain their component through X. C has a separate admitted route. Inspect the
-              original links, then add a bypass with no usable capacity.
+              Start with X selected, then add the Y → A bypass. It creates another path but
+              delivers zero units per week. Watch the required-path reading change while the
+              capacity shortfall stays the same. A connection tells you where something could
+              travel; the capacity tells you how much can get through.
             </p>
             <dl className="dependency-xray__metrics">
               <div>

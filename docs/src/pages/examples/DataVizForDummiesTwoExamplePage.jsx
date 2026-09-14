@@ -229,10 +229,11 @@ export default function DataVizForDummiesTwoExamplePage() {
             <p className="dvd-kicker">The second unit · more shapes, same film room</p>
             <h2>The starters cannot play every question.</h2>
             <p className="dvd-hero__lede">
-              The first guide drafted bars, lines, scatters, histograms, Sankeys, and treemaps.
-              Excellent roster. Still: some questions arrive wearing composition, attrition,
-              matrices, and many-to-many chaos. Send in the bench—specialists whose geometry earns
-              its minutes only when the game calls for it.
+              The first guide introduced bars, lines, scatterplots, histograms, Sankeys, and
+              treemaps. This second guide keeps the fictional sports setting and asks harder
+              questions: what makes up the total, where do participants leave, and who exchanges
+              with whom? Each section introduces a chart, explains its marks, and names the
+              comparison it helps you make.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>7 more chart families</span>

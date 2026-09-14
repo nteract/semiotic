@@ -1,4 +1,3 @@
-
 import React from "react"
 import { Link } from "react-router-dom"
 import { describeChart } from "semiotic/utils"
@@ -65,160 +64,92 @@ function Body() {
   return (
     <>
       <p>
-        Point a screen reader at a chart on a <code>&lt;canvas&gt;</code> and, if you've done
-        everything right, it says "line chart, nine points." That's not a description; it's a
-        census. The pattern of the data is exactly the part that never makes it to the person who
-        can't see the pixels. <code>describeChart()</code> closes that gap by generating the
-        description the chart should have been narrating all along.
+        “Line chart, five points” identifies a picture but leaves its finding unanswered. For the
+        sales series below, a reader needs to know that April is highest at 9,100 and May falls to
+        2,100. <code>describeChart()</code> turns the supplied configuration into a description that
+        includes measurements and a simple account of the pattern.
       </p>
-
       <h2 id="why-care">Why this matters</h2>
       <p>
-        There's real research behind what a good chart description contains. Alan Lundgard and
-        Arvind Satyanarayan's{" "}
-        <a
-          href="https://vis.csail.mit.edu/pubs/vis-text-model/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        Alan Lundgard and Arvind Satyanarayan's
+        <a href="https://vis.csail.mit.edu/pubs/vis-text-model/">
+          {" "}
           four-level model of semantic content
         </a>{" "}
-        (IEEE VIS 2021) analyzed thousands of human-written chart descriptions and sorted their
-        content into four levels: <strong>L1</strong> the encoding (what's a line, what's an axis),{" "}
-        <strong>L2</strong> the statistics (ranges, extrema, means), <strong>L3</strong> the
-        perceptual trends (it rises, it peaks, it reverses), and <strong>L4</strong> the domain
-        meaning (why any of it matters). Then they asked blind and sighted readers which levels they
-        valued. The punchline that should reorganize how every charting library does alt-text:{" "}
-        <strong>blind and low-vision readers rank L2 and L3 as the most useful</strong>: the
-        statistics and the trends. While most automatic captioning stops at L1, the one level that
-        adds the least.
+        distinguishes a chart's construction, statistical relationships, patterns, and domain
+        context. Their study of blind and sighted readers found that useful content depends on the
+        reader, with trends and statistics particularly valuable for blind participants. A
+        chart-type label alone is a thin starting point.
       </p>
+      <h2 id="the-thing">Read three layers of one series</h2>
       <p>
-        So the bar isn't "label the chart." It's "tell me the numbers and the shape." That's a
-        higher bar, but it's also a <em>computable</em> one: a chart's config already contains the
-        data and the encoding. You can derive L1, L2, and most of L3 without an LLM,
-        deterministically, offline.
+        This synthetic series rises from January through April, then drops in May. The panel runs{" "}
+        <code>describeChart()</code> on those five rows. Read Encoding to learn what is measured,
+        Statistics to find the range and its months, and Trend for the generated account of the
+        direction.
       </p>
-
-      <h2 id="the-thing">Three levels from one config</h2>
-      <p>
-        Here's <code>describeChart()</code> run live on a five-point line chart showing sales that
-        climb for four months and then fall off a cliff. Each line is one semantic level:
-      </p>
-
       <LevelBreakdown />
-
       <p>
-        L1 is the encoding. L2 is the statistics, and note it carries the <em>labels</em> at the
-        extremes but not "max 9,100" but "9,100 (Apr)," which is the version a person can actually
-        use. L3 is the trend, and it's doing the subtle thing: the series ends at its lowest point,
-        so it reports the fall to May rather than pretending the April peak is the headline. Glue
-        the three together and a screen reader finally narrates the chart instead of counting it.
+        Notice that the largest value has a month attached. “9,100 in April” gives a reader a place
+        to investigate. The generated text can describe the fall to May, but these rows do not say
+        whether a warehouse closed, demand fell, or a feed failed. That explanation needs evidence
+        outside this chart.
       </p>
-
       <h2 id="how-it-works">How it works</h2>
       <p>
-        No model, no network. <code>describeChart()</code> reads the chart's accessors to find the
-        measure and the dimension, then:
+        The helper reads the component, data, and accessors. It describes the encoding, computes
+        supported statistics, and uses rules to summarize patterns such as net direction and
+        reversals. It makes no model or network call. Coverage varies by chart family: a numerical
+        series supports richer statistics than a topology-only network.
       </p>
-      <ul>
-        <li>
-          <strong>L1</strong> maps the component to a chart-type phrase and names the channels such
-          as "a line chart of sales by month," "split by region" when there's a series field.
-        </li>
-        <li>
-          <strong>L2</strong> walks the data once for min, max, and mean, holding onto the dimension
-          label at each extreme so it can say <em>where</em> the peak was.
-        </li>
-        <li>
-          <strong>L3</strong> compares first to last against the overall spread, classifies the net
-          direction, and detects reversals, so a series that peaks in the middle reads "rises …
-          after peaking at 400 (Feb)" rather than a flat "rises."
-        </li>
-      </ul>
+      <h2 id="when">When to reach for it</h2>
       <p>
-        It's richest for the families where a measure over a dimension is the whole point — XY, bar,
-        part-to-whole, distributions. For network, hierarchy, geo, and single-value charts it
-        returns a clean L1 and stops, rather than inventing a trend that isn't there. Honest
-        degradation beats confident nonsense.
+        Use the output as a first draft, a fallback, or a caption that stays aligned with new data.
+        Review the units, missing values, grouping, and scope. Write a <code>summary</code> for the
+        supported conclusion and provide an exact-value table when readers need one. An
+        automatically generated trend cannot establish a cause, and a passing accessibility check
+        cannot replace trying the reading experience.
       </p>
+      <h2 id="wiring">Wiring it up</h2>
+      <pre style={{ ...panel, overflowX: "auto" }}>{`import { describeChart } from "semiotic/utils"
 
-      <h2 id="opt-in">The description belongs to the container</h2>
-      <p>
-        We made one deliberate architectural choice: auto-description is <strong>not</strong> baked
-        into every chart. It's an opt-in at the{" "}
-        <Link to="/features/chart-container">ChartContainer</Link> layer, which is already where
-        title, subtitle, toolbar live. Give the container a <code>chartConfig</code> (it takes one
-        anyway, for "copy config") and set <code>describe</code>:
-      </p>
-      <pre
-        style={{ ...panel, fontFamily: "var(--font-mono)", fontSize: 13, whiteSpace: "pre-wrap" }}
-      >{`<ChartContainer
+const description = describeChart("LineChart", props)
+// Inspect description.levels before using the text in a report.
+
+<ChartContainer
   title="Sales by month"
   chartConfig={{ component: "LineChart", props }}
-  describe                       // screen-reader-only L1–L3 description
+  describe
 >
   <LineChart {...props} />
 </ChartContainer>`}</pre>
       <p>
-        Why not just do it automatically on the bare chart? Two reasons. The bare chart space is a
-        deliberate baseline: keyboard navigation, focus ring, live region, a data table. Adding
-        presentation on top of it blurs that line. And a container-level description sits in one
-        place in the reading order instead of fighting the chart's own terse aria-label. Full
-        accessible legibility is something you opt into by reaching for the container, not something
-        every chart has to carry alone. (The{" "}
-        <Link to="/accessibility/audit">accessibility audit</Link> knows the difference: flip{" "}
-        <code>describe</code> on and its "features described" finding flips from warning to pass.)
+        <code>ChartContainer</code> can present the generated description when <code>describe</code>{" "}
+        is enabled. This is separate from the chart's authored <code>title</code>,
+        <code> description</code>, and <code>summary</code>. Compose those layers so the reader
+        encounters a useful explanation without hearing the same sentence repeatedly.
       </p>
-
-      <h2 id="when">When to reach for it (and its limit)</h2>
+      <h2 id="other-domains">Other places this helps</h2>
       <p>
-        Use it as the <strong>default first draft</strong> for any chart's description, and as a{" "}
-        <strong>reliable fallback</strong> when no one has written one. What it gives you is the
-        shape: type, numbers, trend. What it can't give you is L4: the <em>meaning</em>. It will
-        tell you sales fell to 2,100 in May; it won't tell you that's because the warehouse flooded.
-        For the "why," write a <code>summary</code>, or feed the generated L1–L3 text plus the data
-        through an LLM via the <Link to="/intelligence/interrogation">interrogation</Link> layer and
-        let it supply the domain narrative. Deterministic description for the shape, generative for
-        the meaning.
+        A dashboard needs captions that follow changing data. An email report needs the main pattern
+        even when its image is unavailable. An assistant needs real statistics before drafting an
+        explanation. In all three cases, computed observations are useful input; the author remains
+        responsible for what the report concludes.
       </p>
-
-      <h2 id="other-domains">Where this pattern shows up</h2>
-      <ul>
-        <li>
-          <strong>Dashboards.</strong> A grid of twenty charts is twenty "line chart, N points"
-          announcements unless each one narrates itself. Auto-description scales where hand-written
-          alt-text doesn't.
-        </li>
-        <li>
-          <strong>Automated reporting.</strong> The same L1–L3 text is a serviceable caption for a
-          generated PDF or email, sighted readers included.
-        </li>
-        <li>
-          <strong>LLM grounding.</strong> Handing a model the deterministic statistics keeps its
-          narrative honest by describing real extrema, not hallucinating a trend.
-        </li>
-        <li>
-          <strong>Any raster visualization.</strong> Maps, WebGL scenes, game telemetry or anywhere
-          the visual has no DOM to provide a config-derived description is the accessible path.
-        </li>
-      </ul>
-
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/accessibility/descriptions">Chart Descriptions - reference</Link>
+          <Link to="/accessibility/descriptions">Chart descriptions reference</Link>
         </li>
         <li>
-          <Link to="/accessibility/audit">Chartability Audit</Link>
+          <Link to="/accessibility/navigation">Explore a chart with structured navigation</Link>
         </li>
         <li>
-          <a
-            href="https://vis.csail.mit.edu/pubs/vis-text-model/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Lundgard &amp; Satyanarayan - A Four-Level Model of Semantic Content
+          <Link to="/accessibility/audit">Accessibility audit</Link>
+        </li>
+        <li>
+          <a href="https://vis.csail.mit.edu/pubs/vis-text-model/">
+            Lundgard and Satyanarayan's four-level model
           </a>
         </li>
       </ul>
@@ -230,13 +161,12 @@ export default {
   slug: "what-a-screen-reader-should-hear",
   title: "What a Screen Reader Should Hear",
   subtitle:
-    "describeChart() turns a chart config into a layered natural-language description: encoding, statistics, and trend which research says blind and low-vision readers actually want.",
+    "Explain a chart’s measurements and pattern, then add the context that only an informed author can supply.",
   author: "Elijah Meeks",
   date: "2026-06-15",
   tags: ["case-study", "accessibility"],
   excerpt:
-    'A screen reader announces "line chart, nine points" which is both accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.',
+    "A label names the chart. A useful description helps someone read it. Follow a five-month sales series through generated encoding, statistics, and trend text, and see where human explanation still matters.",
   component: Body,
   ogChart: { component: "LineChart" },
-  draft: true,
 }

@@ -247,10 +247,10 @@ export default function DataVizForDummiesFiveExamplePage() {
             <p className="dvd-kicker">The road season · geography joins the scouting report</p>
             <h2>A map is a chart only when location changes the answer.</h2>
             <p className="dvd-hero__lede">
-              Parts I through IV completed the core roster. Part V leaves the arena and asks what
-              happens when adjacency, distance, direction, or street context becomes data. Six geo
-              formations show when the map earns its minutes—and when geography is just expensive
-              wallpaper.
+              The season goes on the road. Now the questions involve nearby places, distance,
+              routes, and regional totals. Compare six geographic views and watch what each
+              makes prominent. Use a map when location helps answer the question; keep a bar or
+              line chart when the main comparison is a quantity or a trend.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>6 geo formations</span>

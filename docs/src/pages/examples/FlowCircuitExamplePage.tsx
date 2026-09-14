@@ -110,8 +110,14 @@ export default function FlowCircuitExamplePage() {
             </h1>
             <p>
               {story === "etl"
-                ? "Eight partitions offer 80,000 records/s of capacity. Uneven routing leaves one overloaded and the rest underused. Follow the measured work, then inspect a redistribution candidate."
-                : "10,000 roots/s enter at the boundary. Retries raise offered inventory work to 30,000 attempts/s. Replay the interval observations, then test an explicit retry-budget model."}
+                ? "A data pipeline can have spare capacity and still fall behind. Here, eight workers can process 80,000 records each second, but uneven routing sends too much work to one of them. Follow its growing queue, then compare a scenario that shares the load."
+                : "A service receives 10,000 new requests each second, yet its inventory step faces 30,000 attempts. The extra work comes from retries. Replay the incident, then lower the retry budget to see what that assumption changes."}
+            </p>
+            <p>
+              Start with the observed snapshot and select a module to read its incoming work,
+              completed work, and queue. Switch to replay to follow those readings over time.
+              Modeled scenario puts a proposed change beside the original record. Both studies
+              use synthetic data; the moving particles illustrate the counts in the tables.
             </p>
             <div className="flow-circuit__controls">
               <label>

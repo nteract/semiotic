@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import BlogLayout from "./components/BlogLayout.jsx"
 import BlogEntryView from "./components/BlogEntryView.jsx"
 import BlogEntryCard from "./components/BlogEntryCard.jsx"
@@ -6,11 +6,12 @@ import { entriesByDateDesc } from "./entries.js"
 
 /**
  * /blog/ — most recent entry full, then a preview list of the
- * next 10 underneath. The break between article and list has its
+ * next 10 underneath, with earlier posts available on demand. The break has its
  * own thick band + label so a scrolling reader doesn't lose
  * track of where the article ends.
  */
 export default function BlogIndexPage() {
+  const [previewCount, setPreviewCount] = useState(10)
   const entries = entriesByDateDesc()
   if (entries.length === 0) {
     return (
@@ -23,7 +24,7 @@ export default function BlogIndexPage() {
     )
   }
   const [latest, ...rest] = entries
-  const previews = rest.slice(0, 10)
+  const previews = rest.slice(0, previewCount)
   return (
     <BlogLayout>
       <BlogEntryView entry={latest} />
@@ -32,13 +33,20 @@ export default function BlogIndexPage() {
           <div style={styles.divider}>
             <div style={styles.dividerInner}>
               <span style={styles.dividerLabel}>More from the blog</span>
-              <span style={styles.dividerCount}>{previews.length} more {previews.length === 1 ? "entry" : "entries"}</span>
+              <span role="status" style={styles.dividerCount}>
+                {previews.length} of {rest.length} earlier posts
+              </span>
             </div>
           </div>
-          <section style={styles.previews}>
+          <section style={styles.previews} aria-label="Earlier blog posts">
             {previews.map((e) => (
               <BlogEntryCard key={e.slug} entry={e} />
             ))}
+            {previews.length < rest.length && (
+              <button type="button" onClick={() => setPreviewCount((count) => count + 10)}>
+                Show older posts
+              </button>
+            )}
           </section>
         </>
       )}

@@ -280,10 +280,11 @@ export default function CreativeContoursExamplePage() {
         <div>
           <h2>What the surface encodes</h2>
           <p>
-            Each metro contributes a weighted radial field for the selected cultural sector.
-            The page normalizes the sampled field, cuts it into contour shelves, and renders every
-            in-country sample as a raised isometric prism. The contour lines are generated from the
-            same sampled scalar field with marching squares.
+            Read a taller shelf as a stronger signal for the selected industry. Change the
+            layer to compare where film, music, games, design, or research concentrates. These
+            smooth hills summarize signals around metropolitan areas; they do not measure
+            every location between them. The construction details below explain how the
+            surface is estimated.
           </p>
         </div>
         <div>

@@ -208,10 +208,10 @@ export default function EqualPlacesAtlasExamplePage() {
             <div>
               <h2>What if geography were rendered cell by cell?</h2>
               <p>
-                A projected land mask can become a field of occupied grid cells:
-                dense enough for coastlines to emerge, regular enough that the
-                construction stays visible. Switch to place tiles to compare
-                that sampled-land view with equal-unit cartograms.
+                A large country takes up more ink on a conventional map. What happens when you
+                count equal-sized dots, or give each place one tile? Start with the land-dot view
+                to see coastlines emerge from a regular grid. Switch to place tiles to compare a
+                map of occupied land with a map that gives each place equal visual space.
               </p>
             </div>
             <dl className="epa-principles">

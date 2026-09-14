@@ -308,12 +308,19 @@ export default function AtlasEvaluationExamplePage() {
             data-ranking-policy={result?.forest.forest.rankingPolicyId}
           >
             <p className="atlas-evaluation__eyebrow">Network Atlas · acceptance and performance</p>
-            <h2>Keep the evidence. Bound the drawing.</h2>
+            <h2>Explore a large network one region at a time</h2>
             <p>
-              <strong>Synthetic stress fixture.</strong> Explore 20 bands of directed feedback
-              structure, with five original edges per vertex. Preparation runs in a module worker.
-              Selecting a prepared vertex changes its reading and highlight without matching motifs
-              again.
+              A network can contain every connection and still be impossible to read at once.
+              This lab asks whether a smaller view can stay faithful to the whole graph. Open
+              one region, inspect a node, and check the original connections behind it. All data
+              here is synthetic.
+            </p>
+            <p>
+              Start with 1,000 vertices (nodes), then try 10,000. Each node has five outgoing
+              edges (connections). Preparation analyzes the graph in a background worker;
+              selecting a prepared node only updates the reading and highlight. Use Measure 50
+              selections to test that response on your browser. The p95 result is the time
+              within which 95% of the measured selections finished, not a guarantee for every device.
             </p>
             <div className="atlas-evaluation__controls">
               <label>

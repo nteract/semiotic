@@ -20,6 +20,24 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-10-0",
+    title: "Semiotic 3.10.0",
+    subtitle: "The rules, labels, and interactions you author follow the chart from the browser to a shared report.",
+    author: "Semiotic Team",
+    date: "2026-09-10",
+    tags: ["release"],
+    excerpt: "3.10.0 extends declarative styling across chart families and fixes differences between live charts and static SVG. New interactive stories show how to keep a comparison’s sources, dates, and qualifications attached when it travels.",
+  },
+  {
+    slug: "release-3-9-0",
+    title: "Semiotic 3.9.0",
+    subtitle: "Live data, keyboard reading, and exported charts share more of the same behavior.",
+    author: "Semiotic Team",
+    date: "2026-08-18",
+    tags: ["release"],
+    excerpt: "3.9.0 improves event-time streaming, chart evaluation, observation, and responsive physics layouts. It also closes gaps between browser interaction and static rendering, so a chart remains understandable as its data and surroundings change.",
+  },
+  {
     slug: "physics-that-settles-into-charts",
     title: "Physics that settles into charts",
     subtitle:
@@ -66,54 +84,42 @@ export const allBlogEntriesMeta = [
   {
     slug: "an-interoperability-layer",
     title: "An Interoperability Layer for Semiotic",
-    subtitle:
-      "Semiotic's adapters now live in one coherent Interoperability section, joined by two new ones: fromMermaid turns the web's dominant text-to-graph language into interactive, accessible graphs, and fromArrow feeds in-browser DuckDB/Arrow data straight into the chart accessor path.",
+    subtitle: "Bring Mermaid flowcharts and Arrow tables into a chart application while keeping their meaning and translation limits visible.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study", "network"],
-    excerpt:
-      "An adapter is more than a parser — it carries the metadata a source format lacks and refuses rather than mistranslate. The new Interoperability layer gathers Semiotic's adapters in one place and adds fromMermaid (accessible graphs from Mermaid text) and fromArrow (columnar DuckDB/Arrow data into charts).",
+    excerpt: "A diagram and a database result arrive in different forms. These two examples show how to translate them into Semiotic, read the result, and check what the adapter could not preserve.",
     ogChart: { component: "ForceDirectedGraph" },
-    draft: true,
   },
   {
     slug: "notebook-to-production",
     title: "From Notebook to Production, Without the Rewrite",
-    subtitle:
-      "fromObservablePlot maps an Observable Plot spec to a Semiotic chart, so a chart sketched in a notebook crosses the production boundary carrying the accessible table, keyboard nav, description, theme tokens, and SSR it never had — and refuses, out loud, what it can't translate faithfully.",
+    subtitle: "Carry a supported Plot-style specification into React, then review the translation and add the explanation your readers need.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study", "xy"],
-    excerpt:
-      "Observable Plot is the fastest way to think with data; the rewrite into a production component is the tax. The new fromObservablePlot adapter collapses it — translate the encoding, inherit the accessibility, theming, and SSR Semiotic already ships — while warning rather than approximating where Plot's imperative API has no faithful equivalent.",
+    excerpt: "A notebook chart already contains useful choices about fields, series, and comparison. Try two translations, learn how to read them, and see where warnings require an author’s judgment.",
     ogChart: { component: "LineChart" },
-    draft: true,
   },
   {
     slug: "generation-is-cheap-trust-is-scarce",
     title: "Generation Is Cheap; Trust Is Scarce",
-    subtitle:
-      "Semiotic's generative-UI trust layer turns an LLM's chart proposal into a result that's validated and diagnosed — and, with a renderer, proven to paint — or comes back with precise reasons and ranked alternatives: validate, diagnose, repair, prove.",
+    subtitle: "Check a proposed chart before showing it, and keep configuration checks distinct from render evidence and editorial judgment.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study", "ai"],
-    excerpt:
-      "An LLM can emit a chart in a sentence; that was never the hard part. The hard part is trust — hand-written chart code breaks on first paint, and a plausible chart for the wrong data misleads the reader who can't tell. The trust layer is the deterministic gate between a model's confidence and the user's screen, and it ships no AI-SDK dependency.",
+    excerpt: "Try a valid bar chart and an incomplete stacked-bar proposal. The example shows what prepareChart catches, which checks are optional, and what still needs a reader’s review.",
     ogChart: { component: "BarChart" },
-    draft: true,
   },
   {
     slug: "when-the-pipeline-breaks",
     title: "When the Pipeline Breaks, the Chart Should Say So",
-    subtitle:
-      "Semiotic's data-truth bridge turns dbt freshness failures and Great Expectations validations into provenanced, lifecycled annotations on the chart — so a stale or out-of-bounds series announces itself instead of laundering a pipeline failure into a confident-looking line.",
+    subtitle: "Put a known data-quality problem beside the values it affects, with its source, date, and limits intact.",
     author: "Elijah Meeks",
     date: "2026-06-21",
     tags: ["case-study", "xy"],
-    excerpt:
-      "A dashboard that silently renders broken data is worse than none. The data-truth bridge puts the quality signal where the reader is already looking — on the chart, as an annotation carrying who found the problem, how, when, and against which data snapshot — from the dbt and Great Expectations artifacts your pipeline already produces. Read-only, and honest about what it can't place.",
+    excerpt: "A falling line could describe a business change or a broken feed. Toggle annotations from sample dbt and Great Expectations results to see how a reader can tell what needs investigation.",
     ogChart: { component: "LineChart" },
-    draft: true,
   },
   {
     slug: "metadata-that-travels",
@@ -246,28 +252,22 @@ export const allBlogEntriesMeta = [
   {
     slug: "navigating-a-chart-you-cant-see",
     title: "Navigating a Chart You Can't See",
-    subtitle:
-      "Structured navigation exposes a chart as a screen-reader-traversable tree — chart → series → data point — following the Olli / Data Navigator model, uncoupled from the canvas it's drawn on.",
+    subtitle: "Give readers a path from the whole chart to a series and an exact value, using a keyboard and a screen reader.",
     author: "Elijah Meeks",
     date: "2026-06-15",
     tags: ["case-study", "accessibility"],
-    excerpt:
-      "A flat table of 200 rows is technically accessible and practically unusable. Structured navigation gives a non-visual reader the path a sighted reader takes — overview, then detail — as an ARIA tree built from the chart config and mounted as an opt-in ChartContainer layer, decoupled from how the chart renders.",
+    excerpt: "A table supports exact lookup; a navigation tree helps reveal the structure. Try a two-region sales example and learn how to offer both an overview and detail on demand.",
     ogChart: { component: "LineChart" },
-    draft: true,
   },
   {
     slug: "what-a-screen-reader-should-hear",
     title: "What a Screen Reader Should Hear",
-    subtitle:
-      "describeChart() turns a chart config into a layered natural-language description: encoding, statistics, and trend which research says blind and low-vision readers actually want.",
+    subtitle: "Explain a chart’s measurements and pattern, then add the context that only an informed author can supply.",
     author: "Elijah Meeks",
     date: "2026-06-15",
     tags: ["case-study", "accessibility"],
-    excerpt:
-      'A screen reader announces "line chart, nine points" which is both accurate and useless. Research on accessible visualization says readers want statistics and trends, not chart types. describeChart() generates exactly that, deterministically, from the chart\'s config, and ChartContainer makes it an opt-in layer.',
+    excerpt: "A label names the chart. A useful description helps someone read it. Follow a five-month sales series through generated encoding, statistics, and trend text, and see where human explanation still matters.",
     ogChart: { component: "LineChart" },
-    draft: true,
   },
   {
     slug: "auditing-what-you-cant-see",

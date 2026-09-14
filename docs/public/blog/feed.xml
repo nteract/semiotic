@@ -5,8 +5,30 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog"/>
   <id>https://semiotic.nteract.io/blog/</id>
-  <updated>2026-07-16T00:00:00Z</updated>
+  <updated>2026-09-10T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Semiotic 3.10.0</title>
+    <id>https://semiotic.nteract.io/blog/release-3-10-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-10-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-10-0.png"/>
+    <published>2026-09-10T00:00:00Z</published>
+    <updated>2026-09-10T00:00:00Z</updated>
+    <author><name>Semiotic Team</name></author>
+    <category term="release"/>
+    <summary type="text">3.10.0 extends declarative styling across chart families and fixes differences between live charts and static SVG. New interactive stories show how to keep a comparison’s sources, dates, and qualifications attached when it travels.</summary>
+  </entry>
+  <entry>
+    <title>Semiotic 3.9.0</title>
+    <id>https://semiotic.nteract.io/blog/release-3-9-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-9-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-9-0.png"/>
+    <published>2026-08-18T00:00:00Z</published>
+    <updated>2026-08-18T00:00:00Z</updated>
+    <author><name>Semiotic Team</name></author>
+    <category term="release"/>
+    <summary type="text">3.9.0 improves event-time streaming, chart evaluation, observation, and responsive physics layouts. It also closes gaps between browser interaction and static rendering, so a chart remains understandable as its data and surroundings change.</summary>
+  </entry>
   <entry>
     <title>Metadata That Travels</title>
     <id>https://semiotic.nteract.io/blog/metadata-that-travels</id>
@@ -128,6 +150,18 @@
     <summary type="text">Modern LLM assistants treat text as the only output channel. When the question is about a chart, charts give us a parallel surface — callouts, threshold lines, bands, selections — that&apos;s both more honest and easier to read. Drafted exploration of what multimodal response means in practice.</summary>
   </entry>
   <entry>
+    <title>An Interoperability Layer for Semiotic</title>
+    <id>https://semiotic.nteract.io/blog/an-interoperability-layer</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/an-interoperability-layer"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/an-interoperability-layer.png"/>
+    <published>2026-06-21T00:00:00Z</published>
+    <updated>2026-06-21T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="network"/>
+    <summary type="text">A diagram and a database result arrive in different forms. These two examples show how to translate them into Semiotic, read the result, and check what the adapter could not preserve.</summary>
+  </entry>
+  <entry>
     <title>Annotations That Make Room and Make Sense</title>
     <id>https://semiotic.nteract.io/blog/annotations-that-make-room-and-make-sense</id>
     <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/annotations-that-make-room-and-make-sense"/>
@@ -138,6 +172,42 @@
     <category term="case-study"/>
     <category term="roadmap"/>
     <summary type="text">After hierarchy and placement, the next two annotation milestones handle the failure modes that show up at scale: too many notes, and notes that only connect to their target by color. This is achieved via an opt-in density budget with progressive disclosure and an accessibility audit for color-only association and an opt-in redundant leader-line cue.</summary>
+  </entry>
+  <entry>
+    <title>Generation Is Cheap; Trust Is Scarce</title>
+    <id>https://semiotic.nteract.io/blog/generation-is-cheap-trust-is-scarce</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/generation-is-cheap-trust-is-scarce"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/generation-is-cheap-trust-is-scarce.png"/>
+    <published>2026-06-21T00:00:00Z</published>
+    <updated>2026-06-21T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="ai"/>
+    <summary type="text">Try a valid bar chart and an incomplete stacked-bar proposal. The example shows what prepareChart catches, which checks are optional, and what still needs a reader’s review.</summary>
+  </entry>
+  <entry>
+    <title>From Notebook to Production, Without the Rewrite</title>
+    <id>https://semiotic.nteract.io/blog/notebook-to-production</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/notebook-to-production"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/notebook-to-production.png"/>
+    <published>2026-06-21T00:00:00Z</published>
+    <updated>2026-06-21T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="xy"/>
+    <summary type="text">A notebook chart already contains useful choices about fields, series, and comparison. Try two translations, learn how to read them, and see where warnings require an author’s judgment.</summary>
+  </entry>
+  <entry>
+    <title>When the Pipeline Breaks, the Chart Should Say So</title>
+    <id>https://semiotic.nteract.io/blog/when-the-pipeline-breaks</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/when-the-pipeline-breaks"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/when-the-pipeline-breaks.png"/>
+    <published>2026-06-21T00:00:00Z</published>
+    <updated>2026-06-21T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="xy"/>
+    <summary type="text">A falling line could describe a business change or a broken feed. Toggle annotations from sample dbt and Great Expectations results to see how a reader can tell what needs investigation.</summary>
   </entry>
   <entry>
     <title>Making Better Custom Charts</title>
@@ -163,6 +233,30 @@
     <category term="case-study"/>
     <category term="realtime"/>
     <summary type="text">Buffering raw records and redrawing them is the default front-end streaming pattern, and it scales with stream volume. Aggregate on ingest into bounded event-time windows and the cost follows the resolution of the view instead. That collapses bounded memory, downsampling, backpressure, and windowing into one mechanism, with live charts.</summary>
+  </entry>
+  <entry>
+    <title>Navigating a Chart You Can&apos;t See</title>
+    <id>https://semiotic.nteract.io/blog/navigating-a-chart-you-cant-see</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/navigating-a-chart-you-cant-see"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/navigating-a-chart-you-cant-see.png"/>
+    <published>2026-06-15T00:00:00Z</published>
+    <updated>2026-06-15T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="accessibility"/>
+    <summary type="text">A table supports exact lookup; a navigation tree helps reveal the structure. Try a two-region sales example and learn how to offer both an overview and detail on demand.</summary>
+  </entry>
+  <entry>
+    <title>What a Screen Reader Should Hear</title>
+    <id>https://semiotic.nteract.io/blog/what-a-screen-reader-should-hear</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/what-a-screen-reader-should-hear"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/what-a-screen-reader-should-hear.png"/>
+    <published>2026-06-15T00:00:00Z</published>
+    <updated>2026-06-15T00:00:00Z</updated>
+    <author><name>Elijah Meeks</name></author>
+    <category term="case-study"/>
+    <category term="accessibility"/>
+    <summary type="text">A label names the chart. A useful description helps someone read it. Follow a five-month sales series through generated encoding, statistics, and trend text, and see where human explanation still matters.</summary>
   </entry>
   <entry>
     <title>Semiotic 3.7.2</title>

@@ -46,7 +46,9 @@ export default function BlogEntryView({ entry }) {
           {entry.tags?.length > 0 && (
             <ul style={styles.tags}>
               {entry.tags.map((t) => (
-                <li key={t} style={styles.tag}>{t}</li>
+                <li key={t} style={styles.tag}>
+                  {t}
+                </li>
               ))}
             </ul>
           )}
@@ -73,7 +75,8 @@ const styles = {
   // Title scales with the wider container — bigger than a doc h1
   // because the blog header is the chart of the page.
   title: {
-    fontSize: 44,
+    fontSize: "clamp(2rem, 7vw, 2.75rem)",
+    overflowWrap: "anywhere",
     fontWeight: 700,
     lineHeight: 1.15,
     margin: 0,
@@ -130,6 +133,8 @@ const styles = {
     letterSpacing: 0,
   },
   body: {
+    minWidth: 0,
+    overflowWrap: "anywhere",
     fontSize: 17,
     lineHeight: 1.7,
     color: "var(--text-primary, #e5e7eb)",

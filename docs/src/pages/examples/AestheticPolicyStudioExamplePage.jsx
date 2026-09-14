@@ -134,9 +134,10 @@ export default function AestheticPolicyStudioExamplePage() {
             <span className="policy-kicker">SEMIOTIC · DESIGN GOVERNANCE BRIEFING</span>
             <h2>Taste becomes governable when the judgment is named.</h2>
             <p>
-              The data does not change. The trust floor does not change. What changes is the visual
-              behavior an organization has explicitly decided to value—and Semiotic keeps the
-              measurement separate from that decision.
+              How should the same numbers look in a civic report and an editorial feature? This
+              studio keeps the data fixed and changes the visual priorities: restrained
+              comparison in one policy, stronger emphasis in the other. Compare the treatments,
+              then inspect which choices help the reader and which only express a house style.
             </p>
           </div>
           <aside>
@@ -153,9 +154,10 @@ export default function AestheticPolicyStudioExamplePage() {
             <span>01 · OUT OF THE BOX</span>
             <h3 id="default-policy-title">A capable baseline, not borrowed identity.</h3>
             <p>
-              Semiotic’s balanced profile makes legibility and hierarchy count most. It allows the
-              familiar default palette, but records that no organization-specific palette decision
-              has been made. That is a useful default—and an intentionally incomplete design system.
+              Begin with the balanced profile, which gives the most weight to legibility and
+              hierarchy. Then try each organization’s policy. The scores describe how the design
+              matches those stated preferences; they do not make one organization’s taste a
+              universal rule.
             </p>
           </div>
           <div className="policy-default-grid">

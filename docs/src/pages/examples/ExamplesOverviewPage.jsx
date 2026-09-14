@@ -1120,8 +1120,9 @@ export default function ExamplesOverviewPage() {
         <div style={styles.eyebrow}>Semiotic in practice</div>
         <h1 style={styles.title}>Examples</h1>
         <p style={styles.lede}>
-          Each example starts with a visual question and shows how data, layout, annotation, and
-          interaction work together to answer it.
+          What changed? Where does the work get stuck? Would a different chart tell a different
+          story? Explore a question, try the controls, and follow the evidence. Each example
+          includes an explanation of what to look for and source code you can learn from.
         </p>
       </div>
 
@@ -1159,8 +1160,10 @@ export default function ExamplesOverviewPage() {
 
       <div style={styles.grid}>
         {visibleExamples.map((example) => (
-          <Link key={example.path} to={example.path} style={styles.card}>
-            <ExamplePreview preview={example.preview} />
+          <Link key={example.path} to={example.path} className="examples-card" style={styles.card}>
+            <div className="examples-card-preview">
+              <ExamplePreview preview={example.preview} />
+            </div>
             <div style={styles.cardBody}>
               <div style={styles.eyebrow}>{example.eyebrow}</div>
               <h2 style={styles.cardTitle}>{example.title}</h2>
@@ -4676,7 +4679,7 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
     gap: "20px",
   },
   card: {

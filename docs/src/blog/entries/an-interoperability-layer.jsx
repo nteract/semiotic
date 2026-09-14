@@ -1,7 +1,6 @@
-
 import React, { useMemo } from "react"
 import { Link } from "react-router-dom"
-import { BarChart } from "semiotic"
+import { BarChart } from "semiotic/ordinal"
 import { NetworkCustomChart } from "semiotic/network"
 import { mermaidDagLayout } from "semiotic/recipes"
 import { fromArrow } from "semiotic/data"
@@ -29,13 +28,17 @@ function MermaidDemo() {
         targetAccessor="target"
         layout={mermaidDagLayout}
         layoutConfig={{ direction: r.direction }}
+        title="A record moves through validation and reporting"
+        description="Ingest leads to a validation decision. Valid records reach Transform, Warehouse, Metrics, and Dashboard; rejected records reach Quarantine."
+        summary="Follow the arrow labels Yes and No to compare the two routes."
+        accessibleTable
         responsiveWidth
         height={300}
       />
-      <p style={{ fontSize: 12, color: "var(--text-2)", margin: "6px 6px 0" }}>
-        A Mermaid flowchart, parsed by <code>fromMermaid</code> and rendered as a layered Semiotic
-        graph — shape glyphs (a decision diamond, a store cylinder), directional arrows, and edge
-        labels — from the layering the adapter computed. A flowchart is a DAG, not a force blob.
+      <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 6px 0" }}>
+        Follow the arrows from top to bottom. The diamond separates valid records from records sent
+        to quarantine; the cylinder marks storage. Exact nodes and links are available in the
+        chart's data table.
       </p>
     </div>
   )
@@ -68,12 +71,15 @@ function ArrowDemo() {
         categoryAccessor="region"
         valueAccessor="revenue"
         title="Revenue by region"
-        width={560}
+        description="Four synthetic regions: North 128, South 92, East 145, West 71."
+        summary="East has the highest revenue; West has the lowest."
+        accessibleTable
+        responsiveWidth
         height={260}
       />
-      <p style={{ fontSize: 12, color: "var(--text-2)", margin: "6px 6px 0" }}>
-        A columnar Arrow table (the shape DuckDB-Wasm returns) read by <code>fromArrow</code> into
-        row objects and charted directly.
+      <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "6px 6px 0" }}>
+        Synthetic revenue values read from an Arrow-shaped sample table. Bar length shows revenue;
+        each bar and table row names its region.
       </p>
     </div>
   )
@@ -93,91 +99,86 @@ function Body() {
   return (
     <>
       <p>
-        Semiotic now has an <Link to="/interoperability">interoperability layer</Link>: a coherent
-        home for the adapters that let other tools' charts, data, and quality signals become
-        Semiotic charts — and a library-neutral schema that lets Semiotic's ideas travel the other
-        way. Two new adapters round it out: <code>fromMermaid</code> turns the web's most common
-        text-to-graph language into interactive, accessible graphs, and <code>fromArrow</code> feeds
-        an in-browser analytics engine straight into the chart accessor path.
+        A useful diagram may start as a few lines of Mermaid. A useful dataset may arrive as an
+        Arrow table from a database query. Semiotic's <Link to="/interoperability">adapters</Link>{" "}
+        give those inputs a route into the same chart application, so you can keep the work already
+        done and add the interaction your readers need.
       </p>
-
-      <h2 id="why-care">Why an "adapter" is more than a parser</h2>
+      <h2 id="why-care">Why the handoff matters</h2>
       <p>
-        The temptation with interoperability is to stop at appearance: read one format's marks, emit
-        another's. But a parser only ever reproduces what the source already had. The more useful
-        question is what the source <em>didn't</em> have — and for a chart, that's almost always the
-        metadata that makes it trustworthy: which intents it serves, who can read it, where a
-        callout came from, whether it's even renderable. Every adapter in the new layer is built to
-        carry that, and to compile to the same small set of gate-defended artifacts (a serializable
-        config, a provenanced annotation, the generate→validate→prove loop) so reach never costs
-        coherence. And when an adapter can't faithfully represent something, it{" "}
-        <strong>refuses with a reason</strong> rather than emit a plausible-but-wrong chart.
+        Moving between tools is a chance to lose meaning. A decision can become an unlabeled
+        junction; a large integer can lose precision; a source chart's extra layer can disappear. A
+        useful adapter makes its output inspectable and tells the caller what it could not preserve.
+        The author still needs to check the result and explain it to the reader.
       </p>
-
-      <h2 id="mermaid">Mermaid: an inaccessible diagram class, made accessible</h2>
+      <h2 id="mermaid">Read a flowchart as a process</h2>
       <p>
-        Mermaid is everywhere — GitHub, Notion, LLM output — and it renders as flat,
-        non-interactive, inaccessible SVG. <code>fromMermaid</code> parses the <code>graph</code>/
-        <code>flowchart</code> syntax into a topology that renders with hover, isolation, theme
-        tokens, keyboard navigation, and an accessible navigation tree.
+        Follow the example from Ingest to the Valid? decision. The Yes branch transforms a record
+        and sends it toward storage and reporting. The No branch sends it to Quarantine. Rectangles
+        are steps, the diamond is a decision, and arrows show direction.
       </p>
       <MermaidDemo />
       <p>
-        The design choice that matters: a Mermaid flowchart is a directed acyclic graph, not a
-        force-of-springs blob. So the adapter doesn't just hand back nodes and edges — it computes a
-        longest-path layering and stamps each node with a <code>layer</code> and <code>row</code>,
-        ready for a proper layered render via the <code>lineageDagLayout</code> recipe. Rebuild the
-        analytical logic, not the appearance. Other Mermaid diagram types (sequence, class, state,
-        mindmap) are declined with a reason, not coerced into a wrong graph.
+        <code>unstable_fromMermaid</code> reads a subset of Mermaid flowchart syntax and returns
+        nodes, edges, and suggested layers. The <code>mermaidDagLayout</code> recipe uses those
+        layers to draw this example. Mermaid flowcharts can contain cycles; the adapter warns when
+        it must use a best-effort layering. It also warns about flattened subgraphs and other
+        unsupported syntax. Read <code>warnings</code> before treating the translation as complete.
       </p>
-
-      <h2 id="arrow">Apache Arrow: zero-plumbing client-side data</h2>
       <p>
-        DuckDB-Wasm runs real SQL over millions of rows in the browser, and returns columnar Apache
-        Arrow tables. <code>fromArrow</code> reads one into the row objects a chart expects — leanly
-        (cell-by-cell, skipping Arrow's row-proxy machinery, with column projection), and coercing{" "}
-        <code>int64</code> bigints to numbers so the scales work.
+        Mermaid has its own{" "}
+        <a href="https://mermaid.js.org/config/accessibility.html">
+          accessible titles and descriptions
+        </a>
+        . The reason to translate is to use the graph inside a Semiotic application: coordinated
+        interaction, theme settings, and authored accessible text. A richer navigation tree is a
+        separate composition, not something this adapter creates automatically.
+      </p>
+      <h2 id="arrow">Read columns as chart rows</h2>
+      <p>
+        In the second example, compare the lengths of four revenue bars. East is highest at 145;
+        West is lowest at 71. The sample table implements the small Arrow interface the adapter
+        reads, so the demonstration runs without a database connection.
       </p>
       <ArrowDemo />
       <p>
-        Honest scope: v1 materializes rows, because Semiotic's data path is row-oriented today. The
-        genuinely zero-copy columnar path is deliberately <em>not</em> built yet — it touches the
-        streaming core, so it waits on a real high-throughput consumer and a measured benchmark
-        rather than a marketing one.
+        <code>fromArrow</code> materializes ordinary row objects. You can select just the columns
+        you need with <code>fields</code>. Safe integer values become JavaScript numbers; integers
+        outside the safe range remain bigints and produce a warning. Resolve those values
+        deliberately before using them on a numeric scale. This conversion copies data; it is not a
+        zero-copy columnar renderer.
       </p>
-
-      <h2 id="when">When to reach for the layer</h2>
+      <h2 id="when">When to reach for an adapter</h2>
       <p>
-        Reach for an adapter at a boundary: a notebook chart going to production (
-        <Link to="/interoperability/observable-plot">Observable Plot</Link>,{" "}
-        <Link to="/interoperability/vega-lite">Vega-Lite</Link>), a Mermaid diagram that should be
-        interactive, a DuckDB result that should be a chart, a dbt failure that should annotate the
-        dashboard (<Link to="/interoperability/data-quality-bridge">Data-Truth Bridge</Link>), an
-        agent that should ship a chart it can't break (
-        <Link to="/interoperability/generative-ui">Generative-UI Trust Layer</Link>). Don't reach
-        for them to reproduce an exotic source pixel-for-pixel; they translate the standard cases
-        and tell you, out loud, when they can't.
+        Use these adapters when the source already expresses the relationships or measurements you
+        need and the supported subset preserves them. Keep the original renderer for a diagram whose
+        unsupported grouping or layout is essential. For an Arrow result too large to inspect
+        usefully, aggregate or filter it in the query before making chart rows.
       </p>
+      <h2 id="wiring">Wiring it up</h2>
+      <pre style={{ ...chartFrame, overflowX: "auto" }}>{`import { fromArrow } from "semiotic/data"
+import { unstable_fromMermaid } from "semiotic/experimental"
 
-      <h2 id="where-this-goes">Where this goes</h2>
+const rows = fromArrow(table, { fields: ["region", "revenue"] })
+const graph = unstable_fromMermaid(flowchartText)
+// Inspect graph.warnings, then pass nodes and edges to NetworkCustomChart.
+// Add a title, description, and the reading tools your audience needs.`}</pre>
+      <h2 id="other-domains">Other places this helps</h2>
       <p>
-        The layer is open-ended by construction: a new format is a pure function returning an
-        inspectable object, slotting into the same framework with the same discipline. The leading
-        sign it's working won't be adapter downloads — it'll be someone implementing the{" "}
-        <Link to="/interoperability/portability-spec">portability schemas</Link> in a stack that
-        isn't Semiotic at all. That's the boutique setting a standard rather than shipping a parser.
+        The same handoff appears in a pipeline explorer, a notebook moving into an application, and
+        a report assembled from a browser database. In each case, preserve the source's meaning
+        before adding another way to explore it.
       </p>
-
       <h2 id="related">Related</h2>
       <ul>
         <li>
-          <Link to="/interoperability">Interoperability overview</Link> — the whole adapter family
-          and the strategy behind it.
+          <Link to="/interoperability/mermaid">Mermaid adapter and supported syntax</Link>
         </li>
         <li>
-          <Link to="/interoperability/mermaid">Mermaid Adapter</Link> and{" "}
-          <Link to="/interoperability/arrow">Apache Arrow Adapter</Link> — the two new adapters,
-          interactive.
+          <Link to="/interoperability/arrow">Arrow adapter and column projection</Link>
+        </li>
+        <li>
+          <Link to="/accessibility/navigation">Adding structured navigation</Link>
         </li>
       </ul>
     </>
@@ -188,13 +189,12 @@ export default {
   slug: "an-interoperability-layer",
   title: "An Interoperability Layer for Semiotic",
   subtitle:
-    "Semiotic's adapters now live in one coherent Interoperability section, joined by two new ones: fromMermaid turns the web's dominant text-to-graph language into interactive, accessible graphs, and fromArrow feeds in-browser DuckDB/Arrow data straight into the chart accessor path.",
+    "Bring Mermaid flowcharts and Arrow tables into a chart application while keeping their meaning and translation limits visible.",
   author: "Elijah Meeks",
   date: "2026-06-21",
   tags: ["case-study", "network"],
   excerpt:
-    "An adapter is more than a parser — it carries the metadata a source format lacks and refuses rather than mistranslate. The new Interoperability layer gathers Semiotic's adapters in one place and adds fromMermaid (accessible graphs from Mermaid text) and fromArrow (columnar DuckDB/Arrow data into charts).",
+    "A diagram and a database result arrive in different forms. These two examples show how to translate them into Semiotic, read the result, and check what the adapter could not preserve.",
   component: Body,
   ogChart: { component: "ForceDirectedGraph" },
-  draft: true,
 }

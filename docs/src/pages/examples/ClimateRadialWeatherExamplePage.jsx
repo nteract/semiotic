@@ -264,13 +264,11 @@ export default function ClimateRadialWeatherExamplePage() {
 
       <h2>How it works</h2>
       <p>
-        The controls use browser geolocation and Open-Meteo&apos;s archive and forecast APIs. The
-        display is a radial/linear pair: an <code>OrdinalCustomChart</code> in radial projection, an
-        external custom control (in this case a circular brush), and two aligned{" "}
-        <code>TemporalHistogram</code> detail charts. The current-year marks and condition rings use
-        available daily observations and forecast values; the full-year reference uses a computed
-        1991-2020 baseline. The orange marks show when temperature goes beyond the normal variation
-        of temperature during that time of year while still showing min and max for context.
+        Choose a place, then compare the current year with its seasonal reference. Orange
+        highlights the part of each day&apos;s temperature range beyond the reference&apos;s
+        average daily high or low. Selecting a span on the ring opens those days on the straight
+        timeline. The page labels observations, forecasts, and the 1991–2020 reference separately
+        so you can tell which comparison you are making.
       </p>
 
       <h2>Implementation Excerpt</h2>

@@ -271,10 +271,11 @@ export default function DataVizForDummiesExamplePage() {
               Your question is the game.
             </h2>
             <p className="dvd-hero__lede">
-              Welcome, statistician of the group chat. A chart is not a decorative lil guy you
-              summon after the analysis; it is an argument wearing geometry. We shall scout the
-              roster, read the court, and—Joyceanly, joyfully—refuse to let a pie chart enter at
-              dawn merely because someone said “make it pop.”
+              A chart choice starts with a question: who leads, what changed, how spread out are
+              the values, or where did the flow go? This guide uses one fictional sports season
+              to introduce the main chart families. Read the question above each example,
+              compare the marks, and notice what the form makes easy to see. You do not need to
+              know the component names to begin.
             </p>
             <div className="dvd-hero__chips" aria-label="Guide promises">
               <span>7 chart families</span>
