@@ -1666,6 +1666,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-network-custom", "feature-accessors", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
+    id: "atlas-acceptance",
+    shortLabel: "Atlas acceptance",
+    note: "A worker prepares a 10k-vertex atlas for the public DependencyForestChart, with bounded drawing, complete edge accounting, linked selection, keyboard observations and measured response. A phone inspector and themed SVG/evidence exports preserve the same reading.",
+    uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
     id: "flow-circuit",
     shortLabel: "Flow Circuit",
     note: "An admitted atlas compiles into physics apparatus with original routes, aggregate observed replay, separate modeled editions, accessible inspection and static exports.",

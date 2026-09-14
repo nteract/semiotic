@@ -54,8 +54,8 @@
       "importPath": "semiotic/atlas/core",
       "symbol": "prepareNetworkAtlas",
       "platform": "browser",
-      "rawBytes": 18051,
-      "gzipBytes": 6479,
+      "rawBytes": 18261,
+      "gzipBytes": 6524,
       "packedPackageInputFiles": 5
     },
     {
@@ -162,8 +162,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 890849,
-      "gzipBytes": 287559,
+      "rawBytes": 890970,
+      "gzipBytes": 287555,
       "packedPackageInputFiles": 3
     },
     {
@@ -171,8 +171,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 470733,
-      "gzipBytes": 150247,
+      "rawBytes": 470851,
+      "gzipBytes": 150248,
       "packedPackageInputFiles": 1
     },
     {
@@ -180,8 +180,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 892480,
-      "gzipBytes": 288266,
+      "rawBytes": 892601,
+      "gzipBytes": 288262,
       "packedPackageInputFiles": 3
     },
     {

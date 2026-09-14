@@ -48,6 +48,20 @@ export const dependencyForestLayout: NetworkCustomLayout<
       if (member !== id) hidden.set(member, id)
   }
   const visible = forest.order.filter((id) => !hidden.has(id))
+  const nodeById = new Map(atlas.source.nodes.map((node) => [node.id, node]))
+  const hiddenCounts = new Map<string, number>()
+  for (const owner of hidden.values())
+    hiddenCounts.set(owner, (hiddenCounts.get(owner) ?? 0) + 1)
+  const internalEdges = new Map<string, string[]>()
+  for (const edge of atlas.source.edges) {
+    const from = hidden.get(edge.source) ?? edge.source
+    const to = hidden.get(edge.target) ?? edge.target
+    if (from === to && (edge.source !== from || edge.target !== from)) {
+      const ids = internalEdges.get(from)
+      if (ids) ids.push(edge.id)
+      else internalEdges.set(from, [edge.id])
+    }
+  }
   const sections = [...atlas.sections.sectionIds]
   if (atlas.source.nodes.some((node) => !node.sectionId))
     sections.push("Unsectioned")
@@ -90,20 +104,9 @@ export const dependencyForestLayout: NetworkCustomLayout<
   })
   for (const id of visible) {
     const point = positions.get(id)!
-    const node = atlas.source.nodes.find((item) => item.id === id)!
-    const hiddenCount = [...hidden.values()].filter(
-      (owner) => owner === id
-    ).length
-    const internalEdgeIds = hiddenCount
-      ? atlas.source.edges
-          .filter(
-            (edge) =>
-              (hidden.get(edge.source) ?? edge.source) === id &&
-              (hidden.get(edge.target) ?? edge.target) === id &&
-              (edge.source !== id || edge.target !== id)
-          )
-          .map((edge) => edge.id)
-      : []
+    const node = nodeById.get(id)!
+    const hiddenCount = hiddenCounts.get(id) ?? 0
+    const internalEdgeIds = internalEdges.get(id) ?? []
     const unreachable = atlas.requiredPaths?.unreachableNodeIds.includes(id)
     const unknown = node.completeness && node.completeness !== "known"
     const status = unknown

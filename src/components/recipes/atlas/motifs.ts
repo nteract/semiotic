@@ -2,7 +2,6 @@ import { idDictionary, setOwnValue } from "./ids"
 import {
   MOTIF_CATALOG_TEMPLATES,
   PHASE2_MOTIF_MATCHERS,
-  type AtlasEdge,
   type AtlasOccurrence,
   type MotifMatch,
   type MotifMatchIndex,
@@ -10,38 +9,53 @@ import {
   type NetworkAtlasSpec
 } from "./types"
 
-function distinctNeighbors(
-  edges: readonly AtlasEdge[],
-  nodeId: string,
-  direction: "out" | "in"
-): string[] {
-  const seen = new Set<string>()
-  const ordered: string[] = []
-  for (const edge of edges) {
-    const from = direction === "out" ? edge.source : edge.target
-    const to = direction === "out" ? edge.target : edge.source
-    if (from !== nodeId || seen.has(to)) continue
-    seen.add(to)
-    ordered.push(to)
+/** One input-order-preserving index per matching pass. Parallel edge IDs stay
+ * distinct while neighbor roles remain unique, as in the original scans.
+ */
+function motifGraphIndex(source: NetworkAtlasSource) {
+  const incoming = new Map(
+    source.nodes.map((node) => [node.id, new Set<string>()])
+  )
+  const outgoing = new Map(
+    source.nodes.map((node) => [node.id, new Set<string>()])
+  )
+  const pairs = new Map<string, Map<string, string[]>>()
+  for (const edge of source.edges) {
+    incoming.get(edge.target)?.add(edge.source)
+    outgoing.get(edge.source)?.add(edge.target)
+    let targets = pairs.get(edge.source)
+    if (!targets) pairs.set(edge.source, (targets = new Map()))
+    const ids = targets.get(edge.target)
+    if (ids) ids.push(edge.id)
+    else targets.set(edge.target, [edge.id])
   }
-  return ordered
+  return {
+    incoming: new Map(
+      [...incoming].map(([id, neighbors]) => [id, [...neighbors]])
+    ),
+    outgoing: new Map(
+      [...outgoing].map(([id, neighbors]) => [id, [...neighbors]])
+    ),
+    sectionByNode: new Map(
+      source.nodes.map((node) => [node.id, node.sectionId])
+    ),
+    pairs
+  }
 }
+type MotifGraphIndex = ReturnType<typeof motifGraphIndex>
 
-function sectionOf(
-  source: NetworkAtlasSource,
-  nodeId: string
-): string | undefined {
-  return source.nodes.find((node) => node.id === nodeId)?.sectionId
+function sectionOf(index: MotifGraphIndex, nodeId: string): string | undefined {
+  return index.sectionByNode.get(nodeId)
 }
 
 function sectionsAlong(
-  source: NetworkAtlasSource,
+  index: MotifGraphIndex,
   nodeIds: readonly string[]
 ): string[] {
   const seen = new Set<string>()
   const ordered: string[] = []
   for (const nodeId of nodeIds) {
-    const sectionId = sectionOf(source, nodeId)
+    const sectionId = sectionOf(index, nodeId)
     if (!sectionId || seen.has(sectionId)) continue
     seen.add(sectionId)
     ordered.push(sectionId)
@@ -50,13 +64,11 @@ function sectionsAlong(
 }
 
 function edgesBetween(
-  edges: readonly AtlasEdge[],
+  index: MotifGraphIndex,
   from: string,
   to: string
 ): string[] {
-  return edges
-    .filter((edge) => edge.source === from && edge.target === to)
-    .map((edge) => edge.id)
+  return index.pairs.get(from)?.get(to) ?? []
 }
 
 function entityCountOf(occurrence: AtlasOccurrence): number {
@@ -101,6 +113,7 @@ function fanMatch(
   hubId: string,
   others: string[],
   source: NetworkAtlasSource,
+  index: MotifGraphIndex,
   budget: number | undefined
 ): MotifMatch | undefined {
   if (others.length < 2) return undefined
@@ -110,11 +123,11 @@ function fanMatch(
   for (const other of kept) {
     const pair =
       template === "fan-out"
-        ? edgesBetween(source.edges, hubId, other)
-        : edgesBetween(source.edges, other, hubId)
+        ? edgesBetween(index, hubId, other)
+        : edgesBetween(index, other, hubId)
     edgeIds.push(...pair)
   }
-  const interval = sectionsAlong(source, [hubId, ...others.map((id) => id)])
+  const interval = sectionsAlong(index, [hubId, ...others])
   const bound = entitiesVisiting(source.occurrences ?? [], hubId)
   const roles: Record<string, string | string[]> =
     template === "fan-out"
@@ -150,13 +163,12 @@ function isChainInternal(
   return ins.length === 1 && outs.length === 1
 }
 
-function serialChains(source: NetworkAtlasSource): MotifMatch[] {
-  const ins = new Map<string, string[]>()
-  const outs = new Map<string, string[]>()
-  for (const node of source.nodes) {
-    ins.set(node.id, distinctNeighbors(source.edges, node.id, "in"))
-    outs.set(node.id, distinctNeighbors(source.edges, node.id, "out"))
-  }
+function serialChains(
+  source: NetworkAtlasSource,
+  index: MotifGraphIndex
+): MotifMatch[] {
+  const ins = index.incoming
+  const outs = index.outgoing
   const matches: MotifMatch[] = []
   for (const node of source.nodes) {
     const inN = ins.get(node.id) ?? []
@@ -181,9 +193,9 @@ function serialChains(source: NetworkAtlasSource): MotifMatch[] {
     if (path.length < 2) continue
     const edgeIds: string[] = []
     for (let i = 0; i < path.length - 1; i++) {
-      edgeIds.push(...edgesBetween(source.edges, path[i], path[i + 1]))
+      edgeIds.push(...edgesBetween(index, path[i], path[i + 1]))
     }
-    const interval = sectionsAlong(source, path)
+    const interval = sectionsAlong(index, path)
     const bound = entitiesVisiting(source.occurrences ?? [], path[0])
     matches.push({
       id: `serial-chain:${path.join(">")}`,
@@ -241,7 +253,10 @@ function bindOccurrenceEntities(
   }
 }
 
-function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
+function repeatedStateEpisodes(
+  source: NetworkAtlasSource,
+  graph: MotifGraphIndex
+): MotifMatch[] {
   const matches: MotifMatch[] = []
   for (const occurrence of source.occurrences ?? []) {
     if (occurrence.missingPrehistory) continue
@@ -256,7 +271,7 @@ function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
       if (completed.has(stateId)) continue
       completed.add(stateId)
       const episodePath = occurrence.nodePath.slice(first, index + 1)
-      const interval = sectionsAlong(source, episodePath)
+      const interval = sectionsAlong(graph, episodePath)
       const weights = idDictionary<number>()
       setOwnValue(weights, occurrence.entityId, entityCountOf(occurrence))
       matches.push({
@@ -265,9 +280,9 @@ function repeatedStateEpisodes(source: NetworkAtlasSource): MotifMatch[] {
         roles: { state: stateId, occurrence: occurrence.id },
         nodePath: episodePath,
         edgeIds: [],
-        startSectionId: sectionOf(source, episodePath[0]),
+        startSectionId: sectionOf(graph, episodePath[0]),
         completionSectionId: sectionOf(
-          source,
+          graph,
           episodePath[episodePath.length - 1]
         ),
         intersectSectionIds: interval,
@@ -291,27 +306,30 @@ export function matchMotifs(
   source: NetworkAtlasSource
 ): MotifMatchIndex {
   const budget = spec.motifs.matchBudget
+  const index = motifGraphIndex(source)
   const matches: MotifMatch[] = []
   for (const node of source.nodes) {
     const fanOut = fanMatch(
       "fan-out",
       node.id,
-      distinctNeighbors(source.edges, node.id, "out"),
+      index.outgoing.get(node.id) ?? [],
       source,
+      index,
       budget
     )
     if (fanOut) matches.push(fanOut)
     const fanIn = fanMatch(
       "fan-in",
       node.id,
-      distinctNeighbors(source.edges, node.id, "in"),
+      index.incoming.get(node.id) ?? [],
       source,
+      index,
       budget
     )
     if (fanIn) matches.push(fanIn)
   }
-  matches.push(...serialChains(source))
-  matches.push(...repeatedStateEpisodes(source))
+  matches.push(...serialChains(source, index))
+  matches.push(...repeatedStateEpisodes(source, index))
   bindOccurrenceEntities(matches, source)
 
   const incompleteCandidates: MotifMatchIndex["incompleteCandidates"] = []

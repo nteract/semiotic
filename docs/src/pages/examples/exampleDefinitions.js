@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "atlas-acceptance",
+    path: "/examples/atlas-acceptance",
+    sourceFile: "AtlasEvaluationExamplePage.tsx",
+    sourceFiles: ["AtlasEvaluationExamplePage.tsx", "AtlasEvaluationExamplePage.css", "atlas-evaluation/prepare.ts", "atlas-evaluation/worker.ts", "atlas-evaluation/workerClient.ts", "atlas-evaluation/view.ts"],
+    isPilot: true,
+    title: "Atlas acceptance lab",
+    eyebrow: "Network Atlas · acceptance and performance",
+    description: "Prepare a synthetic graph in a worker, inspect its original evidence, and measure selection on a bounded overview.",
+    contract: {
+      publicImports: ["semiotic/atlas", "semiotic/atlas/core", "semiotic/ai", "semiotic/server", "semiotic/themes/react"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "synthetic-atlas-acceptance-v1", replay: false, schemaVersion: "1", inventory: { maximumVertices: 10000, maximumEdges: 50000, bands: 20, maximumGlyphs: 397 } } },
+      provenance: { source: "Deterministic generator in benchmarks/setup/network-atlas-workloads.ts; arithmetic checks in scripts/network-atlas/acceptance.ts", capturedAt: "2026-09-13", freshnessOwner: "Semiotic maintainers", reviewCadence: "Atlas matching, preparation, rendering or worker lifecycle changes" },
+      accessibility: { summary: "Exact stock, required predecessors, original-edge support and complete evidence exports accompany the diagram", navigation: "Native region and vertex selectors, support disclosure and keyboard-scrollable overview", keyboard: "Native controls and semantic chart activation select the same vertex; essential controls target 44 CSS pixels", forcedColors: "System-color outlines and text readings; manual assistive-technology acceptance remains pending" },
+      motion: { reducedMotion: "Settled diagram; selection timing runs only on request", visibility: "Hidden tabs cancel timing; superseded and unmounted preparations terminate their workers" },
+      responsive: { status: "Phone vertex and edge inspector; scrollable desktop overview", viewports: [390, 1280], selectionIdentity: "Canonical vertex ID, analysis revision and directed-admitted relation scope" },
+      ssr: { status: "React SSR and evidence-backed SVG tested on prepared overviews", hydration: "Worker preparation starts after mount; the initial article describes the pending preparation honestly" },
+      performance: { status: "Reference desktop measurements; device-local probe; no reader-benefit claim", budgets: { bundle: "Lazy documentation route, separate preparation worker and deferred SVG export", interaction: "50 measured selections after 3 warm-ups, p95 target below 50 ms; per-run target result exported", memory: "One active preparation and bounded drawing; all source evidence retained; heap not measured", hiddenPage: "No recurring work; a requested preparation may finish in its worker, selection timing cancels" } },
+    },
+  },
+  {
     id: "jobs-report",
     path: "/examples/jobs-report",
     sourceFile: "JobsReportExamplePage.tsx",
@@ -1998,6 +2018,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Atlas acceptance lab",
+    path: "/examples/atlas-acceptance",
+    publishedAt: "2026-09-13T18:00:00-07:00",
+    eyebrow: "Network Atlas · acceptance and performance",
+    description: "Prepare 10,000 vertices in a worker, inspect bounded regions, and measure selection response while preserving every original edge and ledger row.",
+    preview: "dependency-xray",
+    badges: ["DependencyForestChart", "Worker preparation", "Measured selection"],
+    frames: ["network"],
+    topics: ["process", "design", "accessibility"],
+  },
+  {
     title: "Flow Circuit",
     path: "/examples/flow-circuit",
     publishedAt: "2026-09-12T21:00:00-07:00",
@@ -2868,6 +2899,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
   "/examples/flow-circuit": "FlowCircuitExamplePage.tsx",
+  "/examples/atlas-acceptance": "AtlasEvaluationExamplePage.tsx",
   "/examples/dependency-xray": "DependencyXRayExamplePage.tsx",
   "/examples/lines-of-thought": "TransitDiagramExamplePage.jsx",
   "/examples/aesthetic-policy-studio": "AestheticPolicyStudioExamplePage.jsx",
