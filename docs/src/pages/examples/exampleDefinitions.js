@@ -2023,7 +2023,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     publishedAt: "2026-09-13T18:00:00-07:00",
     eyebrow: "Network Atlas · acceptance and performance",
     description: "Prepare 10,000 vertices in a worker, inspect bounded regions, and measure selection response while preserving every original edge and ledger row.",
-    preview: "dependency-xray",
+    preview: "atlas-acceptance",
     badges: ["DependencyForestChart", "Worker preparation", "Measured selection"],
     frames: ["network"],
     topics: ["process", "design", "accessibility"],

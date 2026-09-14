@@ -1,13 +1,64 @@
+// @vitest-environment node
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import { describe, expect, it } from "vitest"
 import { readFileSync } from "node:fs"
+import { validateExamplePreviews } from "./check-docs-example-integrity.mjs"
 
 const run = promisify(execFile)
 
 describe("docs example integrity", () => {
+  it("accepts distinct preview keys for each example", () => {
+    expect(
+      validateExamplePreviews(
+        [
+          { path: "/examples/atlas-acceptance", preview: "atlas-acceptance" },
+          { path: "/examples/dependency-xray", preview: "dependency-xray" }
+        ],
+        new Set(["atlas-acceptance", "dependency-xray"])
+      )
+    ).toEqual([])
+  })
+
+  it("rejects reused and unused preview keys even when registry counts match", () => {
+    expect(
+      validateExamplePreviews(
+        [
+          { path: "/examples/atlas-acceptance", preview: "dependency-xray" },
+          { path: "/examples/dependency-xray", preview: "dependency-xray" }
+        ],
+        new Set(["atlas-acceptance", "dependency-xray"])
+      )
+    ).toEqual([
+      'Examples /examples/atlas-acceptance and /examples/dependency-xray share preview key "dependency-xray"; register a distinct key for each example (renderer components may be shared)',
+      'Preview renderer "atlas-acceptance" has no example in the manifest'
+    ])
+  })
+
+  it("rejects a preview key without a registered renderer", () => {
+    expect(
+      validateExamplePreviews(
+        [{ path: "/examples/atlas-acceptance", preview: "atlas-acceptance" }],
+        new Set()
+      )
+    ).toEqual([
+      'Example /examples/atlas-acceptance has no explicit preview renderer for "atlas-acceptance"'
+    ])
+  })
+
+  it("rejects a renderer without an example", () => {
+    expect(validateExamplePreviews([], new Set(["atlas-acceptance"]))).toEqual([
+      'Preview renderer "atlas-acceptance" has no example in the manifest'
+    ])
+  })
+
   it("publishes Atlas examples without private source imports", () => {
-    for (const file of ["FlowCircuitExamplePage.tsx", "DependencyXRayExamplePage.tsx", "flow-circuit/CircuitGrammar.tsx", "flow-circuit/CircuitInspector.tsx"]) {
+    for (const file of [
+      "FlowCircuitExamplePage.tsx",
+      "DependencyXRayExamplePage.tsx",
+      "flow-circuit/CircuitGrammar.tsx",
+      "flow-circuit/CircuitInspector.tsx"
+    ]) {
       const source = readFileSync(`docs/src/pages/examples/${file}`, "utf8")
       expect(source).not.toMatch(/src\/components/)
       expect(source).toContain("semiotic/atlas")

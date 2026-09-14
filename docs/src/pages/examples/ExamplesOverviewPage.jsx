@@ -10,6 +10,7 @@ import JobsReportPreview from "./jobs-report/JobsReportPreview"
 import { FlowCircuitPreview, DependencyXRayPreview } from "./flow-circuit/AtlasPreviews"
 
 const PREVIEW_COMPONENTS = {
+  "atlas-acceptance": DependencyXRayPreview,
   "flow-circuit": FlowCircuitPreview,
   "dependency-xray": DependencyXRayPreview,
   superpersuasion: SuperpersuasionPreview,
