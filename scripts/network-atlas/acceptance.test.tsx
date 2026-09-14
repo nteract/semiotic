@@ -4,7 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import {
   prepareNetworkAtlas,
-  prepareDependencyForest
+  prepareDependencyForest,
+  type PreparedNetworkAtlas
 } from "semiotic/atlas/core"
 import { DependencyForestChart } from "semiotic/atlas"
 import { renderChartWithEvidence } from "semiotic/server"
@@ -22,6 +23,149 @@ function prepare(size: 1000 | 10000, witnessLimit = 5, reverse = false) {
   if (!result.ok) throw new Error(JSON.stringify(result.issues))
   return { ...fixture, atlas: result.atlas }
 }
+
+describe("Atlas acceptance partitions", () => {
+  const { spec, source } = atlasWorkload({ size: 1000, witnessLimit: 5 })
+  const prepared = prepareNetworkAtlas(
+    {
+      ...spec,
+      forest: {
+        display: { ...spec.forest.display, roots: ["A"] },
+        requiredPaths: { roots: ["A"], relationScopeId: "directed-admitted" }
+      }
+    },
+    {
+      ...source,
+      nodes: ["A", "B"].map((id) => ({ id, sectionId: "Band 1" })),
+      edges: ["A", "B"].map((id) => ({ id, source: id, target: id })),
+      measureValues: ["A", "B"].map((subjectId) => ({
+        measureId: "inventory",
+        subjectId,
+        value: 1,
+        status: "exact"
+      }))
+    }
+  )
+  if (!prepared.ok) throw new Error(JSON.stringify(prepared.issues))
+  const atlas = prepared.atlas
+  const edgeCheck = "Every original edge is in exactly one edge ledger"
+  const vertexCheck = "Every vertex has a declared-root reachability result"
+  const passed = (candidate: PreparedNetworkAtlas, name: string) =>
+    atlasAcceptanceFacts(candidate).checks.find((check) => check.name === name)
+      ?.passed
+
+  it("accepts exact coverage including an unreachable vertex and self-loops", () => {
+    expect(atlas.requiredPaths?.reachableNodeIds).toEqual(["A"])
+    expect(atlas.requiredPaths?.unreachableNodeIds).toEqual(["B"])
+    expect(atlas.residualEdges.residualEdgeIds).toEqual(["A", "B"])
+    expect(passed(atlas, vertexCheck)).toBe(true)
+    expect(passed(atlas, edgeCheck)).toBe(true)
+  })
+
+  describe.each([vertexCheck, edgeCheck])("%s", (check) => {
+    it.each<{ name: string; first: string[]; second: string[] }>([
+      { name: "empty partitions", first: [], second: [] },
+      { name: "an omitted ID", first: ["A"], second: [] },
+      {
+        name: "a duplicate replacing an omitted ID",
+        first: ["A", "A"],
+        second: []
+      },
+      {
+        name: "a duplicate in the first partition",
+        first: ["A", "A"],
+        second: ["B"]
+      },
+      {
+        name: "a duplicate in the second partition",
+        first: ["A"],
+        second: ["B", "B"]
+      },
+      { name: "overlap replacing an omitted ID", first: ["A"], second: ["A"] },
+      {
+        name: "overlap with complete coverage",
+        first: ["A", "B"],
+        second: ["B"]
+      },
+      {
+        name: "a foreign ID replacing an omitted ID",
+        first: ["A"],
+        second: ["C"]
+      },
+      {
+        name: "a foreign ID beyond complete coverage",
+        first: ["A"],
+        second: ["B", "C"]
+      }
+    ])("rejects $name", ({ first, second }) => {
+      const candidate =
+        check === vertexCheck
+          ? {
+              ...atlas,
+              requiredPaths: {
+                ...atlas.requiredPaths!,
+                reachableNodeIds: first,
+                unreachableNodeIds: second
+              }
+            }
+          : {
+              ...atlas,
+              forest: { ...atlas.forest, backboneEdgeIds: first },
+              residualEdges: { ...atlas.residualEdges, residualEdgeIds: second }
+            }
+      expect(passed(candidate, check)).toBe(false)
+    })
+  })
+
+  it("rejects duplicate IDs in the source graph", () => {
+    expect(
+      passed(
+        {
+          ...atlas,
+          source: {
+            ...atlas.source,
+            nodes: [atlas.source.nodes[0], atlas.source.nodes[0]]
+          },
+          requiredPaths: {
+            ...atlas.requiredPaths!,
+            reachableNodeIds: ["A"],
+            unreachableNodeIds: []
+          }
+        },
+        vertexCheck
+      )
+    ).toBe(false)
+    expect(
+      passed(
+        {
+          ...atlas,
+          source: {
+            ...atlas.source,
+            edges: [atlas.source.edges[0], atlas.source.edges[0]]
+          },
+          residualEdges: { ...atlas.residualEdges, residualEdgeIds: ["A"] }
+        },
+        edgeCheck
+      )
+    ).toBe(false)
+  })
+
+  it.each([
+    { name: "populated", nodes: atlas.source.nodes },
+    { name: "empty", nodes: [] }
+  ])("requires a reachability analysis for $name graphs", ({ nodes }) => {
+    expect(
+      passed(
+        {
+          ...atlas,
+          source: { ...atlas.source, nodes },
+          requiredPaths: undefined
+        },
+        vertexCheck
+      )
+    ).toBe(false)
+  })
+})
 
 describe("Atlas acceptance workloads", () => {
   // Captured from merged 321d8d6a before indexing: compare every serialized
@@ -157,13 +301,19 @@ describe("Atlas acceptance workloads", () => {
     expect(internal.length + painted.length).toBe(50000)
   })
 
-  it.each([1000, 10000] as const)(
-    "renders %i vertices through React SSR and evidence-backed SVG",
-    (size) => {
+  it.each([
+    { size: 1000, reverse: false },
+    { size: 1000, reverse: true },
+    { size: 10000, reverse: false },
+    { size: 10000, reverse: true }
+  ] as const)(
+    "renders $size vertices with reverse=$reverse through React SSR and evidence-backed SVG",
+    ({ size, reverse }) => {
       const props = atlasEvaluationChartProps(
-        prepareAtlasEvaluation({ size, witnessLimit: 5 }, 1),
+        prepareAtlasEvaluation({ size, witnessLimit: 5, reverse }, 1),
         0
       )
+      expect(props.forest.forest).toEqual(props.forest.atlas.forest)
       expect(
         renderToStaticMarkup(<DependencyForestChart {...props} />)
       ).toContain('role="img"')

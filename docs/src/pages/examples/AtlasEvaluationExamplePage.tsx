@@ -305,7 +305,7 @@ export default function AtlasEvaluationExamplePage() {
             data-testid="atlas-evaluation"
             data-preparations={requests}
             data-ready={Boolean(result)}
-            data-ranking-policy={result?.forest.atlas.provenance.rankingPolicyId}
+            data-ranking-policy={result?.forest.forest.rankingPolicyId}
           >
             <p className="atlas-evaluation__eyebrow">Network Atlas · acceptance and performance</p>
             <h2>Keep the evidence. Bound the drawing.</h2>

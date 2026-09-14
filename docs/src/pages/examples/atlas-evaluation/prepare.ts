@@ -11,7 +11,9 @@ export function prepareAtlasEvaluation(options: AtlasWorkloadOptions, generation
   const result = prepareNetworkAtlas(fixture.spec, fixture.source, { generation })
   if (!result.ok) throw new Error(result.issues.map((issue) => issue.message).join("; "))
   const preparedAt = performance.now()
-  const forest = prepareDependencyForest(result.atlas)
+  const forest = prepareDependencyForest(result.atlas, {
+    rankingPolicyId: options.reverse ? "rooted-traversal:id-desc" : "rooted-traversal:id-asc",
+  })
   const projectedAt = performance.now()
   return {
     forest,

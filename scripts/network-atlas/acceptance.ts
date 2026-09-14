@@ -1,9 +1,20 @@
 import type { PreparedNetworkAtlas } from "semiotic/atlas/core"
 
+function isExactPartition(originalIds: string[], ...partitions: string[][]) {
+  const original = new Set(originalIds)
+  if (original.size !== originalIds.length) return false
+  const seen = new Set<string>()
+  for (const ids of partitions) {
+    for (const id of ids) {
+      if (!original.has(id) || seen.has(id)) return false
+      seen.add(id)
+    }
+  }
+  return seen.size === original.size
+}
+
 export function atlasAcceptanceFacts(atlas: PreparedNetworkAtlas) {
-  const original = new Set(atlas.source.edges.map((edge) => edge.id))
-  const backbone = new Set(atlas.forest.backboneEdgeIds)
-  const residual = new Set(atlas.residualEdges.residualEdgeIds)
+  const original = atlas.source.edges.map((edge) => edge.id)
   const nodeInventory = atlas.ledger.entries.filter(
     (row) => row.subjectKind === "node" && row.measureId === "inventory"
   )
@@ -14,9 +25,11 @@ export function atlasAcceptanceFacts(atlas: PreparedNetworkAtlas) {
   const checks = [
     {
       name: "Every original edge is in exactly one edge ledger",
-      passed:
-        original.size === backbone.size + residual.size &&
-        [...original].every((id) => backbone.has(id) !== residual.has(id))
+      passed: isExactPartition(
+        original,
+        atlas.forest.backboneEdgeIds,
+        atlas.residualEdges.residualEdgeIds
+      )
     },
     {
       name: "Node and section stock agree",
@@ -27,9 +40,12 @@ export function atlasAcceptanceFacts(atlas: PreparedNetworkAtlas) {
     {
       name: "Every vertex has a declared-root reachability result",
       passed:
-        (atlas.requiredPaths?.reachableNodeIds.length ?? 0) +
-          (atlas.requiredPaths?.unreachableNodeIds.length ?? 0) ===
-        atlas.source.nodes.length
+        atlas.requiredPaths !== undefined &&
+        isExactPartition(
+          atlas.source.nodes.map((node) => node.id),
+          atlas.requiredPaths.reachableNodeIds,
+          atlas.requiredPaths.unreachableNodeIds
+        )
     },
     {
       name: "Fan witness truncation is disclosed",
@@ -44,7 +60,7 @@ export function atlasAcceptanceFacts(atlas: PreparedNetworkAtlas) {
   ]
   return {
     nodes: atlas.source.nodes.length,
-    edges: original.size,
+    edges: original.length,
     sections: atlas.sections.sectionIds.length,
     stock,
     matches: atlas.motifs.matches.length,

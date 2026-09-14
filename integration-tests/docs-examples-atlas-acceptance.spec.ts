@@ -18,6 +18,16 @@ async function openLab(page: Page) {
   }
 }
 
+async function exportEvidence(page: Page) {
+  const pending = page.waitForEvent("download")
+  await page
+    .getByTestId("atlas-evaluation")
+    .getByRole("button", { name: "Export evidence JSON" })
+    .click()
+  const download = await pending
+  return JSON.parse(await readFile((await download.path()) as string, "utf8"))
+}
+
 test("large Atlas overview selects without re-preparation and exports the complete evidence", async ({
   page
 }, testInfo) => {
@@ -53,12 +63,7 @@ test("large Atlas overview selects without re-preparation and exports the comple
   await demo.getByRole("button", { name: "Measure 50 selections" }).click()
   await expect(demo.getByTestId("selection-timing")).toContainText("50 samples")
   await expect(demo).toHaveAttribute("data-preparations", preparations!)
-  const download = page.waitForEvent("download")
-  await demo.getByRole("button", { name: "Export evidence JSON" }).click()
-  const completed = await download
-  const packet = JSON.parse(
-    await readFile((await completed.path()) as string, "utf8")
-  )
+  const packet = await exportEvidence(page)
   expect(packet.synthetic).toBe(true)
   expect(packet.config.props.forest.atlas.source.nodes).toHaveLength(10000)
   expect(packet.config.props.forest.atlas.source.edges).toHaveLength(50000)
@@ -122,6 +127,12 @@ test("newer worker requests win and witness budgets leave graph facts intact", a
   await expect(demo.getByTestId("atlas-facts")).toContainText(
     "Truncated witnesses2,000"
   )
+  const ascending = (await exportEvidence(page)).config.props.forest
+  const canvas = demo.locator("canvas").first()
+  await expect(canvas).toBeVisible()
+  const initial = await canvas.evaluate((element: HTMLCanvasElement) =>
+    element.toDataURL()
+  )
   await demo.getByLabel("Reverse display backbone").check()
   await expect(demo).toHaveAttribute(
     "data-ranking-policy",
@@ -131,6 +142,33 @@ test("newer worker requests win and witness budgets leave graph facts intact", a
   await expect(demo.getByTestId("atlas-facts")).toContainText(
     "1,000 work items"
   )
+  await expect
+    .poll(
+      async () =>
+        (await canvas.evaluate((element: HTMLCanvasElement) =>
+          element.toDataURL()
+        )) !== initial
+    )
+    .toBe(true)
+  const descending = (await exportEvidence(page)).config.props.forest
+  expect(descending.forest.rankingPolicyId).toBe("rooted-traversal:id-desc")
+  expect(descending.forest).toEqual(descending.atlas.forest)
+  expect(descending.forest.backboneEdgeIds).not.toEqual(
+    ascending.forest.backboneEdgeIds
+  )
+  expect(descending.order).not.toEqual(ascending.order)
+  expect(descending.atlas.source).toEqual(ascending.atlas.source)
+  expect(descending.atlas.ledger).toEqual(ascending.atlas.ledger)
+  expect(descending.atlas.requiredPaths).toEqual(ascending.atlas.requiredPaths)
+
+  await demo.getByLabel("Reverse display backbone").uncheck()
+  await expect(demo).toHaveAttribute(
+    "data-ranking-policy",
+    "rooted-traversal:id-asc"
+  )
+  const restored = (await exportEvidence(page)).config.props.forest
+  expect(restored.forest).toEqual(ascending.forest)
+  expect(restored.order).toEqual(ascending.order)
   const preparations = await demo.getAttribute("data-preparations")
   await demo.getByLabel("Open region").selectOption("4")
   await expect(demo.getByLabel("Inspect vertex")).toHaveValue("r5.1")

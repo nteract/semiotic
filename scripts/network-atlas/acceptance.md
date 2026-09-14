@@ -167,3 +167,41 @@ Completed checks for this phase:
 
 No full release suite, Linux screenshot run, manual screen-reader review or
 real-phone performance measurement was performed in this phase.
+
+## Acceptance review follow-up
+
+The reachability gate now requires an explicit analysis and an exact partition
+of source vertex IDs. Duplicate, overlapping, foreign and missing IDs fail,
+including duplicates that previously concealed a missing vertex. The related
+edge-ledger audit found that converting arrays to sets concealed duplicate
+entries there too; both gates now use the same exact-partition check. The core
+projection's existing edge-coverage assertion already rejects those duplicates.
+
+The lab passes its selected ranking policy to `prepareDependencyForest`, and
+its reported policy comes from the projection used by the chart. Tests verify
+changed backbone membership, vertex order, canvas drawing and exported SVG
+label positions, plus an ascending/descending/ascending browser round trip.
+Original graph data, stock, motifs and declared-root analysis remain consistent.
+Both workload sizes render through React SSR and static SVG in both orders.
+
+The ranking audit covered projection calls in the library, stories, lab,
+inspector, benchmark, chart documentation and packed-consumer fixture. Supplier
+stories explicitly pass the policy, and circuit preparation forwards it. The
+circuit inspector uses its projection only for the original-edge matrix, whose
+rows follow the circuit's supplied order. Benchmark and introductory examples
+use the public ascending default. No other ranking fix was needed.
+
+Verification for these review fixes:
+
+- Seven focused regressions reproduced the defects before the fixes.
+- `check:network-atlas-acceptance` passed 14 independent fixtures, strict
+  lab/worker/benchmark types and all 232 tests, including CSR/SSR preparation
+  and serialized SVG coverage.
+- All three lab Playwright tests passed, covering actual workers, reversed
+  drawing and JSON exports, keyboard selection, light/dark accessibility audits
+  and mobile SVG export.
+- Touched-file ESLint, custom lints and file-size checks passed. The file-size
+  gate retains its pre-existing `StreamPhysicsFrame.tsx` growth warning.
+- `check:website-build:from-dist` prerendered 351 pages and passed route, asset
+  budget and protected-boundary checks. Task-packet and adoption-output
+  freshness checks passed without regenerating their committed artifacts.
