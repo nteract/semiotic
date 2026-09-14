@@ -68,7 +68,6 @@ import {
 } from "../sceneRevisionDiagnostics"
 import {
   AccessibleTablePortal,
-  AriaLiveTooltip,
   ScreenReaderSummary,
   SkipToTableLink
 } from "../AccessibleDataTable"
@@ -137,7 +136,7 @@ export type {
 import {
   renderPhysicsTooltip,
   PhysicsSemanticDataTable,
-  SR_ONLY_STYLE
+  renderPhysicsAnnouncements
 } from "./physicsSemanticUI"
 
 const DEFAULT_SIZE: [number, number] = [640, 360]
@@ -1510,22 +1509,12 @@ export const StreamPhysicsFrame = memo(
             </AccessibleTablePortal>
           ) : null}
           <ScreenReaderSummary summary={summary} />
-          {/* Live region must sit outside role="img" so AT announces hover/focus. */}
-          <AriaLiveTooltip hoverPoint={focusedSemanticItem ? null : hoverData && {
-            data: allSemanticItems.find((item) => item.bodyId === hoverData.id)?.description
-              ? { reading: allSemanticItems.find((item) => item.bodyId === hoverData.id)!.description }
-              : hoverData.data
-          }} />
-          <div
-            id={liveRegionId}
-            aria-live="polite"
-            aria-atomic="true"
-            style={SR_ONLY_STYLE}
-          >
-            {focusedSemanticItem
-              ? (focusedSemanticItem.description ?? focusedSemanticItem.label)
-              : ""}
-          </div>
+          {renderPhysicsAnnouncements(
+            allSemanticItems,
+            focusedSemanticItem,
+            hoverData,
+            liveRegionId
+          )}
           <div
             role="img"
             aria-label={ariaLabel}

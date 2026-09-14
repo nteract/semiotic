@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test"
+import { test, expect, type Locator, type Page } from "@playwright/test"
 import { readFile, writeFile } from "node:fs/promises"
 import AxeBuilder from "@axe-core/playwright"
 
@@ -28,6 +28,36 @@ async function exportEvidence(page: Page) {
   return JSON.parse(await readFile((await download.path()) as string, "utf8"))
 }
 
+async function captureCanvasDrawing(canvas: Locator) {
+  await expect
+    .poll(() =>
+      canvas.evaluate((element: HTMLCanvasElement) => {
+        const context = element.getContext("2d")
+        if (!context || !element.width || !element.height) return 0
+        const pixels = context.getImageData(
+          0,
+          0,
+          element.width,
+          element.height
+        ).data
+        // A uniform background, including a dark fill, is not chart ink.
+        let ink = 0
+        for (let i = 0; i < pixels.length; i += 16) {
+          if (
+            pixels[i + 3] > 16 &&
+            [0, 1, 2, 3].some(
+              (channel) => Math.abs(pixels[i + channel] - pixels[channel]) > 16
+            )
+          )
+            ink += 1
+        }
+        return ink
+      })
+    )
+    .toBeGreaterThan(500)
+  return canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL())
+}
+
 test("large Atlas overview selects without re-preparation and exports the complete evidence", async ({
   page
 }, testInfo) => {
@@ -42,17 +72,17 @@ test("large Atlas overview selects without re-preparation and exports the comple
   await expect(demo.getByTestId("acceptance-checks")).not.toContainText("Fail")
   const preparations = await demo.getAttribute("data-preparations")
   const canvas = demo.locator("canvas").first()
-  await expect(canvas).toBeVisible()
-  const initial = await canvas.evaluate((element: HTMLCanvasElement) =>
-    element.toDataURL()
-  )
+  const initial = await captureCanvasDrawing(canvas)
   await demo.getByLabel("Inspect vertex").selectOption("r1.2")
   await expect(demo.getByTestId("atlas-vertex-reading")).toContainText("r1.2")
   await expect
-    .poll(() =>
-      canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL())
+    .poll(
+      async () =>
+        (await canvas.evaluate((element: HTMLCanvasElement) =>
+          element.toDataURL()
+        )) !== initial
     )
-    .not.toBe(initial)
+    .toBe(true)
   const frame = demo.locator(".stream-network-frame")
   await frame.press("Home")
   await frame.press("Space")
@@ -129,10 +159,7 @@ test("newer worker requests win and witness budgets leave graph facts intact", a
   )
   const ascending = (await exportEvidence(page)).config.props.forest
   const canvas = demo.locator("canvas").first()
-  await expect(canvas).toBeVisible()
-  const initial = await canvas.evaluate((element: HTMLCanvasElement) =>
-    element.toDataURL()
-  )
+  const initial = await captureCanvasDrawing(canvas)
   await demo.getByLabel("Reverse display backbone").check()
   await expect(demo).toHaveAttribute(
     "data-ranking-policy",

@@ -9,10 +9,10 @@
     "packageName": "semiotic",
     "packageVersion": "3.10.0",
     "channel": "source",
-    "sourceRevision": "sha256:5161693ab166267d7a094d215568de1bb764689a0e14c8e74f197be1a8ebe43b",
+    "sourceRevision": "sha256:e97e88049d1795b6aa2ecbb9f4b97f5e61471a90b032d8ea68dd9da52eb65cef",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:a059fab1165f85117b671f9cf9cdf1814086d1d76f48f073e6933ace149e2204",
+      "digest": "sha256:2b76a78870b5107c5eb56c411893eed93f3a5e59e747183bb51faa328fd935f5",
       "fileCount": 1132
     },
     "taskSources": {
@@ -184,7 +184,7 @@
     "owner": "Semiotic repository maintainers",
     "status": "supported-in-scope",
     "observed": {
-      "verifiedAt": "2026-09-14T04:54:41.278Z",
+      "verifiedAt": "2026-09-14T19:17:58.482Z",
       "environment": {
         "node": "v22.22.1",
         "platform": "darwin",

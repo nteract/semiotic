@@ -205,3 +205,28 @@ Verification for these review fixes:
 - `check:website-build:from-dist` prerendered 351 pages and passed route, asset
   budget and protected-boundary checks. Task-packet and adoption-output
   freshness checks passed without regenerating their committed artifacts.
+
+## CI gate follow-up
+
+The lab's two canvas visibility assertions now wait for sampled pixels that
+differ from the canvas background before capturing the initial drawing. A blank
+canvas or uniform dark fill cannot satisfy this check; selection and backbone
+changes still have to alter the captured output. The test-quality baseline
+remains unchanged.
+
+Physics hover/focus announcements now live in the existing semantic UI module.
+The extraction keeps a single authored announcement outside `role="img"`, with
+the same datum fallback, focus description and Escape behavior. A frame-level
+regression covers those readings and table navigation. `StreamPhysicsFrame`
+shrinks from 1,604 to 1,593 lines, below its 1,598-line reviewed ceiling, and the
+file-size growth warning disappears. The existing SentenceFilter exemption
+remains applicable.
+
+Verification covers 668 physics/chart/Atlas unit tests, five lab and Atlas
+integration browser tests, and 18 Flow Circuit CSR/SSR comparisons across
+Chromium, Firefox and WebKit. Source/test types, touched-file lint, custom lints,
+file-size and test-quality gates, production build, public API surface,
+entry/combined-import budgets and cold-consumer contracts pass. Task verification
+reruns its 14 unit assertions and six browser tests before regenerating packets;
+the adoption source inventory is refreshed afterward. No bundle or test-quality
+limit is raised.
