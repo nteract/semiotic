@@ -61,8 +61,38 @@ jobs:
       - name: Verify npm trusted-publisher authentication
         run: node scripts/check-npm-trusted-publisher.mjs
 
-  docs-examples:
+  source-preflight:
     needs: npm-publish-preflight
+    name: Release source and test types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Explicit preparation also supports manual recovery of older tags whose
+      # test typecheck command did not yet build its own declarations.
+      - name: Check source and test types before browser jobs
+        run: |
+          npm run typescript
+          npm run build:declarations
+          npm run typescript:tests
+
+  docs-examples:
+    needs: source-preflight
     name: Docs examples (Chromium)
     runs-on: ubuntu-latest
     # The suite is serial to keep source-route behavior deterministic. Give
@@ -217,9 +247,17 @@ jobs:
             "npm run check:machine-baseline",
             "npm run check:browser-baseline",
           ])
-          const commands = scripts["release:check"]
-            .split(" && ")
-            .filter((command) => !prOnlyBaselines.has(command))
+          // The prerequisite job already ran this exact tag's browser suite.
+          // Prepare declarations first even when recovering an older tag whose
+          // canonical command checks package self-imports before building them.
+          const commands = [
+            "npm run build:declarations",
+            ...scripts["release:check"]
+              .split(" && ")
+              .filter((command) => !prOnlyBaselines.has(command))
+              .filter((command) => command !== "npm run test:examples:source")
+              .filter((command) => command !== "npm run build:declarations"),
+          ]
 
           for (const command of commands) {
             console.log(`\n> ${command}`)

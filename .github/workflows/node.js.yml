@@ -43,6 +43,13 @@ jobs:
           npm run check:file-size
           npm run check:test-quality
 
+      # Run from a clean checkout so package self-imports cannot accidentally
+      # depend on artifacts left by a preceding library build.
+      - name: Check source and test types
+        run: |
+          npm run typescript
+          npm run typescript:tests
+
       - name: Check chart and docs contract drift
         run: |
           npm run check:chart-specs
@@ -195,12 +202,6 @@ jobs:
 
       - name: Test release infrastructure helpers
         run: npm run test:release-infrastructure
-
-      - name: Run type check
-        run: npm run typescript
-
-      - name: Run test type check
-        run: npm run typescript:tests
 
       - name: Check Atlas acceptance fixtures and documentation types
         run: |

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
+import { runInNewContext } from "node:vm"
 import {
   checkNpmTrustedPublisher,
   exchangeNpmPublishToken,
@@ -125,7 +126,7 @@ test("release workflow gates expensive jobs on OIDC preflight and never uses NPM
   assert.doesNotMatch(workflow, /^ {2}visual-contracts:/m)
   assert.match(
     workflow,
-    /^ {2}docs-examples:\n {4}needs: npm-publish-preflight$/m
+    /^ {2}docs-examples:\n {4}needs: source-preflight$/m
   )
   assert.match(
     workflow,
@@ -409,4 +410,59 @@ test("release workflow waits for the exact artifact before installing its public
     /readNpmPublication\(\{ packageName, version, timeoutMs: 10_000 \}\)/
   )
   assert.doesNotMatch(workflow, /npm view.*2>\/dev\/null/)
+})
+
+
+test("release typechecks prepare self-imports before browser work in clean PR and release jobs", () => {
+  const root = new URL("../", import.meta.url)
+  const { scripts } = JSON.parse(readFileSync(new URL("package.json", root), "utf8"))
+  assert.equal(scripts["pretypescript:tests"], "npm run build:declarations")
+  for (const name of ["release:check", "prepublishOnly"]) {
+    const commands = scripts[name].split(" && ")
+    assert.ok(commands.indexOf("npm run typescript:tests") >= 0)
+    assert.ok(commands.indexOf("npm run typescript:tests") < commands.indexOf("npm run test:examples:source"))
+  }
+  const ci = readFileSync(new URL(".github/workflows/node.js.yml", root), "utf8")
+  const preflight = ci.split("  fast-contracts:")[1].split("  coverage-shards:")[0]
+  assert.match(preflight, /npm run typescript:tests/)
+  assert.doesNotMatch(preflight, /npm run dist(?:\s|$)/)
+  const release = readFileSync(new URL(".github/workflows/release.yml", root), "utf8")
+  const sourcePreflight = release.split("  source-preflight:")[1].split("  docs-examples:")[0]
+  assert.match(sourcePreflight, /needs: npm-publish-preflight/)
+  assert.ok(sourcePreflight.indexOf("npm run build:declarations") < sourcePreflight.indexOf("npm run typescript:tests"))
+})
+
+function runPublishGate({ failCommand } = {}) {
+  const workflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8")
+  const step = workflow.split("- name: Run deterministic publish gate")[1]
+  const code = step.match(/node <<'NODE'\n([\s\S]*?)\n {10}NODE/)[1]
+  const commands = []
+  // Reproduce the old tag's ordering, including its duplicate browser work.
+  const recipe = [
+    "npm run test:examples:source", "npm run lint", "npm run typescript:tests",
+    "npm run build:declarations", "npm run check:cold-consumer", "npm run check:pack"
+  ].join(" && ")
+  runInNewContext(code, {
+    require(name) {
+      if (name === "./package.json") return { scripts: { "release:check": recipe } }
+      assert.equal(name, "node:child_process")
+      return { spawnSync(command) {
+        commands.push(command)
+        return { status: command === failCommand ? 1 : 0 }
+      } }
+    },
+    console: { log() {} },
+    process: { cwd: () => "/release", exit(code) { throw new Error(`exit ${code}: ${commands.at(-1)}`) } }
+  })
+  return commands
+}
+
+test("manual recovery prepares old tags and runs remaining publish checks without repeating browsers", () => {
+  assert.deepEqual(runPublishGate(), [
+    "npm run build:declarations", "npm run lint", "npm run typescript:tests", "npm run check:pack"
+  ])
+})
+
+test("manual recovery still stops on a failed deterministic check", () => {
+  assert.throws(() => runPublishGate({ failCommand: "npm run typescript:tests" }), /exit 1: npm run typescript:tests/)
 })

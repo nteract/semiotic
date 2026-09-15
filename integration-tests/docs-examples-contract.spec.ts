@@ -97,6 +97,21 @@ function idForDefinition(definition: ExampleDefinition, route: string): string {
   return String(id)
 }
 
+// This suite is Chromium-only. Native blocking keeps the browser cache enabled
+// and avoids routing every Vite module through Playwright on every navigation.
+async function blockExternalRequests(page: Page, localOrigin: string) {
+  const session = await page.context().newCDPSession(page)
+  await session.send("Network.enable")
+  await session.send("Network.setBlockedURLs", {
+    urlPatterns: [
+      { urlPattern: `${localOrigin}/*`, block: false },
+      { urlPattern: "data:*", block: false }
+    ],
+    urls: ["*"]
+  })
+  return session
+}
+
 async function settleDocument(page: Page) {
   await page.evaluate(
     () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
@@ -269,6 +284,29 @@ function validateEvidenceArtifact(artifact: LocalEvidenceArtifact, expectedRoute
 }
 
 test.describe("docs example local contract evidence", () => {
+  test("native network blocking permits local and data URLs across navigations", async ({ page }, testInfo) => {
+    const origin = new URL(String(testInfo.project.use.baseURL)).origin
+    const session = await blockExternalRequests(page, origin)
+    const blocked: string[] = []
+    session.on("Network.loadingFailed", (event) => {
+      if (event.blockedReason) blocked.push(event.blockedReason)
+    })
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const response = await page.goto("/assets/img/semiotic.png")
+      expect(response?.ok()).toBe(true)
+      const results = await page.evaluate(async () => {
+        const data = await fetch("data:text/plain,local-evidence").then((response) => response.text())
+        const external = await Promise.all([
+          "https://example.invalid/contract-probe",
+          "http://127.0.0.1:3999/contract-probe"
+        ].map((url) => fetch(url).then(() => "allowed", () => "blocked")))
+        return { data, external }
+      })
+      expect(results).toEqual({ data: "local-evidence", external: ["blocked", "blocked"] })
+    }
+    expect(blocked).toEqual(["inspector", "inspector", "inspector", "inspector"])
+  })
+
   test("keeps Merge Pressure stable across reduced-motion and visibility transitions", async ({ page }) => {
     const reactUpdateErrors: string[] = []
     const captureReactUpdateError = (message: string) => {
@@ -301,7 +339,7 @@ test.describe("docs example local contract evidence", () => {
 
   test("captures manifest-driven semantic and viewport evidence", async ({ page }, testInfo) => {
     const definitions = exampleDefinitionList(EXAMPLE_DEFINITIONS)
-    // This deliberately visits every manifest route (currently 50), including
+    // This deliberately visits every manifest route, including
     // cold lazy-module transforms. Its route-level waits remain bounded, but
     // the suite-wide default is sized for the smaller focused contracts.
     testInfo.setTimeout(8 * 60_000)
@@ -311,14 +349,7 @@ test.describe("docs example local contract evidence", () => {
     }
 
     const localOrigin = new URL(configuredBaseURL).origin
-    await page.route("**/*", async (route) => {
-      const requestURL = new URL(route.request().url())
-      if (requestURL.protocol === "data:" || requestURL.origin === localOrigin) {
-        await route.continue()
-        return
-      }
-      await route.abort("blockedbyclient")
-    })
+    await blockExternalRequests(page, localOrigin)
 
     const examples: LocalContractEvidence[] = []
     const visibilityProbe = await page.context().newPage()
