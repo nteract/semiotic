@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.1]
+
+### Added
+- **Network Atlas recipes** — Motif Braid (including async recipe APIs and
+  tapered traffic), Dependency X-Ray, and Flow Circuit, with interactive
+  examples, an acceptance lab, and performance coverage.
+
+### Changed
+- **Less repeated mount and resize work** — network custom layouts reuse
+  cached results when inputs are unchanged. Initial hydration waits for
+  post-ingestion state, worker layouts avoid duplicate solves, and palette
+  and font updates only repaint where possible.
+- **Atlas integration** — readers share chart themes and observers, with
+  tighter schemas, ranking tests, and canvas acceptance checks.
+
+### Fixed
+- **Network accessibility** — keyboard node activation and live announcements
+  use the correct network hover data.
+- **Documentation and release tooling** — example preview integrity checks,
+  API snapshot parameter-name extraction, and npm publication waiting.
+
 ## [3.10.0] - 2026-09-10
 
 ### Added
