@@ -296,6 +296,11 @@ baselines are PR gates; release runs may report selected baseline diagnostics,
 but they cannot block publication. If infrastructure fails after a tag is
 created but before npm accepts the package, use the Release workflow's manual
 `release_tag` input to retry that exact tag with the current release tooling.
+Manual recovery uses the selected workflow revision's manifest-evidence test
+harness against the tagged application and manifest. The sweep runs in batches
+of at most eight routes, each with a fresh browser context and its own timeout;
+the uploaded evidence files together cover the complete tagged manifest.
+The publish job still checks out the untouched tag separately.
 The immutable-artifact and already-published checks keep reruns idempotent.
 
 ## Community

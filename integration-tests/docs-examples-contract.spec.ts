@@ -65,6 +65,7 @@ type LocalEvidenceArtifact = {
   kind: "semiotic-docs-example-local-contract-evidence"
   schemaVersion: number
   capturedAt: string
+  batch: { index: number; count: number; totalExamples: number }
   environment: {
     browser: "local-chromium"
     network: "local-origin-only"
@@ -283,6 +284,16 @@ function validateEvidenceArtifact(artifact: LocalEvidenceArtifact, expectedRoute
   if (errors.length) throw new Error(`Invalid local example evidence artifact:\n${errors.join("\n")}`)
 }
 
+// Each test owns a fresh browser context and a bounded slice of the manifest.
+// All batches run through the same assertions; no route is sampled or omitted.
+const definitions = exampleDefinitionList(EXAMPLE_DEFINITIONS)
+const ROUTES_PER_BATCH = 8
+const evidenceBatches = Array.from(
+  { length: Math.ceil(definitions.length / ROUTES_PER_BATCH) },
+  (_, index) =>
+    definitions.slice(index * ROUTES_PER_BATCH, (index + 1) * ROUTES_PER_BATCH)
+)
+
 test.describe("docs example local contract evidence", () => {
   test("native network blocking permits local and data URLs across navigations", async ({ page }, testInfo) => {
     const origin = new URL(String(testInfo.project.use.baseURL)).origin
@@ -337,121 +348,148 @@ test.describe("docs example local contract evidence", () => {
     }
   })
 
-  test("captures manifest-driven semantic and viewport evidence", async ({ page }, testInfo) => {
-    const definitions = exampleDefinitionList(EXAMPLE_DEFINITIONS)
-    // This deliberately visits every manifest route, including
-    // cold lazy-module transforms. Its route-level waits remain bounded, but
-    // the suite-wide default is sized for the smaller focused contracts.
-    testInfo.setTimeout(8 * 60_000)
-    const configuredBaseURL = testInfo.project.use.baseURL
-    if (typeof configuredBaseURL !== "string") {
-      throw new Error("The docs example contract suite requires a configured baseURL")
-    }
-
-    const localOrigin = new URL(configuredBaseURL).origin
-    await blockExternalRequests(page, localOrigin)
-
-    const examples: LocalContractEvidence[] = []
-    const visibilityProbe = await page.context().newPage()
-    try {
-      for (const definition of definitions) {
-        const route = routeForDefinition(definition)
-        await page.emulateMedia({ reducedMotion: "no-preference" })
-        await page.bringToFront()
-        await page.setViewportSize({ width: 1280, height: 900 })
-        await page.goto(route, { waitUntil: "domcontentloaded" })
-
-        const h1 = page.locator("h1").first()
-        // A cold Vite transform can take longer than the normal assertion
-        // window for the largest lazy example modules. The route is still
-        // bounded by the suite timeout; give its semantic shell time to mount.
-        await expect(h1, `${route} must expose an H1`).toBeVisible({ timeout: 30_000 })
-        await settleDocument(page)
-
-        const semantic = await page.evaluate(() => ({
-          documentLanguage: document.documentElement.lang || null,
-          h1Count: document.querySelectorAll("h1").length,
-          headingCount: document.querySelectorAll("h1, h2, h3, h4, h5, h6").length,
-          mainLandmarkCount: document.querySelectorAll("main, [role=main]").length,
-          navigationLandmarkCount: document.querySelectorAll("nav, [role=navigation]").length
-        }))
-
-        const viewports: ViewportEvidence[] = []
-        for (const viewport of VIEWPORTS) {
-          await page.setViewportSize(viewport)
-          await settleDocument(page)
-          viewports.push(
-            await page.evaluate((currentViewport) => {
-              const isVisible = (element: Element | null) => {
-                if (!element) return false
-                const styles = window.getComputedStyle(element)
-                const rect = element.getBoundingClientRect()
-                return styles.display !== "none" && styles.visibility !== "hidden" && rect.width > 0 && rect.height > 0
-              }
-              const root = document.documentElement
-              return {
-                viewport: currentViewport,
-                documentClientWidth: root.clientWidth,
-                documentScrollWidth: root.scrollWidth,
-                horizontalOverflow: root.scrollWidth > root.clientWidth + 1,
-                h1Visible: isVisible(document.querySelector("h1")),
-                mainVisible: isVisible(document.querySelector("main, [role=main]"))
-              }
-            }, viewport)
-          )
-        }
-
-        await page.emulateMedia({ reducedMotion: "reduce" })
-        await settleDocument(page)
-        const motionVisibility: MotionVisibilityEvidence = {
-          reducedMotion: await captureReducedMotionEvidence(page),
-          visibility: await captureVisibilityEvidence(page, visibilityProbe)
-        }
-
-        examples.push({
-          id: idForDefinition(definition, route),
-          route,
-          title: definition.title || definition.name || null,
-          declaredAssessment: definition.contract?.assessment || null,
-          semantic,
-          viewports,
-          motionVisibility
-        })
+  for (const [batchIndex, batch] of evidenceBatches.entries()) {
+    test(`captures manifest-driven semantic and viewport evidence ${batchIndex + 1}/${evidenceBatches.length} (${routeForDefinition(batch[0])} through ${routeForDefinition(batch[batch.length - 1])})`, async ({
+      page
+    }, testInfo) => {
+      const configuredBaseURL = testInfo.project.use.baseURL
+      if (typeof configuredBaseURL !== "string") {
+        throw new Error(
+          "The docs example contract suite requires a configured baseURL"
+        )
       }
-    } finally {
-      await visibilityProbe.close()
-    }
 
-    const artifact: LocalEvidenceArtifact = {
-      kind: "semiotic-docs-example-local-contract-evidence",
-      schemaVersion: EVIDENCE_SCHEMA_VERSION,
-      capturedAt: new Date().toISOString(),
-      environment: {
-        browser: "local-chromium",
-        network: "local-origin-only",
-        scope: [
-          "Local route loading, DOM landmark counts, heading counts, and viewport geometry.",
-          "External network requests are blocked for this capture.",
-          "Each route is loaded with reduced-motion emulation and must retain its semantic surface.",
-          "A local Chromium probe tab attempts a background/foreground transition for each route; emitted visibility states and semantic continuity after restoration are recorded."
-        ],
-        exclusions: [
-          "This artifact does not establish SSR behavior.",
-          "This artifact does not establish performance, deployment, or cross-browser behavior.",
-          "This artifact does not establish full accessibility equivalence.",
-          "This artifact does not establish policy-specific animation suppression or pause/resume behavior when a route exposes no observable signal."
-        ]
-      },
-      examples
-    }
+      const localOrigin = new URL(configuredBaseURL).origin
+      await blockExternalRequests(page, localOrigin)
 
-    validateEvidenceArtifact(artifact, definitions.map(routeForDefinition))
+      const examples: LocalContractEvidence[] = []
+      const visibilityProbe = await page.context().newPage()
+      try {
+        for (const definition of batch) {
+          const route = routeForDefinition(definition)
+          await test.step(route, async () => {
+            await page.emulateMedia({ reducedMotion: "no-preference" })
+            await page.bringToFront()
+            await page.setViewportSize({ width: 1280, height: 900 })
+            await page.goto(route, { waitUntil: "domcontentloaded" })
 
-    const artifactPath = testInfo.outputPath("docs-example-local-contract-evidence.v2.json")
-    await writeFile(artifactPath, `${JSON.stringify(artifact, null, 2)}\n`, "utf8")
-    await testInfo.attach("docs-example-local-contract-evidence.v2.json", {
-      path: artifactPath,
-      contentType: "application/json"
+            const h1 = page.locator("h1").first()
+            // A cold Vite transform can take longer than the normal assertion
+            // window for the largest lazy example modules. The route is still
+            // bounded by the suite timeout; give its semantic shell time to mount.
+            await expect(h1, `${route} must expose an H1`).toBeVisible({
+              timeout: 30_000
+            })
+            await settleDocument(page)
+
+            const semantic = await page.evaluate(() => ({
+              documentLanguage: document.documentElement.lang || null,
+              h1Count: document.querySelectorAll("h1").length,
+              headingCount: document.querySelectorAll("h1, h2, h3, h4, h5, h6")
+                .length,
+              mainLandmarkCount:
+                document.querySelectorAll("main, [role=main]").length,
+              navigationLandmarkCount: document.querySelectorAll(
+                "nav, [role=navigation]"
+              ).length
+            }))
+
+            const viewports: ViewportEvidence[] = []
+            for (const viewport of VIEWPORTS) {
+              await page.setViewportSize(viewport)
+              await settleDocument(page)
+              viewports.push(
+                await page.evaluate((currentViewport) => {
+                  const isVisible = (element: Element | null) => {
+                    if (!element) return false
+                    const styles = window.getComputedStyle(element)
+                    const rect = element.getBoundingClientRect()
+                    return (
+                      styles.display !== "none" &&
+                      styles.visibility !== "hidden" &&
+                      rect.width > 0 &&
+                      rect.height > 0
+                    )
+                  }
+                  const root = document.documentElement
+                  return {
+                    viewport: currentViewport,
+                    documentClientWidth: root.clientWidth,
+                    documentScrollWidth: root.scrollWidth,
+                    horizontalOverflow: root.scrollWidth > root.clientWidth + 1,
+                    h1Visible: isVisible(document.querySelector("h1")),
+                    mainVisible: isVisible(
+                      document.querySelector("main, [role=main]")
+                    )
+                  }
+                }, viewport)
+              )
+            }
+
+            await page.emulateMedia({ reducedMotion: "reduce" })
+            await settleDocument(page)
+            const motionVisibility: MotionVisibilityEvidence = {
+              reducedMotion: await captureReducedMotionEvidence(page),
+              visibility: await captureVisibilityEvidence(page, visibilityProbe)
+            }
+
+            examples.push({
+              id: idForDefinition(definition, route),
+              route,
+              title: definition.title || definition.name || null,
+              declaredAssessment: definition.contract?.assessment || null,
+              semantic,
+              viewports,
+              motionVisibility
+            })
+          })
+        }
+      } finally {
+        await visibilityProbe.close()
+      }
+
+      const artifact: LocalEvidenceArtifact = {
+        kind: "semiotic-docs-example-local-contract-evidence",
+        schemaVersion: EVIDENCE_SCHEMA_VERSION,
+        capturedAt: new Date().toISOString(),
+        batch: {
+          index: batchIndex + 1,
+          count: evidenceBatches.length,
+          totalExamples: definitions.length
+        },
+        environment: {
+          browser: "local-chromium",
+          network: "local-origin-only",
+          scope: [
+            "Local route loading, DOM landmark counts, heading counts, and viewport geometry for this manifest batch.",
+            "External network requests are blocked for this capture.",
+            "Each route is loaded with reduced-motion emulation and must retain its semantic surface.",
+            "A local Chromium probe tab attempts a background/foreground transition for each route; emitted visibility states and semantic continuity after restoration are recorded."
+          ],
+          exclusions: [
+            "This artifact does not establish SSR behavior.",
+            "This artifact does not establish performance, deployment, or cross-browser behavior.",
+            "This artifact does not establish full accessibility equivalence.",
+            "This artifact does not establish policy-specific animation suppression or pause/resume behavior when a route exposes no observable signal."
+          ]
+        },
+        examples
+      }
+
+      validateEvidenceArtifact(artifact, batch.map(routeForDefinition))
+
+      const artifactPath = testInfo.outputPath(
+        "docs-example-local-contract-evidence.v2.json"
+      )
+      await writeFile(
+        artifactPath,
+        `${JSON.stringify(artifact, null, 2)}\n`,
+        "utf8"
+      )
+      await testInfo.attach("docs-example-local-contract-evidence.v2.json", {
+        path: artifactPath,
+        contentType: "application/json"
+      })
     })
-  })
+  }
 })

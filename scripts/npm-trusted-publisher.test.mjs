@@ -466,3 +466,16 @@ test("manual recovery prepares old tags and runs remaining publish checks withou
 test("manual recovery still stops on a failed deterministic check", () => {
   assert.throws(() => runPublishGate({ failCommand: "npm run typescript:tests" }), /exit 1: npm run typescript:tests/)
 })
+
+
+test("manual browser recovery uses the workflow harness against tagged application source", () => {
+  const workflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8")
+  const docs = workflow.split("  docs-examples:")[1].split("  publish:")[0]
+  assert.match(docs, /name: Checkout tagged source[\s\S]*?ref: \$\{\{ env.RELEASE_TAG \}\}/)
+  assert.match(docs, /name: Checkout release validation harness[\s\S]*?ref: \$\{\{ github.sha \}\}/)
+  assert.match(docs, /sparse-checkout: integration-tests\/docs-examples-contract.spec.ts/)
+  assert.match(docs, /run: cp \.release-validation\/integration-tests\/docs-examples-contract.spec.ts integration-tests\/docs-examples-contract.spec.ts/)
+  assert.ok(docs.indexOf("run: cp ") < docs.indexOf("run: npm run test:examples:source"))
+  const publish = workflow.split("  publish:")[1]
+  assert.doesNotMatch(publish, /run: cp \.release-validation/)
+})

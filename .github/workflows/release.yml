@@ -113,6 +113,20 @@ jobs:
         with:
           ref: ${{ env.RELEASE_TAG }}
 
+      # Recovery must use the selected workflow's fixed validation harness,
+      # while the application and manifest remain those of the immutable tag.
+      - name: Checkout release validation harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          path: .release-validation
+          sparse-checkout: integration-tests/docs-examples-contract.spec.ts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Use current manifest evidence harness against tagged source
+        run: cp .release-validation/integration-tests/docs-examples-contract.spec.ts integration-tests/docs-examples-contract.spec.ts
+
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
