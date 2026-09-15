@@ -7,6 +7,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-built--in-blue.svg)](https://www.typescriptlang.org/)
 [![MseeP.ai Security Assessment Badge](https://mseep.net/pr/nteract-semiotic-badge.png)](https://mseep.ai/app/nteract-semiotic)
 
+[![MCP Queen operational grade](https://mcpqueen.com/badge/io.github.nteract/semiotic.svg)](https://mcpqueen.com/s/io.github.nteract/semiotic)
+
 A React data visualization library designed for AI-assisted development.
 
 Start with a small chart component. Add network graphs, streaming data and
