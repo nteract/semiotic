@@ -24,30 +24,22 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.10.0
+## What's New in 3.10.1
 
-3.10.0 finishes style-rule coverage on the remaining sibling charts, fixes geo
-overlay accessible names, and lands the post-3.9.2 example, physics, and
-renderer work:
+3.10.1 adds Network Atlas recipes and reduces repeated layout work when charts
+mount or resize.
 
-- `styleRules` now reach `WaterfallChart`, `MultiAxisLineChart`, `FlowMap`,
-  `ProcessFlowChart`, `MinimapChart`, `CandlestickChart`, `DifferenceChart`,
-  and `ScatterplotMatrix` in both React and `renderChart`/MCP output.
-- Geographic overlays use "Geographic chart" fallbacks and honor `description`
-  in `<desc>`, matching canvas `aria-label` and static SVG chrome across XY,
-  ordinal, network, and geo frames. Live overlay and GIF `<title>`/`<desc>`
-  ids are instance-local so two charts on one page do not collide.
-- `BubbleChart` now exposes the same xy brush as Scatterplot; stacked and
-  grouped bars share BarChart's value-axis brush. Radar, funnel, pie, and
-  donut honor `valueFormat` in default tooltips (and radar/funnel ticks).
-- Physics charts share source updates, replay, and fixed axes; EventDrop and
-  process-flow semantics stay aligned between live and settled output.
-- Realtime histograms gain responsive sizing, axis control, Y inversion, and
-  linked hover/brush; threshold end caps and Gauge readouts are portable SVG.
-- New long-form examples cover grocery receipts, the jobs report, reservoir
-  guide, plane day, and persuasion, each with pinned sources and consumer kits.
-- Renderer hot paths (packing, LOESS, rollup, ordinal scenes, hover hit-test)
-  and evidence/artifact contracts are tighter without changing public APIs.
+- Network Atlas includes Motif Braid, Dependency X-Ray, and Flow Circuit
+  recipes, with interactive examples and an acceptance lab.
+- Network charts reuse custom layouts when inputs are unchanged, avoid
+  duplicate worker solves, and treat palette and font changes as paint-only
+  updates where possible.
+- Atlas readers integrate with themes and observers; network keyboard
+  activation and live hover announcements are corrected.
+- Documentation preview checks and API snapshot parameter extraction are
+  more reliable.
+
+See [the changelog](CHANGELOG.md#3101) for details.
 
 ## Why Semiotic
 
