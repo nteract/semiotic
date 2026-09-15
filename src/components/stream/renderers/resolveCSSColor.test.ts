@@ -235,11 +235,19 @@ describe("resolveCSSColor", () => {
 
     try {
       const beforeFontLoad = getCSSColorCacheVersion()
+      const emptyLoad = Object.assign(new Event("loadingdone"), { fontfaces: [] })
+      for (const registered of fontListeners) {
+        if (typeof registered === "function") registered(emptyLoad)
+        else registered.handleEvent(emptyLoad)
+      }
+      expect(listener).not.toHaveBeenCalled()
+      expect(getCSSColorCacheVersion()).toBe(beforeFontLoad)
+      const loaded = Object.assign(new Event("loadingdone"), { fontfaces: [{}] })
       for (const registered of fontListeners) {
         if (typeof registered === "function") {
-          registered(new Event("loadingdone"))
+          registered(loaded)
         } else {
-          registered.handleEvent(new Event("loadingdone"))
+          registered.handleEvent(loaded)
         }
       }
 

@@ -13,7 +13,7 @@ function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = D
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function ProcessSankey<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ProcessSankeyProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & SankeyDiagramProps<TNode, TEdge>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function StreamNetworkFrame(: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function StreamNetworkFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-network").StreamNetworkFrameHandle> & import("semiotic-internal/semiotic-network").StreamNetworkFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>): React.JSX.Element

@@ -80,23 +80,23 @@ const DEFAULT_CRUCIBLE_OUTLETS: readonly CrucibleOutlet[]
 const DEFAULT_CRUCIBLE_SIZE: [number, number]
 const DEFAULT_CRUCIBLE_WIDTH: 900
 function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function CollisionSwarmChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function CollisionSwarmChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function EventDropChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function GaltonBoardChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function EventDropChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function GaltonBoardChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function GuantletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function PhysicsPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function PhysicsPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): React.JSX.Element
-function ProcessFlowChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function StreamPhysicsFrame(: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
+function ProcessFlowChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function StreamPhysicsFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
-function UnitPileChart(: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function UnitPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function absorbRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector | number; damping?: number; charge?: StreamPhysicsRegionEffect["charge"];}): StreamPhysicsRegionEffect
 function aggregateRegionCounts(previous: RegionCountMap, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "region" | "type">): RegionCountMap
 function applyCrucibleEvent<TDatum extends Datum>(state: CrucibleRunState<TDatum>, event: CrucibleEvent, context: CrucibleApplyContext): CrucibleApplyResult<TDatum>
@@ -146,7 +146,7 @@ function crucibleComponentBodyId(componentId: string): string
 function crucibleProductBodyId(productId: string): string
 function crucibleProjectionRows<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
 function crucibleSemanticKey(value: unknown): string
-function default(: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
+function default(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: undefined | {charge?: string; apparatus?: string; destination?: string;}): string
 function evaluateCrucibleConservation<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleConservationSpec | undefined): CrucibleConservationResult

@@ -160,6 +160,10 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     cleanup
   } = opts
   useIsomorphicLayoutEffect(() => {
+    // The first CSR commit has a canvas but its passive data/config effects
+    // have not run yet. useHydration schedules a second commit before paint;
+    // paint there, after ingestion, instead of projecting an empty store now.
+    if (!hydrated) return
     const store = storeRef.current
     if (hydrated && wasHydratingFromSSR) {
       store?.cancelIntroAnimation?.()

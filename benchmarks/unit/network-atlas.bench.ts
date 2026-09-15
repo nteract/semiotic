@@ -4,7 +4,15 @@ import { matchMotifs } from "../../src/components/recipes/atlas/motifs"
 import { atlasWorkload } from "../setup/network-atlas-workloads"
 import { atlasMotifWorkloads } from "../setup/network-atlas-motif-workloads"
 
-const options = { time: 0, iterations: 3, warmupTime: 0, warmupIterations: 1 }
+// A handful of millisecond-scale samples can make unchanged matchers appear
+// twice as slow. Warm up each workload and sample over a sustained window;
+// keep a minimum sample count for the more expensive preparation cases too.
+const options = {
+  time: 1000,
+  iterations: 30,
+  warmupTime: 200,
+  warmupIterations: 10
+}
 
 describe("Network Atlas preparation", () => {
   for (const size of [1000, 10000] as const) {

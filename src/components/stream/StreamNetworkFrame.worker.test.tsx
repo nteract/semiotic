@@ -25,6 +25,8 @@ vi.mock("./layouts/forceLayoutWorkerClient", async (importOriginal) => {
 })
 
 import StreamNetworkFrame from "./StreamNetworkFrame"
+import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { StreamNetworkFrameHandle } from "./networkTypes"
 
 describe("StreamNetworkFrame worker force layout", () => {
   let restoreCanvas: (() => void) | null = null
@@ -37,6 +39,56 @@ describe("StreamNetworkFrame worker force layout", () => {
   afterEach(() => {
     restoreCanvas?.()
     restoreCanvas = null
+    vi.restoreAllMocks()
+  })
+
+  it("resizes through the worker without also solving synchronously", async () => {
+    const solve = vi.spyOn(NetworkPipelineStore.prototype, "runLayout")
+    const build = vi.spyOn(NetworkPipelineStore.prototype, "buildScene")
+    const resolvers: Array<
+      (value: { positions: Record<string, { x: number; y: number }> }) => void
+    > = []
+    runWorker.mockImplementation(() => new Promise((resolve) => resolvers.push(resolve)))
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const nodes = [{ id: "a" }, { id: "b" }]
+    const edges = [{ source: "a", target: "b" }]
+    const chart = (width: number) => (
+      <StreamNetworkFrame
+        ref={ref}
+        chartType="force"
+        nodes={nodes}
+        edges={edges}
+        size={[width, 300]}
+        animate={false}
+        layoutExecution="worker"
+      />
+    )
+    const view = render(chart(400))
+    await waitFor(() => expect(runWorker).toHaveBeenCalledTimes(1))
+    expect(solve).not.toHaveBeenCalled()
+    expect(build).not.toHaveBeenCalled()
+    await act(async () => {
+      resolvers[0]({ positions: { a: { x: 100, y: 100 }, b: { x: 300, y: 200 } } })
+    })
+    // Applying worker positions runs the finalizer with simulation disabled.
+    expect(solve).toHaveBeenCalledTimes(1)
+    expect(build).toHaveBeenCalledTimes(1)
+
+    view.rerender(chart(700))
+    await waitFor(() => expect(runWorker).toHaveBeenCalledTimes(2))
+    expect(solve).toHaveBeenCalledTimes(1)
+    expect(build).toHaveBeenCalledTimes(1)
+    expect(view.container.querySelector('[aria-busy="true"]')).not.toBeNull()
+    await act(async () => {
+      resolvers[1]({ positions: { a: { x: 200, y: 100 }, b: { x: 500, y: 200 } } })
+    })
+    expect(ref.current?.getTopology().nodes).toMatchObject([
+      { id: "a", x: 200, y: 100 },
+      { id: "b", x: 500, y: 200 }
+    ])
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+    expect(solve).toHaveBeenCalledTimes(2)
+    expect(build).toHaveBeenCalledTimes(2)
   })
 
   it("shows an internal loading state and applies worker positions", async () => {

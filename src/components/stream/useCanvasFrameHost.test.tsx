@@ -57,12 +57,17 @@ describe("useCanvasFrameHost", () => {
     const canvasRef = result.current.canvasRef
     const interactionCanvasRef = result.current.interactionCanvasRef
     expect(fixture.dirtyRef.current).toBe(true)
-    expect(fixture.render).toHaveBeenCalledTimes(1)
+    expect(fixture.render).not.toHaveBeenCalled()
     expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
 
     rerender({ input: fixture.input })
     expect(result.current.canvasRef).toBe(canvasRef)
     expect(result.current.interactionCanvasRef).toBe(interactionCanvasRef)
+
+    // The first paint waits for the commit after data/config effects, still
+    // synchronously before the browser paints the newly mounted canvas.
+    rerender({ input: { ...fixture.input, hydrated: true } })
+    expect(fixture.render).toHaveBeenCalledTimes(1)
 
     unmount()
     expect(fixture.cleanup).toHaveBeenCalledTimes(1)

@@ -1,4 +1,4 @@
-import { useEffect, type MutableRefObject } from "react"
+import { useEffect, type MutableRefObject, type RefObject } from "react"
 import type { StreamChartType } from "./types"
 import { getXYPlugin, registerXYPlugin } from "./xyPlugins/registry"
 
@@ -22,6 +22,7 @@ export function useEnsureXYPlugins(
   customLayout: unknown,
   dirtyRef: MutableRefObject<boolean>,
   scheduleRender: () => void,
+  storeRef: RefObject<{ markStylePaintPending(): void } | null>,
 ): void {
   useEffect(() => {
     let cancelled = false
@@ -35,7 +36,7 @@ export function useEnsureXYPlugins(
       )
     }
 
-    if (chartType !== "custom" && !getXYPlugin(chartType)) {
+    if (!customLayout && chartType !== "custom" && !getXYPlugin(chartType)) {
       loaders.push(
         import("./xyPlugins/registerBuiltIn").then((mod) => {
           mod.registerBuiltInXYPlugins()
@@ -46,11 +47,15 @@ export function useEnsureXYPlugins(
     if (loaders.length === 0) return undefined
     void Promise.all(loaders).then(() => {
       if (cancelled) return
-      dirtyRef.current = true
+      // Custom geometry was already produced before its painters loaded.
+      // Repaint that retained scene; only a missing built-in builder needs
+      // another geometry pass after registration.
+      if (customLayout) storeRef.current?.markStylePaintPending()
+      else dirtyRef.current = true
       scheduleRender()
     })
     return () => {
       cancelled = true
     }
-  }, [chartType, customLayout, dirtyRef, scheduleRender])
+  }, [chartType, customLayout, dirtyRef, scheduleRender, storeRef])
 }

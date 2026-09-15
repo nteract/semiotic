@@ -146,6 +146,90 @@ describe("public API compatibility comparison", () => {
     ), [])
   })
 
+  it("snapshots imported callback parameters independently of documentation offsets", () => {
+    const directory = mkdtempSync(join(tmpdir(), "semiotic-api-callback-test-"))
+    const dist = join(directory, "dist")
+    const outDir = join(directory, "snapshots")
+    mkdirSync(dist)
+    const packagePath = join(directory, "package.json")
+    writeFileSync(packagePath, JSON.stringify({
+      name: "semiotic",
+      exports: {
+        ".": { types: "./dist/semiotic.d.ts", import: "./dist/semiotic.js" },
+        "./recipes/core": {
+          types: "./dist/semiotic-recipes-core.d.ts",
+          import: "./dist/semiotic-recipes-core.js",
+        },
+      },
+    }))
+    const callbacks = `
+      export interface LayoutContext<C> { config: C }
+      export type Layout<C> = (ctx: LayoutContext<C>, mode?: "initial" | "resize", ...dimensions: number[]) => C
+      export type DestructuredLayout = ({ width, height }: { width: number; height: number }, [x, y]: readonly [number, number]) => number
+      export interface LayoutOverloads {
+        (nodeId: string): number
+        (nodeIds: string[], options?: { depth: number }): number[]
+      }
+    `
+    const layouts = `
+      import type { Layout, DestructuredLayout, LayoutOverloads } from "./callbacks"
+      export declare const graphLayout: Layout<number>
+      export declare const dimensionsLayout: DestructuredLayout
+      export declare const resolveNodes: LayoutOverloads
+    `
+    writeFileSync(join(dist, "callbacks.d.ts"), callbacks)
+    writeFileSync(join(dist, "layouts.d.ts"), layouts)
+    writeFileSync(join(dist, "semiotic.d.ts"), 'export * from "./layouts"\n')
+    writeFileSync(
+      join(dist, "semiotic-recipes-core.d.ts"),
+      'export * from "./semiotic"\nexport { graphLayout as namedLayout } from "./layouts"\n',
+    )
+
+    const generate = () => {
+      const generated = spawnSync(process.execPath, [
+        "scripts/generate-api-surface.mjs",
+        "--package-json", packagePath,
+        "--dist-dir", dist,
+        "--out-dir", outDir,
+      ], { cwd: repoRoot, encoding: "utf8", timeout: 120_000 })
+      assert.equal(
+        generated.status,
+        0,
+        generated.stderr || generated.stdout || generated.error?.message,
+      )
+      return ["semiotic", "semiotic-recipes-core"].map((entry) =>
+        readFileSync(join(outDir, `${entry}.api.md`), "utf8"),
+      )
+    }
+
+    try {
+      const before = generate()
+      for (const snapshot of before) {
+        assert.match(snapshot, /^function graphLayout\(ctx: LayoutContext<number>, mode\?: "initial" \| "resize" \| undefined, \.\.\.dimensions: number\[\]\): number$/m)
+        assert.match(snapshot, /^function dimensionsLayout\(\{ width, height \}: .*?, \[x, y\]: readonly \[number, number\]\): number$/m)
+        assert.match(snapshot, /^function resolveNodes\(nodeId: string\): number$/m)
+        assert.match(snapshot, /^function resolveNodes\(nodeIds: string\[\], options\?: .*\): number\[\]$/m)
+      }
+      assert.match(before[1], /^function namedLayout\(ctx: LayoutContext<number>, mode\?: /m)
+
+      // Neither documentation at the callable's definition nor at its export
+      // changes a public signature. They live in different source files.
+      writeFileSync(join(dist, "callbacks.d.ts"), `/** Layout lifecycle documentation. */\n${callbacks}`)
+      writeFileSync(join(dist, "layouts.d.ts"), `/** Recipes using those callbacks. */\n${layouts}`)
+      assert.deepEqual(generate(), before)
+
+      // A real contract change must still be visible after removing the noise.
+      writeFileSync(join(dist, "callbacks.d.ts"), callbacks.replace("mode?:", "mode:"))
+      const changed = generate()
+      for (const snapshot of changed) {
+        assert.match(snapshot, /^function graphLayout\(ctx: LayoutContext<number>, mode: /m)
+      }
+      assert.notDeepEqual(changed, before)
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it("keeps representative generic React component signatures typed", () => {
     const outDir = mkdtempSync(join(tmpdir(), "semiotic-api-signature-test-"))
     try {
@@ -202,6 +286,7 @@ describe("public API compatibility comparison", () => {
 
       const streamFrame = snapshot.match(/^(?:const|function) StreamXYFrame.*$/m)?.[0]
       assert.ok(streamFrame, "StreamXYFrame signature is missing")
+      assert.match(streamFrame, /^function StreamXYFrame\(props: /)
       assert.match(streamFrame, /StreamXYFrameProps/)
       assert.doesNotMatch(streamFrame, /NamedExoticComponent<any>/)
 

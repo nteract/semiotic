@@ -2,8 +2,19 @@ import * as Semiotic from "../../dist/semiotic.module.min.js"
 import { unitize } from "../../dist/semiotic-recipes.module.min.js"
 import React, { useState } from "react"
 import { createRoot } from "react-dom/client"
+import { MountLayoutFixture } from "./mountLayoutFixture"
 
 const { ThemeProvider, XYCustomChart } = Semiotic
+
+window.xyMountLayoutCalls = { flower: [], glyph: [] }
+function recordXYLayout(name, ctx) {
+  window.xyMountLayoutCalls[name].push({
+    width: ctx.dimensions.width,
+    height: ctx.dimensions.height,
+    nodes: ctx.data.length,
+    edges: 0,
+  })
+}
 
 const seafoodData = [
   { lake: "Erie", species: "Walleye", count: 48, x: 0 },
@@ -28,6 +39,7 @@ function stableId(value) {
 }
 
 function responsiveFlowerLayout(ctx) {
+  recordXYLayout("flower", ctx)
   const plot = ctx.dimensions.plot
   const radius = ctx.config.flowerRadius || 32
   const stemWidth = ctx.config.stemWidth || 5
@@ -172,6 +184,7 @@ const GLYPH_ROWS = [
 const GLYPH_COLORS = { alpha: "#d72f3f", beta: "#4f8999", gamma: "#d8ad43" }
 
 function glyphUnitLayout(ctx) {
+  recordXYLayout("glyph", ctx)
   const nodes = []
   const labels = []
   ctx.data.forEach((row, index) => {
@@ -240,7 +253,8 @@ function App() {
     ThemeProvider,
     { theme: "light" },
     React.createElement(ResponsiveFlowerFixture),
-    React.createElement(GlyphUnitFixture)
+    React.createElement(GlyphUnitFixture),
+    React.createElement(MountLayoutFixture)
   )
 }
 

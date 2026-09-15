@@ -12,17 +12,7 @@ export interface CanvasMargin {
   left: number
 }
 
-/** Repaint canvas text after an asynchronously loaded web font becomes usable. */
-export function subscribeToCanvasFontInvalidation(
-  listener: () => void
-): () => void {
-  const fonts = typeof document === "undefined" ? undefined : document.fonts
-  if (!fonts) return () => {}
-  fonts.addEventListener("loadingdone", listener)
-  return () => {
-    fonts.removeEventListener("loadingdone", listener)
-  }
-}
+export { subscribeToCanvasFontInvalidation } from "./fontLoading"
 
 /**
  * Keep a canvas's backing store and CSS box aligned with the frame size.

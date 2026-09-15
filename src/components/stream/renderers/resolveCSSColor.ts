@@ -13,6 +13,8 @@
  * media-query changes that bypass React).
  */
 
+import { subscribeToCanvasFontInvalidation } from "../fontLoading"
+
 /**
  * Split a `var(--name, fallback)` string into its property name and fallback.
  * Unlike a regex, this balances parentheses so a *nested* fallback var
@@ -50,8 +52,7 @@ let observerInstalled = false
 let installedObserver: MutationObserver | null = null
 let installedMql: MediaQueryList | null = null
 let installedMqlHandler: ((e: MediaQueryListEvent) => void) | null = null
-let installedFontSet: FontFaceSet | null = null
-let installedFontLoadHandler: ((event: Event) => void) | null = null
+let installedFontCleanup: (() => void) | null = null
 type CSSColorInvalidationSubscriber = {
   getElement: () => Element | null
   listener: () => void
@@ -81,11 +82,8 @@ function teardownGlobalObserver(): void {
   installedMql = null
   installedMqlHandler = null
 
-  if (installedFontSet && installedFontLoadHandler) {
-    installedFontSet.removeEventListener("loadingdone", installedFontLoadHandler)
-  }
-  installedFontSet = null
-  installedFontLoadHandler = null
+  installedFontCleanup?.()
+  installedFontCleanup = null
   observerInstalled = false
 }
 
@@ -201,11 +199,7 @@ function ensureGlobalObserver(): void {
   // has been painted. A web font named by --semiotic-font-family may finish
   // loading after the first frame, so repaint settled canvases when the font
   // set completes a load cycle. SVG/HTML update themselves automatically.
-  if (document.fonts && typeof document.fonts.addEventListener === "function") {
-    installedFontSet = document.fonts
-    installedFontLoadHandler = () => invalidateAndNotify()
-    installedFontSet.addEventListener("loadingdone", installedFontLoadHandler)
-  }
+  installedFontCleanup = subscribeToCanvasFontInvalidation(() => invalidateAndNotify())
 }
 
 /**

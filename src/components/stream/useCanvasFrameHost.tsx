@@ -11,7 +11,7 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import type {
   DependencyList,
   MutableRefObject,
@@ -21,6 +21,8 @@ import type {
 import type { FrameMargin, UseFrameResult } from "./useFrame"
 import { useHydrationLifecycle } from "./useHydration"
 import { subscribeToDevicePixelRatioChange } from "./canvasSetup"
+
+const useCanvasLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 export interface CanvasFrameHostRuntime {
   readonly isActive: boolean
@@ -118,6 +120,24 @@ export function useCanvasFrameHost<TStore extends object>(
   const hasRunCanvasPaintInvalidationRef = useRef(false)
   const hasSeenMaxDevicePixelRatioRef = useRef(false)
 
+  // Overlay/background changes can alter whether opaque canvas paint hides an
+  // SVG underlay. Each family provides its own precise dependency list so the
+  // host performs the common handoff without taking ownership of overlay
+  // contents or layout policy. Run before hydration takeover: an initial
+  // synchronous measurement can settle size in the hydration commit, and a
+  // later passive invalidation would rebuild the scene just painted there.
+  useCanvasLayoutEffect(() => {
+    if (!hasRunCanvasPaintInvalidationRef.current) {
+      hasRunCanvasPaintInvalidationRef.current = true
+      if (input.skipInitialCanvasPaintInvalidation) return
+    }
+    if (input.canvasPaintInvalidator) input.canvasPaintInvalidator()
+    else input.dirtyRef.current = true
+    input.scheduleRender()
+    // `canvasPaintDependencies` is intentionally the adapter's explicit
+    // dependency list; React compares its values just like a local effect.
+  }, input.canvasPaintDependencies)
+
   useHydrationLifecycle({
     hydrated: input.hydrated,
     wasHydratingFromSSR: input.wasHydratingFromSSR,
@@ -169,23 +189,6 @@ export function useCanvasFrameHost<TStore extends object>(
     resolutionDirtyRef.current = true
     scheduleRender()
   }, [maxDevicePixelRatio, scheduleRender])
-
-  // Overlay/background changes can alter whether opaque canvas paint hides an
-  // SVG underlay. Each family provides its own precise dependency list so the
-  // host performs the common handoff without taking ownership of overlay
-  // contents or layout policy.
-  useEffect(() => {
-    if (!hasRunCanvasPaintInvalidationRef.current) {
-      hasRunCanvasPaintInvalidationRef.current = true
-      if (input.skipInitialCanvasPaintInvalidation) return
-    }
-    if (input.canvasPaintInvalidator) input.canvasPaintInvalidator()
-    else input.dirtyRef.current = true
-    input.scheduleRender()
-    // `canvasPaintDependencies` is intentionally the adapter's explicit
-    // dependency list; React compares its values just like a local effect.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, input.canvasPaintDependencies)
 
   return { canvasRef, interactionCanvasRef, resolutionDirtyRef }
 }

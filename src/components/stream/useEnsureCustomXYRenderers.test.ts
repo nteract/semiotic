@@ -13,7 +13,8 @@ describe("useEnsureXYPlugins", () => {
     resetXYPluginRegistry()
     const dirtyRef = { current: false }
     const scheduleRender = vi.fn()
-    renderHook(() => useEnsureXYPlugins("line", undefined, dirtyRef, scheduleRender))
+    const storeRef = { current: { markStylePaintPending: vi.fn() } }
+    renderHook(() => useEnsureXYPlugins("line", undefined, dirtyRef, scheduleRender, storeRef))
     await waitFor(() => {
       expect(getXYPlugin("line")).toBeTruthy()
     })
@@ -25,20 +26,23 @@ describe("useEnsureXYPlugins", () => {
     registerXYPlugin(lineXYPlugin)
     const dirtyRef = { current: false }
     const scheduleRender = vi.fn()
-    renderHook(() => useEnsureXYPlugins("line", undefined, dirtyRef, scheduleRender))
+    const storeRef = { current: { markStylePaintPending: vi.fn() } }
+    renderHook(() => useEnsureXYPlugins("line", undefined, dirtyRef, scheduleRender, storeRef))
     expect(dirtyRef.current).toBe(false)
     expect(scheduleRender).not.toHaveBeenCalled()
   })
 
-  it("marks dirty then schedules when custom painters load", async () => {
+  it("marks paint pending without dirtying geometry when custom painters load", async () => {
     registerXYPlugin(lineXYPlugin)
     const dirtyRef = { current: false }
     const scheduleRender = vi.fn()
-    renderHook(() => useEnsureXYPlugins("line", () => ({ nodes: [] }), dirtyRef, scheduleRender))
+    const storeRef = { current: { markStylePaintPending: vi.fn() } }
+    renderHook(() => useEnsureXYPlugins("line", () => ({ nodes: [] }), dirtyRef, scheduleRender, storeRef))
     await waitFor(() => {
       expect(getXYPlugin("custom")).toBeTruthy()
     })
-    expect(dirtyRef.current).toBe(true)
+    expect(dirtyRef.current).toBe(false)
+    expect(storeRef.current.markStylePaintPending).toHaveBeenCalledTimes(1)
     expect(scheduleRender).toHaveBeenCalled()
   })
 })

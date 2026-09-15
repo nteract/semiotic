@@ -48,6 +48,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
 import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
+import { NetworkCustomLayoutCache } from "./networkCustomLayoutCache"
 import { applyNetworkCustomLayoutOutput, clearNetworkCustomLayoutOutput } from "./networkCustomLayoutOutput"
 import {
   restyleNetworkCustomScene,
@@ -105,6 +106,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
    *  StreamNetworkFrame). Empty for built-in chart types. */
   customLayoutHtmlMarks: NetworkHtmlMark[] = []
   private _customLayoutDiagnosticsWarned = new Set<string>()
+  private _customLayoutCache = new NetworkCustomLayoutCache((selection) => this.restyleScene(selection))
   /** Per-frame restyle callbacks from the custom layout result. When set, the
    *  frame routes selection changes through `restyleScene()` (style-only repaint)
    *  instead of a full `buildScene()`. */
@@ -822,6 +824,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
     // user emit scene primitives directly. Hit testing, decay, and SSR keep
     // working because they consume `this.sceneNodes`/`sceneEdges`.
     if (this.config.customNetworkLayout) {
+      if (this._customLayoutCache.reuse(
+        this.config, size, this.getUpdateSnapshot().revisions.data, this.layoutVersion, this.hasCustomRestyle
+      )) return
       const outcome = runNetworkCustomLayout({
         config: this.config,
         customLayout: this.config.customNetworkLayout,
@@ -849,6 +854,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
         return
       }
       const result = outcome.result
+      this._customLayoutCache.commit()
       this.sceneNodes = result.sceneNodes ?? []
       this.sceneEdges = result.sceneEdges ?? []
       this.labels = result.labels ?? []
@@ -877,6 +883,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       return
     }
     // Non-custom path: no restyle callbacks in effect.
+    this._customLayoutCache.clear()
     this._customRestyle = undefined
     this._customRestyleEdge = undefined
     this.hasCustomRestyle = false
@@ -1500,6 +1507,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
   }
 
   clear(): void {
+    this._customLayoutCache.clear()
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null; this._networkDecayCache = null
