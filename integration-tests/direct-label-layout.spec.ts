@@ -105,3 +105,71 @@ test("push updates refresh endpoints with fixed domains and font-load invalidati
     .poll(async () => (await layout(chart)).measurement.measured)
     .toBe(6)
 })
+
+test("push defaults grow both label rails and keep labels in their series colors", async ({ page }) => {
+  await page.addInitScript(() => {
+    const stroke = CanvasRenderingContext2D.prototype.stroke
+    CanvasRenderingContext2D.prototype.stroke = function (...args: Parameters<typeof stroke>) {
+      if (this.lineWidth === 2) {
+        const canvas = this.canvas as HTMLCanvasElement
+        const colors = JSON.parse(canvas.dataset.lineColors || "[]")
+        canvas.dataset.lineColors = JSON.stringify([...colors, this.strokeStyle].slice(-30))
+      }
+      return stroke.apply(this, args)
+    }
+  })
+  await page.reload()
+  for (const [id, firstColor] of [
+    ["push-default-start", null],
+    ["push-default-end", null],
+    ["push-scheme", "#112233"],
+    ["push-color-map", "#abcdef"],
+    ["push-theme", "#cc2244"],
+    ["push-provider", "#22aa66"]
+  ] as const) {
+    const chart = page.getByTestId(id)
+    const colorsMatch = () => chart.evaluate((element) => {
+      const context = document.createElement("canvas").getContext("2d")!
+      const colors = Array.from(element.querySelectorAll("[data-direct-label-id] text"), (node) => {
+        context.fillStyle = node.getAttribute("fill")!
+        return context.fillStyle
+      })
+      const strokes = Array.from(element.querySelectorAll("canvas"))
+        .flatMap(canvas => JSON.parse(canvas.dataset.lineColors || "[]") as string[])
+        .slice(-colors.length)
+      return colors.length > 0 && JSON.stringify(colors) === JSON.stringify(strokes)
+    })
+    await expect(chart.locator("[data-direct-label-id]")).toHaveCount(6)
+    await expect.poll(async () => (await layout(chart)).omitted).toBe(0)
+    await expect.poll(colorsMatch).toBe(true)
+    if (firstColor) {
+      await expect(chart.locator('[data-direct-label-id="Series 0"] text')).toHaveAttribute("fill", firstColor)
+    }
+    await chart.getByRole("button", { name: "Push longer category" }).click()
+    await expect(chart.locator("[data-direct-label-id]")).toHaveCount(7)
+    await expect.poll(async () => (await layout(chart)).omitted).toBe(0)
+    await expect.poll(colorsMatch).toBe(true)
+  }
+})
+
+test("browser exports retain direct labels in SVG and produce PNG", async ({ page }) => {
+  const chart = page.getByTestId("push-default-end")
+  await expect(chart.locator("[data-direct-label-id]")).toHaveCount(6)
+  for (const format of ["SVG", "PNG"] as const) {
+    const pending = page.waitForEvent("download")
+    await chart.getByRole("button", { name: `Export ${format}`, exact: true }).click()
+    const download = await pending
+    const stream = await download.createReadStream()
+    const chunks: Buffer[] = []
+    for await (const chunk of stream!) chunks.push(Buffer.from(chunk))
+    const bytes = Buffer.concat(chunks)
+    if (format === "SVG") {
+      expect(bytes.toString()).toContain("Series 0")
+      expect(bytes.toString()).toContain("Series 5")
+      expect(bytes.toString()).toContain("data-direct-label-id")
+    } else {
+      expect(bytes.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      expect(bytes.length).toBeGreaterThan(1000)
+    }
+  }
+})

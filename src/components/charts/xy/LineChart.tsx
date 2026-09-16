@@ -744,47 +744,9 @@ export const LineChart = forwardRef(
     return { gapProcessedLineData: lineData, hasGaps: false }
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
 
-  // ── Direct-label pre-computation (texts only, no colors) ──────────────
-  // Splitting label texts from full annotations lets the margin estimate
-  // run before useChartSetup (which needs `marginDefaults`), while the
-  // fully-styled annotations (with color from setup.colorScale) are
-  // assembled after setup. The texts depend only on accessors and shape,
-  // not on the color scale.
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
   const directLabelPosition = directLabelConfig.position || "end"
   const directLabelFontSize = directLabelConfig.fontSize || 11
-
-  const directLabelLabelTexts = useMemo(() => {
-    if (!directLabel || !effectiveColorBy) return []
-    const colorAcc = typeof effectiveColorBy === "function" ? effectiveColorBy : (d: Datum) => d[effectiveColorBy as string]
-    const seen = new Set<string>()
-    for (const line of gapProcessedLineData) {
-      const coords: Datum[] = line[lineDataAccessor] || []
-      if (coords.length === 0) continue
-      const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
-      // Coalesce nullish but keep falsy-but-valid values like 0 or false —
-      // a categorical chart with numeric category values must still get a
-      // direct label and have its margin estimated.
-      const raw = colorAcc(endpoint) ?? colorAcc(line)
-      if (raw == null) continue
-      const label = String(raw)
-      if (label !== "") seen.add(label)
-    }
-    return Array.from(seen)
-  }, [directLabel, effectiveColorBy, gapProcessedLineData, lineDataAccessor, directLabelPosition])
-
-  const directLabelMarginDefaults = useMemo(() => {
-    if (!directLabel) return resolved.marginDefaults
-    const maxLabelWidth = directLabelLabelTexts.reduce((max, label) => {
-      return Math.max(max, Array.from(label).length * (directLabelFontSize * 0.65))
-    }, 0)
-    const extra = maxLabelWidth + 10
-    const side = directLabelPosition === "end" ? "right" : "left"
-    return {
-      ...resolved.marginDefaults,
-      [side]: Math.max(resolved.marginDefaults[side] || 0, extra),
-    }
-  }, [directLabel, directLabelLabelTexts, directLabelFontSize, directLabelPosition, resolved.marginDefaults])
 
   // Suppress legend when directLabel is active (unless explicitly overridden)
   const effectiveShowLegend = directLabel && showLegend === undefined ? false : showLegend
@@ -818,7 +780,7 @@ export const LineChart = forwardRef(
     showLegend: effectiveShowLegend,
     legend: additionalLegend,
     userMargin,
-    marginDefaults: directLabelMarginDefaults,
+    marginDefaults: resolved.marginDefaults,
     loading,
     loadingContent,
     emptyContent,
@@ -830,7 +792,9 @@ export const LineChart = forwardRef(
 
   // Aliases so the rest of the file reads naturally — the existing render
   // logic was written against locally-named bindings.
-  const colorScale = setup.colorScale
+  // Labels and marks share the discovered push domain and palette, including
+  // custom schemes that the static-data-only setup.colorScale cannot resolve.
+  const colorScale = setup.categoryColorScale
   const effectiveSelectionHook = setup.effectiveSelectionHook
   const resolvedSelection = setup.resolvedSelection
   const customHoverBehavior = setup.customHoverBehavior
@@ -921,17 +885,14 @@ export const LineChart = forwardRef(
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
 
-  // Direct labeling — prepare endpoint identities; the frame packs projected labels. The
-  // text-only pre-pass (`directLabelLabelTexts`) ran earlier so the margin
-  // estimate could feed into useChartSetup; this pass adds the colors
-  // from the resolved color scale.
+  // Prepare endpoint identities; the frame packs projected labels.
   const directLabelAnnotations = useMemo(() => {
     if (!directLabel || !effectiveColorBy) return []
     const request = {
       position: directLabelPosition,
       fontSize: directLabelFontSize,
       colorBy: effectiveColorBy,
-      color: (label: string) => colorScale ? colorScale(label) : DEFAULT_COLOR
+      color: (label: string) => colorScale?.(label) ?? DEFAULT_COLOR
     }
     if (data === undefined) return [{ type: "text", _directLabelRequest: request }]
     return buildDirectLabels(
@@ -947,7 +908,17 @@ export const LineChart = forwardRef(
   // `useChartLegendAndMargin` → `useLinkedChartCategories`. LineChart no
   // longer layers a separate `useStreamingLegend` call on top — setup
   // owns the full legend pipeline for both bounded and push modes.
-  const effectiveMargin = setup.margin
+  const effectiveMargin = useMemo(() => {
+    if (!directLabel) return setup.margin
+    const side = directLabelPosition === "end" ? "right" : "left"
+    // Grow the default rail from resolved endpoints or the frame's pushed
+    // categories. Explicit user margins still take precedence.
+    if (typeof userMargin === "number" || typeof userMargin?.[side] === "number") return setup.margin
+    const labels = data === undefined ? setup.allCategories : directLabelAnnotations.map(a => String(a.label))
+    const labelWidth = labels.reduce((max, label) =>
+      Math.max(max, Array.from(label).length * directLabelFontSize * 0.65), 0)
+    return { ...setup.margin, [side]: Math.max(setup.margin[side], labelWidth + 10) }
+  }, [data, directLabel, directLabelAnnotations, directLabelPosition, directLabelFontSize, userMargin, setup.margin, setup.allCategories])
 
   // Default tooltip showing all configured fields. `xFormat`/`yFormat`
   // cascade from the HOC so the tooltip values read the same way as the axis.

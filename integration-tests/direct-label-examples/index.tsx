@@ -1,7 +1,11 @@
-import React, { useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import { LineChart } from "../../dist/xy.module.min.js"
-import { ThemeProvider } from "../../dist/semiotic.module.min.js"
+import {
+  ThemeProvider,
+  CategoryColorProvider,
+  exportChart
+} from "../../dist/semiotic.module.min.js"
 import type { StreamXYFrameHandle } from "../../src/components/stream/types"
 
 const rows = (magnitude: number, count = 6) =>
@@ -9,6 +13,53 @@ const rows = (magnitude: number, count = 6) =>
     { x: 0, y: magnitude * 0.2, series: `Series ${i}` },
     { x: 1, y: magnitude * (0.93 + i * 0.01), series: `Series ${i}` }
   ]).flat()
+
+function PushDefaults({
+  position,
+  scheme
+}: {
+  position: "start" | "end"
+  scheme?: string | string[] | Record<string, string>
+}) {
+  const ref = useRef<StreamXYFrameHandle>(null)
+  const container = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    ref.current?.pushMany(rows(1))
+  }, [])
+  return (
+    <div ref={container}>
+      <button
+        onClick={() =>
+          ref.current?.pushMany([
+            { x: 0, y: 0.5, series: "A newly discovered longer category" },
+            { x: 1, y: 0.6, series: "A newly discovered longer category" }
+          ])
+        }
+      >
+        Push longer category
+      </button>
+      <button
+        onClick={() => exportChart(container.current!, { format: "svg" })}
+      >
+        Export SVG
+      </button>
+      <button
+        onClick={() => exportChart(container.current!, { format: "png" })}
+      >
+        Export PNG
+      </button>
+      <LineChart
+        ref={ref}
+        width={700}
+        height={320}
+        lineBy="series"
+        colorScheme={scheme}
+        directLabel={{ position }}
+        title="Automatic push labels"
+      />
+    </div>
+  )
+}
 
 function App() {
   const [compact, setCompact] = useState(false)
@@ -72,7 +123,43 @@ function App() {
           />
         </section>
         <section data-testid="push">
-          <LineChart {...frame} ref={ref} title="Push updates" />
+          <LineChart
+            {...frame}
+            margin={undefined}
+            ref={ref}
+            title="Push updates"
+          />
+        </section>
+        {(["start", "end"] as const).map((position) => (
+          <section key={position} data-testid={`push-default-${position}`}>
+            <PushDefaults position={position} />
+          </section>
+        ))}
+        <section data-testid="push-scheme">
+          <PushDefaults
+            position="end"
+            scheme={["#112233", "#445566", "#778899"]}
+          />
+        </section>
+        <section data-testid="push-color-map">
+          <PushDefaults
+            position="end"
+            scheme={{ "Series 0": "#abcdef", "Series 1": "#fedcba" }}
+          />
+        </section>
+        <section data-testid="push-theme">
+          <ThemeProvider
+            theme={{ colors: { categorical: ["#cc2244", "#2244cc"] } }}
+          >
+            <PushDefaults position="start" />
+          </ThemeProvider>
+        </section>
+        <section data-testid="push-provider">
+          <CategoryColorProvider
+            colors={{ "Series 0": "#22aa66", "Series 1": "#aa2266" }}
+          >
+            <PushDefaults position="end" scheme={["#112233", "#445566"]} />
+          </CategoryColorProvider>
         </section>
         <section
           data-testid="colliding-axis"

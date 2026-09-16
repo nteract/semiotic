@@ -193,6 +193,14 @@ async function createSharedEsmGroup({
       clientOnly,
       entryNames: names
     }),
+    // Function cloning across shared chart chunks can retain unused HOCs in
+    // downstream consumers. Preserve those helpers for consumer tree shaking.
+    ...(groupName === "client-primary" ? {
+      terserOptions: {
+        ...terserOptions,
+        compress: { ...terserOptions.compress, reduce_funcs: false }
+      }
+    } : {}),
     entry: entries,
     name: `${groupName}:esm`,
     format: "esm",
@@ -210,6 +218,10 @@ async function createSharedEsmGroup({
       // Fold syntax while the full module graph is visible. Terser runs on
       // individual output chunks and cannot optimize across those boundaries.
       esbuildOptions.minifySyntax = minify
+      // Only esbuild sees both ends of private cross-chunk exports. Terser
+      // cannot shorten those names when it minifies each chunk separately.
+      // Public entry exports retain their documented names.
+      esbuildOptions.minifyIdentifiers = minify
       esbuildOptions.entryNames = "[name].module.min"
       // Private filenames do not need a descriptive basename: the content
       // hash is their cache identity, and shorter specifiers recur throughout
@@ -1481,10 +1493,20 @@ async function build() {
     esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin()]
   })
   await createSharedEsmGroup({
-    entries: serverEntries,
+    entries: Object.fromEntries(
+      Object.entries(serverEntries).filter(([name]) => name !== "semiotic-ai-core")
+    ),
     minify,
     serverOnly: true,
     groupName: "server"
+  })
+  // AI tooling otherwise widens shared renderer chunks with contract helpers.
+  // Recipe and intent registries coordinate separate entries through global keys.
+  await createSharedEsmGroup({
+    entries: { "semiotic-ai-core": serverEntries["semiotic-ai-core"] },
+    minify,
+    serverOnly: true,
+    groupName: "ai-core"
   })
   // Node can resolve the public edge entry while running package smoke tests
   // or universal build tooling. Keep that condition on the Node renderer so
