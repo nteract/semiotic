@@ -1,3 +1,6 @@
+import type { LabelMeasurer } from "../text/labelMeasurement"
+import { renderDirectLabels } from "../charts/shared/DirectLabelLayer"
+import type { LabelLayoutEvidence } from "../text/labelPlacement"
 import { ThresholdAnnotation } from "../charts/shared/ThresholdAnnotation"
 import { renderThresholdEndCap } from "../charts/shared/ThresholdEndCap"
 import { annotationNote } from "../text/annotationTextLayout"
@@ -84,6 +87,9 @@ interface AnnotationLayout {
 
 export interface StaticAnnotationConfig {
   annotations?: Datum[]
+  margin?: { left: number; right: number }
+  /** Optional renderer-owned metrics; omitted metrics remain explicitly estimated. */
+  labelMeasurer?: LabelMeasurer
   autoPlaceAnnotations?: AutoPlaceAnnotations
   scales: AnnotationScales
   layout: AnnotationLayout
@@ -127,6 +133,7 @@ export interface StaticAnnotationConfig {
 
 /** Annotation accounting emitted by {@link renderStaticAnnotations}. */
 export interface StaticAnnotationRenderResult {
+  layout?: LabelLayoutEvidence
   /** Entries requested by the caller, including lifecycle-hidden entries. */
   inputCount: number
   /** Entries that survived lifecycle filtering and reached the dispatch pass. */
@@ -204,7 +211,8 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   }
   // Match describeChart/nav tree: hide retracted & superseded notes by default
   // so SSR/MCP SVG does not paint editorial dead weight the text layers omit.
-  const filtered = filterAnnotationsByStatus(rawAnnotations)
+
+  const filtered = filterAnnotationsByStatus(rawAnnotations).filter(a => !a._directLabel)
 
   // Mirror GeoSVGOverlay: when a geo projection is available, project
   // `coordinates: [lon, lat]` onto pixel `x`/`y` *before* custom rules run so
@@ -296,6 +304,13 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     ...(projection ? { projection } : {}),
   }
 
+  const directLabels = renderDirectLabels(rawAnnotations, {
+    ...config.layout, scales: config.scales, margin: config.margin,
+    fontFamily: config.theme.typography.fontFamily, measure: config.labelMeasurer,
+    ...(config.svgAnnotationRules ? { renderLabel: (ann, i, fallback) =>
+      config.svgAnnotationRules!(ann, i, annotationContext) ?? fallback } : {})
+  })
+
   const layoutAnnotations = config.autoPlaceAnnotations
     ? annotationLayout({
         annotations,
@@ -316,7 +331,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     config.svgAnnotationRules,
     annotationContext,
   )
-  const elements = pass.nodes
+  const elements = directLabels.node ? [...pass.nodes, directLabels.node] : pass.nodes
 
   // Keep a type-level account of requested annotations which did not turn into
   // SVG. This includes lifecycle-hidden and coordinate-invalid annotations;
@@ -327,6 +342,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     const type = typeof annotation.type === "string" ? annotation.type : "unknown"
     renderedByType.set(type, (renderedByType.get(type) ?? 0) + 1)
   }
+  if (directLabels.evidence) renderedByType.set("text", (renderedByType.get("text") ?? 0) + directLabels.evidence.rendered)
   const unrenderedTypes: string[] = []
   for (const annotation of rawAnnotations) {
     const type = typeof annotation.type === "string" ? annotation.type : "unknown"
@@ -337,7 +353,8 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   config.onRender?.({
     inputCount: rawAnnotations.length,
     eligibleCount: layoutAnnotations.length,
-    renderedCount: pass.renderedAnnotations.length,
+    renderedCount: pass.renderedAnnotations.length + (directLabels.evidence?.rendered ?? 0),
+    ...(directLabels.evidence ? { layout: directLabels.evidence } : {}),
     unrenderedCount: unrenderedTypes.length,
     unrenderedTypes,
   })

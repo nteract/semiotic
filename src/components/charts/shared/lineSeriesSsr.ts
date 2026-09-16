@@ -10,6 +10,7 @@
  * Client uses lazy dynamic import + React state for these; SSR can call
  * the pure statisticalOverlays entry points synchronously.
  */
+import { directLabelAnnotations } from "./directLabels"
 import type { Datum } from "./datumTypes"
 import {
   buildAnomalyAnnotations,
@@ -19,7 +20,7 @@ import {
   type AnomalyConfig,
   type ForecastConfig,
 } from "./statisticalOverlays"
-import { createColorScale, DEFAULT_COLOR, getColor } from "./colorUtils"
+import { createColorScale, DEFAULT_COLOR } from "./colorUtils"
 import { filterSparseArray } from "./sparseArray"
 
 const RESOLVED_X_KEY = "__semiotic_resolvedX"
@@ -217,57 +218,17 @@ function buildDirectLabelAnnotations(
   const cfg = typeof directLabel === "object" ? directLabel : {}
   const position = cfg.position || "end"
   const fontSize = cfg.fontSize || 11
-  const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy as string]
+  const colorAcc = typeof colorBy === "function" ? colorBy : (d: Datum) => d[colorBy]
+  const colorScale = createColorScale(rows.map(d => ({ __lbl: String(colorAcc(d) ?? "") })), "__lbl",
+    (colorScheme ?? themeCategorical) as string | string[] | Record<string, string>)
 
-  // Group by color key, pick endpoint.
-  const groups = new Map<string, Datum[]>()
-  for (const d of rows) {
-    const raw = colorAcc(d)
-    if (raw == null) continue
-    const label = String(raw)
-    if (label === "") continue
-    if (!groups.has(label)) groups.set(label, [])
-    groups.get(label)!.push(d)
-  }
-
-  // Sort each group by x for endpoint selection.
-  const endpoints = new Map<string, Datum>()
-  for (const [label, pts] of groups) {
-    pts.sort((a, b) => Number(a[xKey]) - Number(b[xKey]))
-    endpoints.set(label, position === "end" ? pts[pts.length - 1] : pts[0])
-  }
-
-  const colorScale = createColorScale(
-    Array.from(endpoints.entries()).map(([label]) => ({ __lbl: label })),
-    "__lbl",
-    (colorScheme ?? themeCategorical) as string | string[] | Record<string, string>,
-  )
-
-  const labels = Array.from(endpoints.entries()).map(([label, d]) => ({
-    type: "text" as const,
-    label,
-    [xKey]: d[xKey],
-    [yKey]: d[yKey],
-    dx: position === "end" ? 6 : -6,
-    dy: 0,
-    color: colorScale ? getColor({ __lbl: label }, "__lbl", colorScale) : (color || DEFAULT_COLOR),
-    fontSize,
-  }))
-
-  // Vertical collision avoidance (data-space dy offsets — matches HOC).
-  labels.sort((a, b) => Number(a[yKey]) - Number(b[yKey]))
-  for (let i = 1; i < labels.length; i++) {
-    const prev = labels[i - 1]
-    const curr = labels[i]
-    const prevY = Number(prev[yKey]) + prev.dy
-    const currY = Number(curr[yKey]) + curr.dy
-    if (Math.abs(currY - prevY) < fontSize + 2) {
-      curr.dy += fontSize + 2
-    }
-  }
+  const labels = directLabelAnnotations(rows, {
+    position, fontSize, colorBy,
+    color: label => colorScale ? colorScale(label) : (color || DEFAULT_COLOR)
+  }, xKey, yKey)
 
   const maxLabelWidth = labels.reduce(
-    (max, l) => Math.max(max, String(l.label).length * (fontSize * 0.6)),
+    (max, l) => Math.max(max, Array.from(String(l.label)).length * (fontSize * 0.65)),
     0,
   )
   const extra = maxLabelWidth + 10

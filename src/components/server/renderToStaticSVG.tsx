@@ -51,7 +51,6 @@ import {
   renderPhysicsFrame,
   type StaticPhysicsFrameProps
 } from "./staticPhysics"
-import type { SharpFactory, SharpModule } from "./optionalImageTypes"
 import {
   renderValueChart,
   VALUE_RENDERERS,
@@ -608,7 +607,7 @@ export async function renderToImage(
   props: Datum,
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
-  const { format = "png", scale = 1, background } = options
+  const { background } = options
 
   // Generate SVG
   let svg: string
@@ -631,42 +630,14 @@ export async function renderToImage(
     })
   }
 
-  // Load sharp dynamically — optional dep, loaded at call time only.
-  // The variable specifier defeats static bundler resolution so sharp stays
-  // out of edge/browser-oriented server bundles until this Node-only raster
-  // export path is actually called.
-  let sharp: SharpFactory
-  try {
-    const moduleName = "sharp"
-    const sharpModule: SharpModule = await import(moduleName)
-    sharp = sharpModule.default ?? sharpModule
-  } catch {
-    throw new Error(
-      `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +
-        `  npm install sharp\n` +
-        `sharp is listed as an optional dependency of semiotic.`
-    )
-  }
-
   const requestedDimensions = {
     width: props.width || props.size?.[0] || 600,
     height: props.height || props.size?.[1] || 400
   }
   const { width, height } = renderedSvgDimensions(svg, requestedDimensions)
 
-  const svgBuffer =
-    typeof globalThis.Buffer !== "undefined"
-      ? globalThis.Buffer.from(svg)
-      : new TextEncoder().encode(svg)
-  const pipeline = sharp(svgBuffer, { density: 72 * scale }).resize(
-    Math.round(width * scale),
-    Math.round(height * scale)
-  )
-
-  if (format === "jpeg") {
-    return pipeline.jpeg({ quality: 90 }).toBuffer()
-  }
-  return pipeline.png().toBuffer()
+  const { rasterizeSVG } = await import("./rasterizeSVG")
+  return rasterizeSVG(svg, width, height, options)
 }
 
 export function renderDashboard(

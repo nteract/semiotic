@@ -1,4 +1,5 @@
 "use client"
+import { directLabelAnnotations as buildDirectLabels } from "../shared/directLabels"
 import { selectionDatumWithParent } from "../../store/selectionProvenance"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
@@ -775,7 +776,7 @@ export const LineChart = forwardRef(
   const directLabelMarginDefaults = useMemo(() => {
     if (!directLabel) return resolved.marginDefaults
     const maxLabelWidth = directLabelLabelTexts.reduce((max, label) => {
-      return Math.max(max, label.length * (directLabelFontSize * 0.6))
+      return Math.max(max, Array.from(label).length * (directLabelFontSize * 0.65))
     }, 0)
     const extra = maxLabelWidth + 10
     const side = directLabelPosition === "end" ? "right" : "left"
@@ -920,63 +921,24 @@ export const LineChart = forwardRef(
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
 
-  // Direct labeling — generate full annotations at line endpoints. The
+  // Direct labeling — prepare endpoint identities; the frame packs projected labels. The
   // text-only pre-pass (`directLabelLabelTexts`) ran earlier so the margin
   // estimate could feed into useChartSetup; this pass adds the colors
   // from the resolved color scale.
   const directLabelAnnotations = useMemo(() => {
     if (!directLabel || !effectiveColorBy) return []
-    const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
-    const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
-    const colorAcc = typeof effectiveColorBy === "function" ? effectiveColorBy : (d: Datum) => d[effectiveColorBy as string]
-
-    // Get the endpoint of each line (by group). Mirror the null-aware
-    // logic in `directLabelLabelTexts` so a `0`/`false` category value
-    // still gets an annotation rather than being silently dropped.
-    const groupEndpoints = new Map<string, Datum>()
-    for (const line of gapProcessedLineData) {
-      const coords: Datum[] = line[lineDataAccessor] || []
-      if (coords.length === 0) continue
-      const endpoint = directLabelPosition === "end" ? coords[coords.length - 1] : coords[0]
-      const raw = colorAcc(endpoint) ?? colorAcc(line)
-      if (raw == null) continue
-      const label = String(raw)
-      if (label !== "" && !groupEndpoints.has(label)) {
-        groupEndpoints.set(label, endpoint)
-      }
+    const request = {
+      position: directLabelPosition,
+      fontSize: directLabelFontSize,
+      colorBy: effectiveColorBy,
+      color: (label: string) => colorScale ? colorScale(label) : DEFAULT_COLOR
     }
-
-    // Build text annotations at endpoints with simple collision avoidance
-    const labels = Array.from(groupEndpoints.entries())
-      .map(([label, d]) => ({
-        type: "text" as const,
-        label,
-        [typeof xAccessor === "string" ? xAccessor : "x"]: xAcc(d),
-        [typeof yAccessor === "string" ? yAccessor : "y"]: yAcc(d),
-        dx: directLabelPosition === "end" ? 6 : -6,
-        dy: 0,
-        color: colorScale ? colorScale(label) : DEFAULT_COLOR,
-        fontSize: directLabelFontSize,
-      }))
-
-    // Simple vertical collision avoidance: offset labels that are too close
-    labels.sort((a, b) => {
-      const yField = typeof yAccessor === "string" ? yAccessor : "y"
-      return (a[yField] as number) - (b[yField] as number)
-    })
-    for (let i = 1; i < labels.length; i++) {
-      const yField = typeof yAccessor === "string" ? yAccessor : "y"
-      const prev = labels[i - 1]
-      const curr = labels[i]
-      const prevY = prev[yField] as number + prev.dy
-      const currY = curr[yField] as number + curr.dy
-      if (Math.abs(currY - prevY) < directLabelFontSize + 2) {
-        curr.dy += directLabelFontSize + 2
-      }
-    }
-
-    return labels
-  }, [directLabel, effectiveColorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
+    if (data === undefined) return [{ type: "text", _directLabelRequest: request }]
+    return buildDirectLabels(
+      gapProcessedLineData.flatMap(line => (line[lineDataAccessor] || []).map((d: Datum) => ({ ...d, parentLine: d.parentLine || line }))),
+      request, xAccessor, yAccessor
+    )
+  }, [data, directLabel, effectiveColorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
 
   // `useChartSetup` now synthesizes the push-mode legend (using the
   // same provider → scheme → theme → STREAMING_PALETTE precedence the

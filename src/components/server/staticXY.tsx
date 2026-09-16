@@ -1,3 +1,4 @@
+import { directLabelDescription } from "../charts/shared/directLabels"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
@@ -201,6 +202,9 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     store.scales
   )
 
+  const labelDescription = directLabelDescription(props.annotations)
+  const description = labelDescription ? `${props.description || props.title || "Line chart."}${labelDescription}` : props.description
+
   if (!store.scales) {
     let annotationRender: StaticAnnotationRenderResult | undefined
     const annotationNodes = props.annotations ? renderStaticAnnotations({
@@ -219,7 +223,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         frameType: "xy",
         width: size[0], height: size[1],
         marks: [],
-        title: props.title, description: props.description,
+        title: props.title, description,
         annotations: props.annotations,
         annotationRender,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
@@ -239,7 +243,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description, background: props.background,
+        title: props.title, description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
         legend,
@@ -299,6 +303,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   let annotationRender: StaticAnnotationRenderResult | undefined
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
+    margin,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
     svgAnnotationRules: props.svgAnnotationRules,
     annotationData: data,
@@ -316,7 +321,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       frameType: "xy",
       width: size[0], height: size[1],
       marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
+      title: props.title, description,
       annotations: props.annotations,
       annotationRender,
       xDomain: numericDomain(store.scales.x?.domain?.()),
@@ -365,7 +370,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description, background: props.background,
+      title: props.title, description, background: props.background,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth: width, innerHeight: height,
       legend,

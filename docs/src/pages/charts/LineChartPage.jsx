@@ -10,6 +10,7 @@ import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import Tabs from "../../components/Tabs"
+import DirectLabelsDemo from "../../examples/DirectLabelsDemo"
 import { Link } from "react-router-dom"
 
 // ---------------------------------------------------------------------------
@@ -323,7 +324,7 @@ const lineChartProps = [
   },
   {
     name: "directLabel",
-    type: "boolean",
+    type: 'boolean | { position?: "start" | "end", fontSize?: number }',
     required: false,
     default: "false",
     description:
@@ -963,34 +964,27 @@ export default function LineChartPage() {
       <h2 id="direct-label">Direct Labels</h2>
 
       <p>
-        Instead of a separate legend, <code>directLabel</code> places category names at the end of
-        each line. This follows the data visualization best practice of labeling data directly when
-        space allows. The legend is auto-hidden when direct labels are active.
+        Label each series where the reader is already looking. Enable
+        <code> directLabel</code> to place category names beside the first or
+        last point of each line, with spacing that adapts to the chart size.
       </p>
 
-      <LiveExample
-        frameProps={{
-          data: multiLineData,
-          xAccessor: "month",
-          yAccessor: "revenue",
-          lineBy: "product",
-          colorBy: "product",
-          directLabel: true,
-          xLabel: "Month",
-          yLabel: "Revenue ($)",
-        }}
-        type={LineChart}
-        overrideProps={{
-          data: `[
-  { month: 1, revenue: 12000, product: "Widget" },
-  { month: 1, revenue: 8000, product: "Gadget" },
-  { month: 1, revenue: 5000, product: "Doohickey" },
-  // ...data with product field
-]`,
-          directLabel: "true",
-        }}
-        hiddenProps={{}}
-      />
+      <DirectLabelsDemo />
+
+      <h3 id="direct-label-evidence">Server rendering and layout evidence</h3>
+      <p>
+        Server rendering uses the same placement rules with estimated text
+        measurements. The browser measures the loaded font and updates placement
+        after font loading and resizing. Custom annotation offsets are preserved.
+      </p>
+      <p>
+        For generated charts, <code>renderChartWithEvidence</code> reports
+        requested, rendered, displaced, and omitted counts in
+        <code> evidence.layout</code>, with reason codes and suggested remedies.
+        Estimated text measurements make the assessment incomplete. Axis collision
+        assessment covers browser SVG ticks on charts with direct labels;
+        server axis geometry remains unassessed.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Empty & Loading States */}
