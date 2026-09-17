@@ -6,7 +6,7 @@
     "packageVersion": "3.10.1",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "d5a708b29f49e11064b47f8d08e6a80274ff486a663368be7e5ba36f4412d5a1",
+    "revision": "357e5a2d38c56708c6bbb5379ca5d52a6fa59cdb79b8cf3af9f7a461e619d729",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -165,7 +165,7 @@
     {
       "path": "README.md",
       "bytes": 43335,
-      "sha256": "5674881abb6314cfe8dc8e86aa33241fb2e30c9604cd13a3c84b6b0e684ab4c4"
+      "sha256": "a290458a9ed44a2ccf2492ea0b339b06bac133ea864ca15e8fab5b157cbc8822"
     },
     {
       "path": "agent-skill/semiotic-charts/SKILL.md",
@@ -200,7 +200,7 @@
     {
       "path": "ai/reference.md",
       "bytes": 129048,
-      "sha256": "2e322c497dd1bbc4ecf70801525f129adc75fe83134d347739ead1be08d58c77"
+      "sha256": "0c13e3b9135e0356f090a26c241e20c68196ce85fafabcdd42e989b1ec5d712f"
     },
     {
       "path": "ai/schema.json",
