@@ -264,6 +264,7 @@ export function buildStackedAreaNodes(
     let rawValues: number[] = []
     let datums: Datum[] = []
     let accessibleDatums: Datum[] = []
+    let pathIds: string[] | undefined = getPointId ? [] : undefined
     let needsSort = false
 
     const flushSegment = () => {
@@ -291,8 +292,10 @@ export function buildStackedAreaNodes(
             : accessibleDatums,
           group: g.key
         }
-        if (getPointId) {
-          areaNode.pathIds = stackedDatums.map((row) => String(getPointId(row)))
+        if (pathIds) {
+          areaNode.pathIds = order
+            ? order.map((index) => pathIds![index])
+            : pathIds
         }
         if (curve) areaNode.curve = curve
         nodes.push(areaNode)
@@ -302,6 +305,7 @@ export function buildStackedAreaNodes(
       rawValues = []
       datums = []
       accessibleDatums = []
+      pathIds = getPointId ? [] : undefined
       needsSort = false
     }
 
@@ -370,6 +374,11 @@ export function buildStackedAreaNodes(
       bottomPath.push([px, bottomY])
       datums.push(datum)
       rawValues.push(aggregate)
+      if (pathIds) {
+        // Stack cells are (group, x), not the first contributing row. Key by x
+        // so evicting a duplicate at the same x keeps the vertex retained.
+        pathIds.push(`x:${x}`)
+      }
       // An aggregate is not one arbitrarily selected source row.
       accessibleDatums.push(
         !sources

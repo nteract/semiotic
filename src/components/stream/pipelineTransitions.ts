@@ -357,7 +357,10 @@ export function startTransition(
               node.path,
               nextIds
             )
-            if (pathMoved(joined.prev, joined.target)) {
+            if (
+              pathMoved(joined.prev, joined.target) ||
+              node._introClipFraction !== undefined
+            ) {
               node._targetPath = joined.target
               node._prevPath = joined.prev
               node.path = joined.prev.map(copyPathPoint)
@@ -396,7 +399,8 @@ export function startTransition(
             )
             if (
               pathMoved(joinedTop.prev, joinedTop.target) ||
-              pathMoved(joinedBottom.prev, joinedBottom.target)
+              pathMoved(joinedBottom.prev, joinedBottom.target) ||
+              node._introClipFraction !== undefined
             ) {
               node._targetTopPath = joinedTop.target
               node._targetBottomPath = joinedBottom.target

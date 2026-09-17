@@ -100,6 +100,25 @@ describe("PipelineStore.cancelIntroAnimation", () => {
     }
   })
 
+  it("still installs intro clip when pointIdAccessor keys an unchanged path", () => {
+    const store = new PipelineStore(makeXYConfig({
+      chartType: "line",
+      xAccessor: "x",
+      yAccessor: "y",
+      pointIdAccessor: "id",
+      transition: { duration: 300, easing: "ease-out" },
+      introAnimation: true,
+    }))
+    store.ingest({
+      inserts: [{ id: "a", x: 0, y: 1 }, { id: "b", x: 1, y: 2 }, { id: "c", x: 2, y: 3 }],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(store.activeTransition).not.toBeNull()
+    const line = store.scene.find((n) => n.type === "line")
+    expect(line && line.type === "line" ? line._introClipFraction : undefined).toBe(0)
+  })
+
   it("is idempotent — calling twice is a no-op", () => {
     const store = new PipelineStore(makeXYConfig({
       chartType: "line",

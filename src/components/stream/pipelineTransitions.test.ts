@@ -16,7 +16,7 @@ import {
   type PrevPath,
   type TransitionState,
 } from "./pipelineTransitions"
-import type { CandlestickSceneNode, GlyphSceneNode, LineSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
+import type { AreaSceneNode, CandlestickSceneNode, GlyphSceneNode, LineSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
 import type { GlyphDef } from "./glyphDef"
 
 const ctx: TransitionContext = {
@@ -602,5 +602,45 @@ describe("pipelineTransitions — keyed line path join", () => {
 
     expect(next.path[0]).toEqual([0, 10])
     expect(next._targetPath?.[0]).toEqual([0, 20])
+  })
+
+  it("schedules an intro transition when keyed path coordinates are unchanged", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    const intro = makeLine({ _introClipFraction: 0 })
+    snapshotPositions(ctx, [intro], prevPos, prevPath)
+
+    const next = makeLine({ _introClipFraction: 0 })
+    const state = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(state.activeTransition).not.toBeNull()
+    expect(next._introClipFraction).toBe(0)
+    const startTime = state.activeTransition!.startTime
+    advanceTransition(startTime + 150, transition, state, prevPos, prevPath)
+    expect(next._introClipFraction).toBeGreaterThan(0)
+    expect(next._introClipFraction).toBeLessThan(1)
+  })
+
+  it("schedules an intro transition for keyed areas with unchanged coordinates", () => {
+    const makeArea = (): AreaSceneNode => ({
+      type: "area",
+      topPath: [[0, 10], [10, 20], [20, 30]],
+      bottomPath: [[0, 50], [10, 50], [20, 50]],
+      pathIds: ["a", "b", "c"],
+      style: { fill: "#000", opacity: 1 },
+      datum: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      group: "series",
+      _introClipFraction: 0,
+    })
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeArea()], prevPos, prevPath)
+    const next = makeArea()
+    const state = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+    expect(state.activeTransition).not.toBeNull()
+    advanceTransition(state.activeTransition!.startTime + 150, transition, state, prevPos, prevPath)
+    expect(next._introClipFraction).toBeGreaterThan(0)
   })
 })
