@@ -46,9 +46,15 @@ export interface AggregateConfig {
   sigma?: number
   /** Keep at most this many most-recent windows. @default unbounded */
   retain?: number
-  /** Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). */
+  /**
+   * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Structural:
+   * changing this rebuilds the accumulator (same as `window` / `size`).
+   */
   percentiles?: ReadonlyArray<number>
-  /** Track an approximate distinct count per window. */
+  /**
+   * Track an approximate distinct count per window. Structural: changing
+   * this rebuilds the accumulator.
+   */
   distinct?: boolean
 }
 

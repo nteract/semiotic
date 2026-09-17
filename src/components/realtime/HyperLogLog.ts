@@ -1,6 +1,6 @@
 /**
  * HyperLogLog distinct-count sketch. Per-window memory is a fixed
- * register file (default 256 bytes of state at p=8), so a dashboard can
+ * register file (default p=10, 1024 registers), so a dashboard can
  * ask "how many distinct customers in this minute?" without retaining ids.
  */
 
@@ -12,6 +12,12 @@ function fnv1a(value: string): number {
     hash ^= value.charCodeAt(i)
     hash = Math.imul(hash, 16777619)
   }
+  // Avalanche so nearby strings do not share high bits used for the register.
+  hash ^= hash >>> 16
+  hash = Math.imul(hash, 0x7feb352d)
+  hash ^= hash >>> 15
+  hash = Math.imul(hash, 0x846ca68b)
+  hash ^= hash >>> 16
   return hash >>> 0
 }
 
@@ -37,7 +43,9 @@ export class HyperLogLog {
 
   add(value: string | number): void {
     const hash = fnv1a(String(value))
-    const idx = hash & (this.m - 1)
+    // High p bits select the register; rho() left-shifts those bits off
+    // and counts leading zeros in the remaining low 32-p bits.
+    const idx = hash >>> (32 - this.p)
     const rank = rho(hash, this.p)
     if (rank > this.registers[idx]) this.registers[idx] = rank
   }

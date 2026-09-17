@@ -4821,27 +4821,27 @@ function createServer(
     groundChartHandler
   )
 
+  const streamSchemaInput = z.object({
+    fields: z.array(
+      z.object({
+        name: z.string(),
+        kind: z.enum(["numeric", "categorical", "date", "boolean"]),
+        role: z
+          .enum(["x", "y", "value", "category", "series", "size", "key"])
+          .optional()
+      })
+    ),
+    throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
+    retention: z.enum(["windowed", "cumulative"]).optional(),
+    shape: z.enum(["append", "keyed", "aggregate"]).optional(),
+    keyFields: z.array(z.string()).optional()
+  })
+
   srv.tool(
     "suggestStreamCharts",
     "Recommend streaming Semiotic charts for a schema (not row data). Pass fields plus optional throughput (band or rows/sec), retention, shape ('append'|'keyed'|'aggregate'), and keyFields. Ranks realtime XY charts plus push-capable ordinal/value charts (BarChart, PieChart, BigNumber, GaugeChart, …). Returns suggestions, excluded fits-reasons, and optional stretch picks when audience is set.",
     {
-      schema: z
-        .object({
-          fields: z.array(
-            z.object({
-              name: z.string(),
-              kind: z.enum(["numeric", "categorical", "date", "boolean"]),
-              role: z
-                .enum(["x", "y", "value", "category", "series", "size", "key"])
-                .optional()
-            })
-          ),
-          throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
-          retention: z.enum(["windowed", "cumulative"]).optional(),
-          shape: z.enum(["append", "keyed", "aggregate"]).optional(),
-          keyFields: z.array(z.string()).optional()
-        })
-        .describe(
+      schema: streamSchemaInput.describe(
           "Stream schema — fields plus throughput/retention/shape hints. No row data."
         ),
       intent: z
@@ -4860,22 +4860,8 @@ function createServer(
     "Compose a multi-panel dashboard from one or more stream schemas. Honors AudienceProfile.dashboard layout policy (cellBudget, leadFamilies, windowPreference).",
     {
       schemas: z.union([
-        z.object({
-          fields: z.array(
-            z.object({
-              name: z.string(),
-              kind: z.enum(["numeric", "categorical", "date", "boolean"]),
-              role: z
-                .enum(["x", "y", "value", "category", "series", "size", "key"])
-                .optional()
-            })
-          ),
-          throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
-          retention: z.enum(["windowed", "cumulative"]).optional(),
-          shape: z.enum(["append", "keyed", "aggregate"]).optional(),
-          keyFields: z.array(z.string()).optional()
-        }),
-        z.array(z.record(z.string(), z.unknown()))
+        streamSchemaInput,
+        z.array(streamSchemaInput).min(1)
       ]),
       intent: z.union([z.string(), z.array(z.string())]).optional(),
       budget: z.number().int().min(1).max(12).optional(),

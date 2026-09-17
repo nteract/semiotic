@@ -212,6 +212,37 @@ describe("RealtimeLineChart — aggregate mode", () => {
     ])
   })
 
+  it("rebuilds the accumulator when percentiles or distinct become structural", async () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const chart = (aggregate: { size: number; percentiles?: number[]; distinct?: boolean }) => (
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          aggregate={aggregate}
+        />
+      </TooltipProvider>
+    )
+    const { rerender } = render(chart({ size: 10 }))
+    act(() => {
+      ref.current!.pushMany([
+        { t: 1, v: 10 },
+        { t: 5, v: 20 }
+      ])
+    })
+    expect(ref.current!.getData()).toHaveLength(1)
+
+    rerender(chart({ size: 10, percentiles: [0.95] }))
+    await waitFor(() => expect(ref.current!.getData()).toEqual([]))
+
+    act(() => ref.current!.push({ t: 4, v: 8 }))
+    expect(ref.current!.getData()).toHaveLength(1)
+
+    rerender(chart({ size: 10, percentiles: [0.95], distinct: true }))
+    await waitFor(() => expect(ref.current!.getData()).toEqual([]))
+  })
+
   it("renders aggregated rows into the canvas scene", async () => {
     const ref = React.createRef<RealtimeFrameHandle>()
     const { container } = render(

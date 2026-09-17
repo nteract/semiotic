@@ -53,4 +53,17 @@ describe("suggestStreamDashboard", () => {
     expect(dashboard.panels).toHaveLength(1)
     expect(dashboard.intentsMissing.length).toBeGreaterThan(0)
   })
+
+  it("ranks across every schema and records schemaIndex on each panel", () => {
+    const dashboard = suggestStreamDashboard([latencyStream, keyedBrandStream], {
+      budget: 4,
+    })
+    expect(dashboard.schemas).toHaveLength(2)
+    expect(dashboard.panels.some((panel) => panel.schemaIndex === 0)).toBe(true)
+    expect(dashboard.panels.some((panel) => panel.schemaIndex === 1)).toBe(true)
+    const keyedPanel = dashboard.panels.find((panel) => panel.schemaIndex === 1)
+    expect(keyedPanel?.suggestion.props.categoryAccessor).toBe("brand")
+    const livePanel = dashboard.panels.find((panel) => panel.schemaIndex === 0)
+    expect(livePanel?.suggestion.props.timeAccessor).toBe("ts")
+  })
 })

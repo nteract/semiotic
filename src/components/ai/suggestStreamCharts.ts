@@ -114,6 +114,8 @@ export interface StreamStretchSuggestion {
   replacing?: string
   rationale: string
   familiarity: number
+  /** Set by `suggestStreamDashboard` to bind the stretch to a schema. */
+  schemaIndex?: number
 }
 
 export interface SuggestStreamChartsResult {

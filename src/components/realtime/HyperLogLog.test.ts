@@ -6,8 +6,8 @@ describe("HyperLogLog", () => {
     const hll = new HyperLogLog()
     for (let i = 0; i < 1000; i++) hll.add(`user-${i}`)
     const estimate = hll.count()
-    expect(estimate).toBeGreaterThan(700)
-    expect(estimate).toBeLessThan(1400)
+    expect(estimate).toBeGreaterThan(850)
+    expect(estimate).toBeLessThan(1150)
   })
 
   it("merges sketches", () => {

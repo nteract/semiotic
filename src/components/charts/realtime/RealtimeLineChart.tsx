@@ -283,14 +283,17 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
 
   // Identity key for the structural config — rebuilding the accumulator is
   // only required when the windowing itself changes (not stat/band/sigma,
-  // which are re-derived on emit).
+  // which are re-derived on emit). Percentiles and distinct own extra
+  // per-bucket state, so they are structural too.
   const aggKey = aggEnabled
     ? [
         aggregate!.window ?? "tumbling",
         aggregate!.size,
         aggregate!.hop ?? "",
         aggregate!.gap ?? "",
-        aggregate!.retain ?? ""
+        aggregate!.retain ?? "",
+        (aggregate!.percentiles ?? []).join(","),
+        aggregate!.distinct === true ? "1" : "0"
       ].join("|")
     : ""
 

@@ -17,13 +17,17 @@ export function isIdLikeFieldName(name: string): boolean {
   return ID_EXACT.test(name) || ID_SUFFIX.test(name)
 }
 
+function schemaFields(schema: StreamSchema): ReadonlyArray<StreamFieldSchema> {
+  return schema.fields ?? []
+}
+
 /** Identity columns: explicit `keyFields` unioned with `role: "key"`. */
 export function streamKeyFields(schema: StreamSchema): string[] {
   const keys = new Set<string>()
   for (const name of schema.keyFields ?? []) {
     if (typeof name === "string" && name.length > 0) keys.add(name)
   }
-  for (const field of schema.fields) {
+  for (const field of schemaFields(schema)) {
     if (field.role === "key") keys.add(field.name)
   }
   return Array.from(keys)
@@ -60,23 +64,25 @@ function isKeyField(field: StreamFieldSchema, keyNames: ReadonlySet<string>): bo
 }
 
 export function pickTimeField(schema: StreamSchema): StreamFieldSchema | undefined {
+  const fields = schemaFields(schema)
   return (
-    schema.fields.find((field) => field.role === "x") ??
-    schema.fields.find((field) => field.kind === "date")
+    fields.find((field) => field.role === "x") ??
+    fields.find((field) => field.kind === "date")
   )
 }
 
 export function pickValueField(schema: StreamSchema): StreamFieldSchema | undefined {
+  const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
-  const byValueRole = schema.fields.find(
+  const byValueRole = fields.find(
     (field) => field.role === "value" && !isKeyField(field, keyNames),
   )
   if (byValueRole) return byValueRole
-  const byYRole = schema.fields.find(
+  const byYRole = fields.find(
     (field) => field.role === "y" && !isKeyField(field, keyNames),
   )
   if (byYRole) return byYRole
-  return schema.fields.find(
+  return fields.find(
     (field) =>
       field.kind === "numeric" &&
       !isKeyField(field, keyNames) &&
@@ -86,12 +92,13 @@ export function pickValueField(schema: StreamSchema): StreamFieldSchema | undefi
 }
 
 export function pickCategoryField(schema: StreamSchema): StreamFieldSchema | undefined {
+  const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
-  const byRole = schema.fields.find(
+  const byRole = fields.find(
     (field) => field.role === "category" && !isKeyField(field, keyNames),
   )
   if (byRole) return byRole
-  return schema.fields.find(
+  return fields.find(
     (field) =>
       field.kind === "categorical" &&
       !isKeyField(field, keyNames) &&
@@ -100,13 +107,14 @@ export function pickCategoryField(schema: StreamSchema): StreamFieldSchema | und
 }
 
 export function pickSeriesField(schema: StreamSchema): StreamFieldSchema | undefined {
+  const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
-  const byRole = schema.fields.find(
+  const byRole = fields.find(
     (field) => field.role === "series" && !isKeyField(field, keyNames),
   )
   if (byRole) return byRole
   const category = pickCategoryField(schema)
-  return schema.fields.find(
+  return fields.find(
     (field) =>
       field.kind === "categorical" &&
       !isKeyField(field, keyNames) &&
