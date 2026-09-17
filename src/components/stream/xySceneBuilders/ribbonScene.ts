@@ -96,18 +96,20 @@ export function buildRibbonForGroup(
   ribbon: ResolvedRibbon
 ): AreaSceneNode | null {
   if (!ctx.scales) return null
-  const { topPath, bottomPath, datum } = buildSeriesGeometry(
+  const { topPath, bottomPath, datum, pathIds } = buildSeriesGeometry(
     data,
     ctx.scales,
     ctx.getX,
     ribbon.getTop,
-    ribbon.getBottom
+    ribbon.getBottom,
+    ctx.getPointId
   )
   if (topPath.length < 2) return null
   return {
     type: "area",
     topPath,
     bottomPath,
+    ...(pathIds && { pathIds }),
     // Honor the chart's curve so the band's top/bottom edges follow the same
     // interpolation as the line/area they sit under (mirrors areaScene). Without
     // this the envelope drew straight segments beneath a curved line.

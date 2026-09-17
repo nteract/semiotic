@@ -9,13 +9,14 @@ import {
   startTransition,
   advanceTransition,
   getNodeIdentity,
+  joinPathByIdentity,
   resolveMarkOpacity,
   type TransitionContext,
   type PrevPosition,
   type PrevPath,
   type TransitionState,
 } from "./pipelineTransitions"
-import type { CandlestickSceneNode, GlyphSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
+import type { CandlestickSceneNode, GlyphSceneNode, LineSceneNode, PointSceneNode, RectSceneNode, SceneNode, TransitionConfig } from "./types"
 import type { GlyphDef } from "./glyphDef"
 
 const ctx: TransitionContext = {
@@ -533,5 +534,73 @@ describe("pipelineTransitions — fillOpacity-aware mark opacity", () => {
     // Matches a fresh scene that only has fillOpacity — no tab-back fade.
     expect(resolveMarkOpacity(point.style)).toBe(0.7)
     expect(resolveMarkOpacity({ fill: "#6366f1", fillOpacity: 0.7 })).toBe(0.7)
+  })
+})
+
+describe("pipelineTransitions — keyed line path join", () => {
+  function makeLine(overrides: Partial<LineSceneNode> = {}): LineSceneNode {
+    return {
+      type: "line",
+      path: [[0, 10], [10, 20], [20, 30]],
+      pathIds: ["a", "b", "c"],
+      style: { stroke: "#000", opacity: 1 },
+      datum: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      group: "series",
+      ...overrides,
+    }
+  }
+
+  it("joinPathByIdentity slides retained vertices instead of pairing by index", () => {
+    const joined = joinPathByIdentity(
+      [[0, 10], [10, 20], [20, 30]],
+      ["a", "b", "c"],
+      [[0, 20], [10, 30], [20, 40]],
+      ["b", "c", "d"]
+    )
+    // b and c keep their previous coordinates; d grows from c.
+    expect(joined.prev).toEqual([[10, 20], [20, 30], [20, 30]])
+    expect(joined.target).toEqual([[0, 20], [10, 30], [20, 40]])
+  })
+
+  it("startTransition on a sliding window does not interpolate a→b by index", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(ctx, [makeLine()], prevPos, prevPath)
+
+    const slid = makeLine({
+      path: [[0, 20], [10, 30], [20, 40]],
+      pathIds: ["b", "c", "d"],
+      datum: [{ id: "b" }, { id: "c" }, { id: "d" }],
+    })
+    const state = { scene: [slid as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    // Index join would roll path[0] back to a's [0, 10]. Identity join keeps b.
+    expect(slid.path[0]).toEqual([10, 20])
+    expect(slid.path[1]).toEqual([20, 30])
+    expect(slid._prevPath?.[0]).toEqual([10, 20])
+    expect(slid._targetPath?.[0]).toEqual([0, 20])
+    expect(state.activeTransition).not.toBeNull()
+  })
+
+  it("without pathIds, equal-length paths still join by index", () => {
+    const prevPos = new Map<string, PrevPosition>()
+    const prevPath = new Map<string, PrevPath>()
+    snapshotPositions(
+      ctx,
+      [makeLine({ pathIds: undefined, path: [[0, 10], [10, 20], [20, 30]] })],
+      prevPos,
+      prevPath
+    )
+
+    const next = makeLine({
+      pathIds: undefined,
+      path: [[0, 20], [10, 30], [20, 40]],
+    })
+    const state = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    startTransition(ctx, transition, state, prevPos, prevPath)
+
+    expect(next.path[0]).toEqual([0, 10])
+    expect(next._targetPath?.[0]).toEqual([0, 20])
   })
 })

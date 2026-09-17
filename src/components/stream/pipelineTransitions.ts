@@ -42,7 +42,13 @@ export type PrevPosition = {
   // glyph can fade out as itself (in a neutral ink) rather than vanish.
   glyph?: GlyphDef
 }
-export type PrevPath = { topPath?: [number, number][]; bottomPath?: [number, number][]; path?: [number, number][]; opacity?: number }
+export type PrevPath = {
+  topPath?: [number, number][]
+  bottomPath?: [number, number][]
+  path?: [number, number][]
+  pathIds?: string[]
+  opacity?: number
+}
 
 /** Context needed from PipelineStore for identity resolution */
 export interface TransitionContext {
@@ -50,6 +56,92 @@ export interface TransitionContext {
   getX: (d: Datum) => number
   getY: (d: Datum) => number
   getCategory?: (d: Datum) => string
+  getPointId?: (d: Datum) => string
+}
+
+function copyPathPoint(point: [number, number]): [number, number] {
+  return [point[0], point[1]]
+}
+
+/**
+ * Align previous path vertices to the next path by identity key.
+ *
+ * Retained keys keep their previous coordinates so a sliding window slides
+ * instead of interpolating vertex i → vertex i. Newly entered keys grow from
+ * the nearest already-matched neighbor (the window boundary).
+ */
+export function joinPathByIdentity(
+  prevPath: [number, number][],
+  prevIds: string[],
+  nextPath: [number, number][],
+  nextIds: string[]
+): { prev: [number, number][]; target: [number, number][] } {
+  const prevById = new Map<string, [number, number]>()
+  for (let i = 0; i < prevIds.length; i++) {
+    prevById.set(prevIds[i], prevPath[i])
+  }
+
+  let firstMatchedPrev: [number, number] | undefined
+  for (const id of nextIds) {
+    const matched = prevById.get(id)
+    if (matched) {
+      firstMatchedPrev = matched
+      break
+    }
+  }
+
+  const prev: [number, number][] = new Array(nextPath.length)
+  const target: [number, number][] = new Array(nextPath.length)
+  let lastMatchedPrev: [number, number] | undefined
+  for (let i = 0; i < nextPath.length; i++) {
+    target[i] = copyPathPoint(nextPath[i])
+    const matched = prevById.get(nextIds[i])
+    if (matched) {
+      prev[i] = copyPathPoint(matched)
+      lastMatchedPrev = matched
+    } else {
+      const from = lastMatchedPrev ?? firstMatchedPrev ?? nextPath[i]
+      prev[i] = copyPathPoint(from)
+    }
+  }
+  return { prev, target }
+}
+
+function derivePathIds(
+  ctx: TransitionContext,
+  datum: LineSceneNode["datum"] | AreaSceneNode["datum"],
+  length: number
+): string[] | undefined {
+  if (!Array.isArray(datum) || datum.length !== length || length === 0) return undefined
+  if (ctx.getPointId) {
+    const ids = datum.map((row) => String(ctx.getPointId!(row)))
+    if (ids.every((id) => id.length > 0)) return ids
+  }
+  if (ctx.runtimeMode === "streaming") {
+    const ids = datum.map((row) => `x:${ctx.getX(row)}`)
+    if (new Set(ids).size === ids.length) return ids
+  }
+  return undefined
+}
+
+function resolvePathIds(
+  ctx: TransitionContext,
+  node: LineSceneNode | AreaSceneNode,
+  pathLength: number
+): string[] | undefined {
+  if (node.pathIds && node.pathIds.length === pathLength) return node.pathIds
+  return derivePathIds(ctx, node.datum, pathLength)
+}
+
+function pathMoved(
+  prev: [number, number][],
+  target: [number, number][]
+): boolean {
+  if (prev.length !== target.length) return true
+  for (let i = 0; i < prev.length; i++) {
+    if (prev[i][0] !== target[i][0] || prev[i][1] !== target[i][1]) return true
+  }
+  return false
 }
 
 // ── Identity ───────────────────────────────────────────────────────────
@@ -187,11 +279,16 @@ export function snapshotPositions(
         opacity: resolveMarkOpacity(node.style),
       })
     } else if (node.type === "line") {
-      prevPathMap.set(key, { path: node.path.map(p => [p[0], p[1]] as [number, number]), opacity: node.style?.opacity })
+      prevPathMap.set(key, {
+        path: node.path.map(copyPathPoint),
+        pathIds: resolvePathIds(ctx, node, node.path.length),
+        opacity: node.style?.opacity
+      })
     } else if (node.type === "area") {
       prevPathMap.set(key, {
-        topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
-        bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+        topPath: node.topPath.map(copyPathPoint),
+        bottomPath: node.bottomPath.map(copyPathPoint),
+        pathIds: resolvePathIds(ctx, node, node.topPath.length),
         opacity: node.style?.opacity
       })
     }
@@ -245,27 +342,86 @@ export function startTransition(
       const prevPath = prevPathMap.get(key)
       if (prevPath) {
         matchedPrevPathKeys.add(key)
-        if (node.type === "line" && prevPath.path && prevPath.path.length === node.path.length) {
-          node._targetPath = node.path.map(p => [p[0], p[1]] as [number, number])
-          node._prevPath = prevPath.path
-          for (let j = 0; j < node.path.length; j++) {
-            node.path[j] = [prevPath.path[j][0], prevPath.path[j][1]]
+        if (node.type === "line" && prevPath.path) {
+          const nextIds = resolvePathIds(ctx, node, node.path.length)
+          const prevIds = prevPath.pathIds
+          if (
+            prevIds &&
+            nextIds &&
+            prevIds.length === prevPath.path.length &&
+            nextIds.length === node.path.length
+          ) {
+            const joined = joinPathByIdentity(
+              prevPath.path,
+              prevIds,
+              node.path,
+              nextIds
+            )
+            if (pathMoved(joined.prev, joined.target)) {
+              node._targetPath = joined.target
+              node._prevPath = joined.prev
+              node.path = joined.prev.map(copyPathPoint)
+              hasChanges = true
+            }
+          } else if (prevPath.path.length === node.path.length) {
+            node._targetPath = node.path.map(copyPathPoint)
+            node._prevPath = prevPath.path
+            for (let j = 0; j < node.path.length; j++) {
+              node.path[j] = copyPathPoint(prevPath.path[j])
+            }
+            hasChanges = true
           }
-          hasChanges = true
-        } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath
-          && prevPath.topPath.length === node.topPath.length
-          && prevPath.bottomPath.length === node.bottomPath.length) {
-          node._targetTopPath = node.topPath.map(p => [p[0], p[1]] as [number, number])
-          node._targetBottomPath = node.bottomPath.map(p => [p[0], p[1]] as [number, number])
-          node._prevTopPath = prevPath.topPath
-          node._prevBottomPath = prevPath.bottomPath
-          for (let j = 0; j < node.topPath.length; j++) {
-            node.topPath[j] = [prevPath.topPath[j][0], prevPath.topPath[j][1]]
+        } else if (node.type === "area" && prevPath.topPath && prevPath.bottomPath) {
+          const nextIds = resolvePathIds(ctx, node, node.topPath.length)
+          const prevIds = prevPath.pathIds
+          if (
+            prevIds &&
+            nextIds &&
+            prevIds.length === prevPath.topPath.length &&
+            nextIds.length === node.topPath.length &&
+            prevPath.bottomPath.length === prevPath.topPath.length &&
+            node.bottomPath.length === node.topPath.length
+          ) {
+            const joinedTop = joinPathByIdentity(
+              prevPath.topPath,
+              prevIds,
+              node.topPath,
+              nextIds
+            )
+            const joinedBottom = joinPathByIdentity(
+              prevPath.bottomPath,
+              prevIds,
+              node.bottomPath,
+              nextIds
+            )
+            if (
+              pathMoved(joinedTop.prev, joinedTop.target) ||
+              pathMoved(joinedBottom.prev, joinedBottom.target)
+            ) {
+              node._targetTopPath = joinedTop.target
+              node._targetBottomPath = joinedBottom.target
+              node._prevTopPath = joinedTop.prev
+              node._prevBottomPath = joinedBottom.prev
+              node.topPath = joinedTop.prev.map(copyPathPoint)
+              node.bottomPath = joinedBottom.prev.map(copyPathPoint)
+              hasChanges = true
+            }
+          } else if (
+            prevPath.topPath.length === node.topPath.length &&
+            prevPath.bottomPath.length === node.bottomPath.length
+          ) {
+            node._targetTopPath = node.topPath.map(copyPathPoint)
+            node._targetBottomPath = node.bottomPath.map(copyPathPoint)
+            node._prevTopPath = prevPath.topPath
+            node._prevBottomPath = prevPath.bottomPath
+            for (let j = 0; j < node.topPath.length; j++) {
+              node.topPath[j] = copyPathPoint(prevPath.topPath[j])
+            }
+            for (let j = 0; j < node.bottomPath.length; j++) {
+              node.bottomPath[j] = copyPathPoint(prevPath.bottomPath[j])
+            }
+            hasChanges = true
           }
-          for (let j = 0; j < node.bottomPath.length; j++) {
-            node.bottomPath[j] = [prevPath.bottomPath[j][0], prevPath.bottomPath[j][1]]
-          }
-          hasChanges = true
         }
         node._targetOpacity = node.style.opacity ?? 1
         node._startOpacity = prevPath.opacity ?? node.style.opacity ?? 1

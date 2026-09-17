@@ -159,6 +159,12 @@ export interface LineSceneNode {
   strokeGradient?: GradientConfig
   /** Curve interpolation type (default: linear / straight segments) */
   curve?: CurveType
+  /**
+   * Per-vertex identity keys from `pointIdAccessor`, parallel to `path`.
+   * Path transitions join by these keys so a sliding window slides retained
+   * vertices instead of interpolating by array index.
+   */
+  pathIds?: string[]
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
@@ -209,6 +215,12 @@ export interface AreaSceneNode {
   _pulseColor?: string
   /** Curve interpolation type (default: linear / straight segments) */
   curve?: CurveType
+  /**
+   * Per-vertex identity keys from `pointIdAccessor`, parallel to `topPath` /
+   * `bottomPath`. Path transitions join by these keys so a sliding window
+   * slides retained vertices instead of interpolating by array index.
+   */
+  pathIds?: string[]
   /** Per-vertex decay opacities (oldest→newest = minOpacity→1.0). Set by PipelineStore.applyDecay. */
   _decayOpacities?: number[]
   /** Animation target opacity (set during enter/exit transitions) */
@@ -828,7 +840,10 @@ export interface StreamXYFrameProps<T = Datum>
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
 
   // ── Point identification (for point-anchored annotations) ──
-  /** Accessor for unique point IDs used by point-anchored annotations */
+  /**
+   * Accessor for unique point IDs used by point-anchored annotations,
+   * push-mode remove()/update(), and identity-keyed line/area path transitions.
+   */
   pointIdAccessor?: string | ((d: T) => string)
 
   // ── Annotations ──────────────────────────────────

@@ -24,14 +24,18 @@ export function buildLineNode(
   xGet: (d: Datum) => number,
   yGet: (d: Datum) => number,
   style: Style,
-  group?: string
+  group?: string,
+  getPointId?: (d: Datum) => string
 ): LineSceneNode {
   const {
     topPath: path,
     rawValues,
-    datum
-  } = buildSeriesGeometry(data, scales, xGet, yGet)
-  return { type: "line", path, rawValues, style, datum, group }
+    datum,
+    pathIds
+  } = buildSeriesGeometry(data, scales, xGet, yGet, undefined, getPointId)
+  const node: LineSceneNode = { type: "line", path, rawValues, style, datum, group }
+  if (pathIds) node.pathIds = pathIds
+  return node
 }
 
 export function buildAreaNode(
@@ -42,17 +46,20 @@ export function buildAreaNode(
   baselineY: number,
   style: Style,
   group?: string,
-  y0Get?: (d: Datum) => number
+  y0Get?: (d: Datum) => number,
+  getPointId?: (d: Datum) => string
 ): AreaSceneNode {
+  const geometry = buildSeriesGeometry(
+    data,
+    scales,
+    xGet,
+    yGet,
+    y0Get ?? (() => baselineY),
+    getPointId
+  )
   return {
     type: "area",
-    ...buildSeriesGeometry(
-      data,
-      scales,
-      xGet,
-      yGet,
-      y0Get ?? (() => baselineY)
-    ),
+    ...geometry,
     style,
     group
   }
@@ -172,7 +179,8 @@ export function buildStackedAreaNodes(
   styleFn: (group: string, sampleDatum?: Datum) => Style,
   normalize?: boolean,
   curve?: CurveType,
-  baseline: StackBaseline = "zero"
+  baseline: StackBaseline = "zero",
+  getPointId?: (d: Datum) => string
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
   // Collect all unique x values. `Number.isFinite` rejects NaN,
   // Infinity, -Infinity, and non-numbers — must agree with the
@@ -268,6 +276,7 @@ export function buildStackedAreaNodes(
               .map((_, index) => index)
               .sort((a, b) => topPath[a][0] - topPath[b][0])
           : undefined
+        const stackedDatums = order ? order.map((index) => datums[index]) : datums
         const areaNode: AreaSceneNode = {
           type: "area",
           topPath: order ? order.map((index) => topPath[index]) : topPath,
@@ -276,11 +285,14 @@ export function buildStackedAreaNodes(
             : bottomPath,
           rawValues: order ? order.map((index) => rawValues[index]) : rawValues,
           style: styleFn(g.key, seriesSelectionDatum(g.data)),
-          datum: order ? order.map((index) => datums[index]) : datums,
+          datum: stackedDatums,
           accessibleDatum: order
             ? order.map((index) => accessibleDatums[index])
             : accessibleDatums,
           group: g.key
+        }
+        if (getPointId) {
+          areaNode.pathIds = stackedDatums.map((row) => String(getPointId(row)))
         }
         if (curve) areaNode.curve = curve
         nodes.push(areaNode)

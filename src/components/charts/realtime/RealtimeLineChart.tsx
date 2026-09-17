@@ -219,7 +219,12 @@ export interface RealtimeLineChartProps<
   legendPosition?: LegendPosition
   /** Legend interaction mode */
   legendInteraction?: LegendInteractionMode
-  /** ID accessor for remove()/update() on the push API */
+  /**
+   * Stable per-point ID for push-mode `remove()`/`update()`, point annotations,
+   * and identity-keyed path transitions. With `transition` on a sliding
+   * window, retained vertices slide by this ID instead of interpolating by
+   * array index.
+   */
   pointIdAccessor?: RealtimePointIdAccessor<TDatum>
   /**
    * Opt-in windowed aggregation over event-time. When set, pushed

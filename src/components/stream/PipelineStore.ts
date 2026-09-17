@@ -976,7 +976,8 @@ export class PipelineStore implements UpdateResultStore {
       runtimeMode: this.config.runtimeMode,
       getX: this.getX,
       getY: this.getY,
-      getCategory: this.getCategory
+      getCategory: this.getCategory,
+      getPointId: this.getPointId
     }
   }
 
@@ -1010,6 +1011,7 @@ export class PipelineStore implements UpdateResultStore {
         node._introClipFraction = 0
         this.prevPathMap.set(key, {
           path: node.path.map(p => [p[0], p[1]] as [number, number]),
+          pathIds: node.pathIds?.slice(),
           opacity: node.style.opacity
         })
       } else if (node.type === "area") {
@@ -1018,6 +1020,7 @@ export class PipelineStore implements UpdateResultStore {
         this.prevPathMap.set(key, {
           topPath: node.topPath.map(p => [p[0], p[1]] as [number, number]),
           bottomPath: node.bottomPath.map(p => [p[0], p[1]] as [number, number]),
+          pathIds: node.pathIds?.slice(),
           opacity: node.style.opacity
         })
       }

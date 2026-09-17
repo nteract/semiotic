@@ -48,7 +48,17 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
     if (areaGroups.has(g.key)) {
       // Render as area
       const style = ctx.resolveAreaStyle(g.key, seriesSelectionDatum(g.data))
-      const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
+      const node = buildAreaNode(
+        g.data,
+        ctx.scales,
+        ctx.getX,
+        ctx.getY,
+        baseline,
+        style,
+        g.key,
+        y0Get,
+        ctx.getPointId
+      )
       const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
       if (fillGradient) {
         node.fillGradient = fillGradient
@@ -63,7 +73,15 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
     } else {
       // Render as line
       const style = ctx.resolveLineStyle(g.key, seriesSelectionDatum(g.data))
-      const lineNode = buildLineNode(g.data, ctx.scales, ctx.getX, ctx.getY, style, g.key)
+      const lineNode = buildLineNode(
+        g.data,
+        ctx.scales,
+        ctx.getX,
+        ctx.getY,
+        style,
+        g.key,
+        ctx.getPointId
+      )
       if (ctx.config.curve && ctx.config.curve !== "linear") {
         lineNode.curve = ctx.config.curve
       }

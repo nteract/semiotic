@@ -60,7 +60,15 @@ export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
 
   for (const g of groups) {
     const style = ctx.resolveLineStyle(g.key, seriesSelectionDatum(g.data))
-    const lineNode = buildLineNode(g.data, ctx.scales, ctx.getX, ctx.getY, style, g.key)
+    const lineNode = buildLineNode(
+      g.data,
+      ctx.scales,
+      ctx.getX,
+      ctx.getY,
+      style,
+      g.key,
+      ctx.getPointId
+    )
     if (colorThresholds && colorThresholds.length > 0) {
       lineNode.colorThresholds = colorThresholds
     }
