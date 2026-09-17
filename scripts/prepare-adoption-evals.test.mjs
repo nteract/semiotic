@@ -7,9 +7,12 @@ import { fileURLToPath } from "node:url"
 import {
   buildAdoptionArtifacts,
   buildJobs,
+  collectStaleAdoptionDiffs,
   inventoryPaths,
   jobIdFor,
   jsonText,
+  staleAdoptionMessage,
+  unifiedDiff,
   validateFixtures
 } from "./lib/adoption-evals.mjs"
 
@@ -172,6 +175,75 @@ test("baseline is deterministic and identifies source content without claiming m
     first.baseline.contextProfiles.candidateFixedPackets["update-live-chart"]
       .bytes
   )
+})
+
+test("unified diffs mark inserted, deleted, and unchanged context lines", () => {
+  assert.equal(
+    unifiedDiff(
+      "from.txt",
+      "keep\nremove\nstay\n",
+      "to.txt",
+      "keep\nadd\nstay\n"
+    ),
+    "--- from.txt\n+++ to.txt\n@@ -1,3 +1,3 @@\n keep\n-remove\n+add\n stay\n"
+  )
+  assert.equal(unifiedDiff("from.txt", "same\n", "to.txt", "same\n"), "")
+  assert.equal(
+    unifiedDiff("/dev/null", "", "evals/adoption/jobs.json", "{\n  \"ok\": true\n}\n"),
+    "--- /dev/null\n+++ evals/adoption/jobs.json\n@@ -0,0 +1,3 @@\n+{\n+  \"ok\": true\n+}\n"
+  )
+})
+
+test("check reports the generated baseline diff instead of only the stale path", async (t) => {
+  const directory = await inventoryFixture(t)
+  const artifacts = await buildAdoptionArtifacts(directory)
+  const staleMissing = collectStaleAdoptionDiffs(artifacts, {
+    jobs: null,
+    baseline: null
+  })
+  assert.deepEqual(
+    staleMissing.map((entry) => entry.path),
+    ["evals/adoption/jobs.json", "evals/adoption/baseline.json"]
+  )
+  assert.match(staleMissing[0].diff, /^--- \/dev\/null\n\+\+\+ evals\/adoption\/jobs\.json\n/)
+  assert.match(
+    staleMissing[1].diff,
+    /\n\+ {2}"generatedBy": "scripts\/prepare-adoption-evals\.mjs",\n/
+  )
+
+  const unchanged = collectStaleAdoptionDiffs(artifacts, {
+    jobs: jsonText(artifacts.jobs),
+    baseline: jsonText(artifacts.baseline)
+  })
+  assert.deepEqual(unchanged, [])
+
+  await writeFile(
+    join(directory, "ai/system-prompt.md"),
+    "Changed instructions: preserve user constraints.\n"
+  )
+  const changed = await buildAdoptionArtifacts(directory)
+  const stale = collectStaleAdoptionDiffs(changed, {
+    jobs: jsonText(artifacts.jobs),
+    baseline: jsonText(artifacts.baseline)
+  })
+  assert.deepEqual(
+    stale.map((entry) => entry.path),
+    ["evals/adoption/baseline.json"]
+  )
+  assert.match(
+    stale[0].diff,
+    /- {4}"revision": "[a-f0-9]{64}",\n\+ {4}"revision": "[a-f0-9]{64}",\n/
+  )
+  assert.match(
+    stale[0].diff,
+    /- {6}"bytes": \d+,\n- {6}"sha256": "[a-f0-9]{64}"\n\+ {6}"bytes": \d+,\n\+ {6}"sha256": "[a-f0-9]{64}"\n/
+  )
+  const message = staleAdoptionMessage(stale)
+  assert.match(
+    message,
+    /^Adoption output is stale: evals\/adoption\/baseline\.json\. Run node scripts\/prepare-adoption-evals\.mjs\n\n--- evals\/adoption\/baseline\.json\n/
+  )
+  assert.ok(message.includes(stale[0].diff))
 })
 
 test("inventory refuses missing task sources and incompatible schema versions", async (t) => {

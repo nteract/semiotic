@@ -1,0 +1,582 @@
+{
+  "bundleHashes": {
+    "baseline": "5a0a4fd7c659bac9c89b38081ce70a8a1d59d2daabd8406deae30aa879f204e9",
+    "candidate": "85fde6c4dbff5da4c04ddb684bb658244c2d966aca18f2590f454af1470d08ef"
+  },
+  "environment": {
+    "node": "v22.22.1",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3 Pro"
+  },
+  "baselineRevision": "120153607470774eb8c899a7f5e12a972315cb42",
+  "method": "20 warmups; 100 alternating baseline/candidate renders per case. Milliseconds; p50 and p95. Production CJS bundles. No new gate adopted.",
+  "reproduction": {
+    "baseline": [
+      {
+        "magnitude": 0.000001,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 26.19999999999999
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 23.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 21.799999999999958
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 19.59999999999998
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 17.399999999999956
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 26.19999999999999
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 23.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 21.799999999999958
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 19.59999999999998
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 17.399999999999956
+          }
+        ],
+        "evidenceBytes": 556,
+        "svgBytes": 1746
+      },
+      {
+        "magnitude": 1,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 26.19999999999999
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 23.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 21.799999999999983
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 19.59999999999998
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 17.399999999999977
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 26.19999999999999
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 23.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 21.799999999999983
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 19.59999999999998
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 17.399999999999977
+          }
+        ],
+        "evidenceBytes": 549,
+        "svgBytes": 1746
+      },
+      {
+        "magnitude": 1000000000,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 13.200000000000012
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 10.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 8.799999999999983
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 6.599999999999982
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 4.399999999999979
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 15.39999999999999
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 13.200000000000012
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 10.999999999999986
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 8.799999999999983
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 6.599999999999982
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 4.399999999999979
+          }
+        ],
+        "evidenceBytes": 558,
+        "svgBytes": 1745
+      }
+    ],
+    "candidate": [
+      {
+        "magnitude": 0.000001,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "evidenceBytes": 1323,
+        "svgBytes": 4655,
+        "layout": {
+          "status": "incomplete",
+          "requested": 6,
+          "rendered": 6,
+          "displaced": 6,
+          "omitted": 0,
+          "omittedIds": [],
+          "displacedIds": [
+            "Series 0",
+            "Series 1",
+            "Series 2",
+            "Series 3",
+            "Series 4",
+            "Series 5"
+          ],
+          "measurement": {
+            "measured": 0,
+            "estimated": 6
+          },
+          "collisions": 0,
+          "overflows": 0,
+          "fallback": "accessible-series-list",
+          "findings": [
+            {
+              "code": "ESTIMATED_METRICS",
+              "count": 6,
+              "labelIds": [
+                "Series 5",
+                "Series 4",
+                "Series 3",
+                "Series 2",
+                "Series 1",
+                "Series 0"
+              ],
+              "remedy": "Load the intended font and remeasure before asserting collision-free text."
+            }
+          ],
+          "coverage": {
+            "directLabels": "assessed",
+            "axisLabels": "not-assessed"
+          }
+        }
+      },
+      {
+        "magnitude": 1,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "evidenceBytes": 1346,
+        "svgBytes": 4745,
+        "layout": {
+          "status": "incomplete",
+          "requested": 6,
+          "rendered": 6,
+          "displaced": 6,
+          "omitted": 0,
+          "omittedIds": [],
+          "displacedIds": [
+            "Series 0",
+            "Series 1",
+            "Series 2",
+            "Series 3",
+            "Series 4",
+            "Series 5"
+          ],
+          "measurement": {
+            "measured": 0,
+            "estimated": 6
+          },
+          "collisions": 0,
+          "overflows": 0,
+          "fallback": "accessible-series-list",
+          "findings": [
+            {
+              "code": "ESTIMATED_METRICS",
+              "count": 6,
+              "labelIds": [
+                "Series 5",
+                "Series 4",
+                "Series 3",
+                "Series 2",
+                "Series 1",
+                "Series 0"
+              ],
+              "remedy": "Load the intended font and remeasure before asserting collision-free text."
+            }
+          ],
+          "coverage": {
+            "directLabels": "assessed",
+            "axisLabels": "not-assessed"
+          }
+        }
+      },
+      {
+        "magnitude": 1000000000,
+        "texts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "liveTexts": [
+          {
+            "label": "Series 0",
+            "x": 366,
+            "y": 85.9
+          },
+          {
+            "label": "Series 1",
+            "x": 366,
+            "y": 70.7
+          },
+          {
+            "label": "Series 2",
+            "x": 366,
+            "y": 55.49999999999999
+          },
+          {
+            "label": "Series 3",
+            "x": 366,
+            "y": 40.3
+          },
+          {
+            "label": "Series 4",
+            "x": 366,
+            "y": 25.1
+          },
+          {
+            "label": "Series 5",
+            "x": 366,
+            "y": 9.9
+          }
+        ],
+        "evidenceBytes": 1347,
+        "svgBytes": 4721,
+        "layout": {
+          "status": "incomplete",
+          "requested": 6,
+          "rendered": 6,
+          "displaced": 6,
+          "omitted": 0,
+          "omittedIds": [],
+          "displacedIds": [
+            "Series 0",
+            "Series 1",
+            "Series 2",
+            "Series 3",
+            "Series 4",
+            "Series 5"
+          ],
+          "measurement": {
+            "measured": 0,
+            "estimated": 6
+          },
+          "collisions": 0,
+          "overflows": 0,
+          "fallback": "accessible-series-list",
+          "findings": [
+            {
+              "code": "ESTIMATED_METRICS",
+              "count": 6,
+              "labelIds": [
+                "Series 5",
+                "Series 4",
+                "Series 3",
+                "Series 2",
+                "Series 1",
+                "Series 0"
+              ],
+              "remedy": "Load the intended font and remeasure before asserting collision-free text."
+            }
+          ],
+          "coverage": {
+            "directLabels": "assessed",
+            "axisLabels": "not-assessed"
+          }
+        }
+      }
+    ]
+  },
+  "timings": {
+    "unlabeled": {
+      "baseline": {
+        "p50": 0.2579589999999712,
+        "p95": 0.33454100000000153
+      },
+      "candidate": {
+        "p50": 0.22687500000000682,
+        "p95": 0.3402919999999767
+      }
+    },
+    "directLabels": {
+      "baseline": {
+        "p50": 0.19074999999998,
+        "p95": 0.2500830000000178
+      },
+      "candidate": {
+        "p50": 0.34370799999999235,
+        "p95": 0.665916999999979
+      }
+    }
+  }
+}

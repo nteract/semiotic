@@ -117,6 +117,7 @@ interface-member RenderEvidence::property::edgeCount = optional edgeCount: numbe
 interface-member RenderEvidence::property::empty = required empty: boolean
 interface-member RenderEvidence::property::frameType = required frameType: "geo" | "network" | "ordinal" | "physics" | "value" | "xy"
 interface-member RenderEvidence::property::height = required height: number
+interface-member RenderEvidence::property::layout = optional layout: LabelLayoutEvidence | undefined
 interface-member RenderEvidence::property::legendItems = optional legendItems: number | undefined
 interface-member RenderEvidence::property::margin = optional margin: undefined | {top: number; right: number; bottom: number; left: number;}
 interface-member RenderEvidence::property::markCount = required markCount: number

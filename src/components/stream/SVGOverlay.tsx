@@ -1,4 +1,9 @@
 "use client"
+import { renderDirectLabels } from "../charts/shared/DirectLabelLayer"
+import { directLabelDescription, expandDirectLabelRequests } from "../charts/shared/directLabels"
+import { useAxisLabelAssessment } from "../text/useAxisLabelAssessment"
+import { useLabelMeasurer } from "../text/useLabelMeasurer"
+import { useThemeSelector } from "../store/ThemeStore"
 import { XYGrid } from "./XYGrid"
 import { resolveXYAxes } from "./resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -267,11 +272,26 @@ export function SVGOverlay(props: SVGOverlayProps) {
     stickyPositionCacheRef.current = new Map()
   }
 
+  const directLabelTheme = useThemeSelector(state => state.theme)
+  const hasDirectLabels = Boolean(annotations?.some(a => a._directLabel || a._directLabelRequest))
+  const labelMeasurer = useLabelMeasurer(hasDirectLabels)
+  const expandedAnnotations = useMemo(() => hasDirectLabels
+    ? expandDirectLabelRequests(annotations || [], annotationData, annXAccessor, annYAccessor)
+    : annotations, [hasDirectLabels, annotations, annotationData, annXAccessor, annYAccessor])
+  const directLabels = useMemo(() => renderDirectLabels(expandedAnnotations || [], {
+    width, height, margin, scales, measure: labelMeasurer,
+    fontFamily: directLabelTheme.typography.fontFamily,
+    ...(svgAnnotationRules ? { renderLabel: (ann, i, fallback) => svgAnnotationRules(ann, i, {
+      width, height, scales: scales ? { ...scales, time: scales.x, value: scales.y } : null,
+      frameType: "xy", xAccessor: annXAccessor, yAccessor: annYAccessor, data: annotationData
+    }) ?? fallback } : {})
+  }), [expandedAnnotations, width, height, margin, scales, labelMeasurer, directLabelTheme, svgAnnotationRules, annXAccessor, annYAccessor, annotationData])
+
   // Render annotations
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
     // Hide retracted/superseded by default so paint matches describe/nav tree.
-    const visibleAnnotations = filterAnnotationsByStatus(annotations)
+    const visibleAnnotations = filterAnnotationsByStatus(annotations).filter(a => !a._directLabel && !a._directLabelRequest)
 
     const defaultRules = createDefaultAnnotationRules("xy", annotationActivation)
 
@@ -317,7 +337,9 @@ export function SVGOverlay(props: SVGOverlayProps) {
     return () => document.removeEventListener("keydown", handler)
   }, [crosshairPos?.locked, linkedCrosshairName])
 
-  const hasContent = showAxes || title || description || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
+  const hasContent = directLabels.node || showAxes || title || description || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
+  const axisRevision = useMemo(() => ({ width, height, xTicks, yTicks, yTicksRight, labelMeasurer, axes }), [width, height, xTicks, yTicks, yTicksRight, labelMeasurer, axes])
+  const axisAssessment = useAxisLabelAssessment(hasDirectLabels && Boolean(labelMeasurer), axisRevision)
   const generatedId = useId()
   const { titleId, descId, labelledBy } = overlayAccessibleIds(idPrefix || chartId || generatedId)
 
@@ -325,6 +347,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   return (
     <svg
+      ref={axisAssessment.ref}
+      data-axis-label-layout={hasDirectLabels ? JSON.stringify(axisAssessment.assessment) : undefined}
       role="img"
       aria-labelledby={labelledBy}
       width={totalWidth}
@@ -344,6 +368,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           familyPhrase: "XY data visualization",
           fallback: "XY data visualization"
         })}
+        {directLabelDescription(expandedAnnotations)}
       </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines.
@@ -614,6 +639,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Annotations */}
         {renderedAnnotations}
+        {directLabels.node}
 
         {/* Marginal graphics */}
         {marginalGraphics && scales && xValues && yValues && (

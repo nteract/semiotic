@@ -145,6 +145,8 @@ export interface ChartSetupResult {
   data: Array<Datum>
   /** Color scale function, or undefined if no colorBy */
   colorScale: ((v: string) => string) | undefined
+  /** Resolved category colors, including categories discovered in push mode. */
+  categoryColorScale: ((v: string) => string) | undefined
   /** All unique category values from colorBy */
   allCategories: string[]
   /** Legend interaction state (onLegendHover, onLegendClick, highlighted, isolated) */
@@ -335,10 +337,10 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // an ordinal scale over. `createLegend` then falls back to
   // `STREAMING_PALETTE` for swatches, which mismatches the frame's mark
   // colors when the consumer set an explicit `colorScheme` (or relies on
-  // the theme categorical palette). Synthesize a legend-only scale from
+  // the theme categorical palette). Synthesize a category scale from
   // the discovered categories using the same precedence as `useColorScale`
   // (provider → explicit scheme → theme → STREAMING_PALETTE) so legend
-  // swatches and rendered marks agree even before any data is pushed.
+  // swatches, marks, and direct labels can share the same resolved colors.
   const themeCategorical = useThemeCategorical()
   const categoryColors = useCategoryColors()
   const legendColorScale = useMemo<((v: string) => string) | undefined>(() => {
@@ -363,6 +365,8 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
     )
     return (v: string) =>
       (categoryColors ? resolveExplicitColor(categoryColors, v) : undefined) ??
+      (colorScheme && typeof colorScheme === "object" && !Array.isArray(colorScheme)
+        ? resolveExplicitColor(colorScheme, v) : undefined) ??
       fallbackScale(v) ??
       "#999"
   }, [
@@ -463,6 +467,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   return {
     data: safeData,
     colorScale,
+    categoryColorScale: legendColorScale,
     allCategories: activeCategories,
     legendState,
     effectiveSelectionHook,

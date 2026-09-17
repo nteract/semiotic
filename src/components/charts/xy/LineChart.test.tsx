@@ -2,10 +2,13 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { LineChart } from "./LineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
+import { LIGHT_THEME } from "../../store/themeCore"
+import { ThemeProvider } from "../../ThemeProvider"
+import { CategoryColorProvider } from "../../CategoryColors"
 
 // Mock XYFrame to capture props
 let lastXYFrameProps = {} as CapturedXYFrameProps
@@ -609,6 +612,59 @@ describe("LineChart", () => {
   })
 
   describe("directLabel", () => {
+    it.each(["start", "end"] as const)("grows the default %s rail as push categories arrive", (position) => {
+      render(<LineChart lineBy="series" directLabel={{ position }} />)
+      const side = position === "start" ? "left" : "right"
+      const initial = lastXYFrameProps.margin[side]!
+      act(() => lastXYFrameProps.onCategoriesChange?.(["Series 0", "A much longer series name"]))
+      expect(lastXYFrameProps.margin[side]).toBeGreaterThan(initial)
+      expect(lastXYFrameProps.margin[side]).toBeGreaterThanOrEqual(25 * 11 * 0.65 + 10)
+      expect(lastXYFrameProps.legend).toBeUndefined()
+    })
+
+    it.each([40, { right: 40 }, { bottom: 80 }])("preserves explicit push margins: %j", (margin) => {
+      render(<LineChart lineBy="series" directLabel margin={margin} />)
+      act(() => lastXYFrameProps.onCategoriesChange?.(["A much longer series name"]))
+      expect(lastXYFrameProps.margin.right).toBe(
+        typeof margin === "number" || "right" in margin ? 40 : 25 * 11 * 0.65 + 10
+      )
+    })
+
+    it.each(["auto", null] as const)("grows a nonnumeric %s push margin", (right) => {
+      render(<LineChart lineBy="series" directLabel margin={{ right }} />)
+      act(() => lastXYFrameProps.onCategoriesChange?.(["A much longer series name"]))
+      expect(lastXYFrameProps.margin.right).toBe(25 * 11 * 0.65 + 10)
+    })
+
+    it("reserves static label text found on nested endpoints", () => {
+      const series = "A much longer series name"
+      render(<LineChart data={[{ coordinates: [{ x: 0, y: 1, series }, { x: 1, y: 2, series }] }]} colorBy={(d: Datum) => d.series} directLabel />)
+      expect(lastXYFrameProps.annotations[0].label).toBe(series)
+      expect(lastXYFrameProps.margin.right).toBe(series.length * 11 * 0.65 + 10)
+    })
+
+    it.each([
+      { name: "default", colors: LIGHT_THEME.colors.categorical },
+      { name: "custom scheme", colors: ["#112233", "#445566"], scheme: ["#112233", "#445566"] },
+      { name: "color map", colors: ["#112233", "#445566"], scheme: { A: "#112233", B: "#445566" } },
+      { name: "theme", colors: ["#123456", "#654321"], theme: ["#123456", "#654321"] },
+      { name: "provider", colors: ["#abcdef", "#fedcba"], provider: { A: "#abcdef", B: "#fedcba" } }
+    ])("uses $name category colors for pushed labels", ({ colors, scheme, theme, provider }) => {
+      render(
+        <ThemeProvider theme={theme ? { colors: { categorical: theme } } : {}}>
+          <CategoryColorProvider colors={provider || {}}>
+            <LineChart lineBy="series" directLabel colorScheme={scheme} />
+          </CategoryColorProvider>
+        </ThemeProvider>
+      )
+      act(() => lastXYFrameProps.onCategoriesChange?.(["A", "B"]))
+      const request = lastXYFrameProps.annotations[0]._directLabelRequest
+      expect([request.color("A"), request.color("B")]).toEqual(colors.slice(0, 2))
+      for (const [i, series] of ["A", "B"].entries()) {
+        expect(lastXYFrameProps.lineStyle({ series }).stroke).toBe(colors[i])
+      }
+    })
+
     const multiLineData = [
       { x: 1, y: 10, series: "A" },
       { x: 2, y: 20, series: "A" },

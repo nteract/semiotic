@@ -29,8 +29,9 @@ export async function exportChart(
     background = "white"
   } = options || {}
 
-  // Find the SVG element inside the container
-  const svgElement = container.querySelector("svg")
+  // Prefer the accessible foreground overlay over a separate grid SVG.
+  const svgElement =
+    container.querySelector('svg[role="img"]') || container.querySelector("svg")
   if (!svgElement) {
     throw new Error("No SVG element found in the container")
   }

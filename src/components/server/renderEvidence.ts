@@ -1,3 +1,4 @@
+import type { LabelLayoutEvidence } from "../text/labelPlacement"
 /**
  * Render evidence — machine-readable ground truth about what a server render
  * actually produced, emitted from the same scene the SVG converter walks.
@@ -27,6 +28,8 @@ export type SemanticViabilityStatus =
   "meaningful" | "degraded" | "degenerate" | "not-assessed"
 
 export interface RenderEvidence {
+  /** Optional post-placement label assessment; mark emptiness retains its meaning. */
+  layout?: LabelLayoutEvidence
   /** SHA-256 of the final serialized SVG plus resolved coordinate context, including chart chrome. */
   sceneHash?: string
   /** Version 2 replaces the evidence envelope's legacy mark-count-only hash. */
@@ -233,6 +236,7 @@ interface BuildEvidenceInput {
   annotations?: unknown
   /** Static annotation pass accounting; omitted by callers that have none. */
   annotationRender?: {
+    layout?: LabelLayoutEvidence
     inputCount: number
     renderedCount: number
     unrenderedCount: number
@@ -299,6 +303,7 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
       ? { legendItems: input.legendItems }
       : {}),
     annotationCount,
+    ...(input.annotationRender?.layout ? { layout: input.annotationRender.layout } : {}),
     ...(input.annotationRender
       ? {
           annotationInputCount: input.annotationRender.inputCount,
