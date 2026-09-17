@@ -6,7 +6,7 @@
     "packageVersion": "3.10.1",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "960a0ccb00d5049f583360e04681d70c19aa7be2a629a1346808567e06c565de",
+    "revision": "10433843e5ffe3319b1e5fe8a27cac19808f5e99ad88f408c4ae15dd5ce0eab4",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -344,13 +344,13 @@
     },
     {
       "path": "scripts/lib/adoption-evals.mjs",
-      "bytes": 11170,
-      "sha256": "c37472dd1585d1909954be82b970fc0d7dca9ab50f94060b257607378df5d019"
+      "bytes": 15366,
+      "sha256": "b77de94c593a64a2da95d6fbb190f65ca6120563ab1779f2afd07cf787e66589"
     },
     {
       "path": "scripts/prepare-adoption-evals.mjs",
-      "bytes": 1370,
-      "sha256": "fead5a1e58fd8c13a2b90ce7ec174c0b9eef126fff04f888dc54a10a30048ee2"
+      "bytes": 1434,
+      "sha256": "7b0ad44724f9f20b7b845cc5fd8f2bbf9d31c83ecf010a5fb5d03295d685fad1"
     },
     {
       "path": "scripts/run-openai-ai-evals.mjs",

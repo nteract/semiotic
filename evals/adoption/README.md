@@ -16,7 +16,8 @@ node --test scripts/prepare-adoption-evals.test.mjs
 Generate the three task packets first. These commands use Node's built-in
 modules and local source files; they do not import the package through `dist`,
 contact a provider, or authorize paid work. `--check` detects stale source,
-schema, skill, fixture, or packet references without rewriting the baseline.
+schema, skill, fixture, or packet references without rewriting the baseline, and
+prints a unified diff of each stale generated file.
 
 `fixtures.json` owns prompts and the **scorer-only** expected decisions, success
 criteria, and limits. `jobs.json` is generated from an explicit allowlist of

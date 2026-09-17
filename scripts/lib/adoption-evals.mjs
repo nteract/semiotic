@@ -347,3 +347,141 @@ export async function buildAdoptionArtifacts(root) {
   }
   return { jobs: buildJobs(fixtures), baseline }
 }
+
+function linesOf(text) {
+  if (text == null || text === "") return []
+  const lines = text.split("\n")
+  if (lines[lines.length - 1] === "") lines.pop()
+  return lines
+}
+
+function diffOps(fromLines, toLines) {
+  const fromCount = fromLines.length
+  const toCount = toLines.length
+  const longest = Array.from(
+    { length: fromCount + 1 },
+    () => new Uint32Array(toCount + 1)
+  )
+  for (let fromIndex = fromCount - 1; fromIndex >= 0; fromIndex--) {
+    for (let toIndex = toCount - 1; toIndex >= 0; toIndex--) {
+      longest[fromIndex][toIndex] =
+        fromLines[fromIndex] === toLines[toIndex]
+          ? longest[fromIndex + 1][toIndex + 1] + 1
+          : Math.max(
+              longest[fromIndex + 1][toIndex],
+              longest[fromIndex][toIndex + 1]
+            )
+    }
+  }
+  const ops = []
+  let fromIndex = 0
+  let toIndex = 0
+  while (fromIndex < fromCount && toIndex < toCount) {
+    if (fromLines[fromIndex] === toLines[toIndex]) {
+      ops.push({ type: "equal", line: fromLines[fromIndex] })
+      fromIndex++
+      toIndex++
+    } else if (
+      longest[fromIndex + 1][toIndex] >= longest[fromIndex][toIndex + 1]
+    ) {
+      ops.push({ type: "del", line: fromLines[fromIndex] })
+      fromIndex++
+    } else {
+      ops.push({ type: "ins", line: toLines[toIndex] })
+      toIndex++
+    }
+  }
+  while (fromIndex < fromCount) {
+    ops.push({ type: "del", line: fromLines[fromIndex] })
+    fromIndex++
+  }
+  while (toIndex < toCount) {
+    ops.push({ type: "ins", line: toLines[toIndex] })
+    toIndex++
+  }
+  return ops
+}
+
+function formatHunks(ops, context = 3) {
+  const changeIndexes = []
+  for (let index = 0; index < ops.length; index++) {
+    if (ops[index].type !== "equal") changeIndexes.push(index)
+  }
+  if (!changeIndexes.length) return []
+  const ranges = []
+  let start = Math.max(0, changeIndexes[0] - context)
+  let end = Math.min(ops.length, changeIndexes[0] + 1 + context)
+  for (let index = 1; index < changeIndexes.length; index++) {
+    const nextStart = Math.max(0, changeIndexes[index] - context)
+    if (nextStart <= end) {
+      end = Math.min(ops.length, changeIndexes[index] + 1 + context)
+    } else {
+      ranges.push([start, end])
+      start = nextStart
+      end = Math.min(ops.length, changeIndexes[index] + 1 + context)
+    }
+  }
+  ranges.push([start, end])
+  return ranges.map(([rangeStart, rangeEnd]) => {
+    let oldLine = 1
+    let newLine = 1
+    for (let index = 0; index < rangeStart; index++) {
+      if (ops[index].type !== "ins") oldLine++
+      if (ops[index].type !== "del") newLine++
+    }
+    let oldCount = 0
+    let newCount = 0
+    const body = []
+    for (let index = rangeStart; index < rangeEnd; index++) {
+      const op = ops[index]
+      if (op.type === "equal") {
+        body.push(` ${op.line}`)
+        oldCount++
+        newCount++
+      } else if (op.type === "del") {
+        body.push(`-${op.line}`)
+        oldCount++
+      } else {
+        body.push(`+${op.line}`)
+        newCount++
+      }
+    }
+    const oldStart = oldCount === 0 ? 0 : oldLine
+    const newStart = newCount === 0 ? 0 : newLine
+    return `@@ -${oldStart},${oldCount} +${newStart},${newCount} @@\n${body.join("\n")}\n`
+  })
+}
+
+export function unifiedDiff(fromPath, fromText, toPath, toText) {
+  const hunks = formatHunks(diffOps(linesOf(fromText), linesOf(toText)))
+  if (!hunks.length) return ""
+  return `--- ${fromPath}\n+++ ${toPath}\n${hunks.join("")}`
+}
+
+export function collectStaleAdoptionDiffs(artifacts, existing) {
+  const stale = []
+  for (const [name, content] of Object.entries(artifacts)) {
+    const path = `evals/adoption/${name}.json`
+    const text = jsonText(content)
+    const current = Object.hasOwn(existing, name) ? existing[name] : null
+    if (current === text) continue
+    stale.push({
+      path,
+      diff: unifiedDiff(
+        current == null ? "/dev/null" : path,
+        current ?? "",
+        path,
+        text
+      )
+    })
+  }
+  return stale
+}
+
+export function staleAdoptionMessage(stale) {
+  return `Adoption output is stale: ${stale
+    .map((entry) => entry.path)
+    .join(", ")}. Run node scripts/prepare-adoption-evals.mjs\n\n${stale
+    .map((entry) => entry.diff)
+    .join("\n")}`
+}
