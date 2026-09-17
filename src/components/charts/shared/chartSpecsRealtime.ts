@@ -29,7 +29,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       },
       transition: {
         type: "object",
-        description: "Transition config: { duration, easing }"
+        description: "Transition config: { duration, easing }. Pair with pointIdAccessor so a sliding window slides retained vertices instead of interpolating the path by index."
       }
     },
     capabilities: {

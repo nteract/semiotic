@@ -219,7 +219,10 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    */
   tooltip?: TooltipProp
 
-  /** Accessor for unique point IDs, used by point-anchored annotations (when showPoints is true) */
+  /**
+   * Stable per-point ID for annotations, push-mode `remove()`/`update()`, and
+   * identity-keyed path transitions when `transition` is enabled.
+   */
   pointIdAccessor?: ChartAccessor<TDatum, string>
 
   /**

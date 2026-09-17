@@ -96,7 +96,17 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
 
   for (const g of groups) {
     const style = ctx.resolveAreaStyle(g.key, seriesSelectionDatum(g.data))
-    const node = buildAreaNode(g.data, ctx.scales, ctx.getX, ctx.getY, baseline, style, g.key, y0Get)
+    const node = buildAreaNode(
+      g.data,
+      ctx.scales,
+      ctx.getX,
+      ctx.getY,
+      baseline,
+      style,
+      g.key,
+      y0Get,
+      ctx.getPointId
+    )
     const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
     if (fillGradient) {
       node.fillGradient = fillGradient
@@ -222,7 +232,8 @@ export function buildStackedAreaScene(ctx: XYSceneContext, data: Datum[]): Scene
     styleFn,
     ctx.config.normalize,
     curveType,
-    baseline
+    baseline,
+    ctx.getPointId
   )
   const nodes: SceneNode[] = areaNodes
 

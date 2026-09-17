@@ -11,12 +11,14 @@ export function buildSeriesGeometry(
   scales: StreamScales,
   xGet: (d: Datum) => number,
   yGet: (d: Datum) => number,
-  bottomGet?: (d: Datum) => number
+  bottomGet?: (d: Datum) => number,
+  getPointId?: (d: Datum) => string
 ): {
   topPath: [number, number][]
   bottomPath: [number, number][]
   rawValues: number[]
   datum: Datum[]
+  pathIds?: string[]
 } {
   const entries: {
     x: number
@@ -45,12 +47,16 @@ export function buildSeriesGeometry(
     : []
   const rawValues: number[] = new Array(entries.length)
   const datum: Datum[] = new Array(entries.length)
+  const pathIds = getPointId ? new Array<string>(entries.length) : undefined
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i]
     topPath[i] = [entry.x, entry.y]
     if (bottomGet) bottomPath[i] = [entry.x, entry.bottom]
     rawValues[i] = entry.raw
     datum[i] = entry.datum
+    if (pathIds && getPointId) pathIds[i] = String(getPointId(entry.datum))
   }
-  return { topPath, bottomPath, rawValues, datum }
+  return pathIds
+    ? { topPath, bottomPath, rawValues, datum, pathIds }
+    : { topPath, bottomPath, rawValues, datum }
 }

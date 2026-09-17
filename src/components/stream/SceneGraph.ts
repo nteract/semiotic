@@ -24,14 +24,18 @@ export function buildLineNode(
   xGet: (d: Datum) => number,
   yGet: (d: Datum) => number,
   style: Style,
-  group?: string
+  group?: string,
+  getPointId?: (d: Datum) => string
 ): LineSceneNode {
   const {
     topPath: path,
     rawValues,
-    datum
-  } = buildSeriesGeometry(data, scales, xGet, yGet)
-  return { type: "line", path, rawValues, style, datum, group }
+    datum,
+    pathIds
+  } = buildSeriesGeometry(data, scales, xGet, yGet, undefined, getPointId)
+  const node: LineSceneNode = { type: "line", path, rawValues, style, datum, group }
+  if (pathIds) node.pathIds = pathIds
+  return node
 }
 
 export function buildAreaNode(
@@ -42,17 +46,20 @@ export function buildAreaNode(
   baselineY: number,
   style: Style,
   group?: string,
-  y0Get?: (d: Datum) => number
+  y0Get?: (d: Datum) => number,
+  getPointId?: (d: Datum) => string
 ): AreaSceneNode {
+  const geometry = buildSeriesGeometry(
+    data,
+    scales,
+    xGet,
+    yGet,
+    y0Get ?? (() => baselineY),
+    getPointId
+  )
   return {
     type: "area",
-    ...buildSeriesGeometry(
-      data,
-      scales,
-      xGet,
-      yGet,
-      y0Get ?? (() => baselineY)
-    ),
+    ...geometry,
     style,
     group
   }
@@ -172,7 +179,8 @@ export function buildStackedAreaNodes(
   styleFn: (group: string, sampleDatum?: Datum) => Style,
   normalize?: boolean,
   curve?: CurveType,
-  baseline: StackBaseline = "zero"
+  baseline: StackBaseline = "zero",
+  getPointId?: (d: Datum) => string
 ): { nodes: AreaSceneNode[]; stackedTops: StackedTops } {
   // Collect all unique x values. `Number.isFinite` rejects NaN,
   // Infinity, -Infinity, and non-numbers — must agree with the
@@ -256,6 +264,7 @@ export function buildStackedAreaNodes(
     let rawValues: number[] = []
     let datums: Datum[] = []
     let accessibleDatums: Datum[] = []
+    let pathIds: string[] | undefined = getPointId ? [] : undefined
     let needsSort = false
 
     const flushSegment = () => {
@@ -268,6 +277,7 @@ export function buildStackedAreaNodes(
               .map((_, index) => index)
               .sort((a, b) => topPath[a][0] - topPath[b][0])
           : undefined
+        const stackedDatums = order ? order.map((index) => datums[index]) : datums
         const areaNode: AreaSceneNode = {
           type: "area",
           topPath: order ? order.map((index) => topPath[index]) : topPath,
@@ -276,11 +286,16 @@ export function buildStackedAreaNodes(
             : bottomPath,
           rawValues: order ? order.map((index) => rawValues[index]) : rawValues,
           style: styleFn(g.key, seriesSelectionDatum(g.data)),
-          datum: order ? order.map((index) => datums[index]) : datums,
+          datum: stackedDatums,
           accessibleDatum: order
             ? order.map((index) => accessibleDatums[index])
             : accessibleDatums,
           group: g.key
+        }
+        if (pathIds) {
+          areaNode.pathIds = order
+            ? order.map((index) => pathIds![index])
+            : pathIds
         }
         if (curve) areaNode.curve = curve
         nodes.push(areaNode)
@@ -290,6 +305,7 @@ export function buildStackedAreaNodes(
       rawValues = []
       datums = []
       accessibleDatums = []
+      pathIds = getPointId ? [] : undefined
       needsSort = false
     }
 
@@ -358,6 +374,11 @@ export function buildStackedAreaNodes(
       bottomPath.push([px, bottomY])
       datums.push(datum)
       rawValues.push(aggregate)
+      if (pathIds) {
+        // Stack cells are (group, x), not the first contributing row. Key by x
+        // so evicting a duplicate at the same x keeps the vertex retained.
+        pathIds.push(`x:${x}`)
+      }
       // An aggregate is not one arbitrarily selected source row.
       accessibleDatums.push(
         !sources

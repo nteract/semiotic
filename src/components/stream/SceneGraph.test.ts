@@ -56,6 +56,22 @@ describe("SceneGraph — buildLineNode", () => {
     expect(sortedDatum[2].id).toBe("c") // x=9
   })
 
+  it("keeps pathIds aligned with the sorted path when getPointId is set", () => {
+    const data = [
+      { x: 9, y: 1, id: "c" },
+      { x: 1, y: 5, id: "a" },
+      { x: 5, y: 3, id: "b" }
+    ]
+    const node = buildLineNode(
+      data, makeScales(),
+      d => d.x, d => d.y,
+      { stroke: "#000" },
+      undefined,
+      d => d.id
+    )
+    expect(node.pathIds).toEqual(["a", "b", "c"])
+  })
+
   it("keeps rawValues aligned with sorted path", () => {
     const data = [
       { x: 10, y: 99 },
@@ -163,6 +179,47 @@ describe("SceneGraph — buildAreaNode", () => {
 })
 
 describe("SceneGraph — buildStackedAreaNodes", () => {
+  it("keys duplicate-x aggregates by x so evicting the first source keeps the vertex", () => {
+    const scales = makeScales()
+    const getId = (d: Datum) => d.id as string
+    const styleFn = () => ({ fill: "#000" })
+    const { nodes: before } = buildStackedAreaNodes(
+      [{
+        key: "a",
+        data: [
+          { x: 1, y: 10, id: "first" },
+          { x: 1, y: 5, id: "second" },
+          { x: 2, y: 8, id: "third" }
+        ]
+      }],
+      scales,
+      d => d.x, d => d.y,
+      styleFn,
+      false,
+      undefined,
+      "zero",
+      getId
+    )
+    const { nodes: after } = buildStackedAreaNodes(
+      [{
+        key: "a",
+        data: [
+          { x: 1, y: 5, id: "second" },
+          { x: 2, y: 8, id: "third" }
+        ]
+      }],
+      scales,
+      d => d.x, d => d.y,
+      styleFn,
+      false,
+      undefined,
+      "zero",
+      getId
+    )
+    expect(before[0].pathIds).toEqual(["x:1", "x:2"])
+    expect(after[0].pathIds).toEqual(["x:1", "x:2"])
+  })
+
   it("produces sorted paths (inherently sorted by xValues)", () => {
     const groups = [
       { key: "a", data: [{ x: 3, y: 10 }, { x: 1, y: 20 }] },

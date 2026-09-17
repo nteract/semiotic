@@ -359,4 +359,53 @@ describe("PipelineStore — Transitions", () => {
     const expectedH = prevH + (targetH - prevH) * 0.5
     expect(rect.h).toBeCloseTo(expectedH, 1)
   })
+
+  it("windowed line path transitions join vertices by pointIdAccessor", () => {
+    const store = new PipelineStore(makeConfig({
+      chartType: "line",
+      windowSize: 3,
+      windowMode: "sliding",
+      runtimeMode: "streaming",
+      transition: { duration: 1000, easing: "linear" },
+      xAccessor: "x",
+      yAccessor: "y",
+      pointIdAccessor: "id",
+    }))
+
+    store.ingest({
+      inserts: [
+        { id: "a", x: 0, y: 10 },
+        { id: "b", x: 1, y: 20 },
+        { id: "c", x: 2, y: 30 },
+      ],
+      bounded: false,
+    })
+    store.computeScene({ width: 300, height: 100 })
+    expect(store.activeTransition).toBeNull()
+
+    const first = store.scene.find((n) => n.type === "line")
+    expect(first && first.type === "line" ? first.pathIds : undefined).toEqual([
+      "a",
+      "b",
+      "c",
+    ])
+    const bPrev =
+      first && first.type === "line" ? first.path[1] : undefined
+    expect(bPrev).toBeDefined()
+
+    store.ingest({ inserts: [{ id: "d", x: 3, y: 40 }], bounded: false })
+    store.computeScene({ width: 300, height: 100 })
+
+    const line = store.scene.find((n) => n.type === "line")
+    expect(line && line.type === "line").toBe(true)
+    if (!line || line.type !== "line") return
+
+    expect(line.pathIds).toEqual(["b", "c", "d"])
+    expect(store.activeTransition).not.toBeNull()
+    // Identity join: first live vertex is b, rolled back to b's previous pixel.
+    // Index join would have used a's previous pixel instead.
+    expect(line.path[0][0]).toBeCloseTo(bPrev![0], 5)
+    expect(line.path[0][1]).toBeCloseTo(bPrev![1], 5)
+    expect(line._targetPath?.[0]).not.toEqual(line.path[0])
+  })
 })

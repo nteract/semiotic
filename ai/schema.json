@@ -504,7 +504,7 @@
             },
             "pointIdAccessor": {
               "type": "string",
-              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "description": "Stable ID for point annotations, push-mode remove()/update(), and identity-keyed line path transitions.",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -1179,7 +1179,7 @@
             },
             "pointIdAccessor": {
               "type": "string",
-              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "description": "Stable ID for point annotations, push-mode remove()/update(), and identity-keyed area path transitions.",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -1801,7 +1801,7 @@
             },
             "pointIdAccessor": {
               "type": "string",
-              "description": "Stable ID for point annotations and push-mode remove()/update().",
+              "description": "Stable ID for point annotations, push-mode remove()/update(), and identity-keyed area path transitions.",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -17244,7 +17244,7 @@
             },
             "transition": {
               "type": "object",
-              "description": "Transition config: { duration, easing }"
+              "description": "Transition config: { duration, easing }. Pair with pointIdAccessor so a sliding window slides retained vertices instead of interpolating the path by index."
             }
           },
           "required": []

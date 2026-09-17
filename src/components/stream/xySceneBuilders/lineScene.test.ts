@@ -344,6 +344,25 @@ describe("buildLineScene", () => {
     expect(pointNodes[1].style.fill).toBe("green")
   })
 
+  it("sets pathIds from getPointId in the same order as the sorted path", () => {
+    const data = [
+      { x: 30, y: 1, id: "c" },
+      { x: 10, y: 2, id: "a" },
+      { x: 20, y: 3, id: "b" },
+    ]
+    const ctx = makeCtx({ getPointId: (d) => d.id })
+    const nodes = buildLineScene(ctx, data)
+    const lineNode = nodes.find(isLineNode)
+    expect(lineNode?.pathIds).toEqual(["a", "b", "c"])
+    expect((lineNode?.datum as Datum[])?.map((d) => d.id)).toEqual(["a", "b", "c"])
+  })
+
+  it("omits pathIds when getPointId is not provided", () => {
+    const ctx = makeCtx()
+    const nodes = buildLineScene(ctx, [{ x: 1, y: 2 }])
+    expect(nodes.find(isLineNode)?.pathIds).toBeUndefined()
+  })
+
   it("NaN/null values are excluded from line path", () => {
     const data = [
       { x: 1, y: 10 },
