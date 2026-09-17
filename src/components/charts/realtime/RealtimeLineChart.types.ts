@@ -152,7 +152,7 @@ export interface RealtimeLineChartProps<
   /** Show a loading skeleton placeholder */
   loading?: boolean
   /** Custom content rendered in place of the default skeleton while `loading` is true. */
-  loadingContent?: React.ReactNode | false
+  loadingContent?: ReactNode | false
   /** Custom content to render when data is empty. Set to `false` to disable empty state. */
   emptyContent?: ReactNode | false
   /** Visual emphasis level for dashboard hierarchy. "primary" spans two columns in ChartGrid. */
