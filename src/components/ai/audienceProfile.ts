@@ -1,4 +1,4 @@
-import type { ChartRubric } from "./chartCapabilityTypes"
+import type { ChartFamily, ChartRubric } from "./chartCapabilityTypes"
 import type { AccessibilityAuditResult } from "../charts/shared/auditAccessibility"
 
 /**
@@ -14,6 +14,22 @@ import type { AccessibilityAuditResult } from "../charts/shared/auditAccessibili
  *                       "is the meaning recoverable without pixels?" question.
  */
 export type ReceptionModality = "visual" | "screen-reader" | "sonified" | "agent"
+
+/**
+ * Layout policy for a dashboard generated for this audience. Cell budget,
+ * lead families, density, and stream window preference sit next to
+ * familiarity so `suggestDashboard` / `suggestStreamDashboard` can honor
+ * the same profile the ranking engine already consumes.
+ */
+export interface DashboardLayoutPolicy {
+  /** Maximum panels. Overrides the suggester's default budget. */
+  cellBudget?: number
+  /** Preferred families for the lead (first) panel. */
+  leadFamilies?: ReadonlyArray<ChartFamily>
+  density?: "sparse" | "comfortable" | "dense"
+  /** Default retention when a stream schema omits it. */
+  windowPreference?: "windowed" | "cumulative"
+}
 
 /**
  * A serializable description of who's reading the charts and what the
@@ -70,6 +86,8 @@ export interface AudienceProfile {
    * See {@link receivabilityBias}.
    */
   receptionModality?: ReceptionModality
+  /** Dashboard composition policy for this audience. */
+  dashboard?: DashboardLayoutPolicy
 }
 
 export interface AudienceTarget {

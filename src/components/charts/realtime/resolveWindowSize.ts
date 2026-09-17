@@ -27,7 +27,9 @@ import type { Datum } from "../shared/datumTypes"
 export function resolveRealtimeWindowSize(
   windowSizeProp: number | undefined,
   data: Datum[] | undefined,
+  capacityProp?: number,
 ): number {
-  if (windowSizeProp != null) return windowSizeProp
+  const explicit = windowSizeProp ?? capacityProp
+  if (explicit != null) return explicit
   return Math.max(data?.length ?? 0, 200)
 }

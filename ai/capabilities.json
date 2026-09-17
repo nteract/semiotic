@@ -619,7 +619,7 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "sequential",
       "layoutMode": "plugin",
       "specialFeatures": [
@@ -632,7 +632,7 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
@@ -646,7 +646,7 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
@@ -659,7 +659,7 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [
@@ -672,7 +672,7 @@
       "supportsSelection": true,
       "supportsLinkedHover": true,
       "supportsPush": true,
-      "supportsSSR": false,
+      "supportsSSR": true,
       "colorModel": "categorical",
       "layoutMode": "plugin",
       "specialFeatures": [

@@ -136,6 +136,7 @@ function copyConfig(config: ChartConfig, format?: CopyFormat | undefined): Promi
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
 function createHatchPattern(options?: HatchPatternOptions | undefined, targetCtx?: CanvasRenderingContext2D | undefined): CanvasPattern | HatchFill | null
 function darkenColor(hex: string, factor?: number | undefined): string
+function dashboardIntentManifest(input: {id: string; title?: string; audience?: IntentManifest["audience"]; layout?: DashboardLayoutPolicy; panels: IntentManifest[];}): DashboardIntentManifest
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function deserializeSelections(serialized: SerializedSelections): Map<string, Selection>
 function diagnoseProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "compressedPadding" | "crossingsAfter" | "layoutQuality" | "layoutQualityBefore"> | null | undefined): Diagnosis[]
@@ -258,6 +259,7 @@ interface ControlObservationAdapterOptions
 interface CrosshairStyle
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
+interface DashboardIntentManifest
 interface DetailsPanelProps
 interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface DirectManipulationControlProps
@@ -389,7 +391,7 @@ interface SwarmStyle
 interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
-interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
+interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "capacity" | "capacityMode" | "data" | "windowMode" | "windowSize">
 interface ThresholdAlertConfig
 interface ToConfigOptions
 interface ToURLOptions
@@ -434,8 +436,10 @@ interface-member ActivateObservation::property::type = required type: "activate"
 interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
 interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
 interface-member AggregateConfig::property::band = optional band: AggregateBand | undefined
+interface-member AggregateConfig::property::distinct = optional distinct: boolean | undefined
 interface-member AggregateConfig::property::gap = optional gap: number | string | undefined
 interface-member AggregateConfig::property::hop = optional hop: number | string | undefined
+interface-member AggregateConfig::property::percentiles = optional percentiles: readonly number[] | undefined
 interface-member AggregateConfig::property::retain = optional retain: number | undefined
 interface-member AggregateConfig::property::sigma = optional sigma: number | undefined
 interface-member AggregateConfig::property::size = required size: number | string
@@ -646,6 +650,7 @@ interface-member BubbleChartProps::property::bubbleStrokeWidth = optional bubble
 interface-member BubbleChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member BubbleChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member BubbleChartProps::property::data = optional data: TDatum[] | undefined
+interface-member BubbleChartProps::property::decay = optional decay: DecayConfig | undefined
 interface-member BubbleChartProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member BubbleChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
 interface-member BubbleChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
@@ -653,11 +658,13 @@ interface-member BubbleChartProps::property::legendPosition = optional legendPos
 interface-member BubbleChartProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
 interface-member BubbleChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member BubbleChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member BubbleChartProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member BubbleChartProps::property::regression = optional regression: RegressionProp | undefined
 interface-member BubbleChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member BubbleChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member BubbleChartProps::property::sizeBy = required sizeBy: ChartAccessor<TDatum, number>
 interface-member BubbleChartProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member BubbleChartProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member BubbleChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member BubbleChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member BubbleChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
@@ -860,6 +867,7 @@ interface-member CompileMotionEncodingOptions::property::encoding = required enc
 interface-member ConnectedScatterplotProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member ConnectedScatterplotProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
 interface-member ConnectedScatterplotProps::property::data = optional data: TDatum[] | undefined
+interface-member ConnectedScatterplotProps::property::decay = optional decay: DecayConfig | undefined
 interface-member ConnectedScatterplotProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member ConnectedScatterplotProps::property::forecast = optional forecast: ForecastConfig | undefined
 interface-member ConnectedScatterplotProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
@@ -868,8 +876,10 @@ interface-member ConnectedScatterplotProps::property::orderAccessor = optional o
 interface-member ConnectedScatterplotProps::property::orderLabel = optional orderLabel: string | undefined
 interface-member ConnectedScatterplotProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member ConnectedScatterplotProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member ConnectedScatterplotProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member ConnectedScatterplotProps::property::regression = optional regression: RegressionProp | undefined
 interface-member ConnectedScatterplotProps::property::showGrid = optional showGrid: boolean | undefined
+interface-member ConnectedScatterplotProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member ConnectedScatterplotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ConnectedScatterplotProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member ConnectedScatterplotProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
@@ -920,6 +930,12 @@ interface-member CustomLayoutFailureDiagnostic::property::severity = required se
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
 interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
 interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member DashboardIntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
+interface-member DashboardIntentManifest::property::dashboardId = required dashboardId: string
+interface-member DashboardIntentManifest::property::ididVersion = required ididVersion: string
+interface-member DashboardIntentManifest::property::layout = optional layout: DashboardLayoutPolicy | undefined
+interface-member DashboardIntentManifest::property::panels = required panels: IntentManifest[]
+interface-member DashboardIntentManifest::property::title = optional title: string | undefined
 interface-member DetailsPanelProps::property::chartId = optional chartId: string | undefined
 interface-member DetailsPanelProps::property::children = required children: (datum: Datum, observation: ClickObservation) => React.ReactNode
 interface-member DetailsPanelProps::property::className = optional className: string | undefined
@@ -1751,6 +1767,8 @@ interface-member RealtimeHeatmapProps::property::annotations = optional annotati
 interface-member RealtimeHeatmapProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
 interface-member RealtimeHeatmapProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeHeatmapProps::property::background = optional background: string | undefined
+interface-member RealtimeHeatmapProps::property::capacity = optional capacity: number | undefined
+interface-member RealtimeHeatmapProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member RealtimeHeatmapProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RealtimeHeatmapProps::property::chartId = optional chartId: string | undefined
 interface-member RealtimeHeatmapProps::property::className = optional className: string | undefined
@@ -1768,7 +1786,7 @@ interface-member RealtimeHeatmapProps::property::heatmapYBins = optional heatmap
 interface-member RealtimeHeatmapProps::property::height = optional height: number | undefined
 interface-member RealtimeHeatmapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member RealtimeHeatmapProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
-interface-member RealtimeHeatmapProps::property::linkedHover = optional linkedHover: boolean | string | undefined | {name?: string; fields: string[];}
+interface-member RealtimeHeatmapProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
 interface-member RealtimeHeatmapProps::property::loading = optional loading: boolean | undefined
 interface-member RealtimeHeatmapProps::property::loadingContent = optional loadingContent: React.ReactNode
 interface-member RealtimeHeatmapProps::property::margin = optional margin: PartialMargin | undefined
@@ -1808,6 +1826,8 @@ interface-member RealtimeHistogramProps::property::axes = optional axes: XYFrame
 interface-member RealtimeHistogramProps::property::background = optional background: string | undefined
 interface-member RealtimeHistogramProps::property::binSize = required binSize: number
 interface-member RealtimeHistogramProps::property::brush = optional brush: "x" | boolean | undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
+interface-member RealtimeHistogramProps::property::capacity = optional capacity: number | undefined
+interface-member RealtimeHistogramProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member RealtimeHistogramProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RealtimeHistogramProps::property::chartId = optional chartId: string | undefined
 interface-member RealtimeHistogramProps::property::className = optional className: string | undefined
@@ -1873,6 +1893,8 @@ interface-member RealtimeLineChartProps::property::annotations = optional annota
 interface-member RealtimeLineChartProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
 interface-member RealtimeLineChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeLineChartProps::property::background = optional background: string | undefined
+interface-member RealtimeLineChartProps::property::capacity = optional capacity: number | undefined
+interface-member RealtimeLineChartProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member RealtimeLineChartProps::property::chartId = optional chartId: string | undefined
 interface-member RealtimeLineChartProps::property::className = optional className: string | undefined
 interface-member RealtimeLineChartProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
@@ -1886,7 +1908,7 @@ interface-member RealtimeLineChartProps::property::extentPadding = optional exte
 interface-member RealtimeLineChartProps::property::height = optional height: number | undefined
 interface-member RealtimeLineChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member RealtimeLineChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
-interface-member RealtimeLineChartProps::property::linkedHover = optional linkedHover: boolean | string | undefined | {name?: string; fields: string[];}
+interface-member RealtimeLineChartProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
 interface-member RealtimeLineChartProps::property::loading = optional loading: boolean | undefined
 interface-member RealtimeLineChartProps::property::loadingContent = optional loadingContent: ReactNode
 interface-member RealtimeLineChartProps::property::margin = optional margin: PartialMargin | undefined
@@ -1903,6 +1925,7 @@ interface-member RealtimeLineChartProps::property::responsiveHeight = optional r
 interface-member RealtimeLineChartProps::property::responsiveRules = optional responsiveRules: ResponsiveRule<Record<string, unknown>>[] | undefined
 interface-member RealtimeLineChartProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
 interface-member RealtimeLineChartProps::property::selection = optional selection: SelectionConfig | undefined
+interface-member RealtimeLineChartProps::property::seriesAccessor = optional seriesAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RealtimeLineChartProps::property::showAxes = optional showAxes: boolean | undefined
 interface-member RealtimeLineChartProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member RealtimeLineChartProps::property::size = optional size: [number, number] | undefined
@@ -1928,6 +1951,8 @@ interface-member RealtimeSwarmChartProps::property::annotations = optional annot
 interface-member RealtimeSwarmChartProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
 interface-member RealtimeSwarmChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeSwarmChartProps::property::background = optional background: string | undefined
+interface-member RealtimeSwarmChartProps::property::capacity = optional capacity: number | undefined
+interface-member RealtimeSwarmChartProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member RealtimeSwarmChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member RealtimeSwarmChartProps::property::chartId = optional chartId: string | undefined
 interface-member RealtimeSwarmChartProps::property::className = optional className: string | undefined
@@ -1943,7 +1968,7 @@ interface-member RealtimeSwarmChartProps::property::fill = optional fill: string
 interface-member RealtimeSwarmChartProps::property::height = optional height: number | undefined
 interface-member RealtimeSwarmChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member RealtimeSwarmChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
-interface-member RealtimeSwarmChartProps::property::linkedHover = optional linkedHover: boolean | string | undefined | {name?: string; fields: string[];}
+interface-member RealtimeSwarmChartProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
 interface-member RealtimeSwarmChartProps::property::loading = optional loading: boolean | undefined
 interface-member RealtimeSwarmChartProps::property::loadingContent = optional loadingContent: React.ReactNode
 interface-member RealtimeSwarmChartProps::property::margin = optional margin: PartialMargin | undefined
@@ -1987,6 +2012,8 @@ interface-member RealtimeWaterfallChartProps::property::annotations = optional a
 interface-member RealtimeWaterfallChartProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
 interface-member RealtimeWaterfallChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeWaterfallChartProps::property::background = optional background: string | undefined
+interface-member RealtimeWaterfallChartProps::property::capacity = optional capacity: number | undefined
+interface-member RealtimeWaterfallChartProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member RealtimeWaterfallChartProps::property::chartId = optional chartId: string | undefined
 interface-member RealtimeWaterfallChartProps::property::className = optional className: string | undefined
 interface-member RealtimeWaterfallChartProps::property::connectorStroke = optional connectorStroke: string | undefined
@@ -2002,7 +2029,7 @@ interface-member RealtimeWaterfallChartProps::property::gap = optional gap: numb
 interface-member RealtimeWaterfallChartProps::property::height = optional height: number | undefined
 interface-member RealtimeWaterfallChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member RealtimeWaterfallChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
-interface-member RealtimeWaterfallChartProps::property::linkedHover = optional linkedHover: boolean | string | undefined | {name?: string; fields: string[];}
+interface-member RealtimeWaterfallChartProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
 interface-member RealtimeWaterfallChartProps::property::loading = optional loading: boolean | undefined
 interface-member RealtimeWaterfallChartProps::property::loadingContent = optional loadingContent: React.ReactNode
 interface-member RealtimeWaterfallChartProps::property::margin = optional margin: PartialMargin | undefined
@@ -2160,6 +2187,7 @@ interface-member ScatterplotProps::property::brush = optional brush: boolean | u
 interface-member ScatterplotProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member ScatterplotProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member ScatterplotProps::property::data = optional data: TDatum[] | undefined
+interface-member ScatterplotProps::property::decay = optional decay: DecayConfig | undefined
 interface-member ScatterplotProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member ScatterplotProps::property::forecast = optional forecast: ForecastConfig | undefined
 interface-member ScatterplotProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
@@ -2170,11 +2198,13 @@ interface-member ScatterplotProps::property::onBrush = optional onBrush: ((exten
 interface-member ScatterplotProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member ScatterplotProps::property::pointOpacity = optional pointOpacity: number | undefined
 interface-member ScatterplotProps::property::pointRadius = optional pointRadius: number | undefined
+interface-member ScatterplotProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member ScatterplotProps::property::regression = optional regression: RegressionProp | undefined
 interface-member ScatterplotProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member ScatterplotProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ScatterplotProps::property::sizeBy = optional sizeBy: ChartAccessor<TDatum, number> | undefined
 interface-member ScatterplotProps::property::sizeRange = optional sizeRange: [number, number] | undefined
+interface-member ScatterplotProps::property::staleness = optional staleness: StalenessConfig | undefined
 interface-member ScatterplotProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ScatterplotProps::property::symbolBy = optional symbolBy: ChartAccessor<TDatum, string> | undefined
 interface-member ScatterplotProps::property::symbolMap = optional symbolMap: Record<string, import("../../semiotic-recipes-core").NetworkSymbolName> | undefined
@@ -2577,6 +2607,8 @@ interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyl
 interface-member StreamXYFrameProps::property::brush = optional brush: undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
 interface-member StreamXYFrameProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
 interface-member StreamXYFrameProps::property::canvasPreRenderers = optional canvasPreRenderers: CanvasRendererFn[] | undefined
+interface-member StreamXYFrameProps::property::capacity = optional capacity: number | undefined
+interface-member StreamXYFrameProps::property::capacityMode = optional capacityMode: WindowMode | undefined
 interface-member StreamXYFrameProps::property::categoryAccessor = optional categoryAccessor: ((d: T) => string) | string | undefined
 interface-member StreamXYFrameProps::property::chartType = required chartType: StreamChartType
 interface-member StreamXYFrameProps::property::chunkSize = optional chunkSize: number | undefined

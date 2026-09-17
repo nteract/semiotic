@@ -30,7 +30,7 @@ export type { ThemeSemanticColors } from "./streamThemeTypes"
 export type { AxisTickFormat, AxisTickFormatter, XYFrameAxisConfig } from "./xyFrameAxisTypes"
 
 import type { DecayConfig, PulseConfig, StalenessConfig, TransitionConfig } from "./streamEncodingTypes"
-export type { DecayConfig, PulseConfig, StalenessConfig, TransitionConfig } from "./streamEncodingTypes"
+export type { DecayConfig, PulseConfig, SourceLiveness, StalenessConfig, TransitionConfig } from "./streamEncodingTypes"
 
 export type SceneDatum = Datum | null
 export type SeriesDatum = Datum[] | null
@@ -745,6 +745,14 @@ export interface StreamXYFrameProps<T = Datum>
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
+  /**
+   * Ring-buffer capacity. Alias for `windowSize` — prefer this name when
+   * talking to a Kafka Streams / Flink audience, where "window" means the
+   * aggregation window (`aggregate.window`), not the eviction policy.
+   */
+  capacity?: number
+  /** Alias for `windowMode`. */
+  capacityMode?: WindowMode
   timeAccessor?: string | ((d: T) => number)
 
   // ── Scale types ─────────────────────────────────

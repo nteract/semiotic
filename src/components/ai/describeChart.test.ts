@@ -6,6 +6,7 @@ import {
 } from "./describeChart"
 import { LineChartCapability } from "../charts/xy/LineChart.capability"
 import { PieChartCapability } from "../charts/ordinal/PieChart.capability"
+import { registerIntent } from "./intents"
 
 describe("describeChart — L1 encoding", () => {
   it("names the chart type and what's mapped to each channel (XY)", () => {
@@ -661,6 +662,17 @@ describe("describeChart — L4 intent / communicative act", () => {
       resolveCommunicativeAct("ForceDirectedGraph", { family: "network" })
     ).toBe("tracing")
     expect(resolveCommunicativeAct("Mystery", undefined)).toBeUndefined()
+  })
+
+  it("resolves a composed intent through the heaviest child", () => {
+    registerIntent({
+      id: "health-check-act-test",
+      label: "Health check",
+      description: "Is the system healthy?",
+      composes: ["outlier-detection", "change-detection"],
+      weights: { "outlier-detection": 2, "change-detection": 1 },
+    })
+    expect(communicativeActForIntent("health-check-act-test")).toBe("alerting")
   })
 })
 

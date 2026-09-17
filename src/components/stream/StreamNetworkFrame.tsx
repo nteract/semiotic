@@ -1643,6 +1643,8 @@ const StreamNetworkFrame = memo(forwardRef<
           <StalenessBadge
             isStale={isStale}
             position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
           />
         )}
       </div>

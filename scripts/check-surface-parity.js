@@ -45,9 +45,9 @@ const AI_EXPORT_ONLY = new Set([
   "PhysicsCustomChart",
 ])
 
-// Every non-realtime schema-visible chart now has a renderChart implementation.
-// Keep this as an explicit map rather than deleting the escape hatch: a future
-// exclusion must carry its public reason here and will be counted by the gate.
+// Every schema-visible chart now has a renderChart implementation. Realtime
+// HOCs SSR from controlled `data` (and optional `aggregate`); MCP still treats
+// them as live-data charts. Keep this map as an explicit exclusion hatch.
 const SERVER_CONFIG_EXCLUDED = new Map()
 
 function read(file) {
@@ -228,11 +228,12 @@ const expectedMCPRegistry = new Set(
   [...validation, ...recipeComponents].filter(name => !realtimeCharts.has(name))
 )
 const expectedMetadataComponents = new Set([...validation, ...recipeComponents])
-const expectedServerConfigs = new Set(
-  [...expectedMCPRegistry].filter(
+const expectedServerConfigs = new Set([
+  ...[...expectedMCPRegistry].filter(
     name => !SERVER_CONFIG_EXCLUDED.has(name) && !valueCharts.has(name)
-  )
-)
+  ),
+  ...realtimeCharts,
+])
 
 const errors = []
 

@@ -17,6 +17,10 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       strokeWidth: { type: "number" },
       strokeDasharray: { type: "string" },
       opacity: { type: "number" },
+      seriesAccessor: {
+        type: ["string", "function"],
+        description: "Split the line into series. Passed to the frame as groupAccessor.",
+      },
       aggregate: {
         type: "object",
         description:
@@ -38,7 +42,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: true,
       supportsPush: true,
-      supportsSSR: false,
+      supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "plugin",
       specialFeatures: ["live-stream"]
@@ -120,7 +124,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: true,
       supportsPush: true,
-      supportsSSR: false,
+      supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "plugin",
       specialFeatures: ["live-stream", "brush"]
@@ -308,7 +312,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: true,
       supportsPush: true,
-      supportsSSR: false,
+      supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "plugin",
       specialFeatures: ["live-stream"]
@@ -345,7 +349,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: true,
       supportsPush: true,
-      supportsSSR: false,
+      supportsSSR: true,
       colorModel: "categorical",
       layoutMode: "plugin",
       specialFeatures: ["live-stream"]
@@ -397,7 +401,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       supportsSelection: true,
       supportsLinkedHover: true,
       supportsPush: true,
-      supportsSSR: false,
+      supportsSSR: true,
       colorModel: "sequential",
       layoutMode: "plugin",
       specialFeatures: ["live-stream"]

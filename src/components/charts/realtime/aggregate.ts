@@ -46,6 +46,10 @@ export interface AggregateConfig {
   sigma?: number
   /** Keep at most this many most-recent windows. @default unbounded */
   retain?: number
+  /** Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). */
+  percentiles?: ReadonlyArray<number>
+  /** Track an approximate distinct count per window. */
+  distinct?: boolean
 }
 
 // Field names on the emitted frame rows. Underscored synthetic keys are
@@ -96,6 +100,8 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
     hop: hopMs ?? undefined,
     gap: gapMs ?? undefined,
     retain: config.retain,
+    percentiles: config.percentiles,
+    distinct: config.distinct,
   })
 }
 

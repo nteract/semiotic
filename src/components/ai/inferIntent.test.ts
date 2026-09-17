@@ -50,6 +50,27 @@ describe("inferIntent", () => {
     expect(result?.intent).toBe("geo")
   })
 
+  it("does not let a generic 'flow' token beat registered health-check phrases", () => {
+    registerIntent({
+      id: "health-check-prose-test",
+      label: "Health check",
+      description: "Is order flow healthy?",
+      composes: ["outlier-detection", "change-detection"],
+      signals: {
+        phrases: ["healthy", "failed shipments", "spikes"],
+      },
+    })
+
+    const result = inferIntent(
+      "is order flow healthy, any spikes in failed shipments?",
+    )
+    expect(result?.intent).toBe("health-check-prose-test")
+  })
+
+  it("still maps an explicit funnel/conversion question to flow", () => {
+    expect(inferIntent("show conversion funnel from signup to purchase")?.intent).toBe("flow")
+  })
+
   it("keeps field-name inference opt-in", () => {
     expect(inferIntent("cloud region phase throughput partitions")).toBeNull()
     expect(

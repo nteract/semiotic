@@ -25,6 +25,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
   ChartMode,
   ChartAccessor,
+  LinkedHoverProp,
   SelectionConfig,
   MobileInteractionProp
 } from "../shared/types"
@@ -96,6 +97,10 @@ export interface RealtimeHeatmapProps<
   windowMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
+  /** Alias for `windowSize` — ring-buffer capacity, not the aggregation window. */
+  capacity?: number
+  /** Alias for `windowMode`. */
+  capacityMode?: WindowMode
   /** Controlled data array */
   data?: RealtimeData<TDatum>
   /** Time/x value accessor */
@@ -174,7 +179,7 @@ export interface RealtimeHeatmapProps<
   /** Declarative tooltip config or the legacy full-HoverData callback. */
   tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
-  linkedHover?: boolean | string | { name?: string; fields: string[] }
+  linkedHover?: LinkedHoverProp
   /** Consume a named selection — dims unselected elements */
   selection?: SelectionConfig
   /** Show a loading skeleton placeholder */
@@ -244,8 +249,10 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     margin: userMargin,
     className,
     arrowOfTime = "right",
-    windowMode = "sliding",
+    windowMode: windowModeProp,
+    capacityMode,
     windowSize: windowSizeProp,
+    capacity,
     data,
     timeAccessor,
     valueAccessor,
@@ -391,7 +398,8 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
 
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
   const cursorCellStyle = useMemo(() => {
     if (cursor == null) return undefined
     const style = { cursor }

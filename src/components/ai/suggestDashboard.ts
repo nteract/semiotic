@@ -139,7 +139,7 @@ export function suggestDashboard(
   options: SuggestDashboardOptions = {},
 ): DashboardSuggestion {
   const profile = options.profile ?? profileData(data ?? [], options)
-  const maxPanels = options.maxPanels ?? 6
+  const maxPanels = options.maxPanels ?? options.audience?.dashboard?.cellBudget ?? 6
   const diversify = options.diversifyByFamily !== false
   const intents = options.intents ?? defaultIntents(profile)
 

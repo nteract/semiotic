@@ -629,7 +629,8 @@ host-header allowlisting. For ChatGPT Apps domain verification, set
 | **`getSchema`** | Return the prop schema for a specific component. Pass `{ component: "LineChart" }` to get its props, or omit `component` to list the complete schema-backed catalog. Components marked `[renderable]` are available through `renderChart`; realtime charts require a browser/live environment. |
 | **`suggestChart`** | Sample-row recommender. Pass `{ data: [{...}, ...] }` with 1–5 sample objects plus optional broad intent/capability filters. |
 | **`suggestCharts`** | Capability-based recommender for bounded row data. Returns ranked chart suggestions with scores, reasons, caveats, import paths, and ready-to-use props. |
-| **`suggestStreamCharts`** | Recommend realtime charts from a stream schema, throughput, and retention hints. |
+| **`suggestStreamCharts`** | Recommend streaming charts from a schema (shape, key, throughput). Returns `{ suggestions, excluded, stretchSuggestions }`. |
+| **`suggestStreamDashboard`** | Compose a multi-panel dashboard from stream schemas and an audience layout policy. |
 | **`suggestDashboard`** | Build a multi-panel dashboard suggestion that covers distinct analytical intents. |
 | **`suggestStretchCharts`** | Recommend audience-literacy stretch picks from an `AudienceProfile`. |
 | **`repairChartConfig`** | Check whether a requested chart fits a dataset and return ranked alternatives when it does not. |

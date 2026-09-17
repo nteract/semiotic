@@ -21,6 +21,13 @@ import {
   multiAxisLineChart,
   temporalHistogram
 } from "./serverChartConfigsXY"
+import {
+  realtimeLineChart,
+  realtimeHistogram,
+  realtimeHeatmap,
+  realtimeSwarmChart,
+  realtimeWaterfallChart
+} from "./serverChartConfigsRealtime"
 import { heatmap } from "./serverChartConfigHeatmap"
 import {
   barChart,
@@ -108,6 +115,11 @@ export const CHART_CONFIGS = {
   MinimapChart: minimapChart,
   ScatterplotMatrix: scatterplotMatrix,
   TemporalHistogram: temporalHistogram,
+  RealtimeLineChart: realtimeLineChart,
+  RealtimeHistogram: realtimeHistogram,
+  RealtimeHeatmap: realtimeHeatmap,
+  RealtimeSwarmChart: realtimeSwarmChart,
+  RealtimeWaterfallChart: realtimeWaterfallChart,
   XYCustomChart: xyCustomChart,
   BarChart: barChart,
   StackedBarChart: stackedBarChart,

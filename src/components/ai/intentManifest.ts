@@ -1,4 +1,5 @@
 import type { ChartRecipe } from "./chartRecipes"
+import type { DashboardLayoutPolicy } from "./audienceProfile"
 
 export interface IntentManifest {
   ididVersion: string
@@ -49,6 +50,32 @@ export interface IntentManifest {
     staleAfter?: string
     refreshPolicy?: string
     annotationStatus?: string
+  }
+}
+
+export interface DashboardIntentManifest {
+  ididVersion: string
+  dashboardId: string
+  title?: string
+  audience?: IntentManifest["audience"]
+  layout?: DashboardLayoutPolicy
+  panels: IntentManifest[]
+}
+
+export function dashboardIntentManifest(input: {
+  id: string
+  title?: string
+  audience?: IntentManifest["audience"]
+  layout?: DashboardLayoutPolicy
+  panels: IntentManifest[]
+}): DashboardIntentManifest {
+  return {
+    ididVersion: "0.1",
+    dashboardId: input.id,
+    title: input.title,
+    audience: input.audience,
+    layout: input.layout,
+    panels: input.panels,
   }
 }
 

@@ -123,8 +123,11 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     margin: userMargin,
     className,
     arrowOfTime = "right",
-    windowMode = "sliding",
+    windowMode: windowModeProp,
+    capacityMode,
     windowSize: windowSizeProp,
+    capacity,
+    seriesAccessor,
     data,
     timeAccessor,
     valueAccessor,
@@ -519,7 +522,8 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     selection
   )
 
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
 
   const resolvedClassName = emphasis
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
@@ -564,6 +568,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       data={frameData}
       timeAccessor={frameTimeAccessor}
       valueAccessor={frameValueAccessor}
+      groupAccessor={seriesAccessor}
       xExtent={timeExtent}
       yExtent={valueExtent}
       extentPadding={extentPadding}

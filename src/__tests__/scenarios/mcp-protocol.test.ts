@@ -452,6 +452,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
       "suggestCharts",
       "suggestDashboard",
       "suggestStreamCharts",
+      "suggestStreamDashboard",
       "suggestStretchCharts",
       "suggestTokenEncoding",
     ])

@@ -1093,7 +1093,12 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         )}
 
         {staleness?.showBadge && (
-          <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
+          />
         )}
         <FocusRing
           active={kbFocusIndexRef.current >= 0}

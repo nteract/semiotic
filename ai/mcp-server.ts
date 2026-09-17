@@ -1,31 +1,32 @@
 /**
  * Semiotic MCP Server
  *
- * Exposes twenty-three developer tools, thirteen resources (eleven fixed and
+ * Exposes twenty-four developer tools, thirteen resources (eleven fixed and
  * two templates), and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — sample-row chart recommender
  *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
  *   4. proposeChartVariants — ranks variants/alternatives for a selected chart
- *   5. suggestStreamCharts — realtime chart recommender from a stream schema
- *   6. suggestDashboard — multi-panel dashboard recommender
- *   7. suggestStretchCharts — audience-literacy stretch recommender
- *   8. repairChartConfig — checks a chart choice and proposes alternatives
- *   9. renderChart — renders static HOC charts to SVG/PNG
- *   10. interrogateChart — summarizes chart data for conversational answers
- *   11. groundChart — agent-reader grounding payload (description + intent + structure)
- *   12. diagnoseConfig — anti-pattern detector for chart configurations
- *   13. auditAccessibility — Chartability accessibility audit
- *   14. evaluateChart — unified data, deception, and accessibility evaluation
- *   15. auditMobileVisualization — mobile visualization audit
- *   16. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   17. applyTheme — returns usage guidance for theme presets
- *   18. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
- *   19. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
- *   20. auditArtifact — audits an explicit interpretation contract under a named policy
- *   21. recommendRepresentation — considers chart and non-chart outcomes without inventing facts
- *   22. repairArtifact — proposes repairs or fills missing identity fields
- *   23. explainRefusal — explains policy refusals from an explicit contract
+ *   5. suggestStreamCharts — stream chart recommender from a schema
+ *   6. suggestStreamDashboard — multi-panel dashboard from stream schemas
+ *   7. suggestDashboard — multi-panel dashboard recommender
+ *   8. suggestStretchCharts — audience-literacy stretch recommender
+ *   9. repairChartConfig — checks a chart choice and proposes alternatives
+ *   10. renderChart — renders static HOC charts to SVG/PNG
+ *   11. interrogateChart — summarizes chart data for conversational answers
+ *   12. groundChart — agent-reader grounding payload (description + intent + structure)
+ *   13. diagnoseConfig — anti-pattern detector for chart configurations
+ *   14. auditAccessibility — Chartability accessibility audit
+ *   15. evaluateChart — unified data, deception, and accessibility evaluation
+ *   16. auditMobileVisualization — mobile visualization audit
+ *   17. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
+ *   18. applyTheme — returns usage guidance for theme presets
+ *   19. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
+ *   20. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
+ *   21. auditArtifact — audits an explicit interpretation contract under a named policy
+ *   22. recommendRepresentation — considers chart and non-chart outcomes without inventing facts
+ *   23. repairArtifact — proposes repairs or fills missing identity fields
+ *   24. explainRefusal — explains policy refusals from an explicit contract
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -99,6 +100,7 @@ import {
   repairChartConfig as repairChartConfigFromCapabilities,
   suggestDashboard as suggestDashboardFromCapabilities,
   suggestStreamCharts as suggestStreamChartsFromCapabilities,
+  suggestStreamDashboard as suggestStreamDashboardFromCapabilities,
   suggestStretchCharts as suggestStretchChartsFromCapabilities,
   buildReaderGrounding,
   countNodes,
@@ -2753,21 +2755,25 @@ async function suggestStreamChartsHandler(args: {
   schema: StreamSchema
   intent?: string | string[]
   maxResults?: number
+  audience?: AudienceProfile
 }): Promise<ToolResult> {
-  const { schema, intent, maxResults } = args
+  const { schema, intent, maxResults, audience } = args
   const intentArg = (
     Array.isArray(intent) ? intent : intent ? [intent] : undefined
   ) as IntentId[] | undefined
 
-  const suggestions = suggestStreamChartsFromCapabilities(schema, {
-    intent: intentArg,
-    maxResults: maxResults ?? 8
-  })
+  const { suggestions, excluded, stretchSuggestions } =
+    suggestStreamChartsFromCapabilities(schema, {
+      intent: intentArg,
+      maxResults: maxResults ?? 8,
+      audience
+    })
 
   const lines: string[] = [
     `${suggestions.length} stream chart suggestion${suggestions.length === 1 ? "" : "s"}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}`,
-    ...(schema.throughput ? [`throughput: ${schema.throughput}`] : []),
+    ...(schema.throughput != null ? [`throughput: ${schema.throughput}`] : []),
     ...(schema.retention ? [`retention: ${schema.retention}`] : []),
+    ...(schema.shape ? [`shape: ${schema.shape}`] : []),
     "",
     ...suggestions.map((s, i) => {
       const reasons = s.reasons.length ? ` — ${s.reasons.join("; ")}` : ""
@@ -2777,10 +2783,45 @@ async function suggestStreamChartsHandler(args: {
       return `${i + 1}. ${s.component} (score ${s.score.toFixed(1)}/5)${reasons}${caveats}`
     })
   ]
+  if (excluded.length > 0) {
+    lines.push("", "Excluded:")
+    for (const miss of excluded.slice(0, 8)) {
+      lines.push(`- ${miss.component}: ${miss.reason}`)
+    }
+  }
 
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: { suggestions, schema }
+    structuredContent: { suggestions, excluded, stretchSuggestions, schema }
+  }
+}
+
+async function suggestStreamDashboardHandler(args: {
+  schemas: StreamSchema | StreamSchema[]
+  intent?: string | string[]
+  budget?: number
+  audience?: AudienceProfile
+}): Promise<ToolResult> {
+  const dashboard = suggestStreamDashboardFromCapabilities(args.schemas, {
+    intent: args.intent as IntentId | IntentId[] | undefined,
+    budget: args.budget,
+    audience: args.audience
+  })
+  const lines = [
+    `${dashboard.panels.length} stream dashboard panel${dashboard.panels.length === 1 ? "" : "s"}`,
+    `covered: ${dashboard.intentsCovered.join(", ") || "(none)"}`,
+    ...(dashboard.intentsMissing.length
+      ? [`missing: ${dashboard.intentsMissing.join(", ")}`]
+      : []),
+    "",
+    ...dashboard.panels.map(
+      (panel, i) =>
+        `${i + 1}. ${panel.intent} → ${panel.suggestion.component} (${panel.suggestion.score.toFixed(1)}/5)`,
+    ),
+  ]
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    structuredContent: dashboard
   }
 }
 
@@ -4782,7 +4823,7 @@ function createServer(
 
   srv.tool(
     "suggestStreamCharts",
-    "Recommend realtime/streaming Semiotic charts for a schema (not row data). Pass a schema describing field types plus optional throughput ('low'|'medium'|'high') and retention ('windowed'|'cumulative') hints; the engine ranks realtime charts (RealtimeLineChart, RealtimeHistogram, RealtimeHeatmap, RealtimeWaterfallChart, RealtimeSwarmChart, TemporalHistogram) by their fit. Use when the user is wiring up a live dashboard or monitoring view rather than visualizing a bounded dataset.",
+    "Recommend streaming Semiotic charts for a schema (not row data). Pass fields plus optional throughput (band or rows/sec), retention, shape ('append'|'keyed'|'aggregate'), and keyFields. Ranks realtime XY charts plus push-capable ordinal/value charts (BarChart, PieChart, BigNumber, GaugeChart, …). Returns suggestions, excluded fits-reasons, and optional stretch picks when audience is set.",
     {
       schema: z
         .object({
@@ -4791,24 +4832,57 @@ function createServer(
               name: z.string(),
               kind: z.enum(["numeric", "categorical", "date", "boolean"]),
               role: z
-                .enum(["x", "y", "value", "category", "series", "size"])
+                .enum(["x", "y", "value", "category", "series", "size", "key"])
                 .optional()
             })
           ),
-          throughput: z.enum(["low", "medium", "high"]).optional(),
-          retention: z.enum(["windowed", "cumulative"]).optional()
+          throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
+          retention: z.enum(["windowed", "cumulative"]).optional(),
+          shape: z.enum(["append", "keyed", "aggregate"]).optional(),
+          keyFields: z.array(z.string()).optional()
         })
         .describe(
-          "Stream schema — fields plus throughput/retention hints. No row data."
+          "Stream schema — fields plus throughput/retention/shape hints. No row data."
         ),
       intent: z
         .union([z.string(), z.array(z.string())])
         .optional()
         .describe("Ranking intent."),
-      maxResults: z.number().int().min(1).max(20).optional()
+      maxResults: z.number().int().min(1).max(20).optional(),
+      audience: z.record(z.string(), z.unknown()).optional()
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStreamChartsHandler
+  )
+
+  srv.tool(
+    "suggestStreamDashboard",
+    "Compose a multi-panel dashboard from one or more stream schemas. Honors AudienceProfile.dashboard layout policy (cellBudget, leadFamilies, windowPreference).",
+    {
+      schemas: z.union([
+        z.object({
+          fields: z.array(
+            z.object({
+              name: z.string(),
+              kind: z.enum(["numeric", "categorical", "date", "boolean"]),
+              role: z
+                .enum(["x", "y", "value", "category", "series", "size", "key"])
+                .optional()
+            })
+          ),
+          throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
+          retention: z.enum(["windowed", "cumulative"]).optional(),
+          shape: z.enum(["append", "keyed", "aggregate"]).optional(),
+          keyFields: z.array(z.string()).optional()
+        }),
+        z.array(z.record(z.string(), z.unknown()))
+      ]),
+      intent: z.union([z.string(), z.array(z.string())]).optional(),
+      budget: z.number().int().min(1).max(12).optional(),
+      audience: z.record(z.string(), z.unknown()).optional()
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    suggestStreamDashboardHandler
   )
 
   srv.tool(

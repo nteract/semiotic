@@ -1,7 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
-import type { IntentId } from "./intents"
+import { getIntent, type IntentId } from "./intents"
 import type { AudienceProfile } from "./audienceProfile"
 import {
   XY_FAMILY,
@@ -293,11 +293,43 @@ const ACT_LABEL: Record<CommunicativeAct, string> = {
   presenting: "single-value"
 }
 
-/** The communicative act a built-in intent implies, or undefined if unknown. */
+/**
+ * The communicative act an intent implies. Built-in intents map directly.
+ * Registered composed intents resolve through the heaviest child in
+ * `composes` (highest `weights` entry, default 1), then recurse.
+ */
 export function communicativeActForIntent(
-  intent: IntentId
+  intent: IntentId,
 ): CommunicativeAct | undefined {
-  return INTENT_ACT[intent]
+  const visiting = new Set<IntentId>()
+  const resolve = (id: IntentId): CommunicativeAct | undefined => {
+    const direct = INTENT_ACT[id]
+    if (direct) return direct
+    if (visiting.has(id)) return undefined
+    const descriptor = getIntent(id)
+    if (!descriptor?.composes?.length) return undefined
+    visiting.add(id)
+    const ranked = [...descriptor.composes].sort((a, b) => {
+      const weightDelta = (descriptor.weights?.[b] ?? 1) - (descriptor.weights?.[a] ?? 1)
+      if (weightDelta !== 0) return weightDelta
+      const aIdx = INTENT_TIEBREAK.indexOf(a)
+      const bIdx = INTENT_TIEBREAK.indexOf(b)
+      if (aIdx === -1 && bIdx === -1) return 0
+      if (aIdx === -1) return 1
+      if (bIdx === -1) return -1
+      return aIdx - bIdx
+    })
+    for (const child of ranked) {
+      const act = resolve(child)
+      if (act) {
+        visiting.delete(id)
+        return act
+      }
+    }
+    visiting.delete(id)
+    return undefined
+  }
+  return resolve(intent)
 }
 
 /** Pick the highest-scoring intent, breaking ties by primary-purpose priority. */

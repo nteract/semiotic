@@ -2376,6 +2376,18 @@
                 "function"
               ]
             },
+            "pulse": {
+              "type": "object",
+              "description": "Flash newly inserted or updated points. Also reachable via frameProps.pulse."
+            },
+            "decay": {
+              "type": "object",
+              "description": "Fade older points by buffer age. Also reachable via frameProps.decay."
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Frame-level liveness badge and dimming. Also reachable via frameProps.staleness."
+            },
             "xExtent": {
               "type": "array",
               "description": "Fixed x domain `[min, max]`; either bound may be omitted."
@@ -4630,6 +4642,18 @@
                 "function"
               ]
             },
+            "pulse": {
+              "type": "object",
+              "description": "Flash newly inserted or updated points. Also reachable via frameProps.pulse."
+            },
+            "decay": {
+              "type": "object",
+              "description": "Fade older points by buffer age. Also reachable via frameProps.decay."
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Frame-level liveness badge and dimming. Also reachable via frameProps.staleness."
+            },
             "xExtent": {
               "type": "array",
               "description": "Fixed x domain `[min, max]`; either bound may be omitted."
@@ -5781,6 +5805,18 @@
                 "string",
                 "function"
               ]
+            },
+            "pulse": {
+              "type": "object",
+              "description": "Flash newly inserted or updated points. Also reachable via frameProps.pulse."
+            },
+            "decay": {
+              "type": "object",
+              "description": "Fade older points by buffer age. Also reachable via frameProps.decay."
+            },
+            "staleness": {
+              "type": "object",
+              "description": "Frame-level liveness badge and dimming. Also reachable via frameProps.staleness."
             },
             "xExtent": {
               "type": "array",
@@ -16931,6 +16967,18 @@
                 "growing"
               ]
             },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window)."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode."
+            },
             "arrowOfTime": {
               "type": "string",
               "enum": [
@@ -17234,6 +17282,14 @@
             "opacity": {
               "type": "number"
             },
+            "seriesAccessor": {
+              "type": "string",
+              "description": "Split the line into series. Passed to the frame as groupAccessor.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
             "aggregate": {
               "type": "object",
               "description": "Windowed event-time aggregation config. Structural changes replay controlled data; push-only streams begin a new aggregate epoch because raw events are not retained."
@@ -17390,6 +17446,18 @@
                 "sliding",
                 "growing"
               ]
+            },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window)."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode."
             },
             "arrowOfTime": {
               "type": "string",
@@ -17907,6 +17975,18 @@
                 "growing"
               ]
             },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window)."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode."
+            },
             "arrowOfTime": {
               "type": "string",
               "enum": [
@@ -18383,6 +18463,18 @@
                 "growing"
               ]
             },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window)."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode."
+            },
             "arrowOfTime": {
               "type": "string",
               "enum": [
@@ -18846,6 +18938,18 @@
                 "sliding",
                 "growing"
               ]
+            },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window)."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode."
             },
             "arrowOfTime": {
               "type": "string",

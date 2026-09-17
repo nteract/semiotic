@@ -19,12 +19,23 @@
 // *eviction*, a different concept. Keep the terms distinct.
 
 import { RunningStats } from "./RunningStats"
+import { HyperLogLog } from "./HyperLogLog"
+import { percentileKey, TDigest } from "./TDigest"
 
 /** The Kafka Streams window taxonomy. */
 export type WindowType = "tumbling" | "hopping" | "session"
 
 /** Which statistic the aggregated series carries as its primary value. */
-export type AggregateStat = "mean" | "sum" | "min" | "max" | "count"
+export type AggregateStat =
+  | "mean"
+  | "sum"
+  | "min"
+  | "max"
+  | "count"
+  | "p50"
+  | "p95"
+  | "p99"
+  | "distinct"
 
 /** Envelope drawn around the aggregated series. */
 export type AggregateBand = "stddev" | "minmax" | "none"
@@ -57,6 +68,13 @@ export interface WindowAccumulatorConfig {
    * unbounded (`Infinity`).
    */
   retain?: number
+  /**
+   * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Opt-in so
+   * the default path keeps a cheap `RunningStats` only.
+   */
+  percentiles?: ReadonlyArray<number>
+  /** Track an approximate distinct count (HyperLogLog) per window. */
+  distinct?: boolean
 }
 
 /** A closed or still-filling aggregation window. */
@@ -80,12 +98,41 @@ export interface AggregatedWindow {
    * half-filled aggregate as final.
    */
   partial: boolean
+  /** Present when `percentiles` was configured. Keys like `p50`, `p95`. */
+  percentiles?: Readonly<Record<string, number>>
+  /** Present when `distinct` was configured. */
+  distinct?: number
+}
+
+class WindowBucket {
+  readonly stats = new RunningStats()
+  readonly digest: TDigest | null
+  readonly hll: HyperLogLog | null
+
+  constructor(wantPercentiles: boolean, wantDistinct: boolean) {
+    this.digest = wantPercentiles ? new TDigest() : null
+    this.hll = wantDistinct ? new HyperLogLog() : null
+  }
+
+  push(value: number, distinctKey?: string | number): void {
+    this.stats.push(value)
+    this.digest?.push(value)
+    if (this.hll) {
+      this.hll.add(distinctKey ?? value)
+    }
+  }
+
+  merge(other: WindowBucket): void {
+    this.stats.merge(other.stats)
+    if (this.digest && other.digest) this.digest.merge(other.digest)
+    if (this.hll && other.hll) this.hll.merge(other.hll)
+  }
 }
 
 interface SessionEntry {
   start: number
   end: number
-  stats: RunningStats
+  bucket: WindowBucket
 }
 
 /**
@@ -98,9 +145,11 @@ export class WindowAccumulator {
   private readonly hop: number
   private readonly gap: number
   private readonly retain: number
+  private readonly percentiles: ReadonlyArray<number>
+  private readonly wantDistinct: boolean
 
-  // Tumbling / hopping: window-start (ms) → stats.
-  private windows = new Map<number, RunningStats>()
+  // Tumbling / hopping: window-start (ms) → bucket.
+  private windows = new Map<number, WindowBucket>()
   // Session: sorted-by-start list of live sessions.
   private sessions: SessionEntry[] = []
 
@@ -115,25 +164,35 @@ export class WindowAccumulator {
     this.hop = hop > 0 && hop <= config.size ? hop : config.size
     this.gap = config.gap ?? config.size
     this.retain = config.retain != null && config.retain > 0 ? config.retain : Infinity
+    this.percentiles = config.percentiles ?? []
+    this.wantDistinct = config.distinct === true
   }
 
-  /** Incorporate one event. Non-finite time/value are ignored. */
-  push(time: number, value: number): void {
+  private newBucket(): WindowBucket {
+    return new WindowBucket(this.percentiles.length > 0, this.wantDistinct)
+  }
+
+  /**
+   * Incorporate one event. Non-finite time/value are ignored.
+   * `distinctKey` is hashed into the optional HyperLogLog so a latency
+   * series can still count distinct customers.
+   */
+  push(time: number, value: number, distinctKey?: string | number): void {
     if (!Number.isFinite(time) || !Number.isFinite(value)) return
     if (time > this.latest) this.latest = time
 
     if (this.type === "session") {
-      this.pushSession(time, value)
+      this.pushSession(time, value, distinctKey)
     } else {
-      this.pushFixed(time, value)
+      this.pushFixed(time, value, distinctKey)
     }
     this.prune()
   }
 
-  private pushFixed(time: number, value: number): void {
+  private pushFixed(time: number, value: number, distinctKey?: string | number): void {
     if (this.type === "tumbling" || this.hop >= this.size) {
       const start = Math.floor(time / this.size) * this.size
-      this.bump(start, value)
+      this.bump(start, value, distinctKey)
       return
     }
     // Hopping: event belongs to every window whose [start, start+size)
@@ -143,37 +202,35 @@ export class WindowAccumulator {
     const kMax = Math.floor(time / hop)
     const kMin = Math.floor((time - this.size) / hop) + 1
     for (let k = kMin; k <= kMax; k++) {
-      this.bump(k * hop, value)
+      this.bump(k * hop, value, distinctKey)
     }
   }
 
-  private bump(start: number, value: number): void {
-    let stats = this.windows.get(start)
-    if (!stats) {
-      stats = new RunningStats()
-      this.windows.set(start, stats)
+  private bump(start: number, value: number, distinctKey?: string | number): void {
+    let bucket = this.windows.get(start)
+    if (!bucket) {
+      bucket = this.newBucket()
+      this.windows.set(start, bucket)
     }
-    stats.push(value)
+    bucket.push(value, distinctKey)
   }
 
-  private pushSession(time: number, value: number): void {
+  private pushSession(time: number, value: number, distinctKey?: string | number): void {
     const gap = this.gap
-    // The new event's provisional bounds.
-    const newStats = new RunningStats()
-    newStats.push(value)
+    const incoming = this.newBucket()
+    incoming.push(value, distinctKey)
 
     // Ordered arrivals can only extend the newest session or append one.
     // Avoid copying and sorting the entire history for this common path.
     const tail = this.sessions[this.sessions.length - 1]
     if (!tail || time >= tail.end) {
       if (tail && tail.end >= time - gap && tail.start <= time + gap) {
-        // Match the general path's merge order to retain floating-point results.
-        newStats.merge(tail.stats)
+        incoming.merge(tail.bucket)
         tail.start = tail.start < time ? tail.start : time
         tail.end = time
-        tail.stats = newStats
+        tail.bucket = incoming
       } else {
-        this.sessions.push({ start: time, end: time, stats: newStats })
+        this.sessions.push({ start: time, end: time, bucket: incoming })
       }
       return
     }
@@ -185,11 +242,11 @@ export class WindowAccumulator {
     // them all (plus the new event) into one. Sessions are kept sorted
     // by start, so the survivors form a contiguous run.
     const survivors: SessionEntry[] = []
-    const merged: SessionEntry = { start: lo, end: hi, stats: newStats }
+    const merged: SessionEntry = { start: lo, end: hi, bucket: incoming }
     for (const s of this.sessions) {
       const within = s.end >= time - gap && s.start <= time + gap
       if (within) {
-        merged.stats.merge(s.stats)
+        merged.bucket.merge(s.bucket)
         if (s.start < lo) lo = s.start
         if (s.end > hi) hi = s.end
       } else {
@@ -233,9 +290,9 @@ export class WindowAccumulator {
 
   private emitFixed(): AggregatedWindow[] {
     const rows: AggregatedWindow[] = []
-    for (const [start, stats] of this.windows) {
+    for (const [start, bucket] of this.windows) {
       const end = start + this.size
-      rows.push(this.row(start, end, stats, this.latest < end))
+      rows.push(this.row(start, end, bucket, this.latest < end))
     }
     rows.sort((a, b) => a.start - b.start)
     return rows
@@ -246,17 +303,18 @@ export class WindowAccumulator {
       // A session is still open if the watermark sits within `gap` of
       // its end — another close-by event could still extend it.
       const partial = this.latest - s.end < this.gap
-      return this.row(s.start, s.end, s.stats, partial)
+      return this.row(s.start, s.end, s.bucket, partial)
     })
   }
 
   private row(
     start: number,
     end: number,
-    stats: RunningStats,
+    bucket: WindowBucket,
     partial: boolean
   ): AggregatedWindow {
-    return {
+    const stats = bucket.stats
+    const row: AggregatedWindow = {
       start,
       end,
       count: stats.count,
@@ -267,6 +325,15 @@ export class WindowAccumulator {
       stddev: stats.stddev,
       partial,
     }
+    if (bucket.digest && this.percentiles.length > 0) {
+      const percentiles: Record<string, number> = {}
+      for (const q of this.percentiles) {
+        percentiles[percentileKey(q)] = bucket.digest.quantile(q)
+      }
+      row.percentiles = percentiles
+    }
+    if (bucket.hll) row.distinct = bucket.hll.count()
+    return row
   }
 
   /** Number of live windows (or sessions). */
@@ -301,6 +368,14 @@ export function statValue(w: AggregatedWindow, stat: AggregateStat): number {
       return w.max
     case "count":
       return w.count
+    case "distinct":
+      return w.distinct ?? 0
+    case "p50":
+      return w.percentiles?.p50 ?? Number.NaN
+    case "p95":
+      return w.percentiles?.p95 ?? Number.NaN
+    case "p99":
+      return w.percentiles?.p99 ?? Number.NaN
     case "mean":
     default:
       return w.mean

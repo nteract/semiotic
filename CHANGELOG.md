@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Stream suggestion for ordinal and value charts** — `suggestStreamCharts`
+  now registers BarChart, GroupedBarChart, StackedBarChart, PieChart,
+  DonutChart, BigNumber, and GaugeChart. A keyed `{ brand, revenue }` schema
+  and a single-row aggregate both return charts instead of an empty list.
+- **`StreamSchema.shape` and `keyFields`** — first-class changelog semantics
+  (`append` / `keyed` / `aggregate`) plus a `key` field role distinct from
+  `category`.
+- **Audience, stretch, and exclusions on stream suggestion** —
+  `suggestStreamCharts` takes `audience`, returns
+  `{ suggestions, excluded, stretchSuggestions }`, and
+  `explainStreamCapabilityFit` is the diagnostic alias.
+- **`suggestStreamDashboard`** and `AudienceProfile.dashboard` layout policy
+  (cell budget, lead families, density, window preference).
+- **`applyChangelog`** maps insert/upsert/update/retract batches onto a
+  realtime handle. **T-digest percentiles** and **HyperLogLog distinct
+  counts** are opt-in on `WindowAccumulator`.
+- **Staleness source state** — `StalenessConfig.state` / `settling` so a
+  stopped or failed source reads Stopped/Failed, not Stale.
+- **Controlled-data SSR** for RealtimeLineChart, RealtimeHeatmap,
+  RealtimeHistogram, RealtimeSwarmChart, and RealtimeWaterfallChart.
+- **`RealtimeLineChart.seriesAccessor`**, top-level `pulse` / `decay` /
+  `staleness` on Scatterplot (and Bubble/ConnectedScatterplot), and a
+  canvas `linkedHover` worked example.
+- **Registered intent `phrases`** and composed-intent
+  `communicativeActForIntent` resolution.
+
+### Changed
+- **`suggestStreamCharts` return type** — now
+  `{ suggestions, excluded, stretchSuggestions }` instead of an array.
+  Migration: `const { suggestions } = suggestStreamCharts(...)`.
+- **`StreamChartCapability.importPath`** is a free string so wrappers can
+  declare their own library.
+- **Throughput** accepts a rows-per-second number as well as the
+  low/medium/high bands.
+- **`capacity` / `capacityMode`** alias `windowSize` / `windowMode` so
+  "window" can mean the aggregation window.
+- **`semiotic/ai/core` re-exports** audience types, stream capability
+  types, and `RealtimeFrameHandle` is also exported from `semiotic/xy`.
+
 ## [3.10.1]
 
 ### Added

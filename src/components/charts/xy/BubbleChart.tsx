@@ -7,7 +7,7 @@ import { useMemo, useCallback, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { bubbleXYPlugin } from "../../stream/xyPlugins/pointPlugin"
-import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig, DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
 
@@ -190,6 +190,9 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
    * @see https://semiotic.nteract.io/guides/xy-frame
    */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
+  pulse?: PulseConfig
+  decay?: DecayConfig
+  staleness?: StalenessConfig
 }
 
 /**
@@ -293,6 +296,9 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     regression,
     xExtent,
     yExtent,
+    pulse,
+    decay,
+    staleness,
     frameProps = {},
     selection,
     linkedHover,
@@ -524,6 +530,9 @@ export const BubbleChart = forwardRef(function BubbleChart<TDatum extends Datum 
     }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
+    ...(pulse && { pulse }),
+    ...(decay && { decay }),
+    ...(staleness && { staleness }),
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),

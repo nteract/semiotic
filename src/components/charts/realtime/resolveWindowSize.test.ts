@@ -39,4 +39,9 @@ describe("resolveRealtimeWindowSize", () => {
     // intent; downstream pipeline / RingBuffer will handle.
     expect(resolveRealtimeWindowSize(0, new Array(500))).toBe(0)
   })
+
+  it("accepts capacity as an alias when windowSize is omitted", () => {
+    expect(resolveRealtimeWindowSize(undefined, undefined, 80)).toBe(80)
+    expect(resolveRealtimeWindowSize(40, undefined, 80)).toBe(40)
+  })
 })

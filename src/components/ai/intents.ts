@@ -40,6 +40,11 @@ export type IntentFieldKind = "numeric" | "categorical" | "date" | "boolean" | "
  */
 export interface IntentSignals {
   fieldNames?: ReadonlyArray<string>
+  /**
+   * Natural-language phrases scored in `inferIntent` prose / combined mode.
+   * Matched as whole phrases (case-insensitive), not field-name tokens.
+   */
+  phrases?: ReadonlyArray<string>
   minimumFieldMatches?: number
   dataShape?: {
     minNumericFields?: number

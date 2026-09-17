@@ -5,7 +5,7 @@ import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
-import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout } from "../../stream/types"
+import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout, DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
@@ -87,6 +87,9 @@ export interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends
   yExtent?: [number | undefined, number | undefined] | [number]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
+  pulse?: PulseConfig
+  decay?: DecayConfig
+  staleness?: StalenessConfig
 }
 
 /** Compute a viridis color for index i out of n total items */
@@ -175,6 +178,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     anomaly,
     xExtent,
     yExtent,
+    pulse,
+    decay,
+    staleness,
     frameProps = {},
     selection,
     linkedHover,
@@ -473,6 +479,9 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
       customClickBehavior: setup.customClickBehavior,
     }),
     ...(pointIdAccessor && { pointIdAccessor }),
+    ...(pulse && { pulse }),
+    ...(decay && { decay }),
+    ...(staleness && { staleness }),
     canvasPreRenderers,
     svgPreRenderers,
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),

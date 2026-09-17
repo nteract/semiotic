@@ -543,11 +543,13 @@ export { IntentMark } from "./ai/IntentMark"
 export type { IntentMarkProps } from "./ai/IntentMark"
 export {
   intentManifestFromRecipe,
-  summarizeIntentManifest
+  summarizeIntentManifest,
+  dashboardIntentManifest
 } from "./ai/intentManifest"
 export type {
   IntentManifest,
-  IntentManifestFromRecipeOptions
+  IntentManifestFromRecipeOptions,
+  DashboardIntentManifest
 } from "./ai/intentManifest"
 export { useNavigationSync } from "./ai/useNavigationSync"
 export type {
