@@ -378,6 +378,7 @@ describe("PipelineStore — Transitions", () => {
         { id: "b", x: 1, y: 20 },
         { id: "c", x: 2, y: 30 },
       ],
+      bounded: false,
     })
     store.computeScene({ width: 300, height: 100 })
     expect(store.activeTransition).toBeNull()
@@ -392,7 +393,7 @@ describe("PipelineStore — Transitions", () => {
       first && first.type === "line" ? first.path[1] : undefined
     expect(bPrev).toBeDefined()
 
-    store.ingest({ inserts: [{ id: "d", x: 3, y: 40 }] })
+    store.ingest({ inserts: [{ id: "d", x: 3, y: 40 }], bounded: false })
     store.computeScene({ width: 300, height: 100 })
 
     const line = store.scene.find((n) => n.type === "line")

@@ -611,7 +611,7 @@ describe("pipelineTransitions — keyed line path join", () => {
     snapshotPositions(ctx, [intro], prevPos, prevPath)
 
     const next = makeLine({ _introClipFraction: 0 })
-    const state = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    const state: TransitionState = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
     startTransition(ctx, transition, state, prevPos, prevPath)
 
     expect(state.activeTransition).not.toBeNull()
@@ -637,7 +637,7 @@ describe("pipelineTransitions — keyed line path join", () => {
     const prevPath = new Map<string, PrevPath>()
     snapshotPositions(ctx, [makeArea()], prevPos, prevPath)
     const next = makeArea()
-    const state = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
+    const state: TransitionState = { scene: [next as SceneNode], exitNodes: [] as SceneNode[], activeTransition: null }
     startTransition(ctx, transition, state, prevPos, prevPath)
     expect(state.activeTransition).not.toBeNull()
     advanceTransition(state.activeTransition!.startTime + 150, transition, state, prevPos, prevPath)
