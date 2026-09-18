@@ -118,6 +118,11 @@ for (const chart of ssrParityCharts) {
 // cases. Do not add to this map casually; the intended direction is down.
 const SSR_PARITY_BURN_DOWN = new Map([
   ["BigNumber", "native value SVG evidence is covered in unit/PNG tests; side-by-side parity with the DOM HOC still needs a dedicated fixture"],
+  ["RealtimeLineChart", "controlled-data renderChart SVG is covered in unit tests; canvas CSR vs SVG SSR side-by-side parity still needs a dedicated fixture"],
+  ["RealtimeHistogram", "controlled-data renderChart SVG is covered in unit tests; canvas CSR vs SVG SSR side-by-side parity still needs a dedicated fixture"],
+  ["RealtimeHeatmap", "controlled-data renderChart SVG is covered in unit tests; canvas CSR vs SVG SSR side-by-side parity still needs a dedicated fixture"],
+  ["RealtimeSwarmChart", "controlled-data renderChart SVG is covered in unit tests; canvas CSR vs SVG SSR side-by-side parity still needs a dedicated fixture"],
+  ["RealtimeWaterfallChart", "controlled-data renderChart SVG is covered in unit tests; canvas CSR vs SVG SSR side-by-side parity still needs a dedicated fixture"],
   ["CollisionSwarmChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["EventDropChart", "physics HOC SSR/CSR parity needs a settled-simulation fixture"],
   ["PacketFlowChart", "experimental route-flow physics HOC SSR/CSR parity needs a deterministic path fixture"],
