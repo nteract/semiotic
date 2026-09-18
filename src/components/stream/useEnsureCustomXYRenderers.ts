@@ -28,7 +28,7 @@ export function useEnsureXYPlugins(
     let cancelled = false
     const loaders: Promise<void>[] = []
 
-    if (customLayout && !getXYPlugin("custom")) {
+    if (customLayout && !getXYPlugin("custom")?.canvasRenderers.length) {
       loaders.push(
         import("./xyPlugins/customPlugin").then((mod) => {
           registerXYPlugin(mod.customXYPlugin)
@@ -36,7 +36,7 @@ export function useEnsureXYPlugins(
       )
     }
 
-    if (!customLayout && chartType !== "custom" && !getXYPlugin(chartType)) {
+    if (!customLayout && chartType !== "custom" && !getXYPlugin(chartType)?.canvasRenderers.length) {
       loaders.push(
         import("./xyPlugins/registerBuiltIn").then((mod) => {
           mod.registerBuiltInXYPlugins()

@@ -3,14 +3,18 @@ import { applyChangelog, type ChangelogOp } from "./applyChangelog"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RealtimeFrameHandle } from "./types"
 
-function fakeHandle(initial: Datum[] = []) {
+function fakeHandle(initial: Datum[] = [], capacity = Infinity) {
   let rows = [...initial]
-  const handle: Pick<RealtimeFrameHandle, "push" | "pushMany" | "update" | "remove" | "getData"> = {
+  const handle: Pick<
+    RealtimeFrameHandle,
+    "push" | "pushMany" | "update" | "remove" | "getData"
+  > = {
     push(point) {
       rows.push(point)
     },
     pushMany(points) {
       rows.push(...points)
+      if (rows.length > capacity) rows = rows.slice(-capacity)
     },
     update(id, updater) {
       const prev: Datum[] = []
@@ -29,23 +33,53 @@ function fakeHandle(initial: Datum[] = []) {
     },
     getData() {
       return rows
-    },
+    }
   }
   return { handle, data: () => rows }
 }
 
 describe("applyChangelog", () => {
+  it("preserves last-event order when coalescing into a bounded buffer", () => {
+    const { handle, data } = fakeHandle([], 1)
+    applyChangelog(
+      handle,
+      [
+        { op: "insert", row: { id: "a", v: 1 } },
+        { op: "insert", row: { id: "b", v: 2 } },
+        { op: "update", row: { id: "a", v: 3 } }
+      ],
+      { key: "id" }
+    )
+    expect(data()).toEqual([{ id: "a", v: 3 }])
+  })
+
+  it.each([true, false])(
+    "restores keys evicted during the batch (coalesce=%s)",
+    (coalesce) => {
+      const { handle, data } = fakeHandle([{ id: "a", v: 1 }], 1)
+      const result = applyChangelog(
+        handle,
+        [
+          { op: "insert", row: { id: "b", v: 2 } },
+          { op: "update", row: { id: "a", v: 3 } }
+        ],
+        { key: "id", coalesce }
+      )
+      expect(data()).toEqual([{ id: "a", v: 3 }])
+      expect(result).toEqual({ applied: 2, upserts: 2, retracts: 0 })
+    }
+  )
   it("inserts new keys and updates existing ones", () => {
     const { handle, data } = fakeHandle([{ id: "a", v: 1 }])
     const events: ChangelogOp[] = [
       { op: "insert", row: { id: "b", v: 2 } },
-      { op: "update", row: { id: "a", v: 9 } },
+      { op: "update", row: { id: "a", v: 9 } }
     ]
     const result = applyChangelog(handle, events, { key: "id" })
     expect(result.upserts).toBe(2)
     expect(data()).toEqual([
       { id: "a", v: 9 },
-      { id: "b", v: 2 },
+      { id: "b", v: 2 }
     ])
   })
 
@@ -56,9 +90,9 @@ describe("applyChangelog", () => {
       [
         { op: "insert", row: { id: "a", v: 1 } },
         { op: "update", row: { id: "a", v: 2 } },
-        { op: "retract", id: "a" },
+        { op: "retract", id: "a" }
       ],
-      { key: "id" },
+      { key: "id" }
     )
     expect(result.retracts).toBe(1)
     expect(data()).toEqual([])

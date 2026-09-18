@@ -1,3 +1,6 @@
+import { intentRegistryStore } from "./intentRegistry"
+export { expandComposedIntentScores } from "./intentRegistry"
+
 /**
  * Canonical intent taxonomy for chart suggestion / interrogation.
  *
@@ -83,7 +86,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "How a single metric changes over an ordered sequence (typically time).",
     familyHint: "time-series",
     signals: {
-      fieldNames: fields("date time timestamp year month quarter period"),
+      fieldNames: /* @__PURE__ */ fields("date time timestamp year month quarter period"),
       minimumFieldMatches: 1,
       dataShape: { minNumericFields: 1, minDateFields: 1, confidence: 3.5 },
     },
@@ -94,7 +97,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Compare multiple measured series across a shared x domain.",
     familyHint: "time-series",
     signals: {
-      fieldNames: fields("series cohort segment group"),
+      fieldNames: /* @__PURE__ */ fields("series cohort segment group"),
       minimumFieldMatches: 1,
     },
   },
@@ -104,7 +107,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Compare a single measure across discrete categories.",
     familyHint: "categorical",
     signals: {
-      fieldNames: fields("category product class type"),
+      fieldNames: /* @__PURE__ */ fields("category product class type"),
       minimumFieldMatches: 1,
       dataShape: { minNumericFields: 1, minCategoricalFields: 1, confidence: 3 },
     },
@@ -115,7 +118,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show category ordering by a measure (largest to smallest).",
     familyHint: "categorical",
     signals: {
-      fieldNames: fields("rank ranking position order"),
+      fieldNames: /* @__PURE__ */ fields("rank ranking position order"),
       minimumFieldMatches: 1,
     },
   },
@@ -125,7 +128,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show how individual categories share a total.",
     familyHint: "categorical",
     signals: {
-      fieldNames: fields("share percentage percent portion total"),
+      fieldNames: /* @__PURE__ */ fields("share percentage percent portion total"),
       minimumFieldMatches: 1,
     },
   },
@@ -135,7 +138,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show the shape, spread, and central tendency of a numeric variable.",
     familyHint: "distribution",
     signals: {
-      fieldNames: fields("frequency bin bucket percentile quantile"),
+      fieldNames: /* @__PURE__ */ fields("frequency bin bucket percentile quantile"),
       minimumFieldMatches: 1,
     },
   },
@@ -154,7 +157,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show movement, transitions, or transfers between states.",
     familyHint: "flow",
     signals: {
-      fieldNames: fields("source target origin destination stage phase step"),
+      fieldNames: /* @__PURE__ */ fields("source target origin destination stage phase step"),
       minimumFieldMatches: 2,
     },
   },
@@ -164,7 +167,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show parent/child structure or nested totals.",
     familyHint: "hierarchy",
     signals: {
-      fieldNames: fields("parent child level depth path"),
+      fieldNames: /* @__PURE__ */ fields("parent child level depth path"),
       minimumFieldMatches: 2,
     },
   },
@@ -174,7 +177,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show values bound to geographic locations or regions.",
     familyHint: "geo",
     signals: {
-      fieldNames: fields("latitude longitude country state region city postal zip"),
+      fieldNames: /* @__PURE__ */ fields("latitude longitude country state region city postal zip"),
       minimumFieldMatches: 1,
     },
   },
@@ -184,7 +187,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Surface individual data points that diverge from the rest.",
     familyHint: "distribution",
     signals: {
-      fieldNames: fields("anomaly outlier zscore deviation"),
+      fieldNames: /* @__PURE__ */ fields("anomaly outlier zscore deviation"),
       minimumFieldMatches: 1,
     },
   },
@@ -194,7 +197,7 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Show how the share of categories changes across an ordered sequence.",
     familyHint: "time-series",
     signals: {
-      fieldNames: fields("share percentage percent date time period"),
+      fieldNames: /* @__PURE__ */ fields("share percentage percent date time period"),
       minimumFieldMatches: 2,
       dataShape: {
         minNumericFields: 1,
@@ -210,30 +213,20 @@ const BUILT_IN_INTENTS: IntentDescriptor[] = [
     description: "Surface where or when a metric shifted meaningfully.",
     familyHint: "time-series",
     signals: {
-      fieldNames: fields("delta change before after variance"),
+      fieldNames: /* @__PURE__ */ fields("delta change before after variance"),
       minimumFieldMatches: 1,
     },
   },
 ]
 
-interface IntentRegistryStore {
-  intents: Map<IntentId, IntentDescriptor>
-}
-
-// `semiotic/ai` and `semiotic/ai/core` are intentionally independent entry
-// bundles. Put the runtime extension point on the realm-global symbol registry
-// so registering an intent through either public entry is immediately visible
-// to the other (as recipe and numeric-contract registries already are).
-const REGISTRY_KEY = Symbol.for("semiotic.intentRegistry")
-
-function registryStore(): IntentRegistryStore {
-  const root = globalThis as typeof globalThis & {
-    [REGISTRY_KEY]?: IntentRegistryStore
+// Composition and chart descriptions only need registered extensions. Keep
+// the prose/schema taxonomy out of their initial import graph.
+function registryStore() {
+  const store = intentRegistryStore()
+  for (const intent of BUILT_IN_INTENTS) {
+    if (!store.intents.has(intent.id)) store.intents.set(intent.id, intent)
   }
-  root[REGISTRY_KEY] ??= {
-    intents: new Map(BUILT_IN_INTENTS.map((intent) => [intent.id, intent])),
-  }
-  return root[REGISTRY_KEY]
+  return store
 }
 
 /** Get an intent descriptor by id, or undefined if not registered. */
@@ -254,50 +247,7 @@ export function registerIntent(intent: IntentDescriptor): void {
   registryStore().intents.set(intent.id, intent)
 }
 
-function resolveComposedScore(
-  id: IntentId,
-  scores: Readonly<Partial<Record<IntentId, number>>>,
-  visiting: Set<IntentId>,
-): number | undefined {
-  const direct = scores[id]
-  if (Number.isFinite(direct)) return direct
-
-  const descriptor = registryStore().intents.get(id)
-  if (!descriptor?.composes?.length || visiting.has(id)) return undefined
-  visiting.add(id)
-
-  let weightedScore = 0
-  let totalWeight = 0
-  for (const child of descriptor.composes) {
-    const weight = descriptor.weights?.[child] ?? 1
-    if (!Number.isFinite(weight) || weight <= 0) continue
-    const childScore = resolveComposedScore(child, scores, visiting) ?? 0
-    weightedScore += childScore * weight
-    totalWeight += weight
-  }
-  visiting.delete(id)
-  return totalWeight > 0 ? weightedScore / totalWeight : undefined
-}
-
-/**
- * Materialize requested composed intent scores over a capability's existing
- * scores. Only requested ids are added: registering an intent cannot silently
- * change no-intent/default ranking by adding another value to its mean.
- */
-export function expandComposedIntentScores(
-  scores: Readonly<Partial<Record<IntentId, number>>>,
-  requested: ReadonlyArray<IntentId>,
-): Partial<Record<IntentId, number>> {
-  const expanded: Partial<Record<IntentId, number>> = { ...scores }
-  for (const intent of requested) {
-    if (Number.isFinite(expanded[intent])) continue
-    const composed = resolveComposedScore(intent, expanded, new Set())
-    if (composed !== undefined) expanded[intent] = composed
-  }
-  return expanded
-}
-
 /** Sentinel set used by capability authors to opt out of an intent without misspelling. */
-export const BUILT_IN_INTENT_IDS: ReadonlySet<BuiltInIntentId> = new Set(
-  BUILT_IN_INTENTS.map((intent) => intent.id)
+export const BUILT_IN_INTENT_IDS: ReadonlySet<BuiltInIntentId> = /* @__PURE__ */ new Set(
+  /* @__PURE__ */ BUILT_IN_INTENTS.map((intent) => intent.id)
 ) as ReadonlySet<BuiltInIntentId>

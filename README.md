@@ -460,37 +460,37 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **159.3 KiB** |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **159.5 KiB** |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **6.4 KiB** |
-| `import { LineChart } from "semiotic"` | browser | **144.2 KiB** |
-| `import { LineChart } from "semiotic/xy"` | browser | **144.6 KiB** |
-| `import { LineChart } from "semiotic/line"` | browser | **144.5 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **132.9 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **154.7 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **145.5 KiB** |
+| `import { LineChart } from "semiotic"` | browser | **145.1 KiB** |
+| `import { LineChart } from "semiotic/xy"` | browser | **145.5 KiB** |
+| `import { LineChart } from "semiotic/line"` | browser | **145.3 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **133.1 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **154.9 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **147.7 KiB** |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **147.4 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **282.9 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **146.7 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **283.8 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **261.1 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **286.8 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **148.5 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **287.6 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **262.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **46.4 KiB** |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **19.7 KiB** |
 | `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.8 KiB** |
 | `import { createChartAccessContract } from "semiotic/access"` | browser | **33.4 KiB** |
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **49.1 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **115.7 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **116.0 KiB** |
 | `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.2 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.6 KiB** |
 | `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.1 KiB** |
-| `import { validateProps } from "semiotic/utils"` | browser | **10.4 KiB** |
-| `import { smartTickFormat } from "semiotic/utils/core"` | browser | **8.1 KiB** |
+| `import { validateProps } from "semiotic/utils"` | browser | **11.4 KiB** |
+| `import { smartTickFormat } from "semiotic/utils/core"` | browser | **9.1 KiB** |
 | `import { useReducedMotion } from "semiotic/utils/react"` | browser | **2.4 KiB** |
 | `import { waffleLayout } from "semiotic/recipes"` | browser | **1.7 KiB** |
 | `import { waffleLayout } from "semiotic/recipes/core"` | browser | **1.7 KiB** |
@@ -498,7 +498,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.3 KiB** |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 432.0 KiB raw versus 432.0 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 434.6 KiB raw versus 434.6 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

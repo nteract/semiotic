@@ -44,7 +44,7 @@ export interface AggregateConfig {
   band?: AggregateBand
   /** Multiplier for the `stddev` band (drawn as value ± sigma·σ). @default 1 */
   sigma?: number
-  /** Keep at most this many most-recent windows. @default unbounded */
+  /** Keep at most this many most-recent windows per series. @default unbounded */
   retain?: number
   /**
    * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Structural:

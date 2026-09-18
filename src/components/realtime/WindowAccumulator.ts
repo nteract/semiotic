@@ -360,25 +360,14 @@ export class WindowAccumulator {
  */
 export function statValue(w: AggregatedWindow, stat: AggregateStat): number {
   switch (stat) {
-    case "sum":
-      return w.sum
-    case "min":
-      return w.min
-    case "max":
-      return w.max
-    case "count":
-      return w.count
     case "distinct":
       return w.distinct ?? 0
     case "p50":
-      return w.percentiles?.p50 ?? Number.NaN
     case "p95":
-      return w.percentiles?.p95 ?? Number.NaN
     case "p99":
-      return w.percentiles?.p99 ?? Number.NaN
-    case "mean":
+      return w.percentiles?.[stat] ?? Number.NaN
     default:
-      return w.mean
+      return w[stat] ?? w.mean
   }
 }
 

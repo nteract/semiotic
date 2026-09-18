@@ -3,7 +3,7 @@ import type {
   StreamSchema,
   StreamShape,
   StreamThroughputBand,
-  StreamThroughputThresholds,
+  StreamThroughputThresholds
 } from "./streamingTypes"
 
 const DEFAULT_MEDIUM = 1
@@ -44,11 +44,15 @@ export function resolveStreamShape(schema: StreamSchema): StreamShape {
 
 export function streamThroughputBand(
   schema: StreamSchema,
-  thresholds?: StreamThroughputThresholds,
+  thresholds?: StreamThroughputThresholds
 ): StreamThroughputBand | undefined {
   const throughput = schema.throughput
   if (throughput === undefined) return undefined
-  if (throughput === "low" || throughput === "medium" || throughput === "high") {
+  if (
+    throughput === "low" ||
+    throughput === "medium" ||
+    throughput === "high"
+  ) {
     return throughput
   }
   if (!Number.isFinite(throughput) || throughput < 0) return undefined
@@ -59,58 +63,78 @@ export function streamThroughputBand(
   return "low"
 }
 
-function isKeyField(field: StreamFieldSchema, keyNames: ReadonlySet<string>): boolean {
+function isKeyField(
+  field: StreamFieldSchema,
+  keyNames: ReadonlySet<string>
+): boolean {
   return field.role === "key" || keyNames.has(field.name)
 }
 
-export function pickTimeField(schema: StreamSchema): StreamFieldSchema | undefined {
+export function pickTimeField(
+  schema: StreamSchema
+): StreamFieldSchema | undefined {
   const fields = schemaFields(schema)
   return (
-    fields.find((field) => field.role === "x") ??
-    fields.find((field) => field.kind === "date")
+    fields.find(
+      (field) =>
+        field.role === "x" &&
+        (field.kind === "numeric" || field.kind === "date")
+    ) ?? fields.find((field) => field.kind === "date")
   )
 }
 
-export function pickValueField(schema: StreamSchema): StreamFieldSchema | undefined {
+export function pickValueField(
+  schema: StreamSchema
+): StreamFieldSchema | undefined {
   const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
   const byValueRole = fields.find(
-    (field) => field.role === "value" && !isKeyField(field, keyNames),
+    (field) =>
+      field.kind === "numeric" &&
+      field.role === "value" &&
+      !isKeyField(field, keyNames)
   )
   if (byValueRole) return byValueRole
   const byYRole = fields.find(
-    (field) => field.role === "y" && !isKeyField(field, keyNames),
+    (field) =>
+      field.kind === "numeric" &&
+      field.role === "y" &&
+      !isKeyField(field, keyNames)
   )
   if (byYRole) return byYRole
   return fields.find(
     (field) =>
       field.kind === "numeric" &&
       !isKeyField(field, keyNames) &&
-      field.role !== "size" &&
-      !isIdLikeFieldName(field.name),
+      field.role == null &&
+      !isIdLikeFieldName(field.name)
   )
 }
 
-export function pickCategoryField(schema: StreamSchema): StreamFieldSchema | undefined {
+export function pickCategoryField(
+  schema: StreamSchema
+): StreamFieldSchema | undefined {
   const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
   const byRole = fields.find(
-    (field) => field.role === "category" && !isKeyField(field, keyNames),
+    (field) => field.role === "category" && !isKeyField(field, keyNames)
   )
   if (byRole) return byRole
   return fields.find(
     (field) =>
       field.kind === "categorical" &&
       !isKeyField(field, keyNames) &&
-      field.role !== "series",
+      field.role !== "series"
   )
 }
 
-export function pickSeriesField(schema: StreamSchema): StreamFieldSchema | undefined {
+export function pickSeriesField(
+  schema: StreamSchema
+): StreamFieldSchema | undefined {
   const fields = schemaFields(schema)
   const keyNames = new Set(streamKeyFields(schema))
   const byRole = fields.find(
-    (field) => field.role === "series" && !isKeyField(field, keyNames),
+    (field) => field.role === "series" && !isKeyField(field, keyNames)
   )
   if (byRole) return byRole
   const category = pickCategoryField(schema)
@@ -119,7 +143,7 @@ export function pickSeriesField(schema: StreamSchema): StreamFieldSchema | undef
       field.kind === "categorical" &&
       !isKeyField(field, keyNames) &&
       field.role !== "category" &&
-      field.name !== category?.name,
+      field.name !== category?.name
   )
 }
 

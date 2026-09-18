@@ -29,13 +29,11 @@ import {
 } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
-import type { WindowAccumulator } from "../../realtime/WindowAccumulator"
+import { RealtimeAccumulator, AGG_SERIES } from "./RealtimeAccumulator"
 import type { ReorderBuffer } from "../../realtime/ReorderBuffer"
 import {
   type AggregateConfig,
   type AggregatedRealtimeDatum,
-  createAccumulator,
-  aggregatedRows,
   hasBand,
   AGG_TIME,
   AGG_VALUE,
@@ -271,7 +269,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   // reaching live config/accessors.
   const aggEnabled = aggregate != null
   const [aggRows, setAggRows] = useState<AggregatedRealtimeDatum[]>([])
-  const accRef = useRef<WindowAccumulator | null>(null)
+  const accRef = useRef<RealtimeAccumulator | null>(null)
   const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
   aggConfigRef.current = aggregate
   const aggEnabledRef = useRef(aggEnabled)
@@ -308,23 +306,21 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     // unset means unbounded windows, matching AggregateConfig's documented
     // default. (Deliberately not coupled to `windowSize`, which is the
     // ring-buffer eviction policy and does not apply to aggregated output.)
-    const acc = createAccumulator(cfg)
+    const acc = new RealtimeAccumulator(cfg, seriesAccessor)
     accRef.current = acc
-    if (acc && data) {
+    if (data) {
       const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
       for (const d of data) {
-        const t = readRealtimeNumber(d, ta, "time")
-        const v = readRealtimeNumber(d, va, "value")
-        if (t != null && v != null) acc.push(t, v)
+        acc.push(d, ta, va)
       }
     }
-    setAggRows(acc ? aggregatedRows(acc, cfg) : [])
-  }, [aggKey, aggEnabled, data, timeAccessor, valueAccessor])
+    setAggRows(acc.emit(cfg))
+  }, [aggKey, aggEnabled, data, timeAccessor, valueAccessor, seriesAccessor])
 
   // Re-emit (without rebuilding) when only the readout config changes.
   useEffect(() => {
     if (aggEnabled && accRef.current) {
-      setAggRows(aggregatedRows(accRef.current, aggConfigRef.current!))
+      setAggRows(accRef.current.emit(aggConfigRef.current!))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregate?.stat, aggregate?.band, aggregate?.sigma])
@@ -335,11 +331,9 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     if (!acc || !cfg) return
     const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
     for (const p of points) {
-      const t = readRealtimeNumber(p, ta, "time")
-      const v = readRealtimeNumber(p, va, "value")
-      if (t != null && v != null) acc.push(t, v)
+      acc.push(p, ta, va)
     }
-    setAggRows(aggregatedRows(acc, cfg))
+    setAggRows(acc.emit(cfg))
   }, [])
 
   // ── Event-time ingestion (opt-in) ──────────────────────────────────────
@@ -544,7 +538,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
   const frameBand =
     aggEnabled && aggregate && hasBand(aggregate)
-      ? { y0Accessor: AGG_LOWER, y1Accessor: AGG_UPPER, perSeries: false }
+      ? { y0Accessor: AGG_LOWER, y1Accessor: AGG_UPPER, perSeries: seriesAccessor != null }
       : undefined
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
@@ -571,7 +565,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       data={frameData}
       timeAccessor={frameTimeAccessor}
       valueAccessor={frameValueAccessor}
-      groupAccessor={seriesAccessor}
+      groupAccessor={aggEnabled && seriesAccessor != null ? AGG_SERIES : seriesAccessor}
       xExtent={timeExtent}
       yExtent={valueExtent}
       extentPadding={extentPadding}

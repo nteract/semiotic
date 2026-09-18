@@ -6,25 +6,46 @@ const latencyStream: StreamSchema = {
   fields: [
     { name: "ts", kind: "date" },
     { name: "latency_ms", kind: "numeric", role: "value" },
-    { name: "endpoint", kind: "categorical", role: "category" },
+    { name: "endpoint", kind: "categorical", role: "category" }
   ],
-  throughput: "medium",
+  throughput: "medium"
 }
 
 const keyedBrandStream: StreamSchema = {
   fields: [
     { name: "brand", kind: "categorical", role: "category" },
-    { name: "revenue", kind: "numeric", role: "value" },
+    { name: "revenue", kind: "numeric", role: "value" }
   ],
-  shape: "keyed",
+  shape: "keyed"
 }
 
 describe("suggestStreamDashboard", () => {
+  it("offers unused stretch panels while honoring the allow-list", () => {
+    const options = {
+      intent: "compare-categories" as const,
+      budget: 1,
+      audience: { familiarity: { PieChart: 2, DonutChart: 2 } }
+    }
+    const dashboard = suggestStreamDashboard(keyedBrandStream, {
+      ...options,
+      allow: ["BarChart", "PieChart"]
+    })
+    expect(dashboard.panels[0].suggestion.component).toBe("BarChart")
+    expect(
+      dashboard.stretchPanels.map((panel) => panel.suggestion.component)
+    ).toEqual(["PieChart"])
+    expect(
+      suggestStreamDashboard(keyedBrandStream, {
+        ...options,
+        allow: ["BarChart"]
+      }).stretchPanels
+    ).toEqual([])
+  })
   it("fills complementary intents from a time+category stream", () => {
     const dashboard = suggestStreamDashboard(latencyStream)
     expect(dashboard.panels.length).toBeGreaterThan(1)
     expect(dashboard.intentsCovered).toEqual(
-      expect.arrayContaining(["trend", "compare-categories"]),
+      expect.arrayContaining(["trend", "compare-categories"])
     )
     expect(dashboard.schemas).toHaveLength(1)
   })
@@ -36,9 +57,9 @@ describe("suggestStreamDashboard", () => {
         dashboard: {
           cellBudget: 2,
           leadFamilies: ["categorical"],
-          windowPreference: "cumulative",
-        },
-      },
+          windowPreference: "cumulative"
+        }
+      }
     })
     expect(dashboard.panels.length).toBeLessThanOrEqual(2)
     expect(dashboard.panels[0]?.suggestion.family).toBe("categorical")
@@ -48,16 +69,19 @@ describe("suggestStreamDashboard", () => {
   it("respects an explicit budget over the audience policy", () => {
     const dashboard = suggestStreamDashboard(latencyStream, {
       budget: 1,
-      audience: { dashboard: { cellBudget: 6 } },
+      audience: { dashboard: { cellBudget: 6 } }
     })
     expect(dashboard.panels).toHaveLength(1)
     expect(dashboard.intentsMissing.length).toBeGreaterThan(0)
   })
 
   it("ranks across every schema and records schemaIndex on each panel", () => {
-    const dashboard = suggestStreamDashboard([latencyStream, keyedBrandStream], {
-      budget: 4,
-    })
+    const dashboard = suggestStreamDashboard(
+      [latencyStream, keyedBrandStream],
+      {
+        budget: 4
+      }
+    )
     expect(dashboard.schemas).toHaveLength(2)
     expect(dashboard.panels.some((panel) => panel.schemaIndex === 0)).toBe(true)
     expect(dashboard.panels.some((panel) => panel.schemaIndex === 1)).toBe(true)

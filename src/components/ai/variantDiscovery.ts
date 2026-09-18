@@ -16,7 +16,8 @@ import type {
   ChartVariant,
   IntentScorer,
 } from "./chartCapabilityTypes"
-import { expandComposedIntentScores, type IntentId } from "./intents"
+import type { IntentId } from "./intents"
+import { expandComposedIntentScores } from "./intentRegistry"
 import {
   applyAudienceBias,
   receivabilityBias,

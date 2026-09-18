@@ -1,4 +1,7 @@
-import { suggestStreamCharts, type StreamStretchSuggestion } from "./suggestStreamCharts"
+import {
+  suggestStreamCharts,
+  type StreamStretchSuggestion
+} from "./suggestStreamCharts"
 import type { StreamSchema, StreamSuggestion } from "./streamingTypes"
 import type { IntentId } from "./intents"
 import type { AudienceProfile } from "./audienceProfile"
@@ -7,7 +10,7 @@ import {
   hasNumericValue,
   hasSeriesField,
   hasTimeField,
-  resolveStreamShape,
+  resolveStreamShape
 } from "./streamSchema"
 
 export interface StreamDashboardPanel {
@@ -66,7 +69,9 @@ function defaultStreamIntents(schema: StreamSchema): IntentId[] {
   return Array.from(new Set(intents))
 }
 
-function defaultIntentsForSchemas(schemas: ReadonlyArray<StreamSchema>): IntentId[] {
+function defaultIntentsForSchemas(
+  schemas: ReadonlyArray<StreamSchema>
+): IntentId[] {
   const intents: IntentId[] = []
   for (const schema of schemas) {
     for (const intent of defaultStreamIntents(schema)) {
@@ -83,7 +88,7 @@ interface RankedStreamCandidate {
 
 function withWindowPreference(
   schema: StreamSchema,
-  windowPreference: "windowed" | "cumulative" | undefined,
+  windowPreference: "windowed" | "cumulative" | undefined
 ): StreamSchema {
   if (!windowPreference || schema.retention) return schema
   return { ...schema, retention: windowPreference }
@@ -98,19 +103,20 @@ function withWindowPreference(
  */
 export function suggestStreamDashboard(
   schemas: StreamSchema | ReadonlyArray<StreamSchema>,
-  options: SuggestStreamDashboardOptions = {},
+  options: SuggestStreamDashboardOptions = {}
 ): StreamDashboardSuggestion {
   const list = (Array.isArray(schemas) ? schemas : [schemas]).map((schema) =>
-    withWindowPreference(schema, options.audience?.dashboard?.windowPreference),
+    withWindowPreference(schema, options.audience?.dashboard?.windowPreference)
   )
   const maxPanels =
-    options.budget ??
-    options.audience?.dashboard?.cellBudget ??
-    6
+    options.budget ?? options.audience?.dashboard?.cellBudget ?? 6
   const diversify = options.diversifyByFamily !== false
-  const requested = options.intents
-    ?? (options.intent
-      ? (Array.isArray(options.intent) ? options.intent : [options.intent])
+  const requested =
+    options.intents ??
+    (options.intent
+      ? Array.isArray(options.intent)
+        ? options.intent
+        : [options.intent]
       : defaultIntentsForSchemas(list))
 
   const panels: StreamDashboardPanel[] = []
@@ -133,7 +139,7 @@ export function suggestStreamDashboard(
         deny: options.deny,
         maxResults: 20,
         minScore: 1.5,
-        audience: options.audience,
+        audience: options.audience
       })
       for (const suggestion of suggestions) {
         ranked.push({ suggestion, schemaIndex })
@@ -153,10 +159,14 @@ export function suggestStreamDashboard(
 
   const takeUnused = (
     ranked: RankedStreamCandidate[],
-    predicate: (candidate: RankedStreamCandidate) => boolean,
+    predicate: (candidate: RankedStreamCandidate) => boolean
   ): RankedStreamCandidate | undefined => {
     return ranked.find((candidate) => {
-      if (usedKeys.has(panelKey(candidate.schemaIndex, candidate.suggestion.component))) {
+      if (
+        usedKeys.has(
+          panelKey(candidate.schemaIndex, candidate.suggestion.component)
+        )
+      ) {
         return false
       }
       return predicate(candidate)
@@ -178,11 +188,14 @@ export function suggestStreamDashboard(
     let pick: RankedStreamCandidate | undefined
     if (panels.length === 0 && leadFamilies.length > 0) {
       pick = takeUnused(ranked, (candidate) =>
-        leadFamilies.includes(candidate.suggestion.family),
+        leadFamilies.includes(candidate.suggestion.family)
       )
     }
     if (!pick) {
-      pick = takeUnused(ranked, (candidate) => unusedSchema(candidate) && unusedFamily(candidate))
+      pick = takeUnused(
+        ranked,
+        (candidate) => unusedSchema(candidate) && unusedFamily(candidate)
+      )
     }
     if (!pick) {
       pick = takeUnused(ranked, unusedFamily)
@@ -195,7 +208,7 @@ export function suggestStreamDashboard(
       panels.push({
         intent,
         suggestion: pick.suggestion,
-        schemaIndex: pick.schemaIndex,
+        schemaIndex: pick.schemaIndex
       })
       intentsCovered.push(intent)
       usedFamilies.add(pick.suggestion.family)
@@ -209,16 +222,23 @@ export function suggestStreamDashboard(
   const stretchPanels: StreamStretchSuggestion[] = []
   if (options.audience && (options.audience.exposureLevel ?? 1) > 0) {
     const maxStretch = options.maxStretchPanels ?? Math.min(3, maxPanels)
-    const deny = [
-      ...(options.deny ?? []),
-      ...Array.from(usedKeys).map((key) => key.split(":")[1]),
-    ]
     for (let schemaIndex = 0; schemaIndex < list.length; schemaIndex++) {
       if (stretchPanels.length >= maxStretch) break
+      const deny = [
+        ...(options.deny ?? []),
+        ...panels
+          .filter((panel) => panel.schemaIndex === schemaIndex)
+          .map((panel) => panel.suggestion.component)
+      ]
       const stretches = suggestStreamCharts(list[schemaIndex], {
         audience: options.audience,
+        intent: [...requested],
+        allow: options.allow,
         deny,
-        maxStretchResults: maxStretch - stretchPanels.length,
+        // Only actual dashboard panels have already been selected. Ranking
+        // unused candidates here must not hide them from the stretch pass.
+        maxResults: 0,
+        maxStretchResults: maxStretch - stretchPanels.length
       }).stretchSuggestions
       for (const stretch of stretches) {
         stretchPanels.push({ ...stretch, schemaIndex })
@@ -232,6 +252,6 @@ export function suggestStreamDashboard(
     intentsCovered,
     intentsMissing,
     stretchPanels,
-    schemas: list,
+    schemas: list
   }
 }

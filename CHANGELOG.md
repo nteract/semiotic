@@ -47,6 +47,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`semiotic/ai/core` re-exports** audience types, stream capability
   types, and `RealtimeFrameHandle` is also exported from `semiotic/xy`.
 
+### Fixed
+- Realtime server rendering preserves fixed domains, heatmap aggregation,
+  aggregate envelopes, mark styles, category colors, and retention aliases.
+  The category-color correction also applies to TemporalHistogram.
+- RealtimeLineChart aggregates each `seriesAccessor` group independently in
+  both React and server renders, including bands and per-series retention.
+- Stream inference excludes timestamps and incompatible field kinds from
+  measures. Dashboard stretch panels honor the requested intents, allow-list,
+  and budget, and include unused candidates.
+- Changelog coalescing preserves last-event order, and upserts restore keys
+  evicted earlier in the same bounded-buffer batch.
+- T-digest quantiles interpolate between centroid centers, correcting biased
+  medians for small windows.
+- Server bundles register scene builders without loading canvas painters;
+  browser frames still load their painters when needed. Production bundles
+  preserve tree-shaking annotations, and chart descriptions share a small
+  intent registry without importing the full inference catalog.
+
 ## [3.10.1]
 
 ### Added

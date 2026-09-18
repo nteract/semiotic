@@ -21,7 +21,7 @@ export interface ApplyChangelogResult {
 
 function resolveKey<T extends Datum>(
   op: ChangelogOp<T>,
-  key: ApplyChangelogOptions<T>["key"],
+  key: ApplyChangelogOptions<T>["key"]
 ): string | undefined {
   if (typeof op.id === "string" && op.id.length > 0) return op.id
   if (!op.row) return undefined
@@ -32,7 +32,7 @@ function resolveKey<T extends Datum>(
 
 function indexByKey<T extends Datum>(
   rows: T[],
-  key: ApplyChangelogOptions<T>["key"],
+  key: ApplyChangelogOptions<T>["key"]
 ): Set<string> {
   const ids = new Set<string>()
   for (const row of rows) {
@@ -54,18 +54,28 @@ function indexByKey<T extends Datum>(
  * The chart must set `pointIdAccessor` to the same identity as `key`.
  */
 export function applyChangelog<T extends Datum = Datum>(
-  handle: Pick<RealtimeFrameHandle<T>, "push" | "pushMany" | "update" | "remove" | "getData">,
+  handle: Pick<
+    RealtimeFrameHandle<T>,
+    "push" | "pushMany" | "update" | "remove" | "getData"
+  >,
   events: ReadonlyArray<ChangelogOp<T>>,
-  options: ApplyChangelogOptions<T>,
+  options: ApplyChangelogOptions<T>
 ): ApplyChangelogResult {
   const coalesce = options.coalesce !== false
   const ops = coalesce
     ? Array.from(
-        events.reduce((byKey, op) => {
-          const id = resolveKey(op, options.key)
-          if (id) byKey.set(id, op)
-          return byKey
-        }, new Map<string, ChangelogOp<T>>()).values(),
+        events
+          .reduce((byKey, op) => {
+            const id = resolveKey(op, options.key)
+            if (id) {
+              // Keep the order of the surviving events, including when a key
+              // reappears late in a batch destined for a bounded ring buffer.
+              byKey.delete(id)
+              byKey.set(id, op)
+            }
+            return byKey
+          }, new Map<string, ChangelogOp<T>>())
+          .values()
       )
     : [...events]
 
@@ -97,9 +107,15 @@ export function applyChangelog<T extends Datum = Datum>(
     if (!op.row) continue
     if (present.has(id)) {
       flushInserts()
-      handle.update(id, () => op.row as T)
-      upserts += 1
-      applied += 1
+      const updated = handle.update(id, () => op.row as T)
+      if (updated.length > 0) {
+        upserts += 1
+        applied += 1
+      } else {
+        // Earlier inserts may have evicted a key that was present when the
+        // batch began. An upsert must restore it instead of silently dropping it.
+        inserts.push(op.row)
+      }
     } else {
       inserts.push(op.row)
       present.add(id)

@@ -11,6 +11,27 @@ describe("RealtimeLineChart — aggregate mode", () => {
   beforeEach(() => { cleanup = setupCanvasMock() })
   afterEach(() => { cleanup() })
 
+  it.each([false, true])("aggregates series independently (controlled=%s)", (controlled) => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const points = [
+      { t: 1, v: 10, series: "a" }, { t: 2, v: 20, series: "a" },
+      { t: 1, v: 100, series: "b" }, { t: 2, v: 200, series: "b" },
+    ]
+    render(<TooltipProvider><RealtimeLineChart
+      ref={ref} data={controlled ? points : undefined}
+      timeAccessor="t" valueAccessor="v" seriesAccessor={(d) => String(d.series)}
+      aggregate={{ size: 10, stat: "mean", band: "minmax" }}
+    /></TooltipProvider>)
+    if (!controlled) act(() => ref.current!.pushMany(points))
+    expect(ref.current!.getData()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ value: 15, count: 2, __aggSeries: "a", __aggLower: 10, __aggUpper: 20 }),
+      expect.objectContaining({ value: 150, count: 2, __aggSeries: "b", __aggLower: 100, __aggUpper: 200 }),
+    ]))
+    expect(ref.current!.getData()).toHaveLength(2)
+    act(() => ref.current!.clear())
+    expect(ref.current!.getData()).toEqual([])
+  })
+
   it("reduces pushed events into windowed rows via getData", () => {
     const ref = React.createRef<RealtimeFrameHandle>()
     render(

@@ -7,12 +7,12 @@ interface StalenessBadgeProps {
   settling?: boolean
 }
 
-const BADGE_STYLE: Record<string, { label: string; background: string }> = {
-  live: { label: "LIVE", background: "#28a745" },
-  stale: { label: "STALE", background: "#dc3545" },
-  stopped: { label: "STOPPED", background: "#6c757d" },
-  failed: { label: "FAILED", background: "#842029" },
-  settling: { label: "SETTLING", background: "#fd7e14" },
+const BADGE_COLORS: Record<SourceLiveness, string> = {
+  live: "#28a745",
+  stale: "#dc3545",
+  stopped: "#6c757d",
+  failed: "#842029",
+  settling: "#fd7e14",
 }
 
 export function resolveStalenessBadgeState(
@@ -40,7 +40,8 @@ export function StalenessBadge({
   settling,
 }: StalenessBadgeProps) {
   const kind = resolveStalenessBadgeState(isStale, state, settling)
-  const { label, background } = BADGE_STYLE[kind] ?? BADGE_STYLE.live
+  const background = BADGE_COLORS[kind] ?? BADGE_COLORS.live
+  const label = Object.hasOwn(BADGE_COLORS, kind) ? kind.toUpperCase() : "LIVE"
   return (
     <div
       className="stream-staleness-badge"

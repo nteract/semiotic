@@ -207,6 +207,14 @@ describe("suggestStreamCharts", () => {
     expect(stretchSuggestions.some((s) => s.suggestion.component === "PieChart")).toBe(true)
   })
 
+  it("honors a zero stretch budget", () => {
+    const result = suggestStreamCharts(keyedBrandStream, {
+      maxResults: 0, maxStretchResults: 0,
+      audience: { familiarity: { PieChart: 2 } },
+    })
+    expect(result.stretchSuggestions).toEqual([])
+  })
+
   it("explainStreamCapabilityFit returns the same excluded list", () => {
     const explained = explainStreamCapabilityFit(keyedBrandStream)
     expect(explained.excluded.length).toBeGreaterThan(0)

@@ -41,29 +41,28 @@ export class TDigest {
 
   clone(): TDigest {
     const copy = new TDigest(this.compression)
-    copy.centroids = this.centroids.map((c) => ({ ...c }))
-    copy.total = this.total
+    copy.merge(this)
     return copy
   }
 
-  /** Inclusive quantile in (0, 1]. Empty digest returns NaN. */
+  /** Quantile in [0, 1], interpolated between centroid centers. Empty returns NaN. */
   quantile(q: number): number {
-    if (this.total === 0) return Number.NaN
+    if (this.total === 0 || Number.isNaN(q)) return Number.NaN
     const p = Math.min(1, Math.max(0, q))
     this.compress()
     const target = p * this.total
-    let cumulative = 0
-    for (let i = 0; i < this.centroids.length; i++) {
-      const next = cumulative + this.centroids[i].weight
-      if (next >= target || i === this.centroids.length - 1) {
-        if (i === 0 || target <= cumulative) return this.centroids[i].mean
-        const prev = this.centroids[i - 1]
-        const curr = this.centroids[i]
-        const span = curr.weight
-        const t = span === 0 ? 0 : (target - cumulative) / span
+    let center = this.centroids[0].weight / 2
+    if (target <= center) return this.centroids[0].mean
+    for (let i = 1; i < this.centroids.length; i++) {
+      const prev = this.centroids[i - 1]
+      const curr = this.centroids[i]
+      const span = (prev.weight + curr.weight) / 2
+      const next = center + span
+      if (target <= next) {
+        const t = (target - center) / span
         return prev.mean + (curr.mean - prev.mean) * t
       }
-      cumulative = next
+      center = next
     }
     return this.centroids[this.centroids.length - 1].mean
   }
@@ -81,17 +80,18 @@ export class TDigest {
     const delta = this.compression
     for (let i = 1; i < this.centroids.length; i++) {
       const last = merged[merged.length - 1]
-      const q = n === 0 ? 0 : (seen + last.weight / 2) / n
+      const current = this.centroids[i]
+      const q = (seen + last.weight / 2) / n
       const maxWeight = (4 * n * q * (1 - q)) / delta
-      if (last.weight + this.centroids[i].weight <= Math.max(1, maxWeight)) {
-        const weight = last.weight + this.centroids[i].weight
+      if (last.weight + current.weight <= Math.max(1, maxWeight)) {
+        const weight = last.weight + current.weight
         last.mean =
-          (last.mean * last.weight + this.centroids[i].mean * this.centroids[i].weight) /
+          (last.mean * last.weight + current.mean * current.weight) /
           weight
         last.weight = weight
       } else {
         seen += last.weight
-        merged.push({ ...this.centroids[i] })
+        merged.push({ ...current })
       }
     }
     this.centroids = merged
@@ -100,5 +100,5 @@ export class TDigest {
 
 export function percentileKey(q: number): string {
   const pct = Math.round(q * 1000) / 10
-  return Number.isInteger(pct) ? `p${pct}` : `p${String(pct).replace(".", "_")}`
+  return `p${String(pct).replace(".", "_")}`
 }

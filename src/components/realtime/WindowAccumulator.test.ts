@@ -266,6 +266,13 @@ describe("statValue / bandBounds", () => {
 })
 
 describe("WindowAccumulator — percentiles and distinct", () => {
+  it.each(["tumbling", "hopping", "session"] as const)("emits interpolated medians for %s windows", (window) => {
+    const acc = new WindowAccumulator({ window, size: 100, hop: 50, percentiles: [0.5] })
+    acc.push(10, 0)
+    acc.push(20, 100)
+    expect(acc.emit().length).toBeGreaterThan(0)
+    for (const row of acc.emit()) expect(row.percentiles?.p50).toBe(50)
+  })
   it("emits p95 and a distinct count when configured", () => {
     const acc = new WindowAccumulator({
       size: 100,

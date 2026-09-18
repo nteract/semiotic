@@ -5,7 +5,8 @@ import type {
   StreamSuggestion,
 } from "./streamingTypes"
 import type { ChartFamily, ChartRubric } from "./chartCapabilityTypes"
-import { expandComposedIntentScores, type IntentId } from "./intents"
+import type { IntentId } from "./intents"
+import { expandComposedIntentScores } from "./intentRegistry"
 import {
   applyAudienceBias,
   effectiveFamiliarity,
@@ -233,6 +234,7 @@ function buildStreamStretchSuggestions(
   const ceiling = stretchFamiliarityCeiling(audience)
   const scoreTolerance = 1.5
   const maxResults = options.maxStretchResults ?? 5
+  if (maxResults <= 0) return []
 
   const baseline = rankStreamSuggestions(schema, {
     ...options,

@@ -197,7 +197,7 @@ const { totalGzip, totalRaw, fileCount } = result
 console.log("Multi-subpath consumer (ai + xy + network + geo + realtime):")
 console.log(`  files: ${fileCount}`)
 console.log(`  raw:   ${formatKb(totalRaw)}`)
-console.log(`  gzip:  ${formatKb(totalGzip)}`)
+console.log(`  gzip:  ${formatKb(totalGzip)} (${totalGzip} bytes)`)
 console.log(`  budget: ${formatKb(MULTI_IMPORT_GZIP_BUDGET)}`)
 if (analyze) {
   console.log("  initial output files:")

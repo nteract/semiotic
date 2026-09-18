@@ -1,7 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
-import { getIntent, type IntentId } from "./intents"
+import type { IntentId } from "./intents"
+import { intentRegistryStore } from "./intentRegistry"
 import type { AudienceProfile } from "./audienceProfile"
 import {
   XY_FAMILY,
@@ -306,18 +307,17 @@ export function communicativeActForIntent(
     const direct = INTENT_ACT[id]
     if (direct) return direct
     if (visiting.has(id)) return undefined
-    const descriptor = getIntent(id)
+    const descriptor = intentRegistryStore().intents.get(id)
     if (!descriptor?.composes?.length) return undefined
     visiting.add(id)
     const ranked = [...descriptor.composes].sort((a, b) => {
       const weightDelta = (descriptor.weights?.[b] ?? 1) - (descriptor.weights?.[a] ?? 1)
-      if (weightDelta !== 0) return weightDelta
-      const aIdx = INTENT_TIEBREAK.indexOf(a)
-      const bIdx = INTENT_TIEBREAK.indexOf(b)
-      if (aIdx === -1 && bIdx === -1) return 0
-      if (aIdx === -1) return 1
-      if (bIdx === -1) return -1
-      return aIdx - bIdx
+      // Unknown intents follow the built-ins and retain their authored order.
+      const priority = (child: IntentId) => {
+        const index = INTENT_TIEBREAK.indexOf(child)
+        return index < 0 ? INTENT_TIEBREAK.length : index
+      }
+      return weightDelta || priority(a) - priority(b)
     })
     for (const child of ranked) {
       const act = resolve(child)

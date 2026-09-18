@@ -26,6 +26,11 @@ const executiveAudience: AudienceProfile = {
 }
 
 describe("suggestStretchCharts", () => {
+  it("honors a zero stretch budget", () => {
+    expect(suggestStretchCharts(satisfactionByCohort, {
+      audience: executiveAudience, maxResults: 0,
+    })).toEqual([])
+  })
   it("returns empty array when no audience is supplied", () => {
     const result = suggestStretchCharts(satisfactionByCohort)
     expect(result).toEqual([])

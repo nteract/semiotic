@@ -34,6 +34,7 @@ import { prepareLineSeriesForSsr } from "../charts/shared/lineSeriesSsr"
 import type { AnomalyConfig, ForecastConfig } from "../charts/shared/statisticalOverlays"
 import { makeHistogramRuleContext } from "../charts/realtime/realtimeStyleRules"
 import { buildScatterPointStyle } from "./serverChartConfigsXYScatter"
+import { realtimeCategoryColors } from "./serverRealtimeCategoryColors"
 
 export { bubbleChart } from "./serverChartConfigsXYBubble"
 export { bumpChart } from "./serverChartConfigsXYBump"
@@ -272,6 +273,7 @@ export const temporalHistogram: ChartConfig = {
     const timeAccessor = rest.timeAccessor || "time"
     const valueAccessor = rest.valueAccessor || "value"
     const categoryAccessor = rest.categoryAccessor
+    const colors = realtimeCategoryColors(rows, common, rest, "explicit-then-alpha")
     const valueExtent = rest.valueExtent || common.yExtent
     const strokeStyle = {
       ...primitiveStyleOverrides(rest),
@@ -309,8 +311,8 @@ export const temporalHistogram: ChartConfig = {
       extentPadding: rest.extentPadding ?? common.extentPadding,
       binSize: rest.binSize,
       categoryAccessor,
-      barColors: rest.colors || common.barColors,
-      colorScheme: rest.colors || common.colorScheme,
+      barColors: colors || common.barColors,
+      colorScheme: colors || common.colorScheme,
       barStyle: common.barStyle || barStyle,
       areaStyle: common.areaStyle || resolvedAreaStyle,
       showLegend: common.showLegend ?? Boolean(categoryAccessor),

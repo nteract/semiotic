@@ -8,14 +8,37 @@ import {
   pickValueField,
   resolveStreamShape,
   streamKeyFields,
-  streamThroughputBand,
+  streamThroughputBand
 } from "./streamSchema"
 
 describe("streamSchema helpers", () => {
+  it("does not mistake a numeric timestamp or another encoding for the measure", () => {
+    expect(
+      pickValueField({
+        fields: [
+          { name: "timestamp", kind: "numeric", role: "x" },
+          { name: "region", kind: "numeric", role: "category" },
+          { name: "latency", kind: "numeric" }
+        ]
+      })?.name
+    ).toBe("latency")
+  })
+
+  it("rejects incompatible kinds even when they carry axis/value roles", () => {
+    const schema: StreamSchema = {
+      fields: [
+        { name: "region", kind: "categorical", role: "x" },
+        { name: "label", kind: "categorical", role: "value" },
+        { name: "flag", kind: "boolean", role: "y" }
+      ]
+    }
+    expect(pickTimeField(schema)).toBeUndefined()
+    expect(pickValueField(schema)).toBeUndefined()
+  })
   it("treats explicit shape as authoritative", () => {
     const schema: StreamSchema = {
       fields: [{ name: "brand", kind: "categorical", role: "key" }],
-      shape: "append",
+      shape: "append"
     }
     expect(resolveStreamShape(schema)).toBe("append")
   })
@@ -23,20 +46,20 @@ describe("streamSchema helpers", () => {
   it("infers keyed from role:key or keyFields", () => {
     expect(
       resolveStreamShape({
-        fields: [{ name: "brand", kind: "categorical", role: "key" }],
-      }),
+        fields: [{ name: "brand", kind: "categorical", role: "key" }]
+      })
     ).toBe("keyed")
     expect(
       resolveStreamShape({
         fields: [{ name: "brand", kind: "categorical" }],
-        keyFields: ["brand"],
-      }),
+        keyFields: ["brand"]
+      })
     ).toBe("keyed")
     expect(
       streamKeyFields({
         fields: [{ name: "id", kind: "numeric", role: "key" }],
-        keyFields: ["brand"],
-      }).sort(),
+        keyFields: ["brand"]
+      }).sort()
     ).toEqual(["brand", "id"])
   })
 
@@ -45,9 +68,9 @@ describe("streamSchema helpers", () => {
       resolveStreamShape({
         fields: [
           { name: "ts", kind: "date" },
-          { name: "latency_ms", kind: "numeric" },
-        ],
-      }),
+          { name: "latency_ms", kind: "numeric" }
+        ]
+      })
     ).toBe("append")
   })
 
@@ -57,7 +80,9 @@ describe("streamSchema helpers", () => {
     expect(streamThroughputBand({ fields, throughput: 1 })).toBe("medium")
     expect(streamThroughputBand({ fields, throughput: 250 })).toBe("high")
     expect(streamThroughputBand({ fields, throughput: "high" })).toBe("high")
-    expect(streamThroughputBand({ fields, throughput: 50, }, { high: 40 })).toBe("high")
+    expect(streamThroughputBand({ fields, throughput: 50 }, { high: 40 })).toBe(
+      "high"
+    )
   })
 
   it("prefers value roles and skips id-like names", () => {
@@ -68,16 +93,16 @@ describe("streamSchema helpers", () => {
     const firehose: StreamSchema = {
       fields: [
         { name: "order_id", kind: "numeric" },
-        { name: "latency_ms", kind: "numeric", role: "value" },
-      ],
+        { name: "latency_ms", kind: "numeric", role: "value" }
+      ]
     }
     expect(pickValueField(firehose)?.name).toBe("latency_ms")
 
     const noRoles: StreamSchema = {
       fields: [
         { name: "order_id", kind: "numeric" },
-        { name: "latency_ms", kind: "numeric" },
-      ],
+        { name: "latency_ms", kind: "numeric" }
+      ]
     }
     expect(pickValueField(noRoles)?.name).toBe("latency_ms")
   })
@@ -87,9 +112,9 @@ describe("streamSchema helpers", () => {
       fields: [
         { name: "brand_id", kind: "numeric", role: "key" },
         { name: "brand", kind: "categorical", role: "category" },
-        { name: "revenue", kind: "numeric", role: "value" },
+        { name: "revenue", kind: "numeric", role: "value" }
       ],
-      shape: "keyed",
+      shape: "keyed"
     }
     expect(pickCategoryField(schema)?.name).toBe("brand")
     expect(hasCategoryField(schema)).toBe(true)
