@@ -652,6 +652,13 @@ test.describe("SSR / CSR parity", () => {
       } else {
         await waitForChartReady(page, `csr-${c.id}`)
       }
+      if (c.id === "minimap-composite") {
+        // Canvas readiness does not include the asynchronously loaded brush.
+        // Compare the complete controlled selection, including its SVG overlay.
+        await expect(
+          page.locator(`[data-testid="csr-${c.id}"] .brush-group .selection`)
+        ).toBeVisible()
+      }
 
       // Keep the live CSR chart exactly as it rendered in the browser, then
       // place the standalone server SVG beside it. Moving the CSR fixture

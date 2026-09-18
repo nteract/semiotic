@@ -109,6 +109,8 @@ fi
 
 echo "==> Synchronizing versioned metadata and production artifacts"
 node scripts/sync-release-version.mjs "$VERSION"
+npm run docs:ai-tasks
+node scripts/generate-artifact-surface-inventory.mjs
 
 echo "==> Comparing visual contracts and bootstrapping missing Linux snapshots"
 # The missing-only helper writes genuinely new baselines but still fails on a
@@ -126,6 +128,7 @@ npm run docs:bundle-sizes
 npm run docs:cold-consumer
 npm run docs:readme-dashboard
 npm run docs:api-surface
+npm run prepare:adoption-evals
 
 # The dashboard generator writes a public docs asset after the first site
 # build. Rebuild now so docs/build is fresh before the machine baseline reads
