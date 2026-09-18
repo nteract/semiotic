@@ -60,7 +60,7 @@ export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>
   "ProportionalSymbolMap": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server"},
   "FlowMap": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server","docsRoute":"/charts/flow-map","pilot":true},
   "DistanceCartogram": {"category":"geo","recommendedImport":"semiotic/geo","serverImport":"semiotic/server"},
-  "RealtimeLineChart": {"category":"realtime","recommendedImport":"semiotic/realtime","docsRoute":"/charts/realtime-line-chart","pilot":true},
+  "RealtimeLineChart": {"category":"realtime","recommendedImport":"semiotic/realtime","serverImport":"semiotic/server","docsRoute":"/charts/realtime-line-chart","pilot":true},
   "RealtimeHistogram": {"category":"realtime","recommendedImport":"semiotic/realtime","serverImport":"semiotic/server"},
   "TemporalHistogram": {"category":"realtime","recommendedImport":"semiotic/realtime","serverImport":"semiotic/server"},
   "RealtimeSwarmChart": {"category":"realtime","recommendedImport":"semiotic/realtime","serverImport":"semiotic/server"},
