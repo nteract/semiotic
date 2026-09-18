@@ -2821,7 +2821,7 @@ async function suggestStreamDashboardHandler(args: {
   ]
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: dashboard
+    structuredContent: dashboard as unknown as Record<string, unknown>
   }
 }
 
