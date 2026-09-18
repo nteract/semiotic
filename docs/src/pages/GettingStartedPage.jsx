@@ -39,12 +39,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 132,
+    "kb": 133,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 162,
+    "kb": 163,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
@@ -64,12 +64,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 159,
+    "kb": 162,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 158,
+    "kb": 161,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -79,27 +79,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 241,
+    "kb": 245,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 241,
+    "kb": 245,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 248,
+    "kb": 252,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 98,
+    "kb": 100,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 91,
+    "kb": 92,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -164,12 +164,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 587,
+    "kb": 592,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 134,
+    "kb": 136,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -189,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 368,
+    "kb": 372,
     "blurb": "Full chart API and shared utilities"
   }
 ])

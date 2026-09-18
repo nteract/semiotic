@@ -11,7 +11,8 @@ import type {
   Suggestion,
   SuggestionScaleRange,
 } from "./chartCapabilityTypes"
-import { expandComposedIntentScores, type IntentId } from "./intents"
+import type { IntentId } from "./intents"
+import { expandComposedIntentScores } from "./intentRegistry"
 import { getCapabilities } from "./chartCapabilities"
 import {
   applyAudienceBias,

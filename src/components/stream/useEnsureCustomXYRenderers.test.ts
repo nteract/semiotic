@@ -3,8 +3,21 @@ import { getXYPlugin, resetXYPluginRegistry } from "./xyPlugins/registry"
 import { registerXYPlugin } from "./xyPlugins/registry"
 import { lineXYPlugin } from "./xyPlugins/linePlugin"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
+import { registerServerXYPlugins } from "../server/registerServerXYPlugins"
 
 describe("useEnsureXYPlugins", () => {
+  it.each([false, true])("loads painters after server-only registration (custom=%s)", async (custom) => {
+    resetXYPluginRegistry()
+    registerServerXYPlugins()
+    const dirtyRef = { current: false }
+    const scheduleRender = vi.fn()
+    const storeRef = { current: { markStylePaintPending: vi.fn() } }
+    renderHook(() => useEnsureXYPlugins("line", custom ? () => ({ nodes: [] }) : undefined, dirtyRef, scheduleRender, storeRef))
+    await waitFor(() => {
+      expect(getXYPlugin(custom ? "custom" : "line")?.canvasRenderers.length).toBeGreaterThan(0)
+      expect(scheduleRender).toHaveBeenCalled()
+    })
+  })
   afterEach(() => {
     resetXYPluginRegistry()
   })

@@ -1,16 +1,23 @@
 import type { StreamChartCapability } from "../../ai/streamingTypes"
+import {
+  hasNumericValue,
+  hasTimeField,
+  pickTimeField,
+  pickValueField,
+} from "../../ai/streamSchema"
 
 export const RealtimeHistogramCapability: StreamChartCapability = {
   component: "RealtimeHistogram",
+  family: "realtime",
   importPath: "semiotic/realtime",
   requiresLiveData: true,
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
 
   fits: (schema) => {
-    if (!schema.fields.some((f) => f.kind === "date" || f.role === "x")) {
+    if (!hasTimeField(schema)) {
       return "needs a time field"
     }
-    if (!schema.fields.some((f) => f.kind === "numeric" || f.role === "value")) {
+    if (!hasNumericValue(schema)) {
       return "needs a numeric field to bin"
     }
     return null
@@ -22,12 +29,8 @@ export const RealtimeHistogramCapability: StreamChartCapability = {
     "change-detection": 2,
   },
 
-  buildProps: (schema) => {
-    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
-    const valueField = schema.fields.find((f) => f.role === "value" || f.kind === "numeric")?.name
-    return {
-      timeAccessor: timeField,
-      valueAccessor: valueField,
-    }
-  },
+  buildProps: (schema) => ({
+    timeAccessor: pickTimeField(schema)?.name,
+    valueAccessor: pickValueField(schema)?.name,
+  }),
 }

@@ -26,7 +26,17 @@ export interface TransitionConfig {
   easing?: "ease-out" | "linear"
 }
 
+export type SourceLiveness = "live" | "stale" | "stopped" | "failed" | "settling"
+
 export interface StalenessConfig {
+  /**
+   * Override the ingest-age derivation. A stopped or failed source should
+   * read "Stopped" / "Failed", not "Stale". A retract stream can pass
+   * `"settling"` (or `settling: true`) while changelog ops are coalescing.
+   */
+  state?: SourceLiveness
+  /** Retract stream is still coalescing. Equivalent to `state: "settling"`. */
+  settling?: boolean
   /**
    * ms without data before "stale" (default: 5000). In graded mode this
    * is the base TTL the lifecycle bands are measured against — `aging`

@@ -257,9 +257,61 @@ export type {
   DashboardSuggestion,
   SuggestDashboardOptions
 } from "./ai/suggestDashboard"
-export { suggestStreamCharts } from "./ai/suggestStreamCharts"
-export type { SuggestStreamChartsOptions } from "./ai/suggestStreamCharts"
-export type { StreamSchema, StreamSuggestion } from "./ai/streamingTypes"
+export {
+  applyAudienceBias,
+  effectiveFamiliarity,
+  stretchFamiliarityCeiling,
+  receivabilityBias
+} from "./ai/audienceProfile"
+export type {
+  AudienceProfile,
+  AudienceTarget,
+  AudienceBiasResult,
+  ReceptionModality,
+  ReceivabilitySignal,
+  DashboardLayoutPolicy
+} from "./ai/audienceProfile"
+export {
+  suggestStreamCharts,
+  explainStreamCapabilityFit,
+  registerStreamChartCapability,
+  unregisterStreamChartCapability,
+  getStreamCapabilities
+} from "./ai/suggestStreamCharts"
+export type {
+  SuggestStreamChartsOptions,
+  SuggestStreamChartsResult,
+  RejectedStreamCapability,
+  StreamStretchSuggestion
+} from "./ai/suggestStreamCharts"
+export type {
+  StreamSchema,
+  StreamFieldSchema,
+  StreamFieldKind,
+  StreamFieldRole,
+  StreamShape,
+  StreamThroughput,
+  StreamThroughputBand,
+  StreamThroughputThresholds,
+  StreamChartCapability,
+  StreamIntentScorer,
+  StreamSuggestion
+} from "./ai/streamingTypes"
+export {
+  resolveStreamShape,
+  streamKeyFields,
+  streamThroughputBand,
+  pickValueField,
+  pickCategoryField,
+  pickTimeField,
+  pickSeriesField
+} from "./ai/streamSchema"
+export { suggestStreamDashboard } from "./ai/suggestStreamDashboard"
+export type {
+  StreamDashboardPanel,
+  StreamDashboardSuggestion,
+  SuggestStreamDashboardOptions
+} from "./ai/suggestStreamDashboard"
 export { suggestStretchCharts } from "./ai/suggestStretchCharts"
 export type {
   StretchSuggestion,

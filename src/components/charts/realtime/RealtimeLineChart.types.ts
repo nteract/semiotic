@@ -19,6 +19,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
   ChartAccessor,
   ChartMode,
+  LinkedHoverProp,
   MobileInteractionProp,
   SelectionConfig
 } from "../shared/types"
@@ -87,6 +88,15 @@ export interface RealtimeLineChartProps<
   windowMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
+  /**
+   * Ring-buffer capacity. Alias for `windowSize` — prefer this name when
+   * "window" means the aggregation window (`aggregate.window`).
+   */
+  capacity?: number
+  /** Alias for `windowMode`. */
+  capacityMode?: WindowMode
+  /** Split the line into series. Passed to the frame as `groupAccessor`. */
+  seriesAccessor?: ChartAccessor<TDatum, string>
   /** Controlled data array */
   data?: RealtimeData<TDatum>
   /** Time value accessor */
@@ -146,7 +156,7 @@ export interface RealtimeLineChartProps<
   /** Smooth position interpolation on data change */
   transition?: TransitionConfig
   /** Enable linked hover selection events for cross-chart highlighting */
-  linkedHover?: boolean | string | { name?: string; fields: string[] }
+  linkedHover?: LinkedHoverProp
   /** Consume a named selection — dims unselected elements */
   selection?: SelectionConfig
   /** Show a loading skeleton placeholder */

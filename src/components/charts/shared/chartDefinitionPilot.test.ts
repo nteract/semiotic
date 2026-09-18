@@ -116,7 +116,7 @@ describe("ChartDefinition pilot registry", () => {
       }
     }
     expect(CHART_DEFINITION_PILOT.BigNumber.metadata.support.server.mode).toBe("render-chart")
-    expect(CHART_DEFINITION_PILOT.RealtimeLineChart.metadata.support.server.mode).toBe("unavailable")
+    expect(CHART_DEFINITION_PILOT.RealtimeLineChart.metadata.support.server.mode).toBe("render-chart")
   })
 
   it("links real capability modules, AI schema entries, prop docs, lifecycle records, and examples", () => {

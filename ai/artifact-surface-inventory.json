@@ -4594,6 +4594,7 @@
         "AudienceBiasResult",
         "AudienceProfile",
         "AudienceTarget",
+        "DashboardLayoutPolicy",
         "ReceivabilitySignal",
         "ReceptionModality",
         "applyAudienceBias",
@@ -5119,8 +5120,10 @@
         "preservation"
       ],
       "exports": [
+        "DashboardIntentManifest",
         "IntentManifest",
         "IntentManifestFromRecipeOptions",
+        "dashboardIntentManifest",
         "intentManifestFromRecipe",
         "summarizeIntentManifest"
       ]

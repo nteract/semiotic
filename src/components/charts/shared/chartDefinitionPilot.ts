@@ -332,8 +332,8 @@ export const CHART_DEFINITION_PILOT: Readonly<{
       source: "docs/src/pages/charts/RealtimeLineChartPage.jsx",
     },
     server: {
-      mode: "unavailable",
-      reason: "Realtime push frames are not renderChart/MCP static-render targets.",
+      mode: "render-chart",
+      chartConfig: "RealtimeLineChart",
     },
     examples: [{
       route: "/examples/wikipedia-realtime",

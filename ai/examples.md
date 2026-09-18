@@ -1293,6 +1293,34 @@ import { LinkedCharts } from "semiotic/ai"
 
 Key props: `linkedHover` with `mode: "x-position"` broadcasts the hovered X value. Each chart shows its own tooltip with its own Y values. Use for multi-metric dashboards.
 
+### Canvas realtime frames
+
+Realtime charts draw marks on canvas, but they still consume the same `linkedHover` contract. Coordinate hover (`mode: "x-position"`) is the one that works when there is no SVG mark to hit-test:
+
+```jsx
+import { RealtimeLineChart } from "semiotic/realtime"
+import { LinkedCharts } from "semiotic"
+
+<LinkedCharts>
+  <RealtimeLineChart
+    data={cpuData}
+    timeAccessor="time"
+    valueAccessor="cpu"
+    linkedHover={{ name: "live", mode: "x-position", xField: "time" }}
+    selection={{ name: "live" }}
+  />
+  <RealtimeLineChart
+    data={errorData}
+    timeAccessor="time"
+    valueAccessor="errors"
+    linkedHover={{ name: "live", mode: "x-position", xField: "time" }}
+    selection={{ name: "live" }}
+  />
+</LinkedCharts>
+```
+
+The hovered time is published through `LinkedCrosshairStore`; each canvas frame draws its own crosshair at that x.
+
 ---
 
 ## Category Format (Custom Tick Labels)

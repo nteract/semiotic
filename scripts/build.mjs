@@ -101,13 +101,20 @@ const terserOptions = {
     // Group function declarations before statement/data tables. This keeps
     // repeated code closer within gzip's window without changing public names.
     hoist_funs: true,
-    passes: 2
+    // Keep reusable helpers intact across every library entry. Cloning them
+    // into individual chunks can retain otherwise unused exports downstream.
+    reduce_funcs: false,
+    passes: 3
   },
   mangle: {
     properties: false
   },
   format: {
-    comments: false
+    comments: false,
+    // Consumers still tree-shake these library chunks. Preserve the purity
+    // annotations emitted by esbuild so unused catalogs and factories can
+    // disappear when only a few public exports are imported.
+    preserve_annotations: true
   }
 }
 
@@ -193,14 +200,6 @@ async function createSharedEsmGroup({
       clientOnly,
       entryNames: names
     }),
-    // Function cloning across shared chart chunks can retain unused HOCs in
-    // downstream consumers. Preserve those helpers for consumer tree shaking.
-    ...(groupName === "client-primary" ? {
-      terserOptions: {
-        ...terserOptions,
-        compress: { ...terserOptions.compress, reduce_funcs: false }
-      }
-    } : {}),
     entry: entries,
     name: `${groupName}:esm`,
     format: "esm",

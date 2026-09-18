@@ -11,6 +11,27 @@ describe("RealtimeLineChart — aggregate mode", () => {
   beforeEach(() => { cleanup = setupCanvasMock() })
   afterEach(() => { cleanup() })
 
+  it.each([false, true])("aggregates series independently (controlled=%s)", (controlled) => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const points = [
+      { t: 1, v: 10, series: "a" }, { t: 2, v: 20, series: "a" },
+      { t: 1, v: 100, series: "b" }, { t: 2, v: 200, series: "b" },
+    ]
+    render(<TooltipProvider><RealtimeLineChart
+      ref={ref} data={controlled ? points : undefined}
+      timeAccessor="t" valueAccessor="v" seriesAccessor={(d) => String(d.series)}
+      aggregate={{ size: 10, stat: "mean", band: "minmax" }}
+    /></TooltipProvider>)
+    if (!controlled) act(() => ref.current!.pushMany(points))
+    expect(ref.current!.getData()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ value: 15, count: 2, __aggSeries: "a", __aggLower: 10, __aggUpper: 20 }),
+      expect.objectContaining({ value: 150, count: 2, __aggSeries: "b", __aggLower: 100, __aggUpper: 200 }),
+    ]))
+    expect(ref.current!.getData()).toHaveLength(2)
+    act(() => ref.current!.clear())
+    expect(ref.current!.getData()).toEqual([])
+  })
+
   it("reduces pushed events into windowed rows via getData", () => {
     const ref = React.createRef<RealtimeFrameHandle>()
     render(
@@ -210,6 +231,37 @@ describe("RealtimeLineChart — aggregate mode", () => {
     expect(ref.current!.getData()).toMatchObject([
       { __aggStart: 20, [AGG_VALUE]: 7 }
     ])
+  })
+
+  it("rebuilds the accumulator when percentiles or distinct become structural", async () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const chart = (aggregate: { size: number; percentiles?: number[]; distinct?: boolean }) => (
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          aggregate={aggregate}
+        />
+      </TooltipProvider>
+    )
+    const { rerender } = render(chart({ size: 10 }))
+    act(() => {
+      ref.current!.pushMany([
+        { t: 1, v: 10 },
+        { t: 5, v: 20 }
+      ])
+    })
+    expect(ref.current!.getData()).toHaveLength(1)
+
+    rerender(chart({ size: 10, percentiles: [0.95] }))
+    await waitFor(() => expect(ref.current!.getData()).toEqual([]))
+
+    act(() => ref.current!.push({ t: 4, v: 8 }))
+    expect(ref.current!.getData()).toHaveLength(1)
+
+    rerender(chart({ size: 10, percentiles: [0.95], distinct: true }))
+    await waitFor(() => expect(ref.current!.getData()).toEqual([]))
   })
 
   it("renders aggregated rows into the canvas scene", async () => {

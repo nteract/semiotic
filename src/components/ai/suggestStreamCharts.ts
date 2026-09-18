@@ -4,14 +4,29 @@ import type {
   StreamSchema,
   StreamSuggestion,
 } from "./streamingTypes"
-import type { ChartRubric } from "./chartCapabilityTypes"
-import { expandComposedIntentScores, type IntentId } from "./intents"
+import type { ChartFamily, ChartRubric } from "./chartCapabilityTypes"
+import type { IntentId } from "./intents"
+import { expandComposedIntentScores } from "./intentRegistry"
+import {
+  applyAudienceBias,
+  effectiveFamiliarity,
+  stretchFamiliarityCeiling,
+  type AudienceProfile,
+} from "./audienceProfile"
+import { streamThroughputBand } from "./streamSchema"
 import { RealtimeLineChartCapability } from "../charts/realtime/RealtimeLineChart.capability"
 import { RealtimeHistogramCapability } from "../charts/realtime/RealtimeHistogram.capability"
 import { RealtimeSwarmChartCapability } from "../charts/realtime/RealtimeSwarmChart.capability"
 import { RealtimeWaterfallChartCapability } from "../charts/realtime/RealtimeWaterfallChart.capability"
 import { RealtimeHeatmapCapability } from "../charts/realtime/RealtimeHeatmap.capability"
 import { TemporalHistogramCapability } from "../charts/realtime/TemporalHistogram.capability"
+import { BarChartStreamCapability } from "../charts/ordinal/BarChart.streamCapability"
+import { GroupedBarChartStreamCapability } from "../charts/ordinal/GroupedBarChart.streamCapability"
+import { StackedBarChartStreamCapability } from "../charts/ordinal/StackedBarChart.streamCapability"
+import { PieChartStreamCapability } from "../charts/ordinal/PieChart.streamCapability"
+import { DonutChartStreamCapability } from "../charts/ordinal/DonutChart.streamCapability"
+import { BigNumberStreamCapability } from "../charts/value/BigNumber.streamCapability"
+import { GaugeChartStreamCapability } from "../charts/value/GaugeChart.streamCapability"
 
 const BUILT_IN_STREAM_CAPABILITIES: ReadonlyArray<StreamChartCapability> = [
   RealtimeLineChartCapability,
@@ -20,6 +35,13 @@ const BUILT_IN_STREAM_CAPABILITIES: ReadonlyArray<StreamChartCapability> = [
   RealtimeWaterfallChartCapability,
   RealtimeHeatmapCapability,
   TemporalHistogramCapability,
+  BarChartStreamCapability,
+  GroupedBarChartStreamCapability,
+  StackedBarChartStreamCapability,
+  PieChartStreamCapability,
+  DonutChartStreamCapability,
+  BigNumberStreamCapability,
+  GaugeChartStreamCapability,
 ]
 
 const userStreamCapabilities = new Map<string, StreamChartCapability>()
@@ -75,8 +97,32 @@ function buildReasons(
   for (const { intent, score } of top) {
     reasons.push(`Strong fit for ${intent} (${score}/5)`)
   }
-  if (schema.throughput) reasons.push(`tuned for ${schema.throughput} throughput`)
+  const band = streamThroughputBand(schema)
+  if (band) reasons.push(`tuned for ${band} throughput`)
   return reasons
+}
+
+export interface RejectedStreamCapability {
+  component: string
+  family: ChartFamily
+  importPath: string
+  /** Human-readable reason this chart can't render this schema. */
+  reason: string
+}
+
+export interface StreamStretchSuggestion {
+  suggestion: StreamSuggestion
+  replacing?: string
+  rationale: string
+  familiarity: number
+  /** Set by `suggestStreamDashboard` to bind the stretch to a schema. */
+  schemaIndex?: number
+}
+
+export interface SuggestStreamChartsResult {
+  suggestions: StreamSuggestion[]
+  excluded: ReadonlyArray<RejectedStreamCapability>
+  stretchSuggestions: StreamStretchSuggestion[]
 }
 
 export interface SuggestStreamChartsOptions {
@@ -86,32 +132,14 @@ export interface SuggestStreamChartsOptions {
   maxResults?: number
   minScore?: number
   capabilities?: ReadonlyArray<StreamChartCapability>
+  audience?: AudienceProfile
+  maxStretchResults?: number
 }
 
-/**
- * Suggest realtime charts for a schema, ranked by intent.
- *
- * Parallel to `suggestCharts` but operates on a `StreamSchema` (fields +
- * throughput/retention hints) rather than row data. Use for live dashboards,
- * monitoring views, anywhere events arrive over time rather than as a bounded
- * table.
- *
- * @example
- * const suggestions = suggestStreamCharts({
- *   fields: [
- *     { name: "ts", kind: "date" },
- *     { name: "latency_ms", kind: "numeric" },
- *     { name: "endpoint", kind: "categorical" },
- *   ],
- *   throughput: "high",
- *   retention: "windowed",
- * }, { intent: "trend" })
- * // → [{ component: "RealtimeHeatmap", ... }, { component: "RealtimeWaterfallChart", ... }]
- */
-export function suggestStreamCharts(
+function rankStreamSuggestions(
   schema: StreamSchema,
-  options: SuggestStreamChartsOptions = {},
-): StreamSuggestion[] {
+  options: SuggestStreamChartsOptions,
+): { suggestions: StreamSuggestion[]; excluded: RejectedStreamCapability[] } {
   const capabilities = options.capabilities ?? getStreamCapabilities()
   const rankingIntents: IntentId[] = options.intent
     ? Array.isArray(options.intent) ? options.intent : [options.intent]
@@ -123,13 +151,23 @@ export function suggestStreamCharts(
   const deny = options.deny ? new Set(options.deny) : null
 
   const out: StreamSuggestion[] = []
+  const excluded: RejectedStreamCapability[] = []
 
   for (const capability of capabilities) {
+    const family = capability.family ?? "realtime"
+    const fitReason = capability.fits(schema)
+    if (fitReason !== null) {
+      excluded.push({
+        component: capability.component,
+        family,
+        importPath: capability.importPath,
+        reason: fitReason,
+      })
+      continue
+    }
+
     if (allow && !allow.has(capability.component)) continue
     if (deny && deny.has(capability.component)) continue
-
-    const fitReason = capability.fits(schema)
-    if (fitReason !== null) continue
 
     const baseIntentScores: Partial<Record<IntentId, number>> = {}
     for (const [intent, scorer] of Object.entries(capability.intentScores) as Array<[IntentId, StreamIntentScorer]>) {
@@ -137,22 +175,29 @@ export function suggestStreamCharts(
     }
     const intentScores = expandComposedIntentScores(baseIntentScores, rankingIntents)
 
-    const composite = compositeScore(intentScores, rankingIntents)
-    if (composite < minScore) continue
-
+    const baseComposite = compositeScore(intentScores, rankingIntents)
     const rubric: ChartRubric = { ...capability.rubric }
+    const biased = applyAudienceBias(
+      baseComposite,
+      rubric,
+      capability.component,
+      options.audience,
+    )
+    if (biased.score < minScore) continue
+
     const caveats = capability.caveats ? Array.from(capability.caveats(schema)) : []
     const reasons = buildReasons(schema, intentScores, rankingIntents)
+    if (biased.appliedReason) reasons.push(biased.appliedReason)
     const props = capability.buildProps(schema)
 
     out.push({
       component: capability.component,
-      family: "realtime",
+      family,
       importPath: capability.importPath,
       requiresLiveData: capability.requiresLiveData === true,
-      score: composite,
+      score: biased.score,
       intentScores,
-      rubric,
+      rubric: biased.rubric,
       reasons,
       caveats,
       props,
@@ -165,5 +210,119 @@ export function suggestStreamCharts(
     return b.rubric.familiarity - a.rubric.familiarity
   })
 
-  return out.slice(0, maxResults)
+  return { suggestions: out.slice(0, maxResults), excluded }
+}
+
+function buildStreamStretchSuggestions(
+  schema: StreamSchema,
+  options: SuggestStreamChartsOptions,
+  ranked: StreamSuggestion[],
+): StreamStretchSuggestion[] {
+  const audience = options.audience
+  if (!audience) return []
+  if ((audience.exposureLevel ?? 1) === 0) return []
+
+  const capabilities = options.capabilities ?? getStreamCapabilities()
+  const familiarityByComponent = new Map<string, number>()
+  for (const capability of capabilities) {
+    familiarityByComponent.set(
+      capability.component,
+      effectiveFamiliarity(capability.component, capability.rubric.familiarity, audience),
+    )
+  }
+
+  const ceiling = stretchFamiliarityCeiling(audience)
+  const scoreTolerance = 1.5
+  const maxResults = options.maxStretchResults ?? 5
+  if (maxResults <= 0) return []
+
+  const baseline = rankStreamSuggestions(schema, {
+    ...options,
+    audience: undefined,
+    maxResults: 30,
+    minScore: 1,
+  }).suggestions
+
+  const familiarPicks = baseline.filter(
+    (s) => (familiarityByComponent.get(s.component) ?? s.rubric.familiarity) >= 4,
+  )
+  const topFamiliar = familiarPicks[0]
+  const used = new Set(ranked.map((s) => s.component))
+
+  const out: StreamStretchSuggestion[] = []
+  for (const candidate of baseline) {
+    if (used.has(candidate.component)) continue
+    const familiarity = familiarityByComponent.get(candidate.component) ?? candidate.rubric.familiarity
+    if (familiarity > ceiling) continue
+
+    const isIncreaseTarget = audience.targets?.[candidate.component]?.direction === "increase"
+    const withinTolerance = topFamiliar
+      ? topFamiliar.score - candidate.score <= scoreTolerance
+      : true
+    if (!isIncreaseTarget && !withinTolerance) continue
+
+    const target = audience.targets?.[candidate.component]
+    const rationale =
+      target?.reason ??
+      (target?.direction === "increase"
+        ? `${audience.name ?? "your audience"} is growing adoption of ${candidate.component}`
+        : topFamiliar
+          ? `${candidate.component} is on the stream, and within reach of ${topFamiliar.component} which you're already familiar with`
+          : `${candidate.component} fits this stream and would expand your team's vocabulary`)
+
+    out.push({
+      suggestion: candidate,
+      replacing: topFamiliar?.component,
+      rationale,
+      familiarity,
+    })
+    if (out.length >= maxResults) break
+  }
+  return out
+}
+
+/**
+ * Suggest charts for a stream schema, ranked by intent.
+ *
+ * Parallel to `suggestCharts` but operates on a `StreamSchema` (fields +
+ * throughput/retention/shape hints) rather than row data. Use for live
+ * dashboards, monitoring views, anywhere events arrive over time rather
+ * than as a bounded table.
+ *
+ * Returns `{ suggestions, excluded, stretchSuggestions }`. `excluded`
+ * lists every registered capability whose `fits()` rejected the schema
+ * so a suggestion panel can say why a chart is missing. Pass `audience`
+ * to apply familiarity/target bias and (when `exposureLevel !== 0`) fill
+ * `stretchSuggestions`.
+ *
+ * @example
+ * const { suggestions } = suggestStreamCharts({
+ *   fields: [
+ *     { name: "ts", kind: "date" },
+ *     { name: "latency_ms", kind: "numeric" },
+ *     { name: "endpoint", kind: "categorical" },
+ *   ],
+ *   throughput: "high",
+ *   retention: "windowed",
+ * }, { intent: "trend" })
+ * // → suggestions[0] is RealtimeHeatmap or RealtimeWaterfallChart
+ */
+export function suggestStreamCharts(
+  schema: StreamSchema,
+  options: SuggestStreamChartsOptions = {},
+): SuggestStreamChartsResult {
+  const { suggestions, excluded } = rankStreamSuggestions(schema, options)
+  const stretchSuggestions = buildStreamStretchSuggestions(schema, options, suggestions)
+  return { suggestions, excluded, stretchSuggestions }
+}
+
+/**
+ * Like `suggestStreamCharts`, but named for diagnostic panels that care
+ * about the excluded list. Same result object.
+ */
+export function explainStreamCapabilityFit(
+  schema: StreamSchema,
+  options: SuggestStreamChartsOptions = {},
+): SuggestStreamChartsResult {
+  return suggestStreamCharts(schema, options)
 }

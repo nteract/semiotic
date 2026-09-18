@@ -396,6 +396,16 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   valueAccessor: { type: ["string", "function"], description: "Key for y values" },
   windowSize: { type: "number", description: "Number of data points visible" },
   windowMode: { type: "string", enum: ["sliding", "growing"] as const },
+  capacity: {
+    type: "number",
+    description:
+      "Ring-buffer capacity. Alias for windowSize — prefer this name when \"window\" means the aggregation window (aggregate.window).",
+  },
+  capacityMode: {
+    type: "string",
+    enum: ["sliding", "growing"] as const,
+    description: "Alias for windowMode.",
+  },
   arrowOfTime: { type: "string", enum: ["left", "right"] as const },
   timeExtent: { type: "array" },
   valueExtent: { type: "array" },
@@ -436,7 +446,11 @@ const realtimeProps: Record<string, ChartPropSpec> = {
 
 const realtimeStaticProps: Record<string, ChartPropSpec> = Object.fromEntries(
   Object.entries(realtimeProps).filter(
-    ([propName]) => propName !== "windowSize" && propName !== "windowMode",
+    ([propName]) =>
+      propName !== "windowSize" &&
+      propName !== "windowMode" &&
+      propName !== "capacity" &&
+      propName !== "capacityMode",
   ),
 )
 

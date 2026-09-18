@@ -215,7 +215,10 @@ for (const profile of ["public", "developer"]) {
       })
     )
     const tools = await server.request("tools/list")
-    assert.equal(tools.tools.length, profile === "public" ? 5 : 23)
+    assert.equal(tools.tools.length, profile === "public" ? 5 : 24)
+    if (profile === "developer") {
+      assert.ok(tools.tools.some(({ name }) => name === "suggestStreamDashboard"))
+    }
     assert.ok(
       !tools.tools.some(({ name }) => /task/i.test(name)),
       "Task discovery must not introduce another tool"

@@ -853,7 +853,7 @@
     ]
   },
   "mcp": {
-    "toolCount": 28,
+    "toolCount": 29,
     "tools": [
       "applyTheme",
       "auditAccessibility",
@@ -881,6 +881,7 @@
       "suggestCharts",
       "suggestDashboard",
       "suggestStreamCharts",
+      "suggestStreamDashboard",
       "suggestStretchCharts",
       "suggestTokenEncoding"
     ],

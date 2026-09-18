@@ -107,8 +107,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       binSize,
       valueAccessor,
       arrowOfTime = "right",
-      windowMode = "sliding",
-      windowSize = 200,
+      windowMode: windowModeProp,
+      capacityMode,
+      windowSize: windowSizeProp,
+      capacity,
       timeAccessor,
       xExtent,
       yExtent,
@@ -219,6 +221,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       layoutConfig,
       layoutSelection,
     } = props
+
+    const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+    const windowSize = windowSizeProp ?? capacity ?? 200
 
     const { customHoverBehavior, customClickBehavior, hasClickBehavior } =
       useSemanticFrameInteractions<HoverData>({
@@ -1483,7 +1488,12 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           />
         )}
         {staleness?.showBadge && (
-          <StalenessBadge isStale={isStale} position={staleness.badgePosition} />
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
+          />
         )}
         {focusRing}
         {tooltipElement}

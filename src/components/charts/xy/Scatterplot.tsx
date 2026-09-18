@@ -8,6 +8,7 @@ import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
+import type { DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
 
@@ -139,6 +140,12 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
   yExtent?: [number | undefined, number | undefined] | [number]
   /** Additional StreamXYFrame props for advanced customization */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
+  /** Flash newly inserted or updated points. Also reachable via `frameProps.pulse`. */
+  pulse?: PulseConfig
+  /** Fade older points by buffer age. Also reachable via `frameProps.decay`. */
+  decay?: DecayConfig
+  /** Frame-level liveness badge and dimming. Also reachable via `frameProps.staleness`. */
+  staleness?: StalenessConfig
 }
 
 /**
@@ -230,6 +237,9 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     anomaly,
     xExtent,
     yExtent,
+    pulse,
+    decay,
+    staleness,
     frameProps = {},
     selection,
     linkedHover,
@@ -486,6 +496,9 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     }),
     ...(marginalGraphics && { marginalGraphics }),
     ...(pointIdAccessor && { pointIdAccessor }),
+    ...(pulse && { pulse }),
+    ...(decay && { decay }),
+    ...(staleness && { staleness }),
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),

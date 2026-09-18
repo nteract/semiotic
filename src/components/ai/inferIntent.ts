@@ -33,7 +33,7 @@ const PATTERNS: IntentPattern[] = [
     weight: 4,
     patterns: [
       /\b(outlier|outliers|anomal|anomaly|anomalies|extreme|extremes|unusual|stands? out|sticks? out|odd one)\b/i,
-      /\b(peak|peaks|highest|lowest|biggest spike|spike|min|max|maximum|minimum)\b/i,
+      /\b(peak|peaks|highest|lowest|biggest spike|spikes?|min|max|maximum|minimum)\b/i,
     ],
   },
   {
@@ -112,8 +112,17 @@ const PATTERNS: IntentPattern[] = [
     intent: "flow",
     weight: 4,
     patterns: [
-      /\b(flow|flows|transition|transitions|movement|moved from|funnel|conversion|drop[- ]off|sankey|chord)\b/i,
-      /\b(from.*to|source.*target|path|journey|pipeline)\b/i,
+      /\b(transition|transitions|movement|moved from|funnel|conversion|drop[- ]off|sankey|chord)\b/i,
+      /\b(from.*to|source.*target)\b/i,
+    ],
+  },
+  {
+    // Generic English words that happen to be the intent name. Scored below
+    // registered phrases and below a dedicated flow construction.
+    intent: "flow",
+    weight: 2,
+    patterns: [
+      /\b(flow|flows|path|journey|pipeline)\b/i,
     ],
   },
   {
@@ -295,6 +304,33 @@ function collectSchemaMatches(
   }
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function collectRegisteredPhraseMatches(
+  query: string,
+  matches: Map<IntentId, AccumulatedMatch>,
+): void {
+  const haystack = query.toLowerCase()
+  for (const descriptor of listIntents()) {
+    const phrases = descriptor.signals?.phrases
+    if (!phrases?.length) continue
+    let hits = 0
+    for (const phrase of phrases) {
+      const trimmed = phrase.trim()
+      if (!trimmed) continue
+      const tokens = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
+      if (tokens.length === 0) continue
+      const pattern = new RegExp(`\\b${tokens.map(escapeRegExp).join("\\s+")}\\b`, "i")
+      if (pattern.test(haystack)) hits += 1
+    }
+    if (hits === 0) continue
+    // Registered phrases outrank generic English intent-name tokens.
+    addMatch(matches, descriptor.id, Math.min(5, 4 + hits * 0.5), PROSE_SOURCE)
+  }
+}
+
 /**
  * Map a natural-language query to a built-in intent. Returns `null` when no
  * pattern matches with meaningful confidence.
@@ -328,6 +364,7 @@ export function inferIntent(query: string, options: InferIntentOptions = {}): In
         }
       }
     }
+    collectRegisteredPhraseMatches(query, matches)
   }
   if (mode === "schema" || mode === "combined") {
     collectSchemaMatches(query, options.fields, matches)

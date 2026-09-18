@@ -51,6 +51,14 @@ export function resolveStaleness(
   staleness: StalenessConfig | undefined,
   idleMs: number
 ): ResolvedStaleness {
+  const override = staleness?.state ?? (staleness?.settling ? "settling" : undefined)
+  if (override === "live") return FRESH
+  if (override === "stopped" || override === "failed" || override === "stale") {
+    return { alpha: staleness?.dimOpacity ?? 0.5, band: "stale", isStale: true }
+  }
+  if (override === "settling") {
+    return { alpha: 0.85, band: "aging", isStale: false }
+  }
   if (!staleness || !(idleMs > 0)) return FRESH
   // Clamp non-positive thresholds to the default so binary and graded modes
   // agree — `bandFromAge` treats a non-positive TTL as always-fresh, whereas

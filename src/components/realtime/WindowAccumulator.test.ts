@@ -264,3 +264,29 @@ describe("statValue / bandBounds", () => {
     expect(bandBounds(w, "none", "mean")).toBeNull()
   })
 })
+
+describe("WindowAccumulator — percentiles and distinct", () => {
+  it.each(["tumbling", "hopping", "session"] as const)("emits interpolated medians for %s windows", (window) => {
+    const acc = new WindowAccumulator({ window, size: 100, hop: 50, percentiles: [0.5] })
+    acc.push(10, 0)
+    acc.push(20, 100)
+    expect(acc.emit().length).toBeGreaterThan(0)
+    for (const row of acc.emit()) expect(row.percentiles?.p50).toBe(50)
+  })
+  it("emits p95 and a distinct count when configured", () => {
+    const acc = new WindowAccumulator({
+      size: 100,
+      percentiles: [0.5, 0.95],
+      distinct: true,
+    })
+    for (let i = 1; i <= 20; i++) {
+      acc.push(i, i * 10, `user-${i % 5}`)
+    }
+    const [row] = acc.emit()
+    expect(row.percentiles?.p50).toBeGreaterThan(0)
+    expect(row.percentiles?.p95).toBeGreaterThan(row.percentiles?.p50 ?? 0)
+    expect(row.distinct).toBe(5)
+    expect(statValue(row, "p95")).toBe(row.percentiles?.p95)
+    expect(statValue(row, "distinct")).toBe(5)
+  })
+})

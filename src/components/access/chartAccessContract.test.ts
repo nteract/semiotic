@@ -67,7 +67,7 @@ describe("ChartAccessContract@1", () => {
     ).toBe(
       "Last 5 stream statuses: no data received, then receiving data, then receiving data, then receiving data, then not receiving new data."
     )
-    expect(REALTIME_LINE_CHART_ACCESS_CONTRACT.ssr.supported).toBe(false)
+    expect(REALTIME_LINE_CHART_ACCESS_CONTRACT.ssr.supported).toBe(true)
   })
 
   it("bounds realtime status history at five records by default", () => {
@@ -99,7 +99,7 @@ describe("ChartAccessContract@1", () => {
     const contract = createChartAccessContract({ component, props: {} })
 
     expect(contract.streamStatus.supported).toBe(true)
-    expect(contract.ssr.supported).toBe(false)
+    expect(contract.ssr.supported).toBe(true)
   })
 
   it("does not confuse the static TemporalHistogram with a live push chart", () => {

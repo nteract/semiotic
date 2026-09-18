@@ -28,6 +28,12 @@ describe("resolveStaleness — binary mode", () => {
     expect(resolveStaleness({ threshold: 0 }, 1000).isStale).toBe(false)
     expect(resolveStaleness({ threshold: 0, graded: true }, 1000).band).toBe("fresh")
   })
+
+  it("honors an external source-state override", () => {
+    expect(resolveStaleness({ state: "live" }, 60_000).isStale).toBe(false)
+    expect(resolveStaleness({ state: "failed" }, 100).isStale).toBe(true)
+    expect(resolveStaleness({ settling: true }, 100).band).toBe("aging")
+  })
 })
 
 describe("resolveStaleness — graded mode", () => {

@@ -48,6 +48,30 @@
         "interface RealtimeLineChartHandle<TDatum extends Datum = Datum, TReadDatum extends Datum = TDatum> extends RealtimeFrameHandle<TDatum, TReadDatum>"
       ],
       "reason": "Backward-compatible generic precision: both parameters default to the released Datum handle, while typed realtime line refs can preserve authored rows and distinguish aggregate readback rows."
+    },
+    {
+      "against": "v3.10.1",
+      "entry": "semiotic-ai",
+      "symbol": "suggestStreamCharts",
+      "previous": [
+        "function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): StreamSuggestion[]"
+      ],
+      "current": [
+        "function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult"
+      ],
+      "reason": "Reviewed stream-suggester result expansion: callers now receive { suggestions, excluded, stretchSuggestions } so empty fits can be explained instead of a silent array. Migration is const { suggestions } = suggestStreamCharts(...)."
+    },
+    {
+      "against": "v3.10.1",
+      "entry": "semiotic-ai-core",
+      "symbol": "suggestStreamCharts",
+      "previous": [
+        "function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): StreamSuggestion[]"
+      ],
+      "current": [
+        "function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult"
+      ],
+      "reason": "Reviewed stream-suggester result expansion: callers now receive { suggestions, excluded, stretchSuggestions } so empty fits can be explained instead of a silent array. Migration is const { suggestions } = suggestStreamCharts(...)."
     }
   ]
 }

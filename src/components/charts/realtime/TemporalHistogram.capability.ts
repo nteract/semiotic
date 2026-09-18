@@ -1,4 +1,10 @@
 import type { StreamChartCapability } from "../../ai/streamingTypes"
+import {
+  hasNumericValue,
+  hasTimeField,
+  pickTimeField,
+  pickValueField,
+} from "../../ai/streamSchema"
 
 /**
  * TemporalHistogram is the bounded sibling of RealtimeHistogram — same chart
@@ -7,14 +13,15 @@ import type { StreamChartCapability } from "../../ai/streamingTypes"
  */
 export const TemporalHistogramCapability: StreamChartCapability = {
   component: "TemporalHistogram",
+  family: "realtime",
   importPath: "semiotic/realtime",
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
 
   fits: (schema) => {
-    if (!schema.fields.some((f) => f.kind === "date" || f.role === "x")) {
+    if (!hasTimeField(schema)) {
       return "needs a time field"
     }
-    if (!schema.fields.some((f) => f.kind === "numeric" || f.role === "value")) {
+    if (!hasNumericValue(schema)) {
       return "needs a numeric value field"
     }
     if (schema.retention === "windowed") {
@@ -29,13 +36,8 @@ export const TemporalHistogramCapability: StreamChartCapability = {
     "trend": 2,
   },
 
-  buildProps: (schema) => {
-    const valueField = schema.fields.find((f) => f.role === "value" || f.kind === "numeric")?.name
-    const timeField = schema.fields.find((f) => f.role === "x" || f.kind === "date")?.name
-    // Wraps RealtimeHistogram — same accessor surface (timeAccessor + valueAccessor).
-    return {
-      timeAccessor: timeField,
-      valueAccessor: valueField,
-    }
-  },
+  buildProps: (schema) => ({
+    timeAccessor: pickTimeField(schema)?.name,
+    valueAccessor: pickValueField(schema)?.name,
+  }),
 }

@@ -44,8 +44,18 @@ export interface AggregateConfig {
   band?: AggregateBand
   /** Multiplier for the `stddev` band (drawn as value ± sigma·σ). @default 1 */
   sigma?: number
-  /** Keep at most this many most-recent windows. @default unbounded */
+  /** Keep at most this many most-recent windows per series. @default unbounded */
   retain?: number
+  /**
+   * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Structural:
+   * changing this rebuilds the accumulator (same as `window` / `size`).
+   */
+  percentiles?: ReadonlyArray<number>
+  /**
+   * Track an approximate distinct count per window. Structural: changing
+   * this rebuilds the accumulator.
+   */
+  distinct?: boolean
 }
 
 // Field names on the emitted frame rows. Underscored synthetic keys are
@@ -96,6 +106,8 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
     hop: hopMs ?? undefined,
     gap: gapMs ?? undefined,
     retain: config.retain,
+    percentiles: config.percentiles,
+    distinct: config.distinct,
   })
 }
 

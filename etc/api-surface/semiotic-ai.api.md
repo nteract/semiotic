@@ -209,6 +209,7 @@ function createLocalStorageConversationArcSink(options?: LocalStorageConversatio
 function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo
 function createWebhookConversationArcSink(options: WebhookConversationArcSinkOptions): ConversationArcSink
 function currentTimestamp(): string
+function dashboardIntentManifest(input: {id: string; title?: string; audience?: IntentManifest["audience"]; layout?: DashboardLayoutPolicy; panels: IntentManifest[];}): DashboardIntentManifest
 function dataQualityToAnnotations(results: readonly DataQualityResult[], options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult
 function defineChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): ChartRecipe<TDatum, TConfig>
 function deriveProfileFields(data: readonly Datum[], candidates: {x: import("./chartCapabilityTypes").FieldCandidate[]; y: import("./chartCapabilityTypes").FieldCandidate[]; size: import("./chartCapabilityTypes").FieldCandidate[]; category: import("./chartCapabilityTypes").FieldCandidate[]; series: import("./chartCapabilityTypes").FieldCandidate[]; time: import("./chartCapabilityTypes").FieldCandidate[];}, roles: Readonly<Record<string, readonly import("./fieldRoles").ProfileFieldRole[]>>, options?: ReprofileFieldsOptions | undefined): DerivedProfileFields
@@ -230,6 +231,7 @@ function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataPr
 function eventTimePresentationFinding(context: TemporalContext, referenceTime?: string | undefined): ObligationResult | undefined
 function explainArtifactRefusal(evaluation: ArtifactEvaluation): string
 function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
+function explainStreamCapabilityFit(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult
 function exportChart(container: HTMLElement, options?: undefined | {format?: "png" | "svg"; filename?: string; scale?: number; background?: string;}): Promise<void>
 function filterAnnotationsByStatus<T extends StatusFilterable>(annotations: readonly T[], options?: AnnotationStatusVisibility | undefined): T[]
 function fingerprintArtifactCollection(collection: ArtifactCollectionContract): string
@@ -268,6 +270,10 @@ function migrateArtifactContract(value: unknown): ArtifactContractMigrationResul
 function mobileVisualizationCaveats(): string[]
 function normalizeTokenEncoding(encoding: TokenEncoding): TokenEncoding
 function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
+function pickCategoryField(schema: StreamSchema): StreamFieldSchema | undefined
+function pickSeriesField(schema: StreamSchema): StreamFieldSchema | undefined
+function pickTimeField(schema: StreamSchema): StreamFieldSchema | undefined
+function pickValueField(schema: StreamSchema): StreamFieldSchema | undefined
 function prepareArtifactRevision(component: string, currentProps: Datum, currentContract: ArtifactContract, options: PrepareArtifactRevisionOptions): PreparedArtifactRevision
 function prepareChart(input: PrepareChartInput, options?: PrepareChartOptions | undefined): PrepareChartResult
 function profileData(data: null | readonly Datum[] | undefined, options?: ProfileDataOptions | undefined): ChartDataProfile
@@ -301,6 +307,7 @@ function resolveCommunicativeAct(component: string, context: ChartCapability | D
 function resolveRecipeRoleField(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, role: DataRoleDefinition, profile: ChartDataProfile): string | undefined
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveRowsToNumber(declared: ScaleBand | number | undefined, measuredRows: number, scale?: DataScaleProfile | undefined): number
+function resolveStreamShape(schema: StreamSchema): StreamShape
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function retractClaim(contract: ArtifactContract, claimId: string, correction: Omit<CorrectionRecord, "affectedClaimIds">): ArtifactContract
 function runQualityScorecard(fixtures: readonly ScorecardFixture[], capabilities?: readonly ChartCapability[] | undefined): ScorecardReport
@@ -309,12 +316,15 @@ function scoreChart(component: string, data: null | readonly Datum[] | undefined
 function serializeArtifactCollection(value: unknown): SerializedArtifactCollection
 function serializeArtifactContract(value: unknown, options?: SerializeArtifactContractOptions | undefined): SerializedArtifactContract
 function serializeSelections(selections: Map<string, Selection>): SerializedSelections
+function streamKeyFields(schema: StreamSchema): string[]
+function streamThroughputBand(schema: StreamSchema, thresholds?: StreamThroughputThresholds | undefined): StreamThroughputBand | undefined
 function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): number
 function subscribeToConversationArcChange(listener: () => void): () => void
 function suggestCharts(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
 function suggestChartsGrouped(data: null | readonly Datum[] | undefined, options?: (SuggestChartsOptions & {maxPerBand?: number;}) | undefined): ScaledSuggestionGroups
 function suggestDashboard(data: null | readonly Datum[] | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
-function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): StreamSuggestion[]
+function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult
+function suggestStreamDashboard(schemas: StreamSchema | readonly StreamSchema[], options?: SuggestStreamDashboardOptions | undefined): StreamDashboardSuggestion
 function suggestStretchCharts(data: null | readonly Datum[] | undefined, options?: SuggestStretchChartsOptions | undefined): StretchSuggestion[]
 function suggestTokenEncoding(input: SuggestTokenEncodingInput): TokenEncodingSuggestion
 function summarizeArc(events: readonly ConversationArcEvent[]): ConversationArcSummary
@@ -486,6 +496,8 @@ interface ConversationArcStore
 interface ConversationArcSummary
 interface CorrectionRecord
 interface CreateArtifactPacketOptions
+interface DashboardIntentManifest
+interface DashboardLayoutPolicy
 interface DashboardPanel
 interface DashboardSuggestion
 interface DataAuditChartNotification
@@ -634,6 +646,7 @@ interface RecommendRepresentationOptions
 interface RegisteredRecipeLayout
 interface RejectedCapability
 interface RejectedRepresentation extends RepresentationCandidate
+interface RejectedStreamCapability
 interface RenderEvidenceEvent extends ConversationArcEventBase
 interface RenderEvidenceMemo
 interface RepairAlternativeResult
@@ -675,14 +688,20 @@ interface SmallMultipleItem<TDatum = unknown>
 interface SmallMultipleRenderContext<TItem>
 interface SmallMultipleSharedExtent
 interface StreamChartCapability
+interface StreamDashboardPanel
+interface StreamDashboardSuggestion
 interface StreamFieldSchema
 interface StreamSchema
+interface StreamStretchSuggestion
 interface StreamSuggestion
+interface StreamThroughputThresholds
 interface StreamTopicMetadata extends TemporalMetadataBase
 interface StretchSuggestion
 interface SuggestChartsOptions extends ProfileDataOptions
 interface SuggestDashboardOptions extends ProfileDataOptions
 interface SuggestStreamChartsOptions
+interface SuggestStreamChartsResult
+interface SuggestStreamDashboardOptions
 interface SuggestStretchChartsOptions extends ProfileDataOptions
 interface SuggestTokenEncodingInput
 interface Suggestion
@@ -1087,6 +1106,7 @@ interface-member AudienceBiasResult::property::score = required score: number
 interface-member AudienceFitDefinition::property::audience = required audience: string
 interface-member AudienceFitDefinition::property::fit = required fit: "avoid" | "moderate" | "strong" | "weak"
 interface-member AudienceFitDefinition::property::rationale = optional rationale: string | undefined
+interface-member AudienceProfile::property::dashboard = optional dashboard: DashboardLayoutPolicy | undefined
 interface-member AudienceProfile::property::exposureLevel = optional exposureLevel: 0 | 1 | 2 | undefined
 interface-member AudienceProfile::property::familiarity = optional familiarity: Partial<Record<string, number>> | undefined
 interface-member AudienceProfile::property::name = optional name: string | undefined
@@ -1473,6 +1493,16 @@ interface-member CreateArtifactPacketOptions::property::format = optional format
 interface-member CreateArtifactPacketOptions::property::includeEvidenceSamples = optional includeEvidenceSamples: boolean | undefined
 interface-member CreateArtifactPacketOptions::property::maxClaims = optional maxClaims: number | undefined
 interface-member CreateArtifactPacketOptions::property::maxEvidenceRecords = optional maxEvidenceRecords: number | undefined
+interface-member DashboardIntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
+interface-member DashboardIntentManifest::property::dashboardId = required dashboardId: string
+interface-member DashboardIntentManifest::property::ididVersion = required ididVersion: string
+interface-member DashboardIntentManifest::property::layout = optional layout: DashboardLayoutPolicy | undefined
+interface-member DashboardIntentManifest::property::panels = required panels: IntentManifest[]
+interface-member DashboardIntentManifest::property::title = optional title: string | undefined
+interface-member DashboardLayoutPolicy::property::cellBudget = optional cellBudget: number | undefined
+interface-member DashboardLayoutPolicy::property::density = optional density: "comfortable" | "dense" | "sparse" | undefined
+interface-member DashboardLayoutPolicy::property::leadFamilies = optional leadFamilies: readonly ChartFamily[] | undefined
+interface-member DashboardLayoutPolicy::property::windowPreference = optional windowPreference: "cumulative" | "windowed" | undefined
 interface-member DashboardPanel::property::intent = required intent: IntentId
 interface-member DashboardPanel::property::suggestion = required suggestion: Suggestion
 interface-member DashboardSuggestion::property::intentsCovered = required intentsCovered: IntentId[]
@@ -1821,6 +1851,7 @@ interface-member IntentMarkProps::property::showSummary = optional showSummary: 
 interface-member IntentSignals::property::dataShape = optional dataShape: undefined | {minNumericFields?: number; minCategoricalFields?: number; minDateFields?: number; minBooleanFields?: number; confidence?: number;}
 interface-member IntentSignals::property::fieldNames = optional fieldNames: readonly string[] | undefined
 interface-member IntentSignals::property::minimumFieldMatches = optional minimumFieldMatches: number | undefined
+interface-member IntentSignals::property::phrases = optional phrases: readonly string[] | undefined
 interface-member InterrogationAnsweredEvent::property::annotationCount = optional annotationCount: number | undefined
 interface-member InterrogationAnsweredEvent::property::answer = optional answer: string | undefined
 interface-member InterrogationAnsweredEvent::property::component = optional component: string | undefined
@@ -2303,6 +2334,10 @@ interface-member RejectedCapability::property::family = required family: import(
 interface-member RejectedCapability::property::importPath = required importPath: import("./chartCapabilityTypes").ChartImportPath
 interface-member RejectedCapability::property::reason = required reason: string
 interface-member RejectedRepresentation::property::rejectedBecause = required rejectedBecause: string
+interface-member RejectedStreamCapability::property::component = required component: string
+interface-member RejectedStreamCapability::property::family = required family: ChartFamily
+interface-member RejectedStreamCapability::property::importPath = required importPath: string
+interface-member RejectedStreamCapability::property::reason = required reason: string
 interface-member RenderEvidenceEvent::property::chartId = optional chartId: string | undefined
 interface-member RenderEvidenceEvent::property::component = required component: string
 interface-member RenderEvidenceEvent::property::empty = required empty: boolean
@@ -2497,27 +2532,45 @@ interface-member SmallMultipleSharedExtent::property::yExtent = optional yExtent
 interface-member StreamChartCapability::property::buildProps = required buildProps: (schema: StreamSchema) => Record<string, unknown>
 interface-member StreamChartCapability::property::caveats = optional caveats: ((schema: StreamSchema) => ReadonlyArray<string>) | undefined
 interface-member StreamChartCapability::property::component = required component: string
+interface-member StreamChartCapability::property::family = optional family: ChartFamily | undefined
 interface-member StreamChartCapability::property::fits = required fits: (schema: StreamSchema) => null | string
-interface-member StreamChartCapability::property::importPath = required importPath: "semiotic/realtime"
+interface-member StreamChartCapability::property::importPath = required importPath: string
 interface-member StreamChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, StreamIntentScorer>>
 interface-member StreamChartCapability::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamChartCapability::property::rubric = required rubric: ChartRubric
+interface-member StreamDashboardPanel::property::intent = required intent: IntentId
+interface-member StreamDashboardPanel::property::schemaIndex = required schemaIndex: number
+interface-member StreamDashboardPanel::property::suggestion = required suggestion: StreamSuggestion
+interface-member StreamDashboardSuggestion::property::intentsCovered = required intentsCovered: IntentId[]
+interface-member StreamDashboardSuggestion::property::intentsMissing = required intentsMissing: IntentId[]
+interface-member StreamDashboardSuggestion::property::panels = required panels: StreamDashboardPanel[]
+interface-member StreamDashboardSuggestion::property::schemas = required schemas: readonly StreamSchema[]
+interface-member StreamDashboardSuggestion::property::stretchPanels = required stretchPanels: StreamStretchSuggestion[]
 interface-member StreamFieldSchema::property::kind = required kind: StreamFieldKind
 interface-member StreamFieldSchema::property::name = required name: string
-interface-member StreamFieldSchema::property::role = optional role: "category" | "series" | "size" | "value" | "x" | "y" | undefined
+interface-member StreamFieldSchema::property::role = optional role: StreamFieldRole | undefined
 interface-member StreamSchema::property::fields = required fields: readonly StreamFieldSchema[]
+interface-member StreamSchema::property::keyFields = optional keyFields: readonly string[] | undefined
 interface-member StreamSchema::property::retention = optional retention: "cumulative" | "windowed" | undefined
-interface-member StreamSchema::property::throughput = optional throughput: "high" | "low" | "medium" | undefined
+interface-member StreamSchema::property::shape = optional shape: StreamShape | undefined
+interface-member StreamSchema::property::throughput = optional throughput: StreamThroughput | undefined
+interface-member StreamStretchSuggestion::property::familiarity = required familiarity: number
+interface-member StreamStretchSuggestion::property::rationale = required rationale: string
+interface-member StreamStretchSuggestion::property::replacing = optional replacing: string | undefined
+interface-member StreamStretchSuggestion::property::schemaIndex = optional schemaIndex: number | undefined
+interface-member StreamStretchSuggestion::property::suggestion = required suggestion: StreamSuggestion
 interface-member StreamSuggestion::property::caveats = required caveats: readonly string[]
 interface-member StreamSuggestion::property::component = required component: string
-interface-member StreamSuggestion::property::family = required family: "realtime"
-interface-member StreamSuggestion::property::importPath = required importPath: "semiotic/realtime"
+interface-member StreamSuggestion::property::family = required family: ChartFamily
+interface-member StreamSuggestion::property::importPath = required importPath: string
 interface-member StreamSuggestion::property::intentScores = required intentScores: Partial<Record<IntentId, number>>
 interface-member StreamSuggestion::property::props = required props: Record<string, unknown>
 interface-member StreamSuggestion::property::reasons = required reasons: readonly string[]
 interface-member StreamSuggestion::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamSuggestion::property::rubric = required rubric: ChartRubric
 interface-member StreamSuggestion::property::score = required score: number
+interface-member StreamThroughputThresholds::property::high = optional high: number | undefined
+interface-member StreamThroughputThresholds::property::medium = optional medium: number | undefined
 interface-member StreamTopicMetadata::property::eventTime = optional eventTime: TimeField | undefined
 interface-member StreamTopicMetadata::property::ingestedAt = optional ingestedAt: string | undefined
 interface-member StreamTopicMetadata::property::observedAt = optional observedAt: string | undefined
@@ -2552,11 +2605,24 @@ interface-member SuggestDashboardOptions::property::maxPanels = optional maxPane
 interface-member SuggestDashboardOptions::property::maxStretchPanels = optional maxStretchPanels: number | undefined
 interface-member SuggestDashboardOptions::property::profile = optional profile: ChartDataProfile | undefined
 interface-member SuggestStreamChartsOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestStreamChartsOptions::property::audience = optional audience: AudienceProfile | undefined
 interface-member SuggestStreamChartsOptions::property::capabilities = optional capabilities: readonly StreamChartCapability[] | undefined
 interface-member SuggestStreamChartsOptions::property::deny = optional deny: readonly string[] | undefined
 interface-member SuggestStreamChartsOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member SuggestStreamChartsOptions::property::maxResults = optional maxResults: number | undefined
+interface-member SuggestStreamChartsOptions::property::maxStretchResults = optional maxStretchResults: number | undefined
 interface-member SuggestStreamChartsOptions::property::minScore = optional minScore: number | undefined
+interface-member SuggestStreamChartsResult::property::excluded = required excluded: readonly RejectedStreamCapability[]
+interface-member SuggestStreamChartsResult::property::stretchSuggestions = required stretchSuggestions: StreamStretchSuggestion[]
+interface-member SuggestStreamChartsResult::property::suggestions = required suggestions: StreamSuggestion[]
+interface-member SuggestStreamDashboardOptions::property::allow = optional allow: readonly string[] | undefined
+interface-member SuggestStreamDashboardOptions::property::audience = optional audience: AudienceProfile | undefined
+interface-member SuggestStreamDashboardOptions::property::budget = optional budget: number | undefined
+interface-member SuggestStreamDashboardOptions::property::deny = optional deny: readonly string[] | undefined
+interface-member SuggestStreamDashboardOptions::property::diversifyByFamily = optional diversifyByFamily: boolean | undefined
+interface-member SuggestStreamDashboardOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
+interface-member SuggestStreamDashboardOptions::property::intents = optional intents: readonly IntentId[] | undefined
+interface-member SuggestStreamDashboardOptions::property::maxStretchPanels = optional maxStretchPanels: number | undefined
 interface-member SuggestStretchChartsOptions::property::allow = optional allow: readonly string[] | undefined
 interface-member SuggestStretchChartsOptions::property::audience = optional audience: AudienceProfile | undefined
 interface-member SuggestStretchChartsOptions::property::deny = optional deny: readonly string[] | undefined
@@ -3003,7 +3069,11 @@ type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {
 type SerializedSelections = Record<string, SerializedSelection>
 type SmallMultipleExtent = [number, number]
 type StreamFieldKind = "boolean" | "categorical" | "date" | "numeric"
+type StreamFieldRole = "category" | "key" | "series" | "size" | "value" | "x" | "y"
 type StreamIntentScorer = ((schema: StreamSchema) => number) | number
+type StreamShape = "aggregate" | "append" | "keyed"
+type StreamThroughput = "high" | "low" | "medium" | number
+type StreamThroughputBand = "high" | "low" | "medium"
 type TemporalCompleteness = NonNullable<TemporalContext["completeness"]>
 type TemporalFreshness = NonNullable<TemporalContext["freshness"]>
 type TemporalPresentationState = NonNullable<NonNullable<TemporalContext["presentation"]>["state"]>

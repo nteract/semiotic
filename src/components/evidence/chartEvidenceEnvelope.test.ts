@@ -395,7 +395,7 @@ describe("ChartEvidenceEnvelope@1", () => {
       width: 200,
       height: 120
     })
-    const envelope = toEvidenceEnvelope("RealtimeLineChart", lineProps, {
+    const envelope = toEvidenceEnvelope("UnregisteredCustomChart", lineProps, {
       ssrEvidence: evidence
     })
     const gate = evaluateEvidenceGate(envelope)

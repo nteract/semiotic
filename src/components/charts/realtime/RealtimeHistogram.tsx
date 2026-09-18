@@ -111,6 +111,10 @@ export interface RealtimeHistogramProps<
   arrowOfTime?: ArrowOfTime
   /** Data retention strategy */
   windowMode?: WindowMode
+  /** Alias for `windowSize` — ring-buffer capacity, not the aggregation window. */
+  capacity?: number
+  /** Alias for `windowMode`. */
+  capacityMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
@@ -288,8 +292,10 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     margin: userMargin,
     className,
     arrowOfTime = "right",
-    windowMode = "sliding",
+    windowMode: windowModeProp,
+    capacityMode,
     windowSize: windowSizeProp,
+    capacity,
     data,
     timeAccessor,
     valueAccessor,
@@ -564,7 +570,8 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
 
   const numericTime = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
   const numericValue = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN, [valueAccessor])
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (loadingEl) return loadingEl
   if (emptyEl) return emptyEl
@@ -651,7 +658,7 @@ export interface TemporalHistogramProps<
   TDatum extends Datum = Datum
 > extends Omit<
   RealtimeHistogramProps<TDatum>,
-  "data" | "windowSize" | "windowMode"
+  "data" | "windowMode" | "windowSize"
 > {
   /** Static data array for a bounded temporal histogram. */
   data: TDatum[]

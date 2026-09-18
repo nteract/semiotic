@@ -29,6 +29,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
   ChartMode,
   ChartAccessor,
+  LinkedHoverProp,
   SelectionConfig,
   MobileInteractionProp
 } from "../shared/types"
@@ -103,6 +104,10 @@ export interface RealtimeSwarmChartProps<
   arrowOfTime?: ArrowOfTime
   /** Data retention strategy */
   windowMode?: WindowMode
+  /** Alias for `windowSize` — ring-buffer capacity, not the aggregation window. */
+  capacity?: number
+  /** Alias for `windowMode`. */
+  capacityMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
   /** Controlled data array */
@@ -174,7 +179,7 @@ export interface RealtimeSwarmChartProps<
   /** Declarative tooltip config or the legacy full-HoverData callback. */
   tooltip?: RealtimeTooltipProp
   /** Enable linked hover selection events for cross-chart highlighting */
-  linkedHover?: boolean | string | { name?: string; fields: string[] }
+  linkedHover?: LinkedHoverProp
   /** Consume a named selection — dims unselected elements */
   selection?: SelectionConfig
   /** Show a loading skeleton placeholder */
@@ -238,8 +243,10 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
     margin: userMargin,
     className,
     arrowOfTime = "right",
-    windowMode = "sliding",
+    windowMode: windowModeProp,
+    capacityMode,
     windowSize: windowSizeProp,
+    capacity,
     data,
     timeAccessor,
     valueAccessor,
@@ -461,7 +468,8 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
 
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data)
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (loadingEl) return loadingEl

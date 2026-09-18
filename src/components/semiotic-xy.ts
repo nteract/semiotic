@@ -92,6 +92,7 @@ export type {
   StreamXYFrameProps,
   StreamXYFrameHandle
 } from "./stream/types"
+export type { RealtimeFrameHandle } from "./realtime/types"
 
 // customLayout escape hatch
 export type {

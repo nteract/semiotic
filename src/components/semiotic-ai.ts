@@ -419,7 +419,8 @@ export type {
   AudienceTarget,
   AudienceBiasResult,
   ReceptionModality,
-  ReceivabilitySignal
+  ReceivabilitySignal,
+  DashboardLayoutPolicy
 } from "./ai/audienceProfile"
 export {
   executivePersona,
@@ -434,21 +435,7 @@ export type {
 } from "./ai/suggestStretchCharts"
 
 // Streaming intent — parallel API for live charts (schema-based, not row-based)
-export {
-  suggestStreamCharts,
-  registerStreamChartCapability,
-  unregisterStreamChartCapability,
-  getStreamCapabilities
-} from "./ai/suggestStreamCharts"
-export type { SuggestStreamChartsOptions } from "./ai/suggestStreamCharts"
-export type {
-  StreamSchema,
-  StreamFieldSchema,
-  StreamFieldKind,
-  StreamChartCapability,
-  StreamIntentScorer,
-  StreamSuggestion
-} from "./ai/streamingTypes"
+export * from "./semiotic-ai-stream"
 export { diffProfile } from "./ai/diffProfile"
 export type {
   ProfileDiff,
@@ -634,11 +621,13 @@ export { IntentMark } from "./ai/IntentMark"
 export type { IntentMarkProps } from "./ai/IntentMark"
 export {
   summarizeIntentManifest,
-  intentManifestFromRecipe
+  intentManifestFromRecipe,
+  dashboardIntentManifest
 } from "./ai/intentManifest"
 export type {
   IntentManifest,
-  IntentManifestFromRecipeOptions
+  IntentManifestFromRecipeOptions,
+  DashboardIntentManifest
 } from "./ai/intentManifest"
 export {
   listIntents,

@@ -90,11 +90,7 @@ export class RunningStats {
   /** A detached copy — useful for snapshotting a window before rollup. */
   clone(): RunningStats {
     const copy = new RunningStats()
-    copy._count = this._count
-    copy._mean = this._mean
-    copy._m2 = this._m2
-    copy._min = this._min
-    copy._max = this._max
+    copy.merge(this)
     return copy
   }
 
@@ -105,7 +101,7 @@ export class RunningStats {
 
   /** Arithmetic mean, or 0 when empty. */
   get mean(): number {
-    return this._count === 0 ? 0 : this._mean
+    return this._mean
   }
 
   /**
@@ -114,7 +110,7 @@ export class RunningStats {
    * separate exact accumulator.
    */
   get sum(): number {
-    return this._count === 0 ? 0 : this._mean * this._count
+    return this._mean * this._count
   }
 
   /**

@@ -77,6 +77,7 @@ export function suggestStretchCharts(
   const ceiling = stretchFamiliarityCeiling(audience)
   const scoreTolerance = options.scoreTolerance ?? 1.5
   const maxResults = options.maxResults ?? 5
+  if (maxResults <= 0) return []
 
   // Build a map of effective familiarity per registered component
   const capabilities = getCapabilities()

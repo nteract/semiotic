@@ -48,6 +48,25 @@ describe("RealtimeLineChart", () => {
     expect(data.length).toBe(2)
   })
 
+  it("seriesAccessor keeps a new group in push mode", () => {
+    const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
+    render(
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          timeAccessor="t"
+          valueAccessor="v"
+          seriesAccessor="series"
+        />
+      </TooltipProvider>
+    )
+    act(() => { ref.current!.push({ t: 1, v: 10, series: "a" }) })
+    act(() => { ref.current!.push({ t: 2, v: 20, series: "b" }) })
+    const data = ref.current!.getData()
+    expect(data).toHaveLength(2)
+    expect(new Set(data.map((row) => String(row.series))).size).toBe(2)
+  })
+
   it("clear empties the data buffer", () => {
     const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
     render(

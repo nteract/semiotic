@@ -1313,7 +1313,14 @@ const StreamGeoFrame = memo(
             pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
             geoProjection={storeRef.current?.scales?.projectedPoint}
           />
-          {staleness?.showBadge && <StalenessBadge isStale={isStale} position={staleness.badgePosition} />}
+          {staleness?.showBadge && (
+            <StalenessBadge
+              isStale={isStale}
+              position={staleness.badgePosition}
+              state={staleness.state}
+              settling={staleness.settling}
+            />
+          )}
           {zoomable && (
             <div
               className="stream-geo-zoom-controls"

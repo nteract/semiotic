@@ -30,4 +30,15 @@ describe("StalenessBadge", () => {
     expect(el.style.fontSize).toBe("11px")
     expect(el.style.fontWeight).toBe("600")
   })
+
+  it("renders source-state overrides instead of STALE", () => {
+    const { rerender, getByText } = render(
+      <StalenessBadge isStale state="stopped" />,
+    )
+    expect(getByText("STOPPED")).toBeInTheDocument()
+    rerender(<StalenessBadge isStale={false} state="failed" />)
+    expect(getByText("FAILED")).toBeInTheDocument()
+    rerender(<StalenessBadge isStale={false} settling />)
+    expect(getByText("SETTLING")).toBeInTheDocument()
+  })
 })

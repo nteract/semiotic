@@ -3,9 +3,9 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
-import { registerBuiltInXYPlugins } from "../stream/xyPlugins/registerBuiltIn"
+import { registerServerXYPlugins } from "./registerServerXYPlugins"
 
-registerBuiltInXYPlugins()
+registerServerXYPlugins()
 import type { StreamXYFrameProps } from "../stream/types"
 import { resolveThemeSemanticColors } from "../store/themeCore"
 import {
@@ -93,8 +93,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const pipelineConfig: PipelineConfig = {
     chartType: props.chartType,
     runtimeMode: isStreaming ? "streaming" : "bounded",
-    windowSize: props.windowSize ?? 200,
-    windowMode: props.windowMode ?? "sliding",
+    windowSize: props.windowSize ?? props.capacity ?? 200,
+    windowMode: props.windowMode ?? props.capacityMode ?? "sliding",
     arrowOfTime: isStreaming ? (props.arrowOfTime ?? "right") : "right",
     extentPadding: props.extentPadding ?? 0.1,
     xAccessor: props.xAccessor,

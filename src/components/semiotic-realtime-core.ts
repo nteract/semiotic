@@ -19,6 +19,9 @@ import {
   statValue,
   bandBounds,
 } from "./realtime/WindowAccumulator"
+import { TDigest } from "./realtime/TDigest"
+import { HyperLogLog } from "./realtime/HyperLogLog"
+import { applyChangelog } from "./realtime/applyChangelog"
 import { parseWindowDuration } from "./realtime/parseWindowDuration"
 import { ReorderBuffer } from "./realtime/ReorderBuffer"
 
@@ -40,6 +43,9 @@ export {
   WindowAccumulator,
   statValue,
   bandBounds,
+  TDigest,
+  HyperLogLog,
+  applyChangelog,
   parseWindowDuration,
   ReorderBuffer,
   RealtimeLineChart,
@@ -75,6 +81,11 @@ export type {
   WindowAccumulatorConfig,
   AggregatedWindow,
 } from "./realtime/WindowAccumulator"
+export type {
+  ChangelogOp,
+  ApplyChangelogOptions,
+  ApplyChangelogResult,
+} from "./realtime/applyChangelog"
 export type { AggregateConfig, AggregatedRealtimeDatum } from "./charts/realtime/aggregate"
 
 // Event-time ingestion types
@@ -127,7 +138,11 @@ export type {
   Style,
   StreamXYFrameProps,
   StreamXYFrameHandle,
-  StreamChartType
+  StreamChartType,
+  SourceLiveness,
+  StalenessConfig,
+  DecayConfig,
+  PulseConfig
 } from "./stream/types"
 
 export type {

@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-09-13 · 62 charts indexed.
+Last regen: 2026-09-17 · 62 charts indexed.
 
 **Column key**
 
@@ -85,11 +85,11 @@ Last regen: 2026-09-13 · 62 charts indexed.
 
 | Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
-| **RealtimeHeatmap** | ✓ | ✓ | ✓ | ✓ | — | sequential | plugin | `live-stream` |
-| **RealtimeHistogram** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` `brush` |
-| **RealtimeLineChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
-| **RealtimeSwarmChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
-| **RealtimeWaterfallChart** | ✓ | ✓ | ✓ | ✓ | — | categorical | plugin | `live-stream` |
+| **RealtimeHeatmap** | ✓ | ✓ | ✓ | ✓ | ✓ | sequential | plugin | `live-stream` |
+| **RealtimeHistogram** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `live-stream` `brush` |
+| **RealtimeLineChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `live-stream` |
+| **RealtimeSwarmChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `live-stream` |
+| **RealtimeWaterfallChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `live-stream` |
 | **TemporalHistogram** | ✓ | ✓ | ✓ | — | ✓ | categorical | plugin | `brush` |
 
 ## Physics
@@ -119,6 +119,6 @@ Last regen: 2026-09-13 · 62 charts indexed.
 
 - 54/62 charts render a top-level legend.
 - 47/62 charts expose a push API.
-- 57/62 charts SSR via the `renderChart()` registry.
+- 62/62 charts SSR via the `renderChart()` registry.
 - 5/62 charts use the customLayout escape hatch.
 - 11/62 charts use synthetic (no-layout) construction.
