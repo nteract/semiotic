@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `communicativeActForIntent` resolution.
 
 ### Changed
+- Event-time reordering and fixed-window retention use priority queues;
+  session events update their existing statistics and sketches directly.
+  T-digest compression is batched by pending observations, and HyperLogLog
+  maintains its estimator incrementally for constant-time distinct readouts.
+- Accessibility auditing uses generated chart-name and text-prop metadata.
+  Unused validation catalogs can be removed from AI and chart imports.
 - **`suggestStreamCharts` return type** — now
   `{ suggestions, excluded, stretchSuggestions }` instead of an array.
   Migration: `const { suggestions } = suggestStreamCharts(...)`.
@@ -48,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   types, and `RealtimeFrameHandle` is also exported from `semiotic/xy`.
 
 ### Fixed
+- RealtimeLineChart aggregate handles expose new rows immediately after
+  `push`, `pushMany`, `flush`, and `clear`, including within React batches.
+- Large event-time releases and t-digest merges avoid JavaScript argument
+  limits that previously caused stack-overflow errors.
 - Realtime server rendering preserves fixed domains, heatmap aggregation,
   aggregate envelopes, mark styles, category colors, and retention aliases.
   The category-color correction also applies to TemporalHistogram.

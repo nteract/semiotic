@@ -8,29 +8,111 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 
 describe("RealtimeLineChart — aggregate mode", () => {
   let cleanup: () => void
-  beforeEach(() => { cleanup = setupCanvasMock() })
-  afterEach(() => { cleanup() })
-
-  it.each([false, true])("aggregates series independently (controlled=%s)", (controlled) => {
-    const ref = React.createRef<RealtimeFrameHandle>()
-    const points = [
-      { t: 1, v: 10, series: "a" }, { t: 2, v: 20, series: "a" },
-      { t: 1, v: 100, series: "b" }, { t: 2, v: 200, series: "b" },
-    ]
-    render(<TooltipProvider><RealtimeLineChart
-      ref={ref} data={controlled ? points : undefined}
-      timeAccessor="t" valueAccessor="v" seriesAccessor={(d) => String(d.series)}
-      aggregate={{ size: 10, stat: "mean", band: "minmax" }}
-    /></TooltipProvider>)
-    if (!controlled) act(() => ref.current!.pushMany(points))
-    expect(ref.current!.getData()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ value: 15, count: 2, __aggSeries: "a", __aggLower: 10, __aggUpper: 20 }),
-      expect.objectContaining({ value: 150, count: 2, __aggSeries: "b", __aggLower: 100, __aggUpper: 200 }),
-    ]))
-    expect(ref.current!.getData()).toHaveLength(2)
-    act(() => ref.current!.clear())
-    expect(ref.current!.getData()).toEqual([])
+  beforeEach(() => {
+    cleanup = setupCanvasMock()
   })
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("switches percentile and distinct readouts without losing pushed session history", () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const chart = (stat: "p50" | "p95" | "distinct") => (
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          aggregate={{
+            window: "session",
+            size: 10,
+            percentiles: [0.5, 0.95],
+            distinct: true,
+            stat
+          }}
+        />
+      </TooltipProvider>
+    )
+    const { rerender } = render(chart("p50"))
+    act(() =>
+      ref.current!.pushMany([
+        { time: 0, value: 10 },
+        { time: 1, value: 20 },
+        { time: 2, value: 20 },
+        { time: 3, value: 90 }
+      ])
+    )
+    expect(ref.current!.getData()).toMatchObject([{ count: 4, value: 20 }])
+    rerender(chart("p95"))
+    expect(ref.current!.getData()).toMatchObject([{ count: 4, value: 90 }])
+    rerender(chart("distinct"))
+    expect(ref.current!.getData()).toMatchObject([{ count: 4, value: 3 }])
+  })
+
+  it("exposes pushed and cleared aggregate data synchronously before React commits", () => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    render(
+      <TooltipProvider>
+        <RealtimeLineChart ref={ref} aggregate={{ size: 10 }} />
+      </TooltipProvider>
+    )
+    act(() => {
+      ref.current!.push({ time: 1, value: 10 })
+      expect(ref.current!.getData()).toMatchObject([{ count: 1, value: 10 }])
+      ref.current!.pushMany([
+        { time: 2, value: 20 },
+        { time: 3, value: 30 }
+      ])
+      expect(ref.current!.getData()).toMatchObject([{ count: 3, value: 20 }])
+      ref.current!.clear()
+      expect(ref.current!.getData()).toEqual([])
+    })
+  })
+
+  it.each([false, true])(
+    "aggregates series independently (controlled=%s)",
+    (controlled) => {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      const points = [
+        { t: 1, v: 10, series: "a" },
+        { t: 2, v: 20, series: "a" },
+        { t: 1, v: 100, series: "b" },
+        { t: 2, v: 200, series: "b" }
+      ]
+      render(
+        <TooltipProvider>
+          <RealtimeLineChart
+            ref={ref}
+            data={controlled ? points : undefined}
+            timeAccessor="t"
+            valueAccessor="v"
+            seriesAccessor={(d) => String(d.series)}
+            aggregate={{ size: 10, stat: "mean", band: "minmax" }}
+          />
+        </TooltipProvider>
+      )
+      if (!controlled) act(() => ref.current!.pushMany(points))
+      expect(ref.current!.getData()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            value: 15,
+            count: 2,
+            __aggSeries: "a",
+            __aggLower: 10,
+            __aggUpper: 20
+          }),
+          expect.objectContaining({
+            value: 150,
+            count: 2,
+            __aggSeries: "b",
+            __aggLower: 100,
+            __aggUpper: 200
+          })
+        ])
+      )
+      expect(ref.current!.getData()).toHaveLength(2)
+      act(() => ref.current!.clear())
+      expect(ref.current!.getData()).toEqual([])
+    }
+  )
 
   it("reduces pushed events into windowed rows via getData", () => {
     const ref = React.createRef<RealtimeFrameHandle>()
@@ -48,7 +130,7 @@ describe("RealtimeLineChart — aggregate mode", () => {
       ref.current!.pushMany([
         { t: 1, v: 10 },
         { t: 5, v: 20 }, // window [0,10): mean 15
-        { t: 12, v: 100 }, // window [10,20)
+        { t: 12, v: 100 } // window [10,20)
       ])
     })
     const rows = ref.current!.getData()
@@ -111,7 +193,10 @@ describe("RealtimeLineChart — aggregate mode", () => {
       </TooltipProvider>
     )
     act(() => {
-      ref.current!.pushMany([{ t: 1, v: 5 }, { t: 2, v: 25 }])
+      ref.current!.pushMany([
+        { t: 1, v: 5 },
+        { t: 2, v: 25 }
+      ])
     })
     const row = ref.current!.getData()[0]
     expect(row.__aggLower).toBe(5)
@@ -130,9 +215,13 @@ describe("RealtimeLineChart — aggregate mode", () => {
         />
       </TooltipProvider>
     )
-    act(() => { ref.current!.push({ t: 1, v: 10 }) })
+    act(() => {
+      ref.current!.push({ t: 1, v: 10 })
+    })
     expect(ref.current!.getData().length).toBe(1)
-    act(() => { ref.current!.clear() })
+    act(() => {
+      ref.current!.clear()
+    })
     expect(ref.current!.getData().length).toBe(0)
   })
 
@@ -144,7 +233,10 @@ describe("RealtimeLineChart — aggregate mode", () => {
           ref={ref}
           timeAccessor="t"
           valueAccessor="v"
-          data={[{ t: 1, v: 10 }, { t: 5, v: 30 }]}
+          data={[
+            { t: 1, v: 10 },
+            { t: 5, v: 30 }
+          ]}
           aggregate={{ size: 10, stat: "mean" }}
         />
       </TooltipProvider>
@@ -235,7 +327,11 @@ describe("RealtimeLineChart — aggregate mode", () => {
 
   it("rebuilds the accumulator when percentiles or distinct become structural", async () => {
     const ref = React.createRef<RealtimeFrameHandle>()
-    const chart = (aggregate: { size: number; percentiles?: number[]; distinct?: boolean }) => (
+    const chart = (aggregate: {
+      size: number
+      percentiles?: number[]
+      distinct?: boolean
+    }) => (
       <TooltipProvider>
         <RealtimeLineChart
           ref={ref}
@@ -277,10 +373,16 @@ describe("RealtimeLineChart — aggregate mode", () => {
       </TooltipProvider>
     )
     act(() => {
-      ref.current!.pushMany([{ t: 1, v: 10 }, { t: 12, v: 20 }])
+      ref.current!.pushMany([
+        { t: 1, v: 10 },
+        { t: 12, v: 20 }
+      ])
     })
     await waitFor(() => {
-      const label = container.querySelector("canvas[aria-label]")?.getAttribute("aria-label") ?? ""
+      const label =
+        container
+          .querySelector("canvas[aria-label]")
+          ?.getAttribute("aria-label") ?? ""
       expect(label).toContain("line chart")
       expect(label).toContain("1 lines")
     })

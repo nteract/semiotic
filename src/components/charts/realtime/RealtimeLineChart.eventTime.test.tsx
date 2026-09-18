@@ -9,8 +9,37 @@ import type { ChartObservation } from "../../store/ObservationStore"
 
 describe("RealtimeLineChart — event-time ingestion", () => {
   let cleanup: () => void
-  beforeEach(() => { cleanup = setupCanvasMock() })
-  afterEach(() => { cleanup() })
+  beforeEach(() => {
+    cleanup = setupCanvasMock()
+  })
+  afterEach(() => {
+    cleanup()
+  })
+
+  it("releases a large grace-window batch without spreading it into function arguments", () => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    render(
+      <TooltipProvider>
+        <RealtimeLineChart
+          ref={ref}
+          eventTime={{ lateness: 1_000_000 }}
+          aggregate={{ size: 1_000_000 }}
+        />
+      </TooltipProvider>
+    )
+    act(() => {
+      ref.current!.pushMany(
+        Array.from({ length: 150_000 }, (_, time) => ({ time, value: 1 }))
+      )
+      ref.current!.push({ time: 2_000_000, value: 2 })
+    })
+    expect(ref.current!.getData()).toMatchObject([{ count: 150_000, value: 1 }])
+    act(() => ref.current!.flush())
+    expect(ref.current!.getData()).toMatchObject([
+      { count: 150_000, value: 1 },
+      { count: 1, value: 2 }
+    ])
+  })
 
   it("releases reordered events to the frame in event-time order", () => {
     const ref = React.createRef<React.ElementRef<typeof RealtimeLineChart>>()
@@ -30,7 +59,7 @@ describe("RealtimeLineChart — event-time ingestion", () => {
         { t: 5, v: 1 },
         { t: 2, v: 2 },
         { t: 8, v: 3 },
-        { t: 30, v: 4 }, // watermark 30, threshold 25 → 2,5,8 released sorted
+        { t: 30, v: 4 } // watermark 30, threshold 25 → 2,5,8 released sorted
       ])
     })
     const times = ref.current!.getData().map((d: Datum) => d.t)
@@ -202,7 +231,7 @@ describe("RealtimeLineChart — event-time ingestion", () => {
       ref.current!.pushMany([
         { t: 100, v: 1 },
         { t: 110, v: 2 }, // advances watermark, releases t=100
-        { t: 50, v: 3 }, // late (50 < 110-5)
+        { t: 50, v: 3 } // late (50 < 110-5)
       ])
     })
     const late = observations.filter((o) => o.type === "late-data")
@@ -230,7 +259,7 @@ describe("RealtimeLineChart — event-time ingestion", () => {
       ref.current!.pushMany([
         { t: 100, v: 1 },
         { t: 110, v: 2 },
-        { t: 50, v: 3 }, // late but kept
+        { t: 50, v: 3 } // late but kept
       ])
     })
     expect(ref.current!.getData().some((d: Datum) => d.t === 50)).toBe(true)
@@ -254,7 +283,7 @@ describe("RealtimeLineChart — event-time ingestion", () => {
         { t: 10, v: 1 },
         { t: 5, v: 1 },
         { t: 50, v: 1 },
-        { t: 200, v: 1 }, // flushes the grace window for window [0,100)
+        { t: 200, v: 1 } // flushes the grace window for window [0,100)
       ])
     })
     const rows = ref.current!.getData()
@@ -276,7 +305,10 @@ describe("RealtimeLineChart — event-time ingestion", () => {
       </TooltipProvider>
     )
     act(() => {
-      ref.current!.pushMany([{ t: 5, v: 1 }, { t: 2, v: 2 }])
+      ref.current!.pushMany([
+        { t: 5, v: 1 },
+        { t: 2, v: 2 }
+      ])
     })
     // No reordering — arrival order preserved.
     expect(ref.current!.getData().map((d: Datum) => d.t)).toEqual([5, 2])

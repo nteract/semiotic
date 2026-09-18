@@ -24,7 +24,7 @@ import type { Datum } from "./datumTypes"
  * actionable gaps and routes everything else to the right manual test.
  */
 
-import { VALIDATION_MAP } from "./validateProps"
+import { isKnownChartComponent } from "./knownChartComponents"
 import {
   assessAccessibilityText,
   isNonEmptyString
@@ -313,7 +313,7 @@ export function auditAccessibility(
   const f: A11yFinding[] = []
   const recipe = getChartRecipe(component)
   const isPhysics = PHYSICS.has(component)
-  const known = !!VALIDATION_MAP[component] || !!recipe || isPhysics
+  const known = isKnownChartComponent(component) || !!recipe || isPhysics
   const inContainer = options.inChartContainer === true
   const describes = options.describe === true
   const navigable = options.navigable === true

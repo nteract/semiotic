@@ -21,17 +21,13 @@ function fnv1a(value: string): number {
   return hash >>> 0
 }
 
-function rho(hash: number, precision: number): number {
-  const shifted = hash << precision
-  if (shifted === 0) return 32 - precision + 1
-  return Math.clz32(shifted) + 1
-}
-
 export class HyperLogLog {
   private readonly p: number
   private readonly m: number
   private readonly registers: Uint8Array
   private readonly alpha: number
+  private harmonicSum: number
+  private zeros: number
 
   constructor(p = DEFAULT_P) {
     const precision = Math.max(4, Math.min(16, Math.floor(p)))
@@ -39,43 +35,46 @@ export class HyperLogLog {
     this.m = 1 << precision
     this.registers = new Uint8Array(this.m)
     this.alpha = 0.7213 / (1 + 1.079 / this.m)
+    this.harmonicSum = this.m
+    this.zeros = this.m
   }
 
   add(value: string | number): void {
     const hash = fnv1a(String(value))
-    // High p bits select the register; rho() left-shifts those bits off
-    // and counts leading zeros in the remaining low 32-p bits.
+    // High p bits select the register. Count leading zeros in the remaining
+    // bits, clamping the all-zero case to the available 32-p bits.
     const idx = hash >>> (32 - this.p)
-    const rank = rho(hash, this.p)
-    if (rank > this.registers[idx]) this.registers[idx] = rank
+    const rank = Math.min(Math.clz32(hash << this.p), 32 - this.p) + 1
+    this.updateRegister(idx, rank)
+  }
+
+  private updateRegister(index: number, rank: number): void {
+    const previous = this.registers[index]
+    if (rank <= previous) return
+    this.registers[index] = rank
+    this.harmonicSum += 2 ** -rank - 2 ** -previous
+    if (previous === 0) this.zeros--
   }
 
   merge(other: HyperLogLog): void {
     if (other.m !== this.m) return
     for (let i = 0; i < this.m; i++) {
-      if (other.registers[i] > this.registers[i]) {
-        this.registers[i] = other.registers[i]
-      }
+      this.updateRegister(i, other.registers[i])
     }
   }
 
   clone(): HyperLogLog {
     const copy = new HyperLogLog(this.p)
     copy.registers.set(this.registers)
+    copy.harmonicSum = this.harmonicSum
+    copy.zeros = this.zeros
     return copy
   }
 
   count(): number {
-    let sum = 0
-    let zeros = 0
-    for (let i = 0; i < this.m; i++) {
-      const r = this.registers[i]
-      if (r === 0) zeros += 1
-      sum += 2 ** -r
-    }
-    const estimate = this.alpha * this.m * this.m / sum
-    if (estimate <= 2.5 * this.m && zeros > 0) {
-      return Math.round(this.m * Math.log(this.m / zeros))
+    const estimate = (this.alpha * this.m * this.m) / this.harmonicSum
+    if (estimate <= 2.5 * this.m && this.zeros > 0) {
+      return Math.round(this.m * Math.log(this.m / this.zeros))
     }
     return Math.round(estimate)
   }

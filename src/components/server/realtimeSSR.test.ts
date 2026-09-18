@@ -9,6 +9,32 @@ const points = Array.from({ length: 12 }, (_, i) => ({
 }))
 
 describe("realtime controlled-data SSR", () => {
+  it.each(["p50", "p95", "distinct"])(
+    "renders %s aggregate readouts with data-mark evidence",
+    (stat) => {
+      const { evidence } = renderChartWithEvidence("RealtimeLineChart", {
+        data: [
+          { time: 1, value: 10 },
+          { time: 2, value: 20 },
+          { time: 21, value: 30 },
+          { time: 22, value: 30 }
+        ],
+        extentPadding: 0,
+        aggregate: {
+          window: "session",
+          size: 5,
+          stat,
+          percentiles: [0.5, 0.95],
+          distinct: true
+        }
+      })
+      expect(evidence.status).toBe("ok")
+      expect(evidence.markCountByType.line).toBe(1)
+      const expected =
+        stat === "distinct" ? [1, 2] : stat === "p50" ? [15, 30] : [20, 30]
+      expect(evidence.yDomain).toEqual(expected)
+    }
+  )
   it.each([
     "RealtimeLineChart",
     "RealtimeHistogram",

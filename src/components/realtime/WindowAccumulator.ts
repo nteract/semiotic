@@ -8,11 +8,11 @@
 //
 // Buckets by **event-time** (the datum's time field), never arrival
 // order: pushing the same events in any order yields the same windows.
-// Cost per push is O(windows-touched) — one for tumbling, `size/hop`
-// for hopping, amortized O(1) for session — and render cost is
-// O(visible windows), independent of arrival rate. That bounded render
-// work is the backpressure answer: a firehose aggregates the same as a
-// trickle.
+// An event touches one tumbling window, up to ceil(size/hop) hopping
+// windows, or one session unless it bridges sessions. Fixed retention
+// adds O(log retained-windows) work on creation/eviction. Ordered session
+// lookup is O(1); late lookup is O(log sessions), plus adjacent merges.
+// Rendering consumes window summaries instead of individual events.
 //
 // NAMING: this is the **aggregation window**. The codebase's existing
 // "sliding window" (`WindowMode = "sliding" | "growing"`) is RingBuffer
@@ -21,21 +21,16 @@
 import { RunningStats } from "./RunningStats"
 import { HyperLogLog } from "./HyperLogLog"
 import { percentileKey, TDigest } from "./TDigest"
+import { heapPop, heapPush } from "./minHeap"
+
+const compareStarts = (a: number, b: number) => a - b
 
 /** The Kafka Streams window taxonomy. */
 export type WindowType = "tumbling" | "hopping" | "session"
 
 /** Which statistic the aggregated series carries as its primary value. */
 export type AggregateStat =
-  | "mean"
-  | "sum"
-  | "min"
-  | "max"
-  | "count"
-  | "p50"
-  | "p95"
-  | "p99"
-  | "distinct"
+  "mean" | "sum" | "min" | "max" | "count" | "p50" | "p95" | "p99" | "distinct"
 
 /** Envelope drawn around the aggregated series. */
 export type AggregateBand = "stddev" | "minmax" | "none"
@@ -124,8 +119,9 @@ class WindowBucket {
 
   merge(other: WindowBucket): void {
     this.stats.merge(other.stats)
-    if (this.digest && other.digest) this.digest.merge(other.digest)
-    if (this.hll && other.hll) this.hll.merge(other.hll)
+    // Only buckets from the same accumulator merge, so sketch options match.
+    this.digest?.merge(other.digest!)
+    this.hll?.merge(other.hll!)
   }
 }
 
@@ -150,6 +146,7 @@ export class WindowAccumulator {
 
   // Tumbling / hopping: window-start (ms) → bucket.
   private windows = new Map<number, WindowBucket>()
+  private starts: number[] = []
   // Session: sorted-by-start list of live sessions.
   private sessions: SessionEntry[] = []
 
@@ -163,7 +160,8 @@ export class WindowAccumulator {
     const hop = config.hop ?? config.size
     this.hop = hop > 0 && hop <= config.size ? hop : config.size
     this.gap = config.gap ?? config.size
-    this.retain = config.retain != null && config.retain > 0 ? config.retain : Infinity
+    this.retain =
+      config.retain != null && config.retain > 0 ? config.retain : Infinity
     this.percentiles = config.percentiles ?? []
     this.wantDistinct = config.distinct === true
   }
@@ -189,7 +187,11 @@ export class WindowAccumulator {
     this.prune()
   }
 
-  private pushFixed(time: number, value: number, distinctKey?: string | number): void {
+  private pushFixed(
+    time: number,
+    value: number,
+    distinctKey?: string | number
+  ): void {
     if (this.type === "tumbling" || this.hop >= this.size) {
       const start = Math.floor(time / this.size) * this.size
       this.bump(start, value, distinctKey)
@@ -206,74 +208,79 @@ export class WindowAccumulator {
     }
   }
 
-  private bump(start: number, value: number, distinctKey?: string | number): void {
+  private bump(
+    start: number,
+    value: number,
+    distinctKey?: string | number
+  ): void {
     let bucket = this.windows.get(start)
     if (!bucket) {
+      // A backdated window older than the retained frontier would be
+      // immediately evicted. Avoid allocating its sketches at all.
+      if (this.windows.size >= this.retain && start < this.starts[0]) return
       bucket = this.newBucket()
       this.windows.set(start, bucket)
+      if (this.retain !== Infinity) heapPush(this.starts, start, compareStarts)
     }
     bucket.push(value, distinctKey)
   }
 
-  private pushSession(time: number, value: number, distinctKey?: string | number): void {
-    const gap = this.gap
-    const incoming = this.newBucket()
-    incoming.push(value, distinctKey)
-
+  private pushSession(
+    time: number,
+    value: number,
+    distinctKey?: string | number
+  ): void {
+    const earliest = time - this.gap
+    const latest = time + this.gap
+    let lo = 0
+    let hi = this.sessions.length
     // Ordered arrivals can only extend the newest session or append one.
-    // Avoid copying and sorting the entire history for this common path.
-    const tail = this.sessions[this.sessions.length - 1]
+    // Use the same mutation path for ordered and late input after locating it.
+    const tail = this.sessions[hi - 1]
     if (!tail || time >= tail.end) {
-      if (tail && tail.end >= time - gap && tail.start <= time + gap) {
-        incoming.merge(tail.bucket)
-        tail.start = tail.start < time ? tail.start : time
-        tail.end = time
-        tail.bucket = incoming
-      } else {
-        this.sessions.push({ start: time, end: time, bucket: incoming })
+      lo = hi
+      if (tail && tail.end >= earliest && tail.start <= latest) lo--
+    } else {
+      // Disjoint sessions are ordered by both start and end. Find the first
+      // possible match in O(log sessions), then merge only its adjacent run.
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1
+        if (this.sessions[mid].end < earliest) lo = mid + 1
+        else hi = mid
       }
+    }
+    const first = this.sessions[lo]
+    if (!first || first.start > latest) {
+      const incoming = this.newBucket()
+      incoming.push(value, distinctKey)
+      this.sessions.splice(lo, 0, { start: time, end: time, bucket: incoming })
       return
     }
-
-    let lo = time
-    let hi = time
-
-    // Find every existing session within `gap` of [time, time]; merge
-    // them all (plus the new event) into one. Sessions are kept sorted
-    // by start, so the survivors form a contiguous run.
-    const survivors: SessionEntry[] = []
-    const merged: SessionEntry = { start: lo, end: hi, bucket: incoming }
-    for (const s of this.sessions) {
-      const within = s.end >= time - gap && s.start <= time + gap
-      if (within) {
-        merged.bucket.merge(s.bucket)
-        if (s.start < lo) lo = s.start
-        if (s.end > hi) hi = s.end
-      } else {
-        survivors.push(s)
-      }
+    first.bucket.push(value, distinctKey)
+    first.start = Math.min(first.start, time)
+    first.end = Math.max(first.end, time)
+    let next = lo + 1
+    while (
+      next < this.sessions.length &&
+      this.sessions[next].start <= latest
+    ) {
+      const session = this.sessions[next++]
+      first.bucket.merge(session.bucket)
+      first.end = Math.max(first.end, session.end)
     }
-    merged.start = lo
-    merged.end = hi
-    survivors.push(merged)
-    survivors.sort((a, b) => a.start - b.start)
-    this.sessions = survivors
+    if (next > lo + 1) this.sessions.splice(lo + 1, next - lo - 1)
   }
 
   private prune(): void {
     if (this.retain === Infinity) return
     if (this.type === "session") {
       if (this.sessions.length > this.retain) {
-        this.sessions = this.sessions.slice(this.sessions.length - this.retain)
+        this.sessions.splice(0, this.sessions.length - this.retain)
       }
       return
     }
-    if (this.windows.size <= this.retain) return
-    // Keep the `retain` windows with the largest start.
-    const starts = [...this.windows.keys()].sort((a, b) => a - b)
-    const drop = starts.length - this.retain
-    for (let i = 0; i < drop; i++) {
-      this.windows.delete(starts[i])
+    while (this.windows.size > this.retain) {
+      this.windows.delete(heapPop(this.starts, compareStarts)!)
     }
   }
 
@@ -284,11 +291,14 @@ export class WindowAccumulator {
    * is `partial` while within `gap` of the watermark.
    */
   emit(): AggregatedWindow[] {
-    if (this.type === "session") return this.emitSessions()
-    return this.emitFixed()
-  }
-
-  private emitFixed(): AggregatedWindow[] {
+    if (this.type === "session") {
+      return this.sessions.map((s) => {
+        // A session is still open if the watermark sits within `gap` of
+        // its end — another close-by event could still extend it.
+        const partial = this.latest - s.end < this.gap
+        return this.row(s.start, s.end, s.bucket, partial)
+      })
+    }
     const rows: AggregatedWindow[] = []
     for (const [start, bucket] of this.windows) {
       const end = start + this.size
@@ -296,15 +306,6 @@ export class WindowAccumulator {
     }
     rows.sort((a, b) => a.start - b.start)
     return rows
-  }
-
-  private emitSessions(): AggregatedWindow[] {
-    return this.sessions.map(s => {
-      // A session is still open if the watermark sits within `gap` of
-      // its end — another close-by event could still extend it.
-      const partial = this.latest - s.end < this.gap
-      return this.row(s.start, s.end, s.bucket, partial)
-    })
   }
 
   private row(
@@ -323,9 +324,9 @@ export class WindowAccumulator {
       min: stats.min,
       max: stats.max,
       stddev: stats.stddev,
-      partial,
+      partial
     }
-    if (bucket.digest && this.percentiles.length > 0) {
+    if (bucket.digest) {
       const percentiles: Record<string, number> = {}
       for (const q of this.percentiles) {
         percentiles[percentileKey(q)] = bucket.digest.quantile(q)
@@ -348,6 +349,7 @@ export class WindowAccumulator {
 
   clear(): void {
     this.windows.clear()
+    this.starts = []
     this.sessions = []
     this.latest = -Infinity
   }

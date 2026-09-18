@@ -711,7 +711,7 @@ if (actualValidationMapModule !== expectedValidationMapModule) {
   )
 }
 const expectedKnownChartComponentsModule =
-  generateKnownChartComponentsModule(CHART_SPECS)
+  generateKnownChartComponentsModule(CHART_SPECS, generatedValidationMap)
 const actualKnownChartComponentsModule = readFileSync(
   knownChartComponentsPath,
   "utf8"

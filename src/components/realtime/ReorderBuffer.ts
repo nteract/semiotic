@@ -18,12 +18,24 @@
 // for correct ordering. Default-off; when unused the stream behaves
 // exactly as before.
 
+import { heapPop, heapPush } from "./minHeap"
+
 export type LatePolicy = "drop" | "keep"
+
+interface HeldEvent<T> {
+  item: T
+  time: number
+  order: number
+}
+
+function compareEvents(a: HeldEvent<unknown>, b: HeldEvent<unknown>): number {
+  return a.time - b.time || a.order - b.order
+}
 
 export interface ReorderBufferConfig<T> {
   /** Grace window in ms. Events older than `watermark − lateness` are late. */
   lateness: number
-  /** Event-time accessor (ms). */
+  /** Event-time accessor (ms), evaluated once when the event is pushed. */
   getTime: (item: T) => number
   /**
    * What to do with a late event:
@@ -52,8 +64,9 @@ export class ReorderBuffer<T> {
   private readonly getTime: (item: T) => number
   private readonly latePolicy: LatePolicy
 
-  // Events still inside the grace window, awaiting release.
-  private held: T[] = []
+  // Stable event-time ordering without rescanning the grace window on push.
+  private held: HeldEvent<T>[] = []
+  private nextOrder = 0
   private _watermark: number = -Infinity
   // Largest finite event-time already released. Normally this trails the
   // watermark by `lateness`; an explicit flush advances it to the tail and
@@ -96,25 +109,25 @@ export class ReorderBuffer<T> {
     }
 
     if (t > this._watermark) this._watermark = t
-    this.held.push(item)
+    heapPush(
+      this.held,
+      { item, time: t, order: this.nextOrder++ },
+      compareEvents
+    )
 
-    return { released: this.drain(), late }
+    return { released: this.drain(this._watermark - this.lateness), late }
   }
 
   /** Release all events whose time is at or before `watermark − lateness`. */
-  private drain(): T[] {
-    const threshold = this._watermark - this.lateness
-    if (this.held.length === 0) return []
-
+  private drain(threshold: number): T[] {
     const ready: T[] = []
-    const remaining: T[] = []
-    for (const item of this.held) {
-      if (this.getTime(item) <= threshold) ready.push(item)
-      else remaining.push(item)
+    let next = this.held[0]
+    while (next && next.time <= threshold) {
+      heapPop(this.held, compareEvents)
+      ready.push(next.item)
+      this._releasedThrough = Math.max(this._releasedThrough, next.time)
+      next = this.held[0]
     }
-    this.held = remaining
-    ready.sort((a, b) => this.getTime(a) - this.getTime(b))
-    this.markReleased(ready)
     return ready
   }
 
@@ -123,24 +136,12 @@ export class ReorderBuffer<T> {
    * stream ends and the remaining grace-window events should be shown.
    */
   flush(): T[] {
-    const all = this.held
-    this.held = []
-    all.sort((a, b) => this.getTime(a) - this.getTime(b))
-    this.markReleased(all)
-    return all
-  }
-
-  private markReleased(items: T[]): void {
-    for (const item of items) {
-      const time = this.getTime(item)
-      if (Number.isFinite(time) && time > this._releasedThrough) {
-        this._releasedThrough = time
-      }
-    }
+    return this.drain(Infinity)
   }
 
   clear(): void {
     this.held = []
+    this.nextOrder = 0
     this._watermark = -Infinity
     this._releasedThrough = -Infinity
     this._lateCount = 0
