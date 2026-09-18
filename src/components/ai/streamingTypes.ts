@@ -100,7 +100,12 @@ export interface StreamChartCapability {
    * may declare any string (e.g. `"@iris/charts"`).
    */
   importPath: string
-  family: ChartFamily
+  /**
+   * Chart family for ranking and dashboard diversification.
+   * Omitted descriptors default to `"realtime"` so 3.10 custom
+   * capabilities remain assignable.
+   */
+  family?: ChartFamily
   /** True when this chart consumes an event stream and has no static render proof. */
   requiresLiveData?: boolean
   rubric: ChartRubric

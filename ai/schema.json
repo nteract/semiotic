@@ -25600,6 +25600,18 @@
               "type": "number",
               "description": "Time bin size in milliseconds (required)"
             },
+            "capacity": {
+              "type": "number",
+              "description": "Ring-buffer capacity alias inherited from RealtimeHistogram. TemporalHistogram auto-fits to data unless set."
+            },
+            "capacityMode": {
+              "type": "string",
+              "enum": [
+                "sliding",
+                "growing"
+              ],
+              "description": "Alias for windowMode inherited from RealtimeHistogram."
+            },
             "direction": {
               "type": "string",
               "enum": [

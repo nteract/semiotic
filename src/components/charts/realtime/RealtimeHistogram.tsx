@@ -658,7 +658,7 @@ export interface TemporalHistogramProps<
   TDatum extends Datum = Datum
 > extends Omit<
   RealtimeHistogramProps<TDatum>,
-  "data" | "windowSize" | "windowMode" | "capacity" | "capacityMode"
+  "data" | "windowMode" | "windowSize"
 > {
   /** Static data array for a bounded temporal histogram. */
   data: TDatum[]

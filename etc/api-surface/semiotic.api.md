@@ -391,7 +391,7 @@ interface SwarmStyle
 interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
-interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "capacity" | "capacityMode" | "data" | "windowMode" | "windowSize">
+interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
 interface ThresholdAlertConfig
 interface ToConfigOptions
 interface ToURLOptions

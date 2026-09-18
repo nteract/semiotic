@@ -1304,7 +1304,7 @@ interface-member SerializedArtifactContract::property::transfer = required trans
 interface-member StreamChartCapability::property::buildProps = required buildProps: (schema: StreamSchema) => Record<string, unknown>
 interface-member StreamChartCapability::property::caveats = optional caveats: ((schema: StreamSchema) => ReadonlyArray<string>) | undefined
 interface-member StreamChartCapability::property::component = required component: string
-interface-member StreamChartCapability::property::family = required family: ChartFamily
+interface-member StreamChartCapability::property::family = optional family: ChartFamily | undefined
 interface-member StreamChartCapability::property::fits = required fits: (schema: StreamSchema) => null | string
 interface-member StreamChartCapability::property::importPath = required importPath: string
 interface-member StreamChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, StreamIntentScorer>>

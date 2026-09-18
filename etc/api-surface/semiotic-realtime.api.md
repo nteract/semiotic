@@ -162,7 +162,7 @@ interface Style
 interface SwarmStyle
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
-interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "capacity" | "capacityMode" | "data" | "windowMode" | "windowSize">
+interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>

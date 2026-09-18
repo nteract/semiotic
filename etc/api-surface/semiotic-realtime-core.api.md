@@ -155,7 +155,7 @@ interface StreamXYFrameHandle<T = Datum>
 interface StreamXYFrameProps<T = Datum> extends StreamSemanticInteractionProps<HoverData>
 interface Style
 interface SwarmStyle
-interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "capacity" | "capacityMode" | "data" | "windowMode" | "windowSize">
+interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>

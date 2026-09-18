@@ -153,11 +153,12 @@ function rankStreamSuggestions(
   const excluded: RejectedStreamCapability[] = []
 
   for (const capability of capabilities) {
+    const family = capability.family ?? "realtime"
     const fitReason = capability.fits(schema)
     if (fitReason !== null) {
       excluded.push({
         component: capability.component,
-        family: capability.family,
+        family,
         importPath: capability.importPath,
         reason: fitReason,
       })
@@ -190,7 +191,7 @@ function rankStreamSuggestions(
 
     out.push({
       component: capability.component,
-      family: capability.family,
+      family,
       importPath: capability.importPath,
       requiresLiveData: capability.requiresLiveData === true,
       score: biased.score,
