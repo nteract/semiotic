@@ -1,5 +1,34 @@
 import { test, expect } from "@playwright/test"
-import { waitForChartReady, waitForAllChartsReady, waitForStreamingUpdate } from "./helpers"
+import {
+  waitForChartReady,
+  waitForAllChartsReady,
+  waitForStreamingUpdate
+} from "./helpers"
+
+test("large event-time batches preserve immediate aggregate reads and render", async ({
+  page
+}) => {
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  await page.goto("/realtime-examples/")
+  await waitForChartReady(page, "realtime-aggregate")
+  await page.getByRole("button", { name: "Run 150,000-event batch" }).click()
+  await expect(page.getByTestId("aggregate-result")).toHaveText(
+    JSON.stringify({
+      cleared: 0,
+      released: [{ count: 150_000, value: 1 }],
+      flushed: [
+        { count: 150_000, value: 1 },
+        { count: 1, value: 2 }
+      ]
+    })
+  )
+  await waitForChartReady(page, "realtime-aggregate")
+  await expect(
+    page.getByTestId("realtime-aggregate").locator("canvas[aria-label]")
+  ).toHaveAttribute("aria-label", /1 lines/)
+  expect(errors).toEqual([])
+})
 
 test.describe("Realtime Charts - Line Chart", () => {
   test.beforeEach(async ({ page }) => {
@@ -111,7 +140,7 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
       "realtime-line",
       "realtime-histogram",
       "realtime-waterfall",
-      "realtime-swarm",
+      "realtime-swarm"
     ]
 
     for (const testId of testIds) {
@@ -124,7 +153,9 @@ test.describe("Realtime Charts - Rendering Integrity", () => {
       // up but never paints would slip past `toBeVisible()`; the
       // attribute regex catches it.
       const dataCanvas = testCase.locator("canvas[aria-label]").first()
-      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/, { timeout: 8000 })
+      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/, {
+        timeout: 8000
+      })
     }
   })
 })
@@ -144,13 +175,13 @@ test.describe("Realtime Charts - HOC default coverage (static)", () => {
     "realtime-histogram-static",
     "realtime-waterfall-static",
     "realtime-swarm-static",
-    "realtime-heatmap-static",
+    "realtime-heatmap-static"
   ]) {
     test(`renders ${testId}`, async ({ page }) => {
       await waitForChartReady(page, testId)
       const testCase = page.locator(`[data-testid="${testId}"]`)
       await expect(testCase).toHaveScreenshot(`${testId}.png`, {
-        maxDiffPixels: 100,
+        maxDiffPixels: 100
       })
     })
   }

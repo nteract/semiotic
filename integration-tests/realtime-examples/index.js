@@ -1,6 +1,7 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React, { useRef, useEffect } from "react"
 import { createRoot } from "react-dom/client"
+import { AggregationRegression } from "./AggregationRegression"
 
 const {
   RealtimeLineChart,
@@ -285,4 +286,9 @@ const examples = [
 ]
 
 const root = createRoot(document.getElementById("root"))
+examples.push(TestCase({
+  title: "Aggregate event-time regression",
+  testId: "realtime-aggregate",
+  children: React.createElement(AggregationRegression)
+}))
 root.render(React.createElement("div", { className: "test-grid" }, examples))

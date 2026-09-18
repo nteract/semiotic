@@ -124,7 +124,7 @@ writeFileSync(
 )
 writeFileSync(
   knownChartComponentsPath,
-  generateKnownChartComponentsModule(CHART_SPECS),
+  generateKnownChartComponentsModule(CHART_SPECS, validationMap),
   "utf8",
 )
 const chartClinicMetadata = generateChartClinicMetadata(

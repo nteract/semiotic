@@ -2,7 +2,7 @@ import {
   WindowAccumulator,
   statValue,
   bandBounds,
-  type AggregatedWindow,
+  type AggregatedWindow
 } from "./WindowAccumulator"
 
 function byStart(rows: AggregatedWindow[]) {
@@ -38,7 +38,12 @@ describe("WindowAccumulator — tumbling", () => {
     const ordered = new WindowAccumulator({ size: 10 })
     const shuffled = new WindowAccumulator({ size: 10 })
     const events: [number, number][] = [
-      [1, 5], [3, 7], [12, 2], [25, 9], [8, 1], [22, 4],
+      [1, 5],
+      [3, 7],
+      [12, 2],
+      [25, 9],
+      [8, 1],
+      [22, 4]
     ]
     events.forEach(([t, v]) => ordered.push(t, v))
     ;[...events].reverse().forEach(([t, v]) => shuffled.push(t, v))
@@ -53,8 +58,8 @@ describe("WindowAccumulator — tumbling", () => {
 
     acc.push(11, 1) // watermark 11 → [0,10) now complete, [10,20) partial
     const rows = acc.emit()
-    expect(rows.find(r => r.start === 0)!.partial).toBe(false)
-    expect(rows.find(r => r.start === 10)!.partial).toBe(true)
+    expect(rows.find((r) => r.start === 0)!.partial).toBe(false)
+    expect(rows.find((r) => r.start === 10)!.partial).toBe(true)
   })
 
   it("defaults to tumbling when no window type is given", () => {
@@ -72,9 +77,9 @@ describe("WindowAccumulator — hopping", () => {
     acc.push(7, 3)
     // windows containing t=7: starts in (7-10, 7] multiples of 5 → 0 and 5
     const rows = acc.emit()
-    const starts = rows.map(r => r.start).sort((a, b) => a - b)
+    const starts = rows.map((r) => r.start).sort((a, b) => a - b)
     expect(starts).toEqual([0, 5])
-    rows.forEach(r => {
+    rows.forEach((r) => {
       expect(r.count).toBe(1)
       expect(r.sum).toBe(3)
     })
@@ -85,8 +90,8 @@ describe("WindowAccumulator — hopping", () => {
     acc.push(2, 10) // in [0,10) only (start 0; start -5 excluded as negative? k from floor((2-10)/5)+1 = -1, to floor(2/5)=0)
     acc.push(7, 20) // in [0,10) and [5,15)
     const rows = acc.emit()
-    const w0 = rows.find(r => r.start === 0)!
-    const w5 = rows.find(r => r.start === 5)!
+    const w0 = rows.find((r) => r.start === 0)!
+    const w5 = rows.find((r) => r.start === 5)!
     expect(w0.count).toBe(2) // both events
     expect(w0.sum).toBe(30)
     expect(w5.count).toBe(1) // only t=7
@@ -117,32 +122,65 @@ describe("WindowAccumulator — session", () => {
     acc.push(15, 5)
     acc.push(20, 7)
     const beforeBridge = acc.emit()
-    expect(beforeBridge.map(({ start, end }) => [start, end])).toEqual([[0, 5], [15, 20]])
+    expect(beforeBridge.map(({ start, end }) => [start, end])).toEqual([
+      [0, 5],
+      [15, 20]
+    ])
 
     acc.push(10, 9) // merges the two existing sessions
     acc.push(25, 11) // extends the merged session at its gap endpoint
     acc.push(40, 13) // appends a new trailing session
 
     const rows = acc.emit()
-    expect(rows.map(({ start, end, count, partial }) => ({ start, end, count, partial }))).toEqual([
+    expect(
+      rows.map(({ start, end, count, partial }) => ({
+        start,
+        end,
+        count,
+        partial
+      }))
+    ).toEqual([
       { start: 0, end: 25, count: 6, partial: false },
       { start: 40, end: 40, count: 1, partial: true }
     ])
     expect(rows[0].mean).toBeCloseTo(6)
     expect(rows[0].stddev).toBeCloseTo(Math.sqrt(35 / 3))
-    expect(beforeBridge.map(({ start, end, count }) => [start, end, count])).toEqual([[0, 5, 2], [15, 20, 2]])
+    expect(
+      beforeBridge.map(({ start, end, count }) => [start, end, count])
+    ).toEqual([
+      [0, 5, 2],
+      [15, 20, 2]
+    ])
   })
 
   it("retains the newest sessions when ordered and backdated events are mixed", () => {
-    const acc = new WindowAccumulator({ window: "session", gap: 2, size: 0, retain: 2 })
+    const acc = new WindowAccumulator({
+      window: "session",
+      gap: 2,
+      size: 0,
+      retain: 2
+    })
     for (const time of [0, 10, 20, 30, 31, 5, 21, 32]) acc.push(time, 1)
-    expect(acc.emit().map(({ start, end, count }) => [start, end, count])).toEqual([
-      [20, 21, 2], [30, 32, 3]
+    expect(
+      acc.emit().map(({ start, end, count }) => [start, end, count])
+    ).toEqual([
+      [20, 21, 2],
+      [30, 32, 3]
     ])
     acc.clear()
     acc.push(-10, 4)
     expect(acc.emit()).toEqual([
-      { start: -10, end: -10, count: 1, mean: 4, sum: 4, min: 4, max: 4, stddev: 0, partial: true }
+      {
+        start: -10,
+        end: -10,
+        count: 1,
+        mean: 4,
+        sum: 4,
+        min: 4,
+        max: 4,
+        stddev: 0,
+        partial: true
+      }
     ])
   })
 
@@ -183,7 +221,7 @@ describe("WindowAccumulator — session", () => {
     acc.push(10, 6)
     const rows = acc.emit()
     // {0}, and {6,10,12,15,20} merged
-    const big = rows.find(r => r.start === 6)!
+    const big = rows.find((r) => r.start === 6)!
     expect(big.end).toBe(20)
     expect(big.count).toBe(5) // 6,10,12,15,20 events: values 5,6,3,4,2
     expect(big.sum).toBe(20)
@@ -192,7 +230,13 @@ describe("WindowAccumulator — session", () => {
   it("is order-independent for sessions", () => {
     const a = new WindowAccumulator({ window: "session", gap: 5, size: 0 })
     const b = new WindowAccumulator({ window: "session", gap: 5, size: 0 })
-    const events: [number, number][] = [[0, 1], [3, 2], [20, 3], [22, 4], [10, 5]]
+    const events: [number, number][] = [
+      [0, 1],
+      [3, 2],
+      [20, 3],
+      [22, 4],
+      [10, 5]
+    ]
     events.forEach(([t, v]) => a.push(t, v))
     ;[...events].reverse().forEach(([t, v]) => b.push(t, v))
     expect(byStart(a.emit())).toEqual(byStart(b.emit()))
@@ -200,20 +244,50 @@ describe("WindowAccumulator — session", () => {
 })
 
 describe("WindowAccumulator — retention", () => {
+  it.each(["tumbling", "hopping"] as const)(
+    "retains the newest %s windows through late arrivals and clear",
+    (window) => {
+      const retained = new WindowAccumulator({
+        window,
+        size: 10,
+        hop: 3,
+        retain: 7
+      })
+      const all = new WindowAccumulator({ window, size: 10, hop: 3 })
+      let seed = 17
+      for (let i = 0; i < 500; i++) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
+        const time = i + (seed % 51) - 40
+        retained.push(time, i % 7)
+        all.push(time, i % 7)
+        expect(retained.emit()).toEqual(all.emit().slice(-7))
+        if (i === 247) {
+          retained.clear()
+          all.clear()
+        }
+      }
+    }
+  )
+
   it("prunes to the most recent N tumbling windows", () => {
     const acc = new WindowAccumulator({ size: 10, retain: 3 })
     for (let t = 0; t < 100; t += 10) acc.push(t, 1)
     const rows = acc.emit()
     expect(rows).toHaveLength(3)
-    expect(rows.map(r => r.start)).toEqual([70, 80, 90])
+    expect(rows.map((r) => r.start)).toEqual([70, 80, 90])
   })
 
   it("prunes the oldest sessions", () => {
-    const acc = new WindowAccumulator({ window: "session", gap: 1, size: 0, retain: 2 })
+    const acc = new WindowAccumulator({
+      window: "session",
+      gap: 1,
+      size: 0,
+      retain: 2
+    })
     for (let t = 0; t < 50; t += 10) acc.push(t, 1) // each isolated session
     const rows = acc.emit()
     expect(rows).toHaveLength(2)
-    expect(rows.map(r => r.start)).toEqual([30, 40])
+    expect(rows.map((r) => r.start)).toEqual([30, 40])
   })
 })
 
@@ -239,8 +313,15 @@ describe("WindowAccumulator — hygiene", () => {
 
 describe("statValue / bandBounds", () => {
   const w: AggregatedWindow = {
-    start: 0, end: 10, count: 4, mean: 10, sum: 40,
-    min: 6, max: 16, stddev: 2, partial: false,
+    start: 0,
+    end: 10,
+    count: 4,
+    mean: 10,
+    sum: 40,
+    min: 6,
+    max: 16,
+    stddev: 2,
+    partial: false
   }
 
   it("reads each stat", () => {
@@ -266,18 +347,68 @@ describe("statValue / bandBounds", () => {
 })
 
 describe("WindowAccumulator — percentiles and distinct", () => {
-  it.each(["tumbling", "hopping", "session"] as const)("emits interpolated medians for %s windows", (window) => {
-    const acc = new WindowAccumulator({ window, size: 100, hop: 50, percentiles: [0.5] })
-    acc.push(10, 0)
-    acc.push(20, 100)
-    expect(acc.emit().length).toBeGreaterThan(0)
-    for (const row of acc.emit()) expect(row.percentiles?.p50).toBe(50)
+  it("preserves sketches when late events extend and bridge sessions", () => {
+    const acc = new WindowAccumulator({
+      window: "session",
+      size: 0,
+      gap: 5,
+      percentiles: [0.5, 0.95],
+      distinct: true
+    })
+    for (const [time, value, user] of [
+      [0, 10, "a"],
+      [5, 20, "b"],
+      [15, 30, "a"],
+      [20, 40, "c"]
+    ] as const) {
+      acc.push(time, value, user)
+    }
+    const before = acc.emit()
+    acc.push(10, 50, "b")
+    acc.push(2, 60, "d")
+    acc.push(-5, 70, "e")
+    const [row] = acc.emit()
+    expect(row).toMatchObject({
+      start: -5,
+      end: 20,
+      count: 7,
+      distinct: 5,
+      percentiles: { p50: 40, p95: 70 }
+    })
+    expect(row.mean).toBeCloseTo(40)
+    expect(row.stddev).toBeCloseTo(20)
+    expect(
+      before.map((window) => [
+        window.count,
+        window.distinct,
+        window.percentiles?.p50
+      ])
+    ).toEqual([
+      [2, 2, 15],
+      [2, 2, 35]
+    ])
   })
+
+  it.each(["tumbling", "hopping", "session"] as const)(
+    "emits interpolated medians for %s windows",
+    (window) => {
+      const acc = new WindowAccumulator({
+        window,
+        size: 100,
+        hop: 50,
+        percentiles: [0.5]
+      })
+      acc.push(10, 0)
+      acc.push(20, 100)
+      expect(acc.emit().length).toBeGreaterThan(0)
+      for (const row of acc.emit()) expect(row.percentiles?.p50).toBe(50)
+    }
+  )
   it("emits p95 and a distinct count when configured", () => {
     const acc = new WindowAccumulator({
       size: 100,
       percentiles: [0.5, 0.95],
-      distinct: true,
+      distinct: true
     })
     for (let i = 1; i <= 20; i++) {
       acc.push(i, i * 10, `user-${i % 5}`)

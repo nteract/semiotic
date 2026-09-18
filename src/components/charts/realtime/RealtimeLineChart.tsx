@@ -59,10 +59,7 @@ import {
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import {
-  composeStyleRules,
-  makeXYRuleContext
-} from "../shared/styleRules"
+import { composeStyleRules, makeXYRuleContext } from "../shared/styleRules"
 
 export type { RealtimeLineChartHandle, RealtimeLineChartProps }
 
@@ -275,7 +272,12 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   const aggEnabledRef = useRef(aggEnabled)
   aggEnabledRef.current = aggEnabled
   const aggRowsRef = useRef<AggregatedRealtimeDatum[]>(aggRows)
-  aggRowsRef.current = aggRows
+  const publishAggRows = useCallback((rows: AggregatedRealtimeDatum[]) => {
+    // Imperative readers observe ingestion immediately, even while React
+    // batches the corresponding render with other updates.
+    aggRowsRef.current = rows
+    setAggRows(rows)
+  }, [])
   const accessorsRef = useRef({ timeAccessor, valueAccessor })
   accessorsRef.current = { timeAccessor, valueAccessor }
 
@@ -314,27 +316,38 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
         acc.push(d, ta, va)
       }
     }
-    setAggRows(acc.emit(cfg))
-  }, [aggKey, aggEnabled, data, timeAccessor, valueAccessor, seriesAccessor])
+    publishAggRows(acc.emit(cfg))
+  }, [
+    aggKey,
+    aggEnabled,
+    data,
+    timeAccessor,
+    valueAccessor,
+    seriesAccessor,
+    publishAggRows
+  ])
 
   // Re-emit (without rebuilding) when only the readout config changes.
   useEffect(() => {
     if (aggEnabled && accRef.current) {
-      setAggRows(accRef.current.emit(aggConfigRef.current!))
+      publishAggRows(accRef.current.emit(aggConfigRef.current!))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aggregate?.stat, aggregate?.band, aggregate?.sigma])
 
-  const ingestAgg = useCallback((points: Datum[]) => {
-    const acc = accRef.current
-    const cfg = aggConfigRef.current
-    if (!acc || !cfg) return
-    const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
-    for (const p of points) {
-      acc.push(p, ta, va)
-    }
-    setAggRows(acc.emit(cfg))
-  }, [])
+  const ingestAgg = useCallback(
+    (points: Datum[]) => {
+      const acc = accRef.current
+      const cfg = aggConfigRef.current
+      if (!acc || !cfg) return
+      const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
+      for (const p of points) {
+        acc.push(p, ta, va)
+      }
+      publishAggRows(acc.emit(cfg))
+    },
+    [publishAggRows]
+  )
 
   // ── Event-time ingestion (opt-in) ──────────────────────────────────────
   const eventTimeEnabled = eventTime != null
@@ -396,7 +409,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       const released: Datum[] = []
       for (const p of points) {
         const res = rb.push(p)
-        if (res.released.length) released.push(...res.released)
+        for (const point of res.released) released.push(point)
         if (res.late.length) {
           const cb = onObservationRef.current
           if (cb) {
@@ -449,7 +462,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
         reorderRef.current?.clear()
         if (aggEnabledRef.current) {
           accRef.current?.clear()
-          setAggRows([])
+          publishAggRows([])
         } else {
           frameRef.current?.clear()
         }
@@ -460,7 +473,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
           : (frameRef.current?.getData() ?? []),
       getScales: () => frameRef.current?.getScales() ?? null
     }),
-    [flushEventTime, ingestPoints]
+    [flushEventTime, ingestPoints, publishAggRows]
   )
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
@@ -512,7 +525,14 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       ...(strokeDasharray != null && { strokeDasharray }),
       ...(cursor != null && { cursor })
     })
-  }, [ruledLineStyle, strokeProp, strokeWidthProp, opacity, strokeDasharray, cursor])
+  }, [
+    ruledLineStyle,
+    strokeProp,
+    strokeWidthProp,
+    opacity,
+    strokeDasharray,
+    cursor
+  ])
   const interactiveLineStyle = useRealtimeSelectionStyle(
     lineStyleWithPrimitives,
     [activeSelectionHook],
@@ -538,7 +558,11 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
   const frameBand =
     aggEnabled && aggregate && hasBand(aggregate)
-      ? { y0Accessor: AGG_LOWER, y1Accessor: AGG_UPPER, perSeries: seriesAccessor != null }
+      ? {
+          y0Accessor: AGG_LOWER,
+          y1Accessor: AGG_UPPER,
+          perSeries: seriesAccessor != null
+        }
       : undefined
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
@@ -565,7 +589,9 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       data={frameData}
       timeAccessor={frameTimeAccessor}
       valueAccessor={frameValueAccessor}
-      groupAccessor={aggEnabled && seriesAccessor != null ? AGG_SERIES : seriesAccessor}
+      groupAccessor={
+        aggEnabled && seriesAccessor != null ? AGG_SERIES : seriesAccessor
+      }
       xExtent={timeExtent}
       yExtent={valueExtent}
       extentPadding={extentPadding}

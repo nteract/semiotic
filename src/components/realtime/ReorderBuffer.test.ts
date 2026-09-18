@@ -1,16 +1,97 @@
 import { ReorderBuffer } from "./ReorderBuffer"
 
-interface Pt { t: number; v: number }
+interface Pt {
+  t: number
+  v: number
+}
 const getTime = (p: Pt) => p.t
 
 describe("ReorderBuffer", () => {
+  it("preserves arrival order for timestamp ties across drain and flush", () => {
+    const rb = new ReorderBuffer<Pt>({ lateness: 5, getTime })
+    const early = [
+      { t: 10, v: 1 },
+      { t: 8, v: 2 },
+      { t: 10, v: 3 }
+    ]
+    early.forEach((point) => rb.push(point))
+    expect(rb.push({ t: 15, v: 4 }).released).toEqual([
+      early[1],
+      early[0],
+      early[2]
+    ])
+    rb.push({ t: 15, v: 5 })
+    expect(rb.flush().map((point) => point.v)).toEqual([4, 5])
+  })
+
+  it("reads each event time once even with a large held tail", () => {
+    let reads = 0
+    const rb = new ReorderBuffer<Pt>({
+      lateness: 10_000,
+      getTime: (point) => {
+        reads++
+        return point.t
+      }
+    })
+    for (let i = 0; i < 5000; i++) rb.push({ t: 4999 - i, v: i })
+    expect(rb.flush().map((point) => point.t)).toEqual(
+      Array.from({ length: 5000 }, (_, i) => i)
+    )
+    expect(reads).toBe(5000)
+  })
+
+  it.each(["drop", "keep"] as const)(
+    "matches a stable sort oracle for jitter, ties and flushes (%s)",
+    (latePolicy) => {
+      const rb = new ReorderBuffer<Pt>({ lateness: 37, getTime, latePolicy })
+      let held: Pt[] = []
+      let watermark = -Infinity
+      let frontier = -Infinity
+      let lateCount = 0
+      let seed = 197
+      for (let i = 0; i < 1200; i++) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
+        const point = { t: Math.floor(i / 3) + (seed % 101) - 50, v: i }
+        const late = point.t < Math.max(watermark - 37, frontier)
+        let expected: Pt[] = []
+        if (late) {
+          lateCount++
+          if (latePolicy === "keep") expected = [point]
+        } else {
+          watermark = Math.max(watermark, point.t)
+          held.push(point)
+          expected = held
+            .filter((p) => p.t <= watermark - 37)
+            .sort((a, b) => a.t - b.t)
+          held = held.filter((p) => p.t > watermark - 37)
+          if (expected.length)
+            frontier = Math.max(frontier, expected[expected.length - 1].t)
+        }
+        expect(rb.push(point)).toEqual({
+          released: expected,
+          late: late ? [point] : []
+        })
+        expect(rb.lateCount).toBe(lateCount)
+        expect(rb.heldCount).toBe(held.length)
+        if (i % 197 === 0) {
+          held.sort((a, b) => a.t - b.t)
+          expect(rb.flush()).toEqual(held)
+          if (held.length)
+            frontier = Math.max(frontier, held[held.length - 1].t)
+          held = []
+        }
+      }
+      expect(rb.flush()).toEqual(held.sort((a, b) => a.t - b.t))
+    }
+  )
+
   it("releases in-order events once they exit the grace window", () => {
     const rb = new ReorderBuffer<Pt>({ lateness: 5, getTime })
     // t=0 held (watermark 0, threshold -5)
     expect(rb.push({ t: 0, v: 1 }).released).toEqual([])
     // t=10 advances watermark to 10, threshold 5 → t=0 released
     const r = rb.push({ t: 10, v: 2 })
-    expect(r.released.map(p => p.t)).toEqual([0])
+    expect(r.released.map((p) => p.t)).toEqual([0])
     expect(rb.heldCount).toBe(1) // t=10 still held
   })
 
@@ -22,7 +103,7 @@ describe("ReorderBuffer", () => {
     rb.push({ t: 8, v: 3 })
     // Push far ahead to flush the grace window: watermark 30, threshold 20.
     const r = rb.push({ t: 30, v: 4 })
-    expect(r.released.map(p => p.t)).toEqual([2, 5, 8]) // sorted by event time
+    expect(r.released.map((p) => p.t)).toEqual([2, 5, 8]) // sorted by event time
   })
 
   it("counts and drops late events by default", () => {
@@ -30,16 +111,20 @@ describe("ReorderBuffer", () => {
     rb.push({ t: 100, v: 1 }) // watermark 100, threshold 95
     const r = rb.push({ t: 50, v: 2 }) // 50 < 95 → late
     expect(r.released).toEqual([]) // dropped
-    expect(r.late.map(p => p.t)).toEqual([50])
+    expect(r.late.map((p) => p.t)).toEqual([50])
     expect(rb.lateCount).toBe(1)
   })
 
   it("keeps late events when policy is keep", () => {
-    const rb = new ReorderBuffer<Pt>({ lateness: 5, getTime, latePolicy: "keep" })
+    const rb = new ReorderBuffer<Pt>({
+      lateness: 5,
+      getTime,
+      latePolicy: "keep"
+    })
     rb.push({ t: 100, v: 1 })
     const r = rb.push({ t: 50, v: 2 }) // late
-    expect(r.released.map(p => p.t)).toEqual([50]) // emitted out of order
-    expect(r.late.map(p => p.t)).toEqual([50])
+    expect(r.released.map((p) => p.t)).toEqual([50]) // emitted out of order
+    expect(r.late.map((p) => p.t)).toEqual([50])
     expect(rb.lateCount).toBe(1)
   })
 
@@ -63,7 +148,7 @@ describe("ReorderBuffer", () => {
     rb.push({ t: 1, v: 2 })
     rb.push({ t: 3, v: 3 })
     expect(rb.heldCount).toBe(3)
-    expect(rb.flush().map(p => p.t)).toEqual([1, 3, 5])
+    expect(rb.flush().map((p) => p.t)).toEqual([1, 3, 5])
     expect(rb.heldCount).toBe(0)
   })
 
@@ -104,9 +189,9 @@ describe("ReorderBuffer", () => {
     const arrivals = [0, 2, 1, 4, 3, 6, 5, 9, 8, 7, 20]
     const released: number[] = []
     arrivals.forEach((t, i) => {
-      released.push(...rb.push({ t, v: i }).released.map(p => p.t))
+      released.push(...rb.push({ t, v: i }).released.map((p) => p.t))
     })
-    released.push(...rb.flush().map(p => p.t))
+    released.push(...rb.flush().map((p) => p.t))
     // Nothing was late (all within 3ms jitter), everything emitted, sorted.
     expect(released).toEqual([...arrivals].sort((a, b) => a - b))
     expect(rb.lateCount).toBe(0)

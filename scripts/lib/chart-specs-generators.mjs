@@ -211,10 +211,10 @@ export function generateValidationMapModule(
     ]),
   )
 
-  const chartLines = Object.entries(validationMap).map(([name, entry]) => {
-    const spec = chartSpecs[name]
-    if (!spec) {
-      throw new Error(`Missing ChartSpec for validation entry ${name}`)
+  const chartLines = Object.entries(chartSpecs).map(([name, spec]) => {
+    const entry = validationMap[name]
+    if (!entry) {
+      throw new Error(`Missing validation entry for ChartSpec ${name}`)
     }
     const encodedEntry = [
       entry.required,
@@ -223,7 +223,7 @@ export function generateValidationMapModule(
       spec.propBags,
       encodeProps(spec.ownProps),
     ]
-    return `  ${JSON.stringify(name)}: ${JSON.stringify(encodedEntry)}`
+    return `  /* ${name} */ ${JSON.stringify(encodedEntry)}`
   })
   return `/**
  * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
@@ -231,6 +231,7 @@ export function generateValidationMapModule(
  */
 import type { ComponentSpec, PropDef } from "./validateProps"
 import type { DataShape, PropType } from "./chartSpecCore"
+import { KNOWN_CHART_COMPONENTS } from "./knownChartComponents"
 
 type EncodedProp = number | readonly [number, number]
 type EncodedComponent = readonly [
@@ -245,9 +246,11 @@ const PROP_TYPES = ${JSON.stringify(propTypes)} as const
 const PROP_ENUMS = ${JSON.stringify(propEnums)} as const
 const ENCODED_PROP_BAGS = ${JSON.stringify(encodedPropBags)} as const
 
-const ENCODED_VALIDATION_MAP = {
+// Entries share the generated name registry's order. Chart names are stored
+// once even when a consumer uses both validation and accessibility auditing.
+const ENCODED_VALIDATION_MAP = [
 ${chartLines.join(",\n")}
-} as const
+] as const
 
 function decodeProp(encoded: EncodedProp): PropDef {
   const [typeIndex, enumIndex] = Array.isArray(encoded)
@@ -262,32 +265,38 @@ function decodeProp(encoded: EncodedProp): PropDef {
     : { type, enum: [...PROP_ENUMS[enumIndex]] }
 }
 
-export const VALIDATION_MAP: Record<string, ComponentSpec> = Object.fromEntries(
-  Object.entries(
-    ENCODED_VALIDATION_MAP as Record<string, EncodedComponent>
-  ).map(([name, [required, dataShape, dataAccessors, propBags, ownProps]]) => [
-    name,
-    {
-      required: [...required],
-      dataShape,
-      dataAccessors: [...dataAccessors],
-      props: Object.fromEntries(
-        Object.entries(
-          Object.assign(
-            {},
-            ...propBags.map(
-              (propBag) =>
-                ENCODED_PROP_BAGS[
-                  propBag as keyof typeof ENCODED_PROP_BAGS
-                ]
-            ),
-            ownProps
-          ) as Record<string, EncodedProp>
-        ).map(([propName, encoded]) => [propName, decodeProp(encoded)])
-      )
-    }
-  ])
-)
+function createValidationMap(): Record<string, ComponentSpec> {
+  return Object.fromEntries(
+    (ENCODED_VALIDATION_MAP as readonly EncodedComponent[]).map(
+      ([required, dataShape, dataAccessors, propBags, ownProps], index) => [
+        KNOWN_CHART_COMPONENTS[index],
+        {
+          required: [...required],
+          dataShape,
+          dataAccessors: [...dataAccessors],
+          props: Object.fromEntries(
+            Object.entries(
+              Object.assign(
+                {},
+                ...propBags.map(
+                  (propBag) =>
+                    ENCODED_PROP_BAGS[
+                      propBag as keyof typeof ENCODED_PROP_BAGS
+                    ]
+                ),
+                ownProps
+              ) as Record<string, EncodedProp>
+            ).map(([propName, encoded]) => [propName, decodeProp(encoded)])
+          )
+        }
+      ]
+    )
+  )
+}
+
+// Decoding only allocates this module's own data. Let consumers that use
+// lightweight AI/a11y helpers discard the full validation catalog.
+export const VALIDATION_MAP = /* @__PURE__ */ createValidationMap()
 `
 }
 
@@ -296,13 +305,21 @@ export const VALIDATION_MAP: Record<string, ComponentSpec> = Object.fromEntries(
  * Generating it alongside the richer artifacts keeps the root bundle lean
  * without introducing a second hand-maintained chart catalog.
  */
-export function generateKnownChartComponentsModule(chartSpecs) {
+export function generateKnownChartComponentsModule(chartSpecs, validationMap) {
+  const textProps = ["title", "description", "summary"]
+  const unsupportedText = Object.fromEntries(
+    textProps.map((prop) => [
+      prop,
+      Object.keys(chartSpecs).filter((name) => !validationMap[name].props[prop]),
+    ]),
+  )
   return `/**
  * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
  * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
  *
  * This compact registry is intentionally separate from validation metadata:
- * config serialization only needs chart-name membership.
+ * config serialization and accessibility auditing only need chart names
+ * and the supported text props, not the entire prop-validation catalog.
  */
 export const KNOWN_CHART_COMPONENTS = ${JSON.stringify(Object.keys(chartSpecs), null, 2)} as const
 
@@ -312,6 +329,17 @@ const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = new Set(
 
 export function isKnownChartComponent(componentName: string): boolean {
   return KNOWN_CHART_COMPONENT_SET.has(componentName)
+}
+
+export type AccessibilityTextProp = "title" | "description" | "summary"
+
+const UNSUPPORTED_TEXT_COMPONENTS: Record<AccessibilityTextProp, readonly string[]> = ${JSON.stringify(unsupportedText, null, 2)}
+
+export function supportsChartAccessibilityText(
+  componentName: string,
+  prop: AccessibilityTextProp
+): boolean {
+  return isKnownChartComponent(componentName) && !UNSUPPORTED_TEXT_COMPONENTS[prop].includes(componentName)
 }
 `
 }

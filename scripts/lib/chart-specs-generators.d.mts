@@ -79,7 +79,8 @@ export function generateValidationMapModule(
 ): string
 
 export function generateKnownChartComponentsModule(
-  chartSpecs: Record<string, unknown>
+  chartSpecs: Record<string, unknown>,
+  validationMap: Record<string, GeneratedValidationMapEntry>
 ): string
 
 export function generateChartClinicMetadata<TSpec extends ChartClinicChartSpecLike>(

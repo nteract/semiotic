@@ -3,7 +3,8 @@
  * Do not edit by hand; run `npm run docs:chart-specs:schema`.
  *
  * This compact registry is intentionally separate from validation metadata:
- * config serialization only needs chart-name membership.
+ * config serialization and accessibility auditing only need chart names
+ * and the supported text props, not the entire prop-validation catalog.
  */
 export const KNOWN_CHART_COMPONENTS = [
   "MotifBraidChart",
@@ -76,4 +77,21 @@ const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = new Set(
 
 export function isKnownChartComponent(componentName: string): boolean {
   return KNOWN_CHART_COMPONENT_SET.has(componentName)
+}
+
+export type AccessibilityTextProp = "title" | "description" | "summary"
+
+const UNSUPPORTED_TEXT_COMPONENTS: Record<AccessibilityTextProp, readonly string[]> = {
+  "title": [
+    "BigNumber"
+  ],
+  "description": [],
+  "summary": []
+}
+
+export function supportsChartAccessibilityText(
+  componentName: string,
+  prop: AccessibilityTextProp
+): boolean {
+  return isKnownChartComponent(componentName) && !UNSUPPORTED_TEXT_COMPONENTS[prop].includes(componentName)
 }

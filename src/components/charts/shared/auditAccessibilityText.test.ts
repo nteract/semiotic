@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { auditAccessibility } from "./auditAccessibility"
+import { VALIDATION_MAP } from "./validationMap"
+import { supportsChartAccessibilityText } from "./knownChartComponents"
+import { assessAccessibilityText } from "./auditAccessibilityText"
 import {
   registerChartRecipe,
   unregisterChartRecipe
@@ -13,6 +16,34 @@ const customComponents = [
   "GeoCustomChart",
   "PhysicsCustomChart"
 ]
+
+describe("compact accessibility metadata", () => {
+  it("agrees with every chart's declared text props", () => {
+    for (const [component, spec] of Object.entries(VALIDATION_MAP)) {
+      for (const prop of ["title", "description", "summary"] as const) {
+        expect(
+          supportsChartAccessibilityText(component, prop),
+          `${component}.${prop}`
+        ).toBe(!!spec.props[prop])
+      }
+    }
+  })
+
+  it.each(["UnknownChart", "constructor", "toString", "__proto__"])(
+    "does not credit undeclared text on %s",
+    (component) => {
+      const text = assessAccessibilityText(component, {
+        title: "A title",
+        description: "A description",
+        summary: "A summary"
+      })
+      expect(text.hasTitle || text.hasDescription || text.hasSummary).toBe(
+        false
+      )
+      expect(text.unsupportedFinding?.status).toBe("warn")
+    }
+  )
+})
 const textProps = {
   title: "Reported flights for one aircraft",
   description: "Scheduled and actual departures, ordered by UTC instant.",

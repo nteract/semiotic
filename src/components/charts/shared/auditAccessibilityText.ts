@@ -1,7 +1,7 @@
 import type { A11yFinding } from "./auditAccessibility"
 import type { ChartRecipeFrameFamily } from "../../ai/chartRecipes"
 import type { Datum } from "./datumTypes"
-import { VALIDATION_MAP } from "./validateProps"
+import { supportsChartAccessibilityText } from "./knownChartComponents"
 
 const ACCESSIBILITY_TEXT_PROPS = ["title", "description", "summary"] as const
 // React-only custom layouts are intentionally absent from the JSON prop schema.
@@ -36,12 +36,11 @@ export function assessAccessibilityText(
   props: Datum,
   recipeFamily?: ChartRecipeFrameFamily
 ) {
-  const declaredProps = VALIDATION_MAP[component]?.props
   const customText =
     CUSTOM_TEXT_COMPONENTS.has(component) ||
     (recipeFamily !== undefined && RECIPE_TEXT_FAMILIES.has(recipeFamily))
   const supports = (name: (typeof ACCESSIBILITY_TEXT_PROPS)[number]) =>
-    !!declaredProps?.[name] || customText
+    supportsChartAccessibilityText(component, name) || customText
   const unsupported = ACCESSIBILITY_TEXT_PROPS.filter(
     (name) => isNonEmptyString(props[name]) && !supports(name)
   )
