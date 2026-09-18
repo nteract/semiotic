@@ -698,54 +698,7 @@ export type {
 } from "./charts/shared/tooltipUtils"
 
 // ── Streaming types ────────────────────────────────────────────────────
-
-export type {
-  ArrowOfTime,
-  WindowMode,
-  ThresholdType,
-  LineStyle,
-  BarStyle,
-  WaterfallStyle,
-  SwarmStyle,
-  AnnotationContext,
-  AnnotationAnchorMode,
-  CrosshairStyle,
-  HoverAnnotationConfig,
-  HoverData,
-  RealtimeFrameHandle
-} from "./realtime/types"
-
-// ── Realtime chart HOC types ───────────────────────────────────────────
-
-export type {
-  RealtimeLineChartHandle,
-  RealtimeLineChartProps
-} from "./charts/realtime/RealtimeLineChart"
-export type {
-  AggregateConfig,
-  AggregatedRealtimeDatum
-} from "./charts/realtime/aggregate"
-export type {
-  RealtimeTemporalHistogramProps,
-  RealtimeHistogramProps,
-  TemporalHistogramProps
-} from "./charts/realtime/RealtimeHistogram"
-export type { RealtimeSwarmChartProps } from "./charts/realtime/RealtimeSwarmChart"
-export type { RealtimeWaterfallChartProps } from "./charts/realtime/RealtimeWaterfallChart"
-export type { RealtimeHeatmapProps } from "./charts/realtime/RealtimeHeatmap"
-
-// Mirror a controlled React array into any push-API chart's buffer. Lives in
-// the realtime barrel too; re-exported here since the push HOCs it drives
-// (realtime + ordinal + XY) are all importable from the root entry.
-export {
-  useSyncedPushData,
-  syncPushBuffer
-} from "./charts/shared/useSyncedPushData"
-export type {
-  SyncedPushHandle,
-  SyncedPushDataOptions,
-  PushIdAccessor
-} from "./charts/shared/useSyncedPushData"
+export * from "./semiotic-stream-types"
 
 // ── Annotation provenance + lifecycle (talk-readiness M1) ──────────────
 // Type surface re-exported from the main entry per the talk-readiness
