@@ -34,7 +34,6 @@ jobs:
     env:
       EXPECTED_NAME: io.github.nteract/semiotic
       EXPECTED_REMOTE: https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp
-      REGISTRY_SEARCH_URL: https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.nteract/semiotic
       MCP_PUBLISHER_VERSION: v1.7.9
       MCP_PUBLISHER_LINUX_AMD64_SHA256: ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac
 
@@ -50,6 +49,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ env.RELEASE_REF }}
+
+      # Keep recovery tooling on the selected workflow revision while server.json
+      # and package.json above remain from the exact release tag.
+      - name: Checkout Registry verification tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: .registry-tooling
 
       - name: Display workflow commit
         run: |
@@ -142,39 +148,7 @@ jobs:
 
       - name: Check Registry state before publishing
         id: registry-preflight
-        run: |
-          curl --fail --location --silent --show-error "$REGISTRY_SEARCH_URL" > "$RUNNER_TEMP/mcp-registry-before.json"
-          node <<'NODE'
-          const { appendFileSync, readFileSync } = require("node:fs")
-
-          const canonical = (value) => {
-            if (Array.isArray(value)) return value.map(canonical)
-            if (value && typeof value === "object") {
-              return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]))
-            }
-            return value
-          }
-          const manifest = canonical(JSON.parse(readFileSync("server.json", "utf8")))
-          const search = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/mcp-registry-before.json`, "utf8"))
-          const matching = (search.servers || []).find(({ server }) =>
-            server?.name === process.env.EXPECTED_NAME && server?.version === process.env.EXPECTED_VERSION,
-          )
-
-          if (!matching) {
-            console.log(`Registry has no ${process.env.EXPECTED_NAME} v${process.env.EXPECTED_VERSION}; publication is required.`)
-            appendFileSync(process.env.GITHUB_OUTPUT, "publish_required=true\n")
-            process.exit(0)
-          }
-
-          if (JSON.stringify(canonical(matching.server)) !== JSON.stringify(manifest)) {
-            throw new Error(
-              `Registry already contains ${process.env.EXPECTED_NAME} v${process.env.EXPECTED_VERSION}, but its metadata differs from server.json. Refusing to publish a duplicate.`,
-            )
-          }
-
-          console.log(`Registry already contains identical ${process.env.EXPECTED_NAME} v${process.env.EXPECTED_VERSION}; verification only.`)
-          appendFileSync(process.env.GITHUB_OUTPUT, "publish_required=false\n")
-          NODE
+        run: node .registry-tooling/scripts/check-mcp-registry-publication.mjs preflight
 
       - name: Authenticate to MCP Registry with GitHub OIDC
         if: steps.registry-preflight.outputs.publish_required == 'true'
@@ -190,44 +164,7 @@ jobs:
             ${{ steps.registry-preflight.outputs.publish_required == 'true' &&
             'published' || 'already-verified' }}
         run: |
-          curl --fail --location --silent --show-error "$REGISTRY_SEARCH_URL" > "$RUNNER_TEMP/mcp-registry-after.json"
-          node <<'NODE'
-          const { readFileSync, writeFileSync } = require("node:fs")
-
-          const search = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/mcp-registry-after.json`, "utf8"))
-          const matching = (search.servers || []).find(({ server }) =>
-            server?.name === process.env.EXPECTED_NAME && server?.version === process.env.EXPECTED_VERSION,
-          )
-          if (!matching) throw new Error(`Registry search did not return ${process.env.EXPECTED_NAME} v${process.env.EXPECTED_VERSION}`)
-
-          const server = matching.server
-          const official = matching._meta?.["io.modelcontextprotocol.registry/official"]
-          const npmPackage = server.packages?.find((entry) =>
-            entry.registryType === "npm" && entry.identifier === "semiotic" && entry.version === process.env.EXPECTED_VERSION,
-          )
-          const remote = server.remotes?.find((entry) =>
-            entry.type === "streamable-http" && entry.url === process.env.EXPECTED_REMOTE,
-          )
-          if (official?.status !== "active" || official?.isLatest !== true) {
-            throw new Error(`Registry entry must be active and latest; received ${JSON.stringify(official)}`)
-          }
-          if (!npmPackage) {
-            throw new Error(`Registry entry is missing npm package semiotic@${process.env.EXPECTED_VERSION}`)
-          }
-          if (!remote) throw new Error("Registry entry is missing the expected stable Streamable HTTP remote")
-
-          const summary = {
-            workflowCommit: process.env.GITHUB_SHA,
-            registryVersion: server.version,
-            publicationStatus: official.status,
-            npmPackageVersion: npmPackage.version,
-            stableRemoteUrl: remote.url,
-            publicationTimestamp: official.publishedAt || official.updatedAt || null,
-            outcome: process.env.PUBLISH_OUTCOME,
-          }
-          writeFileSync(`${process.env.RUNNER_TEMP}/mcp-registry-publication-summary.json`, `${JSON.stringify(summary, null, 2)}\n`)
-          console.log(JSON.stringify(summary, null, 2))
-          NODE
+          node .registry-tooling/scripts/check-mcp-registry-publication.mjs verify
           {
             echo "## MCP Registry publication verification"
             echo

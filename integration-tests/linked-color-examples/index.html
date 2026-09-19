@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LinkedCharts color precedence regression</title>
+    <style>
+      body { margin: 0; background: #f5f6f8; color: #202939; font-family: Arial, sans-serif; }
+      .dashboard { width: 880px; padding: 24px; background: white; }
+      h1 { margin: 0 0 8px; font-size: 23px; }
+      p { margin: 0 0 22px; font-size: 14px; line-height: 1.5; color: #526075; }
+      .chart-row { display: flex; gap: 16px; margin-top: 12px; }
+      .chart-panel { border: 1px solid #d8dee8; border-radius: 6px; padding: 12px; }
+      h2 { margin: 0 0 6px; font-size: 16px; }
+      .chart-panel p { margin-bottom: 4px; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>

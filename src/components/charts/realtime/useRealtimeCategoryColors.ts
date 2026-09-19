@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
-import { useCategoryColors } from "../../CategoryColors"
+import { useCategoryColors, useChartCategoryColors } from "../../CategoryColors"
 import { useLinkedChartsActive } from "../../LinkedCharts"
 import {
   DEFAULT_COLORS,
@@ -55,7 +55,8 @@ export function useRealtimeCategoryColors({
   colorScale: ((category: string) => string) | undefined
   colorMap: Record<string, string> | undefined
 } {
-  const providerColors = useCategoryColors()
+  const providerColors = useChartCategoryColors(true)
+  const linkedColors = useCategoryColors()
   const linkedChartsActive = useLinkedChartsActive()
   const themeCategorical = useThemeCategorical()
   const stableDomainKey =
@@ -99,10 +100,8 @@ export function useRealtimeCategoryColors({
 
   const colorScale = useMemo<((category: string) => string) | undefined>(() => {
     if (!enabled) return undefined
-    // LinkedCharts eventually owns every registered category with the ambient
-    // theme palette (or category10 when the theme has none). Use that same
-    // fallback before registration catches up so the first retained scene
-    // does not flash a different color.
+    // Match the linked default before registration catches up. Generated
+    // linked colors are a fallback, below every consumer-authored color.
     const palette =
       themeCategorical && themeCategorical.length > 0
         ? themeCategorical
@@ -122,6 +121,10 @@ export function useRealtimeCategoryColors({
         : undefined
       if (explicitColor) return explicitColor
       if (fallbackColor) return fallbackColor
+      const linkedColor = linkedColors
+        ? resolveExplicitColor(linkedColors, category)
+        : undefined
+      if (linkedColor) return linkedColor
       return palette[index % palette.length]
     }
   }, [
@@ -130,6 +133,7 @@ export function useRealtimeCategoryColors({
     enabled,
     fallbackColor,
     linkedChartsActive,
+    linkedColors,
     providerColors,
     themeCategorical
   ])

@@ -15,7 +15,7 @@ import {
   useLinkedChartCategories,
   useLinkedChartCategoryRegistryActive
 } from "../../LinkedCharts"
-import { useCategoryColors } from "../../CategoryColors"
+import { useChartCategoryColors } from "../../CategoryColors"
 
 const FUNCTION_COLOR_BY_DOMAIN = Symbol("streaming-function-color-domain")
 
@@ -68,7 +68,7 @@ export function useStreamingLegend({
 }) {
   // State version — incremented only when a NEW category is discovered
   const [version, setVersion] = useState(0)
-  const categoryColors = useCategoryColors()
+  const categoryColors = useChartCategoryColors(colorScheme != null)
   const themeCategorical = useThemeCategorical()
   const linkedCategoryRegistryActive = useLinkedChartCategoryRegistryActive()
   const shouldTrackCategoryDomain =

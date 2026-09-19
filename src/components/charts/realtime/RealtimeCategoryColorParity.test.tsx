@@ -236,6 +236,41 @@ describe("realtime categorical mark and legend color parity", () => {
     })
   })
 
+  it.each(["controlled", "push"])("preserves realtime explicit colors under LinkedCharts in %s mode", (mode) => {
+    const expected = { alpha: "#00FF00", beta: "#0000FF" }
+    render(
+      <CategoryColorProvider colors={{ alpha: expected.alpha }}>
+        <LinkedCharts>
+          <RealtimeSwarmChart
+            data={mode === "controlled" ? controlledData : undefined}
+            categoryAccessor="category"
+            colors={{ alpha: "#FF0000", beta: expected.beta }}
+            showLegend
+          />
+          <RealtimeHistogram
+            data={mode === "controlled" ? controlledData : undefined}
+            binSize={10}
+            categoryAccessor="category"
+            colors={{ alpha: "#FF0000", beta: expected.beta }}
+            showLegend
+          />
+        </LinkedCharts>
+      </CategoryColorProvider>
+    )
+    if (mode === "push") {
+      // Assert both before and after the categories reach the linked registry.
+      expect(markColors(latestFrame("swarm"), ["alpha", "beta"])).toEqual(expected)
+      act(() => {
+        latestFrame("swarm").onCategoriesChange?.(["alpha", "beta"])
+        latestFrame("bar").onCategoriesChange?.(["alpha", "beta"])
+      })
+    }
+    for (const type of ["swarm", "bar"] as const) {
+      expect(markColors(latestFrame(type), ["alpha", "beta"])).toEqual(expected)
+      expect(legendColors(latestFrame(type))).toEqual(expected)
+    }
+  })
+
   it("keeps Histogram colors equal across reversed controlled data and the first push scene", () => {
     const reversed = [
       { time: 1, value: 4, category: "beta" },

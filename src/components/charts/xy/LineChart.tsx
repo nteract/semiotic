@@ -796,7 +796,7 @@ export const LineChart = forwardRef(
   // Aliases so the rest of the file reads naturally — the existing render
   // logic was written against locally-named bindings.
   // Labels and marks share the discovered push domain and palette, including
-  // custom schemes that the static-data-only setup.colorScale cannot resolve.
+  // custom schemes resolved against the frame-discovered category domain.
   const colorScale = setup.categoryColorScale
   const effectiveSelectionHook = setup.effectiveSelectionHook
   const resolvedSelection = setup.resolvedSelection

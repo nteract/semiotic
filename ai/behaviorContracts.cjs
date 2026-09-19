@@ -196,7 +196,7 @@ const BEHAVIOR_CONTRACTS = [
     appliesTo: {
       propsAny: ["colorBy", "colorScheme"],
     },
-    summary: "When colorBy is set, CategoryColorProvider/LinkedCharts category maps win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback.",
+    summary: "When colorBy is set, explicit CategoryColorProvider mappings, including those inherited through LinkedCharts, win for mapped categories. Unmapped categories fall back to explicit colorScheme, then ThemeProvider colors.categorical, then the built-in categorical fallback. Generated LinkedCharts colors do not override a child's colorScheme.",
     agentAction: "Use colorBy for categorical encodings. Use CategoryColorProvider or LinkedCharts for cross-chart consistency, colorScheme for per-chart fallback palettes, and avoid frameProps style functions unless intentionally bypassing HOC color resolution.",
   },
   {
