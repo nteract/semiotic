@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `LinkedCharts` no longer overrides child `colorScheme` arrays, named schemes,
+  or category maps with generated registration-order colors. Explicit
+  `CategoryColorProvider` mappings still win, including partial mappings in
+  push mode. The same precedence applies to realtime chart `colors` maps.
+  Unified legend swatches use the resolved chart colors; conflicting per-chart
+  palettes retain individual legends.
+- Network push charts rebuild their color scale from discovered categories,
+  preserving child palettes beneath partial provider mappings and honoring
+  object-map category keys regardless of insertion order.
+
 ## [3.10.2] - 2026-09-18
 
 ### Added

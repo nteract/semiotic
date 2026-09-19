@@ -32,7 +32,7 @@ import {
   distinctCategories
 } from "./hooks"
 import type { FrameLegendOverrides, LegendInteractionMode, LegendPosition } from "./hooks"
-import { useCategoryColors } from "../../CategoryColors"
+import { useChartCategoryColors } from "../../CategoryColors"
 import {
   createColorScale,
   resolveExplicitColor,
@@ -143,7 +143,7 @@ export interface ChartSetupResult {
    * memo cache hits are preserved in the common case.
    */
   data: Array<Datum>
-  /** Color scale function, or undefined if no colorBy */
+  /** Color scale for controlled or discovered push categories; undefined without colorBy. */
   colorScale: ((v: string) => string) | undefined
   /** Resolved category colors, including categories discovered in push mode. */
   categoryColorScale: ((v: string) => string) | undefined
@@ -342,9 +342,12 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // (provider → explicit scheme → theme → STREAMING_PALETTE) so legend
   // swatches, marks, and direct labels can share the same resolved colors.
   const themeCategorical = useThemeCategorical()
-  const categoryColors = useCategoryColors()
+  const categoryColors = useChartCategoryColors(colorScheme != null)
   const legendColorScale = useMemo<((v: string) => string) | undefined>(() => {
-    if (colorScale) return colorScale
+    // An empty-data provider scale cannot index the discovered push domain.
+    // Rebuild it here so a partial provider map falls through to the palette.
+    if (colorScale && (!isPushMode || activeCategories.length === 0))
+      return colorScale
     if (!colorBy || activeCategories.length === 0) return undefined
     const effectiveScheme: string | string[] =
       Array.isArray(colorScheme) && colorScheme.length > 0
@@ -371,6 +374,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
       "#999"
   }, [
     colorScale,
+    isPushMode,
     colorBy,
     activeCategories,
     colorScheme,
@@ -466,7 +470,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   return {
     data: safeData,
-    colorScale,
+    colorScale: legendColorScale,
     categoryColorScale: legendColorScale,
     allCategories: activeCategories,
     legendState,

@@ -270,6 +270,15 @@ if (
 }
 
 // ── Output ────────────────────────────────────────────────────────────
+for (const mode of ["preflight", "verify"]) {
+  if (!publisherWorkflow.includes(`node .registry-tooling/scripts/check-mcp-registry-publication.mjs ${mode}`)) {
+    fail(`Registry ${mode} must use the shared exact-version publication checker.`)
+  }
+}
+if (publisherWorkflow.includes("REGISTRY_SEARCH_URL")) {
+  fail("Registry publication must not depend on a single paginated search response.")
+}
+
 if (errors.length) {
   console.error("\n✗ MCP Registry submission would fail:\n")
   for (const msg of errors) console.error(`  - ${msg}`)

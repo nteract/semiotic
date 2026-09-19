@@ -27,6 +27,13 @@ The revision labels carry the same release commit/version and remove stale
 prior-trigger provenance.
 Subsequent releases publish their exact Registry manifest version
 automatically; manual Registry dispatch remains a recovery path.
+Both duplicate detection and post-publication verification query the exact
+server/version endpoint rather than the paginated search listing. Verification
+waits up to two minutes for the active/latest entry to become visible, retrying
+transient transport errors while rejecting conflicting manifest contents.
+For recovery, dispatch the updated Registry workflow with `release_tag` set to
+the published tag. Its verification tooling comes from the selected workflow
+revision; the authoritative manifest still comes from the release tag.
 
 Run the local cross-reference gate before a release:
 

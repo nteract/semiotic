@@ -15,6 +15,31 @@ import {
 export type CategoryColorMap = Record<string, string>
 
 const CategoryColorContext = createContext<CategoryColorMap | null>(null)
+const ExplicitCategoryColorContext = createContext<CategoryColorMap | null>(null)
+
+/** Internal: publish linked defaults without promoting them to explicit overrides. */
+export function LinkedCategoryColorProvider({
+  colors,
+  children
+}: {
+  colors: CategoryColorMap
+  children: React.ReactNode
+}) {
+  return (
+    <CategoryColorContext.Provider value={colors}>
+      {children}
+    </CategoryColorContext.Provider>
+  )
+}
+
+/** Internal: a chart's own palette takes priority over generated linked defaults. */
+export function useChartCategoryColors(
+  hasOwnColors: boolean
+): CategoryColorMap | null {
+  const colors = useContext(CategoryColorContext)
+  const explicitColors = useContext(ExplicitCategoryColorContext)
+  return hasOwnColors ? explicitColors : colors
+}
 
 export interface CategoryColorProviderProps {
   /** Explicit category→color mapping */
@@ -93,9 +118,11 @@ export function CategoryColorProvider({
   }, [colors, categories, colorScheme])
 
   return (
-    <CategoryColorContext.Provider value={colorMap}>
-      {children}
-    </CategoryColorContext.Provider>
+    <ExplicitCategoryColorContext.Provider value={colorMap}>
+      <CategoryColorContext.Provider value={colorMap}>
+        {children}
+      </CategoryColorContext.Provider>
+    </ExplicitCategoryColorContext.Provider>
   )
 }
 

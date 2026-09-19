@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState, useId, useEffect, useRef } from "react"
-import { useCategoryColors } from "../../CategoryColors"
+import { useChartCategoryColors } from "../../CategoryColors"
 import {
   createColorScale,
   COLOR_SCHEMES,
@@ -164,7 +164,7 @@ export function useColorScale(
   colorBy: string | ((d: Datum, i?: number) => string | number) | undefined,
   colorScheme?: string | string[] | Record<string, string>
 ): ((v: string) => string) | undefined {
-  const categoryColors = useCategoryColors()
+  const categoryColors = useChartCategoryColors(colorScheme != null)
   const themeCategorical = useThemeCategorical()
   return useMemo(() => {
     if (!colorBy) return undefined

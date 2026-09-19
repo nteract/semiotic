@@ -20,7 +20,7 @@ import type {
 import { ObservationProvider } from "./store/ObservationStore"
 import { useSelection } from "./store/useSelection"
 import { useThemeSelector } from "./store/ThemeStore"
-import { CategoryColorProvider, useCategoryColors } from "./CategoryColors"
+import { LinkedCategoryColorProvider, useCategoryColors } from "./CategoryColors"
 import {
   DEFAULT_COLORS,
   resolveExplicitColor
@@ -76,8 +76,13 @@ export function useLinkedChartsActive(): boolean {
   return useContext(LinkedChartsActiveContext)
 }
 
+interface LinkedCategoryRegistration {
+  categories: string[]
+  colors: Array<string | undefined>
+}
+
 interface LinkedCategoryRegistry {
-  registerCategories: (id: string, categories: string[]) => void
+  registerCategories: (id: string, registration: LinkedCategoryRegistration) => void
   unregisterCategories: (id: string) => void
 }
 
@@ -97,7 +102,10 @@ function uniqueCategories(categories: string[]): string[] {
   return unique
 }
 
-function sameCategories(a: readonly string[], b: readonly string[]): boolean {
+function sameCategories(
+  a: ReadonlyArray<string | undefined>,
+  b: ReadonlyArray<string | undefined>
+): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false
@@ -106,15 +114,28 @@ function sameCategories(a: readonly string[], b: readonly string[]): boolean {
 }
 
 /** Register a chart's current color categories with the nearest LinkedCharts. */
-export function useLinkedChartCategories(categories: string[]): void {
+export function useLinkedChartCategories(
+  categories: string[],
+  colorScale?: (category: string) => string
+): void {
   const registry = useContext(LinkedCategoryRegistryContext)
   const id = useId()
   const nextCategories = uniqueCategories(categories)
-  const stableCategoriesRef = useRef<string[]>([])
-  if (!sameCategories(stableCategoriesRef.current, nextCategories)) {
-    stableCategoriesRef.current = nextCategories
+  const nextColors = nextCategories.map((category) => colorScale?.(category))
+  const stableRegistrationRef = useRef<LinkedCategoryRegistration>({
+    categories: [],
+    colors: []
+  })
+  if (
+    !sameCategories(stableRegistrationRef.current.categories, nextCategories) ||
+    !sameCategories(stableRegistrationRef.current.colors, nextColors)
+  ) {
+    stableRegistrationRef.current = {
+      categories: nextCategories,
+      colors: nextColors
+    }
   }
-  const stableCategories = stableCategoriesRef.current
+  const stableRegistration = stableRegistrationRef.current
 
   useIsomorphicLayoutEffect(() => {
     if (!registry) return
@@ -123,8 +144,8 @@ export function useLinkedChartCategories(categories: string[]): void {
 
   useIsomorphicLayoutEffect(() => {
     if (!registry) return
-    registry.registerCategories(id, stableCategories)
-  }, [registry, id, stableCategories])
+    registry.registerCategories(id, stableRegistration)
+  }, [registry, id, stableRegistration])
 }
 
 /** True when a chart can register live categories with a parent LinkedCharts. */
@@ -141,6 +162,7 @@ export interface LinkedChartsProps {
   /**
    * Show a unified legend for all linked charts.
    * When true, child chart legends are automatically suppressed unless explicitly set.
+   * If charts use different colors for the same category, retain their own legends.
    * @default true
    */
   showLegend?: boolean
@@ -446,17 +468,20 @@ export function LinkedCharts({
   const linkedCategoricalPalette =
     themeCategorical.length > 0 ? themeCategorical : DEFAULT_COLORS
   const [registeredCategories, setRegisteredCategories] = useState<
-    Record<string, string[]>
+    Record<string, LinkedCategoryRegistration>
   >({})
   const committedCategoryIndexesRef = useRef(new Map<string, number>())
 
   const registry = useMemo<LinkedCategoryRegistry>(
     () => ({
-      registerCategories: (id, categories) => {
-        const nextCategories = uniqueCategories(categories)
+      registerCategories: (id, registration) => {
         setRegisteredCategories((prev) => {
-          if (sameCategories(prev[id] ?? [], nextCategories)) return prev
-          return { ...prev, [id]: nextCategories }
+          if (
+            sameCategories(prev[id]?.categories ?? [], registration.categories) &&
+            sameCategories(prev[id]?.colors ?? [], registration.colors)
+          )
+            return prev
+          return { ...prev, [id]: registration }
         })
       },
       unregisterCategories: (id) => {
@@ -473,7 +498,7 @@ export function LinkedCharts({
 
   const dynamicCategories = useMemo(() => {
     const merged: string[] = []
-    for (const categories of Object.values(registeredCategories)) {
+    for (const { categories } of Object.values(registeredCategories)) {
       for (const category of categories) merged.push(category)
     }
     return uniqueCategories(merged)
@@ -513,8 +538,31 @@ export function LinkedCharts({
   }, [categoryResolution])
   const categoryColors = categoryResolution.colors
 
+  // Swatches describe the colors the charts actually use. Keep these separate
+  // from the generated defaults: publishing a child's palette back as provider
+  // overrides would silently recolor its siblings. A shared swatch cannot
+  // represent conflicting per-chart palettes, so let their own legends render.
+  const linkedLegend = useMemo(() => {
+    const resolved = new Map<string, string>()
+    let conflicting = false
+    for (const { categories, colors } of Object.values(registeredCategories)) {
+      categories.forEach((category, index) => {
+        const color = colors[index]
+        if (!color) return
+        if (resolved.has(category) && resolved.get(category) !== color) {
+          conflicting = true
+        }
+        resolved.set(category, color)
+      })
+    }
+    return {
+      colors: { ...categoryColors, ...Object.fromEntries(resolved) },
+      conflicting
+    }
+  }, [categoryColors, registeredCategories])
+
   // Determine if we should show a unified legend
-  const shouldShowLegend = showLegend !== undefined ? showLegend : true
+  const shouldShowLegend = (showLegend ?? true) && !linkedLegend.conflicting
 
   // Only suppress child-chart legends once the unified legend actually has
   // categories to render. Setting LinkedLegendContext = true on first render
@@ -529,11 +577,11 @@ export function LinkedCharts({
       <ObservationProvider>
         <LinkedChartsActiveContext.Provider value={true}>
           <LinkedCategoryRegistryContext.Provider value={registry}>
-            <CategoryColorProvider colors={categoryColors}>
+            <LinkedCategoryColorProvider colors={categoryColors}>
               <LinkedLegendContext.Provider value={suppressChildLegends}>
                 {shouldShowLegend && legendPosition === "top" && (
                   <LinkedLegend
-                    categoryColors={categoryColors}
+                    categoryColors={linkedLegend.colors}
                     interaction={legendInteraction}
                     selectionName={legendSelectionName}
                     field={legendField}
@@ -542,14 +590,14 @@ export function LinkedCharts({
                 {children}
                 {shouldShowLegend && legendPosition === "bottom" && (
                   <LinkedLegend
-                    categoryColors={categoryColors}
+                    categoryColors={linkedLegend.colors}
                     interaction={legendInteraction}
                     selectionName={legendSelectionName}
                     field={legendField}
                   />
                 )}
               </LinkedLegendContext.Provider>
-            </CategoryColorProvider>
+            </LinkedCategoryColorProvider>
           </LinkedCategoryRegistryContext.Provider>
         </LinkedChartsActiveContext.Provider>
       </ObservationProvider>

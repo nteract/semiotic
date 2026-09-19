@@ -171,7 +171,8 @@ export function useChartLegendAndMargin({
     return distinctCategories(data, colorBy)
   }, [categories, colorBy, data, shouldResolveCategories])
   useLinkedChartCategories(
-    linkedCategoryRegistryActive && colorBy ? legendCategories : []
+    linkedCategoryRegistryActive && colorBy ? legendCategories : [],
+    colorScale
   )
 
   const automaticLegend = useMemo(() => {
