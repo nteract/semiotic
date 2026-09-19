@@ -550,7 +550,7 @@
     "gofish-ir": "^0.1.0-nightly.20260624",
     "marked": "^18.0.6",
     "marked-gfm-heading-id": "^4.1.4",
-    "playwright-chromium": "1.61.1",
+    "playwright-chromium": "1.63.0",
     "prettier": "^3.9.5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
