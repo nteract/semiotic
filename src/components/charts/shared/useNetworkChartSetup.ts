@@ -55,7 +55,6 @@ import type {
   LegendInteractionState
 } from "./hooks"
 import {
-  createColorScale,
   DEFAULT_COLORS,
   resolveCategoricalPalette,
 } from "./colorUtils"
@@ -64,6 +63,8 @@ import { filterSparseArray } from "./sparseArray"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
 import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
+
+const PUSH_CATEGORY_FIELD = "__streamNetworkCategory"
 
 export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge extends Datum = Datum> {
   /** Raw `nodes` prop (may be undefined). */
@@ -145,7 +146,7 @@ export interface NetworkChartSetupResult {
   safeEdges: Datum[]
 
   /**
-   * Color scale built from `(safeNodes, colorBy, colorScheme)`.
+   * Color scale built from controlled nodes or frame-discovered push categories.
    * `undefined` when colorBy is unset.
    */
   colorScale: ((v: string) => string) | undefined
@@ -319,7 +320,6 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   }, [inferNodes, safeInputNodes, safeEdges, sourceAccessor, targetAccessor])
 
   // ── Color scale + theme ─────────────────────────────────────────
-  const boundedColorScale = useColorScale(safeNodes, colorBy, colorScheme)
   const themeCategorical = useThemeCategorical()
 
   const effectivePalette = useMemo<string[]>(() => {
@@ -344,19 +344,20 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     [isPushMode, frameCategories, boundedCategories],
   )
 
-  // Push-mode nodes are discovered inside StreamNetworkFrame. Once their
-  // category domain comes back, synthesize the same ordinal scale used by the
-  // frame so both the legend swatches and HOC-authored mark styles agree.
-  const colorScale = useMemo<((value: string) => string) | undefined>(() => {
-    if (boundedColorScale) return boundedColorScale
-    if (!colorBy || allCategories.length === 0) return undefined
-    const syntheticField = "__streamNetworkCategory"
-    return createColorScale(
-      allCategories.map((category) => ({ [syntheticField]: category })),
-      syntheticField,
-      effectivePalette,
-    )
-  }, [boundedColorScale, colorBy, allCategories, effectivePalette])
+  // Resolve the live domain through the same provider/scheme/theme precedence
+  // as controlled nodes. An empty-data provider scale has no fallback domain,
+  // and flattening an object-map scheme into a palette loses its exact keys.
+  const colorScaleData = useMemo(
+    () => isPushMode
+      ? allCategories.map((category) => ({ [PUSH_CATEGORY_FIELD]: category }))
+      : safeNodes,
+    [isPushMode, allCategories, safeNodes],
+  )
+  const colorScale = useColorScale(
+    colorScaleData,
+    isPushMode && colorBy ? PUSH_CATEGORY_FIELD : colorBy,
+    colorScheme,
+  )
 
   const legendState = useLegendInteraction(legendInteraction, colorBy, allCategories)
 

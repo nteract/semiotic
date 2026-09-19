@@ -23,6 +23,29 @@ async function countColorPixels(
   }, rgb)
 }
 
+test("screenshot: pushed networks preserve partial provider overrides and child palettes", async ({
+  page
+}) => {
+  await page.setViewportSize({ width: 960, height: 700 })
+  await page.goto("/linked-color-examples/?scenario=network-push")
+  for (const [id, local] of [
+    ["network-array", [0, 0, 255]],
+    ["network-map", [176, 0, 181]]
+  ] as const) {
+    const chart = page.locator(`[data-chart="${id}"]`)
+    for (const color of [[0, 255, 0], [...local]]) {
+      await expect
+        .poll(() => countColorPixels(chart, color))
+        .toBeGreaterThan(20)
+    }
+    await expect(chart.locator(".legend-item rect")).toHaveCount(2)
+  }
+  await expect(page.getByTestId("color-dashboard")).toHaveScreenshot(
+    "linked-pushed-network-palettes.png",
+    { maxDiffPixels: 100 }
+  )
+})
+
 for (const scheme of ["array", "map"]) {
   test(`screenshot: linked charts retain the ${scheme} palette`, async ({
     page
@@ -84,7 +107,14 @@ for (const scheme of ["array", "map"]) {
           `/linked-color-examples/?scheme=${scheme}&mode=${mode}&provider=${provider}`
         )
         const first = provider === "partial" ? [0, 255, 0] : [255, 0, 0]
-        for (const id of ["root-line", "line", "scatter", "bar", "histogram"]) {
+        for (const id of [
+          "root-line",
+          "line",
+          "scatter",
+          "bar",
+          "histogram",
+          "network"
+        ]) {
           const chart = page.locator(`[data-chart="${id}"]`)
           for (const color of [first, [0, 0, 255]]) {
             await expect
