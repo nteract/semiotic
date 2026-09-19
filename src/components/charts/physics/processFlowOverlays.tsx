@@ -91,7 +91,7 @@ export function processFlowProjectionOverlay(
       Number(size[1]) || metadata.volume.height
     ]
     const area = physicsChartArea(resolvedSize)
-    const maxValue = Math.max(1, ...rows.map((row) => row.value))
+    const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
     const barMaxHeight = Math.min(48, area.plot.height * 0.18)
     const y = area.plot.y + 6
 

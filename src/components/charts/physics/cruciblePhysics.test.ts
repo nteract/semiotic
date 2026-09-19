@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   buildCrucibleLayout,
+  buildCrucibleInitialSpawns,
   buildCrucibleStateSpawns,
   compileCruciblePlan,
   crucibleBoundaryColliders,
@@ -37,6 +38,39 @@ function options(): CrucibleCompileOptions<TestDatum> {
 }
 
 describe("Crucible compilation and replay", () => {
+  it("shares amount scaling across initial, terminal, and product bodies", () => {
+    const plan = compileCruciblePlan({
+      ...options(),
+      data: [
+        { id: "a", amount: 1, category: "input" },
+        { id: "b", amount: 5, category: "input" },
+        { id: "c", amount: 17, category: "input" }
+      ],
+      events: [{
+        id: "make",
+        at: { time: 1 },
+        effects: [{ type: "combine", sourceIds: ["a", "b"], productId: "alloy" }]
+      }]
+    })
+    const initial = replayCruciblePlan(plan, 0).state
+    const final = replayCruciblePlan(plan, 1).state
+    const radiusRange: [number, number] = [4, 12]
+    const bodies = buildCrucibleInitialSpawns(initial, plan.layout, { radiusRange })
+    expect(bodies.map((body) => body.shape)).toEqual([
+      { type: "circle", radius: 4 },
+      { type: "circle", radius: 8 },
+      { type: "circle", radius: 12 }
+    ])
+    const terminal = buildCrucibleStateSpawns(final, plan.layout, { radiusRange })
+    expect(terminal.find((body) => body.id === crucibleProductBodyId("alloy"))?.shape).toEqual({
+      type: "circle", radius: (4 + 8 * Math.sqrt(5 / 16)) * 1.28
+    })
+    expect(terminal.filter((body) => body.id.startsWith("crucible:component:")).map((body) => body.shape)).toEqual(bodies.map((body) => body.shape))
+    expect(buildCrucibleInitialSpawns(initial, plan.layout, { bodyRadius: 9 }).map((body) => body.shape)).toEqual(
+      bodies.map(() => ({ type: "circle", radius: 9 }))
+    )
+  })
+
   it("cuts generic wall apertures for every side outlet while retaining dividers", () => {
     const layout = buildCrucibleLayout(
       [900, 520],

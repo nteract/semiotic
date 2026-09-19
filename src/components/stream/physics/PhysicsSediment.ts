@@ -312,7 +312,7 @@ export function sedimentHeightfield(
     value = "count",
     x
   } = options
-  const maxValue = Math.max(1, ...bins.map((bin) => bin[value]))
+  const maxValue = bins.reduce((max, bin) => Math.max(max, bin[value]), 1)
 
   return bins.map((bin, index) => {
     const height = Math.max(0, (bin[value] / maxValue) * maxHeight)

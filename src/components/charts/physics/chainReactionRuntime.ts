@@ -79,7 +79,9 @@ export function initialRuntime<TDatum extends Datum>(
   const recordedTimes = machine.nodes
     .map(taskCompletionTime)
     .filter((value): value is number => value != null)
-  const replayStart = recordedTimes.length ? Math.min(...recordedTimes) - 1 : 0
+  const replayStart = recordedTimes.length
+    ? recordedTimes.reduce((min, time) => Math.min(min, time), Infinity) - 1
+    : 0
   const effectiveTime = mode === "replay" && !reducedMotion ? replayStart : currentTime
   const completed = new Set<string>()
   const blockers = new Map<string, string>()

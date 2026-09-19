@@ -188,7 +188,6 @@ export function fromMermaid(text: string): MermaidResult {
 
   const nodeMap = new Map<string, MermaidNode>()
   const edges: MermaidEdge[] = []
-  let insertionOrder = 0
 
   const ensureNode = (parsed: ParsedNode): void => {
     const existing = nodeMap.get(parsed.id)
@@ -198,7 +197,7 @@ export function fromMermaid(text: string): MermaidResult {
         label: parsed.label ?? parsed.id,
         shape: parsed.shape ?? "rect",
         layer: 0,
-        row: insertionOrder++,
+        row: 0,
       })
     } else if (parsed.label && existing.label === existing.id) {
       // A later definition supplies the label/shape for a node first seen bare.
@@ -300,10 +299,8 @@ function layerGraph(
   const queue: string[] = []
   for (const [id, deg] of indegree) if (deg === 0) queue.push(id)
 
-  let processed = 0
-  while (queue.length > 0) {
-    const u = queue.shift()!
-    processed++
+  for (let head = 0; head < queue.length; head++) {
+    const u = queue[head]
     const lu = nodeMap.get(u)!.layer
     for (const v of adjacency.get(u)!) {
       const node = nodeMap.get(v)!
@@ -314,23 +311,16 @@ function layerGraph(
     }
   }
 
-  if (processed < nodeMap.size) {
+  if (queue.length < nodeMap.size) {
     // A cycle prevented a full topological order; the unprocessed nodes keep
     // their best-effort layer. Mermaid flowcharts may legitimately cycle.
     warnings.push("Graph contains a cycle; layering is best-effort (not a strict DAG).")
   }
 
-  // Assign rows: order within each layer by insertion order (the node's initial row).
-  const byLayer = new Map<number, MermaidNode[]>()
+  // Map iteration already preserves node insertion order within each layer.
+  const rowsPerLayer = new Map<number, number>()
   for (const node of nodeMap.values()) {
-    const list = byLayer.get(node.layer) || []
-    list.push(node)
-    byLayer.set(node.layer, list)
-  }
-  for (const list of byLayer.values()) {
-    list.sort((a, b) => a.row - b.row)
-    list.forEach((node, i) => {
-      node.row = i
-    })
+    node.row = rowsPerLayer.get(node.layer) ?? 0
+    rowsPerLayer.set(node.layer, node.row + 1)
   }
 }

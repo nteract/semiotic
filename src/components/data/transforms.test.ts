@@ -57,6 +57,26 @@ describe("bin", () => {
     expect(total).toBe(2)
   })
 
+  it("excludes values outside the custom domain, including just above its maximum", () => {
+    const rows = [-0.1, 0, 2, 4, 6, 8, 10, 10.1, 11.9, 12].map((v) => ({ v }))
+    expect(bin(rows, { field: "v", bins: 5, domain: [0, 10] })).toEqual([
+      { category: "0-2", value: 1 },
+      { category: "2-4", value: 1 },
+      { category: "4-6", value: 1 },
+      { category: "6-8", value: 1 },
+      { category: "8-10", value: 2 }
+    ])
+  })
+
+  it.each<[number[], number]>([
+    [[4, 5, 5, 6], 2],
+    [[4, 6], 0]
+  ])("counts only matching values for a zero-width custom domain: %j", (values, count) => {
+    expect(bin(values.map((v) => ({ v })), { field: "v", domain: [5, 5] })).toEqual([
+      { category: "5-5", value: count }
+    ])
+  })
+
   it("defaults to 10 bins", () => {
     const result = bin(data, { field: "v" })
     expect(result).toHaveLength(10)

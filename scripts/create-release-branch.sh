@@ -109,6 +109,8 @@ fi
 
 echo "==> Synchronizing versioned metadata and production artifacts"
 node scripts/sync-release-version.mjs "$VERSION"
+npm run docs:ai-surface
+npm run docs:package-surface
 npm run docs:ai-tasks
 node scripts/generate-artifact-surface-inventory.mjs
 
@@ -125,6 +127,7 @@ npm run build:mcp
 npm run docs:ai-surface
 npm run docs:package-surface
 npm run docs:bundle-sizes
+npm run docs:ai-instructions
 npm run docs:cold-consumer
 npm run docs:readme-dashboard
 npm run docs:api-surface

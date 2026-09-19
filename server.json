@@ -8,13 +8,13 @@
     "url": "https://github.com/nteract/semiotic",
     "source": "github"
   },
-  "version": "3.10.2",
+  "version": "3.10.3",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "semiotic",
-      "version": "3.10.2",
+      "version": "3.10.3",
       "transport": {
         "type": "stdio"
       }

@@ -301,7 +301,7 @@ export function CrucibleProjectionOverlay({
   if (!rows.length) return null
   const measure = projection.measure ?? "count"
   const values = rows.map((row) => Math.max(0, projectionValue(row, measure)))
-  const maximum = Math.max(1, ...values)
+  const maximum = values.reduce((max, value) => Math.max(max, value), 1)
   const laneWidth = layout.projection.width / Math.max(1, rows.length)
   const labelRoom = layout.projection.height > 48 ? 21 : 4
   const barHeight = Math.max(5, layout.projection.height - labelRoom - 5)

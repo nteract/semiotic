@@ -55,7 +55,10 @@ export const UnitPileChartCapability: ChartCapability = {
           .map((datum) => Number(datum?.[yField]))
           .filter((value) => Number.isFinite(value))
       : []
-    const maxValue = values.length ? Math.max(...values) : 1
+    const maxValue = values.reduce(
+      (max, value) => Math.max(max, value),
+      values.length ? -Infinity : 1
+    )
     return {
       data: profile.data,
       categoryAccessor: profile.primary.category,

@@ -8,6 +8,7 @@ import { getMinMax } from "../charts/shared/minMax"
 /**
  * Bin continuous data into histogram-ready format.
  * Returns array of { category, value } objects suitable for BarChart.
+ * Values outside a custom domain are excluded; both endpoints are included.
  */
 export function bin<T extends Datum>(
   data: T[],
@@ -28,13 +29,15 @@ export function bin<T extends Datum>(
   const max = options.domain ? options.domain[1] : dataMax
 
   if (min === max) {
-    return [{ category: `${min}-${max}`, value: values.length }]
+    const count = values.reduce((total, value) => total + (value === min ? 1 : 0), 0)
+    return [{ category: `${min}-${max}`, value: count }]
   }
 
   const binWidth = (max - min) / bins
   const counts = new Array(bins).fill(0)
 
   for (const v of values) {
+    if (v < min || v > max) continue
     let idx = Math.floor((v - min) / binWidth)
     if (idx === bins) idx = bins - 1
     if (idx >= 0 && idx < bins) {

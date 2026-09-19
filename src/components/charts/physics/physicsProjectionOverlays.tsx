@@ -44,7 +44,7 @@ export function galtonBoardOverlay(
     const resolvedBins = Math.max(2, Math.round(bins))
     const laneWidth = area.plot.width / resolvedBins
     const yBottom = area.plot.y + area.plot.height
-    const maxValue = Math.max(1, ...rows.map((row) => row.value))
+    const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
     const showScaffold = enabled !== false
     const [domainStart, domainEnd] = metadata?.valueExtent ?? [0, resolvedBins]
     const domainSpan = domainEnd === domainStart ? 1 : domainEnd - domainStart

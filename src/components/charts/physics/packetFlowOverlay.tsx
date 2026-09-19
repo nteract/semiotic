@@ -24,9 +24,9 @@ export function physicalFlowOverlay(
       Number(size[0]) || 760,
       Number(size[1]) || 420
     ]
-    const maxThroughput = Math.max(
-      1,
-      ...metadata.links.map((link) => link.throughput)
+    const maxThroughput = metadata.links.reduce(
+      (max, link) => Math.max(max, link.throughput),
+      1
     )
     const sensorById = new Set(metadata.nodes.map((node) => node.sensorId))
 

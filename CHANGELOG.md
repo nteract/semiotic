@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.3] - 2026-09-19
+
 ### Fixed
 - `LinkedCharts` no longer overrides child `colorScheme` arrays, named schemes,
   or category maps with generated registration-order colors. Explicit
@@ -17,6 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Network push charts rebuild their color scale from discovered categories,
   preserving child palettes beneath partial provider mappings and honoring
   object-map category keys regardless of insertion order.
+- The `bin` data transform excludes values outside custom domains, including
+  values just above the upper bound and nonmatching values for zero-width domains.
+- Physics arrival scheduling, chart builders, projections, and sediment range
+  calculations avoid JavaScript argument limits on large datasets.
+
+### Changed
+- Mermaid graph layering uses a linear queue traversal and assigns rows directly
+  in insertion order, avoiding repeated queue shifts and redundant sorting.
+- Crucible body sizing computes the amount extent once per batch instead of
+  rescanning every component and product for each body.
+- Galton range calculation and EventDrop window summaries avoid redundant scans
+  and intermediate allocations.
+- Development tooling pins Vitest, its coverage provider, and its UI to the same
+  version so coverage runs do not use an unsupported mixed-version setup.
+- Release preparation refreshes versioned surfaces before task packets and
+  synchronizes the public AI reference after updating bundle figures.
 
 ## [3.10.2] - 2026-09-18
 

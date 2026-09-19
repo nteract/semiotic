@@ -64,6 +64,17 @@ describe("fromMermaid — parsing", () => {
     expect(r.warnings!.some((w) => /cycle/i.test(w))).toBe(true)
   })
 
+  it("preserves insertion-order rows when a later source reaches an earlier target", () => {
+    const result = fromMermaid("graph TD\n Z\n A --> B\n C --> Z\n B --> D\n Z --> D")
+    expect(result.nodes.map(({ id, layer, row }) => ({ id, layer, row }))).toEqual([
+      { id: "Z", layer: 1, row: 0 },
+      { id: "A", layer: 0, row: 0 },
+      { id: "B", layer: 1, row: 1 },
+      { id: "C", layer: 0, row: 1 },
+      { id: "D", layer: 2, row: 0 }
+    ])
+  })
+
   it("flattens subgraphs with a warning, keeping the nodes", () => {
     const r = fromMermaid("graph TD\n subgraph G\n A-->B\n end\n B-->C")
     expect(r.nodes.map((n) => n.id).sort()).toEqual(["A", "B", "C"])

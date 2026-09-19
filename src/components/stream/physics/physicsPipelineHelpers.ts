@@ -149,13 +149,12 @@ export function schedulePhysicsSpawns(
   const pacing = options.pacing ?? "immediate"
 
   if (pacing === "arrival") {
-    const values = spawns.map((spawn, index) =>
-      spawnTimeValue(spawn, index, options.timeAccessor)
-    )
-    const finiteValues = values.filter(
-      (value): value is number => value != null
-    )
-    const first = finiteValues.length > 0 ? Math.min(...finiteValues) : 0
+    let first = Infinity
+    const values = spawns.map((spawn, index) => {
+      const value = spawnTimeValue(spawn, index, options.timeAccessor)
+      if (value != null) first = Math.min(first, value)
+      return value
+    })
     // Playback-speed semantics: higher timeScale = faster (less spread).
     // timeScale=1 replays arrivals in real event-time; 10 is 10× fast-forward.
     const rawScale = finiteNumber(options.timeScale) ?? 1

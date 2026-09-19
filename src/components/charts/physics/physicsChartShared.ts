@@ -168,7 +168,7 @@ export function projectionRowsToSemanticItems(
   if (!rows.length) return []
   const area = physicsChartArea(size)
   const laneWidth = area.plot.width / Math.max(1, rows.length)
-  const maxValue = Math.max(1, ...rows.map((row) => row.value))
+  const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
   const maxHeight = area.plot.height * 0.62
   const yBottom = area.plot.y + area.plot.height
 
