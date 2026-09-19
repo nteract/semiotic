@@ -64,12 +64,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 163,
+    "kb": 164,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 162,
+    "kb": 163,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -139,7 +139,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/data",
-    "kb": 3,
+    "kb": 4,
     "blurb": "bin, rollup, groupBy, pivot, fromVegaLite"
   },
   {
@@ -149,7 +149,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 164,
+    "kb": 165,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {

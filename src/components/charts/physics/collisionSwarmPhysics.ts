@@ -94,11 +94,16 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
     rows.push({ datum, index, value, group, radius })
   })
 
-  const values = rows.map((row) => row.value)
   const extentMin = xExtent ? finiteNumber(xExtent[0]) : null
   const extentMax = xExtent ? finiteNumber(xExtent[1]) : null
-  const valueMin = values.length ? Math.min(...values) : 0
-  const valueMax = values.length ? Math.max(...values) : 1
+  const valueMin = rows.reduce(
+    (low, row) => Math.min(low, row.value),
+    rows.length ? Infinity : 0
+  )
+  const valueMax = rows.reduce(
+    (high, row) => Math.max(high, row.value),
+    rows.length ? -Infinity : 1
+  )
   let min = extentMin ?? valueMin
   let max = extentMax ?? valueMax
   if (min === max) {
@@ -111,7 +116,10 @@ export function buildCollisionSwarmPhysics<TDatum extends Datum>(
     min = nextMin
   }
 
-  const maxRadius = Math.max(pointRadius, ...rows.map((row) => row.radius))
+  const maxRadius = rows.reduce(
+    (max, row) => Math.max(max, row.radius),
+    pointRadius
+  )
   const xRangeStart = area.plot.x + maxRadius + 8
   const xRangeEnd = area.plot.x + area.plot.width - maxRadius - 8
   const xScale = scaleLinear().domain([min, max]).range([xRangeStart, xRangeEnd])

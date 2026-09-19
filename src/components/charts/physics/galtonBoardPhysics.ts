@@ -1,6 +1,7 @@
 export { generateGaltonMechanicalSamples } from "./physicsGaltonData"
 export type { GaltonMechanicalSampleOptions } from "./physicsGaltonData"
 import { createPhysicsSourceState } from "./physicsSourceRows"
+import { getMinMax } from "../shared/minMax"
 import { scaleLinear } from "d3-scale"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
@@ -46,8 +47,7 @@ export function buildGaltonBoardPhysics<TDatum extends Datum>(
     .map((datum, index) => finiteNumber(readAccessor(datum, index, valueAccessor)))
     .filter((value): value is number => value != null)
   const normalizedExtent = normalizedFiniteExtent(valueExtent)
-  const min = normalizedExtent?.[0] ?? (values.length ? Math.min(...values) : 0)
-  const max = normalizedExtent?.[1] ?? (values.length ? Math.max(...values) : 1)
+  const [min, max] = normalizedExtent ?? (values.length ? getMinMax(values) : [0, 1])
   const span = max === min ? 1 : max - min
   const xScale = scaleLinear()
     .domain([0, bins])
@@ -119,4 +119,3 @@ export function buildGaltonBoardPhysics<TDatum extends Datum>(
     } satisfies GaltonBoardProjectionMetadata
   }
 }
-

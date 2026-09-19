@@ -82,7 +82,7 @@ function eventDropSemanticItems(
 ) {
   if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
   const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
-  const maxValue = Math.max(1, ...rows.map((row) => row.value))
+  const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
   const maxHeight = metadata.windowPlot.height * 0.62
   const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
 

@@ -287,7 +287,7 @@ export function GauntletProjectionOverlay<TDatum extends Datum>({
 }) {
   const rows = gauntletProjectionRows(states)
   if (!rows.length) return null
-  const maxValue = Math.max(1, ...rows.map((row) => row.value))
+  const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
   const stripTop = 10
   const barMaxH = 28
   const laneWidth = Math.max(40, (layout.width - 80) / rows.length)

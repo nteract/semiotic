@@ -52,7 +52,10 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
   // draws the chart title in — they collided. Derive them from the topmost task
   // so they always sit just above the first row of tiles and clear of the title.
   const topTaskTop = layout.tasks.length
-    ? Math.min(...layout.tasks.map((task) => task.y - task.height / 2))
+    ? layout.tasks.reduce(
+        (min, task) => Math.min(min, task.y - task.height / 2),
+        Infinity
+      )
     : 60
   const laneLabelY = Math.max(20, topTaskTop - 12)
   const laneRailTop = Math.max(26, topTaskTop - 6)

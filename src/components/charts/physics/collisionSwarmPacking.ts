@@ -41,7 +41,10 @@ export function packSwarmLane(
         )
     )
     if (y == null) {
-      const maxRadius = Math.max(...points.map((row) => row.radius))
+      const maxRadius = points.reduce(
+        (max, row) => Math.max(max, row.radius),
+        -Infinity
+      )
       const span = Math.max(0, bottom - top - maxRadius * 2)
       return {
         positions: points.map(
@@ -60,7 +63,10 @@ export function packSwarmLane(
     overlapping: false,
     entryOffset: Math.max(
       0,
-      Math.min(36, ...placed.map((point) => point.y - point.radius - top))
+      placed.reduce(
+        (min, point) => Math.min(min, point.y - point.radius - top),
+        36
+      )
     )
   }
 }

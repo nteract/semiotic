@@ -1,5 +1,6 @@
 /** Deterministic compilation, replay, geometry, and bodies for CrucibleChart. */
 import type { Datum } from "../shared/datumTypes"
+import { getMinMax } from "../shared/minMax"
 import type { ChartAccessor } from "../shared/types"
 import type {
   PhysicsPipelineConfig,
@@ -990,13 +991,12 @@ export function crucibleBondId(productId: string, sourceId: string): string {
 
 function resolvedRadius(
   amount: number,
-  values: readonly number[],
+  extent: readonly [number, number],
   fixed: number | undefined,
   range: [number, number]
 ): number {
   if (fixed !== undefined && Number.isFinite(fixed) && fixed > 0) return fixed
-  const min = Math.min(...values, amount)
-  const max = Math.max(...values, amount)
+  const [min, max] = extent
   if (max - min <= EPSILON) return (range[0] + range[1]) / 2
   const progress = Math.sqrt(Math.max(0, amount - min) / (max - min))
   return range[0] + (range[1] - range[0]) * progress
@@ -1031,7 +1031,7 @@ export function buildCrucibleInitialSpawns<TDatum extends Datum>(
   const components = Object.values(state.components).sort((a, b) =>
     compareIds(a.id, b.id)
   )
-  const amounts = components.map((component) => component.amount)
+  const amountExtent = getMinMax(components.map((component) => component.amount))
   const range = normalizedRadiusRange(options.radiusRange, layout)
   const random = seededRandom(seedNumber(options.seed))
   const centerX = layout.mouth.x + layout.mouth.width / 2
@@ -1044,7 +1044,7 @@ export function buildCrucibleInitialSpawns<TDatum extends Datum>(
       (random() - 0.5) * 0.18
     const radius = resolvedRadius(
       component.amount,
-      amounts,
+      amountExtent,
       options.bodyRadius,
       range
     )
@@ -1157,10 +1157,10 @@ export function buildCrucibleStateSpawns<TDatum extends Datum>(
   const components = Object.values(state.components).sort((a, b) =>
     compareIds(a.id, b.id)
   )
-  const allAmounts = [
+  const amountExtent = getMinMax([
     ...components.map((component) => component.amount),
     ...products.map((product) => product.amount)
-  ]
+  ])
   const range = normalizedRadiusRange(options.radiusRange, layout)
   const productTargets = productTargetMap(products, layout)
   const productSpawns: PhysicsQueuedSpawn[] = products.map((product) => {
@@ -1169,7 +1169,7 @@ export function buildCrucibleStateSpawns<TDatum extends Datum>(
       y: layout.chamber.y + layout.chamber.height / 2
     }
     const radius =
-      resolvedRadius(product.amount, allAmounts, options.bodyRadius, range) *
+      resolvedRadius(product.amount, amountExtent, options.bodyRadius, range) *
       1.28
     const datum: CrucibleBodyDatum<TDatum> = {
       __crucible: true,
@@ -1232,7 +1232,7 @@ export function buildCrucibleStateSpawns<TDatum extends Datum>(
     }
     const radius = resolvedRadius(
       component.amount,
-      allAmounts,
+      amountExtent,
       options.bodyRadius,
       range
     )

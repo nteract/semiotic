@@ -217,35 +217,22 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     windowSize: windows.size
   })
   const area = physicsChartArea(size)
-  const times = events.map((event) => event.eventTime)
-  const firstArrival = events.length
-    ? Math.min(...events.map((event) => event.arrivalTime))
-    : 0
+  let firstArrival = events.length ? Infinity : 0
+  let dataMinTime = events.length ? Infinity : 0
+  let dataMaxTime = events.length ? -Infinity : windows.size
+  for (const event of events) {
+    firstArrival = Math.min(firstArrival, event.arrivalTime)
+    dataMinTime = Math.min(dataMinTime, event.eventTime)
+    dataMaxTime = Math.max(dataMaxTime, event.eventTime)
+  }
   const extentStart = finiteNumber(timeExtent?.[0])
   const extentEnd = finiteNumber(timeExtent?.[1])
-  const dataMinTime = times.length ? Math.min(...times) : 0
-  const dataMaxTime = times.length
-    ? Math.max(...times)
-    : dataMinTime + windows.size
   const minTime = Math.min(extentStart ?? dataMinTime, dataMinTime)
   const maxTime = Math.max(extentEnd ?? dataMaxTime, dataMaxTime)
   const windowStart = Math.floor(minTime / windows.size) * windows.size
   const windowCount = Math.max(
     1,
     Math.ceil((maxTime - windowStart + windows.size) / windows.size)
-  )
-  const closedWindowCount = Math.max(
-    0,
-    Math.min(
-      windowCount,
-      Array.from({ length: windowCount }, (_, index) => index).reduce(
-        (sum, index) =>
-          windowStart + (index + 1) * windows.size <= watermarkValue
-            ? sum + 1
-            : sum,
-        0
-      )
-    )
   )
   const geometry = eventDropGeometry(area, ballRadius)
   const domainEnd = windowStart + windowCount * windows.size
@@ -255,10 +242,13 @@ export function buildEventDropPhysics<TDatum extends Datum>(
       geometry.windowPlot.x,
       geometry.windowPlot.x + geometry.windowPlot.width
     ])
-  const rows = Array.from({ length: windowCount }, () => ({
-    value: 0,
-    secondary: 0
-  }))
+  let closedWindowCount = 0
+  const rows = Array.from({ length: windowCount }, (_, index) => {
+    if (windowStart + (index + 1) * windows.size <= watermarkValue) {
+      closedWindowCount++
+    }
+    return { value: 0, secondary: 0 }
+  })
   const spawns: PhysicsQueuedSpawn[] = []
 
   events.forEach(
