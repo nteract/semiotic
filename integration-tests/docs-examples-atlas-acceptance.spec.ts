@@ -91,7 +91,12 @@ test("large Atlas overview selects without re-preparation and exports the comple
   await expect(demo.getByTestId("atlas-observation")).toContainText("r1.1")
   await canvas.hover({ position: { x: 60, y: 130 } })
   await demo.getByRole("button", { name: "Measure 50 selections" }).click()
-  await expect(demo.getByTestId("selection-timing")).toContainText("50 samples")
+  // Three warm-ups plus 50 samples each wait for two animation frames.
+  // Let the full probe finish on shared CI; its 50 ms response target is
+  // reported separately and is not a deadline for all 106 frames combined.
+  await expect(demo.getByTestId("selection-timing")).toContainText("50 samples", {
+    timeout: 30_000
+  })
   await expect(demo).toHaveAttribute("data-preparations", preparations!)
   const packet = await exportEvidence(page)
   expect(packet.synthetic).toBe(true)
