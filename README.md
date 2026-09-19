@@ -26,22 +26,24 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.10.1
+## What's New in 3.10.2
 
-3.10.1 adds Network Atlas recipes and reduces repeated layout work when charts
-mount or resize.
+3.10.2 improves realtime aggregation, stream chart recommendations, server
+rendering, and line labels.
 
-- Network Atlas includes Motif Braid, Dependency X-Ray, and Flow Circuit
-  recipes, with interactive examples and an acceptance lab.
-- Network charts reuse custom layouts when inputs are unchanged, avoid
-  duplicate worker solves, and treat palette and font changes as paint-only
-  updates where possible.
-- Atlas readers integrate with themes and observers; network keyboard
-  activation and live hover announcements are corrected.
-- Documentation preview checks and API snapshot parameter extraction are
-  more reliable.
+- Stream recommendations cover ordinal and value charts, with audience-aware
+  dashboard layouts and explanations for excluded candidates.
+- Realtime charts support keyed changelogs, percentile and distinct-count
+  aggregates, per-series line aggregation, and more controlled-data SSR paths.
+- Event-time queues, incremental aggregates, and smaller validation imports
+  reduce repeated work and bundle overhead.
+- LineChart direct labels share measured placement across browser and server
+  rendering; keyed path transitions preserve point identity during updates.
 
-See [the changelog](CHANGELOG.md#3101) for details.
+Stream suggestion callers should now destructure the result:
+`const { suggestions } = suggestStreamCharts(...)`.
+
+See [the changelog](CHANGELOG.md#3102---2026-09-18) for details.
 
 ## Why Semiotic
 

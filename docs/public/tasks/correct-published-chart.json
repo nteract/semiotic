@@ -7,16 +7,16 @@
   "route": "/tasks/correct-published-chart",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.10.1",
+    "packageVersion": "3.10.2",
     "channel": "source",
-    "sourceRevision": "sha256:8dc6cb56786d072edbfd5ab0187af737f0ad5165b34a3b6e5667fcf0675b48ad",
+    "sourceRevision": "sha256:06e3a17845e0d48a7b695ee2742e2f0518fca012d13595ddc90a14815e26e1aa",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:354c79594433a9b67d56dc796a1eec6c129fdd374f78f5f830e6ebe00c9c22ad",
+      "digest": "sha256:c2aac1145bd9945c21e1ea12eeaf0f29ba1f3e55f04b06c31a4b5403293cf8b5",
       "fileCount": 1171
     },
     "taskSources": {
-      "digest": "sha256:0a9aacd44c3750f785b385664bd873a92648e8b0ea581f0b485eb8fe1ca5037f",
+      "digest": "sha256:75a490ba8eb66ac32b45fb47c49bdc0e03cdd5b82b7826d7f6d638f07dd60558",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."

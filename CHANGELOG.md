@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.2] - 2026-09-18
+
 ### Added
 - **Stream suggestion for ordinal and value charts** — `suggestStreamCharts`
   now registers BarChart, GroupedBarChart, StackedBarChart, PieChart,
@@ -35,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `communicativeActForIntent` resolution.
 
 ### Changed
+- LineChart direct labels share measured placement across browser, SSR, and
+  static rendering, with accessible fallback content and layout evidence.
+- Keyed path transitions use `pointIdAccessor` to preserve point identity
+  and intro clipping during updates.
 - Event-time reordering and fixed-window retention use priority queues;
   session events update their existing statistics and sketches directly.
   T-digest compression is batched by pending observations, and HyperLogLog
