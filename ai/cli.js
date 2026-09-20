@@ -4,6 +4,8 @@
 const fs = require("fs")
 const path = require("path")
 
+const { diagnoseChart } = require("./dist/diagnose-operation.js")
+
 const pkgRoot = path.resolve(__dirname, "..")
 const {
   CATEGORY_ORDER,
@@ -20,7 +22,6 @@ const {
   behaviorContractsFor,
   dataRequiredForUsageMode,
   formatDoctorBehaviorContracts,
-  normalizeUsageMode
 } = require("./behaviorContracts.cjs")
 
 const FILES = {
@@ -144,136 +145,15 @@ function printSingleComponentSchema(componentName) {
   console.log(JSON.stringify(payload, null, 2))
 }
 
-// Both helpers are only called from `validatePropsWithSchema` below, which
-// filters `undefined` / `null` out of `value` before reaching them — so
-// neither guards null here. CodeQL flags the dead branches if they return.
-
-function schemaTypeMatches(value, expectedType) {
-  const expectedTypes = Array.isArray(expectedType)
-    ? expectedType
-    : [expectedType]
-  return expectedTypes.some((type) => {
-    if (type === "array") return Array.isArray(value)
-    if (type === "object")
-      return typeof value === "object" && !Array.isArray(value)
-    return typeof value === type
-  })
-}
-
-function describeActualType(value) {
-  if (Array.isArray(value)) return "array"
-  return typeof value
-}
-
-function shouldSkipMissingRequiredProp(componentName, propName, usageMode) {
-  return (
-    propName === "data" && !dataRequiredForUsageMode(componentName, usageMode)
-  )
-}
-
-function filterUsageModeErrors(componentName, errors, usageMode) {
-  if (dataRequiredForUsageMode(componentName, usageMode)) return errors
-  return errors.filter(
-    (err) => err !== `"data" is required for ${componentName}.`
-  )
-}
-
-function validatePropsWithSchema(componentName, props, usageMode = "static") {
-  const schema = loadSchema()
-  const component = findComponent(schema, componentName)
-  if (!component) {
-    const available = schemaEntries(schema)
-      .map((entry) => entry.name)
-      .sort()
-      .join(", ")
-    return {
-      valid: false,
-      errors: [
-        `Unknown component "${componentName}". Available components: ${available}`
-      ]
-    }
-  }
-
-  const parameters = component.parameters || {}
-  const properties = parameters.properties || {}
-  const required = parameters.required || []
-  const errors = []
-
-  for (const propName of required) {
-    if (shouldSkipMissingRequiredProp(component.name, propName, usageMode))
-      continue
-    if (props[propName] === undefined || props[propName] === null) {
-      errors.push(`"${propName}" is required for ${component.name}.`)
-    }
-  }
-
-  // Array-shape charts that declare a `data` schema prop need it in static
-  // usage even when "data" isn't in `required` (those lists hold semantic
-  // accessors). Without this, --doctor passed dataless static CandlestickChart /
-  // MultiAxisLineChart / QuadrantChart / DifferenceChart / SwimlaneChart /
-  // LikertChart configs that render blank. dataRequiredForUsageMode is true for
-  // them in static and false in push, mirroring the MCP diagnoseConfig path.
-  if (
-    "data" in properties &&
-    !required.includes("data") &&
-    dataRequiredForUsageMode(component.name, usageMode) &&
-    (props.data === undefined || props.data === null)
-  ) {
-    errors.push(`"data" is required for ${component.name}.`)
-  }
-
-  for (const [propName, value] of Object.entries(props)) {
-    if (value === undefined || value === null) continue
-    const propSchema = properties[propName]
-    if (!propSchema) {
-      errors.push(`Unknown prop "${propName}" for ${component.name}.`)
-      continue
-    }
-
-    // Prefer the full runtime type surface (`x-semiotic-runtime-types`, e.g.
-    // ["string","function"]) over the wire-only `type` ("string"), so a valid
-    // function value for a prop like `colorBy`/`onBrush` is still accepted. The
-    // wire `type` keyword is standards-valid JSON Schema and never lists
-    // "function"; the runtime extension carries it. Falls back to `type` for
-    // props with no runtime-only alternatives.
-    const effectiveType =
-      propSchema["x-semiotic-runtime-types"] || propSchema.type
-    if (effectiveType && !schemaTypeMatches(value, effectiveType)) {
-      const expected = Array.isArray(effectiveType)
-        ? effectiveType.join(" | ")
-        : effectiveType
-      errors.push(
-        `"${propName}" should be ${expected}, got ${describeActualType(value)}.`
-      )
-    }
-
-    if (
-      propSchema.enum &&
-      typeof value === "string" &&
-      !propSchema.enum.includes(value)
-    ) {
-      errors.push(
-        `"${propName}" value "${value}" is not valid. Expected one of: ${propSchema.enum.join(", ")}.`
-      )
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors
-  }
-}
-
 // Returns true when the schema-only validation passed, so the caller can set
 // the process exit code (nonzero on failure — this is a CI gate).
-function printSchemaOnlyDoctorResult(component, props, usageMode) {
-  const result = validatePropsWithSchema(component, props, usageMode)
+function printSchemaOnlyDoctorResult(component, props, usageMode, result) {
   if (usageMode === "push") {
     console.log(
       `  Usage mode: push (data prop may be omitted; use a ref to push data)`
     )
   }
-  if (result.valid) {
+  if (result.ok) {
     console.log(`✓ ${component}: schema-only validation passed.`)
   } else {
     console.log(`✗ ${component}: schema-only validation failed.`)
@@ -282,7 +162,7 @@ function printSchemaOnlyDoctorResult(component, props, usageMode) {
     }
   }
   printDoctorBehaviorContracts(component, props)
-  return result.valid
+  return result.ok
 }
 
 function printDoctorBehaviorContracts(component, props) {
@@ -541,7 +421,6 @@ if (flag === "--doctor") {
       else console.error(msg)
       process.exit(1)
     }
-    const usageMode = normalizeUsageMode(rawUsageMode)
 
     // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
     const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
@@ -557,44 +436,18 @@ if (flag === "--doctor") {
       // packaged schema so the CLI still catches basic agent mistakes.
     }
 
-    // Tracks whether the doctor found any error-level problem. The process
-    // MUST exit nonzero when this is false so CI/agents can gate on it.
-    let ok
+    const report = diagnoseChart(
+      { component, props, usageMode: rawUsageMode },
+      { diagnoseConfig, validateProps },
+      loadSchema
+    )
+    const { usageMode, ok } = report
 
-    if (!diagnoseConfig && !validateProps) {
-      if (asJson) {
-        const result = validatePropsWithSchema(component, props, usageMode)
-        ok = result.valid
-        console.log(
-          JSON.stringify(
-            {
-              component,
-              usageMode,
-              mode: "schema-only",
-              ok,
-              errors: result.errors
-            },
-            null,
-            2
-          )
-        )
-      } else {
-        ok = printSchemaOnlyDoctorResult(component, props, usageMode)
-      }
-    } else if (diagnoseConfig) {
-      // Use the full anti-pattern detector
-      const result = diagnoseConfig(component, props)
-      const diagnoses =
-        usageMode === "push"
-          ? result.diagnoses.filter(
-              (d) =>
-                d.code !== "VALIDATION" ||
-                !shouldSkipMissingRequiredProp(component, "data", usageMode) ||
-                d.message !== `"data" is required for ${component}.`
-            )
-          : result.diagnoses
-      ok = diagnoses.every((d) => d.severity === "warning")
-
+    if (report.mode === "schema-only") {
+      if (asJson) console.log(JSON.stringify(report, null, 2))
+      else printSchemaOnlyDoctorResult(component, props, usageMode, report)
+    } else if (report.mode === "diagnose") {
+      const { diagnoses } = report
       if (asJson) {
         console.log(
           JSON.stringify(
@@ -638,9 +491,7 @@ if (flag === "--doctor") {
       }
     } else {
       // Fallback to validateProps only
-      const result = validateProps(component, props)
-      const errors = filterUsageModeErrors(component, result.errors, usageMode)
-      ok = errors.length === 0
+      const { errors } = report
       if (asJson) {
         console.log(
           JSON.stringify(

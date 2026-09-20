@@ -20,8 +20,8 @@
  *                      `npm run docs:chart-specs:schema` to refresh the
  *                      generated runtime artifact.
  *   - componentMetadata
- *                   → edit `ai/componentMetadata.cjs` so the chart appears
- *                      under the bucket named by `spec.category`.
+ *                   → regenerate XY/ordinal/network/physics/realtime registrations from their definitions;
+ *                      edit `ai/componentMetadata.cjs` for other categories.
  */
 import { createRequire } from "node:module"
 import { readFileSync } from "node:fs"
@@ -29,6 +29,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { isDeepStrictEqual } from "node:util"
 import ts from "typescript"
+import { buildChartSpecArtifacts } from "./lib/chart-spec-artifacts"
 
 import {
   findUnclassifiedPublicProps,
@@ -36,24 +37,14 @@ import {
   unsupportedPublicEnumValues
 } from "./lib/public-chart-prop-parity"
 
-import {
-  CHART_SPECS,
-  PROP_BAGS,
-  composeProps
-} from "../src/components/charts/shared/chartSpecs"
-import { CHART_DEFINITION_PILOT } from "../src/components/charts/shared/chartDefinitionPilot"
+import { CHART_SPECS, composeProps } from "../src/components/charts/shared/chartSpecs"
+import { CHART_DEFINITIONS } from "../src/components/charts/shared/chartDefinitions"
 import { VALIDATION_MAP } from "../src/components/charts/shared/validationMap"
 import { KNOWN_CHART_COMPONENTS } from "../src/components/charts/shared/knownChartComponents"
 import { generateBuiltInRecipeSchemaTools } from "../src/components/ai/builtInChartRecipes"
-// @ts-expect-error — generators emit `any`-typed schema fragments
 import {
   generateSchemaToolEntry,
   generateSchemaToolEntryFromChartDefinition,
-  generateChartClinicMetadata,
-  generateChartClinicMetadataModule,
-  generateKnownChartComponentsModule,
-  generateValidationMap,
-  generateValidationMapModule,
   generateMetadataEntry
 } from "./lib/chart-specs-generators.mjs"
 
@@ -87,19 +78,6 @@ const componentMetadata = require(
 ) as {
   COMPONENTS_BY_CATEGORY: Record<string, string[]>
 }
-const validationMapGeneratedPath = join(
-  repoRoot,
-  "src/components/charts/shared/validationMap.generated.ts"
-)
-const knownChartComponentsPath = join(
-  repoRoot,
-  "src/components/charts/shared/knownChartComponents.ts"
-)
-const chartClinicMetadataGeneratedPath = join(
-  repoRoot,
-  "src/components/ai/chartClinicMetadata.generated.ts"
-)
-
 const errors: string[] = []
 const fail = (msg: string) => errors.push(msg)
 
@@ -690,54 +668,19 @@ function loadPublicChartPropTypes() {
   return result
 }
 
-// The structural checks below make runtime behavior explicit. This byte-level
-// check additionally guarantees that chartSpecs edits are paired with a
-// committed regeneration, rather than silently rebuilding the rich registry at
-// runtime or leaving a semantically equivalent hand-edited artifact behind.
-const generatedValidationMap = generateValidationMap(CHART_SPECS, composeProps)
-const expectedValidationMapModule = generateValidationMapModule(
-  generatedValidationMap,
-  CHART_SPECS,
-  PROP_BAGS
-)
-const actualValidationMapModule = readFileSync(
-  validationMapGeneratedPath,
-  "utf8"
-)
-if (actualValidationMapModule !== expectedValidationMapModule) {
-  fail(
-    "validationMap.generated.ts drifted from CHART_SPECS " +
-      "(run `npm run docs:chart-specs:schema`)"
-  )
-}
-const expectedKnownChartComponentsModule =
-  generateKnownChartComponentsModule(CHART_SPECS, generatedValidationMap)
-const actualKnownChartComponentsModule = readFileSync(
-  knownChartComponentsPath,
-  "utf8"
-)
-if (actualKnownChartComponentsModule !== expectedKnownChartComponentsModule) {
-  fail(
-    "knownChartComponents.ts drifted from CHART_SPECS " +
-      "(run `npm run docs:chart-specs:schema`)"
-  )
-}
-const generatedChartClinicMetadata = generateChartClinicMetadata(
-  CHART_SPECS,
-  CHART_DEFINITION_PILOT
-)
-const expectedChartClinicMetadataModule = generateChartClinicMetadataModule(
-  generatedChartClinicMetadata
-)
-const actualChartClinicMetadataModule = readFileSync(
-  chartClinicMetadataGeneratedPath,
-  "utf8"
-)
-if (actualChartClinicMetadataModule !== expectedChartClinicMetadataModule) {
-  fail(
-    "chartClinicMetadata.generated.ts drifted from CHART_SPECS/CHART_DEFINITION_PILOT " +
-      "(run `npm run docs:chart-specs:schema`)"
-  )
+// The writer and checker share one complete artifact projection.
+const { files: generatedArtifacts, validationMap: generatedValidationMap } =
+  buildChartSpecArtifacts(repoRoot)
+for (const [relativePath, expected] of Object.entries(generatedArtifacts)) {
+  let actual: string | undefined
+  try {
+    actual = readFileSync(join(repoRoot, relativePath), "utf8")
+  } catch {
+    // Report missing outputs as drift.
+  }
+  if (actual !== expected) {
+    fail(`${relativePath} drifted (run npm run docs:chart-specs:schema)`)
+  }
 }
 
 // 1. Set parity across all five sources.
@@ -793,7 +736,7 @@ let checked = 0
 for (const [name, spec] of Object.entries(CHART_SPECS)) {
   const composed = composeProps(spec)
 
-  const definition = CHART_DEFINITION_PILOT[name as keyof typeof CHART_DEFINITION_PILOT]
+  const definition = CHART_DEFINITIONS[name as keyof typeof CHART_DEFINITIONS]
   const generatedSchema = definition
     ? generateSchemaToolEntryFromChartDefinition(definition)
     : generateSchemaToolEntry(spec, composed)
@@ -1091,7 +1034,8 @@ if (errors.length) {
       "\n  - validationMap drift    → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
       "\n  - known chart names drift → edit chartSpecs.ts, then run `npm run docs:chart-specs:schema`" +
       "\n  - Chart Clinic drift     → edit its source registry, then run `npm run docs:chart-specs:schema`" +
-      "\n  - componentMetadata drift → edit ai/componentMetadata.cjs to bucket the chart under spec.category\n"
+      "\n  - migrated registrations → edit chartDefinitions{XY,Ordinal,Network,Physics,Realtime}.ts, then run `npm run docs:chart-specs:schema`" +
+      "\n  - other metadata drift   → edit ai/componentMetadata.cjs to bucket the chart under spec.category\n"
   )
   process.exit(1)
 }

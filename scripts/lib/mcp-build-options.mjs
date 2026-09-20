@@ -24,3 +24,18 @@ export function mcpBuildOptions({ outfile, production = false }) {
     logLevel: "info"
   }
 }
+
+/** The CLI's schema fallback must work without loading any chart runtime. */
+export function diagnosisBuildOptions({ outfile, production = false }) {
+  return {
+    entryPoints: ["ai/operations/diagnose.ts"],
+    bundle: true,
+    platform: "node",
+    target: "node18",
+    format: "cjs",
+    outfile,
+    minify: production,
+    sourcemap: false,
+    logLevel: "info"
+  }
+}

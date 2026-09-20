@@ -56,6 +56,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
+import { diagnoseChart } from "./operations/diagnose"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
   mcpServerInfoForBuild,
@@ -259,12 +260,9 @@ const { formatSuggestionReport, suggestCharts, VALID_INTENTS } =
 const {
   BEHAVIOR_CONTRACTS,
   behaviorContractsFor,
-  dataRequiredForUsageMode,
   formatDoctorBehaviorContracts,
-  normalizeUsageMode
 } = behaviorContractsModule as {
   BEHAVIOR_CONTRACTS: Array<Record<string, unknown>>
-  dataRequiredForUsageMode: (component: string, usageMode?: string) => boolean
   behaviorContractsFor: (args: {
     component?: string
     props?: Record<string, any>
@@ -272,7 +270,6 @@ const {
   formatDoctorBehaviorContracts: (
     contracts: Array<Record<string, unknown>>
   ) => string
-  normalizeUsageMode: (usageMode?: string) => "static" | "push"
 }
 
 // Load schema.json for version info
@@ -2093,27 +2090,13 @@ async function renderInteractiveChartHandler(
   })
 }
 
-function filterUsageModeDiagnoses(
-  component: string,
-  usageMode: "static" | "push",
-  diagnoses: any[]
-) {
-  if (dataRequiredForUsageMode(component, usageMode)) return diagnoses
-  return diagnoses.filter(
-    (d: any) =>
-      d.code !== "VALIDATION" ||
-      d.message !== `"data" is required for ${component}.`
-  )
-}
-
 async function diagnoseConfigHandler(args: {
   component?: string
-  props?: Record<string, any>
+  props?: Record<string, unknown>
   usageMode?: string
 }): Promise<ToolResult> {
   const component = args.component
-  const props: Record<string, any> = args.props ?? {}
-  const usageMode = normalizeUsageMode(args.usageMode)
+  const props = args.props ?? {}
 
   if (!component) {
     return {
@@ -2127,23 +2110,23 @@ async function diagnoseConfigHandler(args: {
     }
   }
 
-  const result = diagnoseConfig(component, props)
-  const diagnoses = filterUsageModeDiagnoses(
-    component,
-    usageMode,
-    result.diagnoses
+  const report = diagnoseChart(
+    { component, props, usageMode: args.usageMode },
+    { diagnoseConfig },
+    () => schema
   )
-  const ok = diagnoses.every((d: any) => d.severity === "warning")
+  if (report.mode !== "diagnose") throw new Error("MCP diagnosis requires the runtime")
+  const { diagnoses, ok, usageMode } = report
   const usageModeNote =
     usageMode === "push"
       ? "Usage mode: push (data prop may be omitted; use a ref to push data).\n\n"
       : ""
 
   if (ok) {
-    const warnings = diagnoses.filter((d: any) => d.severity === "warning")
+    const warnings = diagnoses.filter((d) => d.severity === "warning")
     const msg =
       warnings.length > 0
-        ? `Configuration looks good with ${warnings.length} warning(s):\n${warnings.map((w: any) => `⚠ [${w.code}] ${w.message}\n  Fix: ${w.fix}`).join("\n")}`
+        ? `Configuration looks good with ${warnings.length} warning(s):\n${warnings.map((w) => `⚠ [${w.code}] ${w.message}\n  Fix: ${w.fix}`).join("\n")}`
         : `✓ Configuration looks good — no issues detected.`
     const contracts = formatDoctorBehaviorContracts(
       behaviorContractsFor({ component, props })
@@ -2158,7 +2141,7 @@ async function diagnoseConfigHandler(args: {
     }
   }
 
-  const lines = diagnoses.map((d: any) => {
+  const lines = diagnoses.map((d) => {
     const icon = d.severity === "error" ? "✗" : "⚠"
     const fixLine = d.fix ? `\n  Fix: ${d.fix}` : ""
     return `${icon} [${d.code}] ${d.message}${fixLine}`

@@ -411,7 +411,7 @@
     "check:ai-contracts": "node scripts/generate-ai-behavior-contracts.mjs --check",
     "check:ai-instructions": "node scripts/sync-ai-instructions.mjs --check",
     "check:ssr": "node scripts/check-ssr-alignment.js",
-    "check:capabilities": "node scripts/check-capabilities.mjs",
+    "check:capabilities": "node --test scripts/check-capabilities.test.mjs scripts/registry-source.test.mjs && node scripts/check-capabilities.mjs",
     "check:visual-baseline-capabilities": "node scripts/check-visual-baseline-capabilities.mjs",
     "check:playwright-alignment": "node scripts/check-playwright-version-alignment.mjs",
     "check:capability-coverage": "node scripts/check-capability-coverage.mjs",

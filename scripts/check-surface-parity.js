@@ -12,6 +12,7 @@
 
 const fs = require("fs")
 const path = require("path")
+const { readRegistryKeys } = require("./lib/registry-source.cjs")
 
 const ROOT = path.resolve(__dirname, "..")
 
@@ -161,26 +162,6 @@ function parseSemioticAIChartExports() {
   return names
 }
 
-function parseComponentRegistry() {
-  const source = read(files.componentRegistry)
-  const names = new Set()
-  for (const match of source.matchAll(/^\s{2}(\w+):\s*\{\s*component:/gm)) {
-    names.add(match[1])
-  }
-  return names
-}
-
-function parseServerConfigs() {
-  const source = read(files.serverConfigs)
-  const names = new Set()
-  const registryStart = source.indexOf("export const CHART_CONFIGS")
-  const registrySource = registryStart >= 0 ? source.slice(registryStart) : source
-  for (const match of registrySource.matchAll(/^\s{2}(\w+):\s/gm)) {
-    names.add(match[1])
-  }
-  return names
-}
-
 function discoverChartFiles(category) {
   const dir = path.join(files.chartsDir, category)
   const names = new Set()
@@ -197,8 +178,8 @@ const validation = parseValidationComponents()
 const schema = parseSchemaComponents()
 const recipeComponents = parseRecipeComponents()
 const semioticAI = parseSemioticAIChartExports()
-const mcpRegistry = parseComponentRegistry()
-const serverConfigs = parseServerConfigs()
+const mcpRegistry = readRegistryKeys(files.componentRegistry, "COMPONENT_REGISTRY")
+const serverConfigs = readRegistryKeys(files.serverConfigs, "CHART_CONFIGS")
 const geoCharts = discoverChartFiles("geo")
 // Atlas has a dedicated optional client boundary, like geo. Its MCP registry
 // imports from that boundary so unrelated AI consumers retain their entry graph.

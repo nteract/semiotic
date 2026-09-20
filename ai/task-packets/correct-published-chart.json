@@ -9,11 +9,11 @@
     "packageName": "semiotic",
     "packageVersion": "3.10.3",
     "channel": "source",
-    "sourceRevision": "sha256:c6d593c99b338782c0c63e6e1d9a83062df31cbcafed1d44173e9e36540a3115",
+    "sourceRevision": "sha256:afe9fec879486dd03d619854e776c4c4063dd5ae3461d5df2c5a8f3b678641b3",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:8aa926db2e659e8e7a1fa37d00c7d22c67179d97c9b192b44e86bb678f1f22f4",
-      "fileCount": 1171
+      "digest": "sha256:5cb759fa983be831990391647be6ecc82e40cfb468de10859fe8d39d0179bedd",
+      "fileCount": 1185
     },
     "taskSources": {
       "digest": "sha256:bd8f750c15145f453eb3be245e55cf5fe6efd2c976761edd3efbbd2f798abbf9",
@@ -134,8 +134,8 @@
       {
         "id": "rendering.renderchart-static-props",
         "title": "renderChart uses static props only",
-        "summary": "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
-        "action": "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output."
+        "summary": "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot, never future ref pushes. semiotic/server accepts bounded data for realtime charts; MCP rendering excludes the five live Realtime components but includes TemporalHistogram.",
+        "action": "Use complete static data for snapshots. For a Realtime component snapshot, use semiotic/server directly; for live behavior, return React code with a ref and do not promise MCP-rendered output."
       }
     ]
   },

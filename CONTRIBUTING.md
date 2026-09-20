@@ -85,6 +85,11 @@ Before calling a chart public, complete every relevant item:
 - Add the HOC and its focused behavior tests.
 - Add the chart spec; `scripts/check-chart-specs.ts` is the source of truth
   for the schema/capability contract.
+- For XY, ordinal, network, physics, and realtime charts, add renderer and docs references in
+  `src/components/charts/shared/chartDefinitions{XY,Ordinal,Network,Physics,Realtime}.ts`.
+  The generator owns
+  their MCP registry, server registry, and metadata category. Other families
+  still use authored registrations.
 - Regenerate and check schema/surface artifacts when the spec changes.
 - Add capability metadata, a documentation page/example, and one focused
   Playwright visual snapshot.
@@ -92,6 +97,40 @@ Before calling a chart public, complete every relevant item:
   reason; validate the corresponding `renderChart` path.
 - Run the focused tests plus `npm run check:chart-specs`, and use the checks
   listed in the repository instructions for AI, docs, or package-surface work.
+
+### Chart artifact ownership
+
+`npm run docs:chart-specs:schema -- --list` lists the generation entry inputs,
+all fifteen outputs, and consumer build order. Their transitive imports also
+affect those outputs. Edit the chart specs for props/capabilities and chart
+definitions for migrated registration/docs references, then run:
+
+```bash
+npm run docs:chart-specs:schema
+npm run check:chart-specs
+npm run dist:prod
+npm run build:mcp
+npm run check:mcp-bundle
+```
+
+Regeneration and freshness checks share one projection in
+`scripts/lib/chart-spec-artifacts.ts`. Use
+`npm run docs:chart-specs:schema -- --check` for a read-only artifact check;
+`check:chart-specs` also checks public prop contracts and registration sets.
+Do not edit generated registry files or the marked XY/ordinal/network/physics/realtime regions in
+`ai/componentMetadata.cjs`.
+ChartSpec `importPath` overrides also control generated MCP imports, preserving
+the Atlas readers' separate `semiotic/atlas` entry.
+Definition `mcp` references can declare rendering exclusions or category overrides
+independently of server support. Realtime charts support bounded server snapshots;
+MCP registers only TemporalHistogram, retaining its existing XY category.
+
+CLI `--doctor` and MCP `diagnoseConfig` share the typed operation in
+`ai/operations/diagnose.ts`. Keep transport parsing and output formatting in
+their adapters. Change usage-mode filtering or fallback validation in the
+operation and test both transports. `build:mcp` owns both tracked bundles in
+`ai/dist/`; `check:mcp-bundle` verifies both. Schema-only CLI diagnosis must
+remain usable without library bundles and explicitly report its limited mode.
 
 ```bash
 # Core checks

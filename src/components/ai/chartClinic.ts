@@ -72,7 +72,7 @@ export interface ChartClinicRevisionStatus {
 
 export interface ChartClinicBundleGuidance {
   readonly category?: ChartCategory
-  /** Prefer the pilot's explicit module when available, otherwise a family facade. */
+  /** Prefer the definition's explicit module when available, otherwise a family facade. */
   readonly recommendedImport?: string
   readonly serverImport?: "semiotic/server"
   readonly docsRoute?: string
@@ -108,8 +108,8 @@ function bundleGuidance(component: string): ChartClinicBundleGuidance {
     recommendedImport: metadata.recommendedImport,
     ...(metadata.serverImport ? { serverImport: metadata.serverImport } : {}),
     ...(metadata.docsRoute ? { docsRoute: metadata.docsRoute } : {}),
-    note: metadata.pilot
-      ? "This chart is in the ChartDefinition pilot. Its module and server support are explicit; existing family facades remain compatible."
+    note: metadata.definition
+      ? "The chart definition declares its module and server support; existing family facades remain compatible."
       : "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
   }
 }

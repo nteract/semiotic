@@ -5,7 +5,7 @@
 Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.
 
 Source package: semiotic@3.10.3. Channel: source.
-Source revision: sha256:67787d71b76562dccdd1cfea052f9e05fac0af91d9239dacf5b7bcbea2ff76a4. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:bc410cebd4ce659f0f701b9b529a08949aeefcbca357754bb8276101d90ee4c5. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -398,7 +398,7 @@ Full component resource: semiotic://schema/LineChart. Machine packet: /tasks/upd
 
 - **streaming.ref-mutations-require-id-accessors:** push() and pushMany() can append without IDs, but remove(id) and update(id, updater) require a stable ID accessor: pointIdAccessor for XY/realtime charts, dataIdAccessor for ordinal charts, and nodeIDAccessor/edgeIdAccessor for network operations. When generating code that calls remove() or update(), include the matching ID accessor and make sure pushed rows carry that ID field.
 
-- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path. Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.
+- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot, never future ref pushes. semiotic/server accepts bounded data for realtime charts; MCP rendering excludes the five live Realtime components but includes TemporalHistogram. Use complete static data for snapshots. For a Realtime component snapshot, use semiotic/server directly; for live behavior, return React code with a ref and do not promise MCP-rendered output.
 
 ## Maintenance context
 
