@@ -109,16 +109,26 @@ export const realtimeLineChart: ChartConfig = {
   }
 }
 
-export const realtimeHistogram: ChartConfig = {
-  ...temporalHistogram,
-  buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const rows = Array.isArray(data) ? filterSparseArray(data) : []
-    return {
-      ...temporalHistogram.buildProps(rows, colorBy, colorScheme, common, rest),
-      ...realtimeFrameProps(rows, common, rest)
+// This copies a plain config without side effects; unused SSR catalogs can drop it.
+export const realtimeHistogram: ChartConfig = /* @__PURE__ */ Object.assign(
+  {},
+  temporalHistogram,
+  {
+    buildProps: (data, colorBy, colorScheme, common, rest) => {
+      const rows = Array.isArray(data) ? filterSparseArray(data) : []
+      return {
+        ...temporalHistogram.buildProps(
+          rows,
+          colorBy,
+          colorScheme,
+          common,
+          rest
+        ),
+        ...realtimeFrameProps(rows, common, rest)
+      }
     }
-  }
-}
+  } satisfies Pick<ChartConfig, "buildProps">
+)
 
 export const realtimeHeatmap: ChartConfig = {
   frameType: "xy",
