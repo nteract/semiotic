@@ -114,4 +114,38 @@ describe("CLI schema-only realtime diagnosis", () => {
       }
     }
   )
+  it.each(Object.entries(realtimeDefinitionFixtures))(
+    "rejects explicit empty %s snapshots without runtime bundles",
+    (component, fixture) => {
+      for (const usageMode of ["static", "push"]) {
+        const cli = spawnSync(
+          process.execPath,
+          [
+            "ai/cli.js",
+            "--doctor",
+            "--json",
+            JSON.stringify({
+              component,
+              props: { ...fixture, data: [] },
+              usageMode
+            })
+          ],
+          {
+            encoding: "utf8",
+            env: { ...process.env, SEMIOTIC_AI_SCHEMA_ONLY: "1" }
+          }
+        )
+        expect(cli.status, cli.stderr).toBe(1)
+        expect(JSON.parse(cli.stdout)).toMatchObject({
+          component,
+          mode: "schema-only",
+          usageMode,
+          ok: false,
+          errors: expect.arrayContaining([
+            expect.stringContaining("at least one")
+          ])
+        })
+      }
+    }
+  )
 })

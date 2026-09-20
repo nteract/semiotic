@@ -162,3 +162,15 @@ The 42 task-packet tests passed; regenerated packaged/public task views now
 carry current source fingerprints. All fifteen chart artifacts are current.
 The existing registry typing and NetworkPipelineStore size warnings remain.
 The full release suite and Firefox/WebKit/visual snapshot suites were not run.
+
+Review follow-up: both CommonJS metadata declaration sidecars are now explicitly
+packaged, with an npm pack file-list assertion in the package-surface gate.
+The related fallback audit found that validation-only and schema-only diagnosis
+both accepted empty realtime arrays. Both now reject them across all six charts
+in static and push usage, while valid omitted-data push startup remains accepted.
+All-mode operation tests and actual schema-only CLI subprocess tests cover this
+boundary. The regression tests failed before the fixes; afterward, 89 focused
+operation/CLI/MCP tests, six package-surface tests, 42 task-packet tests, MCP/test
+type checks, targeted ESLint, MCP build/freshness, all 37 API snapshots, and the
+installed-package smoke test passed. Task source fingerprints were regenerated.
+No public API changed; full release/browser suites were not rerun for this fix.

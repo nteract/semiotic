@@ -119,6 +119,17 @@ export function diagnoseChart(
   if (missingRealtimeData && !errors.includes(missingDataMessage)) {
     errors.push(missingDataMessage)
   }
+  // Empty controlled data is a blank snapshot even when usageMode is push.
+  // Enforce this in both fallbacks; their type checks alone accept [].
+  if (
+    COMPONENTS_BY_CATEGORY.realtime.includes(component) &&
+    Array.isArray(props.data) &&
+    props.data.length === 0
+  ) {
+    errors.push(
+      `"data" must contain at least one observation for ${component}; an empty array is a static snapshot, not push startup.`
+    )
+  }
   return { component, usageMode, mode, ok: errors.length === 0, errors }
 }
 

@@ -120,14 +120,17 @@ describe("shared chart diagnosis operation", () => {
         })
         expect(report({ ...props, data })).toMatchObject({ mode, ok: true })
         expect(report({ ...props, width: "wide" }, "push").ok).toBe(false)
-        if (mode === "diagnose") {
-          for (const usageMode of ["static", "push"]) {
-            expect(report({ ...props, data: [] }, usageMode)).toMatchObject({
-              ok: false,
-              diagnoses: expect.arrayContaining([
-                expect.objectContaining({ code: "EMPTY_DATA" })
-              ])
-            })
+        for (const usageMode of ["static", "push"]) {
+          const emptyReport = report({ ...props, data: [] }, usageMode)
+          expect(emptyReport).toMatchObject({ mode, ok: false })
+          if (emptyReport.mode === "diagnose") {
+            expect(emptyReport.diagnoses).toContainEqual(
+              expect.objectContaining({ code: "EMPTY_DATA" })
+            )
+          } else {
+            expect(emptyReport.errors.join(" ")).toMatch(
+              /non-empty|at least one/
+            )
           }
         }
       }
