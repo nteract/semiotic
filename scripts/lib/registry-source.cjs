@@ -40,25 +40,35 @@ function readRegistryKeys(filename, registryName, visiting = new Set()) {
       }
     }
   }
-  while (
-    initializer &&
-    (ts.isAsExpression(initializer) ||
-      ts.isSatisfiesExpression(initializer) ||
-      ts.isParenthesizedExpression(initializer))
-  ) {
-    initializer = initializer.expression
-  }
-  if (!initializer || !ts.isObjectLiteralExpression(initializer))
-    throw new Error(`Expected object registry: ${identity}`)
   const keys = new Set()
-  for (const property of initializer.properties) {
-    if (ts.isSpreadAssignment(property)) {
-      const reference = ts.isIdentifier(property.expression)
-        ? imports.get(property.expression.text)
-        : undefined
+  function collect(expression) {
+    while (
+      expression &&
+      (ts.isAsExpression(expression) ||
+        ts.isSatisfiesExpression(expression) ||
+        ts.isParenthesizedExpression(expression))
+    ) {
+      expression = expression.expression
+    }
+    if (!expression) throw new Error(`Expected object registry: ${identity}`)
+    // Read the arguments as registry fragments, without executing the call.
+    // Nested assign calls preserve the same union of keys as object spreads.
+    if (
+      ts.isCallExpression(expression) &&
+      ts.isPropertyAccessExpression(expression.expression) &&
+      ts.isIdentifier(expression.expression.expression) &&
+      expression.expression.expression.text === "Object" &&
+      expression.expression.name.text === "assign" &&
+      expression.arguments.length > 0
+    ) {
+      for (const argument of expression.arguments) collect(argument)
+      return
+    }
+    if (ts.isIdentifier(expression)) {
+      const reference = imports.get(expression.text)
       if (!reference?.module.startsWith("."))
         throw new Error(
-          `Unsupported registry spread: ${identity}: ${property.getText(source)}`
+          `Unsupported registry spread: ${identity}: ${expression.getText(source)}`
         )
       const base = path.resolve(path.dirname(filename), reference.module)
       const target = [base, `${base}.ts`, `${base}.tsx`].find(
@@ -68,18 +78,27 @@ function readRegistryKeys(filename, registryName, visiting = new Set()) {
       if (!target) throw new Error(`Missing registry module: ${base}`)
       for (const key of readRegistryKeys(target, reference.name, nextVisiting))
         keys.add(key)
-    } else if (
-      (ts.isPropertyAssignment(property) ||
-        ts.isShorthandPropertyAssignment(property)) &&
-      (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
-    ) {
-      keys.add(property.name.text)
-    } else {
-      throw new Error(
-        `Unsupported registry property: ${identity}: ${property.getText(source)}`
-      )
+      return
+    }
+    if (!ts.isObjectLiteralExpression(expression))
+      throw new Error(`Expected object registry: ${identity}`)
+    for (const property of expression.properties) {
+      if (ts.isSpreadAssignment(property)) {
+        collect(property.expression)
+      } else if (
+        (ts.isPropertyAssignment(property) ||
+          ts.isShorthandPropertyAssignment(property)) &&
+        (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+      ) {
+        keys.add(property.name.text)
+      } else {
+        throw new Error(
+          `Unsupported registry property: ${identity}: ${property.getText(source)}`
+        )
+      }
     }
   }
+  collect(initializer)
   return keys
 }
 
