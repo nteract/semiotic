@@ -74,15 +74,15 @@ export function diagnoseChart(
   const { component, props } = request
   const usageMode = normalizeUsageMode(request.usageMode)
   // Realtime runtime validation permits omitted data for React ref startup.
-  // The transport's explicit static mode still requires a bounded snapshot.
+  // Static mode requires a bounded snapshot; explicit null is never push startup.
   const missingRealtimeData =
     COMPONENTS_BY_CATEGORY.realtime.includes(component) &&
-    dataRequiredForUsageMode(component, usageMode) &&
+    (dataRequiredForUsageMode(component, usageMode) || props.data === null) &&
     props.data == null
   const missingDataMessage = `"data" is required for ${component}.`
   if (runtime.diagnoseConfig) {
     const result = runtime.diagnoseConfig(component, props)
-    const diagnoses = dataRequiredForUsageMode(component, usageMode)
+    const diagnoses = !canOmitData(component, props, usageMode)
       ? [...result.diagnoses]
       : result.diagnoses.filter(
           (diagnosis) =>
@@ -113,18 +113,22 @@ export function diagnoseChart(
     ? filterUsageModeErrors(
         component,
         [...runtime.validateProps(component, props).errors],
-        usageMode
+        usageMode,
+        props
       )
     : validatePropsWithSchema(component, props, usageMode, loadSchema()).errors
   if (missingRealtimeData && !errors.includes(missingDataMessage)) {
     errors.push(missingDataMessage)
   }
   // Empty controlled data is a blank snapshot even when usageMode is push.
-  // Enforce this in both fallbacks; their type checks alone accept [].
+  // Cover both fallbacks without duplicating runtime array-validation errors.
   if (
-    COMPONENTS_BY_CATEGORY.realtime.includes(component) &&
+    dataRequiredForUsageMode(component, "static") &&
     Array.isArray(props.data) &&
-    props.data.length === 0
+    props.data.length === 0 &&
+    !errors.includes(
+      `${component}: No data provided. Pass a non-empty array to the data prop.`
+    )
   ) {
     errors.push(
       `"data" must contain at least one observation for ${component}; an empty array is a static snapshot, not push startup.`
@@ -154,22 +158,24 @@ function describeActualType(value: unknown) {
   return typeof value
 }
 
-function shouldSkipMissingRequiredProp(
+function canOmitData(
   componentName: string,
-  propName: string,
+  props: Record<string, unknown>,
   usageMode: UsageMode
 ) {
   return (
-    propName === "data" && !dataRequiredForUsageMode(componentName, usageMode)
+    props.data === undefined &&
+    !dataRequiredForUsageMode(componentName, usageMode)
   )
 }
 
 function filterUsageModeErrors(
   componentName: string,
   errors: string[],
-  usageMode: UsageMode
+  usageMode: UsageMode,
+  props: Record<string, unknown>
 ) {
-  if (dataRequiredForUsageMode(componentName, usageMode)) return errors
+  if (!canOmitData(componentName, props, usageMode)) return errors
   return errors.filter(
     (err) => err !== `"data" is required for ${componentName}.`
   )
@@ -201,7 +207,7 @@ function validatePropsWithSchema(
   const errors = []
 
   for (const propName of required) {
-    if (shouldSkipMissingRequiredProp(component.name, propName, usageMode))
+    if (propName === "data" && canOmitData(component.name, props, usageMode))
       continue
     if (props[propName] === undefined || props[propName] === null) {
       errors.push(`"${propName}" is required for ${component.name}.`)
@@ -217,7 +223,7 @@ function validatePropsWithSchema(
   if (
     "data" in properties &&
     !required.includes("data") &&
-    dataRequiredForUsageMode(component.name, usageMode) &&
+    !canOmitData(component.name, props, usageMode) &&
     (props.data === undefined || props.data === null)
   ) {
     errors.push(`"data" is required for ${component.name}.`)

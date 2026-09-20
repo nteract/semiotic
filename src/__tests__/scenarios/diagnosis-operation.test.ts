@@ -80,6 +80,31 @@ describe("shared chart diagnosis operation", () => {
     }
   )
 
+  describe.each<[string, DiagnosisRuntime]>([
+    ["diagnose", { diagnoseConfig }],
+    ["validate", { validateProps }],
+    ["schema-only", {}]
+  ])("controlled data contracts in %s mode", (mode, runtime) => {
+    it.each(["LineChart", "Heatmap", "CandlestickChart"])(
+      "rejects null and empty data for %s",
+      (component) => {
+        for (const usageMode of ["static", "push"]) {
+          for (const data of [null, []]) {
+            const report = diagnoseChart(
+              { component, props: { data }, usageMode },
+              runtime,
+              loadSchema
+            )
+            expect(report).toMatchObject({ mode, ok: false })
+            if (report.mode !== "diagnose") {
+              expect(report.errors).toHaveLength(1)
+            }
+          }
+        }
+      }
+    )
+  })
+
   it("keeps empty arrays in static data mode and reports blank-chart evidence", () => {
     const report = diagnoseChart(
       {
@@ -114,6 +139,10 @@ describe("shared chart diagnosis operation", () => {
           mode,
           ok: false
         })
+        expect(report({ ...props, data: null }, "push")).toMatchObject({
+          mode,
+          ok: false
+        })
         expect(report(props, "push")).toMatchObject({
           mode,
           ok: component !== "TemporalHistogram"
@@ -128,6 +157,7 @@ describe("shared chart diagnosis operation", () => {
               expect.objectContaining({ code: "EMPTY_DATA" })
             )
           } else {
+            expect(emptyReport.errors).toHaveLength(1)
             expect(emptyReport.errors.join(" ")).toMatch(
               /non-empty|at least one/
             )

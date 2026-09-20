@@ -298,6 +298,43 @@ describe("ChartDefinition registry", () => {
     }
   })
 
+  it("preserves authored nested constraints in definitions and artifacts", () => {
+    const artifacts = generateChartDefinitionArtifacts()
+    for (const chart of CHART_DEFINITION_IDS) {
+      const definition = CHART_DEFINITIONS[chart]
+      const artifact = artifacts.find((entry) => entry.chart === chart)!
+      for (const [name, prop] of Object.entries(
+        composeProps(CHART_SPECS[chart])
+      )) {
+        if (!prop.schema || prop.omitFromSchema) continue
+        expect(
+          definition.wire.schema.properties[name],
+          `${chart}.${name}`
+        ).toMatchObject(prop.schema)
+        expect(
+          artifact.wire.schema.properties[name],
+          `${chart}.${name} artifact`
+        ).toMatchObject(prop.schema)
+      }
+    }
+
+    const Constructor =
+      (Ajv2020 as { default?: typeof Ajv2020 }).default ?? Ajv2020
+    const ajv = new Constructor({ strict: false })
+    const validate = ajv.compile(CHART_DEFINITIONS.GaugeChart.wire.schema)
+    expect(
+      validate({ value: 50, thresholds: [{ value: 20, color: "red" }] })
+    ).toBe(true)
+    for (const thresholds of [
+      [],
+      [{ value: 20 }],
+      [{ color: "red" }],
+      [{ value: 20, color: "red", extra: true }]
+    ]) {
+      expect(validate({ value: 50, thresholds })).toBe(false)
+    }
+  })
+
   it("projects a JSON-serializable artifact for future generators", () => {
     const artifacts = generateChartDefinitionArtifacts()
     expect(artifacts).toHaveLength(CHART_DEFINITION_IDS.length)

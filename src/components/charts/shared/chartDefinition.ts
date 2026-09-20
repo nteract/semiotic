@@ -180,6 +180,7 @@ export function createChartDefinitionWireSchema(
     if (prop.enum) wireProperty.enum = [...prop.enum]
     if (prop.default !== undefined) wireProperty.default = prop.default
     if (prop.description) wireProperty.description = prop.description
+    if (prop.schema) Object.assign(wireProperty, prop.schema)
     if (wireTypes.length !== runtimeTypes.length) {
       wireProperty["x-semiotic-runtime-types"] = [...runtimeTypes]
     }
