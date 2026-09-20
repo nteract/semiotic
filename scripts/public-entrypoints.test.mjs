@@ -1,5 +1,8 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { readFileSync, mkdtempSync, rmSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import test from "node:test"
 import {
   publicJavaScriptEntrypoints,
@@ -130,4 +133,30 @@ test("records nested Node export conditions in the generated package surface", (
   assert.ok(
     experimental?.artifacts.some((artifact) => artifact.kind === "node.import")
   )
+})
+
+test("npm packs CommonJS metadata declaration sidecars alongside their modules", () => {
+  const cache = mkdtempSync(join(tmpdir(), "semiotic-package-sidecars-"))
+  try {
+    const [pack] = JSON.parse(
+      execFileSync(
+        "npm",
+        ["pack", "--dry-run", "--json", "--ignore-scripts", "--cache", cache],
+        { encoding: "utf8", cwd: new URL("..", import.meta.url) }
+      )
+    )
+    const files = new Set(pack.files.map(({ path }) => path))
+    for (const module of ["componentMetadata", "behaviorContracts"]) {
+      assert.ok(
+        files.has(`ai/${module}.cjs`),
+        `${module} runtime must be packed`
+      )
+      assert.ok(
+        files.has(`ai/${module}.d.cts`),
+        `${module} declaration must be packed`
+      )
+    }
+  } finally {
+    rmSync(cache, { recursive: true, force: true })
+  }
 })

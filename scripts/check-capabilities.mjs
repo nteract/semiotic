@@ -36,6 +36,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { readRegistryKeys } from "./lib/registry-source.cjs"
 import { parseCapabilityMatrix } from "./lib/capabilityMatrix.mjs"
 import { renderAccessCapabilitiesModule } from "./lib/accessCapabilities.mjs"
 import {
@@ -93,26 +94,9 @@ if (specEntries.length === 0) {
 }
 
 // ── Index serverChartConfigs CHART_CONFIGS for the SSR gate ────────
-const configsSource = fs.readFileSync(SERVER_CONFIGS_PATH, "utf8")
-const ssrRegistered = new Set()
-const registryStart = configsSource.indexOf("export const CHART_CONFIGS")
-const registrySource =
-  registryStart >= 0 ? configsSource.slice(registryStart) : configsSource
-for (const match of registrySource.matchAll(/^ {2}([A-Z][A-Za-z]+):\s/gm)) {
-  ssrRegistered.add(match[1])
-}
-const valueRenderersSource = fs.readFileSync(VALUE_RENDERERS_PATH, "utf8")
-const valueRegistryStart = valueRenderersSource.indexOf(
-  "export const VALUE_RENDERERS"
-)
-const valueRegistrySource =
-  valueRegistryStart >= 0
-    ? valueRenderersSource.slice(valueRegistryStart)
-    : valueRenderersSource
-for (const match of valueRegistrySource.matchAll(
-  /^ {2}([A-Z][A-Za-z]+):\s/gm
-)) {
-  ssrRegistered.add(match[1])
+const ssrRegistered = readRegistryKeys(SERVER_CONFIGS_PATH, "CHART_CONFIGS")
+for (const name of readRegistryKeys(VALUE_RENDERERS_PATH, "VALUE_RENDERERS")) {
+  ssrRegistered.add(name)
 }
 
 // Configs that legitimately serve server-only renderChart paths rather

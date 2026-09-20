@@ -5,7 +5,7 @@
 Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.
 
 Source package: semiotic@3.10.3. Channel: source.
-Source revision: sha256:c6d593c99b338782c0c63e6e1d9a83062df31cbcafed1d44173e9e36540a3115. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:9ac6b52a5f9dfafa620222bccbca60ee0da3a2f6acf6ed32dd3c586cab192c23. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -571,7 +571,7 @@ Full component resource: semiotic://schema/BarChart. Machine packet: /tasks/corr
 
 - **props.data-required-by-usage-mode:** Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref. Pass usageMode="push" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode="static" or omit it for renderChart/MCP/static configs where data must be present.
 
-- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path. Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.
+- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot, never future ref pushes. semiotic/server accepts bounded data for realtime charts; MCP rendering excludes the five live Realtime components but includes TemporalHistogram. Use complete static data for snapshots. For a Realtime component snapshot, use semiotic/server directly; for live behavior, return React code with a ref and do not promise MCP-rendered output.
 
 ## Maintenance context
 

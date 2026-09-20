@@ -106,9 +106,8 @@ export function generateSchemaToolEntry(spec, composedProps) {
 
 /**
  * Project a ChartDefinition into the existing AI tool-schema registry shape.
- * The pilot definition remains additive, but its charts now reach a real
- * downstream artifact through this boundary instead of being parity-only
- * metadata. Runtime prop metadata is retained so mixed string/function props
+ * Definitions migrate incrementally by family. Runtime prop metadata is
+ * retained so mixed string/function props
  * keep their `x-semiotic-runtime-types` guidance on the React-facing schema.
  */
 export function generateSchemaToolEntryFromChartDefinition(definition) {
@@ -116,6 +115,7 @@ export function generateSchemaToolEntryFromChartDefinition(definition) {
     {
       name: definition.chartKind,
       description: definition.metadata.description,
+      importPath: definition.metadata.importPath,
       required: definition.wire.schema.required,
     },
     definition.runtime.propMetadata,
@@ -346,14 +346,14 @@ export function supportsChartAccessibilityText(
 
 /**
  * Generate the small metadata projection consumed by Chart Clinic bundle
- * guidance. Pilot definitions override the general family recommendation,
- * while non-pilot charts derive their facade and renderChart support directly
+ * guidance. Definitions override the general family recommendation,
+ * while other charts derive their facade and renderChart support directly
  * from ChartSpec.
  */
-export function generateChartClinicMetadata(chartSpecs, chartDefinitionPilot) {
+export function generateChartClinicMetadata(chartSpecs, chartDefinitions) {
   const metadata = {}
   for (const [name, spec] of Object.entries(chartSpecs)) {
-    const definition = chartDefinitionPilot[name]
+    const definition = chartDefinitions[name]
     if (definition) {
       metadata[name] = {
         category: definition.chartFamily,
@@ -362,7 +362,7 @@ export function generateChartClinicMetadata(chartSpecs, chartDefinitionPilot) {
           ? { serverImport: "semiotic/server" }
           : {}),
         docsRoute: definition.metadata.propDocs.route,
-        pilot: true,
+        definition: true,
       }
       continue
     }
@@ -385,7 +385,7 @@ export function generateChartClinicMetadataModule(metadata) {
     ([name, entry]) => `  ${JSON.stringify(name)}: ${JSON.stringify(entry)}`,
   )
   return `/**
- * AUTO-GENERATED from chartSpecs.ts and chartDefinitionPilot.ts by
+ * AUTO-GENERATED from chartSpecs.ts and chartDefinitions.ts by
  * scripts/regenerate-schema.ts.
  * Do not edit by hand; run \`npm run docs:chart-specs:schema\`.
  */
@@ -396,7 +396,7 @@ interface ChartClinicMetadata {
   readonly recommendedImport: string
   readonly serverImport?: "semiotic/server"
   readonly docsRoute?: string
-  readonly pilot?: true
+  readonly definition?: true
 }
 
 export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>> = {

@@ -5,7 +5,7 @@
 Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.
 
 Source package: semiotic@3.10.3. Channel: source.
-Source revision: sha256:03b9d282fdf261fc90d262ec74bead44e05d6e3a8c11c2357d9b8242d8d1bc7b. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:b8ac04697deedaf720cbb6272acc4bbc3425cffc3888509c7f9f2ba3fc82aaa1. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -160,7 +160,7 @@ Full component resource: semiotic://schema/BarChart. Machine packet: /tasks/comp
 
 - **props.data-required-by-usage-mode:** Static usage (`renderChart`, MCP previews, SSR snapshots, and copy/paste examples with immediate data) requires data in props. React push mode selects live ingestion by omitting data and mutating through a ref. Pass usageMode="push" to `semiotic-ai --doctor` when validating ref-based JSX with no data prop. Keep usageMode="static" or omit it for renderChart/MCP/static configs where data must be present.
 
-- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path. Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.
+- **rendering.renderchart-static-props:** MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot, never future ref pushes. semiotic/server accepts bounded data for realtime charts; MCP rendering excludes the five live Realtime components but includes TemporalHistogram. Use complete static data for snapshots. For a Realtime component snapshot, use semiotic/server directly; for live behavior, return React code with a ref and do not promise MCP-rendered output.
 
 - **serialization.formatters-are-react-callbacks:** xFormat, yFormat, categoryFormat, and valueFormat are callback props, not d3 format strings or axis-title strings. They are intentionally absent from JSON/MCP schemas and string values fail validation. In serialized props, omit formatter callbacks and use xLabel, yLabel, categoryLabel, or valueLabel for axis titles. In React JSX, pass a function such as xFormat={value => formatAxis(value)}.
 

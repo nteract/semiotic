@@ -48,7 +48,7 @@ describe("Chart Clinic read-only inspection", () => {
     expect(report.reasons).toEqual([])
   })
 
-  it("uses explicit pilot module/server/docs guidance when a definition exists", () => {
+  it("uses explicit module/server/docs guidance when a definition exists", () => {
     const report = inspectChart({
       component: "LineChart",
       props: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
@@ -61,15 +61,56 @@ describe("Chart Clinic read-only inspection", () => {
     })
   })
 
-  it("uses generated family/server guidance for a non-pilot chart", () => {
+  it("uses definition guidance for the migrated XY family", () => {
     const report = inspectChart({
       component: "AreaChart",
       props: { data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y" },
     })
 
-    expect(report.bundle).toEqual({
+    expect(report.bundle).toMatchObject({
       category: "xy",
       recommendedImport: "semiotic/xy",
+      serverImport: "semiotic/server",
+      docsRoute: "/charts/area-chart",
+    })
+  })
+
+  it.each([
+    ["StackedBarChart", "/charts/stacked-bar-chart"],
+    ["RidgelinePlot", "/cookbook/ridgeline-plot"],
+    ["GaugeChart", "/charts/gauge-chart"],
+  ])("uses ordinal definition guidance for %s", (component, docsRoute) => {
+    expect(inspectChart({ component, props: {} }).bundle).toMatchObject({
+      category: "ordinal", recommendedImport: "semiotic/ordinal", serverImport: "semiotic/server", docsRoute,
+    })
+  })
+
+  it.each([
+    ["SankeyDiagram", "semiotic/network", "/charts/sankey-diagram"],
+    ["ProcessSankey", "semiotic/network", "/charts/process-sankey"],
+    ["MotifBraidChart", "semiotic/atlas", "/charts/motif-braid-chart"],
+    ["DependencyForestChart", "semiotic/atlas", "/charts/dependency-forest-chart"],
+  ])("uses network definition guidance for %s", (component, recommendedImport, docsRoute) => {
+    expect(inspectChart({ component, props: {} }).bundle).toMatchObject({
+      category: "network", recommendedImport, serverImport: "semiotic/server", docsRoute,
+    })
+  })
+
+  it.each([
+    ["CrucibleChart", "semiotic/physics", "/charts/crucible-chart"],
+    ["ChainReactionChart", "semiotic/physics", "/charts/chain-reaction-chart"],
+    ["FlowCircuitChart", "semiotic/atlas", "/charts/flow-circuit-chart"],
+  ])("uses physics definition guidance for %s", (component, recommendedImport, docsRoute) => {
+    expect(inspectChart({ component, props: {} }).bundle).toMatchObject({
+      category: "physics", recommendedImport, serverImport: "semiotic/server", docsRoute,
+    })
+  })
+
+  it("retains family guidance for charts without a definition", () => {
+    const report = inspectChart({ component: "ChoroplethMap", props: {} })
+    expect(report.bundle).toEqual({
+      category: "geo",
+      recommendedImport: "semiotic/geo",
       serverImport: "semiotic/server",
       note:
         "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",

@@ -42,7 +42,7 @@ export interface ChartClinicChartSpecLike extends ChartSpecLike {
   capabilities: { supportsSSR: boolean }
 }
 
-export interface ChartDefinitionPilotLike {
+export interface ChartDefinitionLike {
   chartFamily: string
   runtime: { implementation: { module: string } }
   metadata: {
@@ -56,12 +56,21 @@ export interface GeneratedChartClinicMetadataEntry {
   recommendedImport: string
   serverImport?: "semiotic/server"
   docsRoute?: string
-  pilot?: true
+  definition?: true
 }
 
 export function generateSchemaToolEntry(
   spec: ChartSpecLike,
   composedProps: Record<string, PropSpecLike>
+): GeneratedSchemaToolEntry
+
+export function generateSchemaToolEntryFromChartDefinition(
+  definition: {
+    chartKind: string
+    metadata: { description: string; importPath?: string }
+    wire: { schema: { required: readonly string[] } }
+    runtime: { propMetadata: Readonly<Record<string, PropSpecLike>> }
+  }
 ): GeneratedSchemaToolEntry
 
 export function generateValidationMapEntry(
@@ -75,7 +84,9 @@ export function generateValidationMap<TSpec extends ChartSpecLike>(
 ): Record<string, GeneratedValidationMapEntry>
 
 export function generateValidationMapModule(
-  validationMap: Record<string, GeneratedValidationMapEntry>
+  validationMap: Record<string, GeneratedValidationMapEntry>,
+  chartSpecs: Record<string, ChartSpecLike>,
+  propBags: Record<string, unknown>
 ): string
 
 export function generateKnownChartComponentsModule(
@@ -85,7 +96,7 @@ export function generateKnownChartComponentsModule(
 
 export function generateChartClinicMetadata<TSpec extends ChartClinicChartSpecLike>(
   chartSpecs: Record<string, TSpec>,
-  chartDefinitionPilot: Readonly<Record<string, ChartDefinitionPilotLike>>
+  chartDefinitions: Readonly<Record<string, ChartDefinitionLike>>
 ): Record<string, GeneratedChartClinicMetadataEntry>
 
 export function generateChartClinicMetadataModule(

@@ -62,14 +62,16 @@ function checkEmptyData(
   const spec = VALIDATION_MAP[component]
   if (!spec) return
 
-  if (spec.dataShape === "array") {
+  if (spec.dataShape === "array" || spec.dataShape === "realtime") {
     const data = props.data
     if (data && Array.isArray(data) && data.length === 0) {
       out.push({
         severity: "error",
         code: "EMPTY_DATA",
         message: `data is an empty array — chart will render blank.`,
-        fix: `Provide at least one data point: data={[{ x: 1, y: 2 }]}.`,
+        fix: spec.dataShape === "realtime"
+          ? `Provide at least one observation: data={[{ time: 0, value: 1 }]}, or omit data for React ref push mode.`
+          : `Provide at least one data point: data={[{ x: 1, y: 2 }]}.`,
       })
     }
   }

@@ -32,6 +32,7 @@
 
 const fs = require("fs")
 const path = require("path")
+const { readRegistryKeys } = require("./lib/registry-source.cjs")
 
 const ROOT = path.resolve(__dirname, "..")
 const CHARTS_DIR = path.join(ROOT, "src/components/charts")
@@ -79,7 +80,7 @@ for (const dir of HOC_DIRS) {
 const atlasEntry = path.join(ROOT, "src/components/semiotic-atlas.ts")
 const atlasSource = fs.readFileSync(atlasEntry, "utf8")
 for (const exportMatch of atlasSource.matchAll(
-  /export\s*\{\s*(\w+Chart)\s*\}\s*from\s*"([^\"]+)"/g
+  /export\s*\{\s*(\w+Chart)\s*\}\s*from\s*"([^"]+)"/g
 )) {
   const chartSource = path.resolve(path.dirname(atlasEntry), `${exportMatch[2]}.tsx`)
   if (fs.existsSync(chartSource)) hocsOnDisk.add(exportMatch[1])
@@ -87,16 +88,7 @@ for (const exportMatch of atlasSource.matchAll(
 
 // ── 2. Extract SSR config chart names ──────────────────────────────────
 
-const ssrSource = fs.readFileSync(SSR_CONFIGS, "utf8")
-const ssrNames = new Set()
-const configRegex = /^\s+(\w+):\s/gm
-let match
-while ((match = configRegex.exec(ssrSource))) {
-  // Only lines like "  BarChart: barChart," in CHART_CONFIGS
-  if (/^[A-Z]/.test(match[1])) {
-    ssrNames.add(match[1])
-  }
-}
+const ssrNames = readRegistryKeys(SSR_CONFIGS, "CHART_CONFIGS")
 
 // Portable recipes are schema-visible server-renderable layouts hosted by
 // ChartRecipe rather than one-file-per-chart HOCs under src/components/charts.
@@ -115,6 +107,7 @@ const recipeNames = new Set(
 const chartSpecsIndexSource = fs.readFileSync(CHART_SPECS_INDEX, "utf8")
 const validationNames = new Set()
 const specFileRegex = /from\s+"\.\/(chartSpecs\w+)"/g
+let match
 while ((match = specFileRegex.exec(chartSpecsIndexSource))) {
   const specFile = path.join(CHART_SHARED_DIR, `${match[1]}.ts`)
   if (!fs.existsSync(specFile)) continue

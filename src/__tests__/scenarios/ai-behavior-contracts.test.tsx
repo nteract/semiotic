@@ -16,10 +16,12 @@ import { ThemeProvider } from "../../components/ThemeProvider"
 import { LineChart } from "../../components/charts/xy/LineChart"
 import { useColorScale } from "../../components/charts/shared/hooks"
 import { validateProps } from "../../components/charts/shared/validateProps"
+import { CHART_SPECS, composeProps } from "../../components/charts/shared/chartSpecs"
 import type { RealtimeFrameHandle } from "../../components/realtime/types"
 
 const require = createRequire(import.meta.url)
 const {
+  PUSH_MODE_COMPONENTS,
   BEHAVIOR_CONTRACTS,
   DOC_MARKER_END,
   DOC_MARKER_START,
@@ -27,6 +29,7 @@ const {
   dataRequiredForUsageMode,
   requiredCombinationsFor,
 } = require("../../../ai/behaviorContracts.cjs") as {
+  PUSH_MODE_COMPONENTS: string[]
   BEHAVIOR_CONTRACTS: Array<{
     id: string
     title: string
@@ -44,6 +47,17 @@ const schema = require("../../../ai/schema.json") as {
 }
 
 describe("AI behavior contract metadata", () => {
+  it("keeps omitted-data contracts aligned with runtime push capabilities", () => {
+    for (const component of PUSH_MODE_COMPONENTS) {
+      expect(CHART_SPECS[component].capabilities.supportsPush, component).toBe(true)
+    }
+    for (const spec of Object.values(CHART_SPECS)) {
+      if (spec.capabilities.supportsPush && "data" in composeProps(spec)) {
+        expect(PUSH_MODE_COMPONENTS, spec.name).toContain(spec.name)
+      }
+    }
+  })
+
   it("has stable unique rule IDs and generated docs sections", () => {
     const ids = BEHAVIOR_CONTRACTS.map((contract) => contract.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -136,14 +150,9 @@ describe("AI behavior contract metadata", () => {
   })
 
   it("keeps data required for components that don't support push mode, regardless of usageMode", () => {
-    // These components are schema-required to have data but aren't part of
-    // the push-mode allowlist — Heatmap/FunnelChart/MinimapChart/ScatterplotMatrix
-    // are HOCs without a ref-push API, and the hierarchy charts (Treemap,
-    // CirclePack, TreeDiagram, OrbitDiagram) take a single root object.
-    // Passing usageMode="push" must NOT suppress the "data is required"
-    // error for them (regression test for the static-data list silently
-    // omitting these components and letting agents skip required data).
-    for (const c of ["Heatmap", "FunnelChart", "MinimapChart", "ScatterplotMatrix",
+    // Composite and hierarchy charts require a bounded source. Physics
+    // playback handles also do not expose ref push/pushMany ingestion.
+    for (const c of ["MinimapChart", "ScatterplotMatrix", "CrucibleChart", "ChainReactionChart",
                      "Treemap", "CirclePack", "TreeDiagram", "OrbitDiagram"]) {
       expect(dataRequiredForUsageMode(c, "static")).toBe(true)
       expect(dataRequiredForUsageMode(c, "push")).toBe(true)

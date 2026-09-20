@@ -113,7 +113,15 @@ const REQUIRED_COMBINATIONS = [
   },
 ]
 
+// Charts covered by the common omitted-data/ref contract. This is not the
+// complete push-capability inventory: FlowMap, ProcessSankey, and BigNumber
+// have their own input surfaces rather than a generic data prop.
 const PUSH_MODE_COMPONENTS = [
+  "RealtimeLineChart",
+  "RealtimeHistogram",
+  "RealtimeSwarmChart",
+  "RealtimeWaterfallChart",
+  "RealtimeHeatmap",
   "LineChart",
   "AreaChart",
   "StackedAreaChart",
@@ -122,6 +130,8 @@ const PUSH_MODE_COMPONENTS = [
   "ConnectedScatterplot",
   "CandlestickChart",
   "MultiAxisLineChart",
+  "Heatmap",
+  "WaterfallChart",
   "QuadrantChart",
   "DifferenceChart",
   "BarChart",
@@ -137,6 +147,8 @@ const PUSH_MODE_COMPONENTS = [
   "DonutChart",
   "LikertChart",
   "SwimlaneChart",
+  "FunnelChart",
+  "RadarChart",
   "ForceDirectedGraph",
   "SankeyDiagram",
   "ChordDiagram",
@@ -149,8 +161,6 @@ const PUSH_MODE_COMPONENTS = [
   "PacketFlowChart",
   "ProcessFlowChart",
   "GauntletChart",
-  "CrucibleChart",
-  "ChainReactionChart",
 ]
 
 const STATIC_DATA_COMPONENTS = loadStaticDataComponentsFromSchema()
@@ -251,8 +261,8 @@ const BEHAVIOR_CONTRACTS = [
     title: "renderChart uses static props only",
     severity: "warning",
     appliesTo: {},
-    summary: "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot. Browser-only realtime components and future ref pushes are not renderable through that path.",
-    agentAction: "Use renderChart only with renderable HOC components and complete static data. For live behavior, return React code with a ref and do not promise MCP-rendered output.",
+    summary: "MCP renderChart and semiotic/server renderChart render a single static SVG/PNG snapshot, never future ref pushes. semiotic/server accepts bounded data for realtime charts; MCP rendering excludes the five live Realtime components but includes TemporalHistogram.",
+    agentAction: "Use complete static data for snapshots. For a Realtime component snapshot, use semiotic/server directly; for live behavior, return React code with a ref and do not promise MCP-rendered output.",
   },
   {
     id: "serialization.formatters-are-react-callbacks",

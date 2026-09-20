@@ -3,34 +3,86 @@
 const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value", "recipe"]
 
 const COMPONENTS_BY_CATEGORY = {
+  // BEGIN GENERATED XY CHARTS
   xy: [
-    "LineChart", "BumpChart", "AreaChart", "DifferenceChart", "StackedAreaChart", "Scatterplot", "QuadrantChart",
-    "MultiAxisLineChart", "CandlestickChart", "BubbleChart", "Heatmap",
-    "ConnectedScatterplot", "ScatterplotMatrix", "MinimapChart", "WaterfallChart",
+    "LineChart",
+    "BumpChart",
+    "AreaChart",
+    "DifferenceChart",
+    "StackedAreaChart",
+    "Scatterplot",
+    "BubbleChart",
+    "Heatmap",
+    "QuadrantChart",
+    "MultiAxisLineChart",
+    "WaterfallChart",
+    "CandlestickChart",
+    "ConnectedScatterplot",
+    "ScatterplotMatrix",
+    "MinimapChart"
   ],
+  // END GENERATED XY CHARTS
+  // BEGIN GENERATED ORDINAL CHARTS
   ordinal: [
-    "BarChart", "StackedBarChart", "LikertChart", "GroupedBarChart", "SwarmPlot",
-    "BoxPlot", "Histogram", "ViolinPlot", "RidgelinePlot", "DotPlot", "PieChart",
-    "DonutChart", "GaugeChart", "FunnelChart", "RadarChart", "SwimlaneChart",
+    "BarChart",
+    "StackedBarChart",
+    "GroupedBarChart",
+    "SwarmPlot",
+    "BoxPlot",
+    "Histogram",
+    "ViolinPlot",
+    "RidgelinePlot",
+    "DotPlot",
+    "PieChart",
+    "DonutChart",
+    "GaugeChart",
+    "FunnelChart",
+    "RadarChart",
+    "SwimlaneChart",
+    "LikertChart"
   ],
+  // END GENERATED ORDINAL CHARTS
+  // BEGIN GENERATED NETWORK CHARTS
   network: [
-    "MotifBraidChart", "DependencyForestChart",
-    "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
-    "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram",
+    "MotifBraidChart",
+    "DependencyForestChart",
+    "ForceDirectedGraph",
+    "SankeyDiagram",
+    "ProcessSankey",
+    "ChordDiagram",
+    "TreeDiagram",
+    "Treemap",
+    "CirclePack",
+    "OrbitDiagram"
   ],
+  // END GENERATED NETWORK CHARTS
   geo: [
     "ChoroplethMap", "ProportionalSymbolMap", "FlowMap", "DistanceCartogram",
   ],
+  // BEGIN GENERATED REALTIME CHARTS
   realtime: [
-    "RealtimeLineChart", "RealtimeHistogram", "TemporalHistogram", "RealtimeSwarmChart",
-    "RealtimeWaterfallChart", "RealtimeHeatmap",
+    "RealtimeLineChart",
+    "RealtimeHistogram",
+    "TemporalHistogram",
+    "RealtimeSwarmChart",
+    "RealtimeWaterfallChart",
+    "RealtimeHeatmap"
   ],
+  // END GENERATED REALTIME CHARTS
+  // BEGIN GENERATED PHYSICS CHARTS
   physics: [
     "FlowCircuitChart",
-    "GaltonBoardChart", "EventDropChart", "UnitPileChart", "CollisionSwarmChart",
-    "PacketFlowChart", "ProcessFlowChart", "GauntletChart", "CrucibleChart",
-    "ChainReactionChart",
+    "GaltonBoardChart",
+    "EventDropChart",
+    "UnitPileChart",
+    "CollisionSwarmChart",
+    "PacketFlowChart",
+    "ProcessFlowChart",
+    "GauntletChart",
+    "CrucibleChart",
+    "ChainReactionChart"
   ],
+  // END GENERATED PHYSICS CHARTS
   value: [
     "BigNumber",
   ],
@@ -83,7 +135,8 @@ function schemaResourceUriForComponent(name) {
 function metadataForComponent(entryOrName) {
   const name = typeof entryOrName === "string" ? entryOrName : entryOrName.name
   const category = categoryForComponent(name)
-  // Realtime push-streaming charts are browser-only by design.
+  // MCP excludes the live Realtime charts. Their public server renderers
+  // separately accept bounded data snapshots.
   // TemporalHistogram is the static-data sibling living in the
   // "realtime" category for documentation grouping — it accepts a
   // bounded data array and is renderable through the SSR path like

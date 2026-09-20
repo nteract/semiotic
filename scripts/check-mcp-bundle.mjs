@@ -1,25 +1,33 @@
 #!/usr/bin/env node
-/** Fail when the checked-in MCP executable is not built from its source. */
+/** Fail when either checked-in AI bundle is not built from its source. */
 import { build } from "esbuild"
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { mcpBuildOptions } from "./lib/mcp-build-options.mjs"
+import {
+  mcpBuildOptions,
+  diagnosisBuildOptions
+} from "./lib/mcp-build-options.mjs"
 
 const tempDir = mkdtempSync(join(tmpdir(), "semiotic-mcp-check-"))
-const output = join(tempDir, "mcp-server.js")
 
 try {
-  await build(mcpBuildOptions({ outfile: output, production: true }))
-  const generated = readFileSync(output)
-  const committed = readFileSync("ai/dist/mcp-server.js")
-  if (!generated.equals(committed)) {
-    console.error(
-      "MCP executable is stale: run npm run build:mcp and commit ai/dist/mcp-server.js"
-    )
-    process.exitCode = 1
-  } else {
-    console.log("✓ MCP executable is current")
+  for (const [filename, options] of [
+    ["mcp-server.js", mcpBuildOptions],
+    ["diagnose-operation.js", diagnosisBuildOptions]
+  ]) {
+    const output = join(tempDir, filename)
+    await build(options({ outfile: output, production: true }))
+    const generated = readFileSync(output)
+    const committed = readFileSync(join("ai/dist", filename))
+    if (!generated.equals(committed)) {
+      console.error(
+        `${filename} is stale: run npm run build:mcp and commit ai/dist outputs`
+      )
+      process.exitCode = 1
+    } else {
+      console.log(`✓ ${filename} is current`)
+    }
   }
 } finally {
   rmSync(tempDir, { recursive: true, force: true })

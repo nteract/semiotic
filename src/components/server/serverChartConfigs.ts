@@ -1,62 +1,14 @@
 /**
  * Chart-specific prop mapping for renderChart().
  *
- * Family implementations live in serverChartConfigs{XY,Ordinal,Network,Geo,Custom,Physics}.ts.
+ * Family implementations live in serverChartConfigs{XY,Ordinal,Network,Geo,Custom,Physics,Realtime}.ts.
  */
+import { XY_CHART_CONFIGS } from "./serverChartConfigsXY.generated"
 import type { ChartConfig } from "./serverChartConfigShared"
-import { motifBraidChart, dependencyForestChart, flowCircuitChart } from "./serverChartConfigsAtlas"
-import {
-  sparkline,
-  bumpChart,
-  lineChart,
-  areaChart,
-  differenceChart,
-  stackedAreaChart,
-  candlestickChart,
-  bubbleChart,
-  scatterplot,
-  quadrantChart,
-  connectedScatterplot,
-  waterfallChart,
-  multiAxisLineChart,
-  temporalHistogram
-} from "./serverChartConfigsXY"
-import {
-  realtimeLineChart,
-  realtimeHistogram,
-  realtimeHeatmap,
-  realtimeSwarmChart,
-  realtimeWaterfallChart
-} from "./serverChartConfigsRealtime"
-import { heatmap } from "./serverChartConfigHeatmap"
-import {
-  barChart,
-  stackedBarChart,
-  groupedBarChart,
-  pieChart,
-  donutChart,
-  histogram,
-  boxPlot,
-  violinPlot,
-  swarmPlot,
-  dotPlot,
-  swimlaneChart,
-  ridgelinePlot,
-  likertChart,
-  funnelChart,
-  gaugeChart,
-  radarChart
-} from "./serverChartConfigsOrdinal"
-import {
-  forceDirectedGraph,
-  processSankey,
-  sankeyDiagram,
-  chordDiagram,
-  treeDiagram,
-  treemap,
-  circlePack,
-  orbitDiagram
-} from "./serverChartConfigsNetwork"
+import { sparkline } from "./serverChartConfigsXY"
+import { REALTIME_CHART_CONFIGS } from "./serverChartConfigsRealtime.generated"
+import { ORDINAL_CHART_CONFIGS } from "./serverChartConfigsOrdinal.generated"
+import { NETWORK_CHART_CONFIGS } from "./serverChartConfigsNetwork.generated"
 import {
   choroplethMap,
   proportionalSymbolMap,
@@ -71,22 +23,8 @@ import {
   parallelCoordinatesRecipe,
   calendarHeatmapRecipe
 } from "./serverChartConfigsCustom"
-import {
-  galtonBoardChart,
-  eventDropChart,
-  unitPileChart,
-  collisionSwarmChart,
-  processFlowChart,
-  gauntletChart,
-  crucibleChart,
-  packetFlowChart,
-  physicsCustomChart
-} from "./serverChartConfigsPhysics"
-import {
-  chainReactionChart,
-  minimapChart,
-  scatterplotMatrix
-} from "./serverChartConfigsComposite"
+import { physicsCustomChart } from "./serverChartConfigsPhysics"
+import { PHYSICS_CHART_CONFIGS } from "./serverChartConfigsPhysics.generated"
 
 // ── Registry ───────────────────────────────────────────────────────────
 
@@ -94,74 +32,32 @@ import {
 // the literal key union. Downstream code derives `ChartName` via
 // `keyof typeof CHART_CONFIGS` and stays in lockstep automatically — adding
 // a chart here makes it available to renderChart() without a second edit.
-export const CHART_CONFIGS = {
-  MotifBraidChart: motifBraidChart,
-  DependencyForestChart: dependencyForestChart,
-  FlowCircuitChart: flowCircuitChart,
-  Sparkline: sparkline,
-  BumpChart: bumpChart,
-  LineChart: lineChart,
-  AreaChart: areaChart,
-  DifferenceChart: differenceChart,
-  StackedAreaChart: stackedAreaChart,
-  Scatterplot: scatterplot,
-  CandlestickChart: candlestickChart,
-  BubbleChart: bubbleChart,
-  ConnectedScatterplot: connectedScatterplot,
-  QuadrantChart: quadrantChart,
-  Heatmap: heatmap,
-  WaterfallChart: waterfallChart,
-  MultiAxisLineChart: multiAxisLineChart,
-  MinimapChart: minimapChart,
-  ScatterplotMatrix: scatterplotMatrix,
-  TemporalHistogram: temporalHistogram,
-  RealtimeLineChart: realtimeLineChart,
-  RealtimeHistogram: realtimeHistogram,
-  RealtimeHeatmap: realtimeHeatmap,
-  RealtimeSwarmChart: realtimeSwarmChart,
-  RealtimeWaterfallChart: realtimeWaterfallChart,
-  XYCustomChart: xyCustomChart,
-  BarChart: barChart,
-  StackedBarChart: stackedBarChart,
-  GroupedBarChart: groupedBarChart,
-  PieChart: pieChart,
-  DonutChart: donutChart,
-  Histogram: histogram,
-  BoxPlot: boxPlot,
-  ViolinPlot: violinPlot,
-  SwarmPlot: swarmPlot,
-  DotPlot: dotPlot,
-  SwimlaneChart: swimlaneChart,
-  RidgelinePlot: ridgelinePlot,
-  LikertChart: likertChart,
-  FunnelChart: funnelChart,
-  RadarChart: radarChart,
-  GaugeChart: gaugeChart,
-  OrdinalCustomChart: ordinalCustomChart,
-  ParallelCoordinatesRecipe: parallelCoordinatesRecipe,
-  CalendarHeatmapRecipe: calendarHeatmapRecipe,
-  ForceDirectedGraph: forceDirectedGraph,
-  NetworkCustomChart: networkCustomChart,
-  SankeyDiagram: sankeyDiagram,
-  ProcessSankey: processSankey,
-  ChordDiagram: chordDiagram,
-  TreeDiagram: treeDiagram,
-  Treemap: treemap,
-  CirclePack: circlePack,
-  OrbitDiagram: orbitDiagram,
-  ChoroplethMap: choroplethMap,
-  ProportionalSymbolMap: proportionalSymbolMap,
-  FlowMap: flowMap,
-  DistanceCartogram: distanceCartogram,
-  GeoCustomChart: geoCustomChart,
-  GaltonBoardChart: galtonBoardChart,
-  EventDropChart: eventDropChart,
-  UnitPileChart: unitPileChart,
-  CollisionSwarmChart: collisionSwarmChart,
-  ProcessFlowChart: processFlowChart,
-  GauntletChart: gauntletChart,
-  CrucibleChart: crucibleChart,
-  PacketFlowChart: packetFlowChart,
-  ChainReactionChart: chainReactionChart,
-  PhysicsCustomChart: physicsCustomChart
-} satisfies Record<string, ChartConfig>
+// Catalog assembly only copies plain config objects. Keep the call pure so
+// consumers of animation helpers can discard the unused static chart registry.
+export const CHART_CONFIGS = /* @__PURE__ */ Object.assign(
+  {
+    Sparkline: sparkline,
+    XYCustomChart: xyCustomChart,
+    OrdinalCustomChart: ordinalCustomChart,
+    ParallelCoordinatesRecipe: parallelCoordinatesRecipe,
+    CalendarHeatmapRecipe: calendarHeatmapRecipe,
+    NetworkCustomChart: networkCustomChart,
+    ChoroplethMap: choroplethMap,
+    ProportionalSymbolMap: proportionalSymbolMap,
+    FlowMap: flowMap,
+    DistanceCartogram: distanceCartogram,
+    GeoCustomChart: geoCustomChart,
+    PhysicsCustomChart: physicsCustomChart
+  },
+  /* @__PURE__ */ Object.assign(
+    {},
+    XY_CHART_CONFIGS,
+    REALTIME_CHART_CONFIGS,
+    ORDINAL_CHART_CONFIGS
+  ),
+  /* @__PURE__ */ Object.assign(
+    {},
+    NETWORK_CHART_CONFIGS,
+    PHYSICS_CHART_CONFIGS
+  )
+) satisfies Record<string, ChartConfig>
