@@ -302,6 +302,20 @@ jobs:
       - name: Pack smoke test (verify all entry points resolve)
         run: npm run check:pack
 
+      - name: Install Chromium for packed consumer checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Check packed consumers (webpack, Rspack, Vite)
+        run: npm run check:consumer-compatibility
+
+      - name: Upload consumer compatibility report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: consumer-compatibility
+          path: test-results/consumer-compatibility/
+          if-no-files-found: warn
+
   # Smoke matrix: install, build, typecheck, and unit tests on each
   # supported Node. Catches runtime/engine issues without re-running the
   # full docs/AI contract suite four times.

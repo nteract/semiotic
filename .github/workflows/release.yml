@@ -270,6 +270,8 @@ jobs:
               .split(" && ")
               .filter((command) => !prOnlyBaselines.has(command))
               .filter((command) => command !== "npm run test:examples:source")
+              // Run the consumer matrix once, against the immutable archive below.
+              .filter((command) => command !== "npm run check:consumer-compatibility")
               .filter((command) => command !== "npm run build:declarations"),
           ]
 
@@ -319,6 +321,17 @@ jobs:
 
       - name: Pack-and-import smoke test (exact tarball)
         run: npm run check:pack -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+
+      - name: Check consumer compatibility (exact tarball)
+        run: npm run check:consumer-compatibility -- --tarball "${{ steps.release-artifact.outputs.tarball }}"
+
+      - name: Upload consumer compatibility report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-consumer-compatibility
+          path: test-results/consumer-compatibility/
+          if-no-files-found: warn
 
       - name: "Release diagnostics: packed cold-consumer baseline"
         run: npm run check:cold-consumer -- --tarball "${{ steps.release-artifact.outputs.tarball }}"

@@ -110,7 +110,8 @@ const terserOptions = {
     properties: false
   },
   format: {
-    comments: false,
+    // Runtime-selected imports must retain their consumer-bundler directives.
+    comments: /webpackIgnore|@vite-ignore/,
     // Consumers still tree-shake these library chunks. Preserve the purity
     // annotations emitted by esbuild so unused catalogs and factories can
     // disappear when only a few public exports are imported.
@@ -214,6 +215,13 @@ async function createSharedEsmGroup({
     // suffix. Both remain covered by package.json's `dist/*.min.js` file glob.
     outExtension: () => ({ js: ".js" }),
     esbuildOptions(esbuildOptions) {
+      // ESM always resolves worker assets through import.meta.url. Eliminate
+      // the CommonJS filename fallback before splitting: consumer bundlers
+      // warn about the Node global even when its branch cannot execute.
+      esbuildOptions.define = {
+        ...esbuildOptions.define,
+        __filename: "undefined"
+      }
       // Fold syntax while the full module graph is visible. Terser runs on
       // individual output chunks and cannot optimize across those boundaries.
       esbuildOptions.minifySyntax = minify

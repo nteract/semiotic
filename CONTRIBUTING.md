@@ -175,8 +175,32 @@ npm run check:test-quality
 npm run check:jsdoc-coverage
 npm run size
 npm run check:pack
+npm run check:consumer-compatibility
 npm run release:check
 ```
+
+`check:consumer-compatibility` installs the built package in a temporary consumer
+with the exact compiler versions in `scripts/consumer-compatibility/toolchain.json`.
+It checks all public JavaScript entries in their browser or server targets with
+webpack, Rspack, and Vite in development and production. Unexpected compiler warnings,
+browser console warnings/errors, failed requests, missing chart paint, failed
+worker responses, and invalid SSR evidence fail the gate. The synthetic API
+census retains every export; transfer-size budgets remain owned by `npm run size`.
+The only permitted module diagnostic is Vite/Rolldown's `MODULE_LEVEL_DIRECTIVE`
+warning for Semiotic's own `"use client"` directives: these are required for RSC
+consumers, and the plain browser fixture has no RSC boundaries to preserve.
+Every occurrence is recorded in the report; other directives, other packages,
+and all other module diagnostics still fail. The named-import Vite application
+uses code splitting with the default size warning threshold intact.
+Install Chromium first with `npx playwright install chromium` when running locally.
+
+Use `-- --tarball /path/to/semiotic.tgz` to check an existing archive,
+`-- --bundler rspack` for a focused run, or `-- --latest` to check the newest
+compiler releases without modifying the pins. The JSON report under
+`test-results/consumer-compatibility/` records compiler versions, archive SHA-512,
+covered entries, and failures. Failed temporary consumers are retained for
+diagnosis. PR CI requires the pinned matrix, release CI checks the exact archive
+before publication, and a weekly workflow checks newer compiler versions.
 
 ## Confirmed-defect related-surface audit
 

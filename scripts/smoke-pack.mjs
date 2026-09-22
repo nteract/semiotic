@@ -220,7 +220,7 @@ function localModuleSpecifiers(text) {
   return specifiers
 }
 
-function assertLocalChunksExist(packageRoot, entryRel, failures) {
+function assertEsmModuleGraph(packageRoot, entryRel, failures) {
   const seen = new Set()
   const visit = (relPath) => {
     if (seen.has(relPath)) return
@@ -231,6 +231,12 @@ function assertLocalChunksExist(packageRoot, entryRel, failures) {
       return
     }
     const text = readFileSync(absPath, "utf8")
+    // Consumer bundlers inspect even unreachable branches for Node globals.
+    // Follow static and lazy imports: worker URL helpers can live in shared
+    // chunks whose filenames do not carry the public `.module.min.js` suffix.
+    if (/\b__filename\b/.test(text)) {
+      failures.push(`${entryRel}: CommonJS __filename leaked into ESM ${relPath}`)
+    }
     const baseDir = dirname(relPath)
     for (const specifier of localModuleSpecifiers(text)) {
       const nextRel = `./${resolve(packageRoot, baseDir, specifier).slice(packageRoot.length + 1)}`
@@ -1171,7 +1177,7 @@ try {
     const importPath = entry === "." ? "semiotic" : `semiotic${entry.slice(1)}`
 
     if (typeof esmPath === "string") {
-      assertLocalChunksExist(packageRoot, esmPath, failures)
+      assertEsmModuleGraph(packageRoot, esmPath, failures)
     }
 
     // ESM import

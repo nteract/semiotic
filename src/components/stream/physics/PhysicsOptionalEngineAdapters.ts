@@ -34,7 +34,9 @@ export async function loadOptionalPhysicsPeer(
   details: PhysicsOptionalEngineInstallDetails
 ): Promise<unknown> {
   try {
-    return await import(/* @vite-ignore */ details.packageName)
+    // This public helper accepts a runtime-selected specifier. Leave it to
+    // native import resolution instead of generating a bundler context.
+    return await import(/* webpackIgnore: true */ /* @vite-ignore */ details.packageName)
   } catch (error) {
     throw optionalEngineDependencyError(details, error)
   }
