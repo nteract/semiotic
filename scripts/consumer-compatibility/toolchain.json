@@ -1,0 +1,17 @@
+{
+  "name": "semiotic-consumer-compatibility",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@chenglou/pretext": "0.0.9",
+    "@dimforge/rapier2d-compat": "0.19.3",
+    "@rspack/core": "2.2.6",
+    "matter-js": "0.20.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "roughjs": "4.6.6",
+    "vite": "8.3.0",
+    "webpack": "5.111.1",
+    "world-atlas": "2.0.2"
+  }
+}

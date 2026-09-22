@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   MATTER_PHYSICS_CAPABILITIES,
   MATTER_PHYSICS_INSTALL,
+  loadMatterPhysicsPeer,
   matterBodyToPhysicsBodySpec,
   matterBodyToPhysicsColliderSpec
 } from "./MatterPhysicsEngineAdapter"
@@ -12,8 +13,82 @@ import {
 import {
   RAPIER_PHYSICS_CAPABILITIES,
   RAPIER_PHYSICS_ENGINE_DECISION,
-  RAPIER_PHYSICS_INSTALL
+  RAPIER_PHYSICS_INSTALL,
+  loadRapierPhysicsPeer
 } from "./RapierPhysicsEngineAdapter"
+
+describe("optional physics peer loaders", () => {
+  beforeEach(() => vi.resetModules())
+  afterEach(() => {
+    vi.doUnmock("matter-js")
+    vi.doUnmock("@dimforge/rapier2d-compat")
+  })
+
+  it.each([true, false])(
+    "loads Matter with default export = %s",
+    async (hasDefault) => {
+      const matter = { Engine: { create: vi.fn() } }
+      vi.doMock("matter-js", () =>
+        hasDefault ? { default: matter } : { default: undefined, ...matter }
+      )
+
+      const loaded = await loadMatterPhysicsPeer()
+      expect((loaded as typeof matter).Engine).toBe(matter.Engine)
+    }
+  )
+
+  it.each([true, false])(
+    "awaits Rapier initialization with default export = %s",
+    async (hasDefault) => {
+      let initialized = false
+      const rapier = {
+        init: vi.fn(async () => {
+          await Promise.resolve()
+          initialized = true
+        })
+      }
+      vi.doMock("@dimforge/rapier2d-compat", () =>
+        hasDefault ? { default: rapier } : { default: undefined, ...rapier }
+      )
+
+      const loaded = await loadRapierPhysicsPeer()
+      expect((loaded as typeof rapier).init).toBe(rapier.init)
+      expect(rapier.init).toHaveBeenCalledOnce()
+      expect(initialized).toBe(true)
+    }
+  )
+
+  it.each([
+    ["Matter", loadMatterPhysicsPeer, MATTER_PHYSICS_INSTALL],
+    ["Rapier", loadRapierPhysicsPeer, RAPIER_PHYSICS_INSTALL]
+  ] as const)(
+    "preserves the %s import failure and installation guidance",
+    async (_name, load, details) => {
+      const cause = new Error("Module not found")
+      vi.doMock(details.packageName, () => {
+        throw cause
+      })
+
+      await expect(load()).rejects.toMatchObject({
+        name: "PhysicsOptionalEngineDependencyError",
+        details,
+        // Vitest wraps a rejected mock factory; preserve that entire chain.
+        cause: { cause },
+        message: expect.stringContaining(details.installCommand)
+      })
+    }
+  )
+
+  it("propagates a Rapier initialization failure", async () => {
+    const cause = new Error("WASM initialization failed")
+    vi.doMock("@dimforge/rapier2d-compat", () => ({
+      default: undefined,
+      init: vi.fn().mockRejectedValue(cause)
+    }))
+
+    await expect(loadRapierPhysicsPeer()).rejects.toBe(cause)
+  })
+})
 
 describe("optional physics engine adapter guards", () => {
   it("records the Rapier package decision without importing the peer", () => {
@@ -69,16 +144,14 @@ describe("optional physics engine adapter guards", () => {
   })
 
   it("converts Matter sensor rectangles into physics collider specs", () => {
-    const collider = matterBodyToPhysicsColliderSpec(
-      {
-        label: "watermark-window",
-        isSensor: true,
-        bounds: {
-          min: { x: 10, y: 20 },
-          max: { x: 70, y: 80 }
-        }
+    const collider = matterBodyToPhysicsColliderSpec({
+      label: "watermark-window",
+      isSensor: true,
+      bounds: {
+        min: { x: 10, y: 20 },
+        max: { x: 70, y: 80 }
       }
-    )
+    })
 
     expect(collider).toEqual({
       id: "watermark-window",

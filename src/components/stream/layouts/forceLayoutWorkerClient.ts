@@ -44,13 +44,15 @@ interface ForceWorkerWireResponse {
 }
 
 export function createForceLayoutWorker(): Worker {
-  // Keep the literal ESM URL expression for Vite/Webpack worker-asset
-  // discovery. tsup's CJS output has no import.meta.url, so resolve from the
-  // emitted CJS filename there instead.
-  const workerUrl = typeof import.meta.url === "string" && import.meta.url
-    ? new URL("./forceLayoutWorker.js", import.meta.url)
-    : commonJsWorkerModuleUrl("forceLayoutWorker.js")
-  return new Worker(workerUrl, {
+  // Consumer bundlers need new URL directly inside new Worker to compile
+  // the worker's imports, rather than copying it as an opaque file asset.
+  if (typeof import.meta.url === "string" && import.meta.url) {
+    return new Worker(new URL("./forceLayoutWorker.js", import.meta.url), {
+      type: "module",
+      name: "semiotic-force-layout"
+    })
+  }
+  return new Worker(commonJsWorkerModuleUrl("forceLayoutWorker.js"), {
     type: "module",
     name: "semiotic-force-layout"
   })

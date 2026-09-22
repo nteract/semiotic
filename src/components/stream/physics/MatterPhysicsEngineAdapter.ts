@@ -5,10 +5,7 @@ import type {
   PhysicsColliderShape,
   PhysicsColliderSpec
 } from "./PhysicsKernel"
-import {
-  loadOptionalPhysicsPeer,
-  optionalEngineDependencyError
-} from "./PhysicsOptionalEngineAdapters"
+import { optionalEngineDependencyError } from "./PhysicsOptionalEngineAdapters"
 
 export const MATTER_PHYSICS_PACKAGE = "matter-js"
 export const MATTER_PHYSICS_IMPORT_PATH = "semiotic/physics/matter"
@@ -180,7 +177,11 @@ export function matterBodiesToPhysicsColliders(
 }
 
 export async function loadMatterPhysicsPeer(): Promise<unknown> {
-  const module = await loadOptionalPhysicsPeer(MATTER_PHYSICS_INSTALL)
+  // Keep the literal specifier visible to consumer bundlers. The generic
+  // native-import helper cannot resolve bare npm names in a browser.
+  const module = await import("matter-js").catch((cause: unknown) => {
+    throw optionalEngineDependencyError(MATTER_PHYSICS_INSTALL, cause)
+  })
   return (module as { default?: unknown }).default ?? module
 }
 

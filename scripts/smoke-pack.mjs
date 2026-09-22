@@ -220,7 +220,7 @@ function localModuleSpecifiers(text) {
   return specifiers
 }
 
-function assertLocalChunksExist(packageRoot, entryRel, failures) {
+function assertEsmModuleGraph(packageRoot, entryRel, failures) {
   const seen = new Set()
   const visit = (relPath) => {
     if (seen.has(relPath)) return
@@ -231,6 +231,12 @@ function assertLocalChunksExist(packageRoot, entryRel, failures) {
       return
     }
     const text = readFileSync(absPath, "utf8")
+    // Consumer bundlers inspect even unreachable branches for Node globals.
+    // Follow static and lazy imports: worker URL helpers can live in shared
+    // chunks whose filenames do not carry the public `.module.min.js` suffix.
+    if (/\b__filename\b/.test(text)) {
+      failures.push(`${entryRel}: CommonJS __filename leaked into ESM ${relPath}`)
+    }
     const baseDir = dirname(relPath)
     for (const specifier of localModuleSpecifiers(text)) {
       const nextRel = `./${resolve(packageRoot, baseDir, specifier).slice(packageRoot.length + 1)}`
@@ -371,7 +377,7 @@ function checkUtilsFacadeExportContract(packageRoot, exportsMap, failures) {
  * in RSC and edge code that does not install or initialize a React runtime.
  * Inspect the packed artifact's complete local import graph rather than only
  * its facade: shared chunks can otherwise hide a transitive React dependency.
- * The same walk keeps the optional Pretext peer off other public entry graphs.
+ * The same walk keeps optional peers off other public entry graphs.
  */
 function checkPackedImportIsolation(packageRoot, exportsMap, failures) {
   const exportEntry = exportsMap["./themes/core"]
@@ -435,24 +441,31 @@ function checkPackedImportIsolation(packageRoot, exportsMap, failures) {
     console.log("  ✓ themes/core packed import graph is React-free")
   }
 
-  // The optional hook must not make a root/family import require Pretext in
-  // either format. Walk shared chunks too: facade-only checks miss CJS leaks.
-  let textLeak = false
+  // Optional peers must stay on their own adapter subpaths in both formats.
+  // Walk shared chunks too: facade-only checks miss transitive peer imports.
+  const optionalPeers = new Map([
+    ["@chenglou/pretext", "./text"],
+    ["matter-js", "./physics/matter"],
+    ["@dimforge/rapier2d-compat", "./physics/rapier"]
+  ])
+  let peerLeak = false
   for (const [entry, conditions] of Object.entries(exportsMap)) {
-    if (entry === "./text" || !conditions || typeof conditions !== "object")
-      continue
+    if (!conditions || typeof conditions !== "object") continue
     for (const condition of ["import", "require"]) {
       const target = conditions[condition]
       if (typeof target !== "string") continue
       for (const file of visitGraph(join(packageRoot, target))) {
-        if (!readFileSync(file, "utf8").includes("@chenglou/pretext"))
-          continue
-        textLeak = true
-        failures.push(`${entry} (${condition}) transitively imports Pretext`)
+        const code = readFileSync(file, "utf8")
+        for (const [peer, allowedEntry] of optionalPeers) {
+          if (entry === allowedEntry || !code.includes(peer)) continue
+          peerLeak = true
+          failures.push(`${entry} (${condition}) transitively imports ${peer}`)
+        }
       }
     }
   }
-  if (!textLeak) console.log("  ✓ Pretext peer is isolated to semiotic/text")
+  if (!peerLeak)
+    console.log("  ✓ Pretext, Matter and Rapier peers are isolated to their adapter subpaths")
 }
 
 /**
@@ -1171,7 +1184,7 @@ try {
     const importPath = entry === "." ? "semiotic" : `semiotic${entry.slice(1)}`
 
     if (typeof esmPath === "string") {
-      assertLocalChunksExist(packageRoot, esmPath, failures)
+      assertEsmModuleGraph(packageRoot, esmPath, failures)
     }
 
     // ESM import

@@ -93,11 +93,14 @@ export function canUseProcessSankeyWorker(): boolean {
 }
 
 export function createProcessSankeyLayoutWorker(): Worker {
-  const workerUrl =
-    typeof import.meta.url === "string" && import.meta.url
-      ? new URL("./processSankeyLayoutWorker.js", import.meta.url)
-      : commonJsWorkerModuleUrl("processSankeyLayoutWorker.js")
-  return new Worker(workerUrl, {
+  // The inline URL lets consumer bundlers discover the worker's module graph.
+  if (typeof import.meta.url === "string" && import.meta.url) {
+    return new Worker(new URL("./processSankeyLayoutWorker.js", import.meta.url), {
+      type: "module",
+      name: "semiotic-process-sankey-layout",
+    })
+  }
+  return new Worker(commonJsWorkerModuleUrl("processSankeyLayoutWorker.js"), {
     type: "module",
     name: "semiotic-process-sankey-layout",
   })

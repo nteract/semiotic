@@ -26,12 +26,15 @@ export function canUsePhysicsWorker(): boolean {
 }
 
 export function createPhysicsWorker(): Worker {
-  // Retain the literal ESM URL so consumer bundlers include this asset; use
-  // the real CJS filename when tsup has erased import.meta.url.
-  const workerUrl = typeof import.meta.url === "string" && import.meta.url
-    ? new URL("./physicsWorker.js", import.meta.url)
-    : commonJsWorkerModuleUrl("physicsWorker.js")
-  return new Worker(workerUrl, {
+  // Keep the Worker/URL expression intact so consumer bundlers also compile
+  // imports inside the worker. CJS still resolves the shipped sibling asset.
+  if (typeof import.meta.url === "string" && import.meta.url) {
+    return new Worker(new URL("./physicsWorker.js", import.meta.url), {
+      type: "module",
+      name: "semiotic-physics"
+    })
+  }
+  return new Worker(commonJsWorkerModuleUrl("physicsWorker.js"), {
     type: "module",
     name: "semiotic-physics"
   })
