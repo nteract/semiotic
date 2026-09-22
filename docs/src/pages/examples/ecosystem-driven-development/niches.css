@@ -1,0 +1,299 @@
+.edd-journey-outputs.edd-journey-niches {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 0;
+  gap: 9px;
+}
+.edd-journey-outputs.edd-journey-niches > div {
+  margin-top: 0;
+  padding: 12px;
+  border-left: 2px solid var(--edd-teal);
+}
+.edd-journey-outputs.edd-journey-niches > div::before {
+  display: none;
+}
+.edd-journey-niches strong {
+  margin: 0 0 6px;
+}
+.edd-production-boundary {
+  display: grid;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px dashed var(--edd-muted);
+  gap: 3px;
+}
+.edd-production-boundary strong {
+  font-size: 12px;
+}
+.edd-production-boundary span {
+  font-size: 11px;
+  color: var(--edd-muted);
+}
+.edd-understanding {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 44px;
+  padding: 45px 0;
+  border-top: 1px solid var(--edd-line);
+  border-bottom: 1px solid var(--edd-line);
+}
+.edd-understanding h2 {
+  margin-top: 12px;
+}
+.edd-understanding > div:last-child p {
+  font-size: 14px;
+  color: var(--edd-muted);
+  margin-bottom: 13px;
+}
+.edd-understanding strong {
+  color: var(--edd-ink);
+  font-weight: 600;
+}
+.edd-authorship {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 18px 0;
+  font:
+    12px ui-monospace,
+    monospace;
+}
+.edd-authorship b {
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--edd-rust);
+}
+.edd-library {
+  padding: 45px 0;
+  border-bottom: 1px solid var(--edd-line);
+  scroll-margin-top: 90px;
+}
+.edd-niche-intro {
+  max-width: 800px;
+  font-size: 14px;
+  color: var(--edd-muted);
+  margin-bottom: 26px !important;
+}
+.edd-rendering-definitions,
+.edd-learning-loops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+.edd-rendering-definitions {
+  background: var(--edd-soft);
+  padding: 24px;
+  margin-bottom: 30px;
+}
+.edd-rendering-definitions h3 {
+  font-size: 25px;
+  margin: 10px 0;
+}
+.edd-rendering-definitions p:not(.edd-kicker),
+.edd-learning-loops p:not(.edd-kicker) {
+  font-size: 14px;
+  color: var(--edd-muted);
+}
+.edd-learning-loops > div {
+  border-top: 2px solid var(--edd-teal);
+  padding-top: 15px;
+}
+.edd-learning-loops h3 {
+  font-size: 26px;
+  margin: 10px 0 14px;
+}
+.edd-library-thesis {
+  margin-top: 24px !important;
+  font-size: 14px;
+  color: var(--edd-teal);
+}
+.edd-niches {
+  padding-top: 50px;
+  scroll-margin-top: 90px;
+}
+.edd-niche-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 26px;
+  align-items: start;
+}
+.edd-niche-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.edd-niche-picker button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px;
+  border: 1px solid var(--edd-line);
+  border-radius: 3px;
+  color: var(--edd-ink);
+  background: var(--edd-soft);
+  text-align: left;
+}
+.edd-niche-picker button > strong {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+.edd-niche-picker button[aria-pressed="true"] {
+  background: var(--edd-ink);
+  color: var(--edd-paper);
+  border-color: var(--edd-ink);
+}
+.edd-niche-picker button.edd-production-choice {
+  margin-top: 9px;
+  border-style: dashed;
+}
+.edd-niche-picker > p {
+  margin-top: 12px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--edd-muted);
+}
+.edd-niche-detail {
+  border: 1px solid var(--edd-line);
+  background: var(--edd-card);
+  border-radius: 4px;
+  padding: 26px;
+  min-width: 0;
+}
+.edd-niche-detail header h3 {
+  margin: 10px 0 24px;
+  font-size: 30px;
+}
+.edd-product-value,
+.edd-product-learning {
+  margin-bottom: 24px;
+}
+.edd-product-learning {
+  padding: 18px;
+  background: var(--edd-soft);
+  border-left: 2px solid var(--edd-teal);
+}
+.edd-niche-detail h4 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.edd-niche-detail p:not(.edd-kicker, .edd-small) {
+  font-size: 14px;
+}
+.edd-product-learning .edd-small {
+  margin-top: 12px;
+}
+.edd-niche-sla {
+  border-top: 1px solid var(--edd-line);
+  padding-top: 20px;
+}
+.edd-niche-sla h4 {
+  margin: 14px 0 8px;
+}
+.edd-niche-sla > p:not(.edd-kicker) {
+  margin-bottom: 14px;
+}
+.edd-rough-edges {
+  color: var(--edd-muted);
+}
+.edd-niche-response {
+  padding-left: 14px;
+  border-left: 2px solid var(--edd-teal);
+}
+.edd-niche-facts {
+  margin: 16px 0 0;
+}
+.edd-niche-facts > div {
+  display: grid;
+  grid-template-columns: 105px minmax(0, 1fr);
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--edd-line);
+}
+.edd-niche-facts dt {
+  font-size: 12px;
+  font-weight: 600;
+}
+.edd-niche-facts dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--edd-muted);
+}
+.edd-niche-transfer {
+  font-size: 13px;
+  padding-top: 18px;
+  margin-top: 22px !important;
+  border-top: 1px solid var(--edd-line);
+  color: var(--edd-muted);
+}
+@media (max-width: 950px) {
+  .edd-niche-layout {
+    grid-template-columns: 185px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .edd-niche-detail {
+    padding: 20px;
+  }
+  .edd-niche-facts > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+@media (max-width: 700px) {
+  .edd-library {
+    padding: 32px 0;
+  }
+  .edd-rendering-definitions,
+  .edd-learning-loops,
+  .edd-understanding {
+    grid-template-columns: 1fr;
+  }
+  .edd-rendering-definitions {
+    padding: 18px;
+  }
+  .edd-understanding {
+    gap: 22px;
+    padding: 32px 0;
+  }
+  .edd-niches {
+    padding-top: 35px;
+  }
+  .edd-niche-layout {
+    grid-template-columns: 1fr;
+  }
+  .edd-niche-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .edd-niche-picker button {
+    padding: 10px;
+    gap: 7px;
+  }
+  .edd-niche-picker button > strong {
+    font-size: 11px;
+  }
+  .edd-niche-picker button > span {
+    display: none;
+  }
+  .edd-niche-picker button.edd-production-choice {
+    margin-top: 0;
+  }
+  .edd-niche-picker > p {
+    grid-column: 1 / -1;
+    padding: 0;
+  }
+  .edd-niche-detail {
+    padding: 18px;
+  }
+  .edd-niche-detail header h3 {
+    font-size: 26px;
+  }
+}
+@media (forced-colors: active) {
+  .edd-niche-picker button[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+}

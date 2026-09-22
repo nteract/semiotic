@@ -109,7 +109,7 @@ describe("Semiotic architecture example data", () => {
   })
 
   it("expands direct choices into branch, trunk, and relevant roots", () => {
-    for (const profile of SEMIOTIC_EXAMPLE_PROFILES) {
+    for (const profile of SEMIOTIC_EXAMPLE_PROFILES.filter((item) => item.kind !== "concept")) {
       const highlighted = architectureHighlight(profile)
       expect(highlighted).toContain("semiotic-core")
       expect(highlighted).toContain("root-data")
@@ -117,6 +117,13 @@ describe("Semiotic architecture example data", () => {
       expect(highlighted).toContain("root-scene")
       expect(highlighted.size).toBeGreaterThan(profile.uses.length)
     }
+  })
+  it("keeps the concept storyboard from claiming chart runtime usage", () => {
+    const concepts = SEMIOTIC_EXAMPLE_PROFILES.filter((profile) => profile.kind === "concept")
+    expect(concepts.map((profile) => profile.id)).toEqual(["ecosystem-driven-development"])
+    const [concept] = concepts
+    expect(concept.uses).toEqual([])
+    expect([...architectureHighlight(concept)]).toEqual([])
   })
   it("derives architecture profile route and source metadata from the example registry", () => {
     expect(

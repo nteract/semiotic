@@ -340,6 +340,9 @@ const MobileDataVisualizationExamplePage = lazy(
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const DependencyXRayExamplePage = lazy(() => import("./pages/examples/DependencyXRayExamplePage"))
+const EcosystemDrivenDevelopmentExamplePage = lazy(
+  () => import("./pages/examples/EcosystemDrivenDevelopmentExamplePage"),
+)
 const FlowCircuitExamplePage = lazy(() => import("./pages/examples/FlowCircuitExamplePage"))
 const AtlasEvaluationExamplePage = lazy(() => import("./pages/examples/AtlasEvaluationExamplePage"))
 const OregonTrailExamplePage = lazy(() => import("./pages/examples/OregonTrailExamplePage"))
@@ -349,6 +352,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "EcosystemDrivenDevelopmentExamplePage.tsx": EcosystemDrivenDevelopmentExamplePage,
   "AtlasEvaluationExamplePage.tsx": AtlasEvaluationExamplePage,
   "DependencyXRayExamplePage.tsx": DependencyXRayExamplePage,
   "FlowCircuitExamplePage.tsx": FlowCircuitExamplePage,

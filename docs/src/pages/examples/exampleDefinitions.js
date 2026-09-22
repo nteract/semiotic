@@ -2018,6 +2018,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Ecosystem Driven Development",
+    path: "/examples/ecosystem-driven-development",
+    publishedAt: "2026-09-20T12:00:00-07:00",
+    eyebrow: "Cheap implementation · shared understanding",
+    description: "Code is getting cheaper. Understanding still takes work. Explore how useful tools around a shared capability turn design findings into library improvements and better-informed review, through Semiotic’s static and interactive rendering story.",
+    preview: "ecosystem-driven-development",
+    badges: ["Interactive essay", "Shared learning", "SSR / CSR"],
+    frames: ["custom"],
+    topics: ["process", "design", "ai"],
+  },
+  {
     title: "Atlas acceptance lab",
     path: "/examples/atlas-acceptance",
     publishedAt: "2026-09-13T18:00:00-07:00",
@@ -2898,6 +2909,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/ecosystem-driven-development": "EcosystemDrivenDevelopmentExamplePage.tsx",
   "/examples/flow-circuit": "FlowCircuitExamplePage.tsx",
   "/examples/atlas-acceptance": "AtlasEvaluationExamplePage.tsx",
   "/examples/dependency-xray": "DependencyXRayExamplePage.tsx",

@@ -10,6 +10,7 @@ import JobsReportPreview from "./jobs-report/JobsReportPreview"
 import { FlowCircuitPreview, DependencyXRayPreview } from "./flow-circuit/AtlasPreviews"
 
 const PREVIEW_COMPONENTS = {
+  "ecosystem-driven-development": MiniEcosystemDevelopmentPreview,
   "atlas-acceptance": DependencyXRayPreview,
   "flow-circuit": FlowCircuitPreview,
   "dependency-xray": DependencyXRayPreview,
@@ -83,6 +84,23 @@ const PREVIEW_COMPONENTS = {
   "europa-languages": MiniEuropaLanguagesPreview,
   "equal-places-atlas": MiniEqualPlacesAtlasPreview,
   maup: MiniMaupPreview,
+}
+
+function MiniEcosystemDevelopmentPreview() {
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" rx="6" fill="#edf1e8" />
+      <path d="M121 47L40 18M121 47L121 16M121 47L202 18M121 47L40 78M121 47L121 80M121 47L202 78" fill="none" stroke="#176a60" />
+      {[[8, 6, "Open source"], [89, 4, "Examples"], [170, 6, "Prototypes"], [8, 66, "Design tools"], [89, 68, "Comms"], [170, 66, "Beta UIs"]].map(([x, y, label]) => (
+        <g key={label} transform={`translate(${x}, ${y})`}>
+          <rect width="64" height="23" rx="2" fill="#fcfaf5" stroke="#c9d2c1" />
+          <text x="32" y="15" textAnchor="middle" fontSize="8" fill="#203934">{label}</text>
+        </g>
+      ))}
+      <rect x="75" y="35" width="92" height="24" rx="3" fill="#203934" />
+      <text x="121" y="51" textAnchor="middle" fontSize="10" fill="#fcfaf5">One feature</text>
+    </svg>
+  )
 }
 
 function MiniMachineSemiospherePreview() {

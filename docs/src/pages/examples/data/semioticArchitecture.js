@@ -742,6 +742,13 @@ export const SEMIOTIC_ARCHITECTURE_EDGES = [...structuralEdges, ...rhizomeEdges]
 // NetworkCustomChart, custom layout, and shared-state machinery you are using.
 const EXPLICIT_EXAMPLE_PROFILES = [
   {
+    id: "ecosystem-driven-development",
+    shortLabel: "Ecosystem development",
+    kind: "concept",
+    note: "An interactive essay about developing shared understanding through useful products. Authored static/browser chart illustrations show how rendering fidelity lets a design finding improve a shared capability. Product tasks, service commitments, and a short development history explain what later reviewers inherit; the walkthrough does not execute SSR or CSR.",
+    uses: [],
+  },
+  {
     id: "grocery-bill",
     shortLabel: "Grocery receipt",
     note: "A pinned BLS average-price snapshot supplies fixed-quantity receipts, item contributions, and monthly comparisons. One pure preparation adapter preserves exact values, missingness, and saved state across the page, accessible tables, image exports, and an independent package consumer.",
