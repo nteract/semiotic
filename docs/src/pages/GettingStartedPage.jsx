@@ -69,7 +69,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 163,
+    "kb": 162,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -149,7 +149,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 165,
+    "kb": 164,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": {
     "name": "semiotic",
-    "version": "3.10.3"
+    "version": "3.10.4"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -45,8 +45,8 @@
       "importPath": "semiotic/atlas",
       "symbol": "MotifBraidChart",
       "platform": "browser",
-      "rawBytes": 494930,
-      "gzipBytes": 163351,
+      "rawBytes": 494914,
+      "gzipBytes": 163315,
       "packedPackageInputFiles": 37
     },
     {
@@ -99,8 +99,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 483156,
-      "gzipBytes": 158694,
+      "rawBytes": 483140,
+      "gzipBytes": 158654,
       "packedPackageInputFiles": 32
     },
     {
@@ -135,8 +135,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 452240,
-      "gzipBytes": 151015,
+      "rawBytes": 452161,
+      "gzipBytes": 150954,
       "packedPackageInputFiles": 14
     },
     {
@@ -162,8 +162,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 889361,
-      "gzipBytes": 284047,
+      "rawBytes": 889275,
+      "gzipBytes": 284329,
       "packedPackageInputFiles": 4
     },
     {
@@ -171,8 +171,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 456753,
-      "gzipBytes": 145606,
+      "rawBytes": 452289,
+      "gzipBytes": 144410,
       "packedPackageInputFiles": 1
     },
     {
@@ -180,8 +180,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 891349,
-      "gzipBytes": 284953,
+      "rawBytes": 891263,
+      "gzipBytes": 285211,
       "packedPackageInputFiles": 4
     },
     {
@@ -199,7 +199,7 @@
       "symbol": "suggestCharts",
       "platform": "browser",
       "rawBytes": 133356,
-      "gzipBytes": 40052,
+      "gzipBytes": 40051,
       "packedPackageInputFiles": 1
     },
     {
@@ -333,7 +333,7 @@
       "importPath": "semiotic/recipes",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 4159,
+      "rawBytes": 4161,
       "gzipBytes": 1754,
       "packedPackageInputFiles": 16
     },
@@ -342,7 +342,7 @@
       "importPath": "semiotic/recipes/core",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 4159,
+      "rawBytes": 4161,
       "gzipBytes": 1754,
       "packedPackageInputFiles": 8
     },

@@ -4,8 +4,8 @@
 
 Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.
 
-Source package: semiotic@3.10.3. Channel: source.
-Source revision: sha256:b03caf13c998f852c247bbfa4f5470e09cd9b75d77dfd3b0ba2dd8e0743171d7. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source package: semiotic@3.10.4. Channel: source.
+Source revision: sha256:47c46b50f17f8286c1feceea1ec829cb2ef66812f372f8d1e37cf520a5b11494. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
