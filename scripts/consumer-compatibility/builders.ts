@@ -75,17 +75,24 @@ export async function checkBundler({
       },
       devtool: false,
       node: { __filename: "warn-mock", __dirname: "warn-mock" },
+      // Both entries run on the same page. Share their module cache so loading
+      // the census cannot reinitialize modules already loaded by the app.
+      optimization: { runtimeChunk: "single" },
       // This census intentionally retains the entire API. Transfer budgets are
       // separately enforced by npm run size; module diagnostics remain fatal.
       performance: { hints: false }
     },
     `${bundler}/${mode}/browser`
   )
-  writeFileSync(join(outDir, "index.html"), html("./browser.js"))
+  writeFileSync(join(outDir, "index.html"), html("./browser.js", "./runtime.js"))
   const server = await serveOutput(outDir)
   let evidence
   try {
-    evidence = await checkBrowser(browser, server.url)
+    evidence = await checkBrowser(
+      browser,
+      server.url,
+      `${server.url}/surface.js`
+    )
   } finally {
     await server.close()
   }
@@ -128,8 +135,8 @@ export async function checkBundler({
   return { ...evidence, serverFile: join(outDir, "server.cjs") }
 }
 
-export function html(script: string) {
-  return `<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Semiotic consumer</title></head><body><div id="root"></div><script type="module" src="${script}"></script></body></html>`
+export function html(script: string, runtime?: string) {
+  return `<!doctype html><html><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Semiotic consumer</title></head><body><div id="root"></div>${runtime ? `<script src="${runtime}"></script>` : ""}<script type="module" src="${script}"></script></body></html>`
 }
 
 async function checkVite(
@@ -181,7 +188,13 @@ async function checkVite(
           (entry) => entry.specifier
         )
       },
-      server: { host: "127.0.0.1", port: 0 }
+      server: {
+        host: "127.0.0.1",
+        port: 0,
+        // Playwright owns browser diagnostics, including the scoped Rapier
+        // exception. Do not duplicate them as unscoped dev-server warnings.
+        forwardConsole: false
+      }
     })
     try {
       await server.listen()
@@ -204,7 +217,7 @@ async function checkVite(
         lib: {
           entry: join(root, "surface.mjs"),
           formats: ["es"],
-          fileName: "surface"
+          fileName: () => "surface.mjs"
         }
       }
     })
@@ -218,7 +231,11 @@ async function checkVite(
     })
     const server = await serveOutput(outDir)
     try {
-      evidence = await checkBrowser(browser, server.url)
+      evidence = await checkBrowser(
+        browser,
+        server.url,
+        `${server.url}/census/surface.mjs`
+      )
     } finally {
       await server.close()
     }

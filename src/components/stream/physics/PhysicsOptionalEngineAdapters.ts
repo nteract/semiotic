@@ -8,10 +8,7 @@ export interface PhysicsOptionalEngineInstallDetails {
 export class PhysicsOptionalEngineDependencyError extends Error {
   readonly details: PhysicsOptionalEngineInstallDetails
 
-  constructor(
-    details: PhysicsOptionalEngineInstallDetails,
-    cause?: unknown
-  ) {
+  constructor(details: PhysicsOptionalEngineInstallDetails, cause?: unknown) {
     super(
       `${details.engine} is an optional Semiotic physics engine. Install ${details.packageName} to use ${details.importPath}: ${details.installCommand}`
     )
@@ -30,13 +27,20 @@ export function optionalEngineDependencyError(
   return new PhysicsOptionalEngineDependencyError(details, cause)
 }
 
+/**
+ * Load a runtime-selected specifier using the host's native import resolver.
+ * Browsers require a resolvable URL or an import map for bare package names.
+ * Use the named Matter/Rapier loaders for bundler-managed npm dependencies.
+ */
 export async function loadOptionalPhysicsPeer(
   details: PhysicsOptionalEngineInstallDetails
 ): Promise<unknown> {
   try {
     // This public helper accepts a runtime-selected specifier. Leave it to
     // native import resolution instead of generating a bundler context.
-    return await import(/* webpackIgnore: true */ /* @vite-ignore */ details.packageName)
+    return await import(
+      /* webpackIgnore: true */ /* @vite-ignore */ details.packageName
+    )
   } catch (error) {
     throw optionalEngineDependencyError(details, error)
   }

@@ -184,14 +184,25 @@ with the exact compiler versions in `scripts/consumer-compatibility/toolchain.js
 It checks all public JavaScript entries in their browser or server targets with
 webpack, Rspack, and Vite in development and production. Unexpected compiler warnings,
 browser console warnings/errors, failed requests, missing chart paint, failed
-worker responses, and invalid SSR evidence fail the gate. The synthetic API
-census retains every export; transfer-size budgets remain owned by `npm run size`.
+worker responses, failed optional peer simulations, and invalid SSR evidence fail
+the gate. Matter and Rapier are loaded through their named public helpers from
+installed npm packages; each must simulate gravity, including Rapier's WASM
+initialization. The generic native-import helper has a separate URL probe.
+The synthetic API census retains every export; transfer-size budgets remain
+owned by `npm run size`.
 The only permitted module diagnostic is Vite/Rolldown's `MODULE_LEVEL_DIRECTIVE`
 warning for Semiotic's own `"use client"` directives: these are required for RSC
 consumers, and the plain browser fixture has no RSC boundaries to preserve.
 Every occurrence is recorded in the report; other directives, other packages,
 and all other module diagnostics still fail. The named-import Vite application
 uses code splitting with the default size warning threshold intact.
+The full-engine peer probes run from the library-sized API census, which also
+gets loaded in the browser. Rapier 0.19.3 emits a deprecation warning inside its
+own public `init()` implementation, even without Semiotic. The gate records a
+single occurrence of that exact warning only during the Rapier probe and only
+for that version; other console warnings/errors still fail. Revisit this
+exception when upgrading Rapier. Peer versions and expected warnings are
+included in the compatibility report.
 Install Chromium first with `npx playwright install chromium` when running locally.
 
 Use `-- --tarball /path/to/semiotic.tgz` to check an existing archive,

@@ -109,7 +109,11 @@ async function main() {
         entries.map((entry) => entry.specifier)
       ])
     )
-    writeFileSync(join(temp, "surface.mjs"), namespaceProbe(entries.browser))
+    writeFileSync(
+      join(temp, "surface.mjs"),
+      namespaceProbe(entries.browser) +
+        '\nimport { peerChecks } from "./peers.mjs";\nglobalThis.__semioticPeerChecks = peerChecks;\n'
+    )
     writeFileSync(
       join(temp, "server.mjs"),
       namespaceProbe(entries.server) +
@@ -135,6 +139,15 @@ async function main() {
       target: "es2022"
     })
     writeFileSync(join(temp, "browser.mjs"), app.code)
+    const peers = await transform(
+      readFileSync(join(here, "peers.ts"), "utf8"),
+      {
+        loader: "ts",
+        format: "esm",
+        target: "es2022"
+      }
+    )
+    writeFileSync(join(temp, "peers.mjs"), peers.code)
     writeFileSync(join(temp, "index.html"), html("/browser.mjs"))
 
     const browser = await chromium.launch({ headless: true })
@@ -169,7 +182,7 @@ async function main() {
             }
             results.push({ bundler, mode, status: "passed", ...evidence })
             console.log(
-              `✓ ${label}: no unexpected warnings; charts, workers, and SSR passed`
+              `✓ ${label}: no unexpected warnings; charts, workers, optional peers, and SSR passed`
             )
           } catch (error) {
             const message =

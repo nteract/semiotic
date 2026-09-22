@@ -6,6 +6,7 @@ import {
   assertNoDiagnostics,
   consumerEntries,
   isExpectedClientDirective,
+  isExpectedPeerWarning,
   namespaceProbe,
   parseOptions
 } from "./contracts.ts"
@@ -207,4 +208,24 @@ test("PR and release gates remain blocking, with the release checking its exact 
     assert.ok(
       pkg.scripts[name].includes("npm run check:consumer-compatibility")
     )
+})
+
+test("Rapier's upstream init warning exception is limited to its probe, version and exact message", () => {
+  const warning = {
+    peer: "rapier",
+    version: "0.19.3",
+    message:
+      "using deprecated parameters for the initialization function; pass a single object instead"
+  }
+  assert.equal(isExpectedPeerWarning(warning), true)
+  for (const change of [
+    { peer: "matter" },
+    { peer: "" },
+    { version: "0.19.4" },
+    { message: "__filename is mocked" },
+    { message: "Failed to resolve module specifier @dimforge/rapier2d-compat" },
+    { message: warning.message + "; another warning" }
+  ]) {
+    assert.equal(isExpectedPeerWarning({ ...warning, ...change }), false)
+  }
 })

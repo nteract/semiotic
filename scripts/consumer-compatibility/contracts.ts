@@ -110,3 +110,20 @@ export function isExpectedClientDirective(warning: {
     )
   )
 }
+
+// Rapier 0.19.3's public init() passes a raw ArrayBuffer to its own generated
+// wasm-bindgen initializer. This warning occurs with the peer alone, without
+// Semiotic. Permit it only during that peer's runtime probe, for this exact
+// version/message, and retain it in the report. Revisit when upgrading Rapier.
+export function isExpectedPeerWarning(warning: {
+  peer: string
+  version: string
+  message: string
+}) {
+  return (
+    warning.peer === "rapier" &&
+    warning.version === "0.19.3" &&
+    warning.message ===
+      "using deprecated parameters for the initialization function; pass a single object instead"
+  )
+}

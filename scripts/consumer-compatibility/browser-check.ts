@@ -3,7 +3,8 @@ import { createServer } from "node:http"
 import { readFile } from "node:fs/promises"
 import { extname, resolve, sep } from "node:path"
 import type { Browser } from "playwright-chromium"
-import { assertNoDiagnostics } from "./contracts.ts"
+import { assertNoDiagnostics, isExpectedPeerWarning } from "./contracts.ts"
+import type { peerChecks } from "./peers.ts"
 
 export async function serveOutput(directory: string) {
   const server = createServer(async (request, response) => {
@@ -50,14 +51,17 @@ export async function serveOutput(directory: string) {
 export async function checkBrowser(
   browser: Browser,
   url: string,
-  surfaceUrl?: string
+  surfaceUrl: string
 ) {
   const page = await browser.newPage({
     viewport: { width: 1100, height: 1200 }
   })
   const diagnostics: string[] = []
+  let peerWarnings: string[] | undefined
   page.on("console", (message) => {
-    if (["warning", "error"].includes(message.type()))
+    if (message.type() === "warning" && peerWarnings)
+      peerWarnings.push(message.text())
+    else if (["warning", "error"].includes(message.type()))
       diagnostics.push(`console ${message.type()}: ${message.text()}`)
   })
   page.on("pageerror", (error) =>
@@ -104,10 +108,6 @@ export async function checkBrowser(
       }
     })
     await page.goto(url)
-    if (surfaceUrl)
-      await page.evaluate(async (path) => {
-        await import(/* @vite-ignore */ path)
-      }, surfaceUrl)
     await page.waitForFunction(
       () => {
         const state = window as unknown as {
@@ -164,10 +164,37 @@ export async function checkBrowser(
       undefined,
       { timeout: 15_000 }
     )
+    // The census retains all exports and complete optional engines, including
+    // Rapier's embedded WASM. Run its peer probes separately from the ordinary
+    // chart application's transfer-size checks; do not raise application limits.
+    await page.evaluate(async (path) => {
+      await import(/* @vite-ignore */ path)
+    }, surfaceUrl)
+    const peers: Record<string, string> = {}
+    const expectedPeerWarnings: string[] = []
+    for (const peer of ["matter", "rapier"] as const) {
+      peerWarnings = []
+      const version = await page.evaluate(async (name) => {
+        const state = window as unknown as {
+          __semioticPeerChecks: typeof peerChecks
+        }
+        return state.__semioticPeerChecks[name]()
+      }, peer)
+      assert.ok(version, `${peer}: missing installed peer version`)
+      peers[peer] = version
+      for (const [index, message] of peerWarnings.entries()) {
+        if (index === 0 && isExpectedPeerWarning({ peer, version, message }))
+          expectedPeerWarnings.push(`${peer}@${version}: ${message}`)
+        else diagnostics.push(`console warning (${peer}): ${message}`)
+      }
+    }
+    peerWarnings = undefined
     assertNoDiagnostics("Browser diagnostics", diagnostics)
     return {
       charts: ["LineChart", "BarChart", "ProcessSankey", "UnitPileChart"],
-      workers: 3
+      workers: 3,
+      peers,
+      expectedPeerWarnings
     }
   } catch (error) {
     const state = await page

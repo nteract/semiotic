@@ -1,10 +1,5 @@
-import type {
-  PhysicsEngineCapabilities
-} from "./PhysicsEngineAdapter"
-import {
-  loadOptionalPhysicsPeer,
-  optionalEngineDependencyError
-} from "./PhysicsOptionalEngineAdapters"
+import type { PhysicsEngineCapabilities } from "./PhysicsEngineAdapter"
+import { optionalEngineDependencyError } from "./PhysicsOptionalEngineAdapters"
 
 export const RAPIER_PHYSICS_PACKAGE = "@dimforge/rapier2d-compat"
 export const RAPIER_PHYSICS_IMPORT_PATH = "semiotic/physics/rapier"
@@ -35,8 +30,17 @@ export const RAPIER_PHYSICS_INSTALL = {
 } as const
 
 export async function loadRapierPhysicsPeer(): Promise<unknown> {
-  const module = await loadOptionalPhysicsPeer(RAPIER_PHYSICS_INSTALL)
-  const candidate = module as { default?: unknown; init?: () => Promise<void> | void }
+  // Keep this peer's import on its own optional subpath, so Matter consumers
+  // do not have to install Rapier (and vice versa).
+  const module = await import("@dimforge/rapier2d-compat").catch(
+    (cause: unknown) => {
+      throw optionalEngineDependencyError(RAPIER_PHYSICS_INSTALL, cause)
+    }
+  )
+  const candidate = module as {
+    default?: unknown
+    init?: () => Promise<void> | void
+  }
   const rapier = (candidate.default ?? candidate) as {
     init?: () => Promise<void> | void
   }
@@ -44,8 +48,6 @@ export async function loadRapierPhysicsPeer(): Promise<unknown> {
   return rapier
 }
 
-export function rapierPhysicsDependencyError(
-  cause?: unknown
-): Error {
+export function rapierPhysicsDependencyError(cause?: unknown): Error {
   return optionalEngineDependencyError(RAPIER_PHYSICS_INSTALL, cause)
 }
