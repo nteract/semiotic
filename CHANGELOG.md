@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.4] - 2026-09-22
+
+### Fixed
+- Consumer bundles preserve inline worker URLs and dynamic-import hints, and
+  avoid leaking `__filename` into ESM chunks.
+- Optional Matter and Rapier physics peers use literal dynamic imports that
+  consumer bundlers can resolve. Rapier initialization awaits its WASM runtime;
+  missing peers retain installation guidance.
+- AI diagnosis and validation reject null data and report empty static data
+  consistently. Push-mode exceptions apply only when data is omitted.
+- Generated wire schemas preserve authored nested property constraints,
+  including array item requirements.
+- Registry extraction supports nested `Object.assign` expressions.
+
+### Changed
+- Shared chart definitions generate AI and server registrations for XY, ordinal,
+  network, physics, and realtime charts, with common diagnosis logic across AI
+  transports.
+- A packed-consumer compatibility gate exercises webpack, Rspack, and Vite,
+  checking browser rendering, workers, SSR evidence, and optional physics peers.
+- Refreshed generated chart configurations and release metadata.
+
 ## [3.10.3] - 2026-09-19
 
 ### Fixed

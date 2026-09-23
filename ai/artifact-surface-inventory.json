@@ -107,7 +107,7 @@
     "src/components/store/selectionProvenance.ts"
   ],
   "inventoryVersion": 1,
-  "repositoryVersion": "3.10.3",
+  "repositoryVersion": "3.10.4",
   "relations": [
     {
       "id": "claim-support",
