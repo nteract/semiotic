@@ -149,6 +149,8 @@ export type {
 
 export { lineageDagLayout } from "./recipes/lineageDag"
 export type { LineageDagConfig, LineageLod, LineageStoreSlot } from "./recipes/lineageDag"
+export { createLineageDagFit } from "./recipes/lineageDagFit"
+export type { LineageDagFit, LineageDagFitConfig, LineageDagFitRect } from "./recipes/lineageDagFit"
 
 export { prepareNetworkAtlasAsync } from "./recipes/atlas/prepareAsync"
 export type {

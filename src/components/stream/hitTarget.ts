@@ -271,6 +271,8 @@ export interface NetworkHitTargetRectProps {
  * `id` resolves a `{ pointId: id }` annotation to this mark. Inherits the same
  * keyboard nav, focus ring, tooltip/`onObservation`, and shared-selection
  * threading the built-in network charts get.
+ * Among overlapping rectangles, the smallest containing rectangle wins;
+ * equal-area ties use the first scene entry. Nodes take precedence over edges.
  *
  * @example
  * ```ts
@@ -357,7 +359,8 @@ export interface NetworkLineEdgeHitTargetProps
 
 export interface NetworkPathEdgeHitTargetProps
   extends NetworkEdgeHitTargetBaseProps {
-  /** Curved paths are the most general default; bezier/ribbon reuse the same path contract. */
+  /** Curved paths (the default) hit their stroke only. Use bezier/ribbon for
+   * filled bands whose interiors should also receive pointer hits. */
   type?: "curved" | "bezier" | "ribbon"
   pathD: string
 }
@@ -389,6 +392,8 @@ export function networkEdgeHitTarget(
   }
 
   if ("pathD" in props) {
+    if (!props.type || props.type === "curved")
+      (common.style as NetworkCurvedEdge["style"]).fill = "none"
     return {
       type: props.type ?? "curved",
       pathD: props.pathD,

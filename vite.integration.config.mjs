@@ -73,6 +73,7 @@ export default defineConfig(({ mode }) => ({
         machineBaseline: resolve(integrationRoot, "machine-baseline-examples/index.html"),
         mobileVisualization: resolve(integrationRoot, "mobile-visualization-examples/index.html"),
         network: resolve(integrationRoot, "network-examples/index.html"),
+        networkCustomLayout: resolve(integrationRoot, "network-custom-layout-examples/index.html"),
         ordinal: resolve(integrationRoot, "ordinal-examples/index.html"),
         primitiveProps: resolve(integrationRoot, "primitive-props-examples/index.html"),
         primitiveThemeMatrix: resolve(integrationRoot, "primitive-theme-matrix-examples/index.html"),

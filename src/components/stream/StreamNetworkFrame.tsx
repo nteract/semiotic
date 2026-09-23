@@ -1619,6 +1619,11 @@ const StreamNetworkFrame = memo(forwardRef<
           marks={store?.customLayoutHtmlMarks}
           margin={margin}
           selection={layoutSelection ?? null}
+          width={adjustedWidth}
+          height={adjustedHeight}
+          viewport={props.viewport}
+          htmlMarkCulling={props.htmlMarkCulling}
+          onViewportChange={props.onViewportChange}
         />
 
         <FocusRing

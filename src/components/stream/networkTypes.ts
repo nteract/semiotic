@@ -11,6 +11,7 @@ import type { NetworkSymbolName } from "./symbolPath"
 import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
+import type { NetworkViewportProps } from "./networkViewportTypes"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
 
 /** Style-callback result, including `cursor` on legacy datum-shaped returns. */
@@ -823,6 +824,12 @@ export interface StreamNetworkFrameProps<T = Datum>
   summary?: string
 
   // ── customLayout escape hatch ────────────────────
+  /** Scroll root for HTML marks and shared plot-coordinate viewport reports. */
+  viewport?: NetworkViewportProps["viewport"]
+  /** HTML mark overscan, mounting switch, and off-screen pins. */
+  htmlMarkCulling?: NetworkViewportProps["htmlMarkCulling"]
+  /** Reports committed viewport geometry and visible/mounted mark IDs. */
+  onViewportChange?: NetworkViewportProps["onViewportChange"]
   /** Replaces network layout + scene dispatch with a user-supplied function.
    *  Receives raw nodes/edges + dimensions/theme, returns positioned scene
    *  primitives. See `semiotic/recipes` for reference layouts (flextree, dagre). */

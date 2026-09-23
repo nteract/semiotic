@@ -73,6 +73,7 @@ function computeTransitDiagramPositions(nodes: readonly {id: string; data: Datum
 function countPairwiseCrossings<T>(items: readonly T[], endpoints: (item: T) => readonly [number, number], comparePair?: ((a: T, b: T) => boolean) | undefined): number
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
+function createLineageDagFit(nodes: readonly Datum[], plot: LineageDagFitRect, config?: LineageDagFitConfig | undefined): LineageDagFit
 function createPortalController(options: {id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void;}): PhysicsController
 function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
@@ -326,6 +327,8 @@ interface LegendGroupsInput
 interface LegendSwatch
 interface LegendSwatchesProps
 interface LineageDagConfig
+interface LineageDagFit
+interface LineageDagFitRect
 interface LineageStoreSlot
 interface LinearAxisProps
 interface MarimekkoConfig
@@ -1099,6 +1102,18 @@ interface-member LineageDagConfig::property::showStoreChips = optional showStore
 interface-member LineageDagConfig::property::storeChipColor = optional storeChipColor: string | undefined
 interface-member LineageDagConfig::property::storesAccessor = optional storesAccessor: string | undefined
 interface-member LineageDagConfig::property::typeLabel = optional typeLabel: ((info: {semantic: string; partition: string; node: Datum;}) => string) | undefined
+interface-member LineageDagFit::method::invert = required invert(x: number, y: number): {layer: null | number; row: number;}
+interface-member LineageDagFit::method::nodeBounds = required nodeBounds(node: Datum): LineageDagFitRect & {cx: number; cy: number;}
+interface-member LineageDagFit::method::project = required project(layer: number, row: number): {x: number; y: number;}
+interface-member LineageDagFit::property::layerCount = required layerCount: number
+interface-member LineageDagFit::property::lod = required lod: LineageLod
+interface-member LineageDagFit::property::maxLayerSize = required maxLayerSize: number
+interface-member LineageDagFit::property::nodeHeight = required nodeHeight: number
+interface-member LineageDagFit::property::nodeWidth = required nodeWidth: number
+interface-member LineageDagFitRect::property::height = required height: number
+interface-member LineageDagFitRect::property::width = required width: number
+interface-member LineageDagFitRect::property::x = required x: number
+interface-member LineageDagFitRect::property::y = required y: number
 interface-member LineageStoreSlot::property::slotIndex = required slotIndex: number
 interface-member LineageStoreSlot::property::storeName = required storeName: string
 interface-member LinearAxisProps::property::className = optional className: string | undefined
@@ -2100,6 +2115,7 @@ type HighlightMatch = ReadonlyArray<{field: string; value: unknown;}> | {field: 
 type HullPadding = number | {x?: number; y?: number;}
 type IsometricTerrainKind = "bare" | "cropland" | "forest" | "grassland" | "land" | "ocean" | "scrub" | "snow" | "urban" | "wetland"
 type LandmarkKind = "arena" | "city" | "culture" | "defense" | "faith" | "knowledge" | "monument" | "nature" | "transport"
+type LineageDagFitConfig = Pick<LineageDagConfig, "layerAccessor" | "layerCount" | "lod" | "maxLayerSize" | "minGapX" | "minGapY" | "nodeHeight" | "nodeWidth" | "rowAccessor">
 type LineageLod = "compact" | "dot" | "full" | "icon"
 type MobileAnnotationStrategyMode = "callout-list" | "hybrid" | "plot"
 type MobileChartFamily = "area" | "geo" | "line" | "network" | "ordinal" | "scatter" | "small-multiple"

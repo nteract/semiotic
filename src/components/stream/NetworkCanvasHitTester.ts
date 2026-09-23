@@ -339,7 +339,7 @@ function hitTestLineEdge(
 }
 
 function hitTestPathEdge(
-  edge: { pathD: string; datum: SceneDatum; _cachedPath2D?: Path2D; _cachedPath2DSource?: string },
+  edge: Exclude<NetworkSceneEdge, { type: "line" }>,
   px: number,
   py: number
 ): NetworkHitResult | null {
@@ -352,8 +352,10 @@ function hitTestPathEdge(
   if (!path || !ctx) return null
 
   try {
-    // Check filled area first (for wide ribbon edges)
-    if (ctx.isPointInPath(path, px, py)) {
+    // Canvas implicitly closes open paths for fill tests. Only filled bands
+    // own that interior; an unfilled curved link owns its stroke alone.
+    // Opacity is intentionally ignored so transparent semantic targets work.
+    if (edge.style.fill && edge.style.fill !== "none" && ctx.isPointInPath(path, px, py)) {
       return {
         type: "edge",
         datum: edge.datum,

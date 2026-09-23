@@ -119,9 +119,22 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
  * / `visibility` without re-painting its contents.
  *
  * The framework owns placement: each mark is wrapped in an absolutely-positioned
- * element that tracks the same margin (and any future zoom/pan) transform the
+ * element that tracks the same margin transform the
  * canvas and `overlays` receive, so a mark at `(x, y)` lands exactly where a
  * `sceneNode` at `(x, y)` does. The consumer owns the content's appearance.
+ * Network viewport zoom/pan is not currently supported.
+ *
+ * Wrappers are viewport-culled against the nearest scrollable ancestor, with
+ * 400 CSS pixels of overscan. Scroll/resize updates do not rerun the layout.
+ * SSR, an absent scroll target, or a zero-sized target mounts every mark.
+ * Frame props `viewport`, `htmlMarkCulling`, and `onViewportChange` configure
+ * the target, overscan/disable/pins, and shared plot-space viewport reporting.
+ * Focused card content stays mounted off-screen until focus leaves it.
+ *
+ * Stable IDs preserve mounted content when descendant types/keys remain stable,
+ * including position updates and equal-ID data replacement (which may rerun the
+ * layout). Scrolling an unpinned, unfocused card out of the mounted set discards
+ * its local React state; keep durable state outside virtualized content.
  *
  * Marks are non-interactive by default (`pointer-events: none`) — pointer events
  * fall through to the canvas, so existing `sceneNodes` hit-testing
@@ -129,8 +142,9 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
  * `sceneNode` per mark to keep the canvas authoritative for interaction.
  */
 export interface NetworkHtmlMark {
-  /** Stable identity for keying / reconciliation across layout runs. A
-   *  position-only update repositions without remounting the content. */
+  /** Stable identity for reconciliation while mounted. Position-only updates
+   * preserve content with stable descendant types/keys; viewport culling can
+   * unmount an unpinned, unfocused mark and discard its local state. */
   id: string
   /** Top-left x in plot coordinates — the same space as `sceneNodes`. */
   x: number
@@ -166,7 +180,9 @@ export interface NetworkLayoutResult {
    * dim or animate on hover — they composite `opacity`/`transform` changes
    * instead of re-rasterizing text the way an SVG `<foreignObject>` does. The
    * framework owns positioning + transform so marks stay pixel-aligned with
-   * `sceneNodes`. Additive: a layout that omits it renders no extra DOM. See
+   * `sceneNodes`. Viewport culling defaults to 400 CSS pixels of overscan;
+   * `htmlMarkCulling` configures it without a relayout. A layout that omits marks
+   * renders no extra DOM unless `onViewportChange` needs a measurement origin. See
    * {@link NetworkHtmlMark}.
    */
   htmlMarks?: NetworkHtmlMark[]

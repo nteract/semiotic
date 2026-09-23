@@ -976,7 +976,8 @@ function checkTypeScriptConsumer(proj, packageRoot, failures) {
   for (const script of [
     "run-force-worker-client.mjs",
     "run-force-worker-client.cjs",
-    "run-motif-braid.mjs"
+    "run-motif-braid.mjs",
+    "run-network-custom-layout.mjs"
   ]) {
     try {
       const out = runFixtureScript(fixtureDir, script)

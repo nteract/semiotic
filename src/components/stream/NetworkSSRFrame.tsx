@@ -192,6 +192,11 @@ export function NetworkSSRFrame({
         marks={store?.customLayoutHtmlMarks}
         margin={margin}
         selection={layoutSelection ?? null}
+        width={adjustedWidth}
+        height={adjustedHeight}
+        viewport={props.viewport}
+        htmlMarkCulling={props.htmlMarkCulling}
+        onViewportChange={props.onViewportChange}
       />
     </div>
   )
