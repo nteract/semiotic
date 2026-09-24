@@ -1,4 +1,23 @@
-import { expect, type Page } from "@playwright/test"
+import { expect, type Locator, type Page } from "@playwright/test"
+
+/** Assert tooltip placement independently of reviewed visual baselines. */
+export async function expectTooltipWithinPlot(
+  chart: Locator,
+  margin: { left: number; right: number; top: number; bottom: number }
+): Promise<void> {
+  const tooltip = chart.locator(".stream-frame-tooltip, .stream-ordinal-tooltip")
+  await expect(tooltip).toBeVisible()
+  await expect.poll(async () => {
+    const plot = await chart.locator("canvas").first().boundingBox()
+    const tip = await tooltip.boundingBox()
+    if (!plot || !tip) return false
+    // Allow half a CSS pixel for fractional browser layout rounding.
+    return tip.x >= plot.x + margin.left - 0.5 &&
+      tip.y >= plot.y + margin.top - 0.5 &&
+      tip.x + tip.width <= plot.x + plot.width - margin.right + 0.5 &&
+      tip.y + tip.height <= plot.y + plot.height - margin.bottom + 0.5
+  }, { message: "Tooltip must stay inside its source plot" }).toBe(true)
+}
 
 /**
  * Wait for two animation frames to pass on the page. Deterministic

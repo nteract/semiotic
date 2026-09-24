@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test"
+import { expectTooltipWithinPlot } from "./helpers"
 
 async function hoverAt(page: Page, chart: Locator, x: number, y: number) {
   const box = await chart.boundingBox()
@@ -24,6 +25,9 @@ test("category bars dim lines, and field hover from lines highlights bars", asyn
   await expect(page.getByTestId("selection-summary")).toHaveText(
     "3 matching observations: North"
   )
+  await expectTooltipWithinPlot(page.getByTestId("category-source"), {
+    left: 48, right: 20, top: 28, bottom: 28
+  })
   await expect(example).toHaveScreenshot("bar-to-line.png")
   // South's first vertex: x=5, y=8 in the fixed [0,30] × [0,12] domains.
   await hoverAt(
@@ -35,6 +39,9 @@ test("category bars dim lines, and field hover from lines highlights bars", asyn
   await expect(page.getByTestId("selection-summary")).toHaveText(
     "3 matching observations: South"
   )
+  await expectTooltipWithinPlot(page.getByTestId("linked-line"), {
+    left: 48, right: 20, top: 28, bottom: 28
+  })
   await expect(example).toHaveScreenshot("line-to-bar-field.png")
   await page.mouse.move(850, 10)
   await expect(page.getByTestId("selection-summary")).toContainText(
