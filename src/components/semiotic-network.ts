@@ -111,6 +111,7 @@ export type { NetworkCustomChartProps } from "./charts/custom/NetworkCustomChart
 
 // customLayout escape hatch
 export type {
+  NetworkViewTransform,
   NetworkViewportRect,
   NetworkViewportOptions,
   NetworkHtmlMarkCulling,

@@ -7,6 +7,7 @@ import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import {
   TooltipRoot,
   hasOwnTooltipChrome,
+  hasTooltipContent,
 } from "./tooltipChrome"
 
 export {
@@ -418,7 +419,10 @@ export interface MultiTooltipConfig {
 }
 
 /**
- * Type for tooltip prop that chart components accept
+ * Type for tooltip prop that chart components accept.
+ * `false` disables the tooltip without disabling hover observations. A custom
+ * renderer receives authored data; return `null` directly to omit a datum's
+ * tooltip (including its background). Use TooltipRoot for custom chrome.
  */
 export type TooltipProp =
   | boolean
@@ -440,6 +444,8 @@ export type TooltipPropWithHoverCallback =
 /**
  * The function signature that Stream Frames expect for tooltipContent.
  * Compatible with HoverData and any Record-based hover object.
+ * Receives the frame hover wrapper; use unwrapDatum once for authored data.
+ * Return null directly to suppress the entire tooltip for a datum.
  */
 export type TooltipContentFn = (d: Datum) => React.ReactNode
 
@@ -704,7 +710,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
         datum = withHoverContext
       }
       const result = userFn(datum)
-      if (result === null || result === undefined) return null
+      if (!hasTooltipContent(result)) return null
       // A custom renderer can own its chrome either with TooltipRoot, the
       // explicit data marker, an inline background, or a component-level
       // ownsChrome flag. Preserve that element directly; wrapping it here

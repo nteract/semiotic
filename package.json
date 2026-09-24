@@ -57,6 +57,12 @@
       "require": "./dist/network.min.js",
       "default": "./dist/network.module.min.js"
     },
+    "./network/zoom": {
+      "types": "./dist/semiotic-network-zoom.d.ts",
+      "import": "./dist/semiotic-network-zoom.module.min.js",
+      "require": "./dist/semiotic-network-zoom.min.js",
+      "default": "./dist/semiotic-network-zoom.module.min.js"
+    },
     "./realtime": {
       "types": "./dist/semiotic-realtime.d.ts",
       "import": "./dist/realtime.module.min.js",
@@ -372,7 +378,8 @@
     "typescript:tests": "node scripts/check-test-types.mjs",
     "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "size": "node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "size": "node --test scripts/network-zoom-bundle.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "check:network-zoom-bundle": "node --test scripts/network-zoom-bundle.test.mjs",
     "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",
     "check:multi-import-size": "node scripts/check-multi-import-size.mjs",
     "check:pack": "node scripts/smoke-pack.mjs",

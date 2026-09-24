@@ -78,6 +78,8 @@ const BLURBS = {
     "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts",
   "./network":
     "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
+  "./network/zoom":
+    "Optional virtual network viewport, camera controls and consumer-owned LOD",
   "./geo": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
   "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
   "./server":
@@ -135,6 +137,7 @@ const ORDER = [
   "./xy",
   "./ordinal",
   "./network",
+  "./network/zoom",
   "./geo",
   "./realtime",
   "./realtime/core",

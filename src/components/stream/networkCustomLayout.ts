@@ -122,11 +122,14 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
  * element that tracks the same margin transform the
  * canvas and `overlays` receive, so a mark at `(x, y)` lands exactly where a
  * `sceneNode` at `(x, y)` does. The consumer owns the content's appearance.
- * Network viewport zoom/pan is not currently supported.
+ * An optional `viewTransform` applies the same camera to all layers. Import
+ * gesture controls and size-based LOD helpers from `semiotic/network/zoom`.
  *
  * Wrappers are viewport-culled against the nearest scrollable ancestor, with
  * 400 CSS pixels of overscan. Scroll/resize updates do not rerun the layout.
- * SSR, an absent scroll target, or a zero-sized target mounts every mark.
+ * Without a camera, SSR, an absent scroll target, or a zero-sized target mounts
+ * every mark. A camera inverse-projects the clipped plot for culling, including
+ * during SSR, and keeps overscan in screen CSS pixels.
  * Frame props `viewport`, `htmlMarkCulling`, and `onViewportChange` configure
  * the target, overscan/disable/pins, and shared plot-space viewport reporting.
  * Focused card content stays mounted off-screen until focus leaves it.
@@ -184,6 +187,8 @@ export interface NetworkLayoutResult {
    * `htmlMarkCulling` configures it without a relayout. A layout that omits marks
    * renders no extra DOM unless `onViewportChange` needs a measurement origin. See
    * {@link NetworkHtmlMark}.
+   * With HTML marks, the visual container uses an accessible group rather than
+   * an atomic image so native buttons and editors remain exposed to assistive technology.
    */
   htmlMarks?: NetworkHtmlMark[]
   /**

@@ -826,6 +826,8 @@ export interface StreamNetworkFrameProps<T = Datum>
   // ── customLayout escape hatch ────────────────────
   /** Scroll root for HTML marks and shared plot-coordinate viewport reports. */
   viewport?: NetworkViewportProps["viewport"]
+  /** Optional plot camera; see semiotic/network/zoom for gestures and LOD. */
+  viewTransform?: NetworkViewportProps["viewTransform"]
   /** HTML mark overscan, mounting switch, and off-screen pins. */
   htmlMarkCulling?: NetworkViewportProps["htmlMarkCulling"]
   /** Reports committed viewport geometry and visible/mounted mark IDs. */

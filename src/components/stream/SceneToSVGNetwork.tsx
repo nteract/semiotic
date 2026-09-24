@@ -206,24 +206,25 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
   }
 }
 
-export function networkLabelToSVG(label: NetworkLabel, i: number): React.ReactNode {
+export function networkLabelToSVG(label: NetworkLabel, i: number, anchor: NetworkLabel["anchor"] = "middle", baseline = "auto"): React.ReactNode {
   return (
     <text
       key={`net-label-${i}`}
       x={label.x} y={label.y}
-      textAnchor={label.anchor || "middle"}
+      textAnchor={label.anchor || anchor}
       // Cast via React's `SVGAttributes["dominantBaseline"]` rather
       // than `any`. `NetworkLabel.baseline` is a free-form string
       // (consumers control it); React types this attribute as a strict
       // SVG-spec union. The cast is the boundary, not a type-safety
       // bypass — runtime accepts whatever the user supplied.
-      dominantBaseline={(label.baseline || "auto") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
+      dominantBaseline={(label.baseline || baseline) as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
       fontSize={label.fontSize || 11}
       fontWeight={label.fontWeight}
       fill={label.fill || "var(--semiotic-text, #333)"}
       stroke={label.stroke}
       strokeWidth={label.strokeWidth}
       paintOrder={label.paintOrder}
+      style={{ pointerEvents: "none" }}
     >
       {label.text}
     </text>

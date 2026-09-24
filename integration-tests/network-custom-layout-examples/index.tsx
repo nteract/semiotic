@@ -7,6 +7,9 @@ import {
 } from "../../dist/network.module.min.js"
 import type { NetworkCustomLayout } from "../../src/components/stream/networkCustomLayout"
 import { ViewportFixture } from "./viewportFixture"
+import NetworkZoomDemo, { networkZoomDemoLayoutCalls } from "../../docs/src/components/NetworkZoomDemo"
+import { ZoomFixture } from "./zoomFixture"
+Object.defineProperty(window, "networkZoomDemoLayoutCalls", { get: () => networkZoomDemoLayoutCalls })
 
 const nodes = [{ id: "card" }]
 const edges: [] = []
@@ -97,7 +100,7 @@ function App() {
 }
 
 createRoot(document.getElementById("root")!).render(
-  new URLSearchParams(location.search).has("viewport") ? (
+  new URLSearchParams(location.search).has("zoom") ? <NetworkZoomDemo /> : new URLSearchParams(location.search).has("zoom-test") ? <ZoomFixture /> : new URLSearchParams(location.search).has("viewport") ? (
     <ViewportFixture />
   ) : (
     <App />

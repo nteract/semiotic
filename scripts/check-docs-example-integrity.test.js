@@ -2,12 +2,41 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import { describe, expect, it } from "vitest"
-import { readFileSync } from "node:fs"
-import { validateExamplePreviews } from "./check-docs-example-integrity.mjs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import {
+  loadArchitectureProfilePaths,
+  validateExamplePreviews
+} from "./check-docs-example-integrity.mjs"
 
 const run = promisify(execFile)
 
 describe("docs example integrity", () => {
+  it("rejects a missing explicit architecture profile before prerendering", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "semiotic-profile-check-"))
+    const file = join(directory, "architecture.mjs")
+    try {
+      writeFileSync(
+        file,
+        `
+        const EXAMPLE_DEFINITIONS = [{id: "present"}, {id: "missing"}]
+        const profiles = new Map([["present", {path: "/examples/present"}]])
+        export const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {
+          const profile = profiles.get(definition.id)
+          if (!profile) throw new Error("Missing profile: " + definition.id)
+          return profile
+        })
+      `
+      )
+      await expect(loadArchitectureProfilePaths(file)).rejects.toThrow(
+        "Missing profile: missing"
+      )
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it("accepts distinct preview keys for each example", () => {
     expect(
       validateExamplePreviews(

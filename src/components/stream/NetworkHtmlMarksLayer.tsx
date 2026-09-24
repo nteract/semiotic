@@ -5,6 +5,7 @@ import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { CustomLayoutSelectionProvider } from "./customLayoutSelection"
 import type { NetworkViewportProps } from "./networkViewportTypes"
 import { useNetworkViewport } from "./useNetworkViewport"
+import { normalizeNetworkView } from "./networkViewTransform"
 
 export interface NetworkHtmlMarksLayerProps extends NetworkViewportProps {
   /** Marks emitted by the custom layout (`NetworkLayoutResult.htmlMarks`). */
@@ -21,10 +22,9 @@ export interface NetworkHtmlMarksLayerProps extends NetworkViewportProps {
   height?: number
 }
 
-// The container owns the transform (margin today; margin + zoom/pan when that
-// lands) so every mark inherits the canvas/overlay alignment from one place.
-// It is sized 0×0 and out-of-flow: marks are absolutely positioned against its
-// padding box, whose origin sits at the plot origin after the margin offset.
+// The outer container applies margins; its inner wrapper applies the optional
+// camera so every mark shares the canvas/overlay alignment. Without a camera,
+// the out-of-flow container is 0×0; camera mode sizes it to clip the viewport.
 const containerBaseStyle: React.CSSProperties = {
   position: "absolute",
   top: 0,
@@ -59,6 +59,7 @@ export function NetworkHtmlMarksLayer({
   selection = null,
   width,
   height,
+  viewTransform,
   viewport,
   htmlMarkCulling,
   onViewportChange
@@ -71,6 +72,7 @@ export function NetworkHtmlMarksLayer({
     width,
     height,
     focusedId,
+    viewTransform,
     viewport,
     htmlMarkCulling,
     onViewportChange,
@@ -94,6 +96,7 @@ export function NetworkHtmlMarksLayer({
   if ((!marks || marks.length === 0) && !onViewportChange && focusedId === null)
     return null
 
+  const view = normalizeNetworkView(viewTransform)
   const layer = (
     <div
       className="semiotic-network-html-marks"
@@ -109,25 +112,33 @@ export function NetworkHtmlMarksLayer({
       }}
       style={{
         ...containerBaseStyle,
-        transform: `translate(${margin.left}px, ${margin.top}px)`
+        transform: `translate(${margin.left}px, ${margin.top}px)`,
+        ...(viewTransform ? { width, height, overflow: "clip" } : {})
       }}
     >
-      {visible.map((mark) => (
-        <div
-          key={mark.id}
-          className="semiotic-network-html-mark"
-          data-mark-id={mark.id}
-          style={{
-            position: "absolute",
-            transform: `translate(${mark.x}px, ${mark.y}px)`,
-            width: mark.width,
-            height: mark.height,
-            pointerEvents: "none"
-          }}
-        >
-          {mark.content}
-        </div>
-      ))}
+      <div
+        style={{
+          transformOrigin: "0 0",
+          transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`
+        }}
+      >
+        {visible.map((mark) => (
+          <div
+            key={mark.id}
+            className="semiotic-network-html-mark"
+            data-mark-id={mark.id}
+            style={{
+              position: "absolute",
+              transform: `translate(${mark.x}px, ${mark.y}px)`,
+              width: mark.width,
+              height: mark.height,
+              pointerEvents: "none"
+            }}
+          >
+            {mark.content}
+          </div>
+        ))}
+      </div>
     </div>
   )
 

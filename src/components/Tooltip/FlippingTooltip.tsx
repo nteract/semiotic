@@ -2,6 +2,7 @@ import * as React from "react"
 import {
   defaultTooltipStyle,
   hasOwnTooltipChrome,
+  hasTooltipContent
 } from "./tooltipChrome"
 
 interface FlippingTooltipProps {
@@ -46,15 +47,17 @@ interface FlippingTooltipProps {
 export const hasOwnChrome = hasOwnTooltipChrome
 
 /**
- * Viewport-aware tooltip wrapper that flips horizontally and vertically
- * when the tooltip would overflow the chart container.
+ * Viewport-aware tooltip wrapper that flips horizontally and vertically,
+ * then clamps to the chart area when neither side has enough room.
  *
  * On first render, uses a heuristic (similar to the old 70%/30% thresholds).
  * After measuring the actual tooltip size via ref, repositions precisely to
  * prevent clipping against container edges.
  *
- * Two defensive behaviors:
+ * Defensive behaviors:
  *
+ *   - **Empty content guard.** Null, false and other React-empty callback
+ *     results suppress the wrapper as well as its content.
  *   - **Chrome guarantee.** If the rendered tooltip content does not declare
  *     chrome ownership, the wrapper applies `defaultTooltipStyle` so the
  *     tooltip always has a visible background, padding, and shadow.
@@ -82,6 +85,7 @@ export function FlippingTooltip({
   // decision instead so the hooks always run in the same order, and emit
   // null at the very end when the position is unusable.
   const positionFinite = Number.isFinite(x) && Number.isFinite(y)
+  const hasContent = hasTooltipContent(children)
 
   const ref = React.useRef<HTMLDivElement>(null)
   const [measured, setMeasured] = React.useState<{
@@ -120,11 +124,13 @@ export function FlippingTooltip({
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [className, containerWidth, containerHeight, positionFinite])
+  }, [className, containerWidth, containerHeight, positionFinite, hasContent])
 
   const offset = 12
 
   // Compute position
+  let left = x
+  let top = y
   let transform: string
   if (measured) {
     // Precise flip based on actual tooltip dimensions
@@ -134,12 +140,27 @@ export function FlippingTooltip({
     const flipX = spaceRight < measured.width + offset
     const flipY = spaceBelow < measured.height + offset
 
-    const tx = flipX ? `calc(-100% - ${offset}px)` : `${offset}px`
-    const ty = flipY ? `calc(-100% - 4px)` : "4px"
-    transform = `translate(${tx}, ${ty})`
+    // Flipping alone can overflow the opposite edge in a narrow chart, or
+    // when a camera projects the hovered mark's center outside the viewport.
+    left = Math.max(
+      0,
+      Math.min(
+        x + (flipX ? -measured.width - offset : offset),
+        containerWidth - measured.width
+      )
+    )
+    top = Math.max(
+      0,
+      Math.min(
+        y + (flipY ? -measured.height - 4 : 4),
+        containerHeight - measured.height
+      )
+    )
+    transform = "none"
   } else {
     // Heuristic fallback on first render (before measurement)
-    const tx = x > containerWidth * 0.7 ? `calc(-100% - ${offset}px)` : `${offset}px`
+    const tx =
+      x > containerWidth * 0.7 ? `calc(-100% - ${offset}px)` : `${offset}px`
     const ty = y < containerHeight * 0.3 ? "4px" : "calc(-100% - 4px)"
     transform = `translate(${tx}, ${ty})`
   }
@@ -147,19 +168,20 @@ export function FlippingTooltip({
   // Chrome auto-apply: if the rendered content's root already carries
   // explicit chrome, the user/helper handled it — don't double up.
   // Otherwise apply `defaultTooltipStyle` to the wrapper itself so the
-  // tooltip is never transparent. `width: max-content` overrides the
-  // chrome's `maxWidth` constraint to keep the existing flip math
-  // working; the chrome's `wordWrap: break-word` still handles long
-  // tokens. `pointerEvents` is set on the wrapper regardless.
+  // tooltip is never transparent. Prefer intrinsic width, capped to the plot
+  // width so block content can wrap before placement is measured. Border-box
+  // sizing includes the default chrome's padding in this cap.
   const ownsChrome = hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
-  const compositeClassName = ownsChrome ? className : `${className} semiotic-tooltip`.trim()
+  const compositeClassName = ownsChrome
+    ? className
+    : `${className} semiotic-tooltip`.trim()
   // Late guard return: bail AFTER all hooks have run so the hook call
   // order stays stable across re-renders. An earlier early-return form
   // (before useRef / useState / useLayoutEffect) tripped React's
   // "Expected static flag was missing" check whenever y oscillated
   // between NaN and a finite number.
-  if (!positionFinite) return null
+  if (!positionFinite || !hasContent) return null
   return (
     <div
       ref={ref}
@@ -167,12 +189,16 @@ export function FlippingTooltip({
       style={{
         ...(chromeStyle || {}),
         position: "absolute",
-        left: margin.left + x,
-        top: margin.top + y,
+        left: margin.left + left,
+        top: margin.top + top,
         transform,
         pointerEvents: "none",
         zIndex,
         width: "max-content",
+        maxWidth: ownsChrome
+          ? containerWidth
+          : `min(${containerWidth}px, ${defaultTooltipStyle.maxWidth})`,
+        boxSizing: "border-box"
       }}
     >
       {children}

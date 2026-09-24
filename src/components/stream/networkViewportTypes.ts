@@ -1,5 +1,13 @@
 import type { RefObject } from "react"
 
+/** Camera in plot CSS pixels: screen = translation + k * layout coordinate. */
+export interface NetworkViewTransform {
+  x: number
+  y: number
+  /** Positive uniform scale; 1 preserves the layout's authored size. */
+  k: number
+}
+
 /** A rectangle in plot coordinates, excluding frame margins. */
 export interface NetworkViewportRect {
   x: number
@@ -35,10 +43,14 @@ export interface NetworkHtmlMarkCulling {
 
 /** One committed view of the viewport and HTML mounting policy. */
 export interface NetworkViewportSnapshot {
+  /** Plot in frame CSS pixels, before the camera. Includes resolved margin
+   * offsets so an optional gesture driver can use the actual drawing area. */
+  plotRect?: NetworkViewportRect
   /** Visible plot rectangle without overscan. Null means unmeasured (SSR,
    * no scroll target, or zero-sized target), not an empty visible region. */
   visibleRect: NetworkViewportRect | null
-  /** Viewport expanded by HTML overscan and clipped to the plot. */
+  /** Layout-coordinate viewport expanded by CSS-pixel overscan. With a
+   * camera this can extend beyond the original layout dimensions. */
   renderRect: NetworkViewportRect | null
   /** IDs intersecting visibleRect, excluding off-screen pins; null if unmeasured. */
   visibleMarkIds: readonly string[] | null
@@ -49,6 +61,10 @@ export interface NetworkViewportSnapshot {
 
 /** React-only network viewport props, also available on NetworkCustomChart.frameProps. */
 export interface NetworkViewportProps {
+  /** Optional camera. Clips the plot and transforms canvas, SVG, HTML and hit
+   * testing together without rerunning layout. Gesture/LOD controls are an
+   * opt-in import from semiotic/network/zoom. */
+  viewTransform?: NetworkViewTransform
   /** Select the element that defines the visible window. */
   viewport?: NetworkViewportOptions
   /** Configure HTML mark mounting without rerunning the custom layout. */

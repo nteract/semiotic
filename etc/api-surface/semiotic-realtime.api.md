@@ -768,6 +768,7 @@ interface-member StreamNetworkFrameProps::property::title = optional title: Reac
 interface-member StreamNetworkFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamNetworkFrameProps::property::treeOrientation = optional treeOrientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member StreamNetworkFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::viewTransform = optional viewTransform: import("./networkViewportTypes").NetworkViewTransform | undefined
 interface-member StreamNetworkFrameProps::property::viewport = optional viewport: import("./networkViewportTypes").NetworkViewportOptions | undefined
 interface-member StreamStatusOptions::property::pollIntervalMs = optional pollIntervalMs: number | undefined
 interface-member StreamStatusOptions::property::staleThresholdMs = optional staleThresholdMs: number | undefined

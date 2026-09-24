@@ -268,6 +268,19 @@ function externalizeExperimentalBridgeStoresPlugin() {
   }
 }
 
+/** Optional gestures reuse the canonical chart and its React/store identities. */
+function externalizeNetworkZoomHostPlugin(cjs = false) {
+  return {
+    name: "externalize-network-zoom-host",
+    setup(build) {
+      build.onResolve({ filter: /\/charts\/custom\/NetworkCustomChart$/ }, (args) => {
+        if (!args.importer.replaceAll("\\", "/").includes("/stream/networkZoom/")) return null
+        return { path: cjs ? "./network.min.js" : "./network.module.min.js", external: true }
+      })
+    }
+  }
+}
+
 /** Atlas is an opt-in reader graph over the canonical frame/store instances. */
 function externalizeAtlasHostsPlugin() {
   const hosts = {
@@ -1160,6 +1173,7 @@ async function build() {
       minify,
       clientOnly: true
     },
+    { input: "src/components/semiotic-network-zoom.ts", name: "semiotic-network-zoom", minify, clientOnly: true },
     {
       input: "src/components/semiotic-realtime.ts",
       name: "realtime",
@@ -1428,6 +1442,7 @@ async function build() {
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
     "semiotic-text",
+    "semiotic-network-zoom",
     "controls",
     "semiotic-access",
     "semiotic-artifact-react",
@@ -1497,7 +1512,7 @@ async function build() {
     minify,
     clientOnly: true,
     groupName: "client-auxiliary",
-    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin()]
+    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin(), externalizeNetworkZoomHostPlugin()]
   })
   await createSharedEsmGroup({
     entries: Object.fromEntries(
@@ -1568,6 +1583,7 @@ async function build() {
   // path cannot reach a chart from another. Bundle all client namespaces once
   // and emit tiny public facades that select the requested namespace.
   const isolatedClientCjsNames = new Set([
+    "semiotic-network-zoom",
     "geo",
     "semiotic-artifact-react",
     "semiotic-recipes",
@@ -1600,6 +1616,10 @@ async function build() {
     esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
   })
   writeClientCjsFacades(clientCjsBundles)
+  await createCjsBundle({
+    ...bundledEntries.find((bundle) => bundle.name === "semiotic-network-zoom"),
+    esbuildPlugins: [externalizeNetworkZoomHostPlugin(true)]
+  })
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
   const artifactReactBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-artifact-react",

@@ -2451,6 +2451,7 @@ interface-member StreamNetworkFrameProps::property::title = optional title: Reac
 interface-member StreamNetworkFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamNetworkFrameProps::property::treeOrientation = optional treeOrientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member StreamNetworkFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::viewTransform = optional viewTransform: import("./networkViewportTypes").NetworkViewTransform | undefined
 interface-member StreamNetworkFrameProps::property::viewport = optional viewport: import("./networkViewportTypes").NetworkViewportOptions | undefined
 interface-member StreamOrdinalFrameHandle::method::clear = required clear(): void
 interface-member StreamOrdinalFrameHandle::method::getCustomLayout = required getCustomLayout(): import("./ordinalCustomLayout").OrdinalLayoutResult | null

@@ -27,6 +27,22 @@ const layer = (props: NetworkViewportProps = {}) => (
 )
 
 describe("network viewport mounting and subscription", () => {
+  it("inverse-projects the camera viewport and CSS-pixel overscan without a scroll event", () => {
+    const report = vi.fn()
+    const tree = (k: number, y: number) => <NetworkHtmlMarksLayer marks={marks} margin={margin} width={400} height={200} viewTransform={{ x: 0, y, k }} htmlMarkCulling={{ overscan: 40 }} onViewportChange={report} />
+    const view = render(tree(2, -1600))
+    expect(report.mock.lastCall?.[0]).toMatchObject({
+      visibleRect: { x: 0, y: 800, width: 200, height: 100 },
+      renderRect: { x: -20, y: 780, width: 240, height: 140 },
+      mountedMarkIds: ["9", "10", "11"]
+    })
+    view.rerender(tree(0.5, 0))
+    expect(report.mock.lastCall?.[0]).toMatchObject({
+      visibleRect: { x: 0, y: 0, width: 800, height: 400 },
+      renderRect: { x: -80, y: -80, width: 960, height: 560 }
+    })
+    expect(view.getByLabelText("Card 5")).toBeInTheDocument()
+  })
   let scheduler: ReturnType<typeof createFrameScheduler>
   let scrollY = 0
   let rootHeight = 200

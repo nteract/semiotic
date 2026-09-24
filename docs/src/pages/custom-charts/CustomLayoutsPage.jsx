@@ -17,6 +17,7 @@ import { bulletLayout } from "../../../../src/components/recipes/bullet"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import NetworkViewportDemo from "../../components/NetworkViewportDemo"
+import NetworkZoomDemo from "../../components/NetworkZoomDemo"
 import { Link } from "react-router-dom"
 import { waffleRecipeManifest } from "./waffleRecipeManifest"
 import { IntentMark } from "../../../../src/components/ai/IntentMark"
@@ -1187,7 +1188,9 @@ ref.current.update("planning", (d) => ({
           resize updates share one animation-frame measurement and do not rerun the layout. If
           there is no measurable scroll target, including during SSR or when the target has zero
           size, all marks mount. This affects the DOM wrappers; scene geometry and hit targets stay retained.
-          Network viewport zoom/pan and external CSS scaling are not supported.
+          For camera zoom, import <code>ZoomableNetworkCustomChart</code> from
+          <code> semiotic/network/zoom</code>. Its frame transform keeps canvas,
+          SVG, HTML, culling and hit testing aligned. External CSS scaling is not supported.
         </p>
         <HtmlMarksDemo />
         <CodeBlock language="tsx">{`import { NetworkCustomChart } from "semiotic/network"
@@ -1266,6 +1269,68 @@ const [viewport, setViewport] = useState<NetworkViewportSnapshot | null>(null)
           links whose endpoints are both outside the window. These props are React-only, not JSON configuration.
         </p>
         <NetworkViewportDemo />
+        <h3>Virtual viewport and semantic zoom</h3>
+        <p>
+          <code>ZoomableNetworkCustomChart</code> keeps the layout fixed while a camera
+          pans and scales the plot. It clips content without native scrollbars. The
+          gesture runtime and LOD hooks are only included when you import
+          <code> semiotic/network/zoom</code>; ordinary charts keep their existing behavior.
+        </p>
+        <NetworkZoomDemo />
+        <p>
+          Open the <Link to="/examples/pipeline-explorer">Pipeline Explorer</Link> for
+          the complete example, including its inspector, minimap, persistent notes and Full Code view.
+        </p>
+        <CodeBlock language="tsx">{`import { ZoomableNetworkCustomChart, useNetworkLOD } from "semiotic/network/zoom"
+
+function Card() {
+  const { width, height, level, isInteracting } = useNetworkLOD(260, 174, {
+    breakpoints: [55, 125, 235],
+    hysteresis: 8,
+    // Set keepDetail while an editor has focus.
+  })
+  // Keep the same outer box and edge ports at every level.
+  // Choose silhouettes, skeletons, summaries or full detail here.
+  // Gate expensive requests on level and !isInteracting; cancel stale work.
+  return <CardContent level={level} displayedSize={{ width, height }} />
+}
+
+<ZoomableNetworkCustomChart
+  ref={chartRef}
+  nodes={nodes} edges={edges} layout={layout}
+  width={800} height={500}
+  zoomOptions={{ minZoom: 0.15, maxZoom: 4, panBounds: contentBounds }}
+  frameProps={{ htmlMarkCulling: { overscan: 80, pinnedIds: selectedIds } }}
+/>
+// chartRef.current.fitToContent(), zoomIn(), zoomOut(), panBy(dx, dy), resetZoom()
+// Supply zoom={{ x, y, k }} and onZoomChange for a controlled camera.`}</CodeBlock>
+        <p>
+          Wheel zoom requires Ctrl or Meta by default so an embedded chart does not
+          trap page scrolling. Set <code>wheelZoom: true</code> for a dedicated map-like
+          explorer. Mouse drag, touch pinch, double click, plus/minus keys and
+          Alt+arrow panning are supported. Ordinary arrows retain network navigation.
+          Native browser zoom shortcuts and editing controls keep their behavior.
+          Wheel, drag and pinch follow input each animation frame; <code>duration</code>
+          controls eased button, keyboard, fit and programmatic zoom transitions.
+          <code> settleDelay</code> defers detail promotion without delaying camera movement.
+        </p>
+        <p>
+          <code>zoomOptions</code> also exposes <code>locked</code>, <code>zoomEnabled</code>,
+          <code> pan</code> (true, false, "x" or "y"), and separate gesture switches.
+          Scale and pan bounds apply to fit and imperative movement too. Content
+          smaller than the viewport is centered. Fit uses all retained nodes and card
+          boxes; pass explicit bounds to include arbitrary SVG decorations or edge curves.
+        </p>
+        <p>
+          <code>useNetworkProjectedSize</code> exposes live and settled CSS-pixel sizes;
+          <code> useNetworkZoom</code> exposes the camera and world-coordinate visible
+          rectangle for edge culling or minimaps. The LOD helper delays promotion until
+          motion settles and demotes immediately outside its hysteresis band. It does
+          not fetch or cache data. Store drafts outside virtualized cards if they must
+          survive unmounting, and set <code>keepDetail</code> while an editor is focused.
+          At very small scales, aggregate dense graphs or draw cheap detail on canvas:
+          zooming out can make many more cards visible.
+        </p>
         <p>
           For nested card and row hit rectangles, the smallest containing rectangle wins; equal-area
           ties use the first scene entry. Nodes take precedence over edges. For visible links drawn

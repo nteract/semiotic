@@ -2,12 +2,12 @@ import * as React from "react"
 import type { StreamNetworkFrameProps } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+import { NetworkViewGroup } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { ScreenReaderSummary } from "./AccessibleDataTable"
 import {
   networkSceneNodeToSVG,
-  networkSceneEdgeToSVG,
-  networkLabelToSVG
+  networkSceneEdgeToSVG
 } from "./SceneToSVGNetwork"
 import { renderSceneWithBackend } from "./renderBackend"
 import { composeOverlays } from "./composeOverlays"
@@ -102,7 +102,7 @@ export function NetworkSSRFrame({
     <div
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="img"
+      role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
       aria-label={
         description || (typeof title === "string" ? title : "Network chart")
       }
@@ -110,7 +110,8 @@ export function NetworkSSRFrame({
         position: "relative",
         fontFamily: "var(--semiotic-font-family, sans-serif)",
         width: responsiveWidth ? "100%" : size[0],
-        height: responsiveHeight ? "100%" : size[1]
+        height: responsiveHeight ? "100%" : size[1],
+        overflow: props.viewTransform ? "clip" : undefined
       }}
     >
       <ScreenReaderSummary summary={summary} />
@@ -131,9 +132,12 @@ export function NetworkSSRFrame({
           />
         ) : null}
         <g transform={`translate(${margin.left},${margin.top})`}>
+          <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
           {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
+          </NetworkViewGroup>
         </g>
         <g transform={`translate(${margin.left},${margin.top})`}>
+          <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
           {sceneEdges
             .map((edge, index) => renderSceneWithBackend({
               node: edge,
@@ -150,12 +154,11 @@ export function NetworkSSRFrame({
               fallback: () => networkSceneNodeToSVG(node, index)
             }))
             .filter(Boolean)}
-          {labels
-            .map((label, index) => networkLabelToSVG(label, index))
-            .filter(Boolean)}
+          </NetworkViewGroup>
         </g>
       </svg>
       <NetworkSVGOverlay
+        viewTransform={props.viewTransform}
         width={adjustedWidth}
         height={adjustedHeight}
         totalWidth={size[0]}
@@ -189,6 +192,7 @@ export function NetworkSSRFrame({
         annotationFrame={0}
       />
       <NetworkHtmlMarksLayer
+        viewTransform={props.viewTransform}
         marks={store?.customLayoutHtmlMarks}
         margin={margin}
         selection={layoutSelection ?? null}

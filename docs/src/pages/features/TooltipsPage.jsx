@@ -80,12 +80,11 @@ export default function TooltipsPage() {
       nextPage={{ title: "Interaction", path: "/features/interaction" }}
     >
       <p>
-        Tooltips in Semiotic are powered by the annotation system. The
-        simplest way to enable them is with <code>hoverAnnotation={"{true}"}</code>,
-        which adds a default tooltip on hover. For richer content, Semiotic
-        provides <code>Tooltip</code> and <code>MultiLineTooltip</code>{" "}
-        utility functions that handle common formatting patterns, plus a
-        fully custom <code>tooltipContent</code> prop for complete control.
+        Chart components enable tooltips by default. Use their <code>tooltip</code>{" "}
+        prop to configure fields or supply a custom renderer. Stream Frames
+        expose <code>tooltipContent</code> for custom content. The shared wrapper
+        measures the tooltip, wraps content to fit the plot width and keeps its
+        position within the plot when its size permits.
       </p>
 
       {/* ----------------------------------------------------------------- */}
@@ -195,6 +194,32 @@ export default function TooltipsPage() {
         <code>Tooltip</code> or <code>MultiLineTooltip</code> utilities:
       </p>
 
+      <h3 id="callback-contract">Callback data and intentional omission</h3>
+      <p>
+        Custom and network chart <code>tooltip</code> callbacks receive the
+        authored node or edge: read <code>d.label</code>, for example. Handle
+        both record types when edges are interactive. Frame{" "}
+        <code>tooltipContent</code> callbacks receive a hover wrapper; call{" "}
+        <code>unwrapDatum(hover)</code> once, imported from <code>semiotic/utils</code>,
+        to recover authored data. Avoid guessing nested <code>d.data</code> paths.
+        Legacy realtime charts retain their documented callback signatures.
+      </p>
+      <p>
+        Set <code>tooltip={"{false}"}</code> to omit all tooltips, or return{" "}
+        <code>null</code> directly from the callback to omit one datum. Empty
+        content suppresses the background too. Keep <code>enableHover</code>{" "}
+        enabled if observations still need it. Use <code>TooltipRoot</code> from
+        your chart family entry for custom chrome. The{" "}
+        <Link to="/examples/pipeline-explorer">Pipeline Explorer</Link> demonstrates
+        separate card and connection tooltips alongside an inspector.
+      </p>
+      <p>
+        Verify custom tooltips by hovering actual marks and interactive edges:
+        check expected labels and values, a single readable box, placement after
+        zoom, pan and resize, and dismissal on leave. A rendered chart or an
+        inspector does not establish that hover behavior works.
+      </p>
+
       <h3 id="smart-defaults">Smart defaults for custom &amp; network charts</h3>
       <p>
         When a chart can't declare tooltip fields — a{" "}
@@ -252,8 +277,8 @@ export default function TooltipsPage() {
 
 <BarChart
   data={productData}
-  categoryKey="category"
-  valueKey="sales"
+  categoryAccessor="category"
+  valueAccessor="sales"
   tooltip={MultiLineTooltip({
     title: "category",
     fields: [

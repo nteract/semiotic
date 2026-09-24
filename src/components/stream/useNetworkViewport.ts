@@ -15,6 +15,7 @@ import {
   resolveNetworkScrollContainer
 } from "./networkViewportGeometry"
 import { shallowEqualTwoLevel } from "./shallowEqual"
+import { invertNetworkRect, normalizeNetworkView } from "./networkViewTransform"
 
 const EMPTY_MARKS: NetworkHtmlMark[] = []
 
@@ -35,6 +36,7 @@ export function useNetworkViewport({
   height,
   margin,
   focusedId,
+  viewTransform,
   viewport,
   htmlMarkCulling,
   onViewportChange
@@ -59,7 +61,11 @@ export function useNetworkViewport({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- resolve ref targets after each commit; equal geometry preserves state and subscriptions
   useLayoutEffect(() => {
     const layer = containerRef.current
-    const root = layer ? resolveNetworkScrollContainer(layer, viewport) : null
+    const root = layer
+      ? viewTransform
+        ? layer.closest<HTMLElement>(".stream-network-frame")
+        : resolveNetworkScrollContainer(layer, viewport)
+      : null
     const clips = layer && root ? networkViewportClips(layer, root) : []
     const previous = binding.current
     const same =
@@ -126,18 +132,32 @@ export function useNetworkViewport({
   const result = useMemo(() => {
     const plot =
       width != null && height != null ? { x: 0, y: 0, width, height } : null
-    const visibleRect =
+    const screenRect =
       windowRect && plot ? intersectNetworkRects(windowRect, plot) : windowRect
-    const padded = windowRect
+    // A virtual camera has a known viewport even during SSR. World geometry
+    // may extend well beyond the plot's original dimensions.
+    const window = viewTransform ? (screenRect ?? plot) : windowRect
+    const visibleRect =
+      viewTransform && (screenRect ?? plot)
+        ? invertNetworkRect(
+            (screenRect ?? plot)!,
+            normalizeNetworkView(viewTransform)
+          )
+        : screenRect
+    const padded = window
       ? {
-          x: windowRect.x - overscan,
-          y: windowRect.y - overscan,
-          width: windowRect.width + 2 * overscan,
-          height: windowRect.height + 2 * overscan
+          x: window.x - overscan,
+          y: window.y - overscan,
+          width: window.width + 2 * overscan,
+          height: window.height + 2 * overscan
         }
       : null
     const renderRect =
-      padded && plot ? intersectNetworkRects(padded, plot) : padded
+      viewTransform && padded
+        ? invertNetworkRect(padded, normalizeNetworkView(viewTransform))
+        : padded && plot
+          ? intersectNetworkRects(padded, plot)
+          : padded
     const pins = new Set(htmlMarkCulling?.pinnedIds)
     if (focusedId !== null) pins.add(focusedId)
     const mounted =
@@ -148,6 +168,7 @@ export function useNetworkViewport({
               pins.has(mark.id) || networkRectIntersects(renderRect, mark)
           )
     const snapshot: NetworkViewportSnapshot = {
+      ...(plot ? { plotRect: { ...plot, x: margin.left, y: margin.top } } : {}),
       visibleRect,
       renderRect,
       visibleMarkIds: visibleRect
@@ -166,7 +187,10 @@ export function useNetworkViewport({
     overscan,
     htmlMarkCulling?.enabled,
     htmlMarkCulling?.pinnedIds,
-    focusedId
+    focusedId,
+    viewTransform,
+    margin.left,
+    margin.top
   ])
 
   const notified = useRef<NetworkViewportSnapshot | undefined>(undefined)

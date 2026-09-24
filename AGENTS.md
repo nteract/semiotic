@@ -55,6 +55,11 @@ generated artifacts in the same change.
   breaking change. Update types, chart specs, schemas, docs, and tests together.
 - Add or update focused tests for behavior changes. Do not weaken assertions or
   raise bundle/coverage limits merely to make a check pass.
+- For interactive examples, hover real marks and interactive edges in a browser
+  and assert useful tooltip content, placement after zoom/pan/resize, and dismissal.
+  Do not silently disable tooltips to avoid a defect; an inspector or mount-only
+  test does not verify hover behavior. See `ai/behaviorContracts.cjs` for callback
+  datum shapes and the disabled/empty tooltip contract.
 - For a confirmed, user-visible defect—not a transient CI or infrastructure
   failure—perform a related-surface audit before closing it. Check equivalent
   renderers, entry points, generated artifacts, formats, and public API paths;

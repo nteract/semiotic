@@ -78,6 +78,7 @@ interface NetworkLayoutContext<C extends object = Record<string, unknown>>
 interface NetworkLayoutResult
 interface NetworkLineEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
 interface NetworkPathEdgeHitTargetProps extends NetworkEdgeHitTargetBaseProps
+interface NetworkViewTransform
 interface NetworkViewportOptions
 interface NetworkViewportProps
 interface NetworkViewportRect
@@ -350,16 +351,21 @@ interface-member NetworkLineEdgeHitTargetProps::property::y1 = required y1: numb
 interface-member NetworkLineEdgeHitTargetProps::property::y2 = required y2: number
 interface-member NetworkPathEdgeHitTargetProps::property::pathD = required pathD: string
 interface-member NetworkPathEdgeHitTargetProps::property::type = optional type: "bezier" | "curved" | "ribbon" | undefined
+interface-member NetworkViewTransform::property::k = required k: number
+interface-member NetworkViewTransform::property::x = required x: number
+interface-member NetworkViewTransform::property::y = required y: number
 interface-member NetworkViewportOptions::property::scrollContainer = optional scrollContainer: HTMLElement | null | undefined
 interface-member NetworkViewportOptions::property::scrollContainerRef = optional scrollContainerRef: RefObject<HTMLElement | null> | undefined
 interface-member NetworkViewportProps::property::htmlMarkCulling = optional htmlMarkCulling: NetworkHtmlMarkCulling | undefined
 interface-member NetworkViewportProps::property::onViewportChange = optional onViewportChange: ((viewport: NetworkViewportSnapshot) => void) | undefined
+interface-member NetworkViewportProps::property::viewTransform = optional viewTransform: NetworkViewTransform | undefined
 interface-member NetworkViewportProps::property::viewport = optional viewport: NetworkViewportOptions | undefined
 interface-member NetworkViewportRect::property::height = required height: number
 interface-member NetworkViewportRect::property::width = required width: number
 interface-member NetworkViewportRect::property::x = required x: number
 interface-member NetworkViewportRect::property::y = required y: number
 interface-member NetworkViewportSnapshot::property::mountedMarkIds = required mountedMarkIds: readonly string[]
+interface-member NetworkViewportSnapshot::property::plotRect = optional plotRect: NetworkViewportRect | undefined
 interface-member NetworkViewportSnapshot::property::renderRect = required renderRect: NetworkViewportRect | null
 interface-member NetworkViewportSnapshot::property::visibleMarkIds = required visibleMarkIds: null | readonly string[]
 interface-member NetworkViewportSnapshot::property::visibleRect = required visibleRect: NetworkViewportRect | null
@@ -611,6 +617,7 @@ interface-member StreamNetworkFrameProps::property::title = optional title: Reac
 interface-member StreamNetworkFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamNetworkFrameProps::property::treeOrientation = optional treeOrientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member StreamNetworkFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::viewTransform = optional viewTransform: import("./networkViewportTypes").NetworkViewTransform | undefined
 interface-member StreamNetworkFrameProps::property::viewport = optional viewport: import("./networkViewportTypes").NetworkViewportOptions | undefined
 interface-member Style::property::_edgeFade = optional _edgeFade: boolean | undefined
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined

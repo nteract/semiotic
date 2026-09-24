@@ -1,4 +1,5 @@
 import type { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { NetworkViewTransform } from "./networkViewportTypes"
 import type { CursorFrameGeometry } from "./frameCursorInteraction"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
@@ -27,6 +28,7 @@ export function rehitNetworkFrameCursor(
   options: CursorFrameGeometry & {
     store: NetworkPipelineStore
     cursorInventory: Readonly<NetworkCursorInventory>
+    viewTransform?: NetworkViewTransform
   }
 ): void {
   rehitCanvasMarkCursor(options.canvas, options.pointer, (current) => {
@@ -43,7 +45,8 @@ export function rehitNetworkFrameCursor(
       // pass. Cursor-enabled motion takes one direct hit scan instead.
       nodeQuadtree: options.geometryMoved ? null : options.store.nodeQuadtree,
       maxNodeRadius: options.geometryMoved ? 0 : options.store.maxNodeRadius,
-      includeEdges: options.cursorInventory.edges
+      includeEdges: options.cursorInventory.edges,
+      viewTransform: options.viewTransform
     })
     return result.kind === "hit" ? sceneMarkCursor(result.mark) : undefined
   })
