@@ -11,13 +11,26 @@ import {
   parseOptions
 } from "./contracts.ts"
 import { runCompiler } from "./builders.ts"
+import { publicJavaScriptEntrypoints } from "../lib/public-entrypoints.mjs"
 
 test("consumer inventory covers browser and Node exports without bundling Node-only APIs for browsers", () => {
   const pkg = JSON.parse(
     readFileSync(new URL("../../package.json", import.meta.url), "utf8")
   )
   const entries = consumerEntries(pkg)
-  assert.equal(entries.browser.length, 37)
+  const publicSpecifiers = publicJavaScriptEntrypoints(pkg).map(
+    (entry) => entry.specifier
+  )
+  assert.deepEqual(
+    entries.browser.map((entry) => entry.specifier),
+    publicSpecifiers.filter(
+      (specifier) =>
+        specifier !== "semiotic/server" && specifier !== "semiotic/server/node"
+    )
+  )
+  assert.ok(
+    entries.browser.some((entry) => entry.specifier === "semiotic/network/zoom")
+  )
   assert.deepEqual(
     entries.server.map((entry) => entry.specifier),
     ["semiotic/server", "semiotic/server/node", "semiotic/server/edge"]
@@ -31,7 +44,7 @@ test("consumer inventory covers browser and Node exports without bundling Node-o
   const specifiers = new Set(
     [...entries.browser, ...entries.server].map((entry) => entry.specifier)
   )
-  assert.equal(specifiers.size, 39)
+  assert.deepEqual(specifiers, new Set(publicSpecifiers))
 })
 
 test("new public browser entries automatically enter the census and escape tree shaking", () => {

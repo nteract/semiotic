@@ -29,7 +29,7 @@ const baseProps = {
   y: 50,
   containerWidth: 400,
   containerHeight: 300,
-  margin: { top: 10, right: 10, bottom: 10, left: 20 },
+  margin: { top: 10, right: 10, bottom: 10, left: 20 }
 }
 
 describe("FlippingTooltip — chrome auto-apply", () => {
@@ -60,7 +60,10 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     // (often via defaultTooltipStyle). Class alone is not enough.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <div className="semiotic-tooltip" style={{ background: "red", padding: 99 }}>
+        <div
+          className="semiotic-tooltip"
+          style={{ background: "red", padding: 99 }}
+        >
           Pre-styled
         </div>
       </FlippingTooltip>
@@ -100,24 +103,30 @@ describe("FlippingTooltip — chrome auto-apply", () => {
   it("treats zero-alpha rgba background as missing chrome", () => {
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <div style={{ background: "rgba(12, 24, 36, 0)" }}>Transparent rgba</div>
+        <div style={{ background: "rgba(12, 24, 36, 0)" }}>
+          Transparent rgba
+        </div>
       </FlippingTooltip>
     )
     expect((container.firstChild as HTMLElement).style.background).toBe(
-      EXPECTED_CHROME_BACKGROUND,
+      EXPECTED_CHROME_BACKGROUND
     )
   })
 
   it("respects TooltipRoot in CSS-owned mode without a second box", () => {
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <TooltipRoot chrome="css" className="consumer-tooltip">CSS owned</TooltipRoot>
+        <TooltipRoot chrome="css" className="consumer-tooltip">
+          CSS owned
+        </TooltipRoot>
       </FlippingTooltip>
     )
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.style.background).toBe("")
     expect(container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
-    expect(container.querySelector(".consumer-tooltip")?.textContent).toBe("CSS owned")
+    expect(container.querySelector(".consumer-tooltip")?.textContent).toBe(
+      "CSS owned"
+    )
   })
 
   it("respects an inline `background` style as chrome ownership (no double-wrap)", () => {
@@ -128,7 +137,9 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     // visible as a black strip around the user's tooltip.
     const { container } = render(
       <FlippingTooltip {...baseProps}>
-        <div style={{ background: "white", padding: "8px 12px", color: "#333" }}>
+        <div
+          style={{ background: "white", padding: "8px 12px", color: "#333" }}
+        >
           Custom-styled
         </div>
       </FlippingTooltip>
@@ -216,7 +227,11 @@ describe("FlippingTooltip — chrome auto-apply", () => {
     // would double-wrap them — visible on a Carbon-light theme as
     // a white box around the tooltip.
     function ChromedTooltip() {
-      return <div className="semiotic-tooltip" style={{ background: "white" }}>chrome</div>
+      return (
+        <div className="semiotic-tooltip" style={{ background: "white" }}>
+          chrome
+        </div>
+      )
     }
     ;(ChromedTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
 
@@ -264,14 +279,12 @@ describe("FlippingTooltip — non-finite position guard", () => {
         <div>content</div>
       </FlippingTooltip>
     )
-    // Pin the actual positioned wrapper rather than just "something
-    // rendered": x=50 + margin.left=20 → left=70px, y=75 +
-    // margin.top=10 → top=85px. If the guard incorrectly fired here
-    // the wrapper would be null; if positioning regressed, these
-    // values would shift.
+    // After measurement, left/top include the pointer offsets previously
+    // applied by CSS transform: x=50 + margin.left=20 + 12 → 82px,
+    // y=75 + margin.top=10 + 4 → 89px. The final screen position is unchanged.
     const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.style.left).toBe("70px")
-    expect(wrapper.style.top).toBe("85px")
+    expect(wrapper.style.left).toBe("82px")
+    expect(wrapper.style.top).toBe("89px")
   })
 
   it("transitioning between finite ↔ NaN positions does not throw the React hook-order error", () => {
@@ -294,8 +307,8 @@ describe("FlippingTooltip — non-finite position guard", () => {
         </FlippingTooltip>
       )
       // Same position pinning as the standalone finite-render test:
-      // x=50 + margin.left=20 → 70px; y=75 + margin.top=10 → 85px.
-      expect((container.firstChild as HTMLElement)?.style.top).toBe("85px")
+      // y=75 + margin.top=10 + pointer offset=4 → 89px.
+      expect((container.firstChild as HTMLElement)?.style.top).toBe("89px")
       // Transition to NaN — bails out.
       rerender(
         <FlippingTooltip {...baseProps} x={50} y={NaN}>
@@ -309,7 +322,7 @@ describe("FlippingTooltip — non-finite position guard", () => {
           <div>content</div>
         </FlippingTooltip>
       )
-      expect((container.firstChild as HTMLElement)?.style.top).toBe("85px")
+      expect((container.firstChild as HTMLElement)?.style.top).toBe("89px")
       // And back to NaN again — bails again, no hook-order complaint.
       rerender(
         <FlippingTooltip {...baseProps} x={NaN} y={75}>
@@ -321,7 +334,9 @@ describe("FlippingTooltip — non-finite position guard", () => {
       console.error = origError
     }
     // No React hook-order or "static flag" complaints captured.
-    const reactErrors = errors.filter(e => String(e).includes("static flag") || String(e).includes("hook"))
+    const reactErrors = errors.filter(
+      (e) => String(e).includes("static flag") || String(e).includes("hook")
+    )
     expect(reactErrors).toEqual([])
   })
 })
@@ -339,21 +354,21 @@ describe("FlippingTooltip — stable measurement", () => {
         right: 184.25,
         bottom: 52.5,
         left: 0,
-        toJSON: () => ({}),
+        toJSON: () => ({})
       })
 
     try {
       const { rerender } = render(
         <FlippingTooltip {...baseProps}>
           <div data-hover-render="0">Equivalent telemetry tooltip</div>
-        </FlippingTooltip>,
+        </FlippingTooltip>
       )
 
       for (let index = 1; index <= 25; index += 1) {
         rerender(
           <FlippingTooltip {...baseProps}>
             <div data-hover-render={index}>Equivalent telemetry tooltip</div>
-          </FlippingTooltip>,
+          </FlippingTooltip>
         )
       }
 
@@ -362,6 +377,55 @@ describe("FlippingTooltip — stable measurement", () => {
       expect(rect).toHaveBeenCalledTimes(1)
     } finally {
       rect.mockRestore()
+    }
+  })
+})
+
+describe("FlippingTooltip — plot bounds", () => {
+  it.each([
+    [20, 15],
+    [100, 60], // neither side has room: flipping alone clips the opposite edge
+    [190, 110],
+    [-50, -30], // a camera can project a large mark's center outside the plot
+    [250, 170]
+  ])("keeps measured content in a narrow plot at (%s, %s)", (x, y) => {
+    const width = 180
+    const height = 96
+    const measure = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: width,
+        bottom: height,
+        width,
+        height,
+        toJSON: () => ({})
+      })
+    try {
+      const { container } = render(
+        <FlippingTooltip
+          {...baseProps}
+          x={x}
+          y={y}
+          containerWidth={200}
+          containerHeight={120}
+        >
+          <TooltipRoot>Orders · Source: 24,816 rows</TooltipRoot>
+        </FlippingTooltip>
+      )
+      const wrapper = container.firstChild as HTMLElement
+      const left = Number.parseFloat(wrapper.style.left)
+      const top = Number.parseFloat(wrapper.style.top)
+      expect(wrapper.style.transform).toBe("none")
+      expect(left).toBeGreaterThanOrEqual(baseProps.margin.left)
+      expect(left + width).toBeLessThanOrEqual(baseProps.margin.left + 200)
+      expect(top).toBeGreaterThanOrEqual(baseProps.margin.top)
+      expect(top + height).toBeLessThanOrEqual(baseProps.margin.top + 120)
+    } finally {
+      measure.mockRestore()
     }
   })
 })

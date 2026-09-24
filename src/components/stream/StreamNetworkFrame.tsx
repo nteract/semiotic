@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useCallback,
   useImperativeHandle,
@@ -45,6 +46,7 @@ import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
+import { NetworkViewGroup, normalizeNetworkView, projectNetworkPoint } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
@@ -1127,6 +1129,7 @@ const StreamNetworkFrame = memo(forwardRef<
     }
 
     const result = resolveNetworkPointerHit({
+      viewTransform: props.viewTransform,
       clientX: e.clientX,
       clientY: e.clientY,
       canvasRect: canvas.getBoundingClientRect(),
@@ -1187,6 +1190,7 @@ const StreamNetworkFrame = memo(forwardRef<
     if (!store) return
 
     const result = resolveNetworkPointerHit({
+      viewTransform: props.viewTransform,
       clientX: e.clientX,
       clientY: e.clientY,
       canvasRect: canvas.getBoundingClientRect(),
@@ -1361,17 +1365,20 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Render function ──────────────────────────────────────────────────
 
+  const cameraPaint = useRef(false)
   renderFnRef.current = () => {
-    rafRef.current = null
     // The scheduled paint is also the commit boundary for burst layout work.
     // Commit before canvas guards so data/layout semantics do not depend on
     // whether this particular frame has a paint surface.
-    flushPendingLayout()
-    if (!frameRuntime.isActive) return
+    if (!cameraPaint.current) {
+      rafRef.current = null
+      flushPendingLayout()
+    }
+    if (!frameRuntime.isActive && !cameraPaint.current) return
     // Retain the previous scene while a worker owns the next geometry.
     // Its completion builds and schedules paint; projecting before then
     // duplicates scene work and exposes nodes without final positions.
-    if (layoutAbortRef.current) return
+    if (layoutAbortRef.current && !cameraPaint.current) return
     const canvas = canvasRef.current
     if (!canvas) return
     const store = storeRef.current
@@ -1389,6 +1396,8 @@ const StreamNetworkFrame = memo(forwardRef<
       themeBackground,
       maxDevicePixelRatio,
       renderMode,
+      viewTransform: props.viewTransform,
+      cameraOnly: cameraPaint.current,
       hasBackgroundGraphics: Boolean(backgroundGraphics || store.customLayoutBackgrounds),
       dirtyRef,
       resolutionDirtyRef,
@@ -1422,10 +1431,11 @@ const StreamNetworkFrame = memo(forwardRef<
         }
         if (
           (sceneCursorInventoryRef.current.nodes || sceneCursorInventoryRef.current.edges) &&
-          (inventoryChanged || geometryChanged)
+          (inventoryChanged || geometryChanged || cameraPaint.current)
         ) {
           rehitNetworkFrameCursor({
             canvas, pointer: pointerStateRef.current, store, margin,
+            viewTransform: props.viewTransform,
             width: adjustedWidth, height: adjustedHeight,
             geometryMoved: geometryChanged,
             cursorInventory: sceneCursorInventoryRef.current
@@ -1434,6 +1444,22 @@ const StreamNetworkFrame = memo(forwardRef<
       }
     })
   }
+
+  const cameraWasActive = useRef(false)
+  useLayoutEffect(() => {
+    // Paint in the same commit as the SVG/CSS camera so continuous gestures
+    // cannot leave the raster layer one animation frame behind the DOM.
+    if (props.viewTransform || cameraWasActive.current) {
+      if (kbFocusIndexRef.current < 0) hoverLeaveRef.current?.()
+      cameraPaint.current = true
+      try {
+        renderFnRef.current?.()
+      } finally {
+        cameraPaint.current = false
+      }
+    }
+    cameraWasActive.current = !!props.viewTransform
+  }, [props.viewTransform, renderFnRef, hoverLeaveRef])
 
   useCanvasMarkCursorCleanup(canvasRef)
 
@@ -1451,11 +1477,13 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Tooltip ──────────────────────────────────────────────────────────
 
+  const view = normalizeNetworkView(props.viewTransform)
+  const screenHover = hoverData ? projectNetworkPoint(hoverData, view) : null
   const tooltipElement =
     enableHover && hoverData ? (
       <FlippingTooltip
-        x={hoverData.x}
-        y={hoverData.y}
+        x={screenHover!.x}
+        y={screenHover!.y}
         containerWidth={adjustedWidth}
         containerHeight={adjustedHeight}
         margin={margin}
@@ -1497,7 +1525,7 @@ const StreamNetworkFrame = memo(forwardRef<
         fontFamily: "var(--semiotic-font-family, sans-serif)",
         width: responsiveWidth ? "100%" : size[0],
         height: responsiveHeight ? "100%" : size[1],
-        overflow: "visible"
+        overflow: props.viewTransform ? "clip" : "visible"
       }}
       onKeyDown={onKeyDown}
     >
@@ -1529,7 +1557,9 @@ const StreamNetworkFrame = memo(forwardRef<
         )?.find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
       }} />
       <div
-        role="img"
+        // An image is atomic to assistive technology. HTML marks can contain
+        // editors and buttons, so expose their subtree as a group instead.
+        role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
         aria-label={
           description || (typeof title === "string" ? title : "Network chart")
         }
@@ -1561,7 +1591,9 @@ const StreamNetworkFrame = memo(forwardRef<
           backdropFill={surfaceBackground ?? undefined}
           overflowVisible
         >
-          {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
+          <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
+            {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
+          </NetworkViewGroup>
         </CanvasFrameBackground>
 
         <canvas
@@ -1579,6 +1611,7 @@ const StreamNetworkFrame = memo(forwardRef<
         />
 
         <NetworkSVGOverlay
+          viewTransform={props.viewTransform}
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}
@@ -1616,14 +1649,20 @@ const StreamNetworkFrame = memo(forwardRef<
           straight from the store (same render-time read as customLayoutOverlays).
           `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
         <NetworkHtmlMarksLayer
+          viewTransform={props.viewTransform}
           marks={store?.customLayoutHtmlMarks}
           margin={margin}
           selection={layoutSelection ?? null}
+          width={adjustedWidth}
+          height={adjustedHeight}
+          viewport={props.viewport}
+          htmlMarkCulling={props.htmlMarkCulling}
+          onViewportChange={props.onViewportChange}
         />
 
         <FocusRing
           active={kbFocusIndexRef.current >= 0}
-          hoverPoint={hoverData}
+          hoverPoint={screenHover}
           margin={margin}
           size={size}
           shape={
@@ -1633,8 +1672,8 @@ const StreamNetworkFrame = memo(forwardRef<
               | "wedge"
               | undefined
           }
-          width={focusedNavPointRef.current?.w}
-          height={focusedNavPointRef.current?.h}
+          width={focusedNavPointRef.current?.w == null ? undefined : focusedNavPointRef.current.w * view.k}
+          height={focusedNavPointRef.current?.h == null ? undefined : focusedNavPointRef.current.h * view.k}
         />
 
         {tooltipElement}
@@ -1648,7 +1687,7 @@ const StreamNetworkFrame = memo(forwardRef<
           />
         )}
       </div>
-      {/* end role="img" */}
+      {/* end visual content */}
     </div>
   )
 }))

@@ -520,6 +520,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./network/zoom",
+      "path": "dist/semiotic-network-zoom.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-network-zoom.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-network-zoom.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-network-zoom.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-network-zoom.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-network-zoom.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./ordinal",
       "path": "dist/ordinal.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1415,6 +1446,13 @@
         "path": "dist/semiotic-line.d.ts",
         "exports": [
           "./line"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-network-zoom.d.ts",
+        "exports": [
+          "./network/zoom"
         ],
         "reason": "Public type entry from `exports` map"
       },

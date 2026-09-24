@@ -2385,6 +2385,7 @@ interface-member StreamNetworkFrameProps::property::foregroundGraphics = optiona
 interface-member StreamNetworkFrameProps::property::frameScheduler = optional frameScheduler: import("./useFrame").FrameScheduler | undefined
 interface-member StreamNetworkFrameProps::property::groupWidth = optional groupWidth: number | undefined
 interface-member StreamNetworkFrameProps::property::hierarchySum = optional hierarchySum: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::htmlMarkCulling = optional htmlMarkCulling: import("./networkViewportTypes").NetworkHtmlMarkCulling | undefined
 interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: EdgePush[] | undefined
 interface-member StreamNetworkFrameProps::property::iterations = optional iterations: number | undefined
 interface-member StreamNetworkFrameProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
@@ -2414,6 +2415,7 @@ interface-member StreamNetworkFrameProps::property::nodes = optional nodes: T[] 
 interface-member StreamNetworkFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamNetworkFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
 interface-member StreamNetworkFrameProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
+interface-member StreamNetworkFrameProps::property::onViewportChange = optional onViewportChange: ((viewport: import("./networkViewportTypes").NetworkViewportSnapshot) => void) | undefined
 interface-member StreamNetworkFrameProps::property::orbitAnimated = optional orbitAnimated: boolean | undefined
 interface-member StreamNetworkFrameProps::property::orbitEccentricity = optional orbitEccentricity: ((node: Datum) => number) | number | undefined
 interface-member StreamNetworkFrameProps::property::orbitMode = optional orbitMode: "atomic" | "flat" | "solar" | number[] | undefined
@@ -2449,6 +2451,8 @@ interface-member StreamNetworkFrameProps::property::title = optional title: Reac
 interface-member StreamNetworkFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamNetworkFrameProps::property::treeOrientation = optional treeOrientation: "horizontal" | "radial" | "vertical" | undefined
 interface-member StreamNetworkFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
+interface-member StreamNetworkFrameProps::property::viewTransform = optional viewTransform: import("./networkViewportTypes").NetworkViewTransform | undefined
+interface-member StreamNetworkFrameProps::property::viewport = optional viewport: import("./networkViewportTypes").NetworkViewportOptions | undefined
 interface-member StreamOrdinalFrameHandle::method::clear = required clear(): void
 interface-member StreamOrdinalFrameHandle::method::getCustomLayout = required getCustomLayout(): import("./ordinalCustomLayout").OrdinalLayoutResult | null
 interface-member StreamOrdinalFrameHandle::method::getData = required getData(): T[]

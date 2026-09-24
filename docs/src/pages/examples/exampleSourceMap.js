@@ -1,16 +1,16 @@
 import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
 
-// Vite replaces the direct glob call in browser/docs builds. The prerender
-// process also imports this module through plain Node, where `import.meta`
-// exists but has no Vite `glob` helper; source panels are client-only there.
-const RAW_EXAMPLE_SOURCE_MODULES =
-  typeof import.meta.glob === "function"
-    ? import.meta.glob(["./**/*.{js,jsx,mjs,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
-        eager: false,
-        query: "?raw",
-        import: "default",
-      })
-    : {}
+// Vite replaces the glob call; the helper itself does not exist at runtime.
+// Its injected env distinguishes a Vite build from the plain Node prerender
+// import, where source panels are not loaded. Do not test typeof import.meta.glob:
+// that silently discards every transformed source loader in the browser.
+const RAW_EXAMPLE_SOURCE_MODULES = import.meta.env
+  ? import.meta.glob(["./**/*.{js,jsx,mjs,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
+      eager: false,
+      query: "?raw",
+      import: "default",
+    })
+  : {}
 
 function toRawSourceModuleKey(sourceFile) {
   sourceFile = typeof sourceFile === "string" ? sourceFile.trim() : ""

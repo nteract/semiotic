@@ -782,7 +782,12 @@ const edges = [
   showLabels
   showLegend
   edgeOpacity={0.4}
-  tooltip={(d) => <div><strong>{d.data.id}</strong><br/>Team: {d.data.team}</div>}
+  tooltip={(d) => (
+    <div>
+      <strong>{d.id ?? `${d.source} → ${d.target}`}</strong>
+      {d.team != null && <div>Team: {d.team}</div>}
+    </div>
+  )}
 />
 ```
 
@@ -807,21 +812,15 @@ const [selected, setSelected] = useState(null)
   showLabels
   width={800}
   height={600}
-  frameProps={{
-    customClickBehavior: (d) => {
-      // d is { type: "node"|"edge", data: <your raw node/edge>, x, y } or null
-      if (d?.type === "node") setSelected(d.data)
-    },
-    customHoverBehavior: (d) => {
-      // same shape as click — d.data is your original object
-      if (d?.type === "node") console.log("Hovering:", d.data.id)
-    },
-    background: "#1a1a2e",
+  onClick={(datum) => setSelected(datum)}
+  onObservation={(event) => {
+    if (event.type === "hover" && event.datum) console.log("Hovering:", event.datum)
   }}
+  frameProps={{ background: "#1a1a2e" }}
 />
 ```
 
-Key props: `frameProps` passes through to the underlying `StreamNetworkFrame` for advanced control (custom click/hover, background, annotations). Callback `d.data` is always your original node/edge object.
+Key props: `onClick` receives the authored datum; `onObservation` includes it as `event.datum`. Use these high-level callbacks for selection and telemetry. Advanced `frameProps` callbacks receive frame payloads; use `unwrapDatum` once when raw data is needed. Tooltips remain enabled independently of these callbacks.
 
 ### SankeyDiagram
 

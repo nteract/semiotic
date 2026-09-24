@@ -11,6 +11,8 @@ import type {
 } from "./networkTypes"
 import type { Quadtree } from "d3-quadtree"
 import type { NetworkCircleNode } from "./networkTypes"
+import type { NetworkViewTransform } from "./networkViewportTypes"
+import { normalizeNetworkView } from "./networkViewTransform"
 
 export type NetworkPointerHit =
   | { kind: "miss-outside" }
@@ -34,6 +36,7 @@ export function resolveNetworkPointerHit(options: {
   maxNodeRadius: number
   hitRadius?: number
   includeEdges?: boolean
+  viewTransform?: NetworkViewTransform
 }): NetworkPointerHit {
   const {
     clientX,
@@ -62,15 +65,17 @@ export function resolveNetworkPointerHit(options: {
     return { kind: "miss-outside" }
   }
 
+  const view = normalizeNetworkView(options.viewTransform)
   const hit = findNearestNetworkNode(
     sceneNodes,
     sceneEdges,
-    chartX,
-    chartY,
-    hitRadius,
+    (chartX - view.x) / view.k,
+    (chartY - view.y) / view.k,
+    hitRadius / view.k,
     nodeQuadtree,
     maxNodeRadius,
-    includeEdges
+    includeEdges,
+    view.k
   )
 
   if (!hit) return { kind: "miss" }

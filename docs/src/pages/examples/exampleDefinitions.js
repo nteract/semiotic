@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "pipeline-explorer",
+    path: "/examples/pipeline-explorer",
+    sourceFile: "PipelineExplorerExamplePage.tsx",
+    sourceFiles: ["PipelineExplorerExamplePage.tsx", "pipeline-explorer/PipelineExplorer.tsx", "pipeline-explorer/data.ts", "pipeline-explorer/scene.tsx", "pipeline-explorer/PipelineCard.tsx", "pipeline-explorer/PipelineMinimap.tsx", "pipeline-explorer/pipeline-explorer.css"],
+    isPilot: true,
+    title: "Pipeline Explorer",
+    eyebrow: "Custom networks · semantic zoom",
+    description: "Explore a virtualized pipeline map, inspect individual steps and preserve notes while zoom changes the detail.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/network/zoom"],
+      data: { states: ["snapshot"], fixture: { kind: "illustrative-pipeline-snapshot", replay: false, schemaVersion: "1", inventory: { nodes: 30, edges: 24, pipelines: 6 } } },
+      provenance: { source: "Authored illustrative data in pipeline-explorer/data.ts; no live telemetry or external requests", capturedAt: "2026-09-23", freshnessOwner: "Semiotic maintainers", reviewCadence: "Camera, virtualization and semantic LOD API changes" },
+      accessibility: { summary: "Persistent step inspector and complete snapshot table include exact metrics and text status", navigation: "Native step selector, zoom/fit/reset controls and chart keyboard navigation", keyboard: "Plus/minus zoom, Alt+arrows pan, focusable note editors and native disclosure controls", forcedColors: "System-color outlines and a tabular alternative; manual assistive-technology review remains pending" },
+      motion: { reducedMotion: "The camera driver disables eased navigation when reduced motion is requested", visibility: "No polling or replay; gesture work is bounded and disposed on unmount" },
+      responsive: { status: "Virtual viewport fits its container; inspector stacks on smaller screens", viewports: [320, 390, 768, 1440], selectionIdentity: "Stable step IDs; page-owned notes survive card virtualization" },
+      ssr: { status: "Static article, snapshot and initial camera are prerenderable", hydration: "Resize observation and pointer gestures attach after mount" },
+      performance: { status: "Bounded local example; no device timing claim", budgets: { bundle: "Lazy example route; the gallery preview does not import optional zoom code", interaction: "Fixed layout identity; gestures coalesce per animation frame; detail promotion waits until settled", memory: "30 steps, 24 edges, page-local notes and viewport culling", hiddenPage: "No recurring background data work" } },
+    },
+  },
+  {
     id: "atlas-acceptance",
     path: "/examples/atlas-acceptance",
     sourceFile: "AtlasEvaluationExamplePage.tsx",
@@ -2017,6 +2037,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "Pipeline Explorer",
+    path: "/examples/pipeline-explorer",
+    publishedAt: "2026-09-23T15:00:00-07:00",
+    eyebrow: "Custom networks · semantic zoom",
+    description: "Pull back to see six data pipelines, then zoom in to inspect a slow lookup or a validation issue. Cards simplify as they shrink; your notes stay with each step.",
+    preview: "pipeline-explorer",
+    badges: ["Zoom & pan", "Semantic detail", "Virtualized cards"],
+    frames: ["network", "custom"],
+    topics: ["process", "design", "accessibility"],
+  },
   {
     title: "Atlas acceptance lab",
     path: "/examples/atlas-acceptance",

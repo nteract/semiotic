@@ -330,7 +330,9 @@ const styles = {
   sourceTab: {
     flex: "0 0 auto",
     padding: "6px 9px",
-    border: "1px solid var(--surface-3)",
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "var(--surface-3)",
     borderRadius: "4px",
     background: "var(--surface-1)",
     color: "var(--text-secondary)",

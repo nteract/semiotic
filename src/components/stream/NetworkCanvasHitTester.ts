@@ -37,7 +37,8 @@ export function findNearestNetworkNode(
   maxDistance = 30,
   nodeQuadtree?: Quadtree<NetworkCircleNode> | null,
   maxNodeRadius = 0,
-  includeEdges = true
+  includeEdges = true,
+  viewScale = 1
 ): NetworkHitResult | null {
   // Check nodes — for nested rects (treemap) we want the smallest
   // containing rect, so we track rect hits by area separately.
@@ -89,7 +90,7 @@ export function findNearestNetworkNode(
   // but shouldn't intercept hover.
   for (const edge of sceneEdges) {
     if ((edge as { interactive?: boolean }).interactive === false) continue
-    const result = hitTestEdge(edge, px, py)
+    const result = hitTestEdge(edge, px, py, 5 / viewScale)
     if (result) result.mark = edge
     if (result && result.distance < bestDist) {
       bestNode = result
@@ -291,15 +292,16 @@ function getEdgePath2D(
 function hitTestEdge(
   edge: NetworkSceneEdge,
   px: number,
-  py: number
+  py: number,
+  tolerance: number
 ): NetworkHitResult | null {
   switch (edge.type) {
     case "bezier":
     case "ribbon":
     case "curved":
-      return hitTestPathEdge(edge, px, py)
+      return hitTestPathEdge(edge, px, py, tolerance)
     case "line":
-      return hitTestLineEdge(edge, px, py)
+      return hitTestLineEdge(edge, px, py, tolerance)
     default:
       return null
   }
@@ -308,7 +310,8 @@ function hitTestEdge(
 function hitTestLineEdge(
   edge: { type: "line"; x1: number; y1: number; x2: number; y2: number; datum: SceneDatum },
   px: number,
-  py: number
+  py: number,
+  tolerance: number
 ): NetworkHitResult | null {
   // Point-to-line-segment distance
   const dx = edge.x2 - edge.x1
@@ -324,7 +327,6 @@ function hitTestLineEdge(
   const nearY = edge.y1 + t * dy
   const dist = Math.sqrt((px - nearX) ** 2 + (py - nearY) ** 2)
 
-  const tolerance = 5
   if (dist <= tolerance) {
     return {
       type: "edge",
@@ -339,9 +341,10 @@ function hitTestLineEdge(
 }
 
 function hitTestPathEdge(
-  edge: { pathD: string; datum: SceneDatum; _cachedPath2D?: Path2D; _cachedPath2DSource?: string },
+  edge: Exclude<NetworkSceneEdge, { type: "line" }>,
   px: number,
-  py: number
+  py: number,
+  tolerance: number
 ): NetworkHitResult | null {
   // Use pointer coordinates for every path edge; custom layout data need not
   // contain Sankey-specific endpoint coordinates for tooltip placement.
@@ -352,8 +355,10 @@ function hitTestPathEdge(
   if (!path || !ctx) return null
 
   try {
-    // Check filled area first (for wide ribbon edges)
-    if (ctx.isPointInPath(path, px, py)) {
+    // Canvas implicitly closes open paths for fill tests. Only filled bands
+    // own that interior; an unfilled curved link owns its stroke alone.
+    // Opacity is intentionally ignored so transparent semantic targets work.
+    if (edge.style.fill && edge.style.fill !== "none" && ctx.isPointInPath(path, px, py)) {
       return {
         type: "edge",
         datum: edge.datum,
@@ -365,7 +370,7 @@ function hitTestPathEdge(
 
     // Also check stroke with generous hit tolerance for thin curved/ribbon edges
     const prevLineWidth = ctx.lineWidth
-    ctx.lineWidth = 10
+    ctx.lineWidth = tolerance * 2
     const inStroke = ctx.isPointInStroke(path, px, py)
     ctx.lineWidth = prevLineWidth
     if (inStroke) {

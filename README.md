@@ -391,7 +391,9 @@ loadConversationArc(sink.load(), { enabled: false })
 
 ## Bundle Sizes
 
-Semiotic ships 37 stable JavaScript entry points (36 subpaths plus the root). **Don't import from `"semiotic"` unless you need everything** — use the smallest sub-path that matches your charts or tooling.
+Semiotic ships 38 stable JavaScript entry points (37 subpaths plus the root). **Don't import from `"semiotic"` unless you need everything** — use the smallest sub-path that matches your charts or tooling.
+
+Custom network layouts can opt into a virtual zoom/pan viewport through `semiotic/network/zoom`. It exports `ZoomableNetworkCustomChart` and projected-size/LOD hooks; ordinary chart imports exclude its gesture and LOD runtime.
 
 The numbers below are **first-party artifact cost**: the gzip size of Semiotic's own code for each sub-path. They exclude React and other runtime dependencies, so they are not a prediction of a cold application bundle. Do not add artifact rows to estimate an app: dependency resolution and cross-import deduplication happen in the consumer bundler and are measured separately below.
 
@@ -400,7 +402,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/atlas` | **270 KB** | Motif Braid, Dependency Forest, and Flow Circuit readers |
+| `semiotic/atlas` | **271 KB** | Motif Braid, Dependency Forest, and Flow Circuit readers |
 | `semiotic/atlas/core` | **13 KB** | Network Atlas preparation, projections, and evidence queries |
 | `semiotic/access` | **28 KB** | Chart Access Contract factory and first-wave baseline contracts |
 | `semiotic/evidence` | **44 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
@@ -409,34 +411,35 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/line` | **134 KB** | LineChart only — one-chart micro boundary |
 | `semiotic/xy` | **164 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **128 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **148 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/network` | **150 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/network/zoom` | **155 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
 | `semiotic/geo` | **106 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **164 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **162 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime` | **165 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **164 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **243 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **243 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **250 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/server` | **241 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **241 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **249 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
 | `semiotic/utils` | **99 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **92 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **110 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **109 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/core` | **102 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/react` | **7 KB** | Glyph and React layout-selection helpers |
+| `semiotic/recipes/react` | **8 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **11 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **11 KB** | Theme presets and token helpers |
 | `semiotic/themes/react` | **6 KB** | ThemeProvider/useTheme and hooks |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/physics` | **164 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
+| `semiotic/physics` | **165 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **595 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **596 KB** | All schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic/ai/core` | **138 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **11 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic/text` | **2 KB** | Optional Pretext annotation hook — peer package excluded |
-| `semiotic` | **374 KB** | Full chart API and shared utilities |
+| `semiotic` | **375 KB** | Full chart API and shared utilities |
 
 <!-- semiotic-bundle-sizes:end -->
 
@@ -457,30 +460,31 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 
 | Public named import | Runtime | gzip cold-consumer bundle |
 |---|---:|---:|
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **159.5 KiB** |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **161.4 KiB** |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **6.2 KiB** |
 | `import { LineChart } from "semiotic"` | browser | **145.1 KiB** |
 | `import { LineChart } from "semiotic/xy"` | browser | **145.6 KiB** |
-| `import { LineChart } from "semiotic/line"` | browser | **145.4 KiB** |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **133.2 KiB** |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **154.9 KiB** |
+| `import { LineChart } from "semiotic/line"` | browser | **145.5 KiB** |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **133.3 KiB** |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **156.8 KiB** |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **161.3 KiB** |
 | `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **147.9 KiB** |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
-| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **147.4 KiB** |
+| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **147.6 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **277.7 KiB** |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **141.0 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **278.5 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **255.7 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **276.0 KiB** |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **139.8 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **276.9 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **256.4 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **39.1 KiB** |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **13.0 KiB** |
 | `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.8 KiB** |
 | `import { createChartAccessContract } from "semiotic/access"` | browser | **27.0 KiB** |
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **42.3 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.4 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **116.0 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **116.3 KiB** |
 | `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** |
@@ -495,7 +499,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.3 KiB** |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 434.7 KiB raw versus 434.7 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 435.0 KiB raw versus 435.0 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

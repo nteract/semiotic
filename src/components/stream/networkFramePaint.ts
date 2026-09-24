@@ -26,8 +26,15 @@ import type {
   NetworkSceneEdge
 } from "./networkTypes"
 import type { MarginType } from "../types/marginType"
-import type { DecayConfig, PulseConfig, StalenessConfig, SceneRenderMode } from "./types"
+import type {
+  DecayConfig,
+  PulseConfig,
+  StalenessConfig,
+  SceneRenderMode
+} from "./types"
 import { paintSceneWithBackend } from "./renderBackend"
+import type { NetworkViewTransform } from "./networkViewportTypes"
+import { normalizeNetworkView } from "./networkViewTransform"
 
 export interface NetworkFramePaintContext {
   canvas: HTMLCanvasElement
@@ -42,6 +49,9 @@ export interface NetworkFramePaintContext {
   themeBackground?: string
   maxDevicePixelRatio?: number
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
+  viewTransform?: NetworkViewTransform
+  /** Reproject retained pixels without advancing layout/animation, even paused. */
+  cameraOnly?: boolean
   /** Skip opaque canvas fill when an SVG backgroundGraphics layer is present. */
   hasBackgroundGraphics?: boolean
   dirtyRef: { current: boolean }
@@ -126,25 +136,26 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const deltaTime = lastFrameTimeRef.current
     ? Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
     : 0.016
-  lastFrameTimeRef.current = now
+  if (!ctx.cameraOnly) lastFrameTimeRef.current = now
 
-  const transitionWasActive = store.transition != null
-  const transitionActive = store.advanceTransition(
-    reducedMotion ? now + 1e6 : now
-  )
+  const transitionWasActive = !ctx.cameraOnly && store.transition != null
+  const transitionActive =
+    !ctx.cameraOnly && store.advanceTransition(reducedMotion ? now + 1e6 : now)
   const isTransitioning = reducedMotion ? false : transitionActive
-  const transitionFinishedThisFrame =
-    transitionWasActive && !transitionActive
+  const transitionFinishedThisFrame = transitionWasActive && !transitionActive
 
-  const animationTicked = reducedMotion
-    ? false
-    : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
+  const animationTicked =
+    reducedMotion || ctx.cameraOnly
+      ? false
+      : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
-  const wasDirty = dirtyRef.current
-  const sceneRevisionCheck = sceneRevisionDiagnostics?.beforeCompute(
-    store.getLastUpdateResult(),
-    isTransitioning
-  )
+  const wasDirty = !ctx.cameraOnly && dirtyRef.current
+  const sceneRevisionCheck =
+    !ctx.cameraOnly &&
+    sceneRevisionDiagnostics?.beforeCompute(
+      store.getLastUpdateResult(),
+      isTransitioning
+    )
   // The final transition step mutates/snap-aligns geometry while returning
   // false. Rebuild once for that step too so paint and pointer geometry reach
   // the same target.
@@ -160,7 +171,11 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   }
   if (sceneRevisionCheck) {
     // Network scene rebuilds may be consumed synchronously before paint.
-    sceneRevisionDiagnostics?.afterCompute(sceneRevisionCheck, computedScene, true)
+    sceneRevisionDiagnostics?.afterCompute(
+      sceneRevisionCheck,
+      computedScene,
+      true
+    )
   }
 
   const particlesWanted =
@@ -176,7 +191,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   // and asks for a repaint via this flag — folded into the paint gate only.
   // resolutionDirty is the same paint-only path for browser zoom / DPR caps.
   const stylePaintPending = store.consumeStylePaintPending()
-  if (computedScene || stylePaintPending) {
+  if (computedScene || stylePaintPending || ctx.cameraOnly) {
     onSceneOrStyleChange?.({
       // Pure force/orbit motion preserves the authored style inventory. Avoid
       // a second O(n+m) scan on every animation frame; the frame caches this
@@ -195,7 +210,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     animationTicked,
     continuous: particlesWanted || isContinuous,
     liveEncoding,
-    forced: stylePaintPending || needsResolutionRepaint
+    forced: stylePaintPending || needsResolutionRepaint || ctx.cameraOnly
   })
   if (resolutionDirtyRef) resolutionDirtyRef.current = false
 
@@ -220,10 +235,22 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       height: size[1]
     })
 
-    if (decay) store.applyDecay()
-    if (pulse) store.applyPulse(now)
-    if (thresholds) store.applyThresholds(now)
-    if (animate !== false) store.applyTopologyDiff(now)
+    c2d.save()
+    if (ctx.viewTransform) {
+      const view = normalizeNetworkView(ctx.viewTransform)
+      c2d.beginPath()
+      c2d.rect(0, 0, adjustedWidth, adjustedHeight)
+      c2d.clip()
+      c2d.translate(view.x, view.y)
+      c2d.scale(view.k, view.k)
+    }
+
+    if (!ctx.cameraOnly) {
+      if (decay) store.applyDecay()
+      if (pulse) store.applyPulse(now)
+      if (thresholds) store.applyThresholds(now)
+      if (animate !== false) store.applyTopologyDiff(now)
+    }
 
     if (currentlyStale) {
       c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
@@ -234,7 +261,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       nodes: store.sceneEdges,
       renderMode,
       pixelRatio: dpr,
-      paintBuiltIn: (edges) => networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
+      paintBuiltIn: (edges) =>
+        networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
     })
 
     paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
@@ -255,13 +283,14 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     if (particlesWanted && !currentlyStale) {
       const edges = store.edgesArray
       if (edges.length > 0) {
-        spawnNetworkParticles(
-          store.particlePool!,
-          edges,
-          deltaTime,
-          particleStyle,
-          random
-        )
+        if (!ctx.cameraOnly)
+          spawnNetworkParticles(
+            store.particlePool!,
+            edges,
+            deltaTime,
+            particleStyle,
+            random
+          )
         const speed = (particleStyle.speedMultiplier ?? 1) * 0.5
 
         let edgeSpeedMultipliers: number[] | undefined
@@ -276,7 +305,13 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
           })
         }
 
-        store.particlePool!.step(deltaTime, speed, edges, edgeSpeedMultipliers)
+        if (!ctx.cameraOnly)
+          store.particlePool!.step(
+            deltaTime,
+            speed,
+            edges,
+            edgeSpeedMultipliers
+          )
         renderNetworkParticles(
           c2d,
           store.particlePool!,
@@ -290,8 +325,10 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     if (currentlyStale) {
       c2d.globalAlpha = 1
     }
+    c2d.restore()
   }
 
+  if (ctx.cameraOnly) return
   dirtyRef.current = false
 
   if (computedScene) {
@@ -306,8 +343,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   }
 
   const wantsAnnotationUpdate =
-    computedScene ||
-    pendingAnnotationFrameRef.current
+    computedScene || pendingAnnotationFrameRef.current
   if (
     wantsAnnotationUpdate &&
     (transitionFinishedThisFrame ||

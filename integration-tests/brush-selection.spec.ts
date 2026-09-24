@@ -1,5 +1,5 @@
 import { test, expect, type Locator } from "@playwright/test"
-import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
+import { waitForChartReady, waitForAllChartsReady, waitForRafs, expectTooltipWithinPlot } from "./helpers"
 
 async function readCanvasState(locator: Locator): Promise<string[]> {
   return locator
@@ -461,6 +461,10 @@ test.describe("Brush & Selection - Visual snapshots", () => {
     await proveLinkedHoverTargetsChanged(page, testCase, "multi-axis-source", [
       "MultiAxisLineChart",
     ])
+    await expectTooltipWithinPlot(
+      testCase.locator('[data-linked-hover-chart="multi-axis-source"]'),
+      { left: 24, right: 24, top: 24, bottom: 24 }
+    )
     await expect(testCase).toHaveScreenshot(
       "linked-hover-deterministic-xy-multi-axis-state.png",
       { maxDiffPixels: 600 }
@@ -471,6 +475,10 @@ test.describe("Brush & Selection - Visual snapshots", () => {
     await proveLinkedHoverTargetsChanged(page, testCase, "difference-source", [
       "DifferenceChart",
     ])
+    await expectTooltipWithinPlot(
+      testCase.locator('[data-linked-hover-chart="difference-source"]'),
+      { left: 24, right: 24, top: 24, bottom: 24 }
+    )
     await expect(testCase).toHaveScreenshot(
       "linked-hover-deterministic-xy-difference-state.png",
       { maxDiffPixels: 600 }

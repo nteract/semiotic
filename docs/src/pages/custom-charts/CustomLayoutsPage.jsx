@@ -16,6 +16,8 @@ import { marimekkoLayout } from "../../../../src/components/recipes/marimekko"
 import { bulletLayout } from "../../../../src/components/recipes/bullet"
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
+import NetworkViewportDemo from "../../components/NetworkViewportDemo"
+import NetworkZoomDemo from "../../components/NetworkZoomDemo"
 import { Link } from "react-router-dom"
 import { waffleRecipeManifest } from "./waffleRecipeManifest"
 import { IntentMark } from "../../../../src/components/ai/IntentMark"
@@ -755,6 +757,16 @@ import { lineageDagLayout } from "semiotic/recipes"
                   hullColors, hullPadding: 16, hullRadius: 12 }}
   selection={{ name: "lineage" }}   // LinkedCharts → ctx.selection highlights across views
 />`}</CodeBlock>
+        <p>
+          Use <code>createLineageDagFit(nodes, plot, config)</code> from <code>semiotic/recipes</code>
+          to share the recipe's exact fitting rules with a minimap. It returns resolved glyph
+          dimensions and LOD, <code>nodeBounds(node)</code>, <code>project(layer, row)</code>, and
+          <code>invert(x, y)</code>. Coordinates are plot-relative; margins and scrolling are separate.
+          Create one fit per view size/LOD and convert the main viewport through logical coordinates
+          into the minimap. An inverse with a single layer returns <code>layer: null</code> because
+          that axis is collapsed; show the full minimap width in that case. For a custom layout's
+          already-emitted positions, the chart ref's <code>getCustomLayout()</code> supplies readback.
+        </p>
       </section>
 
       <section>
@@ -1156,7 +1168,7 @@ ref.current.update("planning", (d) => ({
           renders into one real-DOM layer <strong>above the canvas and SVG overlays</strong> (stack
           order: <code>backgrounds</code> → canvas → <code>overlays</code> → <code>htmlMarks</code>). Each mark is{" "}
           <code>{"{ id, x, y, width, height, content }"}</code> in the <em>same plot space</em> as{" "}
-          <code>sceneNodes</code> — the framework owns the margin (and any future zoom/pan)
+          <code>sceneNodes</code> — the framework owns the margin
           transform, so a mark at <code>(x, y)</code> lands exactly where a scene node at{" "}
           <code>(x, y)</code> does.
         </p>
@@ -1169,6 +1181,16 @@ ref.current.update("planning", (d) => ({
           <code>transform</code> / <code>visibility</code> changes without repainting its contents.
           Marks are <code>pointer-events: none</code> by default, so keep a transparent hit-rect
           scene node per card and let the canvas stay authoritative for hover, tooltip, and click.
+        </p>
+        <p>
+          HTML wrappers are virtualized against the nearest ancestor with <code>overflow: auto</code>,{" "}
+          <code>scroll</code>, or <code>overlay</code>, with 400 CSS pixels of overscan. Scroll and
+          resize updates share one animation-frame measurement and do not rerun the layout. If
+          there is no measurable scroll target, including during SSR or when the target has zero
+          size, all marks mount. This affects the DOM wrappers; scene geometry and hit targets stay retained.
+          For camera zoom, import <code>ZoomableNetworkCustomChart</code> from
+          <code> semiotic/network/zoom</code>. Its frame transform keeps canvas,
+          SVG, HTML, culling and hit testing aligned. External CSS scaling is not supported.
         </p>
         <HtmlMarksDemo />
         <CodeBlock language="tsx">{`import { NetworkCustomChart } from "semiotic/network"
@@ -1203,6 +1225,120 @@ const cardLayout: NetworkCustomLayout = (ctx) => {
           big graphs (the demo above drives the dim through <code>layoutConfig</code> for brevity,
           which re-runs the layout each hover — fine at four nodes, but prefer the selection path at
           scale).
+        </p>
+        <p>
+          Stable mark IDs and stable descendant component types/keys preserve mounted content across
+          position updates and node-array replacement. A new node array can still rerun the layout.
+          Once an unpinned, unfocused card is culled, its local React state is discarded; keep durable
+          edits outside virtualized cards. A focused card stays mounted until focus leaves. Removing
+          focused data returns lost focus to the frame. Interactive card content must opt into
+          <code> pointer-events: auto</code>.
+        </p>
+        <p>
+          Through <code>frameProps</code>, set <code>viewport.scrollContainerRef</code> explicitly,
+          or use <code>viewport.scrollContainer</code> with an element stored by a callback ref when
+          the scroll element can be replaced. A null explicit target mounts all marks; it does not
+          fall back to another ancestor. Configure <code>htmlMarkCulling</code> with
+          <code> enabled</code>, <code>overscan</code> (zero is valid), and <code>pinnedIds</code>.
+          Refs resolve after a React commit; mutating <code>ref.current</code> alone does not notify React.
+        </p>
+        <CodeBlock language="tsx">{`import { useState } from "react"
+import type { NetworkViewportSnapshot } from "semiotic/network"
+
+const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null)
+const [viewport, setViewport] = useState<NetworkViewportSnapshot | null>(null)
+
+<div ref={setScrollContainer} style={{ height: 280, overflow: "auto" }}>
+  <NetworkCustomChart
+    nodes={nodes} edges={edges} layout={cardLayout}
+    frameProps={{
+      viewport: { scrollContainer },
+      htmlMarkCulling: { overscan: 80, pinnedIds: selectedId ? [selectedId] : [] },
+      onViewportChange: setViewport,
+    }}
+  />
+</div>`}</CodeBlock>
+        <p>
+          <code>onViewportChange</code> reports unpadded <code>visibleRect</code>, overscanned
+          <code> renderRect</code>, <code>visibleMarkIds</code>, and <code>mountedMarkIds</code> in
+          plot space. Null rectangles mean unmeasured. Off-screen pins appear only in the mounted
+          set. Rectangle changes are reported even when IDs do not change, so a minimap tracks
+          scrolling continuously. Reporting also works without HTML marks or with culling disabled.
+          Feed it to subscribed overlay content and a minimap; keep it out of <code>layoutConfig</code>
+          so scrolling does not trigger layout. Edge culling must test complete path bounds, including
+          links whose endpoints are both outside the window. These props are React-only, not JSON configuration.
+        </p>
+        <NetworkViewportDemo />
+        <h3>Virtual viewport and semantic zoom</h3>
+        <p>
+          <code>ZoomableNetworkCustomChart</code> keeps the layout fixed while a camera
+          pans and scales the plot. It clips content without native scrollbars. The
+          gesture runtime and LOD hooks are only included when you import
+          <code> semiotic/network/zoom</code>; ordinary charts keep their existing behavior.
+        </p>
+        <NetworkZoomDemo />
+        <p>
+          Open the <Link to="/examples/pipeline-explorer">Pipeline Explorer</Link> for
+          the complete example, including its inspector, minimap, persistent notes and Full Code view.
+        </p>
+        <CodeBlock language="tsx">{`import { ZoomableNetworkCustomChart, useNetworkLOD } from "semiotic/network/zoom"
+
+function Card() {
+  const { width, height, level, isInteracting } = useNetworkLOD(260, 174, {
+    breakpoints: [55, 125, 235],
+    hysteresis: 8,
+    // Set keepDetail while an editor has focus.
+  })
+  // Keep the same outer box and edge ports at every level.
+  // Choose silhouettes, skeletons, summaries or full detail here.
+  // Gate expensive requests on level and !isInteracting; cancel stale work.
+  return <CardContent level={level} displayedSize={{ width, height }} />
+}
+
+<ZoomableNetworkCustomChart
+  ref={chartRef}
+  nodes={nodes} edges={edges} layout={layout}
+  width={800} height={500}
+  zoomOptions={{ minZoom: 0.15, maxZoom: 4, panBounds: contentBounds }}
+  frameProps={{ htmlMarkCulling: { overscan: 80, pinnedIds: selectedIds } }}
+/>
+// chartRef.current.fitToContent(), zoomIn(), zoomOut(), panBy(dx, dy), resetZoom()
+// Supply zoom={{ x, y, k }} and onZoomChange for a controlled camera.`}</CodeBlock>
+        <p>
+          Wheel zoom requires Ctrl or Meta by default so an embedded chart does not
+          trap page scrolling. Set <code>wheelZoom: true</code> for a dedicated map-like
+          explorer. Mouse drag, touch pinch, double click, plus/minus keys and
+          Alt+arrow panning are supported. Ordinary arrows retain network navigation.
+          Native browser zoom shortcuts and editing controls keep their behavior.
+          Wheel, drag and pinch follow input each animation frame; <code>duration</code>
+          controls eased button, keyboard, fit and programmatic zoom transitions.
+          <code> settleDelay</code> defers detail promotion without delaying camera movement.
+        </p>
+        <p>
+          <code>zoomOptions</code> also exposes <code>locked</code>, <code>zoomEnabled</code>,
+          <code> pan</code> (true, false, "x" or "y"), and separate gesture switches.
+          Scale and pan bounds apply to fit and imperative movement too. Content
+          smaller than the viewport is centered. Fit uses all retained nodes and card
+          boxes; pass explicit bounds to include arbitrary SVG decorations or edge curves.
+        </p>
+        <p>
+          <code>useNetworkProjectedSize</code> exposes live and settled CSS-pixel sizes;
+          <code> useNetworkZoom</code> exposes the camera and world-coordinate visible
+          rectangle for edge culling or minimaps. The LOD helper delays promotion until
+          motion settles and demotes immediately outside its hysteresis band. It does
+          not fetch or cache data. Store drafts outside virtualized cards if they must
+          survive unmounting, and set <code>keepDetail</code> while an editor is focused.
+          At very small scales, aggregate dense graphs or draw cheap detail on canvas:
+          zooming out can make many more cards visible.
+        </p>
+        <p>
+          For nested card and row hit rectangles, the smallest containing rectangle wins; equal-area
+          ties use the first scene entry. Nodes take precedence over edges. For visible links drawn
+          in SVG overlays, emit <code>networkEdgeHitTarget</code> into <code>sceneEdges</code> with
+          the same plot geometry. Its default curved path hits the stroke only; use
+          <code> type: "ribbon"</code> or <code>"bezier"</code> for filled bands. Set
+          <code> interactive: false</code> for a table-only edge. Overlay pointer events must reach
+          the frame. Keyboard network traversal remains node-based.
         </p>
       </section>
 

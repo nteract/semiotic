@@ -12,9 +12,11 @@
   ],
   "excludeFiles": ["*.test.tsx", "*.test.ts", "*.spec.ts"],
   "rules": [
+    "Keep interactive tooltips unless omission is intentional. tooltip=false or null suppresses the whole box, not hover observations. Browser-test real node/edge content, one readable tooltip, zoom/pan/resize placement and disappearance on leave.",
+    "Custom/network chart tooltip callbacks receive raw authored data. frameProps.tooltipContent receives a hover wrapper: use unwrapDatum once. Handle nodes and edges separately; use TooltipRoot for custom chrome. Do not guess nested d.data paths.",
     "Atlas readers: import MotifBraidChart, DependencyForestChart and FlowCircuitChart from semiotic/atlas. Prepare admitted artifacts and query evidence with semiotic/atlas/core. The same complete props support renderChartWithEvidence from semiotic/server.",
     "Stable sub-paths: /line,/access,/evidence,/artifact,/artifact/react,/xy,/ordinal,/network,/geo,/realtime,/realtime/core,/realtime/react,/physics,/physics/rapier,/physics/matter,/server,/server/node,/server/edge,/ai,/ai/core",
-    "More stable sub-paths: /atlas,/atlas/core,/utils,/utils/core,/utils/react,/themes,/themes/core,/themes/react,/data,/recipes,/recipes/core,/recipes/react,/value,/spec,/controls,/rough,/text",
+    "More stable sub-paths: /atlas,/atlas/core,/network/zoom,/utils,/utils/core,/utils/react,/themes,/themes/core,/themes/react,/data,/recipes,/recipes/core,/recipes/react,/value,/spec,/controls,/rough,/text",
     "Use usePretextAnnotations from semiotic/text for opt-in SVG note wrapping; install @chenglou/pretext@0.0.9. Pass returned notes to annotations. Browser fonts drive measurement; SSR and serialized JSON retain ordinary wrapping.",
     "Use semiotic/artifact for renderer-independent purpose, claims, evidence, time, reception, corrections, policy, collections, grounding, and transfer. Keep unknown source, review, or timing facts explicit; deterministic helpers do not invent them.",
     "Use /line only when LineChart is the route's sole XY chart; use /xy for any other XY chart or mixed XY catalog.",

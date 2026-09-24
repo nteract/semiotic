@@ -10,6 +10,7 @@ import type {
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { clamp, nonNegativeFinite, readField } from "./recipeUtils"
+import { createLineageDagFit } from "./lineageDagFit"
 import {
   renderLineageHullBackgrounds,
   type LineageHullRect,
@@ -196,8 +197,6 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const cfg = ctx.config || {}
   const plot = ctx.dimensions.plot
 
-  const layerAcc = cfg.layerAccessor ?? "x"
-  const rowAcc = cfg.rowAccessor ?? "y"
   const partAcc = cfg.partitionAccessor ?? "partition"
   const semAcc = cfg.semanticAccessor ?? "semantic"
   const labelAcc = cfg.labelAccessor ?? "label"
@@ -217,49 +216,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const chipColor = cfg.storeChipColor ?? "var(--semiotic-info, #6a8caf)"
   const hullGroupAcc = cfg.hullGroupAccessor
 
-  // ── Domain (layer/row counts) ───────────────────────────────────────────
-  let layerCount = cfg.layerCount
-  let maxLayerSize = cfg.maxLayerSize
-  if (layerCount == null || maxLayerSize == null) {
-    let maxLayer = 0
-    const rowsByLayer = new Map<number, number>()
-    for (const n of ctx.nodes) {
-      const lx = Math.round(Number(readField(n, layerAcc, 0)))
-      maxLayer = Math.max(maxLayer, lx)
-      rowsByLayer.set(lx, (rowsByLayer.get(lx) ?? 0) + 1)
-    }
-    layerCount = layerCount ?? maxLayer + 1
-    maxLayerSize = maxLayerSize ?? Math.max(1, ...rowsByLayer.values())
-  }
-
-  // ── Glyph size + level of detail ────────────────────────────────────────
-  const availW = plot.width / Math.max(1, layerCount)
-  const availH = plot.height / Math.max(1, maxLayerSize)
-  let w = Math.min(cfg.nodeWidth ?? 172, Math.max(8, availW - (cfg.minGapX ?? 26)))
-  let h = Math.min(cfg.nodeHeight ?? 54, Math.max(8, availH - (cfg.minGapY ?? 18)))
-  const lod: LineageLod =
-    cfg.lod && cfg.lod !== "auto"
-      ? cfg.lod
-      : w < 16
-        ? "dot"
-        : w < 48
-          ? "icon"
-          : w < 108
-            ? "compact"
-            : "full"
-  if (lod === "dot") {
-    const d = Math.min(w, h, 11)
-    w = d
-    h = d
-  }
-
-  // ── Logical → pixel mapping ─────────────────────────────────────────────
-  const usableW = Math.max(1, plot.width - w)
-  const usableH = Math.max(1, plot.height - h)
-  const rowSpan = Math.max(1, maxLayerSize - 1)
-  const xPx = (layer: number) =>
-    plot.x + w / 2 + (layerCount! > 1 ? layer / (layerCount! - 1) : 0.5) * usableW
-  const yPx = (row: number) => plot.y + h / 2 + ((row + rowSpan / 2) / rowSpan) * usableH
+  const fit = createLineageDagFit(ctx.nodes, plot, cfg)
+  const { nodeWidth: w, nodeHeight: h, lod } = fit
 
   // ── Reach / selection state ─────────────────────────────────────────────
   const reachSet = cfg.reachableIds ? new Set(cfg.reachableIds) : null
@@ -286,16 +244,13 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
 
   for (const node of ctx.nodes) {
     const id = node.id
-    const layer = Number(readField(node, layerAcc, 0))
-    const row = Number(readField(node, rowAcc, 0))
     const partition = String(readField(node, partAcc, "processor"))
     const semantic = String(readField(node, semAcc, "processor"))
     const label = String(readField(node, labelAcc, id))
     const stores = normalizeStores(readField(node, storesAcc, []))
     const rawDatum = (node.data ?? node) as Datum
 
-    const cx = xPx(layer)
-    const cy = yPx(row)
+    const { cx, cy } = fit.nodeBounds(node)
     positions.set(id, { cx, cy })
 
     // Reach (host-owned set) is the dimming source when present; otherwise the

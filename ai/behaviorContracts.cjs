@@ -188,6 +188,15 @@ const BEHAVIOR_CONTRACTS = [
     agentAction: "Use an actionable cursor only when the application separately supplies documented click or observation behavior and an accessible activation path. Treat cursor in serialized/static output as visual metadata, never as proof that a mark is interactive.",
   },
   {
+    id: "interaction.tooltip-content-and-verification",
+    category: "interaction",
+    title: "Tooltip behavior needs browser evidence",
+    severity: "warning",
+    appliesTo: {},
+    summary: "Interactive charts keep useful tooltips unless omission is intentional. tooltip=false or a null callback result suppresses the entire tooltip, independently of hover observations and selection. Verify actual content and placement in a browser; do not silently disable tooltips to avoid a defect.",
+    agentAction: "Use the documented callback shape: custom/network chart tooltip callbacks receive authored data, while frameProps.tooltipContent receives a hover wrapper (unwrapDatum once). Handle node and edge records separately. Prefer default/configured tooltips or TooltipRoot for custom chrome. Hover a real mark and an edge when interactive; assert expected labels/values, one readable tooltip, no empty box or clipping after zoom/pan and resize, and disappearance on leave. Test tooltip=false and null-returning renderers without disabling enableHover when observations or selection are required. An inspector or a mount-only test does not establish tooltip behavior.",
+  },
+  {
     id: "props.data-required-by-usage-mode",
     category: "required-props",
     title: "Data required by usage mode",

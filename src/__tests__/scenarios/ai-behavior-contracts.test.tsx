@@ -65,6 +65,7 @@ describe("AI behavior contract metadata", () => {
       "props.data-required-by-usage-mode",
       "color.category-precedence",
       "interaction.cursor-is-presentation-only",
+      "interaction.tooltip-content-and-verification",
       "props.required-combinations",
       "streaming.push-mode-data",
       "streaming.ref-mutations-require-id-accessors",

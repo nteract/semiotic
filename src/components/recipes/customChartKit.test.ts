@@ -493,6 +493,9 @@ describe("hitTarget helpers", () => {
       interactive: true,
     })
     expect(path.style.opacity).toBe(0)
+    expect(path.style.fill).toBe("none")
+    const band = networkEdgeHitTarget({ type: "ribbon", pathD: "M0,0L10,0L10,10Z", datum: {} })
+    expect(band.style.fill).toBe("rgba(0,0,0,0)")
   })
 
   it("geoAreaHitTarget emits a transparent interactive geoarea node", () => {

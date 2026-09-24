@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 270,
+    "kb": 271,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -54,8 +54,13 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network",
-    "kb": 148,
+    "kb": 150,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
+  },
+  {
+    "importPath": "semiotic/network/zoom",
+    "kb": 155,
+    "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
     "importPath": "semiotic/geo",
@@ -64,12 +69,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 164,
+    "kb": 165,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 162,
+    "kb": 164,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -79,17 +84,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 243,
+    "kb": 241,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 243,
+    "kb": 241,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 250,
+    "kb": 249,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
@@ -109,7 +114,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 110,
+    "kb": 109,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -119,7 +124,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes/react",
-    "kb": 7,
+    "kb": 8,
     "blurb": "Glyph and React layout-selection helpers"
   },
   {
@@ -149,7 +154,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 164,
+    "kb": 165,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -164,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 595,
+    "kb": 596,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -189,7 +194,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 374,
+    "kb": 375,
     "blurb": "Full chart API and shared utilities"
   }
 ])

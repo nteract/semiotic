@@ -48,14 +48,18 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     ...definitionSourceLoaderEntries
   ]
   const previewKeyEntries = collectPreviewKeys(read(paths.previews))
-  const architectureProfileEntries = collectArchitectureProfilePaths(
-    read(paths.architecture),
-    exampleDefinitions
-  )
+  let architectureProfileEntries
+  try {
+    architectureProfileEntries = await loadArchitectureProfilePaths(
+      paths.architecture
+    )
+  } catch (error) {
+    failures.push(`Architecture profiles could not load: ${error.message}`)
+  }
   const appPaths = new Set(appRouteEntries)
   const sourceLoaders = new Map(sourceLoaderEntries)
   const previewKeys = new Set(previewKeyEntries)
-  const architecturePaths = new Set(architectureProfileEntries)
+  const architecturePaths = new Set(architectureProfileEntries ?? [])
   const examplePageFiles = new Set(readdirSync(paths.examplesDirectory))
 
   validateDuplicatePaths(failures, "App routes", appRouteEntries)
@@ -68,7 +72,7 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
   validateDuplicatePaths(
     failures,
     "architecture profiles",
-    architectureProfileEntries
+    architectureProfileEntries ?? []
   )
 
   comparePathSets(failures, "App routes", appPaths, examplePaths)
@@ -78,12 +82,14 @@ export async function validateDocsExampleIntegrity({ root = ROOT } = {}) {
     new Set(sourceLoaders.keys()),
     examplePaths
   )
-  comparePathSets(
-    failures,
-    "architecture profiles",
-    architecturePaths,
-    examplePaths
-  )
+  if (architectureProfileEntries) {
+    comparePathSets(
+      failures,
+      "architecture profiles",
+      architecturePaths,
+      examplePaths
+    )
+  }
   failures.push(...validateExamplePreviews(examples, previewKeys))
 
   for (const example of examples) {
@@ -341,26 +347,12 @@ function collectPreviewKeys(source) {
   return keys
 }
 
-function collectArchitectureProfilePaths(source, definitions = []) {
-  const paths = [...source.matchAll(/\bpath:\s*["'](\/examples\/[^"']+)/g)].map(
-    (match) => match[1]
-  )
-
-  if (
-    source.includes(
-      "const SEMIOTIC_EXAMPLE_PROFILES = EXAMPLE_DEFINITIONS.map((definition) => {"
-    )
-  ) {
-    paths.push(
-      ...definitions
-        .map((definition) => definition?.path)
-        .filter(
-          (path) => typeof path === "string" && path.startsWith("/examples/")
-        )
-    )
-  }
-
-  return paths
+export async function loadArchitectureProfilePaths(filePath) {
+  // Execute the pure-data module so missing or duplicate explicit profiles fail
+  // here, just as they do in the architecture gallery and Node prerender. A
+  // regex over EXAMPLE_DEFINITIONS.map cannot prove the mapped profiles exist.
+  const { SEMIOTIC_EXAMPLE_PROFILES = [] } = await loadManifest(filePath)
+  return SEMIOTIC_EXAMPLE_PROFILES.map((profile) => profile.path)
 }
 
 function readStaticExamplePageTitle(source) {

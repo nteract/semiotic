@@ -49,6 +49,7 @@ import {
 import { resolveFrameGraphics } from "../stream/frameGraphics"
 import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { collectNetworkAnnotationAnchors } from "../stream/networkAnnotationAnchors"
+import { NetworkViewGroup } from "../stream/networkViewTransform"
 
 registerBuiltInNetworkLayouts()
 
@@ -129,17 +130,6 @@ function networkAnnotationData(nodes: NetworkSceneNode[]): Datum[] {
 export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
   const chartType: NetworkChartType = props.chartType || "force"
-  const emptyNetworkEvidence = (annotationRender?: StaticAnnotationRenderResult) =>
-    buildEvidence({
-      frameType: "network",
-      width: size[0], height: size[1],
-      marks: [],
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      annotationRender,
-      nodeCount: 0, edgeCount: 0,
-      margin,
-    })
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = networkFrameDefaultMargin(chartType)
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
@@ -206,32 +196,30 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     null
   )
 
-  const renderEmptyNetwork = () => {
-    let annotationRender: StaticAnnotationRenderResult | undefined
-    const identityScale = (value: DatumValue) => Number(value)
-    const annotationNodes = props.annotations ? renderStaticAnnotations({
-      annotations: props.annotations,
-      autoPlaceAnnotations: props.autoPlaceAnnotations,
-      svgAnnotationRules: props.svgAnnotationRules,
-      scales: { x: identityScale, y: identityScale },
-      layout: { width: innerWidth, height: innerHeight },
-      theme,
+  // Empty and populated scenes share the same camera, annotations and evidence
+  // envelope, so static exports cannot acquire a second projection path.
+  let annotationRender: StaticAnnotationRenderResult | undefined
+  const renderContent = (
+    content: React.ReactNode,
+    renderedNodes: { node: NetworkSceneNode }[] = [],
+    renderedEdges: { node: NetworkSceneEdge }[] = []
+  ) => {
+    if (sink) sink.evidence = buildEvidence({
       frameType: "network",
-      idPrefix: props._idPrefix,
-      onRender: result => { annotationRender = result },
-    }) : null
-    if (sink) sink.evidence = emptyNetworkEvidence(annotationRender)
-    const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
-      ? (
-        <>
-          {resolvedBackgroundGraphics}
-          {annotationNodes}
-          {resolvedForegroundGraphics}
-        </>
-      )
-      : null
+      width: size[0], height: size[1],
+      marks: [
+        ...renderedNodes.map(({ node }) => ({ type: `node:${node.type ?? "node"}` })),
+        ...renderedEdges.map(({ node }) => ({ type: `edge:${node.type ?? "edge"}` })),
+      ],
+      title: props.title, description: props.description,
+      annotations: props.annotations,
+      annotationRender,
+      nodeCount: renderedNodes.length,
+      edgeCount: renderedEdges.length,
+      margin,
+    })
     return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(emptyContent, {
+      wrapSVG(<NetworkViewGroup view={props.viewTransform} width={innerWidth} height={innerHeight}>{content}</NetworkViewGroup>, {
         width: size[0], height: size[1],
         className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
         title: props.title, description: props.description, background: props.background,
@@ -241,6 +229,35 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         idPrefix: props._idPrefix,
       })
     )
+  }
+  const renderAnnotations = (sceneNodes?: NetworkSceneNode[]) => {
+    const identityScale = (value: DatumValue) => Number(value)
+    return props.annotations ? renderStaticAnnotations({
+      annotations: props.annotations,
+      autoPlaceAnnotations: props.autoPlaceAnnotations,
+      svgAnnotationRules: props.svgAnnotationRules,
+      scales: { x: identityScale, y: identityScale },
+      layout: { width: innerWidth, height: innerHeight },
+      theme,
+      frameType: "network",
+      annotationData: sceneNodes && networkAnnotationData(sceneNodes),
+      pointNodes: sceneNodes && collectNetworkAnnotationAnchors(sceneNodes),
+      idPrefix: props._idPrefix,
+      onRender: result => { annotationRender = result },
+    }) : null
+  }
+  const renderEmptyNetwork = () => {
+    const annotationNodes = renderAnnotations()
+    const emptyContent = resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations
+      ? (
+        <>
+          {resolvedBackgroundGraphics}
+          {annotationNodes}
+          {resolvedForegroundGraphics}
+        </>
+      )
+      : null
+    return renderContent(emptyContent)
   }
 
   const plugin = getLayoutPlugin(chartType)
@@ -449,42 +466,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     .map((label, i) => networkLabelToSVG(label, i))
     .filter(Boolean)
 
-  // Network annotations: layout assigns absolute pixel coords to nodes, so
-  // overlay annotations use raw `x`/`y` numbers directly. `staticAnnotations`
-  // pixel-passthrough kicks in when no `scales.x`/`scales.y` is supplied.
-  // Custom `svgAnnotationRules` still runs first for bespoke note types.
-  let annotationRender: StaticAnnotationRenderResult | undefined
-  const identityScale = (value: DatumValue) => Number(value)
-  const annotationNodes = props.annotations ? renderStaticAnnotations({
-    annotations: props.annotations,
-    autoPlaceAnnotations: props.autoPlaceAnnotations,
-    svgAnnotationRules: props.svgAnnotationRules,
-    scales: { x: identityScale, y: identityScale },
-    layout: { width: innerWidth, height: innerHeight },
-    theme,
-    frameType: "network",
-    annotationData: networkAnnotationData(sceneNodes),
-    pointNodes: collectNetworkAnnotationAnchors(sceneNodes),
-    idPrefix: props._idPrefix,
-    onRender: result => { annotationRender = result },
-  }) : null
-
-  if (sink) {
-    sink.evidence = buildEvidence({
-      frameType: "network",
-      width: size[0], height: size[1],
-      marks: [
-        ...renderedNodes.map(({ node }) => ({ type: `node:${(node as { type?: string }).type ?? "node"}` })),
-        ...renderedEdges.map(({ node }) => ({ type: `edge:${(node as { type?: string }).type ?? "edge"}` })),
-      ],
-      title: props.title, description: props.description,
-      annotations: props.annotations,
-      annotationRender,
-      nodeCount: renderedNodes.length,
-      edgeCount: renderedEdges.length,
-      margin,
-    })
-  }
+  // Annotation anchors stay in layout coordinates inside the camera group.
+  const annotationNodes = renderAnnotations(sceneNodes)
 
   const content = (
     <>
@@ -507,17 +490,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     </>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(
-    wrapSVG(content, {
-      width: size[0], height: size[1],
-      className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description, background: props.background,
-      theme, innerTransform: `translate(${margin.left},${margin.top})`,
-      innerWidth, innerHeight,
-      legend: networkLegendOut,
-      idPrefix: props._idPrefix,
-    })
-  )
+  return renderContent(content, renderedNodes, renderedEdges)
 }
 
 // ── Ordinal SSR ─────────────────────────────────────────────────────────

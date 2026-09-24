@@ -1660,6 +1660,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "pipeline-explorer",
+    shortLabel: "Pipeline Explorer",
+    note: "An optional camera on NetworkCustomChart scales canvas ports, SVG connections and virtualized HTML cards together. Consumer-authored semantic detail, a shared-window minimap, persistent notes and an accessible inspector make the same pipeline readable at every scale.",
+    uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
     id: "dependency-xray",
     shortLabel: "Dependency X-Ray",
     note: "A prepared dependency atlas feeds a sectioned NetworkCustomChart, original-edge cross-links, required-path overlays, an accessible adjacency matrix, and static SVG/evidence exports.",

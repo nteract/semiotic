@@ -14,7 +14,10 @@ import {
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AnnotationContext } from "../realtime/types"
+import { networkLabelToSVG } from "./SceneToSVGNetwork"
 import { SVGChartTitle } from "./SVGChartTitle"
+import type { NetworkViewTransform } from "./networkViewportTypes"
+import { NetworkViewGroup, normalizeNetworkView, projectNetworkPoint } from "./networkViewTransform"
 import {
   overlayAccessibleDescription,
   overlayAccessibleIds,
@@ -46,6 +49,8 @@ export interface NetworkSVGOverlayProps {
 
   /** Labels from the layout plugin */
   labels: NetworkLabel[]
+  /** Optional camera for scene-relative content; title and legend stay fixed. */
+  viewTransform?: NetworkViewTransform
 
   /** Chart title */
   title?: string | ReactNode
@@ -199,31 +204,16 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         })}
       </desc>
       <g transform={`translate(${margin.left},${margin.top})`}>
+        <NetworkViewGroup view={props.viewTransform} width={width} height={height}>
         {/* Labels */}
-        {labels.map((label, i) => (
-          <text
-            key={`label-${i}`}
-            x={label.x}
-            y={label.y}
-            textAnchor={label.anchor || "start"}
-            dominantBaseline={(label.baseline || "middle") as React.SVGAttributes<SVGTextElement>["dominantBaseline"]}
-            fontSize={label.fontSize || 11}
-            fontWeight={label.fontWeight}
-            fill={label.fill || "var(--semiotic-text, #333)"}
-            stroke={label.stroke}
-            strokeWidth={label.strokeWidth}
-            paintOrder={label.paintOrder}
-            style={{ pointerEvents: "none" }}
-          >
-            {label.text}
-          </text>
-        ))}
+        {labels.map((label, i) => networkLabelToSVG(label, i, "start", "middle"))}
 
         {/* Non-widget annotations (rendered in SVG) */}
         {renderedSvgAnnotations}
 
         {/* Foreground graphics */}
         {foregroundGraphics}
+        </NetworkViewGroup>
       </g>
 
       <SVGChartTitle title={title} totalWidth={totalWidth} marginTop={margin.top} />
@@ -245,8 +235,13 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
         (n.datum?.data?.name === annotation.nodeId)
       )
       if (!node) return null
-      const nx = margin.left + (node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x ?? 0))
-      const ny = margin.top + (node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y ?? 0))
+      const anchor = projectNetworkPoint({
+        x: node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x ?? 0),
+        y: node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y ?? 0)
+      }, normalizeNetworkView(props.viewTransform))
+      if (props.viewTransform && (anchor.x < 0 || anchor.y < 0 || anchor.x > width || anchor.y > height)) return null
+      const nx = margin.left + anchor.x
+      const ny = margin.top + anchor.y
       const dx = annotation.dx ?? 0
       const dy = annotation.dy ?? -16
       const w = annotation.width ?? 32

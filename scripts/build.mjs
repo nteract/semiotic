@@ -10,6 +10,7 @@ import {
 import { build as tsupBuild } from "tsup"
 import ts from "typescript"
 import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
+import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
@@ -98,8 +99,6 @@ const terserOptions = {
     drop_console: false,
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
-    // Group function declarations before statement/data tables. This keeps
-    // repeated code closer within gzip's window without changing public names.
     hoist_funs: true,
     // Keep reusable helpers intact across every library entry. Cloning them
     // into individual chunks can retain otherwise unused exports downstream.
@@ -119,7 +118,7 @@ const terserOptions = {
   }
 }
 
-function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames }) {
+function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }) {
   return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
@@ -130,11 +129,16 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames }) {
     bundle: true,
     clean: false,
     sourcemap: !minify,
-    minify: minify ? "terser" : false,
+    minify: minify && format === "cjs" ? "terser" : false,
     terserOptions,
     external: explicitExternals,
     pure: ["console.log", "console.debug"],
-    plugins: [useClientDirectivePlugin({ clientOnly, entryNames })],
+    plugins: [
+      ...(minify && format === "esm"
+        ? [minifyLibraryPlugin({ format, options: terserOptions })]
+        : []),
+      useClientDirectivePlugin({ clientOnly, entryNames })
+    ],
     silent: true
   }
 }
@@ -155,7 +159,9 @@ async function createCjsBundle(options = {}) {
   } = options
 
   await tsupBuild({
-    ...baseBuildOptions({ minify, serverOnly, clientOnly, entryNames: [name] }),
+    ...baseBuildOptions({
+      minify, serverOnly, clientOnly, entryNames: [name], format: "cjs"
+    }),
     entry: { [name]: input },
     name: `${name}:cjs`,
     format: "cjs",
@@ -199,7 +205,8 @@ async function createSharedEsmGroup({
       minify,
       serverOnly,
       clientOnly,
-      entryNames: names
+      entryNames: names,
+      format: "esm"
     }),
     entry: entries,
     name: `${groupName}:esm`,
@@ -264,6 +271,19 @@ function externalizeExperimentalBridgeStoresPlugin() {
           }
         }
       )
+    }
+  }
+}
+
+/** Optional gestures reuse the canonical chart and its React/store identities. */
+function externalizeNetworkZoomHostPlugin(cjs = false) {
+  return {
+    name: "externalize-network-zoom-host",
+    setup(build) {
+      build.onResolve({ filter: /\/charts\/custom\/NetworkCustomChart$/ }, (args) => {
+        if (!args.importer.replaceAll("\\", "/").includes("/stream/networkZoom/")) return null
+        return { path: cjs ? "./network.min.js" : "./network.module.min.js", external: true }
+      })
     }
   }
 }
@@ -1160,6 +1180,7 @@ async function build() {
       minify,
       clientOnly: true
     },
+    { input: "src/components/semiotic-network-zoom.ts", name: "semiotic-network-zoom", minify, clientOnly: true },
     {
       input: "src/components/semiotic-realtime.ts",
       name: "realtime",
@@ -1428,6 +1449,7 @@ async function build() {
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
     "semiotic-text",
+    "semiotic-network-zoom",
     "controls",
     "semiotic-access",
     "semiotic-artifact-react",
@@ -1453,10 +1475,9 @@ async function build() {
   )
   primaryClientEntries["semiotic-client-shared"] =
     "src/components/semiotic-client-shared.ts"
-  primaryClientEntries["semiotic-ai-artifact-policy-constants"] =
-    "src/components/internal/semioticAiArtifactPolicyConstants.ts"
-  primaryClientEntries["semiotic-ai-hash-primitives"] =
-    "src/components/evidence/stableJsonHash.ts"
+  // Pure artifact tables and hash helpers follow their actual consumers.
+  // Additional private entries here create unnecessary gzip/chunk boundaries;
+  // purity annotations preserve downstream named-import tree shaking.
   const auxiliaryClientEntries = Object.fromEntries(
     Object.entries(clientEntries).filter(([name]) =>
       auxiliaryClientEntryNames.has(name)
@@ -1497,7 +1518,7 @@ async function build() {
     minify,
     clientOnly: true,
     groupName: "client-auxiliary",
-    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin()]
+    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin(), externalizeNetworkZoomHostPlugin()]
   })
   await createSharedEsmGroup({
     entries: Object.fromEntries(
@@ -1568,6 +1589,7 @@ async function build() {
   // path cannot reach a chart from another. Bundle all client namespaces once
   // and emit tiny public facades that select the requested namespace.
   const isolatedClientCjsNames = new Set([
+    "semiotic-network-zoom",
     "geo",
     "semiotic-artifact-react",
     "semiotic-recipes",
@@ -1600,6 +1622,10 @@ async function build() {
     esbuildPlugins: [externalizeCustomLayoutSelectionForCjsPlugin()],
   })
   writeClientCjsFacades(clientCjsBundles)
+  await createCjsBundle({
+    ...bundledEntries.find((bundle) => bundle.name === "semiotic-network-zoom"),
+    esbuildPlugins: [externalizeNetworkZoomHostPlugin(true)]
+  })
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
   const artifactReactBundle = bundledEntries.find(
     (bundle) => bundle.name === "semiotic-artifact-react",

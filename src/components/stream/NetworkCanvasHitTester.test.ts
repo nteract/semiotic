@@ -130,6 +130,23 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(result).not.toBeNull()
       expect(result!.datum!.id).toBe("child")
     })
+
+    it("resolves overlapping card/row targets by area, with first-entry ties", () => {
+      const card: NetworkRectNode = {
+        type: "rect", x: 0, y: 0, w: 200, h: 120,
+        style: { opacity: 0 }, datum: { id: "card" }
+      }
+      const row: NetworkRectNode = {
+        ...card, x: 10, y: 40, w: 180, h: 24, datum: { id: "row" }
+      }
+      const duplicate = { ...row, datum: { id: "duplicate" } }
+      for (const scene of [[card, row], [row, card]]) {
+        expect(findNearestNetworkNode(scene, [], 50, 50)?.datum?.id).toBe("row")
+        expect(findNearestNetworkNode(scene, [], 50, 10)?.datum?.id).toBe("card")
+      }
+      expect(findNearestNetworkNode([row, duplicate], [], 50, 50)?.datum?.id).toBe("row")
+      expect(findNearestNetworkNode([duplicate, row], [], 50, 50)?.datum?.id).toBe("duplicate")
+    })
   })
 
   // ── Arc hit testing (chord diagram) ──────────────────────────────────
@@ -364,6 +381,22 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
     const PROCESS_SANKEY_BAND_PATH =
       "M50,80 L100,82 L150,75 L200,78 L250,80 " +
       "L250,120 L200,118 L150,125 L100,122 L50,120 Z"
+
+    it.each(["bezier", "ribbon", "curved"] as const)("does not fill the hit area of an unfilled %s path", async (type) => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        for (const fill of [undefined, "none"]) {
+          const edge: NetworkSceneEdge = {
+            type, pathD: "M50,80 L250,80 L250,120",
+            style: { fill, stroke: "navy" }, datum: { id: "open" }
+          }
+          expect(hitTest([], [edge], 200, 95)).toBeNull()
+          expect(hitTest([], [edge], 150, 82)?.datum?.id).toBe("open")
+        }
+      } finally { restore() }
+    })
 
     it.each(["bezier", "ribbon", "curved"] as const)("hits inside a %s band body", async (type) => {
       const restore = installGeometryFakes()
