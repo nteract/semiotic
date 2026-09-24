@@ -50,6 +50,10 @@ describe("cold-consumer named import manifest", () => {
     [".", 'import { LineChart } from "semiotic"'],
     ["./atlas", 'import { MotifBraidChart } from "semiotic/atlas"'],
     [
+      "./network/zoom",
+      'import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"'
+    ],
+    [
       "./atlas/core",
       'import { prepareNetworkAtlas } from "semiotic/atlas/core"'
     ]

@@ -15,11 +15,20 @@ import {
   publicJavaScriptEntrypoints,
   stableApiEntrypoints
 } from "./lib/public-entrypoints.mjs"
+import { validateNamedImportCases } from "./lib/cold-consumer-measurement.mjs"
 
 const repoRoot = REPO_ROOT
 const errors = []
 const entries = publicJavaScriptEntrypoints()
 const aliases = semioticSourceAliases(repoRoot)
+
+// Catch a missing retained-import measurement during the ordinary build,
+// before the packed-consumer baseline or the broader test suite runs.
+errors.push(
+  ...validateNamedImportCases(
+    JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8"))
+  )
+)
 
 function sameSet(label, actual, expected) {
   const actualSet = new Set(actual)
