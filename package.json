@@ -378,7 +378,7 @@
     "typescript:tests": "node scripts/check-test-types.mjs",
     "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "size": "node --test scripts/network-zoom-bundle.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "size": "node --test scripts/lib/minify-library-chunk.test.mjs scripts/network-zoom-bundle.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
     "check:network-zoom-bundle": "node --test scripts/network-zoom-bundle.test.mjs",
     "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",
     "check:multi-import-size": "node scripts/check-multi-import-size.mjs",
