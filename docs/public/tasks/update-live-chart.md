@@ -5,7 +5,7 @@
 Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.
 
 Source package: semiotic@3.10.4. Channel: source.
-Source revision: sha256:3248653f5f63ab2317f75c2743843296116cffe568c7a64ef988cac16889fdbb. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:2f9a59d5edb42c281708eff7e708d89e13b4978152298ffa5fd2fe04821682d5. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -343,7 +343,7 @@ Browser presentation; source: docs/src/pages/tasks/examples/live-chart.css.
 
 ## Check the result
 
-Evidence state: stale. Only the content digests and environment recorded here; not a release range or an adoption result.
+Evidence state: supported-in-scope. Only the content digests and environment recorded here; not a release range or an adoption result.
 
 - Corrections replace records by stable ID without increasing the retained count.
 - At most four records remain in the chart after new observations.
@@ -358,7 +358,7 @@ npx vitest run docs/src/pages/tasks/examples/live-chart.test.tsx
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-task-live.spec.ts
 ```
 
-No current execution result is recorded for these source contents.
+Recorded execution: 2026-09-24T20:50:01.009Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 
