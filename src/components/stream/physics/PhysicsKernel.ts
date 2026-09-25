@@ -196,6 +196,10 @@ function signOrOne(value: number): number {
   return value < 0 ? -1 : 1
 }
 
+function stationarySleeper(body: PhysicsBodyState): boolean {
+  return body.sleeping && body.x === body.prevX && body.y === body.prevY
+}
+
 function circleCircleCollision(
   ax: number,
   ay: number,
@@ -347,36 +351,18 @@ function bodyBodyCollision(a: MutableBody, b: MutableBody): Collision | null {
       b.shape.height
     )
   }
-  if (a.shape.type === "circle" && b.shape.type === "aabb") {
-    const collision = circleAabbCollision(
-      a.x,
-      a.y,
-      a.shape.radius,
-      b.x,
-      b.y,
-      b.shape.width,
-      b.shape.height
-    )
-    return collision
-      ? {
-          nx: -collision.nx,
-          ny: -collision.ny,
-          penetration: collision.penetration
-        }
-      : null
+  const circle = a.shape.type === "circle" ? a : b
+  const box = circle === a ? b : a
+  if (circle.shape.type !== "circle" || box.shape.type !== "aabb") return null
+  const collision = circleAabbCollision(
+    circle.x, circle.y, circle.shape.radius,
+    box.x, box.y, box.shape.width, box.shape.height
+  )
+  if (collision && circle === a) {
+    collision.nx = -collision.nx
+    collision.ny = -collision.ny
   }
-  if (a.shape.type === "aabb" && b.shape.type === "circle") {
-    return circleAabbCollision(
-      b.x,
-      b.y,
-      b.shape.radius,
-      a.x,
-      a.y,
-      a.shape.width,
-      a.shape.height
-    )
-  }
-  return null
+  return collision
 }
 
 function bodyColliderCollision(
@@ -658,12 +644,13 @@ export class PhysicsKernelWorld {
     // Establish grounded supports before propagating their position constraint
     // up the pile. Impulses continue to use the bodies' actual masses.
     this.resolveColliders(bodies, solidColliders, false, colliderCandidates)
+    const stationarySleepers = colliderCandidates && bodies.map(stationarySleeper)
     let candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
     for (let i = 0; i < this.options.collisionIterations; i += 1) {
       if (i > 0 && !candidates.coversPositions()) {
         candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
       }
-      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, i === 0)
+      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, i === 0, stationarySleepers)
       const staticContacts = this.resolveColliders(bodies, solidColliders, i === 0, colliderCandidates)
       // Without contacts, another pass cannot change geometry or support.
       // Filter callbacks still receive every authored pass, including mutations.
@@ -852,13 +839,21 @@ export class PhysicsKernelWorld {
   private resolveBodyPairs(
     bodies: MutableBody[],
     pairs: [number, number][],
-    emitEvents: boolean
+    emitEvents: boolean,
+    stationarySleepers?: boolean[]
   ): boolean {
     let hasContacts = false
     for (const [aIndex, bIndex] of pairs) {
       const a = bodies[aIndex]
       const b = bodies[bIndex]
       if (!a || !b) continue
+      // The first pass already recorded these immovable contacts. Revisit any
+      // body corrected by a collider or woken by another contact this step.
+      if (!emitEvents && stationarySleepers?.[aIndex] && stationarySleepers[bIndex] &&
+        stationarySleeper(a) && stationarySleeper(b)) {
+        hasContacts = true
+        continue
+      }
       const collision = sweptCircleContact(a, b) ?? bodyBodyCollision(a, b)
       if (!collision) continue
       hasContacts = true
@@ -893,11 +888,15 @@ export class PhysicsKernelWorld {
     // Contact with an anchored neighbor only confers support when the contact
     // force actually opposes gravity. Side-by-side sleeping bodies must not
     // become a mid-air shelf for newly arriving units.
-    if (this.contactOpposesGravity(collision.nx, collision.ny)) {
+    const gravity = this.options.gravity
+    const gravityMagnitude = Math.hypot(gravity.x, gravity.y)
+    const aSupportsB = this.contactOpposesGravity(collision.nx, collision.ny, gravityMagnitude)
+    const bSupportsA = this.contactOpposesGravity(-collision.nx, -collision.ny, gravityMagnitude)
+    if (aSupportsB) {
       if (a.sleeping) this.supportedThisStep.add(b.id)
       this.addSupportContact(a.id, b.id)
     }
-    if (this.contactOpposesGravity(-collision.nx, -collision.ny)) {
+    if (bSupportsA) {
       if (b.sleeping) this.supportedThisStep.add(a.id)
       this.addSupportContact(b.id, a.id)
     }
@@ -913,10 +912,10 @@ export class PhysicsKernelWorld {
     if (invTotal <= EPSILON) return
 
     const supportA = this.supportedThisStep.has(a.id) &&
-      this.contactOpposesGravity(collision.nx, collision.ny) && !b.sleeping && !b.fixedPosition
+      aSupportsB && !b.sleeping && !b.fixedPosition
     const supportB = this.supportedThisStep.has(b.id) &&
-      this.contactOpposesGravity(-collision.nx, -collision.ny) && !a.sleeping && !a.fixedPosition
-    const grounded = Math.hypot(this.options.gravity.x, this.options.gravity.y) > 1
+      bSupportsA && !a.sleeping && !a.fixedPosition
+    const grounded = gravityMagnitude > 1
     const projectionAx = grounded && supportA ? 0 : ax
     const projectionAy = grounded && supportA ? 0 : ay
     const projectionBx = grounded && !supportA && supportB ? 0 : bx
@@ -939,7 +938,6 @@ export class PhysicsKernelWorld {
     const impactSpeed = Math.abs(velocityAlongNormal)
 
     const restitution = pairRestitution(a.restitution, b.restitution, this.options.restitution)
-    const gravity = this.options.gravity
     const previousA = a.vx * gravity.x + a.vy * gravity.y
     const previousB = b.vx * gravity.x + b.vy * gravity.y
     const impulse = (-(1 + restitution) * velocityAlongNormal) / invTotal
@@ -1142,9 +1140,10 @@ export class PhysicsKernelWorld {
   /** A stationary stack is supported through contacts to the floor even before
    * each lower layer has spent a full sleep interval becoming an anchor. */
   private addSupportContact(support: string, dependent: string): void {
+    let dependents = this.supportDependents.get(support)
+    if (dependents?.has(dependent)) return
     this.supportContactsThisStep.add(support)
     this.supportContactsThisStep.add(dependent)
-    let dependents = this.supportDependents.get(support)
     if (!dependents) {
       dependents = new Set()
       this.supportDependents.set(support, dependents)
@@ -1167,9 +1166,9 @@ export class PhysicsKernelWorld {
     }
   }
 
-  private contactOpposesGravity(nx: number, ny: number): boolean {
+  private contactOpposesGravity(nx: number, ny: number, magnitude?: number): boolean {
     const { x: gx, y: gy } = this.options.gravity
-    const magnitude = Math.hypot(gx, gy)
+    magnitude ??= Math.hypot(gx, gy)
     // With no meaningful gravity vector there is no stable "down" direction,
     // so retain the previous contact-based sleeping behavior. Gravity at or
     // below this epsilon is intentionally treated as zero for support detection.

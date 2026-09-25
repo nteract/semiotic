@@ -249,7 +249,9 @@ const ENTRY_GRAPHS = [
   // Initial complete graphs: 272.3 KiB for readers, 13.4 KiB for pure Core.
   // Bumped 275→277: the published reader graph measures 276.7 KiB gzip
   // after the complete Atlas surface was wired into the package entry.
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 277 },
+  // Approved 256-byte allowance for dense-pile settling: 283,747 bytes gzip,
+  // with unchanged simulation output and a faster Linux coverage regression.
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 277.25 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
