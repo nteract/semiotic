@@ -157,6 +157,8 @@ With `transition` enabled on a sliding `windowSize`, set `pointIdAccessor` so re
 
 Realtime chart `timeAccessor` callbacks may return a number, `Date`, or numeric/date string, such as `timeAccessor={(d) => d.isoDate}`. The same types apply to `TemporalHistogram` and bounded server rendering. Value accessors remain numeric.
 
+`RealtimeHistogram` and `TemporalHistogram` support `showGrid` (false by default); set `axes={[{ orient: "bottom", grid: false }, { orient: "left" }]}` for horizontal lines only. Their boolean `hoverHighlight` (false by default) matches `binStart`, keeping the whole stacked column highlighted and dimming other bins. No category accessor is required, and local bin highlighting is independent of linked-hover fields.
+
 With `aggregate`, changing only `stat`/`band`/`sigma` reuses accumulated windows. Changing `window`/`size`/`hop`/`gap`/`retain`, `timeAccessor`, or `valueAccessor` starts a structurally new accumulator: controlled `data` is replayed under the new definition, while push-only history resets because aggregation intentionally retains window statistics rather than every raw event.
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.
@@ -577,7 +579,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **`barPadding`**: pixel value (40/60 default). Reduce for small charts.
 - **`sort`** (BarChart/StackedBarChart/GroupedBarChart/DotPlot): `false` preserves insertion order; `"auto"` = insertion while streaming, value-desc on static (DotPlot default). StackedBar/GroupedBar default to `false`; the underlying frame value-sorts when `oSort` is undefined, so always pass `sort` explicitly if order matters.
 - **`fillArea`**: `fillArea={["seriesA"]}` fills named series only — names must match `lineBy`/`colorBy` keys.
-- **`hoverHighlight`**: requires `colorBy` as a string field.
+- **`hoverHighlight`**: requires `colorBy` as a string field on series/category charts. `RealtimeHistogram` and `TemporalHistogram` instead match `binStart` and highlight the whole column without a category accessor.
 - **`frameProps` style functions**: bypass HOC color resolution — use `colorBy` instead.
 - **Geo imports**: always `semiotic/geo`, never `semiotic`.
 - **Axis config**: `frameProps.axes: [{ orient, includeMax, autoRotate, gridStyle, landmarkTicks, tickAnchor, extent }]`. `tickAnchor: "edges"` flips first tick's `text-anchor` to `start`, last to `end` (and `dominant-baseline` on vertical axes) so edge labels don't overflow. Pairs with `axisExtent: "exact"`. Per-axis `extent: "nice"|"exact"` overrides chart-level `axisExtent` (common: exact x / nice y). Exact on a **value (y)** axis also skips y `extentPadding`; exact on x only affects tick placement.

@@ -30,6 +30,7 @@ export function useRealtimeChartMode(
     width: props.size?.[0] ?? props.width,
     height: props.size?.[1] ?? props.height,
     showAxes: props.showAxes,
+    showGrid: props.showGrid,
     showLegend: props.showLegend,
     enableHover: props.enableHover == null ? undefined : !!props.enableHover,
     linkedHover: props.linkedHover,

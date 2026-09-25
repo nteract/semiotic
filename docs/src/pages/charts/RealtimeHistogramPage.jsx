@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from "react"
 import { RealtimeHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData } from "semiotic"
 
 import TemporalHistogramLinkedExample from "../../examples/TemporalHistogramLinkedExample"
+import TemporalHistogramHoverExample, { temporalHistogramHoverCode } from "../../examples/TemporalHistogramHoverExample"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -571,6 +572,8 @@ const RealtimeHistogramProps = [
   { name: "linkedHover", type: "boolean | string | object", description: "Publish a named hover selection using bin fields or authored source-row fields." },
   { name: "selection", type: "object", description: "Consume a named selection and dim unmatched bins." },
   { name: "showAxes", type: "boolean", required: false, default: "true", description: "Show axis baselines, ticks, and labels." },
+  { name: "showGrid", type: "boolean", default: "false", description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
+  { name: "hoverHighlight", type: "boolean", default: "false", description: "Dim other time bins on hover, keeping the whole stacked column highlighted. Also supported by TemporalHistogram; no category accessor is required." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },
   { name: "tooltipContent", type: "function", required: false, default: null, description: "Custom tooltip render function. Receives hover data." },
@@ -675,6 +678,23 @@ function StreamingBars() {
       {/* Examples */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
+
+      <h3 id="grid-and-hover">Horizontal grid lines and column hover</h3>
+      <p>
+        Hover either color in a column: both stacked segments stay highlighted
+        while the other time bins dim. Horizontal grid lines make their totals
+        easier to compare. Move off the chart to restore every column.
+      </p>
+      <section aria-label="Histogram grid and hover example">
+        <TemporalHistogramHoverExample />
+        <CodeBlock code={temporalHistogramHoverCode} language="tsx" />
+      </section>
+      <p>
+        <code>showGrid</code> enables the grid; <code>grid: false</code> on the
+        bottom axis removes vertical lines. <code>hoverHighlight</code> matches
+        the whole time bin, including all its stacked categories. These props
+        work on both <code>TemporalHistogram</code> and <code>RealtimeHistogram</code>.
+      </p>
 
       <h3 id="stacked-bars">Stacked Bars by Category</h3>
       <p>

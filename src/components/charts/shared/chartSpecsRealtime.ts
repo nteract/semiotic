@@ -60,6 +60,8 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["realtime"],
     ownProps: {
       showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
+      showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
+      hoverHighlight: { type: "boolean", default: false, description: "Dim other time bins on hover. All stacked segments sharing binStart stay highlighted together; no category accessor is required." },
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
       axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
       styleRules: STYLE_RULES_PROP_SPEC,
@@ -142,6 +144,8 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: ["realtimeStatic"],
     ownProps: {
       showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
+      showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
+      hoverHighlight: { type: "boolean", default: false, description: "Dim other time bins on hover. All stacked segments sharing binStart stay highlighted together; no category accessor is required." },
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
       axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
       styleRules: STYLE_RULES_PROP_SPEC,

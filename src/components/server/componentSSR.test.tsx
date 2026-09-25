@@ -149,12 +149,16 @@ describe("Component SSR — XY Charts", () => {
         ]}
         width={420}
         height={240}
+        showGrid
+        axes={[{ orient: "bottom", grid: false }, { orient: "left" }]}
+        hoverHighlight
       />
     )
 
     expect(html).toContain("<svg")
     expect(html).not.toContain("<canvas")
     expect(html).toMatch(/<rect[^>]*(?:fill|style)=/)
+    expect(html).toContain('class="stream-grid"')
   })
 
   it("AreaChart renders area path with fill", () => {

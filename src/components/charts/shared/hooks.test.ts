@@ -591,6 +591,19 @@ describe("useChartSelection", () => {
       result.current.hoverSelectionHook?.predicate({ series: "beta" })
     ).toBe(false)
   })
+
+  it("can match local hover by bin independently of the color field", () => {
+    const { result } = renderHook(() => useChartSelection({
+      hoverHighlight: true,
+      hoverHighlightField: "binStart",
+      colorByField: "category"
+    }), { wrapper: createWrapper() })
+    act(() => result.current.customHoverBehavior({ data: { binStart: 0, category: "North" } }))
+    expect(result.current.hoverSelectionHook?.predicate({ binStart: 0, category: "South" })).toBe(true)
+    expect(result.current.hoverSelectionHook?.predicate({ binStart: 10, category: "North" })).toBe(false)
+    act(() => result.current.customHoverBehavior(null))
+    expect(result.current.hoverSelectionHook).toBeNull()
+  })
 })
 
 // ── useChartMode ──────────────────────────────────────────────────────────

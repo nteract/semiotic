@@ -1,7 +1,7 @@
 import React from "react"
 import { act, render, waitFor } from "@testing-library/react"
 import { beforeEach, afterEach, expect, it } from "vitest"
-import { RealtimeHistogram } from "./RealtimeHistogram"
+import { RealtimeHistogram, TemporalHistogram } from "./RealtimeHistogram"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import type { StreamScales } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -20,6 +20,47 @@ const data = [
   { time: 5, value: 4 },
   { time: 15, value: 8 }
 ]
+
+it.each(["RealtimeHistogram", "TemporalHistogram"] as const)(
+  "%s renders the same horizontal-only grid on client and server",
+  async (name) => {
+    const Histogram = name === "RealtimeHistogram" ? RealtimeHistogram : TemporalHistogram
+    const props = {
+      data,
+      binSize: 10,
+      showGrid: true,
+      hoverHighlight: true,
+      axes: [{ orient: "bottom" as const, grid: false }, { orient: "left" as const }],
+      timeExtent: [0, 20] as [number, number],
+      valueExtent: [0, 10] as [number, number]
+    }
+    const { container, rerender } = render(<Histogram {...props} />)
+    await waitFor(() => expect(container.querySelectorAll(".stream-grid line").length).toBeGreaterThan(0))
+    const { svg, evidence } = renderChartWithEvidence(name, props)
+    expect(evidence.empty).toBe(false)
+    expect(evidence.markCount).toBe(2)
+    const server = new DOMParser().parseFromString(svg, "image/svg+xml")
+    for (const root of [container, server]) {
+      const lines = [...root.querySelectorAll(".stream-grid line, .semiotic-grid line")]
+      expect(lines.length).toBeGreaterThan(0)
+      for (const line of lines) {
+        expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"))
+        expect(line.getAttribute("x1")).not.toBe(line.getAttribute("x2"))
+      }
+    }
+    // Per-axis grid options do not enable grids when the chart switch is off.
+    rerender(<Histogram {...props} showGrid={false} />)
+    expect(container.querySelector(".stream-grid")).toBeNull()
+    expect(renderChartWithEvidence(name, { ...props, showGrid: false }).svg).not.toContain('class="semiotic-grid"')
+    // With no per-axis suppression, both grid directions are available.
+    rerender(<Histogram {...props} axes={undefined} />)
+    await waitFor(() => expect(
+      [...container.querySelectorAll(".stream-grid line")].some(
+        (line) => line.getAttribute("x1") === line.getAttribute("x2")
+      )
+    ).toBe(true))
+  }
+)
 
 it("hides each axis independently and removes its default margin", async () => {
   const ref = React.createRef<TestHandle>()
