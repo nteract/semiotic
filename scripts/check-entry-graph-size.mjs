@@ -110,8 +110,8 @@ const ENTRY_GRAPHS = [
     entry: "semiotic-artifact.module.min.js",
     label: "artifact",
     // NA5 binds prepared Atlas payloads as data and registers three chart
-    // identities. Same-runner baseline: 121.0 KiB; new graph: 121.2 KiB.
-    limitKb: 121.5
+    // identities. The published contract graph now measures 121.6 KiB gzip.
+    limitKb: 122
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -158,9 +158,10 @@ const ENTRY_GRAPHS = [
   // The shared StreamXYFrame custom-layout bridge measures 166.8 KiB here.
   { entry: "physics.module.min.js", label: "physics", limitKb: 168 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
-  // precision add serializer/runtime code to the server entry. Production
-  // graph measures 240.8 KiB gzip; retain measured one-KiB headroom.
-  { entry: "server.module.min.js", label: "server", limitKb: 242 },
+  // precision add serializer/runtime code to the server entry.
+  // Bumped 242→244: the published Atlas readers and renderer-aware server
+  // configs add 1.6 KiB gzip to the reachable graph (243.6 KiB measured).
+  { entry: "server.module.min.js", label: "server", limitKb: 244 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -228,7 +229,9 @@ const ENTRY_GRAPHS = [
   // Bumped 584→586: esbuild 0.28.2 plus overlay/format/brush catalog work
   // measure 584.8 KiB gzip. Keep ~1 KiB of headroom; chart-family budgets
   // still have unused runway.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 586 },
+  // Bumped 586→594: the published Atlas reader catalog and compatibility
+  // surface add 7.2 KiB gzip (593.2 KiB measured).
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 594 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -239,10 +242,14 @@ const ENTRY_GRAPHS = [
   // NA5's public static readers repartition the shared layout chunk: +292
   // gzip bytes for this complete facade. The retained waffleLayout consumer
   // remains 1,765 bytes (+1 gzip byte / -1 raw byte); no new retained runtime.
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 102.5 },
+  // Bumped 102.5→104: the complete reader graph measures 103.2 KiB gzip
+  // after the published Atlas layout exports were included.
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 104 },
   // Optional readers reuse the existing network/physics hosts and stores.
   // Initial complete graphs: 272.3 KiB for readers, 13.4 KiB for pure Core.
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 275 },
+  // Bumped 275→277: the published reader graph measures 276.7 KiB gzip
+  // after the complete Atlas surface was wired into the package entry.
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 277 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
