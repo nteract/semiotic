@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consistently across bounded data, pushes, configuration changes, and static
   rendering. Date-only strings and automatically inferred calendar ticks use
   UTC. Axes refresh when the scale type changes even if domain endpoints stay
-  unchanged. (#1295)
+  unchanged. Public realtime time-accessor types accept number, Date, and string
+  callbacks across all chart variants and entry points. (#1295)
 - Keyboard navigation reaches distribution marks, candlesticks, funnels, and
   geographic lines with the same data as pointer hover. Focus geometry follows
   resized scenes without replaying hover callbacks. (#1294)
@@ -51,7 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nodes their own identity. Browser and static rendering infer missing endpoints
   beside supplied nodes. Materialized scenes refresh after ingestion; edge-ID
   removal dismisses active tooltips; keyboard focus follows layout changes and
-  removals. (#1324)
+  removals. Metadata-only edge updates preserve accumulated pushed values,
+  including custom accessors and in-place updates. (#1324)
 - ProcessSankey distinguishes numeric strings from dates, parses ISO times
   consistently in UTC, generates automatic ticks, and passes the appropriate
   number or Date to `timeFormat`. Tooltips retain time of day and node labels.
@@ -70,7 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   artifacts have semantic regression coverage. (Part of #1305)
 - MCP HTTP uploads have bounded body and header deadlines. Partial uploads no
   longer occupy tool-execution slots, and oversized or timed-out uploads receive
-  an error before their connection closes. (#1375)
+  an error before their connection closes. A separate upload-admission pool caps
+  simultaneous body readers and releases capacity before execution; excess
+  uploads are rejected without queuing. Requests rejected before body parsing
+  also close unread bodies after sending their error response. (#1375)
 
 ### Changed
 

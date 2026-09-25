@@ -1,3 +1,4 @@
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import { parseDateLikeString } from "../shared/temporalStrings"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
@@ -19,7 +20,7 @@ export function readRealtimeNumber<TDatum extends Datum>(
 /** Preserve date identity for the frame's temporal detection while rejecting missing times. */
 export function readRealtimeTime<TDatum extends Datum>(
   datum: Datum,
-  accessor: ChartAccessor<TDatum, number> | undefined,
+  accessor: ChartAccessor<TDatum, CoercibleNumber> | undefined,
   fallback: string
 ): number | Date | null {
   const raw: unknown = typeof accessor === "function"

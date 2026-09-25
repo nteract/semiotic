@@ -65,6 +65,18 @@ test("pushed network preserves accessors, values and tooltip identity", async ({
     await page.mouse.move(0, 0)
     await expect(tooltip).toHaveCount(0)
   }
+  await page.evaluate(() =>
+    window.networkIngestRef.current.updateEdge("0", "1", (data) => ({
+      ...data,
+      label: "edited metadata"
+    }))
+  )
+  const edited = await readTargets()
+  expect(edited.payload).toMatchObject({ amount: 3, label: "edited metadata" })
+  expect(edited.value).toBe(5)
+  await hover(edited.edge, "Value: 5")
+  await page.mouse.move(0, 0)
+  await expect(tooltip).toHaveCount(0)
   await frame.focus()
   await frame.press("Home")
   await frame.press("End")
@@ -97,6 +109,18 @@ test("pushed network preserves accessors, values and tooltip identity", async ({
   const targets = await readTargets()
   await hover(targets.edge, "Value: 5")
   await expect(ring).toHaveCount(0)
+  // An explicit value edit replaces the aggregate; later pushes add to it.
+  await page.evaluate(() => {
+    window.networkIngestRef.current.updateEdge("0", "1", (data) => ({
+      ...data,
+      amount: 7
+    }))
+    window.networkIngestRef.current.push({ from: 0, to: 1, amount: 2 })
+  })
+  await page.mouse.move(0, 0)
+  const revised = await readTargets()
+  expect(revised.value).toBe(9)
+  await hover(revised.edge, "Value: 9")
   // Remove without moving the pointer: the currently visible edge tooltip
   // must disappear when its retained raw ID removes that edge.
   expect(

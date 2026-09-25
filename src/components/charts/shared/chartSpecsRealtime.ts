@@ -170,7 +170,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       className: { type: "string" },
       timeAccessor: {
         type: ["string", "function"],
-        description: "Key for time/x values"
+        description: "Field name or function returning a number, Date, or numeric/date string for time/x values"
       },
       valueAccessor: {
         type: ["string", "function"],

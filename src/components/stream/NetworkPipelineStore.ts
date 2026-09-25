@@ -1268,6 +1268,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
   /**
    * Update all edges between source and target. Handles parallel edges.
+   * Retain accumulated values unless the updater changes the value accessor result.
    * Returns array of previous data values (one per updated edge), or empty array.
    */
   updateEdge(
@@ -1280,9 +1281,11 @@ export class NetworkPipelineStore implements UpdateResultStore {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
       if (src === sourceId && tgt === targetId) {
+        const previousValue = readNetworkAccessor(edge.data ?? {}, this.config.valueAccessor, "value")
         results.push(edge.data ? { ...edge.data } : {})
         edge.data = updater(edge.data ?? {})
-        edge.value = normalizeNetworkValue(readNetworkAccessor(edge.data, this.config.valueAccessor, "value"))
+        const nextValue = readNetworkAccessor(edge.data, this.config.valueAccessor, "value")
+        if (!Object.is(previousValue, nextValue)) edge.value = normalizeNetworkValue(nextValue)
       }
     }
     if (results.length > 0) {

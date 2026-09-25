@@ -29,4 +29,17 @@ describe("realtime temporal normalization", () => {
       { time: Date.UTC(2024, 0, 1, 12), value: 5, count: 2, __aggStart: Date.UTC(2024, 0, 1), __aggEnd: Date.UTC(2024, 0, 2) }
     ])
   })
+
+  it.each(["date", "iso"] as const)("aggregates temporal function accessors returning %s", field => {
+    const aggregate = { size: 86400000, stat: "sum" as const }
+    const accumulator = new RealtimeAccumulator(aggregate)
+    const rows = [
+      { date: new Date("2024-01-01T00:00:00Z"), iso: "2024-01-01T00:00:00Z", value: 2 },
+      { date: new Date("2024-01-01T12:00:00Z"), iso: "2024-01-01T12:00:00Z", value: 3 }
+    ]
+    for (const row of rows) accumulator.push(row, (datum: typeof row) => datum[field])
+    expect(accumulator.emit(aggregate)).toMatchObject([
+      { time: Date.UTC(2024, 0, 1, 12), value: 5, count: 2, __aggStart: Date.UTC(2024, 0, 1), __aggEnd: Date.UTC(2024, 0, 2) }
+    ])
+  })
 })

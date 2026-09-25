@@ -392,7 +392,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   showLegend: { type: "boolean" },
   legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const, default: "right" },
   legendInteraction: { type: "string", enum: ["highlight", "isolate", "none"] as const, default: "none" },
-  timeAccessor: { type: ["string", "function"], description: "Key for time/x values" },
+  timeAccessor: { type: ["string", "function"], description: "Field name or function returning a number, Date, or numeric/date string for time/x values" },
   valueAccessor: { type: ["string", "function"], description: "Key for y values" },
   windowSize: { type: "number", description: "Number of data points visible" },
   windowMode: { type: "string", enum: ["sliding", "growing"] as const },

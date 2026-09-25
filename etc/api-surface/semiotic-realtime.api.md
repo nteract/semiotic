@@ -382,7 +382,7 @@ interface-member RealtimeHeatmapProps::property::styleRules = optional styleRule
 interface-member RealtimeHeatmapProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeHeatmapProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHeatmapProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeHeatmapProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeHeatmapProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeHeatmapProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -449,7 +449,7 @@ interface-member RealtimeHistogramProps::property::styleRules = optional styleRu
 interface-member RealtimeHistogramProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeHistogramProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHistogramProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeHistogramProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeHistogramProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeHistogramProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -509,7 +509,7 @@ interface-member RealtimeLineChartProps::property::styleRules = optional styleRu
 interface-member RealtimeLineChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeLineChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeLineChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeLineChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeLineChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeLineChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -569,7 +569,7 @@ interface-member RealtimeSwarmChartProps::property::styleRules = optional styleR
 interface-member RealtimeSwarmChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeSwarmChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeSwarmChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeSwarmChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeSwarmChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeSwarmChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -630,7 +630,7 @@ interface-member RealtimeWaterfallChartProps::property::styleRules = optional st
 interface-member RealtimeWaterfallChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeWaterfallChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeWaterfallChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeWaterfallChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeWaterfallChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeWaterfallChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined

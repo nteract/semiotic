@@ -23,7 +23,8 @@ export interface StreamNetworkFrameHandle {
   removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
   /** Update a node's data by ID. Returns previous data. */
   updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
-  /** Update all edges between source+target. Returns array of previous data. */
+  /** Update all edges between source+target. Returns array of previous data.
+   * Accumulated values are retained unless the updater changes the value accessor result. */
   updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
   clear(): void
   getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }

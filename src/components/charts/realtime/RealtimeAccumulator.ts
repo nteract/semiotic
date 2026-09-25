@@ -1,3 +1,4 @@
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import {
@@ -20,10 +21,10 @@ export class RealtimeAccumulator {
     private readonly seriesAccessor?: ChartAccessor<Datum, string>
   ) {}
 
-  push(
+  push<TDatum extends Datum>(
     row: Datum,
-    timeAccessor?: ChartAccessor<Datum, number>,
-    valueAccessor?: ChartAccessor<Datum, number>
+    timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>,
+    valueAccessor?: ChartAccessor<TDatum, number>
   ): void {
     const time = readRealtimeTime(row, timeAccessor, "time")
     const value = readRealtimeNumber(row, valueAccessor, "value")

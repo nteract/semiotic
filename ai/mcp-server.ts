@@ -56,7 +56,8 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
-import { DEFAULT_MCP_BODY_TIMEOUT_MS, readMcpJsonBody } from "./mcp-http-body"
+import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
+import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
 import { diagnoseChart } from "./operations/diagnose"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
@@ -5262,6 +5263,7 @@ async function main() {
     const renderExecutionLimits = resolveMcpRenderExecutionLimits()
     const requestLimits = resolveMcpRequestLimits()
     const requestLimiter = createMcpRequestLimiter(requestLimits)
+    const uploadAdmission = createMcpUploadAdmission(resolveMcpUploadLimit())
     const protocolVersions = (process.env.MCP_SUPPORTED_PROTOCOL_VERSIONS || "")
       .split(",")
       .map((version) => version.trim())
@@ -5351,6 +5353,7 @@ async function main() {
         origin &&
         !allowedOrigins.includes(origin)
       ) {
+        closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
           reason: "forbidden_origin",
           method: req.method,
@@ -5385,6 +5388,7 @@ async function main() {
           !allowedHosts.includes(rawHost) &&
           !allowedHosts.includes(normalizedHost)
         ) {
+          closeMcpRequestAfterResponse(req, res)
           mcpLogger.warn("request_rejected", {
             reason: "forbidden_host",
             method: req.method,
@@ -5431,6 +5435,7 @@ async function main() {
       // is an unauthenticated server — a 200 with non-OAuth JSON would confuse
       // a client's auth-discovery flow.
       if (pathname !== "/" && pathname !== "/mcp") {
+        closeMcpRequestAfterResponse(req, res)
         res.writeHead(404, { "Content-Type": "application/json" })
         res.end(JSON.stringify({ error: "Not found" }))
         return
@@ -5465,6 +5470,7 @@ async function main() {
       }
 
       if (req.method !== "POST") {
+        closeMcpRequestAfterResponse(req, res)
         res.writeHead(405, {
           "Content-Type": "application/json",
           Allow: "POST, OPTIONS"
@@ -5485,6 +5491,7 @@ async function main() {
       const requestAbortSignal = createMcpRequestCancellationSignal(req, res)
 
       if (!hasSupportedAccept(String(req.headers.accept || ""))) {
+        closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
           reason: "unsupported_accept",
           method: req.method,
@@ -5506,6 +5513,7 @@ async function main() {
           protocolVersions
         )
       ) {
+        closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
           reason: "unsupported_protocol_version",
           method: req.method,
@@ -5520,6 +5528,7 @@ async function main() {
       }
 
       if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
+        closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
           reason: "unauthorized",
           method: req.method,
@@ -5531,9 +5540,9 @@ async function main() {
         return
       }
 
-      // Uploads do not reserve an execution slot. They have independent byte
-      // and wall-clock bounds, including chunked or deliberately stalled bodies.
-      const bodyResult = await readMcpJsonBody(req, maxBodyBytes, bodyTimeoutMs)
+      // Uploads have independent concurrency, byte and wall-clock bounds. The
+      // admission slot is released before validation or execution admission.
+      const bodyResult = await uploadAdmission.readBody(req, maxBodyBytes, bodyTimeoutMs)
       if (requestAbortSignal.aborted) return
       if (!bodyResult.ok) {
         mcpLogger.warn("request_rejected", {
@@ -5542,8 +5551,8 @@ async function main() {
           route: pathname,
           status: bodyResult.status
         })
-        res.setHeader("Connection", "close")
-        res.once("finish", () => req.destroy())
+        closeMcpRequestAfterResponse(req, res)
+        if (bodyResult.status === 429) res.setHeader("Retry-After", "1")
         writeJsonRpcError(res, bodyResult.status, bodyResult.code, bodyResult.message)
         return
       }

@@ -152,6 +152,8 @@ With `transition` enabled on a sliding `windowSize`, set `pointIdAccessor` so re
 
 `RealtimeLineChart` supports `eventTime={{ lateness, latePolicy? }}` for bounded out-of-order input. Type its ref as `RealtimeLineChartHandle` and call `ref.current.flush()` when the source ends so events still inside the grace window are released in event-time order. A flush commits an ordering boundary: later newer events buffer normally, while events older than the flushed frontier follow `latePolicy`. Changing the event-time config or `timeAccessor` live drains the old tail before the new interpretation begins.
 
+Realtime chart `timeAccessor` callbacks may return a number, `Date`, or numeric/date string, such as `timeAccessor={(d) => d.isoDate}`. The same types apply to `TemporalHistogram` and bounded server rendering. Value accessors remain numeric.
+
 With `aggregate`, changing only `stat`/`band`/`sigma` reuses accumulated windows. Changing `window`/`size`/`hop`/`gap`/`retain`, `timeAccessor`, or `valueAccessor` starts a structurally new accumulator: controlled `data` is replayed under the new definition, while push-only history resets because aggregation intentionally retains window statistics rather than every raw event.
 
 Encoding: `decay`, `pulse`, `transition`, `staleness` — compose freely.

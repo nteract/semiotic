@@ -89,6 +89,7 @@ const SAFE_REASONS = new Set([
   "request_handler_error",
   "request_rate",
   "request_stream_error",
+  "request_upload_concurrency",
   "service_startup_failure",
   "unauthorized",
   "unsupported_accept",
