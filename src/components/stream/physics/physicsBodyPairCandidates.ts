@@ -1,4 +1,14 @@
 import type { PhysicsBodyState } from "./PhysicsKernel"
+import {
+  aabbOverlap,
+  bodyInsideBounds,
+  paddedBodyBounds
+} from "./physicsCollisionBounds"
+
+type BodyCandidateBounds = ReturnType<typeof paddedBodyBounds> & {
+  cellX: number
+  cellY: number
+}
 
 /** A neighbor list remains valid while each body stays inside its padded
  * starting bounds. Position correction can create contacts that did not
@@ -8,61 +18,70 @@ export function physicsBodyPairCandidates(
   size: number,
   gravity = { x: 0, y: 0 }
 ) {
-  const cellSize = Math.max(1, size)
+  let maximumExtent = 1
   const bounds = bodies.map((body) => {
-    const rx = body.shape.type === "circle" ? body.shape.radius : body.shape.width / 2
-    const ry = body.shape.type === "circle" ? body.shape.radius : body.shape.height / 2
-    const padding = Math.max(0.005, Math.min(rx, ry))
-    return {
-      x: body.x, y: body.y, padding,
-      minX: Math.min(body.x, body.prevX) - rx - padding,
-      maxX: Math.max(body.x, body.prevX) + rx + padding,
-      minY: Math.min(body.y, body.prevY) - ry - padding,
-      maxY: Math.max(body.y, body.prevY) + ry + padding
+    const box = paddedBodyBounds(body) as BodyCandidateBounds
+    if (body.bodyCollisions !== false) {
+      maximumExtent = Math.max(
+        maximumExtent,
+        box.maxX - box.minX,
+        box.maxY - box.minY
+      )
     }
+    return box
   })
-  const cells = new Map<string, number[]>()
+  // A large configured cell otherwise compares a dense pile of tiny marks
+  // quadratically. Bound its size by the actual padded swept extents; the
+  // overlap test and final ordering remain independent of this partition.
+  const cellSize = Math.max(1, Math.min(size, maximumExtent))
+  const cells = new Map<string, { x: number; y: number; indexes: number[] }>()
   for (let i = 0; i < bodies.length; i += 1) {
     if (bodies[i].bodyCollisions === false) continue
     const box = bounds[i]
-    for (let x = Math.floor(box.minX / cellSize); x <= Math.floor(box.maxX / cellSize); x += 1) {
-      for (let y = Math.floor(box.minY / cellSize); y <= Math.floor(box.maxY / cellSize); y += 1) {
+    box.cellX = Math.floor(box.minX / cellSize)
+    box.cellY = Math.floor(box.minY / cellSize)
+    for (let x = box.cellX; x <= Math.floor(box.maxX / cellSize); x += 1) {
+      for (let y = box.cellY; y <= Math.floor(box.maxY / cellSize); y += 1) {
         const key = `${x}:${y}`
         const cell = cells.get(key)
-        if (cell) cell.push(i)
-        else cells.set(key, [i])
+        if (cell) cell.indexes.push(i)
+        else cells.set(key, { x, y, indexes: [i] })
       }
     }
   }
-  const pairSet = new Set<string>()
-  for (const indexes of cells.values()) {
+  const pairs: [number, number][] = []
+  for (const { x, y, indexes } of cells.values()) {
     for (let i = 0; i < indexes.length; i += 1) {
       for (let j = i + 1; j < indexes.length; j += 1) {
         const a = indexes[i]
         const b = indexes[j]
         const first = bounds[a]
         const second = bounds[b]
-        if (first.minX <= second.maxX && first.maxX >= second.minX &&
-          first.minY <= second.maxY && first.maxY >= second.minY) {
-          pairSet.add(`${a}:${b}`)
+        // Emit a pair only from its first shared cell, avoiding both duplicate
+        // tuples and the string-key/split round trip for every nearby pair.
+        if (
+          x !== Math.max(first.cellX, second.cellX) ||
+          y !== Math.max(first.cellY, second.cellY)
+        )
+          continue
+        if (aabbOverlap(first, second)) {
+          pairs.push([a, b])
         }
       }
     }
   }
-  // Parse once per neighbor-list build, not at every relaxation iteration.
   const depths = bodies.map((body) => body.x * gravity.x + body.y * gravity.y)
-  const pairs = Array.from(pairSet, (key) => key.split(":").map(Number) as [number, number])
-    .sort(([a0, a1], [b0, b1]) =>
+  pairs.sort(
+    ([a0, a1], [b0, b1]) =>
       Math.max(depths[b0], depths[b1]) - Math.max(depths[a0], depths[a1]) ||
       (a0 === b0 ? a1 - b1 : a0 - b0)
-    )
+  )
   return {
     pairs,
-    coversPositions: () => bodies.every((body, index) =>
-      body.bodyCollisions === false || (
-        Math.abs(body.x - bounds[index].x) <= bounds[index].padding &&
-        Math.abs(body.y - bounds[index].y) <= bounds[index].padding
+    coversPositions: () =>
+      bodies.every(
+        (body, index) =>
+          body.bodyCollisions === false || bodyInsideBounds(body, bounds[index])
       )
-    )
   }
 }

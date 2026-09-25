@@ -70,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contact solving prevents dense piles from freezing with visibly overlapping
   bodies, and settling detection accounts for corrected movement. UnitPile walls
   preserve the advertised clear packing width. (#1300)
+- Physics settling reduces collision-candidate work for small bodies and reuses
+  conservative nearby-wall lists across solver passes. Observation paths avoid
+  unused body-state copies. Dense and paced 1,000-body regressions retain their
+  original limits, with exact simulation-state and event-order coverage.
 - Production minification preserves NaN comparisons, getter side effects, and
   coercion order across library formats. Shipped ESM, CommonJS, Node, and edge
   artifacts have semantic regression coverage. (Part of #1305)

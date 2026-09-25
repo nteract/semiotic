@@ -4,6 +4,9 @@ import { cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, 
 import { sweptAabbContact } from "./physicsSweptAabbContact"
 import { physicsBodyPairCandidates } from "./physicsBodyPairCandidates"
 import { sweptCircleContact } from "./physicsSweptCircleContact"
+import { aabbOverlap, bodyBounds, colliderBounds,
+  bodyInsideBounds, colliderCandidatesForBody, type PhysicsAabbBounds,
+  type PhysicsColliderCandidates } from "./physicsCollisionBounds"
 
 export type PhysicsBodyShape =
   | { type: "circle"; radius: number }
@@ -138,13 +141,6 @@ type MutableBody = PhysicsKernelSnapshotBody
 type MutableCollider = PhysicsKernelSnapshotCollider
 type MutableSpring = PhysicsKernelSnapshotSpring
 
-interface AabbBounds {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-}
-
 interface Collision {
   nx: number
   ny: number
@@ -198,53 +194,6 @@ function pairFriction(a: number | undefined, b: number | undefined, fallback: nu
 
 function signOrOne(value: number): number {
   return value < 0 ? -1 : 1
-}
-
-function bodyBounds(body: MutableBody): AabbBounds {
-  if (body.shape.type === "circle") {
-    const r = body.shape.radius
-    return {
-      minX: body.x - r,
-      minY: body.y - r,
-      maxX: body.x + r,
-      maxY: body.y + r
-    }
-  }
-  const hw = body.shape.width / 2
-  const hh = body.shape.height / 2
-  return {
-    minX: body.x - hw,
-    minY: body.y - hh,
-    maxX: body.x + hw,
-    maxY: body.y + hh
-  }
-}
-
-function colliderBounds(collider: MutableCollider): AabbBounds {
-  const shape = collider.shape
-  if (shape.type === "aabb") {
-    const hw = shape.width / 2
-    const hh = shape.height / 2
-    return {
-      minX: shape.x - hw,
-      minY: shape.y - hh,
-      maxX: shape.x + hw,
-      maxY: shape.y + hh
-    }
-  }
-  const half = (shape.thickness ?? 0) / 2
-  return {
-    minX: Math.min(shape.x1, shape.x2) - half,
-    minY: Math.min(shape.y1, shape.y2) - half,
-    maxX: Math.max(shape.x1, shape.x2) + half,
-    maxY: Math.max(shape.y1, shape.y2) + half
-  }
-}
-
-function aabbOverlap(a: AabbBounds, b: AabbBounds): boolean {
-  return (
-    a.minX <= b.maxX && a.maxX >= b.minX && a.minY <= b.maxY && a.maxY >= b.minY
-  )
 }
 
 function circleCircleCollision(
@@ -701,17 +650,24 @@ export class PhysicsKernelWorld {
     // Rebuild when a large correction can introduce a more distant contact.
     const solidColliders = this.sortedColliders().filter(
       (collider) => !collider.sensor
-    )
+    ).map(collider => ({ collider, bounds: colliderBounds(collider) }))
+    // Filters may inspect or mutate bodies on each visit. Keep their complete
+    // authored call order; only reuse bounds when the pass has no filters.
+    const colliderCandidates = solidColliders.some(({ collider }) => collider.bodyFilter)
+      ? undefined : new Array<PhysicsColliderCandidates | undefined>(bodies.length)
     // Establish grounded supports before propagating their position constraint
     // up the pile. Impulses continue to use the bodies' actual masses.
-    this.resolveColliders(bodies, solidColliders, false)
+    this.resolveColliders(bodies, solidColliders, false, colliderCandidates)
     let candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
     for (let i = 0; i < this.options.collisionIterations; i += 1) {
       if (i > 0 && !candidates.coversPositions()) {
         candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
       }
-      this.resolveBodyPairs(bodies, candidates.pairs, i === 0)
-      this.resolveColliders(bodies, solidColliders, i === 0)
+      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, i === 0)
+      const staticContacts = this.resolveColliders(bodies, solidColliders, i === 0, colliderCandidates)
+      // Without contacts, another pass cannot change geometry or support.
+      // Filter callbacks still receive every authored pass, including mutations.
+      if (colliderCandidates && !bodyContacts && !staticContacts) break
     }
 
     if (!candidates.coversPositions()) {
@@ -897,13 +853,15 @@ export class PhysicsKernelWorld {
     bodies: MutableBody[],
     pairs: [number, number][],
     emitEvents: boolean
-  ): void {
+  ): boolean {
+    let hasContacts = false
     for (const [aIndex, bIndex] of pairs) {
       const a = bodies[aIndex]
       const b = bodies[bIndex]
       if (!a || !b) continue
       const collision = sweptCircleContact(a, b) ?? bodyBodyCollision(a, b)
       if (!collision) continue
+      hasContacts = true
       this.resolveDynamicCollision(a, b, collision)
       if (emitEvents) {
         this.lastEvents.push({
@@ -914,6 +872,7 @@ export class PhysicsKernelWorld {
         })
       }
     }
+    return hasContacts
   }
 
   private resolveDynamicCollision(
@@ -1038,16 +997,27 @@ export class PhysicsKernelWorld {
 
   private resolveColliders(
     bodies: MutableBody[],
-    colliders: MutableCollider[],
-    emitEvents: boolean
-  ): void {
-    for (const body of bodies) {
-      for (const collider of colliders) {
+    colliders: Array<{ collider: MutableCollider; bounds: PhysicsAabbBounds }>,
+    emitEvents: boolean,
+    candidates?: Array<PhysicsColliderCandidates | undefined>
+  ): boolean {
+    let hasContacts = false
+    for (let bodyIndex = 0; bodyIndex < bodies.length; bodyIndex++) {
+      const body = bodies[bodyIndex]
+      let nearby = candidates?.[bodyIndex]
+      if (candidates && (!nearby || !bodyInsideBounds(body, nearby.bounds))) {
+        candidates[bodyIndex] = nearby = colliderCandidatesForBody(body, colliders)
+      }
+      let cursor = 0
+      while (cursor < (nearby ? nearby.indexes.length : colliders.length)) {
+        const colliderIndex = nearby ? nearby.indexes[cursor++] : cursor++
+        const { collider, bounds } = colliders[colliderIndex]
         if (!colliderAppliesToBody(collider, body)) continue
         const swept = sweptAabbContact(body, collider.shape, POSITION_SLOP + EPSILON)
-        if (!swept && !aabbOverlap(bodyBounds(body), colliderBounds(collider))) continue
+        if (!swept && !aabbOverlap(bodyBounds(body), bounds)) continue
         const collision = swept ?? bodyColliderCollision(body, collider)
         if (!collision) continue
+        hasContacts = true
         this.resolveStaticCollision(body, collider, collision)
         // Floors and upward-facing ramps support a body. Vertical tube walls
         // merely constrain x and cannot make a slow falling body sleep in air.
@@ -1062,8 +1032,16 @@ export class PhysicsKernelWorld {
             sensor: false
           })
         }
+        if (nearby && candidates && !bodyInsideBounds(body, nearby.bounds)) {
+          candidates[bodyIndex] = nearby = colliderCandidatesForBody(body, colliders)
+          // A correction may introduce a later contact in this very pass.
+          // Earlier colliders must wait for the next pass, as in the full scan.
+          cursor = 0
+          while (cursor < nearby.indexes.length && nearby.indexes[cursor] <= colliderIndex) cursor++
+        }
       }
     }
+    return hasContacts
   }
 
   private resolveStaticCollision(

@@ -788,6 +788,8 @@ export class PhysicsPipelineStore {
         bodyId: spawn.id
       })
     }
+    // Avoid a full-world copy for spawn observations that nobody will receive.
+    if (!observations && !this.observation.onObservation) return
     const body = this.world.readState().find((state) => state.id === spawn.id)
     this.emitObservation(
       {

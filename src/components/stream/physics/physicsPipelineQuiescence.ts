@@ -64,6 +64,12 @@ export class PhysicsQuiescenceTracker {
       this.seconds = 0
       return
     }
+    // A sleeping world is already quiescent; avoid cloning all body states
+    // between paced arrivals merely to rediscover their sleeping flags.
+    if (world.allSleeping()) {
+      this.seconds += Math.max(0, deltaSeconds)
+      return
+    }
     const bodies = world.readState(this.scratch)
     const thresholdSq = this.speed * this.speed
     let quiescent = true
