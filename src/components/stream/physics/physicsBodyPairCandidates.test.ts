@@ -46,6 +46,131 @@ function exhaustivePairs(bodies: PhysicsBodyState[], gravity = { x: 0, y: 0 }) {
 }
 
 describe("physics broadphase candidate completeness", () => {
+  it("keeps a sleeping pile's candidates local and invalidates on anchor movement", () => {
+    const world = new PhysicsKernelWorld()
+    for (let index = 0; index < 1000; index++) {
+      world.spawn({
+        id: String(index),
+        x: (index % 4) * 4,
+        y: Math.floor(index / 4) * 4,
+        shape: { type: "circle", radius: 2 }
+      })
+    }
+    const bodies = world.snapshot().bodies
+    for (const body of bodies) body.sleeping = true
+    const candidates = broadphase.physicsBodyPairCandidates(bodies, 36)
+    // A settled mark only needs its immediate neighbors, including touching
+    // edges. This work bound catches padding regressions without a CPU timer.
+    expect(candidates.pairs.length).toBeGreaterThan(0)
+    expect(candidates.pairs.length).toBeLessThan(4 * bodies.length)
+    const pairKeys = new Set(candidates.pairs.map(([a, b]) => `${a},${b}`))
+    const indexByPosition = new Map(
+      bodies.map((body, index) => [`${body.x},${body.y}`, index])
+    )
+    for (const [index, body] of bodies.entries()) {
+      const neighbor = indexByPosition.get(`${body.x},${body.y + 4}`)
+      if (neighbor !== undefined) {
+        expect(
+          pairKeys.has(
+            `${Math.min(index, neighbor)},${Math.max(index, neighbor)}`
+          )
+        ).toBe(true)
+      }
+    }
+    expect(candidates.coversPositions()).toBe(true)
+    bodies[0].x += 0.001
+    expect(candidates.coversPositions()).toBe(false)
+  })
+
+  it.each(["circle", "aabb"] as const)(
+    "retains swept %s candidates after an anchor is corrected",
+    (type) => {
+      const world = new PhysicsKernelWorld()
+      for (let index = 0; index < 3; index++) {
+        world.spawn({
+          id: String(index),
+          x: index * 20,
+          y: 0,
+          shape:
+            type === "circle"
+              ? { type, radius: 2 }
+              : { type, width: 4, height: 4 }
+        })
+      }
+      const bodies = world.snapshot().bodies
+      for (const body of bodies) body.sleeping = true
+      bodies[0].x = 40
+      expect(broadphase.physicsBodyPairCandidates(bodies, 36).pairs).toEqual([
+        [0, 1],
+        [0, 2]
+      ])
+    }
+  )
+
+  it.each(["circle", "aabb"] as const)(
+    "matches exhaustive contacts when sleeping %s anchors wake or move",
+    (type) => {
+      const optimized = new PhysicsKernelWorld({
+        gravity: { x: 0, y: 0 },
+        contactWakeSpeed: 20
+      })
+      for (let index = 0; index < 24; index++) {
+        optimized.spawn({
+          id: String(index),
+          x: (index % 4) * 3.995,
+          y: Math.floor(index / 4) * 3.995,
+          shape:
+            type === "circle"
+              ? { type, radius: 2 }
+              : { type, width: 4, height: 4 }
+        })
+      }
+      const snapshot = optimized.snapshot()
+      for (const body of snapshot.bodies) {
+        body.sleeping = true
+        body.sleepTime = 1
+      }
+      optimized.restore(snapshot)
+      const expected = new PhysicsKernelWorld()
+      expected.restore(snapshot)
+      const original = broadphase.physicsBodyPairCandidates
+      const events = []
+      const snapshots = []
+      const advance = (world: PhysicsKernelWorld, step: number) => {
+        if (step === 5) world.applyImpulse("0", 100, 0)
+        if (step === 30)
+          world.setColliders([
+            {
+              id: "wall",
+              shape: { type: "aabb", x: 0, y: 10, width: 8, height: 60 }
+            }
+          ])
+        world.step()
+      }
+      for (let step = 0; step < 60; step++) {
+        advance(optimized, step)
+        events.push(optimized.events())
+        snapshots.push(optimized.snapshot())
+      }
+      expect(events.flat().some((event) => event.type === "wake")).toBe(true)
+      const spy = vi
+        .spyOn(broadphase, "physicsBodyPairCandidates")
+        .mockImplementation((bodies, size, gravity) => ({
+          ...original(bodies, size, gravity),
+          pairs: exhaustivePairs(bodies, gravity)
+        }))
+      try {
+        for (let step = 0; step < 60; step++) {
+          advance(expected, step)
+          expect(expected.events()).toEqual(events[step])
+          expect(expected.snapshot()).toEqual(snapshots[step])
+        }
+      } finally {
+        spy.mockRestore()
+      }
+    }
+  )
+
   it.each(["x", "y"] as const)(
     "retains unique ordered swept pairs along the %s axis across distant cells",
     (axis) => {
