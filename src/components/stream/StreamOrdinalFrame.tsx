@@ -48,6 +48,7 @@ import { useStableShallow } from "./useStableShallow"
 import { AccessibleDataTable, AccessibleTablePortal, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
@@ -806,8 +807,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       ? (isRadialMode ? hoverPoint.y + adjustedHeight / 2 : hoverPoint.y)
       : 0
 
-    const tooltipElement = tooltipRendered ? (
+    const tooltipElement = hasTooltipContent(tooltipRendered) ? (
       <FlippingTooltip
+        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
         x={tooltipX}
         y={tooltipY}
         containerWidth={adjustedWidth}

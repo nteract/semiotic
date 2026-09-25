@@ -1,4 +1,6 @@
 import * as React from "react"
+import { TooltipRoot, hasTooltipContent, markTooltipChrome } from "semiotic/network"
+import { unwrapDatum } from "semiotic/utils"
 import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"
 import type {
   ZoomableNetworkCustomChartHandle,
@@ -100,8 +102,33 @@ const layout: NetworkCustomLayout = () => {
     )
   }
 }
+// An unmarked consumer wrapper around a library-owned surface.
+const ChartTooltip = markTooltipChrome(function ChartTooltip({ label }: { label: string }) {
+  const id = React.useId()
+  return <TooltipRoot id={id} role="tooltip" style={{ background: "navy", color: "white" }}>{label}</TooltipRoot>
+})
+const MyTooltip = ({ label }: { label: string }) => <ChartTooltip label={label} />
+const ownedTooltip = markTooltipChrome((datum: Record<string, unknown>) => <MyTooltip label={String(datum.id)} />)
+const emptyResults: Record<string, React.ReactNode> = {
+  null: null, undefined: undefined, boolean: false, true: true,
+  text: "", whitespace: "  ", array: [], fragment: <>{null}{false}</>
+}
+
 export function ZoomFixture() {
   const tooltipMode = new URLSearchParams(location.search).get("tooltip")
+  const rawTooltip = new URLSearchParams(location.search).has("raw-tooltip")
+  const [width, setWidth] = React.useState(540)
+  const tooltip = tooltipMode === "owned"
+    ? ownedTooltip
+    : tooltipMode && Object.hasOwn(emptyResults, tooltipMode)
+      ? markTooltipChrome(() => {
+          // A wrapping library suppresses empty consumer results before adding its surface.
+          const result = emptyResults[tooltipMode]
+          return hasTooltipContent(result) ? <MyTooltip label={String(result)} /> : null
+        })
+      : tooltipMode === "zero"
+        ? () => 0
+        : (datum: Record<string, unknown>) => <span data-testid="zoom-tooltip">{String(datum.id)}</span>
   const [viewport, setViewport] =
     React.useState<NetworkViewportSnapshot | null>(null)
   const [hover, setHover] = React.useState("none")
@@ -145,11 +172,12 @@ export function ZoomFixture() {
         />
         Lock
       </label>
+      <button onClick={() => setWidth(340)}>Narrow chart</button>
       <ZoomableNetworkCustomChart
         nodes={nodes}
         edges={edges}
         layout={layout}
-        width={540}
+        width={width}
         height={360}
         margin={{ left: 30, top: 20, right: 10, bottom: 10 }}
         ref={(handle) => {
@@ -163,20 +191,19 @@ export function ZoomFixture() {
         zoomOptions={options}
         animate={false}
         accessibleTable={false}
-        tooltip={
-          tooltipMode === "false"
-            ? false
-            : tooltipMode === "null"
-              ? () => null
-              : (datum) => (
-                  <span data-testid="zoom-tooltip">{String(datum.id)}</span>
-                )
-        }
+        tooltip={tooltipMode === "false" ? false : tooltip}
         onObservation={(event) => {
           if (event.type === "hover") setHover(String(event.datum?.id))
           if (event.type === "hover-end") setHover("none")
         }}
         frameProps={{
+          ...(rawTooltip ? {
+            tooltipContent: tooltipMode === "owned"
+              ? markTooltipChrome((hover) => <MyTooltip label={String(unwrapDatum(hover)?.id)} />)
+              : (hover) => tooltipMode && Object.hasOwn(emptyResults, tooltipMode)
+                ? emptyResults[tooltipMode]
+                : tooltip(unwrapDatum(hover) || {})
+          } : {}),
           onViewportChange: setViewport,
           htmlMarkCulling: { overscan: 0 },
           paused: new URLSearchParams(location.search).has("paused")

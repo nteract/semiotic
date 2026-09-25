@@ -148,7 +148,8 @@ function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
-function hasOwnTooltipChrome(node: React.ReactNode): boolean
+function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
+function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function intentManifestFromRecipe(recipe: ChartRecipe<import("../stream/networkColorAccessors").Datum, Record<string, unknown>>, options: IntentManifestFromRecipeOptions): IntentManifest

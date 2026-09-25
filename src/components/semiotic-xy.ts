@@ -15,6 +15,8 @@ export {
   TooltipRoot,
   MultiLineTooltip,
   MultiPointTooltip,
+  hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome,
 } from "./Tooltip/Tooltip"
 export type {

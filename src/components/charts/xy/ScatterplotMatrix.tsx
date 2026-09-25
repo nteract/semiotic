@@ -10,6 +10,7 @@ import {
   type TooltipProp,
 } from "../../Tooltip/Tooltip"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome, hasTooltipContent } from "../../Tooltip/tooltipChrome"
 import { useColorScale, DEFAULT_COLOR, resolveMobileInteraction } from "../shared/hooks"
 import { LinkedCharts } from "../../LinkedCharts"
 import { useSelectionSelector } from "../../store/SelectionStore"
@@ -405,9 +406,10 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
           </TooltipRoot>
         )
         const tooltipContent = hasCustomContent ? customContent : defaultContent
-        if (!tooltipContent) return null
+        if (!hasTooltipContent(tooltipContent)) return null
         return (
           <FlippingTooltip
+            contentOwnsChrome={hasOwnTooltipChrome(normalizedTooltip)}
             x={tooltipLeft}
             y={tooltipTop}
             containerWidth={labelWidth + fields.length * cellSize + fields.length * cellGap}

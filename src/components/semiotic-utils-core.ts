@@ -282,6 +282,7 @@ export {
   resolveMultiCapableTooltip,
   isMultiTooltip,
   hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome
 } from "./Tooltip/Tooltip"
 export type {

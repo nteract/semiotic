@@ -1,4 +1,5 @@
 import * as React from "react"
+import { TooltipRoot, markTooltipChrome, hasOwnTooltipChrome } from "../../Tooltip/Tooltip"
 import { render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { HoverData, StreamXYFrameProps } from "../../stream/types"
@@ -63,6 +64,16 @@ describe("MultiAxisLineChart tooltips", () => {
     expect(rendered.container.textContent).toContain("72")
     expect(rendered.container.textContent).toContain("Humidity")
     expect(rendered.container.textContent).toContain("0.45")
+  })
+
+  it("preserves renderer ownership while restoring original units", () => {
+    const Wrapped = ({ value }: { value: number }) => <TooltipRoot>{value}</TooltipRoot>
+    const content = markTooltipChrome((datum: Datum) => <Wrapped value={datum.allSeries[0].value} />)
+    render(<MultiAxisLineChart data={data} xAccessor="time" series={series} tooltip={{ mode: "multi", content }} />)
+    expect(hasOwnTooltipChrome(capturedProps?.tooltipContent)).toBe(true)
+    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    expect(view.container.textContent).toBe("72")
+    expect(view.container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
   })
 
   it("passes original units and source-shaped rows to custom multi content", () => {

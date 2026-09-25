@@ -24,6 +24,8 @@ describe("tooltip public entry points", () => {
   ])("exports the custom chrome primitive from %s", (_name, entry) => {
     expect(entry.TooltipRoot).toBeTypeOf("function")
     expect(entry.Tooltip).toBeTypeOf("function")
+    expect(entry.hasTooltipContent).toBe(root.hasTooltipContent)
+    expect(entry.hasOwnTooltipChrome).toBe(root.hasOwnTooltipChrome)
     expect(entry.markTooltipChrome).toBeTypeOf("function")
   })
 
@@ -31,6 +33,7 @@ describe("tooltip public entry points", () => {
     expect(utils.normalizeTooltip).toBeTypeOf("function")
     expect(utils.resolveTooltipContent).toBeTypeOf("function")
     expect(utils.resolveMultiCapableTooltip).toBeTypeOf("function")
+    expect(utils.hasTooltipContent).toBe(root.hasTooltipContent)
     expect(utils.hasOwnTooltipChrome).toBeTypeOf("function")
   })
 

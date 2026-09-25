@@ -83,9 +83,11 @@ export function TooltipRoot({
 }
 
 /**
- * Mark a wrapper component whose rendered root owns tooltip chrome. This is
- * useful when a tooltip callback returns `<MyTooltip />`: FlippingTooltip can
- * inspect the component type before React renders its inner TooltipRoot.
+ * Mark a component or tooltip renderer as owning its tooltip chrome. Marking
+ * the renderer passed to `tooltip` or `tooltipContent` covers every non-empty
+ * result, even when it returns an unmarked wrapper component. Plain renderers
+ * should stay unmarked to retain Semiotic's default surface.
+ * Returns the same component or renderer without invoking or wrapping it.
  */
 export function markTooltipChrome<T>(component: T): T {
   ;(component as T & { ownsChrome: boolean }).ownsChrome = true
@@ -109,11 +111,16 @@ function paintsInlineBackground(value: unknown): boolean {
 }
 
 /**
- * Whether the immediate tooltip content explicitly owns its visual chrome.
+ * Whether a renderer or the immediate tooltip content owns its visual chrome.
  * A class name alone is deliberately not enough: many callbacks use a class
  * only for internal layout and would otherwise become transparent.
  */
-export function hasOwnTooltipChrome(node: React.ReactNode): boolean {
+export function hasOwnTooltipChrome(
+  node: React.ReactNode | ((...args: never[]) => React.ReactNode)
+): boolean {
+  if (typeof node === "function") {
+    return (node as { ownsChrome?: boolean }).ownsChrome === true
+  }
   if (!React.isValidElement(node)) return false
 
   const type = node.type as { ownsChrome?: boolean } | string

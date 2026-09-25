@@ -2,6 +2,7 @@ import "../../test-utils/registerBuiltInXYPlugins"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { render, act, fireEvent, waitFor } from "@testing-library/react"
+import { TooltipRoot, markTooltipChrome } from "../Tooltip/Tooltip"
 import StreamXYFrame, { withAlpha } from "./StreamXYFrame"
 import type { StreamXYFrameHandle, StreamXYFrameProps } from "./types"
 import {
@@ -703,6 +704,23 @@ describe("StreamXYFrame", () => {
             ?.textContent
         ).toBe("Alpha")
       })
+    })
+
+    it.each(["zero", "owned"])("renders %s frame callbacks without losing content or adding a surface", async (mode) => {
+      const Wrapped = () => <TooltipRoot>Owned</TooltipRoot>
+      const tooltipContent = mode === "zero" ? () => 0 : markTooltipChrome(() => <Wrapped />)
+      const { container } = render(
+        <StreamXYFrame chartType="scatter" data={[{ x: 1, y: 10 }, { x: 2, y: 20 }]}
+          xAccessor="x" yAccessor="y" size={[300, 200]} enableHover tooltipContent={tooltipContent} />
+      )
+      fireEvent.keyDown(container.querySelector(".stream-xy-frame")!, { key: "ArrowRight" })
+      await waitFor(() => {
+        expect(container.querySelector(".stream-frame-tooltip")?.textContent).toBe(mode === "zero" ? "0" : "Owned")
+      })
+      expect(container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+      if (mode === "owned") {
+        expect(container.querySelector<HTMLElement>(".stream-frame-tooltip")!.style.background).toBe("")
+      }
     })
 
     it("emits additive focus and activation observations from the keyboard", async () => {

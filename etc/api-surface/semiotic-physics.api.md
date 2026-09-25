@@ -154,6 +154,8 @@ function evaluatePhysicsBodyBudget(input: PhysicsBodyBudgetInput): PhysicsBodyBu
 function forceFieldRegion(options: ProcessRegionBaseOptions & {force?: StreamPhysicsRegionVector; damping?: number; energyDelta?: number;}): StreamPhysicsRegionEffect
 function galtonPegs(options: GaltonPegsOptions): PhysicsColliderSpec[]
 function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: ReadonlySet<string> | readonly string[]): {id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[];}[]
+function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
+function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function isHatchFill(fill: unknown): boolean

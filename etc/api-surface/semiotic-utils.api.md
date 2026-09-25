@@ -79,7 +79,8 @@ function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
-function hasOwnTooltipChrome(node: React.ReactNode): boolean
+function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
+function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchFillKey(h: HatchFill): string
 function isHatchFill(fill: unknown): boolean

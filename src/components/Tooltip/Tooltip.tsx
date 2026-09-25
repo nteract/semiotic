@@ -8,12 +8,14 @@ import {
   TooltipRoot,
   hasOwnTooltipChrome,
   hasTooltipContent,
+  markTooltipChrome,
 } from "./tooltipChrome"
 
 export {
   TooltipRoot,
   defaultTooltipStyle,
   hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome,
 } from "./tooltipChrome"
 export type { TooltipRootProps, TooltipChromeMode } from "./tooltipChrome"
@@ -422,7 +424,9 @@ export interface MultiTooltipConfig {
  * Type for tooltip prop that chart components accept.
  * `false` disables the tooltip without disabling hover observations. A custom
  * renderer receives authored data; return `null` directly to omit a datum's
- * tooltip (including its background). Use TooltipRoot for custom chrome.
+ * tooltip (including its background). Other React-empty results also suppress
+ * it; numeric zero remains visible. Use TooltipRoot for custom chrome, or
+ * markTooltipChrome(renderer) when chrome is inside wrapper components.
  */
 export type TooltipProp =
   | boolean
@@ -634,7 +638,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     // 2. Returning a plain string/number renders as an unstyled text node.
     //    We wrap all results in the standard tooltip chrome.
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
-    return (hoverData: Datum) => {
+    const normalized = (hoverData: Datum) => {
       // Unwrap Semiotic HoverData → raw datum so user functions receive
       // the data they pushed/passed. Prefer the explicit internal marker
       // emitted by Stream Frames. Accept frame-only metadata as a narrow
@@ -712,16 +716,17 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       const result = userFn(datum)
       if (!hasTooltipContent(result)) return null
       // A custom renderer can own its chrome either with TooltipRoot, the
-      // explicit data marker, an inline background, or a component-level
+      // explicit data marker, an inline background, or a renderer/component
       // ownsChrome flag. Preserve that element directly; wrapping it here
       // would create the same double-box artifact FlippingTooltip avoids.
-      if (hasOwnTooltipChrome(result)) return result
+      if (hasOwnTooltipChrome(userFn) || hasOwnTooltipChrome(result)) return result
       return (
         <TooltipRoot>
           {result}
         </TooltipRoot>
       )
     }
+    return hasOwnTooltipChrome(userFn) ? markTooltipChrome(normalized) : normalized
   }
 
   if (tooltip === false || tooltip === undefined) {

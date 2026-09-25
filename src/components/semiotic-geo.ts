@@ -7,7 +7,7 @@ import StreamGeoFrame from "./stream/StreamGeoFrame"
 
 export { StreamGeoFrame }
 
-export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
+export { Tooltip, TooltipRoot, MultiLineTooltip, hasOwnTooltipChrome, hasTooltipContent, markTooltipChrome } from "./Tooltip/Tooltip"
 export type {
   TooltipProp,
   TooltipConfig,

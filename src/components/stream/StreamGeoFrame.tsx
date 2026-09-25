@@ -28,6 +28,7 @@ import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
 import { zoom as d3Zoom, zoomIdentity } from "d3-zoom"
 import type { ZoomBehavior, ZoomTransform, D3ZoomEvent } from "d3-zoom"
 import { select } from "d3-selection"
@@ -1132,8 +1133,9 @@ const StreamGeoFrame = memo(
 
     const tooltipRendered = effectiveHoverAnnotation && hoverPoint ? tooltipContent ? tooltipContent(hoverPoint) : <DefaultGeoTooltip data={hoverPoint} /> : null
 
-    const tooltipElement = tooltipRendered ? (
+    const tooltipElement = hasTooltipContent(tooltipRendered) ? (
       <FlippingTooltip
+        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
         x={hoverPoint!.x}
         y={hoverPoint!.y}
         containerWidth={adjustedWidth}

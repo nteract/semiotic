@@ -7,7 +7,7 @@ import StreamOrdinalFrame from "./stream/StreamOrdinalFrame"
 
 export { StreamOrdinalFrame }
 
-export { Tooltip, TooltipRoot, MultiLineTooltip, markTooltipChrome } from "./Tooltip/Tooltip"
+export { Tooltip, TooltipRoot, MultiLineTooltip, hasOwnTooltipChrome, hasTooltipContent, markTooltipChrome } from "./Tooltip/Tooltip"
 export type {
   TooltipProp,
   TooltipConfig,

@@ -12,6 +12,8 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import {
   MultiPointTooltip,
   isMultiTooltipConfig,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
   resolveMultiCapableTooltip,
   type TooltipProp,
 } from "../../Tooltip/Tooltip"
@@ -573,9 +575,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     if (!isMultiTooltipConfig(tooltip) || typeof tooltip.content !== "function") {
       return tooltip
     }
+    const content = (datum: Datum) => tooltip.content!(mapMultiAxisHover(datum))
     return {
       mode: "multi",
-      content: (datum) => tooltip.content!(mapMultiAxisHover(datum)),
+      content: hasOwnTooltipChrome(tooltip.content) ? markTooltipChrome(content) : content,
     }
   }, [mapMultiAxisHover, tooltip])
 
