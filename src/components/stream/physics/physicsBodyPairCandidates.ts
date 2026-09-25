@@ -34,38 +34,42 @@ export function physicsBodyPairCandidates(
   // quadratically. Bound its size by the actual padded swept extents; the
   // overlap test and final ordering remain independent of this partition.
   const cellSize = Math.max(1, Math.min(size, maximumExtent))
-  const cells = new Map<string, { x: number; y: number; indexes: number[] }>()
+  // Numeric coordinates avoid rebuilding and hashing a string for every cell.
+  const columns = new Map<number, Map<number, number[]>>()
   for (let i = 0; i < bodies.length; i += 1) {
     if (bodies[i].bodyCollisions === false) continue
     const box = bounds[i]
     box.cellX = Math.floor(box.minX / cellSize)
     box.cellY = Math.floor(box.minY / cellSize)
     for (let x = box.cellX; x <= Math.floor(box.maxX / cellSize); x += 1) {
+      let column = columns.get(x)
+      if (!column) columns.set(x, (column = new Map()))
       for (let y = box.cellY; y <= Math.floor(box.maxY / cellSize); y += 1) {
-        const key = `${x}:${y}`
-        const cell = cells.get(key)
-        if (cell) cell.indexes.push(i)
-        else cells.set(key, { x, y, indexes: [i] })
+        const cell = column.get(y)
+        if (cell) cell.push(i)
+        else column.set(y, [i])
       }
     }
   }
   const pairs: [number, number][] = []
-  for (const { x, y, indexes } of cells.values()) {
-    for (let i = 0; i < indexes.length; i += 1) {
-      for (let j = i + 1; j < indexes.length; j += 1) {
-        const a = indexes[i]
-        const b = indexes[j]
-        const first = bounds[a]
-        const second = bounds[b]
-        // Emit a pair only from its first shared cell, avoiding both duplicate
-        // tuples and the string-key/split round trip for every nearby pair.
-        if (
-          x !== Math.max(first.cellX, second.cellX) ||
-          y !== Math.max(first.cellY, second.cellY)
-        )
-          continue
-        if (aabbOverlap(first, second)) {
-          pairs.push([a, b])
+  for (const [x, column] of columns) {
+    for (const [y, indexes] of column) {
+      for (let i = 0; i < indexes.length; i += 1) {
+        for (let j = i + 1; j < indexes.length; j += 1) {
+          const a = indexes[i]
+          const b = indexes[j]
+          const first = bounds[a]
+          const second = bounds[b]
+          // Emit a pair only from its first shared cell, avoiding both duplicate
+          // tuples and a separate pair-key set.
+          if (
+            x !== Math.max(first.cellX, second.cellX) ||
+            y !== Math.max(first.cellY, second.cellY)
+          )
+            continue
+          if (aabbOverlap(first, second)) {
+            pairs.push([a, b])
+          }
         }
       }
     }

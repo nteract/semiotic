@@ -46,6 +46,35 @@ function exhaustivePairs(bodies: PhysicsBodyState[], gravity = { x: 0, y: 0 }) {
 }
 
 describe("physics broadphase candidate completeness", () => {
+  it.each(["x", "y"] as const)(
+    "retains unique ordered swept pairs along the %s axis across distant cells",
+    (axis) => {
+      const world = new PhysicsKernelWorld()
+      for (let index = 0; index < 96; index++) {
+        const offset = (index % 32) * 3 - 48
+        const band = (Math.floor(index / 32) - 1) * 1e7
+        world.spawn({
+          id: String(index),
+          x: axis === "x" ? offset : band,
+          y: axis === "y" ? offset : band,
+          shape: { type: "circle", radius: 1 },
+          bodyCollisions: index % 11 !== 0
+        })
+      }
+      const bodies = world.snapshot().bodies
+      for (const body of bodies) {
+        if (axis === "x") body.prevX -= 6
+        else body.prevY += 6
+      }
+      for (const size of [1, 36, 1000]) {
+        const gravity = { x: -3, y: 4 }
+        expect(
+          broadphase.physicsBodyPairCandidates(bodies, size, gravity).pairs
+        ).toEqual(exhaustivePairs(bodies, gravity))
+      }
+    }
+  )
+
   it.each([1, 8, 36, 64, 1000])(
     "matches all-pairs swept overlap and ordering for cell size %s",
     (cellSize) => {

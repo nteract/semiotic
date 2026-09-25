@@ -999,6 +999,7 @@ export class PhysicsKernelWorld {
     emitEvents: boolean,
     candidates?: Array<PhysicsColliderCandidates | undefined>
   ): boolean {
+    if (colliders.length === 0) return false
     let hasContacts = false
     for (let bodyIndex = 0; bodyIndex < bodies.length; bodyIndex++) {
       const body = bodies[bodyIndex]
@@ -1072,8 +1073,9 @@ export class PhysicsKernelWorld {
   }
 
   private updateSensors(bodies: MutableBody[]): void {
-    const current = new Set<string>()
     const sensors = this.sortedColliders().filter((collider) => collider.sensor)
+    if (sensors.length === 0 && this.activeSensors.size === 0) return
+    const current = new Set<string>()
     for (const body of bodies) {
       const bounds = bodyBounds(body)
       for (const sensor of sensors) {

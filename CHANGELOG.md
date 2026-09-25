@@ -76,6 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   original limits, with exact simulation-state and event-order coverage.
 - Dense UnitPile settling avoids repeated gravity and support calculations
   while retaining arrival timing, confinement, and the original event sequence.
+- Paced physics settling uses numeric spatial-grid keys and skips empty collider
+  and sensor scans, reducing work as sleeping bodies accumulate. Collision order,
+  sensor transitions, arrival timing, and existing timeout limits are preserved.
 - Production minification preserves NaN comparisons, getter side effects, and
   coercion order across library formats. Shipped ESM, CommonJS, Node, and edge
   artifacts have semantic regression coverage. (Part of #1305)
