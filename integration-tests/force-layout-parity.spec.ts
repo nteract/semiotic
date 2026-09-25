@@ -14,9 +14,12 @@ test("force worker and sync keep equivalent geometry, spacing and hover after ra
       ref.current.getTopology().nodes.map(({ id, x, y }) => ({ id, x, y })),
     ]))
   })
-  const checkGeometryAndHover = async (radius: number) => {
-    await expect(page.getByTestId("force-worker").getByRole("status")).toHaveText("worker: ready")
-    await expect(page.getByTestId("force-sync").getByRole("status")).toHaveText("sync: ready")
+  const checkGeometryAndHover = async (radius: number, width: number) => {
+    for (const execution of ["worker", "sync"]) {
+      const status = page.getByTestId(`force-${execution}`).getByRole("status")
+      await expect(status).toHaveAttribute("data-layout-inputs", `${radius}:${width}`)
+      await expect(status).toHaveText(`${execution}: ready`)
+    }
     const geometry = await readGeometry()
     expect(geometry.worker).toEqual(geometry.sync)
     for (let i = 0; i < geometry.sync.length; i++) {
@@ -44,13 +47,13 @@ test("force worker and sync keep equivalent geometry, spacing and hover after ra
     return geometry.sync
   }
 
-  const original = await checkGeometryAndHover(4)
+  const original = await checkGeometryAndHover(4, 600)
   expect(workers.some((url) => url.includes("forceLayoutWorker"))).toBe(true)
   await page.getByRole("button", { name: "Enlarge nodes" }).click()
-  const enlarged = await checkGeometryAndHover(20)
+  const enlarged = await checkGeometryAndHover(20, 600)
   expect(enlarged).not.toEqual(original)
   await page.getByRole("button", { name: "Narrow graphs" }).click()
-  const resized = await checkGeometryAndHover(20)
+  const resized = await checkGeometryAndHover(20, 420)
   expect(resized).not.toEqual(enlarged)
   expect(errors).toEqual([])
 })

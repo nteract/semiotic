@@ -91,6 +91,45 @@ describe("StreamNetworkFrame worker force layout", () => {
     expect(build).toHaveBeenCalledTimes(2)
   })
 
+  it("announces ready only with committed geometry after radius and size changes", async () => {
+    const resolvers: Array<
+      (value: { positions: Record<string, { x: number; y: number }> }) => void
+    > = []
+    runWorker.mockImplementation(() => new Promise((resolve) => resolvers.push(resolve)))
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const nodes = [{ id: "a" }, { id: "b" }]
+    const edges = [{ source: "a", target: "b" }]
+    const readyGeometry: unknown[] = []
+    const onState = vi.fn((state: string) => {
+      if (state === "ready") {
+        readyGeometry.push(ref.current?.getTopology().nodes.map(({ id, x, y }) => ({ id, x, y })))
+      }
+    })
+    const chart = (radius: number, width: number) => (
+      <StreamNetworkFrame ref={ref} nodes={nodes} edges={edges}
+        chartType="force" nodeSize={radius} size={[width, 300]}
+        animate={false} layoutExecution="worker" onLayoutStateChange={onState}
+      />
+    )
+    const view = render(chart(4, 400))
+    const inputs = [[4, 400], [20, 400], [20, 700]]
+    for (const [index, [radius, width]] of inputs.entries()) {
+      if (index > 0) {
+        onState.mockClear()
+        view.rerender(chart(radius, width))
+      }
+      await waitFor(() => expect(resolvers).toHaveLength(index + 1))
+      expect(onState.mock.calls).toEqual([["pending"]])
+      expect(readyGeometry).toHaveLength(index)
+      const positions = { a: { x: 100 + index, y: 100 }, b: { x: 250 + index, y: 200 } }
+      await act(async () => resolvers[index]({ positions }))
+      expect(onState.mock.calls).toEqual([["pending"], ["ready"]])
+      expect(readyGeometry[index]).toEqual([
+        { id: "a", ...positions.a }, { id: "b", ...positions.b }
+      ])
+    }
+  })
+
   it("shows an internal loading state and applies worker positions", async () => {
     let resolveWorker:
       | ((value: { positions: Record<string, { x: number; y: number }> }) => void)
