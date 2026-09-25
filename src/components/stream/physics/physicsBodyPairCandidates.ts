@@ -1,7 +1,6 @@
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import {
   aabbOverlap,
-  bodyBounds,
   bodyInsideBounds,
   paddedBodyBounds
 } from "./physicsCollisionBounds"
@@ -21,13 +20,13 @@ export function physicsBodyPairCandidates(
 ) {
   let maximumExtent = 1
   const bounds = bodies.map((body) => {
-    const box = paddedBodyBounds(body) as BodyCandidateBounds
     // Sleeping anchors cannot be projected by body contacts. They need no
     // correction envelope until they move; coversPositions then invalidates
     // this list. Padding every anchor quadruples candidate area in a pile.
-    if (body.sleeping && body.x === body.prevX && body.y === body.prevY) {
-      Object.assign(box, bodyBounds(body), { padding: 0 })
-    }
+    const box = paddedBodyBounds(
+      body,
+      !(body.sleeping && body.x === body.prevX && body.y === body.prevY)
+    ) as BodyCandidateBounds
     if (body.bodyCollisions !== false) {
       maximumExtent = Math.max(
         maximumExtent,

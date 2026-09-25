@@ -1,39 +1,19 @@
 /** Shared pure equality for frame configs and retained custom-layout inputs. */
 export function shallowEqualTwoLevel(a: unknown, b: unknown): boolean {
+  return equalConfig(a, b, 2)
+}
+
+function equalConfig(a: unknown, b: unknown, depth: number): boolean {
   if (Object.is(a, b)) return true
+  if (depth === 0) return false
   if (Array.isArray(a) && Array.isArray(b)) return shallowEqualArray(a, b)
   if (!isPlainObject(a) || !isPlainObject(b)) return false
   const ak = Object.keys(a)
   const bk = Object.keys(b)
   if (ak.length !== bk.length) return false
   for (const k of ak) {
-    // Confirm `b` actually has this own key — `{ a: undefined }` and
-    // `{ b: undefined }` share key counts but the values would both
-    // read as `undefined` without an explicit hasOwnProperty guard.
     if (!Object.prototype.hasOwnProperty.call(b, k)) return false
-    const va = (a as Record<string, unknown>)[k]
-    const vb = (b as Record<string, unknown>)[k]
-    if (Object.is(va, vb)) continue
-    if (Array.isArray(va) && Array.isArray(vb)) {
-      if (!shallowEqualArray(va, vb)) return false
-      continue
-    }
-    if (!isPlainObject(va) || !isPlainObject(vb)) return false
-    if (!shallowEqualKeys(va, vb)) return false
-  }
-  return true
-}
-
-function shallowEqualKeys(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>
-): boolean {
-  const ak = Object.keys(a)
-  const bk = Object.keys(b)
-  if (ak.length !== bk.length) return false
-  for (const k of ak) {
-    if (!Object.prototype.hasOwnProperty.call(b, k)) return false
-    if (!Object.is(a[k], b[k])) return false
+    if (!equalConfig(a[k], b[k], depth - 1)) return false
   }
   return true
 }

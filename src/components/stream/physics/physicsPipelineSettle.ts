@@ -92,15 +92,14 @@ export function createPhysicsStepObserver(
   }
   const observe = (steps: number) => {
     const aggregate = readResult(steps)
-    const result: PhysicsPipelineTickResult = {
-      ...aggregate,
-      spawned: aggregate.spawned.slice(cursors.spawned),
-      evicted: aggregate.evicted.slice(cursors.evicted),
-      sedimented: aggregate.sedimented.slice(cursors.sedimented),
-      events: aggregate.events.slice(cursors.events),
-      observations: aggregate.observations.slice(cursors.observations)
+    const result = { ...aggregate }
+    // Keep each collector's cursor and slicing together. The generic key
+    // preserves the association between a collector and its element type.
+    const slice = <K extends typeof keys[number]>(key: K) => {
+      result[key] = aggregate[key].slice(cursors[key]) as PhysicsPipelineTickResult[K]
+      cursors[key] = aggregate[key].length
     }
-    for (const key of keys) cursors[key] = aggregate[key].length
+    keys.forEach(slice)
     // A display-frame boundary is not another model step. Still deliver
     // admissions and transitions at t=0, but do not rerun controllers on an
     // empty boundary: otherwise RAF batching changes process outcomes.

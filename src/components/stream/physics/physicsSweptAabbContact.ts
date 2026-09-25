@@ -29,30 +29,31 @@ export function sweptAabbContact(
   const spanY = body.shape.type === "circle" ? 0 : ry
   let firstTime = Infinity
   let contact: { nx: number; ny: number; penetration: number } | null = null
-  const consider = (time: number, across: number, min: number, max: number,
-    nx: number, ny: number, penetration: number) => {
-    if (time < firstTime && across >= min && across <= max) {
+  const axis = (position: number, previous: number, delta: number, radius: number,
+    near: number, far: number, across: number, acrossDelta: number,
+    min: number, max: number, horizontal: boolean) => {
+    let time: number
+    let penetration: number
+    let normal: number
+    if (delta > 0 && previous + radius <= near + slop && position + radius > near) {
+      time = Math.max(0, (near - radius - previous) / delta)
+      penetration = position + radius - near
+      normal = -1
+    } else if (delta < 0 && previous - radius >= far - slop && position - radius < far) {
+      time = Math.max(0, (far + radius - previous) / delta)
+      penetration = far - (position - radius)
+      normal = 1
+    } else return
+    const crossing = across + acrossDelta * time
+    if (time < firstTime && crossing >= min && crossing <= max) {
       firstTime = time
-      contact = { nx, ny, penetration }
+      contact = { nx: horizontal ? normal : 0, ny: horizontal ? 0 : normal, penetration }
     }
   }
-  if (dx > 0 && body.prevX + rx <= left + slop && body.x + rx > left) {
-    const time = Math.max(0, (left - rx - body.prevX) / dx)
-    consider(time, body.prevY + dy * time, top - spanY, bottom + spanY,
-      -1, 0, body.x + rx - left)
-  } else if (dx < 0 && body.prevX - rx >= right - slop && body.x - rx < right) {
-    const time = Math.max(0, (right + rx - body.prevX) / dx)
-    consider(time, body.prevY + dy * time, top - spanY, bottom + spanY,
-      1, 0, right - (body.x - rx))
-  }
-  if (dy > 0 && body.prevY + ry <= top + slop && body.y + ry > top) {
-    const time = Math.max(0, (top - ry - body.prevY) / dy)
-    consider(time, body.prevX + dx * time, left - spanX, right + spanX,
-      0, -1, body.y + ry - top)
-  } else if (dy < 0 && body.prevY - ry >= bottom - slop && body.y - ry < bottom) {
-    const time = Math.max(0, (bottom + ry - body.prevY) / dy)
-    consider(time, body.prevX + dx * time, left - spanX, right + spanX,
-      0, 1, bottom - (body.y - ry))
-  }
+  // Preserve x-before-y tie breaking while sharing the entry-face arithmetic.
+  axis(body.x, body.prevX, dx, rx, left, right, body.prevY, dy,
+    top - spanY, bottom + spanY, true)
+  axis(body.y, body.prevY, dy, ry, top, bottom, body.prevX, dx,
+    left - spanX, right + spanX, false)
   return contact
 }

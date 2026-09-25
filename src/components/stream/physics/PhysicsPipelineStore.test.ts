@@ -23,6 +23,26 @@ function circle(id: string, x = 0, y = 0) {
   }
 }
 
+it("preserves wall geometry and authored order for every plot-boundary combination", () => {
+  const expected = [
+    { id: "custom-floor", shape: { type: "aabb", x: 60, y: 103, width: 108, height: 6 } },
+    { id: "custom-ceiling", shape: { type: "aabb", x: 60, y: 17, width: 108, height: 6 } },
+    { id: "custom-left-wall", shape: { type: "aabb", x: 8, y: 60, width: 4, height: 92 } },
+    { id: "custom-right-wall", shape: { type: "aabb", x: 112, y: 60, width: 4, height: 92 } }
+  ]
+  for (let mask = 0; mask < 16; mask++) {
+    expect(collidersFromPlotBounds({ x: 10, y: 20, width: 100, height: 80 }, {
+      idPrefix: "custom",
+      wallThickness: 4,
+      floorThickness: 6,
+      includeFloor: !!(mask & 1),
+      includeCeiling: !!(mask & 2),
+      includeLeftWall: !!(mask & 4),
+      includeRightWall: !!(mask & 8)
+    })).toEqual(expected.filter((_, index) => mask & (1 << index)))
+  }
+})
+
 function stateTuple(
   store: PhysicsPipelineStore
 ): Array<[string, number, number]> {

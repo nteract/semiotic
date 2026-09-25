@@ -36,12 +36,12 @@ export function colliderCandidatesForBody(
   return { bounds, indexes }
 }
 
-export function paddedBodyBounds(body: PhysicsBodyState) {
+export function paddedBodyBounds(body: PhysicsBodyState, pad = true) {
   const rx =
     body.shape.type === "circle" ? body.shape.radius : body.shape.width / 2
   const ry =
     body.shape.type === "circle" ? body.shape.radius : body.shape.height / 2
-  const padding = Math.max(0.005, Math.min(rx, ry))
+  const padding = pad ? Math.max(0.005, Math.min(rx, ry)) : 0
   return {
     x: body.x,
     y: body.y,

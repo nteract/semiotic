@@ -947,7 +947,7 @@ export class PhysicsKernelWorld {
     a.vy -= iy * ay
     b.vx += ix * bx
     b.vy += iy * by
-    this.applyFriction(a, b, collision, impulse, invA, invB)
+    this.applyFriction(a, b, collision, impulse, ax, ay, bx, by)
     if (restitution > 0) {
       if (previousA >= 0 && a.vx * gravity.x + a.vy * gravity.y < 0) this.reboundingThisStep.add(a.id)
       if (previousB >= 0 && b.vx * gravity.x + b.vy * gravity.y < 0) this.reboundingThisStep.add(b.id)
@@ -963,21 +963,21 @@ export class PhysicsKernelWorld {
     b: MutableBody,
     collision: Collision,
     normalImpulse: number,
-    invA: number,
-    invB: number
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number
   ): void {
     const tx = -collision.ny
     const ty = collision.nx
     const rvx = b.vx - a.vx
     const rvy = b.vy - a.vy
     const tangentVelocity = rvx * tx + rvy * ty
-    const ax = a.fixedPosition?.x == null ? invA : 0
-    const ay = a.fixedPosition?.y == null ? invA : 0
-    const bx = b.fixedPosition?.x == null ? invB : 0
-    const by = b.fixedPosition?.y == null ? invB : 0
+    // Reuse the axis inverse masses from normal resolution; friction acts on
+    // the same bodies and fixed coordinates, along the tangent instead.
     const invTotal = a.fixedPosition || b.fixedPosition
       ? tx ** 2 * (ax + bx) + ty ** 2 * (ay + by)
-      : invA + invB
+      : ax + bx
     if (Math.abs(tangentVelocity) <= EPSILON || invTotal <= EPSILON) return
     const friction = pairFriction(a.friction, b.friction, this.options.friction)
     const frictionImpulse = clamp(
