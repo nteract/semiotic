@@ -12,11 +12,9 @@ for (const multi of [false, true]) {
     const frame = page.locator(".stream-xy-frame")
     const tooltip = frame.locator(".stream-frame-tooltip")
     const hoverAlpha = async () => {
-      await expect(frame.locator("canvas").first()).toBeVisible()
-      const bounds = (await frame.boundingBox())!
       // First-column Alpha is rank 1 in the fixed [2.5, 0.5] rank domain.
-      await page.mouse.move(bounds.x + 42, bounds.y + 70)
-      return bounds
+      await frame.hover({ position: { x: 42, y: 70 } })
+      return (await frame.boundingBox())!
     }
     const checkSurface = async (owned: boolean) => {
       const bounds = await hoverAlpha()
