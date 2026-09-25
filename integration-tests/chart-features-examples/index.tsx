@@ -5,6 +5,7 @@ import { GaugeChart } from "../../dist/ordinal.module.min.js"
 import { RealtimeHistogram } from "../../dist/realtime.module.min.js"
 import { renderChart } from "../../dist/server.module.min.js"
 import TemporalHistogramLinkedExample from "../../docs/src/examples/TemporalHistogramLinkedExample"
+import { BumpTooltipFixture } from "./BumpTooltipFixture"
 
 function App() {
   const [compact, setCompact] = useState(false)
@@ -96,4 +97,6 @@ function App() {
     </main>
   )
 }
-createRoot(document.getElementById("root")!).render(<App />)
+createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).has("bump-tooltip") ? <BumpTooltipFixture /> : <App />
+)
