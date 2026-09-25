@@ -44,12 +44,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 166,
+    "kb": 167,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 130,
+    "kb": 131,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
@@ -69,12 +69,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 168,
+    "kb": 169,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 167,
+    "kb": 168,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -154,7 +154,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 167,
+    "kb": 168,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {

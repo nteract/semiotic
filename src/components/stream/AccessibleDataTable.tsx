@@ -4,11 +4,13 @@ import { useDataSummary } from "../DataSummaryContext"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
 import {
+  countDataRows,
   extractAllRows,
   type AccessibleSceneNode as AnySceneNode,
 } from "./accessibleDataRows"
 import {
   buildNetworkTableModel,
+  countNetworkTableRows,
   computeFieldStats,
   fmt,
   fmtCell,
@@ -304,10 +306,8 @@ export function AccessibleDataTable({
     ) : null
   }
 
-  const allRows = extractAllRows(scene)
-  const totalCount = allRows.length
-
   if (!isExpanded) {
+    const totalCount = countDataRows(scene)
     return (
       <div
         id={tableId}
@@ -330,6 +330,7 @@ export function AccessibleDataTable({
   }
 
   // JIT: only compute stats + sample on activation
+  const allRows = extractAllRows(scene)
   const fieldStats = computeFieldStats(allRows)
   const summary = formatSummary(allRows.length, fieldStats)
   const shownCount = Math.min(visibleCount, allRows.length)
@@ -491,9 +492,9 @@ export function NetworkAccessibleDataTable({
     [visible]
   )
 
-  const safeNodes = nodes.filter((node) => node.datum !== null)
+  const { nodeCount, edgeCount } = countNetworkTableRows(nodes, edges)
 
-  if (safeNodes.length === 0 && edges.length === 0) {
+  if (nodeCount === 0 && edgeCount === 0) {
     return tableId ? (
       <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
     ) : null
@@ -515,14 +516,14 @@ export function NetworkAccessibleDataTable({
           onClick={() => setSrExpanded(true)}
           style={HIDDEN_TRIGGER_STYLE}
         >
-          View data summary ({safeNodes.length} nodes, {edges.length} edges)
+          View data summary ({nodeCount} nodes, {edgeCount} edges)
         </button>
       </div>
     )
   }
 
   const { nodeRows, edgeRows, hasWeights, summary } =
-    buildNetworkTableModel(safeNodes, edges)
+    buildNetworkTableModel(nodes, edges)
 
   const shownNodeCount = Math.min(visibleNodeCount, nodeRows.length)
   const sampleNodes = nodeRows.slice(0, shownNodeCount)

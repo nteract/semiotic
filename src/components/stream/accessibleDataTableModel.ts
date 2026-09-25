@@ -159,6 +159,24 @@ function edgeEndpoints(edge: NetworkTableElement) {
   }
 }
 
+/** Match expanded topology counts without building semantic rows or degrees. */
+export function countNetworkTableRows(
+  nodes: NetworkTableElement[],
+  edges: NetworkTableElement[]
+) {
+  let nodeCount = 0
+  let edgeCount = 0
+  for (const node of nodes) {
+    if (node && typeof node === "object" && node.datum !== null) nodeCount++
+  }
+  for (const edge of edges) {
+    if (!edge || typeof edge !== "object") continue
+    const contributors = datumRecord(edge.datum).__chordEdges
+    edgeCount += Array.isArray(contributors) ? contributors.length : 1
+  }
+  return { nodeCount, edgeCount }
+}
+
 /** Derive authored rows and topology metrics without coupling them to React. */
 export function buildNetworkTableModel(
   nodes: NetworkTableElement[],

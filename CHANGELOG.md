@@ -31,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   categories, values, and distribution statistics. Gauge tooltips include the
   current reading; decorative geometry no longer inflates data counts. Accessible
   tables retain rows for grouped data, distributions, symbols, glyphs, and
-  connections.
+  connections. Collapsed tables count rows without materializing datum fields;
+  chord table counts include every contributing edge.
   (#1301, #1302)
 - Eleven XY and radar chart wrappers retain authored descriptions, summaries,
   and accessible-table settings, including disabled and portaled tables. (#1353)
@@ -57,11 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ProcessSankey distinguishes numeric strings from dates, parses ISO times
   consistently in UTC, generates automatic ticks, and passes the appropriate
   number or Date to `timeFormat`. Tooltips retain time of day and node labels.
-  Static rendering uses the same axis-dependent margin defaults. (#1331; part of
-  #1330)
+  Static rendering uses the same axis-dependent margin defaults. Domain docs
+  and diagnostics accept the same Date, ISO-string, and numeric inputs; reversed
+  or malformed domains produce an error. (#1331; part of #1330)
 - Default physics settling drains scheduled arrivals before spending its settling
   budget, preserving pacing in reduced-motion and static rendering. Explicit
-  step limits remain total limits. (#1299)
+  step limits remain total limits. Sparse arrivals skip idle intervals once
+  bodies are quiescent, including bodies that never formally sleep. (#1299)
 - Physics contacts preserve the entry side of thin walls, floors, and fast
   circle collisions, keeping bodies in their assigned histogram bins. Grounded
   contact solving prevents dense piles from freezing with visibly overlapping

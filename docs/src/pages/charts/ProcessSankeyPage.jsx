@@ -15,7 +15,7 @@ import StreamingDemo from "../../components/StreamingDemo"
 const processSankeyProps = [
   { name: "nodes", type: "array", description: "Optional node records; may carry xExtent: [start, end] for an explicit lifetime. Missing endpoints are inferred." },
   { name: "edges", type: "array", description: "Timed edge records; omit when ingesting through the push API." },
-  { name: "domain", type: "[number, number]", required: true, description: "[tStart, tEnd] of the time axis." },
+  { name: "domain", type: "[number | Date | string, number | Date | string]", required: true, description: "[tStart, tEnd] with start <= end. Numbers/numeric strings use numeric units; Dates/ISO strings use UTC calendar time." },
   { name: "axisTicks", type: "array", description: "Override automatic ticks with [{ date, label? }]; [] hides ticks." },
   { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Read time left-to-right or top-to-bottom." },
   { name: "xExtentAccessor", type: "string | function", description: "Per-node [start, end] lifetime accessor." },
@@ -1163,7 +1163,12 @@ export default function ProcessSankeyPage() {
           the lane drawing after the final flow settles.
         </li>
         <li><code>edges</code> — array of edge records with <code>source</code>, <code>target</code>, <code>value</code>, <code>startTime</code>, <code>endTime</code>.</li>
-        <li><code>domain</code> — <code>[tStart, tEnd]</code> of the chart&rsquo;s time axis.</li>
+        <li>
+          <code>domain</code> — required <code>[tStart, tEnd]</code> with
+          start &le; end. Each endpoint accepts a number, <code>Date</code>,
+          numeric string, or ISO date string. For JSON/MCP configs, use numbers
+          or strings; JavaScript <code>Date</code> objects are available in React.
+        </li>
         <li><code>axisTicks</code> — override automatic ticks with <code>{`{ date, label? }`}</code> entries. Set <code>{`axisTicks={[]}`}</code> to hide ticks.</li>
         <li><code>orientation</code> — <code>&quot;horizontal&quot;</code> reads time left-to-right; <code>&quot;vertical&quot;</code> reads top-to-bottom with lanes distributed across the x-axis.</li>
       </ul>
@@ -1323,8 +1328,10 @@ export default function ProcessSankeyPage() {
       <h3>Formatting</h3>
       <ul>
         <li>
-          <code>timeFormat(d: Date)</code> — applied to axis tick labels
-          (overrides <code>tick.label</code> when set) and to time
+          <code>timeFormat(d: number | Date)</code> — receives numbers for
+          numeric domains (including numeric strings), or Dates for Date/ISO
+          domains. Applied to axis ticks without an explicit{" "}
+          <code>tick.label</code> and to time
           fields in the default tooltip (<code>startTime</code>,{" "}
           <code>endTime</code>, and node mass-history timestamps). Same
           convention as <code>xFormat</code> on XY charts.
@@ -1347,7 +1354,8 @@ export default function ProcessSankeyPage() {
           <code>valueFormat</code>.
         </li>
         <li>
-          <strong>Node tooltip</strong> shows the node id and a
+          <strong>Node tooltip</strong> shows the authored <code>nodeLabel</code>{" "}
+          (falling back to the node id) and a
           mass-history table — one row per distinct mass state across
           the node&rsquo;s lifetime, with{" "}
           <code>{`{ Time, Mass }`}</code> columns formatted via{" "}

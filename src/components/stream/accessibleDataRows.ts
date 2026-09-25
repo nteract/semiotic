@@ -88,6 +88,72 @@ export function extractNetworkDataRow(
   }
 }
 
+function representedSeriesDatums(scene: AccessibleSceneNode[]): Set<unknown> {
+  // Only suppress markers whose exact source row is already represented by a
+  // series or distribution. Geo lines and unrelated scatter layers must not
+  // hide points merely because they share a scene with a line.
+  const representedDatums = new Set<unknown>()
+  // A collapsed series without markers needs only its array length, even for
+  // large live datasets. Do not visit every observation just to build this set.
+  if (!scene.some(node => node && (
+    node.type === "point" || node.type === "symbol" || node.type === "glyph"
+  ))) {
+    return representedDatums
+  }
+  for (const node of scene) {
+    if (!node || !["line", "area", "boxplot", "violin"].includes(String(node.type))) continue
+    if (Array.isArray(node.datum)) {
+      for (const datum of node.datum) representedDatums.add(datum)
+    }
+  }
+  return representedDatums
+}
+
+/** Count table rows without enumerating datum fields or allocating display rows. */
+export function countDataRows(scene: AccessibleSceneNode[]): number {
+  if (!Array.isArray(scene)) return 0
+  const representedDatums = representedSeriesDatums(scene)
+  let count = 0
+  for (const node of scene) {
+    if (!node || typeof node !== "object" || node.datum === null) continue
+    switch (node.type) {
+      case "point":
+      case "symbol":
+      case "glyph":
+        if (!representedDatums.has(node.datum)) count++
+        break
+      case "line":
+      case "area": {
+        const datum = accessibleDatumFor(node)
+        count += Array.isArray(datum)
+          ? datum.length
+          : datum != null && typeof datum === "object" ? 1 : 0
+        break
+      }
+      case "boxplot":
+      case "violin": {
+        const datum = accessibleDatumFor(node)
+        count += Array.isArray(datum) ? datum.length + 1 : 1
+        break
+      }
+      case "rect":
+      case "heatcell":
+      case "wedge":
+      case "circle":
+      case "arc":
+      case "candlestick":
+      case "connector":
+      case "trapezoid":
+      case "bezier":
+      case "ribbon":
+      case "curved":
+      case "geoarea":
+        count++
+    }
+  }
+  return count
+}
+
 /**
  * Extract user-facing table rows from scene nodes. Geometry is ignored; rich
  * accessibleDatum/tableFields metadata takes precedence over the render datum.
@@ -95,17 +161,7 @@ export function extractNetworkDataRow(
 export function extractAllRows(scene: AccessibleSceneNode[]): DataRow[] {
   const rows: DataRow[] = []
   if (!Array.isArray(scene)) return rows
-
-  // Only suppress markers whose exact source row is already represented by a
-  // series or distribution. Geo lines and unrelated scatter layers must not
-  // hide points merely because they share a scene with a line.
-  const representedDatums = new Set<unknown>()
-  for (const node of scene) {
-    if (!node || !["line", "area", "boxplot", "violin"].includes(String(node.type))) continue
-    if (Array.isArray(node.datum)) {
-      for (const datum of node.datum) representedDatums.add(datum)
-    }
-  }
+  const representedDatums = representedSeriesDatums(scene)
 
   for (const node of scene) {
     if (!node || typeof node !== "object") continue

@@ -148,6 +148,29 @@ describe("physics settled scene helpers", () => {
     expect(html).toContain('fill="#22c55e"')
   })
 
+  it("includes next-day arrivals in settled SVG when stationary bodies never sleep", () => {
+    const store = new PhysicsPipelineStore({
+      fixedDt: 1,
+      kernel: { gravity: { x: 0, y: 980 } }
+    })
+    store.enqueue([
+      { ...circle("early", 10, 10), fixedPosition: { x: 10, y: 10 }, spawnAt: 0 },
+      { ...circle("late", 20, 10), fixedPosition: { x: 20, y: 10 }, spawnAt: 86400 }
+    ])
+
+    const result = buildPhysicsSettledScene(store, { charge: 2 })
+
+    expect(result.stepsRun).toBeLessThan(5)
+    expect(store.allSleeping()).toBe(false)
+    expect(store.atRest()).toBe(true)
+    expect(result.snapshot.simulationState).toBe("settled")
+    // Evidence retains its stricter formal-sleep certification; skipping an
+    // idle interval must not manufacture sleeping flags to obtain it.
+    expect(result.evidence).toMatchObject({ bodyCount: 2, queuedCount: 0, sleepingCount: 0, settled: false })
+    expect(result.sceneNodes.map((node) => node._transitionKey)).toEqual(["early", "late"])
+    expect(svgMarkup(result.sceneNodes).match(/<circle/g)).toHaveLength(2)
+  })
+
   it("projects snapshot-style body state without mutating bodies", () => {
     const body: PhysicsBodyState = {
       id: "body",

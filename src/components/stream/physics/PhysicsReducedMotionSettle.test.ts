@@ -33,6 +33,22 @@ function pacedStore(count: number) {
   return { store, layout }
 }
 
+function quiescentArrivalStore() {
+  const store = new PhysicsPipelineStore({
+    fixedDt: 1,
+    kernel: { gravity: { x: 0, y: 980 } }
+  })
+  store.enqueue([0, 86400].map((spawnAt, index) => ({
+    id: index ? "next-day" : "first",
+    x: index * 10,
+    y: 0,
+    fixedPosition: { x: index * 10, y: 0 },
+    spawnAt,
+    shape: { type: "circle" as const, radius: 1 }
+  })))
+  return store
+}
+
 describe("reduced-motion settle admits paced arrivals", () => {
   it("settleWithObservations drains a paced queue instead of stopping at t=0", () => {
     const { store, layout } = pacedStore(60)
@@ -133,6 +149,62 @@ describe("reduced-motion settle admits paced arrivals", () => {
     expect(result.queueSize).toBeGreaterThan(0)
     expect(result.shouldContinue).toBe(true)
     expect(store.snapshot().simulationState).toBe("running")
+  })
+
+  it.each(["settle", "settleWithObservations"] as const)(
+    "%s skips quiescent non-sleeping intervals before a next-day arrival",
+    (method) => {
+      const store = quiescentArrivalStore()
+      const result = store[method]()
+      const steps = typeof result === "number" ? result : result.steps
+
+      expect(steps).toBeLessThan(5)
+      expect(store.readBodies().map(({ id, x, y }) => ({ id, x, y }))).toEqual([
+        { id: "first", x: 0, y: 0 },
+        { id: "next-day", x: 10, y: 0 }
+      ])
+      expect(store.allSleeping()).toBe(false)
+      expect(store.atRest()).toBe(true)
+      expect(store.hasPendingWork()).toBe(false)
+      expect(store.elapsed()).toBe(86401)
+      if (typeof result !== "number") {
+        expect(result.observations.find((event) =>
+          event.type === "physics-spawn" && event.bodyId === "next-day"
+        )?.timestamp).toBe(86400)
+      }
+    }
+  )
+
+  it.each(["settle", "settleWithObservations"] as const)(
+    "%s keeps explicit step limits on the fixed clock despite quiescence",
+    (method) => {
+      const store = quiescentArrivalStore()
+      const result = store[method](3)
+
+      expect(typeof result === "number" ? result : result.steps).toBe(3)
+      expect(store.elapsed()).toBe(3)
+      expect(store.atRest()).toBe(true)
+      expect(store.allSleeping()).toBe(false)
+      expect(store.queueSize()).toBe(1)
+      expect(store.readBodies().map((body) => body.id)).toEqual(["first"])
+    }
+  )
+
+  it("preserves authored step callbacks while awaiting arrivals in a quiescent world", () => {
+    const store = quiescentArrivalStore()
+    const times: number[] = []
+    const result = store.settleWithObservations(undefined, {
+      onStep: (step) => {
+        times.push(step.elapsedSeconds)
+        if (step.elapsedSeconds === 3) store.setPaused(true)
+      }
+    })
+
+    expect(times).toEqual([0, 1, 2, 3])
+    expect(result.steps).toBe(3)
+    expect(store.atRest()).toBe(true)
+    expect(store.allSleeping()).toBe(false)
+    expect(store.queueSize()).toBe(1)
   })
 
   it("holds for UnitPileChart pacing as well", () => {

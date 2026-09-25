@@ -29,7 +29,11 @@ export interface ProcessSankeyProps<
 > extends BaseChartProps {
   nodes?: TNode[]
   edges?: TEdge[]
-  /** [tStart, tEnd] of the chart's time axis. Required. */
+  /**
+   * Required [tStart, tEnd] with start <= end. Endpoints accept numbers,
+   * Dates, numeric strings, or ISO date strings. Date-only strings and ISO
+   * datetimes without a timezone use UTC. JSON configs use numbers or strings.
+   */
   domain: [TimeLike, TimeLike]
   /** Override automatic axis ticks with { date, label? } entries. [] hides ticks. */
   axisTicks?: ProcessSankeyTick[]
@@ -72,6 +76,7 @@ export interface ProcessSankeyProps<
    * to time fields in the default tooltip. Same convention as
    * `xFormat` on XY charts: numeric (including numeric-string) domains pass
    * numbers; Date or ISO-string domains pass Dates. Default dates use UTC.
+   * Explicit axis tick labels take precedence over this formatter.
    */
   timeFormat?: (d: number | Date) => string | React.ReactNode
   /** Format function for the `value` field. Mirrors `yFormat` on XY charts. */

@@ -24,7 +24,6 @@ export interface PhysicsSettleHost {
   fixedDt: number
   queueSize: () => number
   atRest: () => boolean
-  allSleeping: () => boolean
   elapsed: () => number
   nextArrival: () => number | undefined
   lastArrival: () => number | undefined
@@ -118,7 +117,7 @@ export function runPhysicsSettleSteps(
     afterStep?: () => void
     /** Include the queued arrival horizon before spending the settling margin. */
     drainArrivals?: boolean
-    /** Skip sleeping intervals only when no authored step callback is active. */
+    /** Skip at-rest intervals only when no authored step callback is active. */
     skipIdle?: boolean
   } = {}
 ): PhysicsSettleRun {
@@ -139,7 +138,7 @@ export function runPhysicsSettleSteps(
       options.continueWhile?.())
   ) {
     const nextArrival = host.nextArrival()
-    const idleSteps = options.skipIdle && nextArrival != null && host.allSleeping()
+    const idleSteps = options.skipIdle && nextArrival != null && host.atRest()
       ? Math.min(
           Math.max(0, Math.floor((nextArrival - host.elapsed()) / host.fixedDt) - 1),
           Math.max(0, stepLimit - steps - skippedSteps - 1)

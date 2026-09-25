@@ -409,13 +409,13 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/artifact` | **122 KB** | Renderer-independent contracts, claims, time, policy, grounding, and transfer audits |
 | `semiotic/artifact/react` | **4 KB** | Accessible progressive disclosure for artifact contracts and policy evaluations |
 | `semiotic/line` | **136 KB** | LineChart only — one-chart micro boundary |
-| `semiotic/xy` | **166 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **130 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/xy` | **167 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **131 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **154 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
 | `semiotic/network/zoom` | **159 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
 | `semiotic/geo` | **108 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **168 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **167 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime` | **169 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **168 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **244 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **244 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
@@ -431,7 +431,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/themes/react` | **6 KB** | ThemeProvider/useTheme and hooks |
 | `semiotic/data` | **4 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/physics` | **167 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
+| `semiotic/physics` | **168 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
 | `semiotic/ai` | **603 KB** | All schema-backed charts + validation — optimized for LLM code generation |

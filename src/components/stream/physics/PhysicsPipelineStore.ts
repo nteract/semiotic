@@ -440,7 +440,6 @@ export class PhysicsPipelineStore {
       fixedDt: this.config.fixedDt,
       queueSize: () => this.queue.length,
       atRest: () => this.atRest(),
-      allSleeping: () => this.world.allSleeping(),
       elapsed: () => this.elapsedSeconds,
       nextArrival: () => this.queue[0]?.spawnAt,
       lastArrival: () => this.queue.at(-1)?.spawnAt,
