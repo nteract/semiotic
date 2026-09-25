@@ -135,3 +135,36 @@ test("bin highlighting and hover callbacks remain active with tooltips disabled"
   await expect(page.getByTestId("hovered-bin")).toHaveText("none")
   await expect.poll(() => columnPixels(chart)).toEqual(baseline)
 })
+
+test.describe("touch bin highlighting", () => {
+  test.use({ hasTouch: true })
+
+  for (const component of ["bounded", "push"]) {
+    for (const mobile of ["mobile", "narrow"]) {
+      test(`${component} ${mobile} taps lock a column and background taps clear it`, async ({ page }) => {
+        await page.goto(`/chart-features-examples/?histogram-hover&${component}&${mobile}`)
+        const chart = page.getByTestId("histogram-hover")
+        const tooltip = chart.locator(".stream-frame-tooltip")
+        await expect.poll(async () => (await columnPixels(chart))[0][1]).toEqual([200, 50, 50, 255])
+        const baseline = await columnPixels(chart)
+        const tap = async (column: number, y: number) => {
+          const box = (await chart.locator("canvas").first().boundingBox())!
+          await page.touchscreen.tap(box.x + 50 + (box.width - 70) * (column + 0.5) / 3, box.y + y)
+        }
+        for (const [column, y, category] of [[0, 180, "North"], [2, 100, "South"]] as const) {
+          await tap(column, y)
+          await expect.poll(async () => (await columnPixels(chart))[column]).toEqual(baseline[column])
+          await expect.poll(async () => (await columnPixels(chart))[1]).not.toEqual(baseline[1])
+          await expect(tooltip).toContainText(`range:${column * 10}–${column * 10 + 10}`)
+          await expect(tooltip).toContainText(`category:${category}`)
+          await expect(tooltip).toContainText("count:8")
+          await expectTooltipWithinPlot(chart, margin)
+          // The top of the plot is outside every bar and its touch hit radius.
+          await tap(column, 22)
+          await expect.poll(() => columnPixels(chart)).toEqual(baseline)
+          await expect(tooltip).toHaveCount(0)
+        }
+      })
+    }
+  }
+})

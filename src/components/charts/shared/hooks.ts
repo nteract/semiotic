@@ -592,13 +592,17 @@ export function useChartSelection({
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [mobileInteraction?.enabled, clearMobileLock])
 
+  // Callback identities change as selection state and mobile props resolve.
+  // Only unmount should run this cleanup; ordinary rerenders must keep the lock.
+  const clearMobileLockRef = useRef(clearMobileLock)
+  clearMobileLockRef.current = clearMobileLock
   useEffect(() => {
     return () => {
       if (mobileHoverLockRef.current) {
-        clearMobileLock(false)
+        clearMobileLockRef.current(false)
       }
     }
-  }, [clearMobileLock])
+  }, [])
 
   // Clean up crosshair on unmount or config change to prevent stale entries
   // when the source chart is conditionally rendered or navigated away from

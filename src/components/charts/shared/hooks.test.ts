@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { renderHook, act } from "@testing-library/react"
+import { render, renderHook, act } from "@testing-library/react"
 import * as React from "react"
 import {
   resolveMobileInteraction,
@@ -603,6 +603,44 @@ describe("useChartSelection", () => {
     expect(result.current.hoverSelectionHook?.predicate({ binStart: 10, category: "North" })).toBe(false)
     act(() => result.current.customHoverBehavior(null))
     expect(result.current.hoverSelectionHook).toBeNull()
+  })
+
+  it("keeps mobile hover locks across rerenders and clears on Escape or unmount", () => {
+    let chart: ReturnType<typeof useChartSelection>
+    let selection: ReturnType<typeof useSelection>
+    function Producer() {
+      chart = useChartSelection({
+        linkedHover: { name: "mobile-category", fields: ["category"] },
+        hoverHighlight: true,
+        colorByField: "category",
+        mobileInteraction: resolveMobileInteraction(true)
+      })
+      return null
+    }
+    function Consumer() {
+      selection = useSelection({ name: "mobile-category" })
+      return null
+    }
+    const tree = (visible: boolean) => React.createElement(
+      SelectionProvider, null,
+      visible ? React.createElement(Producer) : null,
+      React.createElement(Consumer)
+    )
+    const { rerender } = render(tree(true))
+    const tap = () => chart!.customClickBehavior({ data: { category: "North" } })
+    act(tap)
+    rerender(tree(true))
+    act(() => chart!.customHoverBehavior(null))
+    expect(chart!.hoverSelectionHook?.predicate({ category: "North" })).toBe(true)
+    expect(chart!.hoverSelectionHook?.predicate({ category: "South" })).toBe(false)
+    expect(selection!.isActive).toBe(true)
+    act(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })))
+    expect(chart!.hoverSelectionHook).toBeNull()
+    expect(selection!.isActive).toBe(false)
+    act(tap)
+    expect(selection!.isActive).toBe(true)
+    rerender(tree(false))
+    expect(selection!.isActive).toBe(false)
   })
 })
 

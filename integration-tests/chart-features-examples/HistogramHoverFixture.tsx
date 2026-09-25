@@ -15,6 +15,7 @@ export function HistogramHoverFixture() {
   const params = new URLSearchParams(location.search)
   const push = params.has("push")
   const stacked = !params.has("single")
+  const narrow = params.has("narrow")
   const [compact, setCompact] = useState(false)
   const [hover, setHover] = useState("none")
   const ref = useRef<RealtimeFrameHandle>(null)
@@ -23,6 +24,8 @@ export function HistogramHoverFixture() {
   }, [push])
   const props: RealtimeHistogramProps = {
     binSize: 10,
+    mode: params.has("mobile") ? "mobile" : undefined,
+    width: narrow ? 420 : undefined,
     responsiveWidth: true,
     height: 260,
     timeExtent: [0, 30] as [number, number],
@@ -50,7 +53,7 @@ export function HistogramHoverFixture() {
       <output data-testid="hovered-bin">{hover}</output>
       <section
         data-testid="histogram-hover"
-        style={{ width: compact ? 420 : 720 }}
+        style={{ width: compact || narrow ? 420 : 720 }}
       >
         {push ? (
           <RealtimeHistogram {...props} ref={ref} />

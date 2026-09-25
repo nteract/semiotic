@@ -120,6 +120,26 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s bin hover", (Histogram
     expect(style(10).opacity).toBe(0.8)
   })
 
+  it.each([{ mode: "mobile" as const }, { width: 420 }])(
+    "locks and clears local bin highlighting on mobile activation with %j",
+    (mobileProps) => {
+      render(<Histogram data={data} binSize={10} hoverHighlight opacity={0.8} {...mobileProps} />)
+      expect(lastXYFrameProps.customClickBehavior).toBeTypeOf("function")
+      act(() => lastXYFrameProps.customClickBehavior!({
+        data: { binStart: 0, binEnd: 10, total: 12, category: "North" },
+        x: 100, y: 100
+      }))
+      expect(style(0, "North").opacity).toBe(0.8)
+      expect(style(0, "South").opacity).toBe(0.8)
+      expect(style(10).opacity).toBe(0.5)
+      act(() => lastXYFrameProps.customHoverBehavior!(null))
+      expect(style(10).opacity).toBe(0.5)
+      act(() => lastXYFrameProps.customClickBehavior!(null))
+      expect(style(0).opacity).toBe(0.8)
+      expect(style(10).opacity).toBe(0.8)
+    }
+  )
+
   it("keeps linked category selection independent of local bin highlighting", () => {
     let selection: ReturnType<typeof useSelection>
     function Probe() {

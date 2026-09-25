@@ -621,6 +621,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,
+        hoverHighlight: props.hoverHighlight,
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,
