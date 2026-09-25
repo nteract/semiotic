@@ -128,6 +128,7 @@ export class PhysicsPipelineStore {
   private paused = false
   private queue: InternalQueuedSpawn[] = []
   private revision = 0
+  private observedInitialBoundary = false
   private updateResults = new UpdateResultTracker()
   private sediment: PhysicsSedimentAccumulator
   private simulationState: PhysicsSimulationState = "settled"
@@ -308,6 +309,7 @@ export class PhysicsPipelineStore {
   }
 
   clear(): void {
+    this.observedInitialBoundary = false
     const kernelOptions = this.world.snapshot().options
     this.world.init({
       ...kernelOptions,
@@ -428,10 +430,12 @@ export class PhysicsPipelineStore {
   }
 
   private stepObserver(execution: PhysicsPipelineExecution | undefined, sink: Required<PhysicsSettleSink>): (() => void) | undefined {
+    const observeInitial = !this.observedInitialBoundary
+    if (execution) this.observedInitialBoundary = true
     return createPhysicsStepObserver(execution, (steps) => {
       if (steps) this.revision += 1
       return this.result(steps, sink.spawned, sink.evicted, sink.sedimented, sink.events, sink.observations)
-    })
+    }, observeInitial)
   }
 
   /** Bind this store to the shared settle loop (see physicsPipelineSettle). */
@@ -716,6 +720,7 @@ export class PhysicsPipelineStore {
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
+    this.observedInitialBoundary = false
     const previousState = this.simulationState
     this.config = {
       bodyLimit: snapshot.config.bodyLimit,

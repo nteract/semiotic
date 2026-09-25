@@ -72,7 +72,8 @@ export interface PhysicsSettleRun {
  * result for the caller of tick or settleWithObservations. */
 export function createPhysicsStepObserver(
   execution: PhysicsPipelineExecution | undefined,
-  readResult: (steps: number) => PhysicsPipelineTickResult
+  readResult: (steps: number) => PhysicsPipelineTickResult,
+  observeInitial = false
 ): (() => void) | undefined {
   if (!execution) return undefined
   const keys = [
@@ -100,6 +101,12 @@ export function createPhysicsStepObserver(
       observations: aggregate.observations.slice(cursors.observations)
     }
     for (const key of keys) cursors[key] = aggregate[key].length
+    // A display-frame boundary is not another model step. Still deliver
+    // admissions and transitions at t=0, but do not rerun controllers on an
+    // empty boundary: otherwise RAF batching changes process outcomes.
+    if (steps === 0 && !observeInitial && keys.every((key) => result[key].length === 0)) {
+      return
+    }
     execution.onStep(result)
   }
   observe(0)

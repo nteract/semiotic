@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
@@ -167,12 +168,17 @@ export const EventDropChart = forwardRef(function EventDropChart<
     rerunMS,
     seed = 1,
     timeAccessor = "time" as ChartAccessor<TDatum, number>,
-    timeExtent,
+    timeExtent: timeExtentProp,
     timeScale = 1,
-    watermark,
+    watermark: watermarkProp,
     watermarkAtArrivalAccessor,
-    windows = { size: 10 }
+    windows: windowsProp
   } = props
+  // Inline option objects are ordinary JSX. Preserve the compiler identity
+  // across observer-driven rerenders when their values have not changed.
+  const windows = useStableShallow(windowsProp ?? { size: 10 })
+  const watermark = useStableShallow(watermarkProp)
+  const timeExtent = useStableShallow(timeExtentProp)
   const layoutMode = usePhysicsChartMode(props, [760, 360])
   const {
     chartSize,

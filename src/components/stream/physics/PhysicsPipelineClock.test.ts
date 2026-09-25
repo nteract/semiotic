@@ -27,6 +27,53 @@ function scheduledStore() {
 }
 
 describe("physics model clock", () => {
+  it("delivers the same controller boundaries for settling and different display rates", () => {
+    const observe = (hz?: number) => {
+      const store = scheduledStore()
+      const boundaries: Array<{
+        steps: number
+        elapsed: number
+        spawned: string[]
+      }> = []
+      const execution = {
+        onStep: (
+          result: import("./PhysicsPipelineTypes").PhysicsPipelineTickResult
+        ) => {
+          boundaries.push({
+            steps: result.steps,
+            elapsed: result.elapsedSeconds,
+            spawned: result.spawned
+          })
+        }
+      }
+      if (hz) {
+        for (let frame = 0; frame < hz; frame++) {
+          store.tick(0, execution)
+          store.tick(1 / hz, execution)
+        }
+      } else store.settleWithObservations(120, execution)
+      return boundaries
+    }
+    const settled = observe()
+    expect(settled.filter((entry) => entry.steps === 1)).toHaveLength(120)
+    expect(settled.flatMap((entry) => entry.spawned)).toEqual(["arrival"])
+    for (const hz of [30, 60, 120, 240]) expect(observe(hz)).toEqual(settled)
+  })
+
+  it("still delivers admissions on an explicit zero-time refresh", () => {
+    const store = scheduledStore()
+    store.enqueue({
+      id: "now",
+      x: 0,
+      y: 0,
+      shape: { type: "circle", radius: 1 }
+    })
+    const admitted: string[] = []
+    store.tick(0, { onStep: (result) => admitted.push(...result.spawned) })
+    expect(admitted).toEqual(["now"])
+    expect(store.elapsed()).toBe(0)
+  })
+
   it.each([120, 60, 30, 10])(
     "admits the same arrival at %i Hz without pre-birth motion",
     (hz) => {

@@ -13,6 +13,8 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import GaltonBoardChart from "./GaltonBoardChart"
 import UnitPileChart from "./UnitPileChart"
 import GauntletChart from "./GauntletChart"
+import EventDropChart from "./EventDropChart"
+import CollisionSwarmChart from "./CollisionSwarmChart"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type { PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineStore"
 
@@ -59,6 +61,78 @@ describe("physics charts under prefers-reduced-motion", () => {
     restoreMedia()
     cleanupCanvas()
   })
+
+  it.each([true, false])(
+    "EventDrop observers can update React state with inline options (explicit windows: %s)",
+    async (explicitWindows) => {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const data = [{ id: "early", time: 6, arrivalTime: 7 }]
+      function Observed({ watermark }: { watermark: number }) {
+        const [reading, setReading] = React.useState({ elapsed: 0 })
+        return (
+          <>
+            <output>{reading.elapsed}</output>
+            <EventDropChart
+              ref={ref}
+              data={data}
+              windows={explicitWindows ? { size: 12 } : undefined}
+              watermark={{ value: watermark }}
+              timeExtent={[0, 24]}
+              frameProps={{
+                onTick: (result) =>
+                  setReading({ elapsed: result.elapsedSeconds })
+              }}
+            />
+          </>
+        )
+      }
+      const { rerender } = render(<Observed watermark={-1} />)
+      const body = () =>
+        (ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot).world
+          .bodies[0]
+      await waitFor(() => expect(body()?.datum).toMatchObject({ late: false }))
+      rerender(<Observed watermark={25} />)
+      await waitFor(() => expect(body()?.datum).toMatchObject({ late: true }))
+    }
+  )
+
+  it.each(["galton", "swarm", "pile"] as const)(
+    "%s keeps inline extent/category options stable during observation",
+    async (family) => {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const data = [{ id: "a", value: 6, x: 6, category: "A" }]
+      function Observed({ end }: { end: number }) {
+        const [reading, setReading] = React.useState({ elapsed: 0 })
+        const frameProps = {
+          onTick: (result: { elapsedSeconds: number }) =>
+            setReading({ elapsed: result.elapsedSeconds })
+        }
+        return (
+          <>
+            <output>{reading.elapsed}</output>
+            {family === "galton" ? (
+              <GaltonBoardChart ref={ref} data={data}
+                valueExtent={[0, end]} frameProps={frameProps} />
+            ) : family === "swarm" ? (
+              <CollisionSwarmChart ref={ref} data={data}
+                xExtent={[0, end]} frameProps={frameProps} />
+            ) : (
+              <UnitPileChart ref={ref} simulationMode="mechanical"
+                mechanicalCount={3} mechanicalCategories={[`A-${end}`]}
+                frameProps={frameProps} />
+            )}
+          </>
+        )
+      }
+      const { rerender } = render(<Observed end={12} />)
+      const snapshot = () =>
+        ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot
+      await waitFor(() => expect(snapshot().world.bodies.length).toBeGreaterThan(0))
+      const before = snapshot().world.bodies
+      rerender(<Observed end={24} />)
+      await waitFor(() => expect(snapshot().world.bodies).not.toEqual(before))
+    }
+  )
 
   it("GaltonBoardChart admits every paced ball, not just the first", async () => {
     const ref = React.createRef<PhysicsFrameHandle>()

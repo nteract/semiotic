@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
@@ -139,8 +140,9 @@ export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
     referenceLines,
     rerunMS,
     seed = 1,
-    valueExtent
+    valueExtent: valueExtentProp
   } = props
+  const valueExtent = useStableShallow(valueExtentProp)
   const layoutMode = usePhysicsChartMode(props, [700, 420], {
     hasSimulationMode: true
   })
