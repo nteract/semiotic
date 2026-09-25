@@ -4,6 +4,8 @@ import { existsSync, readFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { test } from "node:test"
 import { fileURLToPath } from "node:url"
+import { build } from "esbuild"
+import { EXTERNAL_RUNTIME_PACKAGES } from "./lib/cold-consumer-measurement.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
@@ -109,4 +111,55 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
       )
     })
   }
+}
+
+for (const entry of ["./ai", "./ai/core"]) {
+  test(`${entry} suggestCharts consumer preserves temporal suggestions without network renderer initialization`, async () => {
+    const filename = resolve(root, pkg.exports[entry].import)
+    assert.ok(existsSync(filename), `${filename} is missing; run npm run dist:prod`)
+    const result = await build({
+      stdin: {
+        contents: `export { suggestCharts } from ${JSON.stringify(filename)}`,
+        resolveDir: root
+      },
+      bundle: true,
+      write: false,
+      minify: true,
+      format: "cjs",
+      platform: "browser",
+      target: "es2022",
+      external: EXTERNAL_RUNTIME_PACKAGES,
+      logLevel: "silent"
+    })
+    const code = result.outputFiles[0].text
+    // Network capability metadata must not keep the frame's React initializer
+    // alive merely because both occupy the same published shared chunk.
+    assert.doesNotMatch(code, /\.displayName\s*=\s*["']StreamNetworkFrame["']/)
+    const program = `${code}
+      const assert = require("node:assert/strict")
+      for (const [startTime, endTime, domain] of [
+        ["12", "14", [12, 14]],
+        ["2026-01-01T12:00", "2026-01-01T18:00", ["2026-01-01T12:00:00.000Z", "2026-01-01T18:00:00.000Z"]]
+      ]) {
+        const suggestions = module.exports.suggestCharts([], {
+          allow: ["ProcessSankey"], includeVariants: false,
+          rawInput: {
+            nodes: [{ id: "a" }, { id: "b" }],
+            edges: [{ source: "a", target: "b", value: 2, startTime, endTime }]
+          }
+        })
+        assert.equal(suggestions.length, 1)
+        assert.equal(suggestions[0].component, "ProcessSankey")
+        assert.deepEqual(suggestions[0].props.domain, domain)
+      }
+      process.exit(0)
+    `
+    const execution = spawnSync(process.execPath, ["--input-type=commonjs"], {
+      cwd: root,
+      input: program,
+      encoding: "utf8",
+      timeout: 15000
+    })
+    assert.equal(execution.status, 0, execution.stderr || execution.error || execution.stdout)
+  })
 }

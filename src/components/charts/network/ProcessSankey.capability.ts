@@ -1,5 +1,7 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
-import { isProcessSankeyDateDomain, toProcessSankeyTime } from "./processSankey/time"
+// Keep recommendation metadata on shared data helpers. Renderer-owned helpers
+// can share a published chunk with chart initializers and retain that runtime.
+import { coerceUtcTimeValue, hasCalendarTimeValues } from "../shared/temporalStrings"
 
 export const ProcessSankeyCapability: ChartCapability = {
   component: "ProcessSankey",
@@ -58,9 +60,9 @@ export const ProcessSankeyCapability: ChartCapability = {
     for (const e of edges) {
       const s = e?.[startKey]
       const en = e?.[endKey]
-      const sN = toProcessSankeyTime(s)
-      const eN = toProcessSankeyTime(en)
-      dateDomain ||= isProcessSankeyDateDomain([s, en])
+      const sN = coerceUtcTimeValue(s)
+      const eN = coerceUtcTimeValue(en)
+      dateDomain ||= hasCalendarTimeValues([s, en])
       if (Number.isFinite(sN)) { tMin = Math.min(tMin, sN); tMax = Math.max(tMax, sN) }
       if (Number.isFinite(eN)) { tMin = Math.min(tMin, eN); tMax = Math.max(tMax, eN) }
     }

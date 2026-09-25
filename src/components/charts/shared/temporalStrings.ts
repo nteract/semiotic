@@ -29,6 +29,30 @@ export function coerceDateLikeValue(value: unknown): number {
   return +(value as number)
 }
 
+/** Finite numbers or ISO time values, with timezone-free datetimes interpreted as UTC. */
+export function coerceUtcTimeValue(value: unknown): number {
+  if (value instanceof Date) return value.getTime()
+  if (typeof value === "number") return Number.isFinite(value) ? value : NaN
+  if (typeof value !== "string" || !value.trim()) return NaN
+  const text = value.trim()
+  const numeric = Number(text)
+  if (!Number.isNaN(numeric)) return Number.isFinite(numeric) ? numeric : NaN
+  if (/^\d{4}-\d{1,2}(?:-\d{1,2})?$/.test(text)) {
+    return parseDateLikeString(text)
+  }
+  const datetime = /^(\d{4}-\d{2}-\d{2})[Tt ](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)([Zz]|[+-]\d{2}:?\d{2})?$/.exec(text)
+  if (!datetime || !Number.isFinite(parseDateLikeString(datetime[1]))) return NaN
+  return Date.parse(`${datetime[1]}T${datetime[2]}${datetime[3] || "Z"}`)
+}
+
+/** Authored dates select calendar formatting; numeric strings remain numeric. */
+export function hasCalendarTimeValues(values: readonly unknown[]): boolean {
+  return values.some(value =>
+    (value instanceof Date || (typeof value === "string" && Number.isNaN(Number(value)))) &&
+    Number.isFinite(coerceUtcTimeValue(value))
+  )
+}
+
 export function coerceTemporalStringRows(
   data: Datum[] | undefined,
   fieldName: string | undefined,

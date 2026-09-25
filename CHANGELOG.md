@@ -70,6 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Production minification preserves NaN comparisons, getter side effects, and
   coercion order across library formats. Shipped ESM, CommonJS, Node, and edge
   artifacts have semantic regression coverage. (Part of #1305)
+- ProcessSankey recommendation metadata uses shared time helpers without
+  retaining network renderers in a bundled `suggestCharts` import. Refreshed
+  packed-consumer measurements for the corrected graph and earlier bug fixes.
 - MCP HTTP uploads have bounded body and header deadlines. Partial uploads no
   longer occupy tool-execution slots, and oversized or timed-out uploads receive
   an error before their connection closes. A separate upload-admission pool caps
