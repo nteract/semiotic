@@ -1,6 +1,12 @@
 import { mulberry32 } from "../../recipes/random"
 import { cloneFixedPosition, enforceFixedPosition, fixedAxisContact } from "./physicsFixedPosition"
 import { cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
+import { sweptAabbContact } from "./physicsSweptAabbContact"
+import { physicsBodyPairCandidates } from "./physicsBodyPairCandidates"
+import { sweptCircleContact } from "./physicsSweptCircleContact"
+import { aabbOverlap, bodyBounds, colliderBounds,
+  bodyInsideBounds, colliderCandidatesForBody, type PhysicsAabbBounds,
+  type PhysicsColliderCandidates } from "./physicsCollisionBounds"
 
 export type PhysicsBodyShape =
   | { type: "circle"; radius: number }
@@ -135,13 +141,6 @@ type MutableBody = PhysicsKernelSnapshotBody
 type MutableCollider = PhysicsKernelSnapshotCollider
 type MutableSpring = PhysicsKernelSnapshotSpring
 
-interface AabbBounds {
-  minX: number
-  minY: number
-  maxX: number
-  maxY: number
-}
-
 interface Collision {
   nx: number
   ny: number
@@ -197,51 +196,8 @@ function signOrOne(value: number): number {
   return value < 0 ? -1 : 1
 }
 
-function bodyBounds(body: MutableBody): AabbBounds {
-  if (body.shape.type === "circle") {
-    const r = body.shape.radius
-    return {
-      minX: body.x - r,
-      minY: body.y - r,
-      maxX: body.x + r,
-      maxY: body.y + r
-    }
-  }
-  const hw = body.shape.width / 2
-  const hh = body.shape.height / 2
-  return {
-    minX: body.x - hw,
-    minY: body.y - hh,
-    maxX: body.x + hw,
-    maxY: body.y + hh
-  }
-}
-
-function colliderBounds(collider: MutableCollider): AabbBounds {
-  const shape = collider.shape
-  if (shape.type === "aabb") {
-    const hw = shape.width / 2
-    const hh = shape.height / 2
-    return {
-      minX: shape.x - hw,
-      minY: shape.y - hh,
-      maxX: shape.x + hw,
-      maxY: shape.y + hh
-    }
-  }
-  const half = (shape.thickness ?? 0) / 2
-  return {
-    minX: Math.min(shape.x1, shape.x2) - half,
-    minY: Math.min(shape.y1, shape.y2) - half,
-    maxX: Math.max(shape.x1, shape.x2) + half,
-    maxY: Math.max(shape.y1, shape.y2) + half
-  }
-}
-
-function aabbOverlap(a: AabbBounds, b: AabbBounds): boolean {
-  return (
-    a.minX <= b.maxX && a.maxX >= b.minX && a.minY <= b.maxY && a.maxY >= b.minY
-  )
+function stationarySleeper(body: PhysicsBodyState): boolean {
+  return body.sleeping && body.x === body.prevX && body.y === body.prevY
 }
 
 function circleCircleCollision(
@@ -395,36 +351,18 @@ function bodyBodyCollision(a: MutableBody, b: MutableBody): Collision | null {
       b.shape.height
     )
   }
-  if (a.shape.type === "circle" && b.shape.type === "aabb") {
-    const collision = circleAabbCollision(
-      a.x,
-      a.y,
-      a.shape.radius,
-      b.x,
-      b.y,
-      b.shape.width,
-      b.shape.height
-    )
-    return collision
-      ? {
-          nx: -collision.nx,
-          ny: -collision.ny,
-          penetration: collision.penetration
-        }
-      : null
+  const circle = a.shape.type === "circle" ? a : b
+  const box = circle === a ? b : a
+  if (circle.shape.type !== "circle" || box.shape.type !== "aabb") return null
+  const collision = circleAabbCollision(
+    circle.x, circle.y, circle.shape.radius,
+    box.x, box.y, box.shape.width, box.shape.height
+  )
+  if (collision && circle === a) {
+    collision.nx = -collision.nx
+    collision.ny = -collision.ny
   }
-  if (a.shape.type === "aabb" && b.shape.type === "circle") {
-    return circleAabbCollision(
-      b.x,
-      b.y,
-      b.shape.radius,
-      a.x,
-      a.y,
-      a.shape.width,
-      a.shape.height
-    )
-  }
-  return null
+  return collision
 }
 
 function bodyColliderCollision(
@@ -550,6 +488,10 @@ export class PhysicsKernelWorld {
   // body this step. The contact normal must oppose gravity; side walls and
   // lateral neighbors cannot anchor a body in mid-air.
   private supportedThisStep = new Set<string>()
+  private supportDependents = new Map<string, Set<string>>()
+  private supportContactsThisStep = new Set<string>()
+  private reboundingThisStep = new Set<string>()
+  private interpenetratingThisStep = new Set<string>()
   private lastEvents: PhysicsKernelEvent[] = []
   private nextBodyIndex = 0
   private nextColliderIndex = 0
@@ -655,6 +597,7 @@ export class PhysicsKernelWorld {
     const dt = Math.max(0, dtSeconds)
     this.lastEvents = []
     if (dt === 0) return
+    this.reboundingThisStep.clear()
 
     const bodies = this.sortedBodies()
     for (const body of bodies) {
@@ -685,18 +628,55 @@ export class PhysicsKernelWorld {
     }
 
     this.supportedThisStep.clear()
+    this.supportDependents.clear()
+    this.supportContactsThisStep.clear()
+    this.interpenetratingThisStep.clear()
 
-    // Broadphase pairs and solid colliders are computed once per step and reused
-    // across relaxation iterations — narrowphase re-tests exact overlap each pass.
-    const pairKeys = this.bodyPairKeys(bodies)
+    // Retain nearby candidates while corrections stay inside their coverage.
+    // Rebuild when a large correction can introduce a more distant contact.
     const solidColliders = this.sortedColliders().filter(
       (collider) => !collider.sensor
-    )
+    ).map(collider => ({ collider, bounds: colliderBounds(collider) }))
+    // Filters may inspect or mutate bodies on each visit. Keep their complete
+    // authored call order; only reuse bounds when the pass has no filters.
+    const colliderCandidates = solidColliders.some(({ collider }) => collider.bodyFilter)
+      ? undefined : new Array<PhysicsColliderCandidates | undefined>(bodies.length)
+    // Establish grounded supports before propagating their position constraint
+    // up the pile. Impulses continue to use the bodies' actual masses.
+    this.resolveColliders(bodies, solidColliders, false, colliderCandidates)
+    const stationarySleepers = colliderCandidates && bodies.map(stationarySleeper)
+    let candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
     for (let i = 0; i < this.options.collisionIterations; i += 1) {
-      this.resolveBodyPairs(bodies, pairKeys, i === 0)
-      this.resolveColliders(bodies, solidColliders, i === 0)
+      if (i > 0 && !candidates.coversPositions()) {
+        candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
+      }
+      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, i === 0, stationarySleepers)
+      const staticContacts = this.resolveColliders(bodies, solidColliders, i === 0, colliderCandidates)
+      // Without contacts, another pass cannot change geometry or support.
+      // Filter callbacks still receive every authored pass, including mutations.
+      if (colliderCandidates && !bodyContacts && !staticContacts) break
     }
 
+    if (!candidates.coversPositions()) {
+      candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
+    }
+    for (const [aIndex, bIndex] of candidates.pairs) {
+      const contact = bodyBodyCollision(bodies[aIndex], bodies[bIndex])
+      if (contact && contact.penetration > POSITION_SLOP * 4) {
+        this.interpenetratingThisStep.add(bodies[aIndex].id)
+        this.interpenetratingThisStep.add(bodies[bIndex].id)
+      }
+    }
+
+    const supported = Array.from(this.supportedThisStep)
+    for (let index = 0; index < supported.length; index += 1) {
+      for (const id of this.supportDependents.get(supported[index]) ?? []) {
+        if (this.supportedThisStep.has(id)) continue
+        this.supportedThisStep.add(id)
+        supported.push(id)
+      }
+    }
+    this.reconcileSupportedVelocity(bodies, dt)
     this.updateSensors(bodies)
     this.updateSleeping(bodies, dt)
   }
@@ -858,16 +838,25 @@ export class PhysicsKernelWorld {
 
   private resolveBodyPairs(
     bodies: MutableBody[],
-    pairKeys: string[],
-    emitEvents: boolean
-  ): void {
-    for (const key of pairKeys) {
-      const [aIndex, bIndex] = key.split(":").map(Number)
+    pairs: [number, number][],
+    emitEvents: boolean,
+    stationarySleepers?: boolean[]
+  ): boolean {
+    let hasContacts = false
+    for (const [aIndex, bIndex] of pairs) {
       const a = bodies[aIndex]
       const b = bodies[bIndex]
       if (!a || !b) continue
-      const collision = bodyBodyCollision(a, b)
+      // The first pass already recorded these immovable contacts. Revisit any
+      // body corrected by a collider or woken by another contact this step.
+      if (!emitEvents && stationarySleepers?.[aIndex] && stationarySleepers[bIndex] &&
+        stationarySleeper(a) && stationarySleeper(b)) {
+        hasContacts = true
+        continue
+      }
+      const collision = sweptCircleContact(a, b) ?? bodyBodyCollision(a, b)
       if (!collision) continue
+      hasContacts = true
       this.resolveDynamicCollision(a, b, collision)
       if (emitEvents) {
         this.lastEvents.push({
@@ -878,48 +867,7 @@ export class PhysicsKernelWorld {
         })
       }
     }
-  }
-
-  private bodyPairKeys(bodies: MutableBody[]): string[] {
-    const cellSize = Math.max(1, this.options.cellSize)
-    const cells = new Map<string, number[]>()
-    for (let i = 0; i < bodies.length; i += 1) {
-      if (bodies[i].bodyCollisions === false) continue
-      const bounds = bodyBounds(bodies[i])
-      const minX = Math.floor(bounds.minX / cellSize)
-      const maxX = Math.floor(bounds.maxX / cellSize)
-      const minY = Math.floor(bounds.minY / cellSize)
-      const maxY = Math.floor(bounds.maxY / cellSize)
-      for (let x = minX; x <= maxX; x += 1) {
-        for (let y = minY; y <= maxY; y += 1) {
-          const key = `${x}:${y}`
-          const cell = cells.get(key)
-          if (cell) cell.push(i)
-          else cells.set(key, [i])
-        }
-      }
-    }
-
-    const pairSet = new Set<string>()
-    for (const key of Array.from(cells.keys()).sort()) {
-      const indexes = cells.get(key) ?? []
-      indexes.sort((a, b) => a - b)
-      for (let i = 0; i < indexes.length; i += 1) {
-        for (let j = i + 1; j < indexes.length; j += 1) {
-          const a = indexes[i]
-          const b = indexes[j]
-          if (bodies[a].bodyCollisions === false || bodies[b].bodyCollisions === false) continue
-          if (aabbOverlap(bodyBounds(bodies[a]), bodyBounds(bodies[b]))) {
-            pairSet.add(`${a}:${b}`)
-          }
-        }
-      }
-    }
-    return Array.from(pairSet).sort((a, b) => {
-      const [a0, a1] = a.split(":").map(Number)
-      const [b0, b1] = b.split(":").map(Number)
-      return a0 === b0 ? a1 - b1 : a0 - b0
-    })
+    return hasContacts
   }
 
   private resolveDynamicCollision(
@@ -940,17 +888,17 @@ export class PhysicsKernelWorld {
     // Contact with an anchored neighbor only confers support when the contact
     // force actually opposes gravity. Side-by-side sleeping bodies must not
     // become a mid-air shelf for newly arriving units.
-    if (
-      a.sleeping &&
-      this.contactOpposesGravity(collision.nx, collision.ny)
-    ) {
-      this.supportedThisStep.add(b.id)
+    const gravity = this.options.gravity
+    const gravityMagnitude = Math.hypot(gravity.x, gravity.y)
+    const aSupportsB = this.contactOpposesGravity(collision.nx, collision.ny, gravityMagnitude)
+    const bSupportsA = this.contactOpposesGravity(-collision.nx, -collision.ny, gravityMagnitude)
+    if (aSupportsB) {
+      if (a.sleeping) this.supportedThisStep.add(b.id)
+      this.addSupportContact(a.id, b.id)
     }
-    if (
-      b.sleeping &&
-      this.contactOpposesGravity(-collision.nx, -collision.ny)
-    ) {
-      this.supportedThisStep.add(a.id)
+    if (bSupportsA) {
+      if (b.sleeping) this.supportedThisStep.add(a.id)
+      this.addSupportContact(b.id, a.id)
     }
     const invA = a.sleeping ? 0 : 1 / a.mass
     const invB = b.sleeping ? 0 : 1 / b.mass
@@ -963,12 +911,25 @@ export class PhysicsKernelWorld {
       : invA + invB
     if (invTotal <= EPSILON) return
 
-    const correction =
-      Math.max(0, collision.penetration - POSITION_SLOP) / invTotal
-    a.x -= collision.nx * correction * ax
-    a.y -= collision.ny * correction * ay
-    b.x += collision.nx * correction * bx
-    b.y += collision.ny * correction * by
+    const supportA = this.supportedThisStep.has(a.id) &&
+      aSupportsB && !b.sleeping && !b.fixedPosition
+    const supportB = this.supportedThisStep.has(b.id) &&
+      bSupportsA && !a.sleeping && !a.fixedPosition
+    const grounded = gravityMagnitude > 1
+    const projectionAx = grounded && supportA ? 0 : ax
+    const projectionAy = grounded && supportA ? 0 : ay
+    const projectionBx = grounded && !supportA && supportB ? 0 : bx
+    const projectionBy = grounded && !supportA && supportB ? 0 : by
+    const projectionTotal = collision.nx ** 2 * (projectionAx + projectionBx) +
+      collision.ny ** 2 * (projectionAy + projectionBy)
+    const correction = Math.max(0, collision.penetration - POSITION_SLOP) /
+      Math.max(EPSILON, projectionTotal)
+    a.x -= collision.nx * correction * projectionAx
+    a.y -= collision.ny * correction * projectionAy
+    b.x += collision.nx * correction * projectionBx
+    b.y += collision.ny * correction * projectionBy
+    if (grounded && supportA) this.supportedThisStep.add(b.id)
+    if (grounded && supportB) this.supportedThisStep.add(a.id)
 
     const rvx = b.vx - a.vx
     const rvy = b.vy - a.vy
@@ -977,6 +938,8 @@ export class PhysicsKernelWorld {
     const impactSpeed = Math.abs(velocityAlongNormal)
 
     const restitution = pairRestitution(a.restitution, b.restitution, this.options.restitution)
+    const previousA = a.vx * gravity.x + a.vy * gravity.y
+    const previousB = b.vx * gravity.x + b.vy * gravity.y
     const impulse = (-(1 + restitution) * velocityAlongNormal) / invTotal
     const ix = impulse * collision.nx
     const iy = impulse * collision.ny
@@ -984,7 +947,11 @@ export class PhysicsKernelWorld {
     a.vy -= iy * ay
     b.vx += ix * bx
     b.vy += iy * by
-    this.applyFriction(a, b, collision, impulse, invA, invB)
+    this.applyFriction(a, b, collision, impulse, ax, ay, bx, by)
+    if (restitution > 0) {
+      if (previousA >= 0 && a.vx * gravity.x + a.vy * gravity.y < 0) this.reboundingThisStep.add(a.id)
+      if (previousB >= 0 && b.vx * gravity.x + b.vy * gravity.y < 0) this.reboundingThisStep.add(b.id)
+    }
     if (impactSpeed > this.options.contactWakeSpeed) {
       this.wake(a)
       this.wake(b)
@@ -996,21 +963,21 @@ export class PhysicsKernelWorld {
     b: MutableBody,
     collision: Collision,
     normalImpulse: number,
-    invA: number,
-    invB: number
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number
   ): void {
     const tx = -collision.ny
     const ty = collision.nx
     const rvx = b.vx - a.vx
     const rvy = b.vy - a.vy
     const tangentVelocity = rvx * tx + rvy * ty
-    const ax = a.fixedPosition?.x == null ? invA : 0
-    const ay = a.fixedPosition?.y == null ? invA : 0
-    const bx = b.fixedPosition?.x == null ? invB : 0
-    const by = b.fixedPosition?.y == null ? invB : 0
+    // Reuse the axis inverse masses from normal resolution; friction acts on
+    // the same bodies and fixed coordinates, along the tangent instead.
     const invTotal = a.fixedPosition || b.fixedPosition
       ? tx ** 2 * (ax + bx) + ty ** 2 * (ay + by)
-      : invA + invB
+      : ax + bx
     if (Math.abs(tangentVelocity) <= EPSILON || invTotal <= EPSILON) return
     const friction = pairFriction(a.friction, b.friction, this.options.friction)
     const frictionImpulse = clamp(
@@ -1028,15 +995,28 @@ export class PhysicsKernelWorld {
 
   private resolveColliders(
     bodies: MutableBody[],
-    colliders: MutableCollider[],
-    emitEvents: boolean
-  ): void {
-    for (const body of bodies) {
-      for (const collider of colliders) {
+    colliders: Array<{ collider: MutableCollider; bounds: PhysicsAabbBounds }>,
+    emitEvents: boolean,
+    candidates?: Array<PhysicsColliderCandidates | undefined>
+  ): boolean {
+    if (colliders.length === 0) return false
+    let hasContacts = false
+    for (let bodyIndex = 0; bodyIndex < bodies.length; bodyIndex++) {
+      const body = bodies[bodyIndex]
+      let nearby = candidates?.[bodyIndex]
+      if (candidates && (!nearby || !bodyInsideBounds(body, nearby.bounds))) {
+        candidates[bodyIndex] = nearby = colliderCandidatesForBody(body, colliders)
+      }
+      let cursor = 0
+      while (cursor < (nearby ? nearby.indexes.length : colliders.length)) {
+        const colliderIndex = nearby ? nearby.indexes[cursor++] : cursor++
+        const { collider, bounds } = colliders[colliderIndex]
         if (!colliderAppliesToBody(collider, body)) continue
-        if (!aabbOverlap(bodyBounds(body), colliderBounds(collider))) continue
-        const collision = bodyColliderCollision(body, collider)
+        const swept = sweptAabbContact(body, collider.shape, POSITION_SLOP + EPSILON)
+        if (!swept && !aabbOverlap(bodyBounds(body), bounds)) continue
+        const collision = swept ?? bodyColliderCollision(body, collider)
         if (!collision) continue
+        hasContacts = true
         this.resolveStaticCollision(body, collider, collision)
         // Floors and upward-facing ramps support a body. Vertical tube walls
         // merely constrain x and cannot make a slow falling body sleep in air.
@@ -1051,8 +1031,16 @@ export class PhysicsKernelWorld {
             sensor: false
           })
         }
+        if (nearby && candidates && !bodyInsideBounds(body, nearby.bounds)) {
+          candidates[bodyIndex] = nearby = colliderCandidatesForBody(body, colliders)
+          // A correction may introduce a later contact in this very pass.
+          // Earlier colliders must wait for the next pass, as in the full scan.
+          cursor = 0
+          while (cursor < nearby.indexes.length && nearby.indexes[cursor] <= colliderIndex) cursor++
+        }
       }
     }
+    return hasContacts
   }
 
   private resolveStaticCollision(
@@ -1066,6 +1054,8 @@ export class PhysicsKernelWorld {
     const velocityAlongNormal = body.vx * collision.nx + body.vy * collision.ny
     if (velocityAlongNormal < 0) {
       const restitution = pairRestitution(body.restitution, collider.restitution, this.options.restitution)
+      const gravity = this.options.gravity
+      const previous = body.vx * gravity.x + body.vy * gravity.y
       body.vx -= (1 + restitution) * velocityAlongNormal * collision.nx
       body.vy -= (1 + restitution) * velocityAlongNormal * collision.ny
 
@@ -1075,13 +1065,17 @@ export class PhysicsKernelWorld {
       const friction = pairFriction(body.friction, collider.friction, this.options.friction)
       body.vx -= tangentVelocity * tx * friction
       body.vy -= tangentVelocity * ty * friction
+      if (restitution > 0 && previous >= 0 && body.vx * gravity.x + body.vy * gravity.y < 0) {
+        this.reboundingThisStep.add(body.id)
+      }
     }
     enforceFixedPosition(body)
   }
 
   private updateSensors(bodies: MutableBody[]): void {
-    const current = new Set<string>()
     const sensors = this.sortedColliders().filter((collider) => collider.sensor)
+    if (sensors.length === 0 && this.activeSensors.size === 0) return
+    const current = new Set<string>()
     for (const body of bodies) {
       const bounds = bodyBounds(body)
       for (const sensor of sensors) {
@@ -1124,7 +1118,8 @@ export class PhysicsKernelWorld {
       )
       const slow =
         speed < this.options.sleepSpeed &&
-        moved < this.options.sleepSpeed * dt
+        moved < this.options.sleepSpeed * dt &&
+        !this.interpenetratingThisStep.has(body.id)
       // Under gravity a body may only sleep while supported by the ground or an
       // anchored neighbor — a body merely held still by a falling crowd keeps
       // ticking so it can never freeze in mid-air once the crowd clears.
@@ -1144,9 +1139,38 @@ export class PhysicsKernelWorld {
     }
   }
 
-  private contactOpposesGravity(nx: number, ny: number): boolean {
+  /** A stationary stack is supported through contacts to the floor even before
+   * each lower layer has spent a full sleep interval becoming an anchor. */
+  private addSupportContact(support: string, dependent: string): void {
+    let dependents = this.supportDependents.get(support)
+    if (dependents?.has(dependent)) return
+    this.supportContactsThisStep.add(support)
+    this.supportContactsThisStep.add(dependent)
+    if (!dependents) {
+      dependents = new Set()
+      this.supportDependents.set(support, dependents)
+    }
+    dependents.add(dependent)
+  }
+
+  private reconcileSupportedVelocity(bodies: MutableBody[], dt: number): void {
+    const gravity = this.options.gravity
+    if (Math.hypot(gravity.x, gravity.y) <= 1) return
+    for (const body of bodies) {
+      if (body.sleeping || !this.supportedThisStep.has(body.id) ||
+        !this.supportContactsThisStep.has(body.id)) continue
+      // Preserve rebound impulses. Otherwise gravity must not accumulate in
+      // stored velocity while contact projection holds the grounded body still.
+      if (this.reboundingThisStep.has(body.id) && body.vx * gravity.x + body.vy * gravity.y < 0) continue
+      body.vx = (body.x - body.prevX) / dt
+      body.vy = (body.y - body.prevY) / dt
+      enforceFixedPosition(body)
+    }
+  }
+
+  private contactOpposesGravity(nx: number, ny: number, magnitude?: number): boolean {
     const { x: gx, y: gy } = this.options.gravity
-    const magnitude = Math.hypot(gx, gy)
+    magnitude ??= Math.hypot(gx, gy)
     // With no meaningful gravity vector there is no stable "down" direction,
     // so retain the previous contact-based sleeping behavior. Gravity at or
     // below this epsilon is intentionally treated as zero for support detection.

@@ -358,6 +358,7 @@ describe("ProcessSankey HOC", () => {
           nodes={sampleNodes}
           edges={sampleEdges}
           domain={DOMAIN}
+          axisTicks={[]}
         />
       </TooltipProvider>
     )

@@ -1,3 +1,4 @@
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -107,8 +108,8 @@ export interface RealtimeWaterfallChartProps<
   windowSize?: number
   /** Controlled data array */
   data?: RealtimeData<TDatum>
-  /** Time value accessor */
-  timeAccessor?: ChartAccessor<TDatum, number>
+  /** Time accessor returning a number, Date, or numeric/date string. */
+  timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value accessor (positive = gain, negative = loss) */
   valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */

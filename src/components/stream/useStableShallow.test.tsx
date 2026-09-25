@@ -17,6 +17,20 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { useStableShallow } from "./useStableShallow"
+import { shallowEqualTwoLevel } from "./shallowEqual"
+
+it("keeps config equality bounded to two levels and preserves Object.is semantics", () => {
+  const callback = () => 1
+  expect(shallowEqualTwoLevel({ callback }, { callback })).toBe(true)
+  expect(shallowEqualTwoLevel({ callback }, { callback: () => 1 })).toBe(false)
+  expect(shallowEqualTwoLevel({ n: NaN }, { n: NaN })).toBe(true)
+  expect(shallowEqualTwoLevel({ n: 0 }, { n: -0 })).toBe(false)
+  expect(shallowEqualTwoLevel({ a: { x: undefined } }, { a: { y: undefined } })).toBe(false)
+  expect(shallowEqualTwoLevel({ a: { x: {} } }, { a: { x: {} } })).toBe(false)
+  expect(shallowEqualTwoLevel({ a: [{}] }, { a: [{}] })).toBe(false)
+  expect(shallowEqualTwoLevel({ a: new Map() }, { a: new Map() })).toBe(false)
+  expect(shallowEqualTwoLevel(Object.create(null), {})).toBe(true)
+})
 
 describe("useStableShallow", () => {
   it("returns the same reference across renders when shallow-equal at one level", () => {

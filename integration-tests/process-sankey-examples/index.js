@@ -1,11 +1,12 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React, { useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
+import { ProcessTimeFixture } from "./ProcessTimeFixture"
 
 const { ProcessSankey } = Semiotic
 
-const D = (y, m, d) => new Date(y, m - 1, d).getTime()
-const DOMAIN = [D(2026, 1, 1), D(2026, 6, 30)]
+const D = (y, m, d) => Date.UTC(y, m - 1, d)
+const DOMAIN = [new Date(D(2026, 1, 1)), new Date(D(2026, 6, 30))]
 
 // Static fixture: a small project-team flow with categorical coloring.
 const STATIC_NODES = [
@@ -179,4 +180,4 @@ const App = () =>
   )
 
 const root = createRoot(document.getElementById("root"))
-root.render(React.createElement(App))
+root.render(React.createElement(new URLSearchParams(location.search).has("time") ? ProcessTimeFixture : App))

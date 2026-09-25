@@ -122,9 +122,9 @@ describe("sankey-plus layout", () => {
     })
   })
 
-  test("circular arc extent does not exceed 40% of chart height", () => {
-    // Circular arcs should be compact — they convey connection, not magnitude.
-    // A 100-value circular link should NOT produce a 200px tall arc.
+  test("circular bands use the same magnitude scale as forward bands", () => {
+    // Final viewport fitting belongs to the frame; the layout must preserve
+    // magnitude even when a circular band needs space outside the node area.
     const result = runLayout(
       ["S1", "S2", "S3"],
       [
@@ -140,9 +140,10 @@ describe("sankey-plus layout", () => {
 
     circularLinks.forEach(link => {
       if (link.circularPathData) {
-        const arcExtent = Math.abs(link.circularPathData.verticalFullExtent)
-        // The arc should not extend more than 40% of chart height beyond the graph
-        expect(arcExtent).toBeLessThan(400 * 1.4)
+        expect(link._circularWidth).toBeCloseTo(link.width)
+        for (const other of result.links) {
+          expect(link.width / link.value).toBeCloseTo(other.width / other.value)
+        }
       }
     })
   })
@@ -220,10 +221,7 @@ describe("sankey-plus layout", () => {
     })
   })
 
-  test("circular arc radius is capped to prevent oversized arcs", () => {
-    // With ky scaling, link width can exceed chart dimensions.
-    // The arc radius (which determines visual arc size) should be capped
-    // even when the link value is large.
+  test("circular radii leave room for the full band width", () => {
     const result = runLayout(
       ["A", "B", "C"],
       [
@@ -239,10 +237,9 @@ describe("sankey-plus layout", () => {
 
     circularLinks.forEach(link => {
       if (link.circularPathData) {
-        // Arc radius should be capped — not based on full link width
-        expect(link.circularPathData.arcRadius).toBeLessThan(300 * 0.5)
-        // _circularWidth should be capped to 15% of chart height
-        expect(link._circularWidth).toBeLessThanOrEqual(300 * 0.15)
+        expect(link._circularWidth).toBe(link.width)
+        expect(link.circularPathData.rightSmallArcRadius).toBeGreaterThan(link.width / 2)
+        expect(link.circularPathData.leftSmallArcRadius).toBeGreaterThan(link.width / 2)
       }
     })
   })
@@ -272,7 +269,7 @@ describe("sankey-plus layout", () => {
     })
   })
 
-  test("real streaming data: circular links stay within canvas", () => {
+  test("real streaming data: circular links retain full-width routes", () => {
     const result = runLayout(
       ["Store", "Serve", "Cache", "Ingest", "Validate", "Reject", "Process"],
       [
@@ -293,12 +290,12 @@ describe("sankey-plus layout", () => {
     circularLinks.forEach(link => {
       if (link.circularPathData) {
         const cpd = link.circularPathData
-        // Vertical extent must be within canvas (with margin for arcs + chamfer)
-        expect(cpd.verticalFullExtent).toBeGreaterThan(-60)
-        expect(cpd.verticalFullExtent).toBeLessThan(510)
-        // Horizontal extents must be reasonable
-        expect(cpd.rightFullExtent).toBeLessThan(750)
-        expect(cpd.leftFullExtent).toBeGreaterThan(-50)
+        expect(link._circularWidth).toBe(link.width)
+        expect(link._circularStub).toBe(false)
+        expect(cpd.sourceX).toBe(link.source.x1)
+        expect(cpd.targetX).toBe(link.target.x0)
+        expect(link.path).not.toMatch(/NaN|Infinity/)
+        expect(link.path.match(/A/g)).toHaveLength(4)
       }
     })
   })

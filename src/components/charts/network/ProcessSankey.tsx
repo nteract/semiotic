@@ -17,6 +17,7 @@ import { useProcessSankeyTooltipContent } from "./processSankey/processSankeyToo
 import { readChartAccessor } from "./processSankey/accessors"
 import {
   toProcessSankeyTime,
+  isProcessSankeyDateDomain,
   type ProcessSankeyTimeLike
 } from "./processSankey/time"
 import { renderLoadingState } from "../shared/withChartWrapper"
@@ -108,7 +109,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     nodes: rawNodesProp,
     edges: rawEdgesProp,
     domain: rawDomain,
-    axisTicks = [],
+    axisTicks,
     nodeIdAccessor = "id",
     nodeLabel,
     sourceAccessor = "source",
@@ -305,7 +306,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     marginDefaults: resolveProcessSankeyMarginDefaults(
       !!title,
       showQualityReadout,
-      axisTicks.length > 0,
+      axisTicks === undefined || axisTicks.length > 0,
       orientation
     ),
     userMargin,
@@ -524,6 +525,8 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     tooltip,
     enableHover,
     layout,
+    dateDomain: isProcessSankeyDateDomain(rawDomain),
+    nodeLabel,
     timeFormat,
     valueFormat,
     sourceAccessor,
@@ -543,6 +546,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
       plotW,
       plotH,
       timelineExtent,
+      domain: rawDomain,
       axisTicks,
       showQualityReadout,
       showLaneRails,
@@ -559,6 +563,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     plotW,
     plotH,
     timelineExtent,
+    rawDomain,
     axisTicks,
     showQualityReadout,
     showLaneRails,

@@ -1,3 +1,4 @@
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import type { CSSProperties, ReactNode } from "react"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type {
@@ -99,8 +100,8 @@ export interface RealtimeLineChartProps<
   seriesAccessor?: ChartAccessor<TDatum, string>
   /** Controlled data array */
   data?: RealtimeData<TDatum>
-  /** Time value accessor */
-  timeAccessor?: ChartAccessor<TDatum, number>
+  /** Time accessor returning a number, Date, or numeric/date string. */
+  timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value accessor */
   valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */

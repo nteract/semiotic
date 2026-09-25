@@ -1,4 +1,4 @@
-import { readRealtimeNumber } from "../charts/realtime/realtimeAccessors"
+import { readRealtimeNumber, readRealtimeTime } from "../charts/realtime/realtimeAccessors"
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
@@ -302,7 +302,7 @@ export const temporalHistogram: ChartConfig = {
       windowMode: "growing",
       windowSize: Math.max(1, rows.length),
       arrowOfTime: rest.arrowOfTime || "right",
-      timeAccessor: (datum: Datum) => readRealtimeNumber(datum, timeAccessor, "time") ?? NaN,
+      timeAccessor: (datum: Datum) => readRealtimeTime(datum, timeAccessor, "time") ?? NaN,
       valueAccessor: (datum: Datum) => readRealtimeNumber(datum, valueAccessor, "value") ?? NaN,
       xExtent: rest.timeExtent || common.xExtent,
       yExtent: valueExtent,

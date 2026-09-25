@@ -521,8 +521,10 @@ function SensorScene() {
       </p>
 
       <p>
-        Reduced motion runs a bounded pass using <code>config.settleStepLimit</code>
-        {" "}and paints its result. A continuous process can still have unfinished
+        Reduced motion preserves the current queue's arrival schedule, then allows
+        {" "}<code>config.settleStepLimit</code> steps for settling. Explicit
+        {" "}<code>settle(maxSteps)</code> calls still bound the entire run. A
+        continuous process can still have unfinished
         work when that budget ends. Use the process ledger or a declared time
         horizon to report completion; sleeping bodies alone do not establish it.
         Authored <code>onTick</code> callbacks and controllers use synchronous

@@ -21,6 +21,7 @@ it("preserves renderer ownership through the band/ribbon adapter and resets for 
         tooltip,
         enableHover: true,
         layout: null,
+        dateDomain: false,
         sourceAccessor: "source",
         targetAccessor: "target",
         valueAccessor: "value",

@@ -1,3 +1,4 @@
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -103,8 +104,8 @@ export interface RealtimeHeatmapProps<
   capacityMode?: WindowMode
   /** Controlled data array */
   data?: RealtimeData<TDatum>
-  /** Time/x value accessor */
-  timeAccessor?: ChartAccessor<TDatum, number>
+  /** Time/x accessor returning a number, Date, or numeric/date string. */
+  timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value/y accessor */
   valueAccessor?: ChartAccessor<TDatum, number>
   /** Category accessor for colored cells */

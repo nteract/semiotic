@@ -18,8 +18,9 @@ JavaScript to TypeScript for strict mode compatibility.
   stacking linearly, producing tighter layouts with multiple cycles.
 - **Two-pass layout**: Double positioning pass with alpha-decay relaxation
   and explicit collision resolution.
-- **Dynamic extent adjustment**: `adjustGraphExtents()` recalculates bounds
-  after circular path data is computed — no more clipped loops.
+- **Proportional circular bands**: Every circular route retains its full flow
+  width. Semiotic’s layout plugin fits nodes and complete circular bands into
+  the viewport with one uniform scale, preserving flow proportions.
 - **Geometric link sorting**: Perpendicular intersection checks prevent
   false link overlaps.
 - **Configurable parameters**: `verticalMargin`, `circularGap`, `baseRadius`

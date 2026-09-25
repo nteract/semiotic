@@ -364,6 +364,14 @@ function StreamingLine() {
       <h2 id="event-time">Event-Time Ordering and Aggregation</h2>
 
       <p>
+        Across realtime charts, <code>timeAccessor</code> accepts a field name or
+        a function returning a number, <code>Date</code>, or numeric/date string.
+        Date-only strings and automatically inferred calendar ticks use UTC.
+        Aggregation and event-time ordering convert dates to epoch milliseconds;
+        <code>valueAccessor</code> remains numeric.
+      </p>
+
+      <p>
         Set <code>eventTime</code> when events can arrive out of order.
         RealtimeLineChart holds a bounded grace window, then releases points in
         event-time order. This delays display by <code>lateness</code>. Call the

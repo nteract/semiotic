@@ -2,6 +2,54 @@
   "schemaVersion": 1,
   "changes": [
     {
+      "against": "v3.10.4",
+      "entry": "semiotic",
+      "symbol": "interface-member StreamXYFrameProps::property::timeAccessor",
+      "previous": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined"
+      ],
+      "current": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined"
+      ],
+      "reason": "Reviewed temporal input widening: CoercibleNumber is number | Date | string, matching runtime time normalization. Existing numeric callbacks, field names, and omitted accessors remain accepted; typed temporal callbacks are covered by the packed consumer regression. Generic datum typing and numeric value accessors are unchanged."
+    },
+    {
+      "against": "v3.10.4",
+      "entry": "semiotic-xy",
+      "symbol": "interface-member StreamXYFrameProps::property::timeAccessor",
+      "previous": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined"
+      ],
+      "current": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined"
+      ],
+      "reason": "Reviewed temporal input widening: CoercibleNumber is number | Date | string, matching runtime time normalization. Existing numeric callbacks, field names, and omitted accessors remain accepted; typed temporal callbacks are covered by the packed consumer regression. Generic datum typing and numeric value accessors are unchanged."
+    },
+    {
+      "against": "v3.10.4",
+      "entry": "semiotic-realtime",
+      "symbol": "interface-member StreamXYFrameProps::property::timeAccessor",
+      "previous": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined"
+      ],
+      "current": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined"
+      ],
+      "reason": "Reviewed temporal input widening: CoercibleNumber is number | Date | string, matching runtime time normalization. Existing numeric callbacks, field names, and omitted accessors remain accepted; typed temporal callbacks are covered by the packed consumer regression. Generic datum typing and numeric value accessors are unchanged."
+    },
+    {
+      "against": "v3.10.4",
+      "entry": "semiotic-realtime-core",
+      "symbol": "interface-member StreamXYFrameProps::property::timeAccessor",
+      "previous": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined"
+      ],
+      "current": [
+        "interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined"
+      ],
+      "reason": "Reviewed temporal input widening: CoercibleNumber is number | Date | string, matching runtime time normalization. Existing numeric callbacks, field names, and omitted accessors remain accepted; typed temporal callbacks are covered by the packed consumer regression. Generic datum typing and numeric value accessors are unchanged."
+    },
+    {
       "against": "v3.8.9",
       "entry": "semiotic",
       "symbol": "ChartAccessor",

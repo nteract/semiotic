@@ -11,6 +11,7 @@ import { build as tsupBuild } from "tsup"
 import ts from "typescript"
 import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
+import { libraryTerserOptions as terserOptions } from "./lib/library-minification-options.mjs"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
@@ -88,33 +89,6 @@ function useClientDirectivePlugin({
         writeFileSync(file.name, `"use client";\n${code}`)
       }
     }
-  }
-}
-
-const terserOptions = {
-  compress: {
-    pure_getters: true,
-    unsafe: true,
-    unsafe_comps: true,
-    drop_console: false,
-    pure_funcs: ["console.log", "console.debug"],
-    drop_debugger: true,
-    hoist_funs: true,
-    // Keep reusable helpers intact across every library entry. Cloning them
-    // into individual chunks can retain otherwise unused exports downstream.
-    reduce_funcs: false,
-    passes: 3
-  },
-  mangle: {
-    properties: false
-  },
-  format: {
-    // Runtime-selected imports must retain their consumer-bundler directives.
-    comments: /webpackIgnore|@vite-ignore/,
-    // Consumers still tree-shake these library chunks. Preserve the purity
-    // annotations emitted by esbuild so unused catalogs and factories can
-    // disappear when only a few public exports are imported.
-    preserve_annotations: true
   }
 }
 

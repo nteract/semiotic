@@ -68,6 +68,15 @@ describe("buildDefaultRealtimeTooltip", () => {
     expect(container.textContent).toMatch(/y:\s*87\.50/)
   })
 
+  it.each([new Date("2024-01-01T12:30:00Z"), "2024-01-01T12:30:00Z"])("reads temporal callback results: %s", time => {
+    const Tooltip = buildDefaultRealtimeTooltip<{ timestamp: Date | string; value: number }>({
+      timeAccessor: datum => datum.timestamp
+    })
+    const { container } = render(<>{Tooltip(fakeHover({ data: { timestamp: time, value: 2 } }))}</>)
+    expect(container.textContent).toContain(time instanceof Date ? time.toLocaleString() : time)
+    expect(container.textContent).toContain("y:2")
+  })
+
   it("falls back gracefully when hover.data is null (mid-clear, hover-anywhere mode)", () => {
     const Tooltip = buildDefaultRealtimeTooltip()
     expect(() =>

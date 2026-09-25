@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react"
 import type { ScaleBand, ScaleLinear } from "d3-scale"
+import type { CoercibleNumber } from "../stream/accessorUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
@@ -160,7 +161,7 @@ export interface RealtimeFrameProps {
   windowMode?: WindowMode
   windowSize?: number
   data?: Datum[]
-  timeAccessor?: string | ((d: Datum) => number)
+  timeAccessor?: string | ((d: Datum) => CoercibleNumber)
   valueAccessor?: string | ((d: Datum) => number)
   timeExtent?: [number, number]
   valueExtent?: [number, number]

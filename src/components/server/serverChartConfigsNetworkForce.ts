@@ -72,7 +72,6 @@ export const forceDirectedGraph: ChartConfig = {
       colorScheme,
       iterations: rest.iterations,
       forceStrength: rest.forceStrength,
-      showLabels: rest.showLabels ?? false,
       nodeLabel: rest.nodeLabel,
       nodeSize: rest.nodeSize ?? 8,
       nodeSizeRange: rest.nodeSizeRange,
@@ -82,6 +81,7 @@ export const forceDirectedGraph: ChartConfig = {
       // explicit frameProps nodeStyle/edgeStyle is the documented escape hatch
       // and outranks the primitive overlay on both paths.
       ...common,
+      showLabels: common.showLabels ?? rest.showLabels ?? false,
       showLegend: (common.showLegend ?? Boolean(colorBy)) && Boolean(colorBy)
     }
   }

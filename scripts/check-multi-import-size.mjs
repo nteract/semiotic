@@ -49,7 +49,9 @@ const analyze = process.argv.includes("--analyze")
 // visible.
 // Bumped 388→390: esbuild 0.28.2 plus overlay/format/brush catalog work
 // measure 389.0 KiB gzip on the same union. Keep ~1 KiB of headroom.
-const MULTI_IMPORT_GZIP_BUDGET = 390 * 1024
+// Bumped 390→392: the published Atlas reader catalog and shared accessibility
+// surface add 1.4 KiB gzip to the representative union (391.4 KiB measured).
+const MULTI_IMPORT_GZIP_BUDGET = 392 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

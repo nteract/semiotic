@@ -48,6 +48,28 @@ function svgMarkup(
 }
 
 describe("physics settled scene helpers", () => {
+  it("includes late arrivals in settled SVG marks and the evidence ledger", () => {
+    const store = new PhysicsPipelineStore({
+      kernel: { gravity: { x: 0, y: 0 }, sleepAfter: 0.01 }
+    })
+    store.enqueue([
+      { ...circle("early", 10, 10), spawnAt: 0 },
+      { ...circle("late", 20, 10), spawnAt: 60 }
+    ])
+
+    const result = buildPhysicsSettledScene(store, { charge: 2 })
+
+    expect(result.sceneNodes.map((node) => node._transitionKey)).toEqual(["early", "late"])
+    expect(result.snapshot.queue).toHaveLength(0)
+    expect(result.evidence).toMatchObject({
+      bodyCount: 2,
+      queuedCount: 0,
+      settled: true,
+      ledger: { charge: 2, live: 2, queued: 0, balanced: true }
+    })
+    expect(result.evidence.warnings).toEqual([])
+  })
+
   it("projects settled physics bodies into XY scene nodes reusable by SceneToSVG", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 1 / 60,
@@ -124,6 +146,29 @@ describe("physics settled scene helpers", () => {
     expect(html).toContain('x="26"')
     expect(html).toContain('fill="#0ea5e9"')
     expect(html).toContain('fill="#22c55e"')
+  })
+
+  it("includes next-day arrivals in settled SVG when stationary bodies never sleep", () => {
+    const store = new PhysicsPipelineStore({
+      fixedDt: 1,
+      kernel: { gravity: { x: 0, y: 980 } }
+    })
+    store.enqueue([
+      { ...circle("early", 10, 10), fixedPosition: { x: 10, y: 10 }, spawnAt: 0 },
+      { ...circle("late", 20, 10), fixedPosition: { x: 20, y: 10 }, spawnAt: 86400 }
+    ])
+
+    const result = buildPhysicsSettledScene(store, { charge: 2 })
+
+    expect(result.stepsRun).toBeLessThan(5)
+    expect(store.allSleeping()).toBe(false)
+    expect(store.atRest()).toBe(true)
+    expect(result.snapshot.simulationState).toBe("settled")
+    // Evidence retains its stricter formal-sleep certification; skipping an
+    // idle interval must not manufacture sleeping flags to obtain it.
+    expect(result.evidence).toMatchObject({ bodyCount: 2, queuedCount: 0, sleepingCount: 0, settled: false })
+    expect(result.sceneNodes.map((node) => node._transitionKey)).toEqual(["early", "late"])
+    expect(svgMarkup(result.sceneNodes).match(/<circle/g)).toHaveLength(2)
   })
 
   it("projects snapshot-style body state without mutating bodies", () => {

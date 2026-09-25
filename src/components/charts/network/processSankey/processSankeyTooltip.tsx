@@ -11,6 +11,7 @@ import { normalizeTooltip, hasOwnTooltipChrome, markTooltipChrome, type TooltipP
 import { readChartAccessor } from "./accessors"
 import {
   toProcessSankeyTime,
+  formatProcessSankeyTime,
   type ProcessSankeyTimeLike,
 } from "./time"
 
@@ -23,6 +24,8 @@ export interface UseProcessSankeyTooltipOptions<
   tooltip: TooltipProp | undefined
   enableHover: boolean
   layout: ProcessSankeyLayout | null
+  dateDomain: boolean
+  nodeLabel?: ChartAccessor<_TNode, string>
   timeFormat?: (d: number | Date) => string | React.ReactNode
   valueFormat?: (d: number) => string | React.ReactNode
   sourceAccessor: ChartAccessor<TEdge, string>
@@ -46,6 +49,8 @@ export function useProcessSankeyTooltipContent<
     tooltip,
     enableHover,
     layout,
+    dateDomain,
+    nodeLabel,
     timeFormat,
     valueFormat,
     sourceAccessor,
@@ -62,15 +67,10 @@ export function useProcessSankeyTooltipContent<
   }, [tooltip, enableHover])
 
   const formatTime = useCallback((t: number): React.ReactNode => {
-    if (timeFormat) return timeFormat(new Date(t))
-    // Real timestamps (ms since epoch) sit above ~1e10; small integers are
-    // tick numbers and must print as-is (not as 1970-01-01).
     if (!Number.isFinite(t)) return ""
-    if (Math.abs(t) < 1e10) {
-      return Number.isInteger(t) ? String(t) : t.toFixed(2)
-    }
-    return new Date(t).toISOString().slice(0, 10)
-  }, [timeFormat])
+    if (timeFormat) return timeFormat(dateDomain ? new Date(t) : t)
+    return formatProcessSankeyTime(t, dateDomain)
+  }, [timeFormat, dateDomain])
 
   const formatValue = useCallback((v: number): React.ReactNode => {
     if (valueFormat) return valueFormat(v)
@@ -86,13 +86,14 @@ export function useProcessSankeyTooltipContent<
 
     if (payload.__kind === "band") {
       const nodeId = payload.id
+      const label = nodeLabel ? readChartAccessor(nodeLabel, userDatum as _TNode) : nodeId
       const rows = layout ? massHistoryRows(layout.nodeData[nodeId]) : []
       const MAX = 5
       const truncated = rows.length > MAX ? rows.length : null
       const display = pickMassQuantiles(rows, MAX)
       return (
         <div style={{ minWidth: 160 }}>
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>{nodeId}</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{label == null ? nodeId : String(label)}</div>
           {display.length > 0 && (
             <table style={{ borderCollapse: "collapse", fontSize: 11, width: "100%" }}>
               <thead>
@@ -146,7 +147,7 @@ export function useProcessSankeyTooltipContent<
       </div>
     )
   }, [
-    layout, customTooltipFn, formatTime, formatValue,
+    layout, nodeLabel, customTooltipFn, formatTime, formatValue,
     sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor,
   ])
   return hasOwnTooltipChrome(customTooltipFn) ? markTooltipChrome(content) : content

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "../../stream/physics/StreamPhysicsFrame"
@@ -112,7 +113,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
     frameProps,
     loading,
     loadingContent,
-    mechanicalCategories,
+    mechanicalCategories: mechanicalCategoriesProp,
     mechanicalCount,
     paused,
     rerunMS,
@@ -121,6 +122,7 @@ export const UnitPileChart = forwardRef(function UnitPileChart<
     valueAccessor,
     styleRules
   } = props
+  const mechanicalCategories = useStableShallow(mechanicalCategoriesProp)
   const layoutMode = usePhysicsChartMode(props, [700, 380], {
     hasSimulationMode: true
   })

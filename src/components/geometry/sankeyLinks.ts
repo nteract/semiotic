@@ -355,83 +355,46 @@ export const areaLink = (d) => {
 }
 
 export function circularAreaLink(link) {
-  const fullHW = link.sankeyWidth / 2
-  const compactHW = (link._circularWidth ?? link.sankeyWidth) / 2
   const cpd = link.circularPathData
   if (!cpd) return null
+  const hw = link.sankeyWidth / 2
+  const s = link.circularLinkType === "bottom" ? 1 : -1
+  const sweep = s === 1 ? 1 : 0
+  // Layout coordinates always flow left-to-right. Transpose the entire path
+  // (including ellipse radii and sweep) for vertical charts.
+  const down = link.direction === "down"
+  const point = (x: number, y: number) => down ? `${y},${x}` : `${x},${y}`
+  const turn = (rx: number, ry: number, clockwise: number, x: number, y: number) =>
+    `A${down ? ry : rx},${down ? rx : ry} 0 0 ${down ? 1 - clockwise : clockwise} ${point(x, y)}`
+  const {
+    sourceX: sx, sourceY: sy, targetX: tx, targetY: ty,
+    rightInnerExtent: ri, leftInnerExtent: li,
+    rightFullExtent: rf, leftFullExtent: lf, verticalFullExtent: vf,
+    verticalRightInnerExtent: vr, verticalLeftInnerExtent: vl,
+    rightLargeArcRadius: rr, rightSmallArcRadius: rs,
+    leftLargeArcRadius: lr, leftSmallArcRadius: ls
+  } = cpd
 
-  if (link.direction === "down") return null
-
-  // Stub mode: for non-top-4 circular links, return just outbound + inbound stubs
-  if (link._circularStub) {
-    const sx = cpd.sourceX
-    const sy = cpd.sourceY
-    const tx = cpd.targetX
-    const ty = cpd.targetY
-    const sourceNode = typeof link.source === "object" ? link.source : null
-    const targetNode = typeof link.target === "object" ? link.target : null
-    if (!sourceNode || !targetNode) return null
-
-    // Stub length: 1/3 of the gap between source right edge and next column
-    // (or a fixed reasonable length)
-    const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - sx) * 0.33))
-    const stubLenT = Math.max(15, Math.min(40, (tx - cpd.leftFullExtent) * 0.33))
-
-    // Outbound stub (source side) — rectangle fading out
-    const outbound =
-      `M${sx},${sy - fullHW}` +
-      `L${sx + stubLen},${sy - fullHW}` +
-      `L${sx + stubLen},${sy + fullHW}` +
-      `L${sx},${sy + fullHW}Z`
-
-    // Inbound stub (target side) — rectangle fading in
-    const inbound =
-      `M${tx},${ty - fullHW}` +
-      `L${tx - stubLenT},${ty - fullHW}` +
-      `L${tx - stubLenT},${ty + fullHW}` +
-      `L${tx},${ty + fullHW}Z`
-
-    // Return both paths separated by M (two separate filled shapes)
-    return outbound + inbound
-  }
-
-  // Full circular ribbon for top cycles:
-
-  const sx = cpd.sourceX
-  const sy = cpd.sourceY
-  const tx = cpd.targetX
-  const ty = cpd.targetY
-  const rf = cpd.rightFullExtent
-  const lf = cpd.leftFullExtent
-  const vf = cpd.verticalFullExtent
-
-  const isBottom = link.circularLinkType === "bottom"
-  const s = isBottom ? 1 : -1
-
-  // Chamfer size — proportional to compact width, clamped
-  const ch = Math.max(4, Math.min(compactHW, 15))
-
+  // Offset both sides of the computed centerline by half the real band width.
+  // Keep the engine's nested corner radii instead of replacing them with
+  // chamfers or narrowing the return route.
   return (
-    // OUTER edge (source → around → target)
-    // Starts at full width, chamfered corners taper to compact on return route
-    `M${sx},${sy - s * fullHW}` +
-    `L${rf},${sy - s * fullHW}` +
-    `L${rf + compactHW},${sy - s * fullHW + s * ch}` +
-    `L${rf + compactHW},${vf + s * compactHW - s * ch}` +
-    `L${rf + compactHW - ch},${vf + s * compactHW}` +
-    `L${lf - compactHW + ch},${vf + s * compactHW}` +
-    `L${lf - compactHW},${vf + s * compactHW - s * ch}` +
-    `L${lf - compactHW},${ty - s * fullHW + s * ch}` +
-    `L${lf - compactHW + ch},${ty - s * fullHW}` +
-    `L${tx},${ty - s * fullHW}` +
-    // INNER edge (target → around → source, reversed)
-    // Offset inward by compactHW so vertical thickness matches bottom horizontal
-    `L${tx},${ty + s * fullHW}` +
-    `L${lf + compactHW},${ty + s * fullHW}` +
-    `L${lf + compactHW},${vf - s * compactHW}` +
-    `L${rf - compactHW},${vf - s * compactHW}` +
-    `L${rf - compactHW},${sy + s * fullHW}` +
-    `L${sx},${sy + s * fullHW}` +
-    `Z`
+    `M${point(sx, sy - s * hw)}L${point(ri, sy - s * hw)}` +
+    turn(rr + hw, rs + hw, sweep, rf + hw, sy + s * rs) +
+    `L${point(rf + hw, vr)}` +
+    turn(rr + hw, rr + hw, sweep, ri, vf + s * hw) +
+    `L${point(li, vf + s * hw)}` +
+    turn(lr + hw, lr + hw, sweep, lf - hw, vl) +
+    `L${point(lf - hw, ty + s * ls)}` +
+    turn(lr + hw, ls + hw, sweep, li, ty - s * hw) +
+    `L${point(tx, ty - s * hw)}L${point(tx, ty + s * hw)}L${point(li, ty + s * hw)}` +
+    turn(lr - hw, ls - hw, 1 - sweep, lf + hw, ty + s * ls) +
+    `L${point(lf + hw, vl)}` +
+    turn(lr - hw, lr - hw, 1 - sweep, li, vf - s * hw) +
+    `L${point(ri, vf - s * hw)}` +
+    turn(rr - hw, rr - hw, 1 - sweep, rf - hw, vr) +
+    `L${point(rf - hw, sy + s * rs)}` +
+    turn(rr - hw, rs - hw, 1 - sweep, ri, sy + s * hw) +
+    `L${point(sx, sy + s * hw)}Z`
   )
 }

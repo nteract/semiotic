@@ -522,8 +522,8 @@ jobs:
 
       # Use the browsers and OS dependencies baked into the pinned image;
       # an APT-backed reinstall can fail during an Ubuntu mirror sync.
-      - name: Build library
-        run: npm run dist
+      - name: Build production library for behavioral tests
+        run: npm run dist:prod
 
       - name: Check browser baseline
         run: npm run check:browser-baseline

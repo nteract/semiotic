@@ -604,7 +604,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
       useOrdinalKeyboardNavigation({
         storeRef,
         hoverRef,
@@ -663,6 +663,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       // (browser zoom / maxDevicePixelRatio is paint-only).
       if ((wasDirty || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        refreshKeyboardFocus()
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()
@@ -987,7 +988,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        <AriaLiveTooltip hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
@@ -1110,6 +1111,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           shape={focusedNavPointRef.current?.shape}
           width={focusedNavPointRef.current?.w}
           height={focusedNavPointRef.current?.h}
+          pathData={focusedNavPointRef.current?.pathData}
         />
         {tooltipElement}
         </div>{/* end role="img" */}

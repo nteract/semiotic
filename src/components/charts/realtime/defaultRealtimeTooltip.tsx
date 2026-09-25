@@ -19,6 +19,7 @@ import * as React from "react"
 import type { ReactNode } from "react"
 import type { Datum } from "../shared/datumTypes"
 import type { HoverData } from "../../realtime/types"
+import type { CoercibleNumber } from "../../stream/accessorUtils"
 import type { ChartAccessor } from "../shared/types"
 
 const tooltipStyle: React.CSSProperties = {
@@ -37,7 +38,7 @@ const tooltipStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = { opacity: 0.7, marginRight: 4 }
 
 interface DefaultRealtimeTooltipOptions<TDatum extends Datum = Datum> {
-  timeAccessor?: ChartAccessor<TDatum, number>
+  timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   valueAccessor?: ChartAccessor<TDatum, number>
   /**
    * Field-name aliases shown in the tooltip ("x" / "y" by default).
@@ -51,7 +52,7 @@ interface DefaultRealtimeTooltipOptions<TDatum extends Datum = Datum> {
 
 function readField<TDatum extends Datum>(
   datum: TDatum | null | undefined,
-  accessor: ChartAccessor<TDatum, number> | undefined,
+  accessor: ChartAccessor<TDatum, unknown> | undefined,
   fallback: string,
 ): unknown {
   if (datum == null) return undefined

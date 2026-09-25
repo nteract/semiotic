@@ -18,10 +18,11 @@ import type { JsonRpcResponse, ListedMcpTool } from "./mcpProtocolTypes"
 
 import { spawn, type ChildProcess } from "child_process"
 import { readFileSync } from "fs"
-import * as http from "http"
 import * as net from "net"
 import * as path from "path"
 import { SERVER_PATH, SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
+
+import { openPartialMcpUpload, requestHTTP } from "./mcpHttpUploadHarness"
 
 const HTTP_START_RETRIES = 3
 
@@ -191,57 +192,6 @@ async function sendHTTPRPC(
     response,
     text,
   }
-}
-
-function requestHTTP(port: number, pathName: string, options: {
-  method?: string
-  host?: string
-  body?: Datum
-  headers?: Record<string, string>
-} = {}): Promise<{
-  body?: unknown
-  headers: http.IncomingHttpHeaders
-  status: number
-  text: string
-}> {
-  return new Promise((resolve, reject) => {
-    const bodyText = options.body ? JSON.stringify(options.body) : undefined
-    const req = http.request({
-      host: "127.0.0.1",
-      port,
-      path: pathName,
-      method: options.method ?? (bodyText ? "POST" : "GET"),
-      headers: {
-        ...(options.host ? { Host: options.host } : {}),
-        ...(bodyText ? {
-          Accept: "application/json, text/event-stream",
-          "Content-Type": "application/json",
-        } : {}),
-        ...options.headers,
-      },
-    }, (res) => {
-      let text = ""
-      res.setEncoding("utf8")
-      res.on("data", (chunk) => { text += chunk })
-      res.on("end", () => {
-        let body
-        try {
-          body = text ? JSON.parse(text) : undefined
-        } catch {
-          body = undefined
-        }
-        resolve({
-          body,
-          headers: res.headers,
-          status: res.statusCode ?? 0,
-          text,
-        })
-      })
-    })
-    req.on("error", reject)
-    if (bodyText) req.write(bodyText)
-    req.end()
-  })
 }
 
 async function spawnReadyHTTPServer(
@@ -1239,6 +1189,163 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
       error: { code: -32600, message: "Request body too large" },
       id: null,
     })
+  })
+
+  it("keeps tool execution available while partial uploads expire", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_REQUESTS: "1",
+      MCP_MAX_CONCURRENT_UPLOADS: "3",
+      MCP_BODY_TIMEOUT_MS: "1000",
+    })
+    proc = server.proc
+    port = server.port
+    const uploads = [openPartialMcpUpload(port), openPartialMcpUpload(port)]
+    try {
+      await Promise.all(uploads.map((upload) => upload.ready))
+      const healthy = await requestHTTP(port, "/mcp", {
+        body: { jsonrpc: "2.0", id: "healthy", method: "tools/list" },
+      })
+      expect(healthy.status).toBe(200)
+      expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+      const responses = await Promise.all(uploads.map((upload) => upload.closed))
+      for (const response of responses) {
+        expect(response).toContain("408 Request Timeout")
+        expect(response).toContain("Request body timed out")
+        expect(response).toMatch(/connection: close/i)
+      }
+    } finally {
+      for (const upload of uploads) upload.socket.destroy()
+    }
+  })
+
+  it("closes an oversized chunked upload without waiting for its final chunk", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+    const server = await spawnReadyHTTPServer({ MCP_MAX_BODY_BYTES: "512" })
+    proc = server.proc
+    port = server.port
+    const upload = openPartialMcpUpload(port, "x".repeat(1024))
+    try {
+      const response = await upload.closed
+      expect(response).toContain("413 Payload Too Large")
+      expect(response).toContain("Request body too large")
+      expect(response).toMatch(/connection: close/i)
+    } finally {
+      upload.socket.destroy()
+    }
+  })
+
+  it("bounds simultaneous uploads, closes excess bodies, and recovers after timeout", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_UPLOADS: "2", MCP_BODY_TIMEOUT_MS: "1000"
+    })
+    proc = server.proc
+    port = server.port
+    const uploads = [openPartialMcpUpload(port), openPartialMcpUpload(port)]
+    try {
+      await Promise.all(uploads.map((upload) => upload.ready))
+      const excess = openPartialMcpUpload(port)
+      const rejection = await excess.closed
+      expect(rejection).toContain("429 Too Many Requests")
+      expect(rejection).toContain("Request upload limit exceeded")
+      expect(rejection).toMatch(/connection: close/i)
+      expect(rejection).toMatch(/retry-after: 1/i)
+      expect((await requestHTTP(port, "/health")).status).toBe(200)
+      const expired = await Promise.all(uploads.map((upload) => upload.closed))
+      expect(expired.every((response) => response.includes("408 Request Timeout"))).toBe(true)
+      const healthy = await requestHTTP(port, "/mcp", {
+        body: { jsonrpc: "2.0", id: "after-upload-timeout", method: "tools/list" }
+      })
+      expect(healthy.status).toBe(200)
+      expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+    } finally {
+      for (const upload of uploads) upload.socket.destroy()
+    }
+  })
+
+  it("recovers upload admission after aborts, malformed chunks, invalid JSON and oversize bodies", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_UPLOADS: "1", MCP_MAX_BODY_BYTES: "512"
+    })
+    proc = server.proc
+    port = server.port
+    for (const failure of ["abort", "chunk", "json", "oversize"] as const) {
+      const upload = openPartialMcpUpload(port)
+      try {
+        await upload.ready
+        if (failure === "abort") upload.socket.destroy()
+        if (failure === "chunk") upload.socket.write("invalid-chunk-size\r\n")
+        if (failure === "json") upload.socket.write("0\r\n\r\n")
+        if (failure === "oversize") upload.socket.write(`400\r\n${"x".repeat(1024)}\r\n`)
+        const response = await upload.closed
+        if (failure === "json") expect(response).toContain("Invalid JSON body")
+        if (failure === "oversize") expect(response).toContain("413 Payload Too Large")
+        // A local abort can precede the peer's close event; retry admission
+        // until that disconnect has propagated through the server event loop.
+        await vi.waitFor(async () => {
+          const healthy = await requestHTTP(port, "/mcp", {
+            body: { jsonrpc: "2.0", id: `after-${failure}`, method: "tools/list" }
+          })
+          expect(healthy.status).toBe(200)
+          expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+        })
+      } finally {
+        upload.socket.destroy()
+      }
+    }
+  })
+
+  it("rejects unread unauthorized uploads without consuming admission and retains CORS headers", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_UPLOADS: "1", MCP_AUTH_TOKEN: "upload-test-token",
+      MCP_ALLOWED_ORIGINS: "https://allowed.example"
+    })
+    proc = server.proc
+    port = server.port
+    const denied = openPartialMcpUpload(port, "{", { Origin: "https://allowed.example" })
+    const response = await denied.closed
+    expect(response).toContain("401 Unauthorized")
+    expect(response).toMatch(/connection: close/i)
+    expect(response).toMatch(/access-control-allow-origin: https:\/\/allowed\.example/i)
+    const healthy = await requestHTTP(port, "/mcp", {
+      headers: { Authorization: "Bearer upload-test-token", Origin: "https://allowed.example" },
+      body: { jsonrpc: "2.0", id: "authorized-upload", method: "tools/list" }
+    })
+    expect(healthy.status).toBe(200)
+    expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+  })
+
+  it.each<{ name: string; pathname: string; headers: Record<string, string>; status: string }>([
+    { name: "protocol", pathname: "/mcp", headers: { "MCP-Protocol-Version": "unsupported" }, status: "400 Bad Request" },
+    { name: "route", pathname: "/missing", headers: {}, status: "404 Not Found" }
+  ])("closes partial uploads rejected by $name before admission", async ({ pathname, headers, status }) => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_UPLOADS: "1", MCP_SUPPORTED_PROTOCOL_VERSIONS: "2024-11-05"
+    })
+    proc = server.proc
+    port = server.port
+    const upload = openPartialMcpUpload(port, "{", headers, pathname)
+    const response = await upload.closed
+    expect(response).toContain(status)
+    expect(response).toMatch(/connection: close/i)
+    const healthy = await requestHTTP(port, "/mcp", {
+      headers: { "MCP-Protocol-Version": "2024-11-05" },
+      body: { jsonrpc: "2.0", id: "after-early-rejection", method: "tools/list" }
+    })
+    expect(healthy.status).toBe(200)
+    expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
   })
 
   it("rejects over-limit tool arguments before MCP dispatch", async () => {

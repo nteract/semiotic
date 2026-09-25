@@ -175,12 +175,15 @@ export interface NetworkConfigPatchClassification {
 /** Union the declared effects for a patch after its effective keys are known. */
 export function classifyNetworkConfigPatch(
   keys: readonly string[],
+  chartType?: string,
 ): NetworkConfigPatchClassification {
   let retainedData: NetworkRetainedDataEffect = "preserve"
   const invalidations = new Set<Invalidation>()
 
   for (const key of keys) {
-    const effect = NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
+    const effect = chartType === "force" && (key === "nodeSize" || key === "nodeSizeRange")
+      ? dependency("preserve", LAYOUT)
+      : NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
       ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
@@ -228,8 +231,8 @@ export class NetworkPipelineUpdateResults {
       : this.recordNoop("restyle")
   }
 
-  recordConfig(keys: readonly string[]): UpdateResult {
-    const classification = classifyNetworkConfigPatch(keys)
+  recordConfig(keys: readonly string[], chartType?: string): UpdateResult {
+    const classification = classifyNetworkConfigPatch(keys, chartType)
     return this.tracker.record(
       { kind: "config", keys },
       classification.invalidations,

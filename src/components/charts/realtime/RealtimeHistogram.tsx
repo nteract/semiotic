@@ -1,4 +1,5 @@
-import { readRealtimeNumber } from "./realtimeAccessors"
+import type { CoercibleNumber } from "../../stream/accessorUtils"
+import { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -119,8 +120,8 @@ export interface RealtimeHistogramProps<
   windowSize?: number
   /** Controlled data array */
   data?: RealtimeData<TDatum>
-  /** Time value accessor */
-  timeAccessor?: ChartAccessor<TDatum, number>
+  /** Time accessor returning a number, Date, or numeric/date string. */
+  timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value accessor */
   valueAccessor?: ChartAccessor<TDatum, number>
   /** Fixed time domain */
@@ -568,7 +569,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
 
-  const numericTime = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
+  const numericTime = useCallback((datum: Datum) => readRealtimeTime(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
   const numericValue = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN, [valueAccessor])
   const windowMode = windowModeProp ?? capacityMode ?? "sliding"
   const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)

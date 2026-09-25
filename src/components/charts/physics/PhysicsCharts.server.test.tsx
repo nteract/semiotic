@@ -4,9 +4,23 @@ import { describe, expect, it } from "vitest"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { DARK_THEME } from "../../store/ThemeStore"
 import ChainReactionChart from "./ChainReactionChart"
+import GaltonBoardChart from "./GaltonBoardChart"
 import type { PhysicsCustomLayoutContext } from "./PhysicsCustomChart"
 
 describe("physics chart server rendering", () => {
+  it("renders all 1000 paced Galton balls through React SSR", () => {
+    const data = Array.from({ length: 1000 }, (_, index) => ({
+      id: `row-${index}`, value: index % 21
+    }))
+    const html = renderToString(
+      <GaltonBoardChart data={data} valueAccessor="value" bins={21}
+        ballRadius={1} size={[1000, 420]} seed={1} />
+    )
+    const container = document.createElement("div")
+    container.innerHTML = html
+    expect(container.querySelectorAll('[id$="-data-area"] circle')).toHaveLength(1000)
+  }, 30000)
+
   it("renders settled physics SVG with evidence", () => {
     const { svg, evidence } = renderChartWithEvidence("GaltonBoardChart", {
       data: [

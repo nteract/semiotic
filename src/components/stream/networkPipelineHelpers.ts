@@ -15,6 +15,7 @@ export function createNode(id: string): RealtimeNode {
     width: 0,
     height: 0,
     value: 0,
+    data: { id },
     createdByFrame: true
   }
 }

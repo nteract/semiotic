@@ -662,8 +662,8 @@ describe("renderChart", () => {
     expect(svg).toContain(">Review<")
     expect(countMatches(svg, />Intake</g)).toBe(1)
     expect(countMatches(svg, />Review</g)).toBe(1)
-    expect(svg).toContain('class="semiotic-legend" transform="translate(270,30)"')
-    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(270,30)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(270,8)"')
+    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(270,8)"')
     for (const [position, minimum] of [
       ["right", 140], ["left", 140], ["top", 50], ["bottom", 80],
     ] as const) {

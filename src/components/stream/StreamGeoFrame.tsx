@@ -589,7 +589,7 @@ const StreamGeoFrame = memo(
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } = useGeoKeyboardNavigation({
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } = useGeoKeyboardNavigation({
       storeRef,
       hoverRef,
       hoveredNodeRef,
@@ -676,6 +676,7 @@ const StreamGeoFrame = memo(
         } else if (hasZoom) {
           store.applyZoomTransform(zt, layout)
         }
+        refreshKeyboardFocus()
         dirtyRef.current = false
         computedSceneThisFrame = true
 
@@ -1392,7 +1393,7 @@ const StreamGeoFrame = memo(
             hoverPoint={hoverPoint}
             margin={margin}
             size={size}
-            shape={focusedNavPointRef.current?.shape as "circle" | "rect" | "wedge" | "geoarea" | undefined}
+            shape={focusedNavPointRef.current?.shape}
             width={focusedNavPointRef.current?.w}
             height={focusedNavPointRef.current?.h}
             pathData={focusedNavPointRef.current?.pathData}

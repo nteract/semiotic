@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type PhysicsSemanticItem,
   type StreamPhysicsFrameHandle
@@ -133,8 +134,9 @@ export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
     seed = 1,
     settle,
     xAccessor = "x" as ChartAccessor<TDatum, number>,
-    xExtent
+    xExtent: xExtentProp
   } = props
+  const xExtent = useStableShallow(xExtentProp)
   const layoutMode = usePhysicsChartMode(props, [700, 360])
   const {
     chartSize,

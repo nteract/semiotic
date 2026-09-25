@@ -50,16 +50,6 @@ interface SankeyComputedEdge {
   circularLinkType?: string
 }
 
-interface GradientBezierEdge extends NetworkBezierEdge {
-  _gradient?: {
-    direction: "left" | "right"
-    from: number
-    to: number
-    x0: number
-    x1: number
-  }
-}
-
 /**
  * Sankey layout plugin — uses d3-sankey-circular for layout computation.
  *
@@ -76,26 +66,46 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     config: NetworkPipelineConfig,
     size: [number, number]
   ): void {
-    if (nodes.length === 0) return
-
     const direction = config.orientation === "vertical" ? "down" : "right"
     const orient = config.nodeAlign || "justify"
     const nodeWidth = config.nodeWidth ?? 15
     const nodePaddingRatio = config.nodePaddingRatio ?? 0.05
-    const iterations = config.iterations ?? 100
+    const iterations = config.iterations ?? 300
 
-    // Clone for d3-sankey (it mutates).
-    // Apply sqrt scaling to link values — preserves relative proportions
-    // while compressing the range so large accumulated values don't
-    // create links wider than the chart. sqrt(582)≈24 vs sqrt(89)≈9
-    // maintains a 2.6x ratio instead of 6.5x, producing more balanced layouts.
-    const sankeyNodes = nodes.map((n) => ({ ...n }))
-    const sankeyEdges = edges.map((e) => ({
-      ...e,
-      source: resolveNodeRefId(e.source),
-      target: resolveNodeRefId(e.target),
-      value: Math.sqrt(Math.max(1, e.value || 1))
+    // Resolve values once during ingestion. Nonpositive flows have no band;
+    // excluding them also prevents zero-only cycles from perturbing layout.
+    for (const edge of edges) {
+      edge.sankeyWidth = 0
+      edge.circular = false
+      delete edge.circularPathData
+      delete edge._circularWidth
+      delete edge._circularStub
+    }
+    for (const node of nodes) {
+      node.value = 0
+      node.width = node.height = 0
+      node.x0 = node.x1 = node.y0 = node.y1 = 0
+      node.sourceLinks = []
+      node.targetLinks = []
+    }
+    const nodeIds = new Set(nodes.map((node) => node.id))
+    const activeIds = new Set<string>()
+    const sankeyEdges = edges.filter((edge) => {
+      const source = resolveNodeRefId(edge.source)
+      const target = resolveNodeRefId(edge.target)
+      if (!Number.isFinite(edge.value) || edge.value <= 0 ||
+          !nodeIds.has(source) || !nodeIds.has(target)) return false
+      activeIds.add(source)
+      activeIds.add(target)
+      return true
+    }).map((edge) => ({
+      ...edge,
+      source: resolveNodeRefId(edge.source),
+      target: resolveNodeRefId(edge.target)
     }))
+    if (sankeyEdges.length === 0) return
+    // The engine mutates nodes and edges, so retain authored rows on clones.
+    const sankeyNodes = nodes.filter((node) => activeIds.has(node.id)).map((node) => ({ ...node }))
 
     let frameExtent: [[number, number], [number, number]]
     if (direction === "down") {
@@ -148,8 +158,8 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
 
       const bboxW = maxX - minX
       const bboxH = maxY - minY
-      const targetW = size[0]
-      const targetH = size[1]
+      const targetW = frameExtent[1][0]
+      const targetH = frameExtent[1][1]
 
       if (bboxW > 0 && bboxH > 0 && (minX < 0 || minY < 0 || maxX > targetW || maxY > targetH)) {
         const scaleX = targetW / bboxW
@@ -268,7 +278,6 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
-    // _circularStub is set inside addCircularPathData by the layout engine
   },
 
   buildScene(
@@ -313,7 +322,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     for (const node of nodes) {
       const w = node.x1 - node.x0
       const h = node.y1 - node.y0
-      if (w <= 0 || h <= 0) continue
+      if (node.value <= 0 || w <= 0 || h <= 0) continue
 
       const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
       const style: Style = {
@@ -361,7 +370,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     )
 
     for (const edge of sortedEdges) {
-      if (!edge.sankeyWidth || edge.sankeyWidth <= 0) continue
+      if (!(edge.value > 0) || !edge.sankeyWidth || edge.sankeyWidth <= 0) continue
 
       const sourceNode = typeof edge.source === "object" ? edge.source : null
       const targetNode = typeof edge.target === "object" ? edge.target : null
@@ -384,50 +393,6 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       }
 
       const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
-
-      // Stub circular edges: two separate fading rectangles
-      if (edge._circularStub && edge.circular && edge.circularPathData) {
-        const cpd = edge.circularPathData
-        const hw = edge.sankeyWidth / 2
-        const stubLen = Math.max(15, Math.min(40, (cpd.rightFullExtent - cpd.sourceX) * 0.33))
-        const stubLenT = Math.max(15, Math.min(40, (cpd.targetX - cpd.leftFullExtent) * 0.33))
-
-        const edgeFill = userStyle.fill || fill
-
-        // Outbound stub (fades out)
-        const outPath = `M${cpd.sourceX},${cpd.sourceY - hw}L${cpd.sourceX + stubLen},${cpd.sourceY - hw}L${cpd.sourceX + stubLen},${cpd.sourceY + hw}L${cpd.sourceX},${cpd.sourceY + hw}Z`
-        sceneEdges.push({
-          type: "bezier",
-          pathD: outPath,
-          style: {
-            fill: edgeFill,
-            fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
-            stroke: "none",
-            opacity: userStyle.opacity,
-            cursor: userStyle.cursor,
-          },
-          datum: edge,
-          _gradient: { direction: "right", from: 1, to: 0, x0: cpd.sourceX, x1: cpd.sourceX + stubLen }
-        } as GradientBezierEdge)
-
-        // Inbound stub (fades in)
-        const inPath = `M${cpd.targetX},${cpd.targetY - hw}L${cpd.targetX - stubLenT},${cpd.targetY - hw}L${cpd.targetX - stubLenT},${cpd.targetY + hw}L${cpd.targetX},${cpd.targetY + hw}Z`
-        sceneEdges.push({
-          type: "bezier",
-          pathD: inPath,
-          style: {
-            fill: edgeFill,
-            fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
-            stroke: "none",
-            opacity: userStyle.opacity,
-            cursor: userStyle.cursor,
-          },
-          datum: edge,
-          _gradient: { direction: "left", from: 0, to: 1, x0: cpd.targetX - stubLenT, x1: cpd.targetX }
-        } as GradientBezierEdge)
-
-        continue
-      }
 
       // Normal or full circular edge
       let pathD: string
@@ -463,7 +428,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       for (const node of nodes) {
         const w = node.x1 - node.x0
         const h = node.y1 - node.y0
-        if (w <= 0 || h <= 0) continue
+        if (node.value <= 0 || w <= 0 || h <= 0) continue
 
         const text = labelFn ? labelFn(node) : node.id
         if (!text) continue

@@ -31,7 +31,30 @@ import {
 
 type RefValue<Value> = { current: Value }
 type SetHoverPoint = Dispatch<SetStateAction<HoverData | null>>
-type FocusedNavPoint = Pick<NavPoint, "shape" | "w" | "h" | "pathData">
+type FocusedNavPoint = NavPoint
+
+/** Keep the same datum focused when retained geometry moves, without a new focus event. */
+function refreshFocusedPoint(
+  points: NavPoint[],
+  indexRef: RefValue<number>,
+  pointRef: RefValue<FocusedNavPoint | null>,
+  hoverRef: RefValue<HoverData | null>,
+  setHoverPoint: SetHoverPoint,
+  toHover: (point: NavPoint) => HoverData
+) {
+  const previous = pointRef.current
+  if (indexRef.current < 0 || !previous) return
+  const matches = (point: NavPoint) => point.datum === previous.datum && point.group === previous.group && point.shape === previous.shape
+  const index = points[indexRef.current] && matches(points[indexRef.current])
+    ? indexRef.current : points.findIndex(matches)
+  const next = points[index]
+  indexRef.current = index
+  pointRef.current = next ?? null
+  if (next && next.x === previous.x && next.y === previous.y && next.w === previous.w && next.h === previous.h && next.pathData === previous.pathData && next.stats === previous.stats) return
+  const hover = next ? toHover(next) : null
+  hoverRef.current = hover
+  setHoverPoint(hover)
+}
 
 interface KeyboardInteractionParams<Store, Node = unknown> {
   storeRef: RefValue<Store | null>
@@ -69,6 +92,14 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<FocusedNavPoint | null>(null)
   const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(null)
+  const refreshKeyboardFocus = useCallback(() => {
+    const store = storeRef.current
+    if (!store || kbFocusIndexRef.current < 0) return
+    const graph = buildNavGraph(extractPoints(store.scene))
+    navGraphCacheRef.current = { version: store.version, graph }
+    refreshFocusedPoint(graph.flat, kbFocusIndexRef, focusedNavPointRef, hoverRef, setHoverPoint, point => toHover(point, store))
+    if (kbFocusIndexRef.current < 0 && hoveredNodeRef) hoveredNodeRef.current = null
+  }, [extractPoints, hoverRef, hoveredNodeRef, setHoverPoint, storeRef, toHover])
 
   const onKeyDown = useCallback((event: KeyboardEvent) => {
     if (isInteractiveKeyboardTarget(event)) return
@@ -164,7 +195,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     toHover
   ])
 
-  return { kbFocusIndexRef, focusedNavPointRef, onKeyDown }
+  return { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus }
 }
 
 export function useXYKeyboardNavigation(
@@ -229,6 +260,12 @@ export function useGeoKeyboardNavigation({
 }: KeyboardInteractionParams<GeoPipelineStore, GeoSceneNode>) {
   const kbFocusIndexRef = useRef(-1)
   const focusedNavPointRef = useRef<FocusedNavPoint | null>(null)
+  const refreshKeyboardFocus = useCallback(() => {
+    const store = storeRef.current
+    if (!store || kbFocusIndexRef.current < 0) return
+    refreshFocusedPoint(extractGeoNavPoints(store.scene), kbFocusIndexRef, focusedNavPointRef, hoverRef, setHoverPoint, geoPointToHover)
+    if (kbFocusIndexRef.current < 0 && hoveredNodeRef) hoveredNodeRef.current = null
+  }, [hoverRef, hoveredNodeRef, setHoverPoint, storeRef])
 
   const onKeyDown = useCallback((event: KeyboardEvent) => {
     if (isInteractiveKeyboardTarget(event)) return
@@ -295,5 +332,5 @@ export function useGeoKeyboardNavigation({
     storeRef
   ])
 
-  return { kbFocusIndexRef, focusedNavPointRef, onKeyDown }
+  return { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus }
 }

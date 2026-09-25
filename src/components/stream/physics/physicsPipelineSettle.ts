@@ -24,6 +24,9 @@ export interface PhysicsSettleHost {
   fixedDt: number
   queueSize: () => number
   atRest: () => boolean
+  elapsed: () => number
+  nextArrival: () => number | undefined
+  lastArrival: () => number | undefined
   /** Advance simulated time; this is what makes time-driven consumers progress. */
   advanceTime: (seconds: number) => void
   spawnDue: (
@@ -69,7 +72,8 @@ export interface PhysicsSettleRun {
  * result for the caller of tick or settleWithObservations. */
 export function createPhysicsStepObserver(
   execution: PhysicsPipelineExecution | undefined,
-  readResult: (steps: number) => PhysicsPipelineTickResult
+  readResult: (steps: number) => PhysicsPipelineTickResult,
+  observeInitial = false
 ): (() => void) | undefined {
   if (!execution) return undefined
   const keys = [
@@ -88,15 +92,20 @@ export function createPhysicsStepObserver(
   }
   const observe = (steps: number) => {
     const aggregate = readResult(steps)
-    const result: PhysicsPipelineTickResult = {
-      ...aggregate,
-      spawned: aggregate.spawned.slice(cursors.spawned),
-      evicted: aggregate.evicted.slice(cursors.evicted),
-      sedimented: aggregate.sedimented.slice(cursors.sedimented),
-      events: aggregate.events.slice(cursors.events),
-      observations: aggregate.observations.slice(cursors.observations)
+    const result = { ...aggregate }
+    // Keep each collector's cursor and slicing together. The generic key
+    // preserves the association between a collector and its element type.
+    const slice = <K extends typeof keys[number]>(key: K) => {
+      result[key] = aggregate[key].slice(cursors[key]) as PhysicsPipelineTickResult[K]
+      cursors[key] = aggregate[key].length
     }
-    for (const key of keys) cursors[key] = aggregate[key].length
+    keys.forEach(slice)
+    // A display-frame boundary is not another model step. Still deliver
+    // admissions and transitions at t=0, but do not rerun controllers on an
+    // empty boundary: otherwise RAF batching changes process outcomes.
+    if (steps === 0 && !observeInitial && keys.every((key) => result[key].length === 0)) {
+      return
+    }
     execution.onStep(result)
   }
   observe(0)
@@ -112,19 +121,39 @@ export function runPhysicsSettleSteps(
     shouldStop?: () => boolean
     continueWhile?: () => boolean
     afterStep?: () => void
+    /** Include the queued arrival horizon before spending the settling margin. */
+    drainArrivals?: boolean
+    /** Skip at-rest intervals only when no authored step callback is active. */
+    skipIdle?: boolean
   } = {}
 ): PhysicsSettleRun {
   let steps = 0
+  let skippedSteps = 0
   let budget: PhysicsBodyBudgetDecision | undefined
+  const arrivalSteps = options.drainArrivals ? Math.max(0, Math.ceil(
+    ((host.lastArrival() ?? host.elapsed()) - host.elapsed()) / host.fixedDt
+  )) : 0
+  const stepLimit = maxSteps + arrivalSteps
 
   while (
-    steps < maxSteps &&
+    steps + skippedSteps < stepLimit &&
     !options.shouldStop?.() &&
     (options.stopAtRest === false ||
       host.queueSize() > 0 ||
       !host.atRest() ||
       options.continueWhile?.())
   ) {
+    const nextArrival = host.nextArrival()
+    const idleSteps = options.skipIdle && nextArrival != null && host.atRest()
+      ? Math.min(
+          Math.max(0, Math.floor((nextArrival - host.elapsed()) / host.fixedDt) - 1),
+          Math.max(0, stepLimit - steps - skippedSteps - 1)
+        )
+      : 0
+    if (idleSteps > 0) {
+      host.advanceTime(idleSteps * host.fixedDt)
+      skippedSteps += idleSteps
+    }
     // Integrate [t, t + dt] before admitting arrivals at its end. A body born
     // at t + dt must never receive the motion from the interval before birth.
     host.step(host.fixedDt)

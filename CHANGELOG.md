@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Exported `hasTooltipContent` beside the tooltip chrome helpers across public
+  chart entry points, so renderer wrappers can apply the same empty-content rules.
+
+### Fixed
+
+- `markTooltipChrome` accepts tooltip renderers and preserves ownership through
+  normalization and both BumpChart adapters. Wrapped styled tooltips avoid a
+  second surface, plain content keeps the default surface, and empty callback
+  results—including booleans, whitespace, arrays, and fragments—are suppressed.
+- XY and realtime charts resolve temporal string and function accessors
+  consistently across bounded data, pushes, configuration changes, and static
+  rendering. Date-only strings and automatically inferred calendar ticks use
+  UTC. Axes refresh when the scale type changes even if domain endpoints stay
+  unchanged. Public realtime time-accessor types accept number, Date, and string
+  callbacks across all chart variants and entry points. (#1295)
+- Keyboard navigation reaches distribution marks, candlesticks, funnels, and
+  geographic lines with the same data as pointer hover. Focus geometry follows
+  resized scenes without replaying hover callbacks. (#1294)
+- Pie, donut, gauge, and other scene-backed accessible summaries expose original
+  categories, values, and distribution statistics. Gauge tooltips include the
+  current reading; decorative geometry no longer inflates data counts. Accessible
+  tables retain rows for grouped data, distributions, symbols, glyphs, and
+  connections. Collapsed tables count rows without materializing datum fields;
+  chord table counts include every contributing edge.
+  (#1301, #1302)
+- Eleven XY and radar chart wrappers retain authored descriptions, summaries,
+  and accessible-table settings, including disabled and portaled tables. (#1353)
+- Chord layouts honor resolved value accessors, aggregate parallel and reverse
+  contributors into one ribbon, retain their tooltip/table data, clear stale
+  zero-valued geometry, and bound padding for large category counts. Custom
+  tooltip and style callbacks retain the existing representative datum. (#1296)
+- Force layouts share edge-weight and warm-start behavior between synchronous
+  and worker execution, and recompute collision geometry when node sizes change.
+  Static ForceDirectedGraph labels honor the same visibility defaults. (#1297)
+- Sankey widths use original linear values, omit nonpositive flows, and retain
+  complete circular routes. Vertical layouts fit the correct plot extent.
+  Circular transitions interpolate route geometry with width, including parallel
+  edges. Cancelling an intro animation during hydration restores the final
+  geometry. (#1298, #1335)
+- Network ingestion preserves custom accessors and raw edge payloads through
+  push and update APIs, normalizes IDs and values consistently, and gives inferred
+  nodes their own identity. Browser and static rendering infer missing endpoints
+  beside supplied nodes. Materialized scenes refresh after ingestion; edge-ID
+  removal dismisses active tooltips; keyboard focus follows layout changes and
+  removals. Metadata-only edge updates preserve accumulated pushed values,
+  including custom accessors and in-place updates. (#1324)
+- ProcessSankey distinguishes numeric strings from dates, parses ISO times
+  consistently in UTC, generates automatic ticks, and passes the appropriate
+  number or Date to `timeFormat`. Tooltips retain time of day and node labels.
+  Static rendering uses the same axis-dependent margin defaults. Domain docs
+  and diagnostics accept the same Date, ISO-string, and numeric inputs; reversed
+  or malformed domains produce an error. (#1331; part of #1330)
+- Default physics settling drains scheduled arrivals before spending its settling
+  budget, preserving pacing in reduced-motion and static rendering. Explicit
+  step limits remain total limits. Sparse arrivals skip idle intervals once
+  bodies are quiescent, including bodies that never formally sleep. (#1299)
+- Physics contacts preserve the entry side of thin walls, floors, and fast
+  circle collisions, keeping bodies in their assigned histogram bins. Grounded
+  contact solving prevents dense piles from freezing with visibly overlapping
+  bodies, and settling detection accounts for corrected movement. UnitPile walls
+  preserve the advertised clear packing width. (#1300)
+- Physics settling reduces collision-candidate work for small bodies and reuses
+  conservative nearby-wall lists across solver passes. Observation paths avoid
+  unused body-state copies. Dense and paced 1,000-body regressions retain their
+  original limits, with exact simulation-state and event-order coverage.
+- Dense UnitPile settling avoids repeated gravity and support calculations
+  while retaining arrival timing, confinement, and the original event sequence.
+- Paced physics settling uses numeric spatial-grid keys and skips empty collider
+  and sensor scans, reducing work as sleeping bodies accumulate. Collision order,
+  sensor transitions, arrival timing, and existing timeout limits are preserved.
+- Production minification preserves NaN comparisons, getter side effects, and
+  coercion order across library formats. Shipped ESM, CommonJS, Node, and edge
+  artifacts have semantic regression coverage. (Part of #1305)
+- ProcessSankey recommendation metadata uses shared time helpers without
+  retaining network renderers in a bundled `suggestCharts` import. Refreshed
+  packed-consumer measurements for the corrected graph and earlier bug fixes.
+- MCP HTTP uploads have bounded body and header deadlines. Partial uploads no
+  longer occupy tool-execution slots, and oversized or timed-out uploads receive
+  an error before their connection closes. A separate upload-admission pool caps
+  simultaneous body readers and releases capacity before execution; excess
+  uploads are rejected without queuing. Requests rejected before body parsing
+  also close unread bodies after sending their error response. (#1375)
+
+### Changed
+
+- Browser CI exercises production bundles. Added focused interaction, worker,
+  accessibility, static-rendering, and transport regressions without increasing
+  test-quality, file-size, or bundle-size limits.
+
 ## [3.10.4] - 2026-09-22
 
 ### Fixed

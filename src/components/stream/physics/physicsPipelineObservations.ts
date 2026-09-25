@@ -22,7 +22,7 @@ export function observePhysicsKernelEvents(
   events: PhysicsKernelEvent[],
   context: PhysicsObservationContext
 ): void {
-  if (events.length === 0) return
+  if (!events.some((event) => event.type === "sleep")) return
   const bodyById = new Map(world.readState().map((body) => [body.id, body]))
   for (const event of events) {
     if (event.type !== "sleep") continue
@@ -48,7 +48,16 @@ export function observePhysicsSensorTransitions(
   const currentPairs = new Set(
     world.activeSensorPairs().map((pair) => sensorPairKey(pair.sensorId, pair.bodyId))
   )
-  if (currentPairs.size === 0 && previousPairs.size === 0) return currentPairs
+  let changed = currentPairs.size !== previousPairs.size
+  if (!changed) {
+    for (const key of currentPairs) {
+      if (!previousPairs.has(key)) {
+        changed = true
+        break
+      }
+    }
+  }
+  if (!changed) return currentPairs
   const bodyById = new Map(world.readState().map((body) => [body.id, body]))
 
   const emit = (direction: "enter" | "exit", key: string) => {

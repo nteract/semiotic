@@ -716,7 +716,7 @@ interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolA
 interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
 interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined

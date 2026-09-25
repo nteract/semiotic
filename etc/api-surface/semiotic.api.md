@@ -191,7 +191,7 @@ function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
 function themeToTokens(theme: SemioticTheme): Datum
 function toConfig(componentName: string, props: Datum, options?: ToConfigOptions | undefined): ChartConfig
-function toProcessSankeyTime(value: ProcessSankeyTimeLike | null | undefined): number
+function toProcessSankeyTime(value: unknown): number
 function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult
 function useCategoryColors(): CategoryColorMap | null
@@ -1682,7 +1682,7 @@ interface-member ProcessSankeyProps::property::valueAccessor = optional valueAcc
 interface-member ProcessSankeyProps::property::valueFormat = optional valueFormat: ((d: number) => string | React.ReactNode) | undefined
 interface-member ProcessSankeyProps::property::xExtentAccessor = optional xExtentAccessor: ChartAccessor<TNode, [ProcessSankeyTimeLike, ProcessSankeyTimeLike]> | undefined
 interface-member ProcessSankeyTick::property::date = required date: ProcessSankeyTimeLike
-interface-member ProcessSankeyTick::property::label = required label: string
+interface-member ProcessSankeyTick::property::label = optional label: React.ReactNode
 interface-member QuadrantChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member QuadrantChartProps::property::centerlineStyle = optional centerlineStyle: CenterlineStyle | undefined
 interface-member QuadrantChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
@@ -1811,7 +1811,7 @@ interface-member RealtimeHeatmapProps::property::styleRules = optional styleRule
 interface-member RealtimeHeatmapProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHeatmapProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeHeatmapProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHeatmapProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeHeatmapProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeHeatmapProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeHeatmapProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -1878,7 +1878,7 @@ interface-member RealtimeHistogramProps::property::styleRules = optional styleRu
 interface-member RealtimeHistogramProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeHistogramProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeHistogramProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHistogramProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeHistogramProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeHistogramProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeHistogramProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -1938,7 +1938,7 @@ interface-member RealtimeLineChartProps::property::styleRules = optional styleRu
 interface-member RealtimeLineChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeLineChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeLineChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeLineChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeLineChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeLineChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeLineChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -1998,7 +1998,7 @@ interface-member RealtimeSwarmChartProps::property::styleRules = optional styleR
 interface-member RealtimeSwarmChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeSwarmChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeSwarmChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeSwarmChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeSwarmChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeSwarmChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeSwarmChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -2059,7 +2059,7 @@ interface-member RealtimeWaterfallChartProps::property::styleRules = optional st
 interface-member RealtimeWaterfallChartProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member RealtimeWaterfallChartProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member RealtimeWaterfallChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeWaterfallChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, CoercibleNumber> | undefined
 interface-member RealtimeWaterfallChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member RealtimeWaterfallChartProps::property::tooltip = optional tooltip: RealtimeTooltipProp | undefined
 interface-member RealtimeWaterfallChartProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
@@ -2352,8 +2352,8 @@ interface-member StreamNetworkFrameHandle::method::getLayoutFailure = required g
 interface-member StreamNetworkFrameHandle::method::getTension = required getTension(): number
 interface-member StreamNetworkFrameHandle::method::getTopology = required getTopology(): {nodes: RealtimeNode[]; edges: RealtimeEdge[];}
 interface-member StreamNetworkFrameHandle::method::getTopologyDiff = required getTopologyDiff(): {addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[];}
-interface-member StreamNetworkFrameHandle::method::push = required push(edge: EdgePush): void
-interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(edges: EdgePush[]): void
+interface-member StreamNetworkFrameHandle::method::push = required push(edge: Datum): void
+interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(edges: Datum[]): void
 interface-member StreamNetworkFrameHandle::method::relayout = required relayout(): void
 interface-member StreamNetworkFrameHandle::method::removeEdge = required removeEdge(sourceIdOrEdgeId: string, targetId?: string | undefined): boolean
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
@@ -2387,7 +2387,7 @@ interface-member StreamNetworkFrameProps::property::frameScheduler = optional fr
 interface-member StreamNetworkFrameProps::property::groupWidth = optional groupWidth: number | undefined
 interface-member StreamNetworkFrameProps::property::hierarchySum = optional hierarchySum: ((d: T) => number) | string | undefined
 interface-member StreamNetworkFrameProps::property::htmlMarkCulling = optional htmlMarkCulling: import("./networkViewportTypes").NetworkHtmlMarkCulling | undefined
-interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: EdgePush[] | undefined
+interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: Datum[] | undefined
 interface-member StreamNetworkFrameProps::property::iterations = optional iterations: number | undefined
 interface-member StreamNetworkFrameProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
 interface-member StreamNetworkFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
@@ -2697,7 +2697,7 @@ interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolA
 interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
 interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined

@@ -1,5 +1,6 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
+import { TemporalAccessorExample } from "./TemporalAccessorExample.jsx"
 import { createRoot } from "react-dom/client"
 import { lineData, scatterData, areaData, colors } from "../test-data.js"
 
@@ -644,5 +645,7 @@ const examples = [
 // Render all examples
 const root = createRoot(document.getElementById("root"))
 root.render(
-  React.createElement("div", { className: "test-grid" }, examples)
+  new URLSearchParams(location.search).has("temporal-accessors")
+    ? React.createElement(TemporalAccessorExample)
+    : React.createElement("div", { className: "test-grid" }, examples)
 )

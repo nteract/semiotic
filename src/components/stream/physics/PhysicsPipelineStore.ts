@@ -128,6 +128,7 @@ export class PhysicsPipelineStore {
   private paused = false
   private queue: InternalQueuedSpawn[] = []
   private revision = 0
+  private observedInitialBoundary = false
   private updateResults = new UpdateResultTracker()
   private sediment: PhysicsSedimentAccumulator
   private simulationState: PhysicsSimulationState = "settled"
@@ -308,6 +309,7 @@ export class PhysicsPipelineStore {
   }
 
   clear(): void {
+    this.observedInitialBoundary = false
     const kernelOptions = this.world.snapshot().options
     this.world.init({
       ...kernelOptions,
@@ -414,23 +416,26 @@ export class PhysicsPipelineStore {
     return result
   }
 
-  /** Steps-only settle. Kernel/sensor transitions are stepped but not observed. */
-  settle(maxSteps = this.config.settleStepLimit): number {
+  /** Steps-only settle. An explicit limit bounds the entire run; otherwise
+   * paced arrivals receive their scheduled time plus the settling margin. */
+  settle(maxSteps?: number): number {
     return this.runSettle(maxSteps, false).steps
   }
 
   settleWithObservations(
-    maxSteps = this.config.settleStepLimit,
+    maxSteps?: number,
     execution?: PhysicsPipelineExecution
   ): PhysicsPipelineTickResult {
     return this.runSettle(maxSteps, true, execution)
   }
 
   private stepObserver(execution: PhysicsPipelineExecution | undefined, sink: Required<PhysicsSettleSink>): (() => void) | undefined {
+    const observeInitial = !this.observedInitialBoundary
+    if (execution) this.observedInitialBoundary = true
     return createPhysicsStepObserver(execution, (steps) => {
       if (steps) this.revision += 1
       return this.result(steps, sink.spawned, sink.evicted, sink.sedimented, sink.events, sink.observations)
-    })
+    }, observeInitial)
   }
 
   /** Bind this store to the shared settle loop (see physicsPipelineSettle). */
@@ -439,6 +444,9 @@ export class PhysicsPipelineStore {
       fixedDt: this.config.fixedDt,
       queueSize: () => this.queue.length,
       atRest: () => this.atRest(),
+      elapsed: () => this.elapsedSeconds,
+      nextArrival: () => this.queue[0]?.spawnAt,
+      lastArrival: () => this.queue.at(-1)?.spawnAt,
       advanceTime: (s) => { this.elapsedSeconds += s },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
       observeBodyBudget: (obs) => this.observeBodyBudget(obs),
@@ -456,7 +464,7 @@ export class PhysicsPipelineStore {
    * can't mean two different things. `observe` adds kernel/sensor observation
    * and the collected tick result; the stepping itself is identical.
    */
-  private runSettle(maxSteps: number, observe: boolean, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
+  private runSettle(maxSteps: number | undefined, observe: boolean, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
     const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
@@ -483,10 +491,12 @@ export class PhysicsPipelineStore {
       : { spawned }
     const afterStep = this.stepObserver(execution, { spawned, evicted, sedimented, events, observations: observations ?? [] })
     const { steps, budget }: PhysicsSettleRun =
-      runPhysicsSettleSteps(this.settleHost(), maxSteps, sink, {
+      runPhysicsSettleSteps(this.settleHost(), maxSteps ?? this.config.settleStepLimit, sink, {
         afterStep,
         continueWhile: execution?.continueWhile,
-        shouldStop: observe ? () => this.paused || !this.visible : undefined
+        shouldStop: observe ? () => this.paused || !this.visible : undefined,
+        drainArrivals: maxSteps === undefined,
+        skipIdle: maxSteps === undefined && !execution
       })
 
     const bodiesChanged = spawned.length + evicted.length + sedimented.length > 0
@@ -710,6 +720,7 @@ export class PhysicsPipelineStore {
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
+    this.observedInitialBoundary = false
     const previousState = this.simulationState
     this.config = {
       bodyLimit: snapshot.config.bodyLimit,
@@ -782,6 +793,8 @@ export class PhysicsPipelineStore {
         bodyId: spawn.id
       })
     }
+    // Avoid a full-world copy for spawn observations that nobody will receive.
+    if (!observations && !this.observation.onObservation) return
     const body = this.world.readState().find((state) => state.id === spawn.id)
     this.emitObservation(
       {

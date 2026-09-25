@@ -290,54 +290,28 @@ export function collidersFromPlotBounds(
   const colliders: PhysicsColliderSpec[] = []
   const midX = bounds.x + bounds.width / 2
   const midY = bounds.y + bounds.height / 2
+  const addWall = (name: string, x: number, y: number, width: number, height: number) => {
+    colliders.push({
+      id: `${idPrefix}-${name}`,
+      shape: { type: "aabb", x, y, width, height }
+    })
+  }
 
   if (includeFloor) {
-    colliders.push({
-      id: `${idPrefix}-floor`,
-      shape: {
-        type: "aabb",
-        x: midX,
-        y: bounds.y + bounds.height + floorThickness / 2,
-        width: bounds.width + wallThickness * 2,
-        height: floorThickness
-      }
-    })
+    addWall("floor", midX, bounds.y + bounds.height + floorThickness / 2,
+      bounds.width + wallThickness * 2, floorThickness)
   }
   if (includeCeiling) {
-    colliders.push({
-      id: `${idPrefix}-ceiling`,
-      shape: {
-        type: "aabb",
-        x: midX,
-        y: bounds.y - floorThickness / 2,
-        width: bounds.width + wallThickness * 2,
-        height: floorThickness
-      }
-    })
+    addWall("ceiling", midX, bounds.y - floorThickness / 2,
+      bounds.width + wallThickness * 2, floorThickness)
   }
   if (includeLeftWall) {
-    colliders.push({
-      id: `${idPrefix}-left-wall`,
-      shape: {
-        type: "aabb",
-        x: bounds.x - wallThickness / 2,
-        y: midY,
-        width: wallThickness,
-        height: bounds.height + floorThickness * 2
-      }
-    })
+    addWall("left-wall", bounds.x - wallThickness / 2, midY,
+      wallThickness, bounds.height + floorThickness * 2)
   }
   if (includeRightWall) {
-    colliders.push({
-      id: `${idPrefix}-right-wall`,
-      shape: {
-        type: "aabb",
-        x: bounds.x + bounds.width + wallThickness / 2,
-        y: midY,
-        width: wallThickness,
-        height: bounds.height + floorThickness * 2
-      }
-    })
+    addWall("right-wall", bounds.x + bounds.width + wallThickness / 2, midY,
+      wallThickness, bounds.height + floorThickness * 2)
   }
 
   return colliders

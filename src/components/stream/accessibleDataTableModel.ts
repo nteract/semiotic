@@ -159,6 +159,24 @@ function edgeEndpoints(edge: NetworkTableElement) {
   }
 }
 
+/** Match expanded topology counts without building semantic rows or degrees. */
+export function countNetworkTableRows(
+  nodes: NetworkTableElement[],
+  edges: NetworkTableElement[]
+) {
+  let nodeCount = 0
+  let edgeCount = 0
+  for (const node of nodes) {
+    if (node && typeof node === "object" && node.datum !== null) nodeCount++
+  }
+  for (const edge of edges) {
+    if (!edge || typeof edge !== "object") continue
+    const contributors = datumRecord(edge.datum).__chordEdges
+    edgeCount += Array.isArray(contributors) ? contributors.length : 1
+  }
+  return { nodeCount, edgeCount }
+}
+
 /** Derive authored rows and topology metrics without coupling them to React. */
 export function buildNetworkTableModel(
   nodes: NetworkTableElement[],
@@ -169,8 +187,20 @@ export function buildNetworkTableModel(
   const edgeRows: DataRow[] = []
   let hasWeights = false
 
-  for (let index = 0; index < edges.length; index++) {
-    const edge = edges[index]
+  // Chord ribbons combine parallel rows and reciprocal directions. Expand
+  // their retained inputs for tables/degrees without duplicating painted marks.
+  const inputEdges = edges.flatMap((edge) => {
+    const contributors = datumRecord(edge?.datum).__chordEdges
+    return Array.isArray(contributors)
+      ? contributors.map((datum) => ({
+          ...edge,
+          datum,
+          accessibleDatum: datumRecord(datum).data ?? datum
+        }))
+      : [edge]
+  })
+  for (let index = 0; index < inputEdges.length; index++) {
+    const edge = inputEdges[index]
     if (!edge || typeof edge !== "object") continue
     const raw = datumRecord(edge.datum)
     const { source, target } = edgeEndpoints(edge)
@@ -221,7 +251,7 @@ export function buildNetworkTableModel(
   }
   nodeRows.sort((a, b) => b.degree - a.degree)
 
-  const summaryParts = [`${nodeRows.length} nodes, ${edges.length} edges.`]
+  const summaryParts = [`${nodeRows.length} nodes, ${edgeRows.length} edges.`]
   if (nodeRows.length > 0) {
     summaryParts.push(
       `Mean degree: ${fmt(degreeSum / nodeRows.length)}, max degree: ${maxDegree}.`,

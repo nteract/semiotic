@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
 import type { Page } from "@playwright/test"
+import { waitForPipelineExplorerLayout } from "./helpers/pipelineExplorer"
 
 const errors = new WeakMap<Page, string[]>()
 async function scrollToTop(page: Page) {
@@ -112,6 +113,7 @@ test("inspect steps, virtualize cards, preserve notes and track the minimap with
   await expect
     .poll(async () => Number(await explorer.getAttribute("data-mounted-count")))
     .toBeLessThan(30)
+  await waitForPipelineExplorerLayout(page)
   const calls = await explorer.getAttribute("data-layout-calls")
   const initialWindow = await page
     .getByTestId("pipeline-minimap-window")

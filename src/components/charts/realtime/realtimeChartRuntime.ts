@@ -15,7 +15,7 @@ import {
 } from "../shared/selectionUtils"
 import type { ChartMode, SelectionConfig } from "../shared/types"
 
-export { readRealtimeNumber } from "./realtimeAccessors"
+export { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
 
 interface RealtimeModeProps extends Omit<ChartModeInput, "enableHover">, RealtimeResponsiveProps {
   mode?: ChartMode

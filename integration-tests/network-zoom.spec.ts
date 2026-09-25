@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test"
+import { waitForPipelineExplorerLayout } from "./helpers/pipelineExplorer"
 
 for (const mode of ["false", "null"]) {
   test(`tooltip ${mode} suppresses chrome while preserving hover observations`, async ({
@@ -208,29 +209,72 @@ test("controlled cameras wait for acceptance and locks cover controls and impera
     .toBe(2)
 })
 
-test("canonical cards degrade to skeletons and restore detail only after zoom settles", async ({
-  page
-}) => {
-  await page.goto("/network-custom-layout-examples/?zoom")
-  const first = page.locator('[data-mark-id="step-0"] article')
-  await expect(first).toHaveAttribute("data-lod", "3")
-  const calls = await page.evaluate(() => window.networkZoomDemoLayoutCalls)
-  await page.getByRole("button", { name: "Zoom out", exact: true }).click()
-  await expect(page.getByLabel("Zoom level")).toHaveText("50%")
-  await expect(first).toHaveAttribute("data-lod", "2")
-  await expect(first.locator("input")).toHaveCount(0)
-  await page.getByRole("button", { name: "Zoom out", exact: true }).click()
-  await expect(page.getByLabel("Zoom level")).toHaveText("25%")
-  await expect(first).toHaveAttribute("data-lod", "1")
-  await page.getByRole("button", { name: "Reset", exact: true }).click()
-  await expect(page.getByTestId("zoom-phase")).toHaveText("Exploring…")
-  await expect(first.locator("input")).toHaveCount(0)
-  await expect(page.getByTestId("zoom-phase")).toHaveText("Detail ready")
-  await expect(first).toHaveAttribute("data-lod", "3")
-  expect(await page.evaluate(() => window.networkZoomDemoLayoutCalls)).toBe(
-    calls
-  )
-})
+for (const deferredResize of [false, true]) {
+  test(`canonical cards degrade to skeletons and restore detail only after zoom settles${deferredResize ? " with deferred initial resize" : ""}`, async ({
+    page
+  }) => {
+    if (deferredResize) {
+      await page.addInitScript(() => {
+        const NativeResizeObserver = window.ResizeObserver
+        let deferred = true
+        const pending: Array<() => void> = []
+        Object.assign(window, {
+          releasePipelineResize: () => {
+            deferred = false
+            pending.splice(0).forEach((deliver) => deliver())
+          }
+        })
+        window.ResizeObserver = class extends NativeResizeObserver {
+          constructor(callback: ResizeObserverCallback) {
+            super((entries, observer) => {
+              if (
+                deferred &&
+                entries.some((entry) => entry.target.matches(".pipeline-chart"))
+              ) {
+                pending.push(() => callback(entries, observer))
+              } else callback(entries, observer)
+            })
+          }
+        }
+      })
+    }
+    await page.goto("/network-custom-layout-examples/?zoom")
+    const first = page.locator('[data-mark-id="step-0"] article')
+    await expect(first).toHaveAttribute("data-lod", "3")
+    if (deferredResize) {
+      const initialCalls = await page.evaluate(
+        () => window.networkZoomDemoLayoutCalls
+      )
+      await page.evaluate(() => {
+        const fixture = window as unknown as { releasePipelineResize: () => void }
+        fixture.releasePipelineResize()
+      })
+      await expect
+        .poll(() => page.evaluate(() => window.networkZoomDemoLayoutCalls))
+        .toBeGreaterThan(initialCalls)
+    }
+    // The first card can paint at the demo's 600px fallback before its initial
+    // ResizeObserver delivery. A real width change must rerun layout; only
+    // camera/LOD changes after that measured layout should preserve this count.
+    await waitForPipelineExplorerLayout(page)
+    const calls = await page.evaluate(() => window.networkZoomDemoLayoutCalls)
+    await page.getByRole("button", { name: "Zoom out", exact: true }).click()
+    await expect(page.getByLabel("Zoom level")).toHaveText("50%")
+    await expect(first).toHaveAttribute("data-lod", "2")
+    await expect(first.locator("input")).toHaveCount(0)
+    await page.getByRole("button", { name: "Zoom out", exact: true }).click()
+    await expect(page.getByLabel("Zoom level")).toHaveText("25%")
+    await expect(first).toHaveAttribute("data-lod", "1")
+    await page.getByRole("button", { name: "Reset", exact: true }).click()
+    await expect(page.getByTestId("zoom-phase")).toHaveText("Exploring…")
+    await expect(first.locator("input")).toHaveCount(0)
+    await expect(page.getByTestId("zoom-phase")).toHaveText("Detail ready")
+    await expect(first).toHaveAttribute("data-lod", "3")
+    expect(await page.evaluate(() => window.networkZoomDemoLayoutCalls)).toBe(
+      calls
+    )
+  })
+}
 
 for (const { ctrlKey, controlled } of [
   { ctrlKey: false, controlled: false },

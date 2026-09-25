@@ -2,7 +2,7 @@ import type { ChartConfig } from "./serverChartConfigShared"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { primitiveStyleOverrides } from "./serverChartConfigShared"
-import { readRealtimeNumber } from "../charts/realtime/realtimeAccessors"
+import { readRealtimeNumber, readRealtimeTime } from "../charts/realtime/realtimeAccessors"
 import {
   RealtimeAccumulator,
   AGG_SERIES
@@ -40,7 +40,7 @@ function realtimeAccessors(rest: Datum) {
   const valueAccessor = rest.valueAccessor || "value"
   return {
     timeAccessor: (datum: Datum) =>
-      readRealtimeNumber(datum, timeAccessor, "time") ?? NaN,
+      readRealtimeTime(datum, timeAccessor, "time") ?? NaN,
     valueAccessor: (datum: Datum) =>
       readRealtimeNumber(datum, valueAccessor, "value") ?? NaN
   }

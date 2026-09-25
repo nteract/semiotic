@@ -24,6 +24,16 @@ describe("GaugeChart", () => {
     lastOrdinalFrameProps = {} as CapturedOrdinalFrameProps
   })
 
+  it.each([true, false])("shows the original formatted gauge value on filled=%s segments", (filled) => {
+    render(<TooltipProvider><GaugeChart value={65} valueFormat={(value) => `${value} units`} /></TooltipProvider>)
+    const { container } = render(<>{lastOrdinalFrameProps.tooltipContent({
+      data: { _zone: "Capacity", _isFill: filled, value: filled ? 0.65 : 0.35 },
+    })}</>)
+    expect(container.textContent).toContain("Capacity")
+    expect(container.textContent).toContain("Current: 65 units")
+    if (!filled) expect(container.textContent).toContain("Remaining: 35 units")
+  })
+
   it("renders without crashing", () => {
     const { container } = render(
       <TooltipProvider>

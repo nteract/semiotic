@@ -16942,7 +16942,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -17422,7 +17422,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -17950,7 +17950,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -18438,7 +18438,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -18914,7 +18914,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"
@@ -24143,11 +24143,11 @@
             },
             "domain": {
               "type": "array",
-              "description": "[tStart, tEnd] of the chart's time axis (required)."
+              "description": "[tStart, tEnd] of the time axis (required). Numbers and numeric strings use numeric units; Date/ISO values use UTC dates. ISO datetimes without a zone mean UTC."
             },
             "axisTicks": {
               "type": "array",
-              "description": "Optional [{ date, label }] tick array for the time axis."
+              "description": "Override automatic time-axis ticks with [{ date, label? }]. An empty array hides ticks."
             },
             "sourceAccessor": {
               "type": "string",
@@ -25279,7 +25279,7 @@
             },
             "timeAccessor": {
               "type": "string",
-              "description": "Key for time/x values",
+              "description": "Field name or function returning a number, Date, or numeric/date string for time/x values",
               "x-semiotic-runtime-types": [
                 "string",
                 "function"

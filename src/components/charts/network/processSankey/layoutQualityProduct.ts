@@ -7,6 +7,7 @@
 
 import type { Diagnosis } from "../../shared/diagnoseTypes"
 import type { ProcessSankeyLayout, ProcessSankeyLayoutQuality } from "./processSankeyTypes"
+import { coerceUtcTimeValue } from "../../shared/temporalStrings"
 
 /** Soft thresholds for flagship-scale rivers; not hard layout failures. */
 export const PROCESS_SANKEY_QUALITY_THRESHOLDS = {
@@ -107,23 +108,26 @@ export function explainProcessSankeyLayout(
 export function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diagnosis[] {
   const out: Diagnosis[] = []
   const domain = props.domain
+  const start = Array.isArray(domain) ? coerceUtcTimeValue(domain[0]) : NaN
+  const end = Array.isArray(domain) ? coerceUtcTimeValue(domain[1]) : NaN
   if (domain == null) {
     out.push({
       severity: "error",
       code: "PROCESS_SANKEY_MISSING_DOMAIN",
       message: "ProcessSankey requires domain: [tStart, tEnd].",
-      fix: "Pass domain={[start, end]} as numbers or Date-compatible values.",
+      fix: "Pass domain={[start, end]} using numbers, Dates, numeric strings, or ISO date strings.",
     })
   } else if (
     !Array.isArray(domain) ||
     domain.length !== 2 ||
-    !Number.isFinite(Number(domain[0])) ||
-    !Number.isFinite(Number(domain[1]))
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    start > end
   ) {
     out.push({
       severity: "error",
       code: "PROCESS_SANKEY_BAD_DOMAIN",
-      message: "domain must be a 2-tuple of finite times.",
+      message: "domain must be a 2-tuple of finite times with start <= end.",
       fix: "Use domain={[t0, t1]} with t0 <= t1.",
     })
   }

@@ -245,6 +245,8 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
+    description: props.description,
+    summary: props.summary,
     xLabel: props.xLabel,
     accessibleTable: props.accessibleTable,
       mobileInteraction: props.mobileInteraction,
