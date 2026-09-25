@@ -167,6 +167,8 @@ export interface RealtimeHistogramProps<
   gap?: number
   /** Show axis baselines, ticks, and labels */
   showAxes?: boolean
+  /** Show grid lines. Set grid: false on the bottom axis for horizontal lines only. */
+  showGrid?: boolean
   /** Show the temporal axis; hidden axes reserve no default margin. */
   showTimeAxis?: boolean
   /** Show the value axis; hidden axes reserve no default margin. */
@@ -177,6 +179,8 @@ export interface RealtimeHistogramProps<
   background?: string
   /** Enable hover interaction */
   enableHover?: boolean | HoverAnnotationConfig
+  /** Dim other time bins on hover, keeping every segment of the hovered column highlighted. */
+  hoverHighlight?: boolean
   /** Custom tooltip renderer */
   tooltipContent?: (d: HoverData) => ReactNode
   /** Callback on hover */
@@ -449,6 +453,8 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   } = useChartSelection({
     selection,
     linkedHover,
+    hoverHighlight: props.hoverHighlight,
+    hoverHighlightField: "binStart",
     unwrapData: true,
     onObservation,
     chartType: "RealtimeHistogram",
@@ -607,6 +613,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       barStyle={barStyle}
       areaStyle={interactiveBarStyle}
       showAxes={showAxes}
+      showGrid={resolved.showGrid}
       axes={axes}
       background={background}
       hoverAnnotation={enableHover}
@@ -614,6 +621,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,
+        hoverHighlight: props.hoverHighlight,
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,

@@ -274,6 +274,7 @@ export function useChartSelection({
   chartId,
   onClick,
   hoverHighlight,
+  hoverHighlightField,
   colorByField,
   mobileInteraction,
   emitObservations = true
@@ -287,6 +288,8 @@ export function useChartSelection({
   chartId?: string
   onClick?: (datum: Datum, event: { x: number; y: number }) => void
   hoverHighlight?: HoverHighlightMode
+  /** Local hover identity override, independent of linked-hover fields. */
+  hoverHighlightField?: string
   colorByField?: string
   mobileInteraction?: ResolvedMobileInteractionConfig
   /** Frames that own observation publication can use these callbacks only for linking. */
@@ -349,7 +352,7 @@ export function useChartSelection({
   // ── Hover highlight: track hovered series key for sibling dimming ──────
   const [hoveredSeriesKey, setHoveredSeriesKey] = useState<string | null>(null)
   const mobileHoverLockRef = useRef(false)
-  const seriesField = colorByField || fallbackFields[0]
+  const seriesField = hoverHighlightField || colorByField || fallbackFields[0]
 
   const hoverSelectionHook: SelectionHookResult | null = useMemo(() => {
     if (!hoverHighlight || hoveredSeriesKey == null || !seriesField) return null
@@ -589,13 +592,17 @@ export function useChartSelection({
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [mobileInteraction?.enabled, clearMobileLock])
 
+  // Callback identities change as selection state and mobile props resolve.
+  // Only unmount should run this cleanup; ordinary rerenders must keep the lock.
+  const clearMobileLockRef = useRef(clearMobileLock)
+  clearMobileLockRef.current = clearMobileLock
   useEffect(() => {
     return () => {
       if (mobileHoverLockRef.current) {
-        clearMobileLock(false)
+        clearMobileLockRef.current(false)
       }
     }
-  }, [clearMobileLock])
+  }, [])
 
   // Clean up crosshair on unmount or config change to prevent stale entries
   // when the source chart is conditionally rendered or navigated away from
