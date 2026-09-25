@@ -120,6 +120,7 @@ import {
   resolveMultiCapableTooltip,
   isMultiTooltip,
   hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome
 } from "./Tooltip/Tooltip"
 
@@ -242,6 +243,7 @@ export {
   resolveMultiCapableTooltip,
   isMultiTooltip,
   hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome,
   // Data structures
   RingBuffer,

@@ -18,6 +18,8 @@ import {
   isMultiTooltip,
   isMultiTooltipConfig,
   normalizeTooltip,
+  hasOwnTooltipChrome,
+  markTooltipChrome,
   type TooltipProp
 } from "../../Tooltip/Tooltip"
 import type { Datum } from "../shared/datumTypes"
@@ -642,7 +644,9 @@ export function resolvePhysicsTooltipProps(
       : frameProps?.tooltipContent
   return {
     enableHover: frameProps?.enableHover,
-    tooltipContent
+    tooltipContent: tooltipContent && hasOwnTooltipChrome(normalized)
+      ? markTooltipChrome(tooltipContent)
+      : tooltipContent
   }
 }
 

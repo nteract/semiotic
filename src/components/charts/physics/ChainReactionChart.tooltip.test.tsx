@@ -1,4 +1,5 @@
 import * as React from "react"
+import { TooltipRoot, markTooltipChrome, hasOwnTooltipChrome } from "../../Tooltip/Tooltip"
 import { act, render } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type {
@@ -120,6 +121,16 @@ describe("ChainReactionChart tooltip contract", () => {
     expect(custom).toHaveBeenCalledWith(data[0])
     expect(tooltip.container.textContent).toBe("Alpha")
     expect(tooltip.container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+  })
+
+  it("preserves renderer ownership while unwrapping the source row", () => {
+    const Wrapped = ({ label }: { label: string }) => <TooltipRoot>{label}</TooltipRoot>
+    renderChart(markTooltipChrome((datum: Datum) => <Wrapped label={datum.label} />))
+    expect(hasOwnTooltipChrome(capturedProps?.tooltipContent)).toBe(true)
+    const content = capturedProps?.tooltipContent?.(physicsHover())
+    const view = render(<>{content}</>)
+    expect(view.container.textContent).toBe("Alpha")
+    expect(view.container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
   })
 
   it("preserves the authored source row on emitted dependency bodies", () => {

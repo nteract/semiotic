@@ -25,6 +25,8 @@ function explainProcessSankeyLayout(layout: Pick<ProcessSankeyLayout, "compresse
 function formatProcessSankeyIssue(issue: ProcessSankeyIssue): string
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
+function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
+function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchPatternDef(h: HatchFill, id: string): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function inventoryAtTime(nodeId: string, time: number, edges: readonly InventoryEdge[], options?: InventoryAtTimeOptions | undefined): number

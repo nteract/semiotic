@@ -96,6 +96,8 @@ function bandBounds(w: AggregatedWindow, band: AggregateBand, stat: AggregateSta
 function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
+function hasTooltipContent(node: React.ReactNode): boolean
 function markTooltipChrome<T>(component: T): T
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function parseWindowDuration(spec: number | string): null | number

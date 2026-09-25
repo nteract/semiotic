@@ -18,6 +18,8 @@ interface FlippingTooltipProps {
   margin: { left: number; top: number; right: number; bottom: number }
   /** Tooltip content */
   children: React.ReactNode
+  /** The callback owns chrome independently of its returned element tree. */
+  contentOwnsChrome?: boolean
   /** CSS class name for the wrapper */
   className?: string
   /** z-index (default 1) */
@@ -75,6 +77,7 @@ export function FlippingTooltip({
   containerHeight,
   margin,
   children,
+  contentOwnsChrome = false,
   className = "stream-frame-tooltip",
   zIndex = 1
 }: FlippingTooltipProps) {
@@ -171,7 +174,7 @@ export function FlippingTooltip({
   // tooltip is never transparent. Prefer intrinsic width, capped to the plot
   // width so block content can wrap before placement is measured. Border-box
   // sizing includes the default chrome's padding in this cap.
-  const ownsChrome = hasOwnTooltipChrome(children)
+  const ownsChrome = contentOwnsChrome || hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
   const compositeClassName = ownsChrome
     ? className

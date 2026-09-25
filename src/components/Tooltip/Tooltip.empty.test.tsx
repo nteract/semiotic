@@ -2,7 +2,7 @@ import * as React from "react"
 import { cleanup, render } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
-import { normalizeTooltip } from "./Tooltip"
+import { normalizeTooltip, hasTooltipContent, markTooltipChrome, TooltipRoot } from "./Tooltip"
 
 afterEach(cleanup)
 
@@ -20,6 +20,8 @@ const empty: [string, React.ReactNode][] = [
   ["true", true],
   ["empty text", ""],
   ["whitespace", "  \n"],
+  ["empty array", []],
+  ["empty fragment", <></>],
   ["array", [null, false, ""]],
   [
     "fragment",
@@ -85,4 +87,34 @@ it("keeps zero visible and measures when previously empty content appears", () =
   } finally {
     rect.mockRestore()
   }
+})
+
+it.each(empty)("suppresses %s before applying renderer ownership", (_name, content) => {
+  expect(hasTooltipContent(content)).toBe(false)
+  const renderer = normalizeTooltip(markTooltipChrome(() => content))
+  if (typeof renderer !== "function") throw new Error("Expected renderer")
+  expect(renderer({})).toBeNull()
+  const view = render(
+    <FlippingTooltip {...position} contentOwnsChrome>{renderer({})}</FlippingTooltip>
+  )
+  expect(view.container.firstChild).toBeNull()
+})
+
+it.each(empty)("lets wrapping libraries suppress %s before adding an element", (_name, content) => {
+  const consumer = () => content
+  const libraryRenderer = markTooltipChrome(() => {
+    const result = consumer()
+    return hasTooltipContent(result) ? <TooltipRoot>{result}</TooltipRoot> : null
+  })
+  const renderer = normalizeTooltip(libraryRenderer)
+  if (typeof renderer !== "function") throw new Error("Expected renderer")
+  expect(renderer({})).toBeNull()
+})
+
+it("keeps zero and mixed fragment/array content while leaving components opaque", () => {
+  expect(hasTooltipContent(0)).toBe(true)
+  expect(hasTooltipContent([null, false, <>{[" ", 0]}</>])).toBe(true)
+  const EmptyComponent = vi.fn(() => null)
+  expect(hasTooltipContent(<EmptyComponent />)).toBe(true)
+  expect(EmptyComponent).not.toHaveBeenCalled()
 })

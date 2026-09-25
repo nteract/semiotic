@@ -7,7 +7,7 @@ import type { HoverData } from "../../../realtime/types"
 import type { ProcessSankeyLayout } from "./processSankeyTypes"
 import { massHistoryRows, pickMassQuantiles } from "./tooltipUtils"
 import { isProcessSankeyScenePayload } from "./streamingLayout"
-import { normalizeTooltip, type TooltipProp } from "../../../Tooltip/Tooltip"
+import { normalizeTooltip, hasOwnTooltipChrome, markTooltipChrome, type TooltipProp } from "../../../Tooltip/Tooltip"
 import { readChartAccessor } from "./accessors"
 import {
   toProcessSankeyTime,
@@ -77,7 +77,7 @@ export function useProcessSankeyTooltipContent<
     return String(v)
   }, [valueFormat])
 
-  return useCallback((d: HoverData): React.ReactNode => {
+  const content = useCallback((d: HoverData): React.ReactNode => {
     if (!d || !d.data) return null
     const payload = d.data
     if (!isProcessSankeyScenePayload(payload)) return null
@@ -149,4 +149,5 @@ export function useProcessSankeyTooltipContent<
     layout, customTooltipFn, formatTime, formatValue,
     sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor,
   ])
+  return hasOwnTooltipChrome(customTooltipFn) ? markTooltipChrome(content) : content
 }

@@ -42,6 +42,7 @@ import {
 } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
@@ -1482,6 +1483,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const tooltipElement =
     enableHover && hoverData ? (
       <FlippingTooltip
+        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
         x={screenHover!.x}
         y={screenHover!.y}
         containerWidth={adjustedWidth}

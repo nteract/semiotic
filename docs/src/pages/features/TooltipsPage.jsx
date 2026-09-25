@@ -206,8 +206,9 @@ export default function TooltipsPage() {
       </p>
       <p>
         Set <code>tooltip={"{false}"}</code> to omit all tooltips, or return{" "}
-        <code>null</code> directly from the callback to omit one datum. Empty
-        content suppresses the background too. Keep <code>enableHover</code>{" "}
+        <code>null</code> directly from the callback to omit one datum. Undefined,
+        booleans, empty or whitespace-only strings, and empty arrays or fragments
+        also suppress the background. Numeric zero remains visible. Keep <code>enableHover</code>{" "}
         enabled if observations still need it. Use <code>TooltipRoot</code> from
         your chart family entry for custom chrome. The{" "}
         <Link to="/examples/pipeline-explorer">Pipeline Explorer</Link> demonstrates
@@ -219,6 +220,54 @@ export default function TooltipsPage() {
         zoom, pan and resize, and dismissal on leave. A rendered chart or an
         inspector does not establish that hover behavior works.
       </p>
+
+      <h3 id="chrome-ownership">Chrome ownership through wrapper components</h3>
+      <p>
+        Use <code>markTooltipChrome(renderer)</code> when a custom renderer supplies
+        its own background, padding and shadow. Pass that renderer to <code>tooltip</code>,
+        multi-mode <code>content</code>, or a frame's <code>tooltipContent</code>.
+        Ownership applies to every non-empty result, even through unmarked wrapper
+        components. Existing component markers, <code>TooltipRoot</code>, inline
+        backgrounds and <code>data-semiotic-tooltip-chrome</code> still work.
+      </p>
+      <CodeBlock
+        code={`import { Scatterplot, TooltipRoot, markTooltipChrome } from "semiotic/xy"
+
+function ChartTooltip({ label }) {
+  return <TooltipRoot>{label}</TooltipRoot>
+}
+const MyTooltip = props => <ChartTooltip {...props} />
+const renderTooltip = markTooltipChrome(d => <MyTooltip label={d.name} />)
+
+<Scatterplot data={data} xAccessor="x" yAccessor="y" tooltip={renderTooltip} />`}
+        language="jsx"
+      />
+      <p>
+        Leave plain renderers such as <code>{"d => d.name"}</code> unmarked so
+        Semiotic supplies its default surface. <code>hasOwnTooltipChrome</code>
+        accepts a renderer or its returned element. Detection inspects explicit
+        metadata and the immediate element; it does not render components or inspect
+        computed CSS. Marking a renderer preserves its identity and does not call it.
+      </p>
+      <p>
+        Wrapping libraries can import <code>hasTooltipContent</code> from their chart
+        family entry or <code>semiotic/utils</code> and check the consumer's result
+        before adding an element. The helper checks arrays and fragments recursively;
+        arbitrary elements remain opaque, including components that later return null.
+      </p>
+      <CodeBlock
+        code={`import { TooltipRoot, hasTooltipContent, hasOwnTooltipChrome, markTooltipChrome } from "semiotic/xy"
+
+function withTooltipSurface(content) {
+  return markTooltipChrome(d => {
+    const result = content(d)
+    if (!hasTooltipContent(result)) return null
+    if (hasOwnTooltipChrome(content) || hasOwnTooltipChrome(result)) return result
+    return <TooltipRoot>{result}</TooltipRoot>
+  })
+}`}
+        language="jsx"
+      />
 
       <h3 id="smart-defaults">Smart defaults for custom &amp; network charts</h3>
       <p>

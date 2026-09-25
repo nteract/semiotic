@@ -39,6 +39,7 @@ export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTable, AccessibleTablePortal, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
@@ -1139,8 +1140,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultTooltip hover={hoverPoint} />)
       : null
 
-    const tooltipElement = tooltipRendered ? (
+    const tooltipElement = hasTooltipContent(tooltipRendered) ? (
       <FlippingTooltip
+        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
         x={hoverPoint!.x}
         y={hoverPoint!.y}
         containerWidth={adjustedWidth}

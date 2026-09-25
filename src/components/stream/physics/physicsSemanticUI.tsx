@@ -6,6 +6,7 @@
 import * as React from "react"
 import { useDataSummary } from "../../DataSummaryContext"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
+import { hasOwnTooltipChrome, hasTooltipContent } from "../../Tooltip/tooltipChrome"
 import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { AriaLiveTooltip } from "../AriaLiveTooltip"
@@ -337,9 +338,10 @@ export function renderPhysicsTooltip({
   ) : (
     <DefaultPhysicsTooltip hover={hoverData} />
   )
-  if (!content) return null
+  if (!hasTooltipContent(content)) return null
   return (
     <FlippingTooltip
+      contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
       x={hoverData.x - margin.left}
       y={hoverData.y - margin.top}
       containerWidth={plotWidth}

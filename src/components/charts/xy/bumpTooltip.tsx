@@ -2,8 +2,10 @@ import * as React from "react"
 import { useCallback, useMemo } from "react"
 import {
   TooltipRoot,
+  hasOwnTooltipChrome,
   isMultiTooltip,
   isMultiTooltipConfig,
+  markTooltipChrome,
   normalizeTooltip,
   type TooltipProp,
 } from "../../Tooltip/Tooltip"
@@ -120,10 +122,17 @@ export function useBumpTooltip<TDatum extends Datum>({
 
   const resolvedTooltip = useMemo<TooltipProp>(() => {
     if (tooltip === false) return false
+    // XYCustomChart normalizes these adapters again. Preserve ownership from
+    // the consumer renderer even when its returned component is unmarked.
+    const content = multiTooltip ? multiTooltipContent : singleTooltipContent
+    const ownsChrome = multiTooltip
+      ? isMultiTooltipConfig(tooltip) && hasOwnTooltipChrome(tooltip.content)
+      : hasOwnTooltipChrome(normalizedTooltip)
+    const adaptedContent = ownsChrome ? markTooltipChrome(content) : content
     return multiTooltip
-      ? { mode: "multi", content: multiTooltipContent }
-      : singleTooltipContent
-  }, [multiTooltip, multiTooltipContent, singleTooltipContent, tooltip])
+      ? { mode: "multi", content: adaptedContent }
+      : adaptedContent
+  }, [multiTooltip, multiTooltipContent, normalizedTooltip, singleTooltipContent, tooltip])
 
   return { tooltip: resolvedTooltip, formatX }
 }

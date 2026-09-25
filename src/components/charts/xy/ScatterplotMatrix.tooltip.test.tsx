@@ -1,4 +1,5 @@
 import * as React from "react"
+import { TooltipRoot, markTooltipChrome } from "../../Tooltip/Tooltip"
 import { act, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { StreamXYFrameProps } from "../../stream/types"
@@ -58,6 +59,22 @@ describe("ScatterplotMatrix tooltips", () => {
     expect(screen.getByText("custom First")).toBeInTheDocument()
     expect(tooltip.mock.calls[0][0]).toEqual(data[0])
     expect(document.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+  })
+
+  it("honors renderer ownership for its grid-level tooltip", () => {
+    const Wrapped = ({ label }: { label: string }) => <TooltipRoot>{label}</TooltipRoot>
+    const tooltip = markTooltipChrome((datum: Record<string, unknown>) => <Wrapped label={String(datum.label)} />)
+    render(<ScatterplotMatrix data={data} fields={["a", "b"]} tooltip={tooltip} />)
+    hoverFirstCell()
+    expect(screen.getByText("First")).toBeInTheDocument()
+    expect(document.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
+    expect(document.querySelector<HTMLElement>(".scatterplot-matrix-tooltip")!.style.background).toBe("")
+  })
+
+  it("keeps numeric zero as visible content", () => {
+    render(<ScatterplotMatrix data={data} fields={["a", "b"]} tooltip={markTooltipChrome(() => 0)} />)
+    hoverFirstCell()
+    expect(document.querySelector(".scatterplot-matrix-tooltip")?.textContent).toBe("0")
   })
 
   it("honors tooltip={false}", () => {

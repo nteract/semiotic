@@ -52,6 +52,8 @@ import {
   Tooltip,
   TooltipRoot,
   MultiLineTooltip,
+  hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome
 } from "./Tooltip/Tooltip"
 import { PhysicsPipelineStore } from "./stream/physics/PhysicsPipelineStore"
@@ -139,6 +141,8 @@ export {
   Tooltip,
   TooltipRoot,
   MultiLineTooltip,
+  hasOwnTooltipChrome,
+  hasTooltipContent,
   markTooltipChrome,
   PhysicsPipelineStore,
   PhysicsSedimentAccumulator,
