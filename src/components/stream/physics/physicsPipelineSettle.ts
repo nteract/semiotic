@@ -24,6 +24,10 @@ export interface PhysicsSettleHost {
   fixedDt: number
   queueSize: () => number
   atRest: () => boolean
+  allSleeping: () => boolean
+  elapsed: () => number
+  nextArrival: () => number | undefined
+  lastArrival: () => number | undefined
   /** Advance simulated time; this is what makes time-driven consumers progress. */
   advanceTime: (seconds: number) => void
   spawnDue: (
@@ -112,19 +116,39 @@ export function runPhysicsSettleSteps(
     shouldStop?: () => boolean
     continueWhile?: () => boolean
     afterStep?: () => void
+    /** Include the queued arrival horizon before spending the settling margin. */
+    drainArrivals?: boolean
+    /** Skip sleeping intervals only when no authored step callback is active. */
+    skipIdle?: boolean
   } = {}
 ): PhysicsSettleRun {
   let steps = 0
+  let skippedSteps = 0
   let budget: PhysicsBodyBudgetDecision | undefined
+  const arrivalSteps = options.drainArrivals ? Math.max(0, Math.ceil(
+    ((host.lastArrival() ?? host.elapsed()) - host.elapsed()) / host.fixedDt
+  )) : 0
+  const stepLimit = maxSteps + arrivalSteps
 
   while (
-    steps < maxSteps &&
+    steps + skippedSteps < stepLimit &&
     !options.shouldStop?.() &&
     (options.stopAtRest === false ||
       host.queueSize() > 0 ||
       !host.atRest() ||
       options.continueWhile?.())
   ) {
+    const nextArrival = host.nextArrival()
+    const idleSteps = options.skipIdle && nextArrival != null && host.allSleeping()
+      ? Math.min(
+          Math.max(0, Math.floor((nextArrival - host.elapsed()) / host.fixedDt) - 1),
+          Math.max(0, stepLimit - steps - skippedSteps - 1)
+        )
+      : 0
+    if (idleSteps > 0) {
+      host.advanceTime(idleSteps * host.fixedDt)
+      skippedSteps += idleSteps
+    }
     // Integrate [t, t + dt] before admitting arrivals at its end. A body born
     // at t + dt must never receive the motion from the interval before birth.
     host.step(host.fixedDt)

@@ -310,6 +310,15 @@ export default function AccessibilityPage() {
         <code>--semiotic-focus</code> CSS custom property (default: #005fcc).
       </p>
 
+      <p>
+        BoxPlot, ViolinPlot, and RidgelinePlot expose each category's summary
+        statistics as a focus target. CandlestickChart exposes each candle or
+        range. Funnel connectors and FlowMap flows can also receive focus;
+        their dashed outlines follow the drawn shape. Use Home, End, PageUp,
+        and PageDown to move through the full set of marks, and Escape to
+        dismiss the tooltip and clear focus.
+      </p>
+
       <h3 id="aria-live">Live Announcements</h3>
 
       <p>

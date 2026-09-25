@@ -663,8 +663,8 @@ interface-member StreamNetworkFrameHandle::method::getLayoutFailure = required g
 interface-member StreamNetworkFrameHandle::method::getTension = required getTension(): number
 interface-member StreamNetworkFrameHandle::method::getTopology = required getTopology(): {nodes: RealtimeNode[]; edges: RealtimeEdge[];}
 interface-member StreamNetworkFrameHandle::method::getTopologyDiff = required getTopologyDiff(): {addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[];}
-interface-member StreamNetworkFrameHandle::method::push = required push(edge: EdgePush): void
-interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(edges: EdgePush[]): void
+interface-member StreamNetworkFrameHandle::method::push = required push(edge: Datum): void
+interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(edges: Datum[]): void
 interface-member StreamNetworkFrameHandle::method::relayout = required relayout(): void
 interface-member StreamNetworkFrameHandle::method::removeEdge = required removeEdge(sourceIdOrEdgeId: string, targetId?: string | undefined): boolean
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
@@ -698,7 +698,7 @@ interface-member StreamNetworkFrameProps::property::frameScheduler = optional fr
 interface-member StreamNetworkFrameProps::property::groupWidth = optional groupWidth: number | undefined
 interface-member StreamNetworkFrameProps::property::hierarchySum = optional hierarchySum: ((d: T) => number) | string | undefined
 interface-member StreamNetworkFrameProps::property::htmlMarkCulling = optional htmlMarkCulling: import("./networkViewportTypes").NetworkHtmlMarkCulling | undefined
-interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: EdgePush[] | undefined
+interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: Datum[] | undefined
 interface-member StreamNetworkFrameProps::property::iterations = optional iterations: number | undefined
 interface-member StreamNetworkFrameProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
 interface-member StreamNetworkFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
@@ -882,7 +882,7 @@ interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolA
 interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
 interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
-interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => number) | string | undefined
+interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined

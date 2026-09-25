@@ -84,6 +84,7 @@ const SAFE_REASONS = new Set([
   "invalid_json",
   "operation_limit",
   "request_body_too_large",
+  "request_body_timeout",
   "request_concurrency",
   "request_handler_error",
   "request_rate",

@@ -4,9 +4,11 @@
  * paths paint identical theme-token chrome.
  */
 import * as React from "react"
+import { scaleLinear, scaleUtc } from "d3-scale"
 import type { ProcessSankeyLayout } from "./algorithm"
 import type { ProcessSankeyOrientation } from "./orientation"
 import type { ProcessSankeyNormalizedNode } from "./buildScenes"
+import { isProcessSankeyDateDomain, type ProcessSankeyTimeLike } from "./time"
 
 const CHROME_STROKE = "var(--semiotic-grid, #94a3b8)"
 const CHROME_TEXT = "var(--semiotic-text-secondary, #475569)"
@@ -24,12 +26,13 @@ export interface BuildProcessSankeyBackgroundGraphicsInput {
   plotW: number
   plotH: number
   timelineExtent: number
-  axisTicks: readonly ProcessSankeyTickInput[]
+  domain: readonly ProcessSankeyTimeLike[]
+  axisTicks?: readonly ProcessSankeyTickInput[]
   showQualityReadout?: boolean
   showLaneRails?: boolean
   /** Non-fatal validation messages for the quality readout (M6). */
   warnings?: readonly string[]
-  timeFormat?: (d: Date) => string | React.ReactNode
+  timeFormat?: (d: number | Date) => string | React.ReactNode
   colorOf?: (id: string, idx: number) => string
   toTime: (value: number | Date | string | undefined | null) => number
   xScale: (t: number) => number
@@ -46,7 +49,6 @@ export function buildProcessSankeyBackgroundGraphics(
   const plotW = input.plotW
   const plotH = input.plotH
   const timelineExtent = input.timelineExtent
-  const axisTicks = input.axisTicks
   const showQualityReadout = input.showQualityReadout ?? false
   const showLaneRails = input.showLaneRails ?? false
   const warningLines = (input.warnings ?? []).slice(0, 3)
@@ -54,6 +56,7 @@ export function buildProcessSankeyBackgroundGraphics(
   const colorOf = input.colorOf
   const toTime = input.toTime
   const xScale = input.xScale
+  const dateDomain = isProcessSankeyDateDomain(input.domain)
   const {
     centerlines, laneLifetime, nodeData, valueScale: S, compressedPadding,
     crossingsBefore, crossingsAfter, layoutQualityBefore, layoutQuality,
@@ -61,17 +64,37 @@ export function buildProcessSankeyBackgroundGraphics(
 
   let dataMinTime: number | null = null
   let dataMaxTime: number | null = null
+  let minTime = Infinity
+  let maxTime = -Infinity
   for (const n of nodes) {
     const lt = laneLifetime[n.id]
     if (!lt || lt.start === null || lt.end === null) continue
     const start = xScale(lt.start as number)
     const end = xScale(lt.end as number)
+    minTime = Math.min(minTime, lt.start as number)
+    maxTime = Math.max(maxTime, lt.end as number)
     if (dataMinTime === null || start < dataMinTime) dataMinTime = start
     if (dataMaxTime === null || end > dataMaxTime) dataMaxTime = end
   }
   const clampTimeCoord = (value: number): number => Math.max(0, Math.min(timelineExtent, value))
   const axisStart = clampTimeCoord(dataMinTime ?? 0)
   const axisEnd = Math.max(axisStart, clampTimeCoord(dataMaxTime ?? timelineExtent))
+  const tickDomain: [number, number] = [
+    Math.max(toTime(input.domain[0]), minTime),
+    Math.min(toTime(input.domain[1]), maxTime)
+  ]
+  const tickCount = Math.max(2, Math.min(8, Math.floor(timelineExtent / 90)))
+  const dateScale = scaleUtc().domain(tickDomain)
+  const axisTicks = input.axisTicks ?? (Number.isFinite(tickDomain[0]) && Number.isFinite(tickDomain[1])
+    ? (dateDomain ? dateScale.ticks(tickCount) : scaleLinear().domain(tickDomain).ticks(tickCount))
+      .map(date => ({ date }))
+    : [])
+  const tickLabel = (tick: ProcessSankeyTickInput): React.ReactNode => {
+    if (tick.label != null) return tick.label
+    const time = toTime(tick.date)
+    const value = dateDomain ? new Date(time) : time
+    return timeFormat ? timeFormat(value) : dateDomain ? dateScale.tickFormat()(value as Date) : String(time)
+  }
   const visibleTicks = axisTicks.map((tick, index) => ({
     tick,
     index,
@@ -155,10 +178,7 @@ export function buildProcessSankeyBackgroundGraphics(
         })}
         <line x1={-4} y1={axisStart} x2={-4} y2={axisEnd} stroke={CHROME_STROKE} />
         {visibleTicks.map(({ tick, index, coordinate }) => {
-          const t = toTime(tick.date)
-          const label = tick.label != null
-            ? tick.label
-            : (timeFormat ? timeFormat(new Date(t)) : "")
+          const label = tickLabel(tick)
           return (
             <g key={index} transform={`translate(-4,${coordinate})`}>
               <line x2={-6} stroke={CHROME_STROKE} />
@@ -202,10 +222,7 @@ export function buildProcessSankeyBackgroundGraphics(
       })}
       <line x1={axisStart} y1={plotH + 4} x2={axisEnd} y2={plotH + 4} stroke={CHROME_STROKE} />
       {visibleTicks.map(({ tick, index, coordinate }) => {
-        const t = toTime(tick.date)
-        const label = tick.label != null
-          ? tick.label
-          : (timeFormat ? timeFormat(new Date(t)) : "")
+        const label = tickLabel(tick)
         return (
           <g key={index} transform={`translate(${coordinate},${plotH + 4})`}>
             <line y2={6} stroke={CHROME_STROKE} />

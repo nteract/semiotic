@@ -793,7 +793,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown } =
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
       useXYKeyboardNavigation({
         storeRef,
         hoverRef,
@@ -879,6 +879,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // the dimensions changed (the latter wins over an active transition).
       if ((dirtyRef.current || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        refreshKeyboardFocus()
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()
@@ -1069,18 +1070,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       // Push scales into React state so SVGOverlay renders axes/grid
       if (wasDirty && store.scales) {
-        // Use valueOf() for domain comparison — scaleTime.domain() returns new Date objects each call
-        const v = (d: number | Date) => typeof d === "object" && d !== null && typeof d.valueOf === "function" ? d.valueOf() : d
-        const scalesChanged = !currentScales ||
-          v(currentScales.x.domain()[0]) !== v(store.scales.x.domain()[0]) ||
-          v(currentScales.x.domain()[1]) !== v(store.scales.x.domain()[1]) ||
-          v(currentScales.y.domain()[0]) !== v(store.scales.y.domain()[0]) ||
-          v(currentScales.y.domain()[1]) !== v(store.scales.y.domain()[1]) ||
-          currentScales.x.range()[0] !== store.scales.x.range()[0] ||
-          currentScales.x.range()[1] !== store.scales.x.range()[1] ||
-          currentScales.y.range()[0] !== store.scales.y.range()[0] ||
-          currentScales.y.range()[1] !== store.scales.y.range()[1]
-        if (scalesChanged) {
+        // A rebuilt scale can change mapping or tick intervals without changing
+        // domain/range endpoints (linear → log, or numeric → calendar time).
+        if (currentScales !== store.scales) {
           setCurrentScales(store.scales)
         }
 

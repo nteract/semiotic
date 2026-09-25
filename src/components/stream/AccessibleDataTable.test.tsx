@@ -461,12 +461,53 @@ describe("extractAllRows — surfaces raw data, not pixels", () => {
   it("skips redundant point nodes when a series node carries the same data", () => {
     // showPoints=true emits both a line node and per-point nodes; the points
     // are decorative duplicates and must not double-count.
+    const datum = { month: 1, sales: 4200 }
     const rows = extractAllRows([
-      { type: "line", path: [[0, 0]], datum: [{ month: 1, sales: 4200 }] },
-      { type: "point", x: 412, y: 88, datum: { month: 1, sales: 4200 } },
+      { type: "line", path: [[0, 0]], datum: [datum] },
+      { type: "point", x: 412, y: 88, datum },
     ])
     expect(rows).toEqual([{ label: "Line point", values: { month: 1, sales: 4200 } }])
   })
+
+  it("retains independent markers beside XY series and object-valued geo lines", () => {
+    const shared = { month: 1, sales: 4200 }
+    const independent = { month: 1, sales: 4200 }
+    const rows = extractAllRows([
+      { type: "line", datum: [shared] },
+      { type: "symbol", datum: shared },
+      { type: "glyph", datum: independent },
+      { type: "line", datum: { source: "London", target: "Paris", travelers: 27 } },
+      { type: "point", datum: { city: "London", population: 100 } },
+    ])
+    expect(rows.map(({ values }) => values)).toEqual([
+      shared, independent,
+      { source: "London", target: "Paris", travelers: 27 },
+      { city: "London", population: 100 },
+    ])
+  })
+
+  it("includes distribution summaries and every observation without duplicating outliers", () => {
+    const outlier = { group: "A", measurement: 100 }
+    const rows = extractAllRows([
+      { type: "boxplot", category: "A", stats: { n: 2, median: 55 }, datum: [{ group: "A", measurement: 10 }, outlier] },
+      { type: "point", datum: outlier },
+    ])
+    expect(rows.map(({ values }) => values)).toEqual([
+      { category: "A", n: 2, median: 55 },
+      { category: "A", group: "A", measurement: 10 },
+      { category: "A", group: "A", measurement: 100 },
+    ])
+  })
+
+  it.each(["symbol", "glyph", "trapezoid", "connector", "bezier", "ribbon", "curved"])(
+    "extracts authored fields and semantic projections for %s nodes", (type) => {
+      expect(extractAllRows([
+        { type, datum: { value: 1 }, accessibleDatum: { value: 2 } },
+        { type, datum: { value: 3 }, accessibility: { tableFields: { value: 4 } } },
+        { type, datum: null },
+      ]).map(({ values }) => values)).toEqual([{ value: 2 }, { value: 4 }])
+    },
+  )
 
   it("emits a candlestick's raw OHLC datum, not undefined node fields", () => {
     // The node only carries openY/closeY pixels — node.open etc. don't exist.

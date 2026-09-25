@@ -46,6 +46,11 @@ import {
 import { DEFAULT_TENSION_CONFIG } from "./networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPipelineUpdateResults } from "./networkPipelineUpdateResults"
+import { normalizeNetworkData, normalizeNetworkValue, readNetworkAccessor, resolveNetworkEdgeDatum } from "./networkDataNormalization"
+import {
+  snapshotEdgePositions, savePreviousEdgePositions, saveTargetEdgePosition,
+  interpolateEdgePosition, restoreTargetEdgePosition, type EdgePositionSnapshots
+} from "./networkEdgeTransitions"
 import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
 import { NetworkCustomLayoutCache } from "./networkCustomLayoutCache"
@@ -138,9 +143,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
   // Maps as arrays every frame during animation. `Array.from` on every frame
   // allocates O(n+m) garbage for a graph that hasn't structurally changed
   // (a 5k-node/10k-edge orbit/sankey churns millions of slots/sec → GC stalls).
-  // Cache keyed on layoutVersion — which bumps on every Map mutation
-  // (ingest/remove/clear) but NOT on an animation tick — so animation frames
-  // reuse the arrays. Handed only to non-hierarchical layout plugins, which
+  // Cache keyed on layoutVersion, with ingest invalidation for deferred or
+  // empty layouts that do not bump it. Animation frames reuse the arrays.
+  // Handed only to non-hierarchical layout plugins, which
   // read them (mutating node-object positions in place); hierarchical plugins
   // use the arrays as scratch and get fresh copies.
   private _nodesArrCache: RealtimeNode[] | null = null
@@ -172,10 +177,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     { x0: number; x1: number; y0: number; y1: number }
   > | null = null
   /** Snapshot of edge positions from before bounded re-ingestion cleared the maps */
-  private _boundedEdgeSnapshot: Map<
-    string,
-    { y0: number; y1: number; sankeyWidth: number }
-  > | null = null
+  private _boundedEdgeSnapshot: EdgePositionSnapshots | null = null
 
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
@@ -271,7 +273,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     ) {
       this.particlePool = new ParticlePool(2000)
     }
-    this.updateResults.recordConfig(changedConfigKeys)
+    this.updateResults.recordConfig(changedConfigKeys, nextConfig.chartType)
   }
 
   /** Additive explicit-result form of {@link updateConfig}. */
@@ -327,33 +329,6 @@ export class NetworkPipelineStore implements UpdateResultStore {
     size: [number, number],
     options?: { deferLayout?: boolean }
   ): void {
-    const {
-      nodeIDAccessor = "id",
-      sourceAccessor = "source",
-      targetAccessor = "target",
-      valueAccessor = "value"
-    } = this.config
-
-    const getNodeId =
-      typeof nodeIDAccessor === "function"
-        ? nodeIDAccessor
-        : (d: Datum) => d[nodeIDAccessor]
-
-    const getSource =
-      typeof sourceAccessor === "function"
-        ? sourceAccessor
-        : (d: Datum) => d[sourceAccessor]
-
-    const getTarget =
-      typeof targetAccessor === "function"
-        ? targetAccessor
-        : (d: Datum) => d[targetAccessor]
-
-    const getValue =
-      typeof valueAccessor === "function"
-        ? valueAccessor
-        : (d: Datum) => d[valueAccessor] ?? 1
-
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -367,62 +342,29 @@ export class NetworkPipelineStore implements UpdateResultStore {
         })
       }
     }
-    this._boundedEdgeSnapshot = new Map()
-    for (const [, edge] of this.edges) {
-      const src = typeof edge.source === "string" ? edge.source : edge.source.id
-      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
-      if (edge.sankeyWidth > 0) {
-        this._boundedEdgeSnapshot.set(`${src}\0${tgt}`, {
-          y0: edge.y0,
-          y1: edge.y1,
-          sankeyWidth: edge.sankeyWidth
-        })
-      }
-    }
+    this._boundedEdgeSnapshot = snapshotEdgePositions(this.edges.values())
 
     this.nodes.clear()
     this.edges.clear()
     this._decaySortedNodes = null; this._networkDecayCache = null
 
     // Build node map
-    for (const raw of rawNodes) {
-      const id = String(getNodeId(raw))
+    this._arrCacheVersion = -1
+    const normalized = normalizeNetworkData(rawNodes, rawEdges, this.config)
+    for (const [id, raw] of normalized.nodes) {
       this.nodes.set(id, { ...createNode(id), data: raw })
     }
 
     // Build edge map (creating nodes if not provided).
     // Use a unique index key so parallel edges (same source→target, different
     // groups) are preserved. Streaming ingestion still aggregates by source+target.
-    for (let i = 0; i < rawEdges.length; i++) {
-      const raw = rawEdges[i]
-      const sourceId = String(getSource(raw))
-      const targetId = String(getTarget(raw))
-      // Preserve `value: 0` (e.g. an edge with no flow that should
-      // suppress particles); fall back to 1 only when the raw value is
-      // nullish or non-finite. The earlier `|| 1` pattern collapsed
-      // legitimate zeros into 1, which made "no-flow" edges still
-      // animate particles at the default rate.
-      const rawValue = getValue(raw)
-      const numValue = rawValue == null ? NaN : Number(rawValue)
-      const value = Number.isFinite(numValue) ? numValue : 1
-
-      if (!this.nodes.has(sourceId)) {
-        this.nodes.set(sourceId, { ...createNode(sourceId), data: raw })
-      }
-      if (!this.nodes.has(targetId)) {
-        this.nodes.set(targetId, { ...createNode(targetId), data: raw })
-      }
-
-      const key = `${sourceId}\0${targetId}\0${i}`
+    for (const resolved of normalized.edges) {
+      const raw = resolved.data
       const edge: RealtimeEdge = {
-        source: sourceId,
-        target: targetId,
-        value,
+        ...resolved,
         y0: 0,
         y1: 0,
-        sankeyWidth: 0,
-        data: raw,
-        _edgeKey: key
+        sankeyWidth: 0
       }
       // For customNetworkLayout charts (e.g. ProcessSankey), `runLayout`
       // short-circuits before `finalizeLayout` would have computed
@@ -439,7 +381,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       if (raw && typeof raw === "object" && isValidBezierCache(raw.bezier)) {
         edge.bezier = raw.bezier as BezierCache
       }
-      this.edges.set(key, edge)
+      this.edges.set(resolved._edgeKey, edge)
     }
 
     // Run layout unless a worker will provide the force positions.
@@ -496,7 +438,12 @@ export class NetworkPipelineStore implements UpdateResultStore {
    * Returns true if a relayout is needed.
    */
   ingestEdge(push: EdgePush): boolean {
-    const { source, target, value } = push
+    const resolved = resolveNetworkEdgeDatum(push, this.config)
+    if (!resolved) {
+      this.updateResults.recordNoop("ingest")
+      return false
+    }
+    const { source, target, value } = resolved
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
     const now = this.currentTime()
@@ -523,17 +470,17 @@ export class NetworkPipelineStore implements UpdateResultStore {
     let valueChanged = false
     if (existing) {
       existing.value += value
+      existing.data = { ...existing.data, ...push }
       this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.weightChange
       valueChanged = true
     } else {
       this.edges.set(key, {
-        source,
-        target,
-        value,
+        ...resolved,
         y0: 0,
         y1: 0,
-        sankeyWidth: 0
+        sankeyWidth: 0,
+        _edgeKey: key
       })
       this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.newEdge
@@ -546,6 +493,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       valueChanged ||
       this.tension >= this.tensionConfig.threshold
     )
+    if (topologyChanged) this._arrCacheVersion = -1
     this.updateResults.recordData("ingest", 1)
     return needsRelayout
   }
@@ -591,36 +539,11 @@ export class NetworkPipelineStore implements UpdateResultStore {
     // Save previous positions for transition
     this.prepareForRelayout()
 
-    // For force layout warm-start: collect previous node positions into a Map
-    // and stash on config so the plugin can restore positions for nodes that
-    // were recreated (e.g. bounded re-ingestion clears and recreates nodes).
-    // Streaming ingestion preserves existing nodes so their x/y are already set.
+    // Only completed layouts supply warm-start positions. Transition geometry
+    // also exists for fresh nodes at the origin and cannot establish that a
+    // node has actually been positioned.
     if (plugin.supportsStreaming && !plugin.hierarchical) {
-      const prevPositions = new Map<string, { x: number; y: number }>()
-      for (const node of nodesArr) {
-        if (node._prevX0 !== undefined) {
-          // Use the center of the previous bounding box
-          const prevW = (node._prevX1 ?? 0) - (node._prevX0 ?? 0)
-          const prevH = (node._prevY1 ?? 0) - (node._prevY0 ?? 0)
-          prevPositions.set(node.id, {
-            x: (node._prevX0 ?? 0) + prevW / 2,
-            y: (node._prevY0 ?? 0) + prevH / 2
-          })
-        } else if (node.x !== 0 || node.y !== 0) {
-          prevPositions.set(node.id, { x: node.x, y: node.y })
-        }
-      }
-      // Also include positions from the previous layout's node set (covers
-      // nodes that existed before but may have been removed in this update)
-      if (this._lastPositionSnapshot) {
-        for (const [id, pos] of this._lastPositionSnapshot) {
-          if (!prevPositions.has(id)) {
-            prevPositions.set(id, pos)
-          }
-        }
-      }
-      this.config.__previousPositions =
-        prevPositions.size > 0 ? prevPositions : undefined
+      this.config.__previousPositions = this._lastPositionSnapshot ?? undefined
     }
 
     // Execute layout — hierarchical plugins push into the arrays directly
@@ -677,7 +600,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     // Snapshot node positions for future warm-start relayouts
     const posSnapshot = new Map<string, { x: number; y: number }>()
     for (const node of this.nodes.values()) {
-      if (node.x !== 0 || node.y !== 0) {
+      if (Number.isFinite(node.x) && Number.isFinite(node.y)) {
         posSnapshot.set(node.id, { x: node.x, y: node.y })
       }
     }
@@ -718,8 +641,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
       nodesArr.length > 0 &&
       transitionDuration > 0
     ) {
-      const cx = size[0] / 2
-      const cy = size[1] / 2
+      const transposed = this.config.chartType === "sankey" && this.config.orientation === "vertical"
+      const cx = size[transposed ? 1 : 0] / 2
+      const cy = size[transposed ? 0 : 1] / 2
       for (const node of this.nodes.values()) {
         node._prevX0 = cx
         node._prevX1 = cx
@@ -980,8 +904,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
   }
 
   /**
-   * Per-frame-stable node/edge arrays (see field docs). Rebuilt only when
-   * layoutVersion changes — i.e. on a Map mutation, never on an animation tick.
+   * Per-frame-stable node/edge arrays (see field docs). Rebuilt after a layout
+   * revision or ingest invalidation, never merely for an animation tick.
    */
   private _ensureArrays(): void {
     if (
@@ -1054,6 +978,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
    * Idempotent — a second call is a no-op.
    */
   cancelIntroAnimation(): void {
+    if (this.transition) this.snapToTargets()
     this.transition = null
     // Wipe per-node and per-edge intro state so the canvas paint
     // pipeline reads the live positions instead of interpolating from
@@ -1068,6 +993,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       edge._prevY0 = undefined
       edge._prevY1 = undefined
       edge._prevSankeyWidth = undefined
+      edge._prevCircularPathData = undefined
       edge._introFromZero = false
     }
   }
@@ -1095,20 +1021,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
 
     for (const edge of this.edges.values()) {
-      if (
-        edge._targetY0 !== undefined &&
-        edge._prevY0 !== undefined &&
-        edge._prevSankeyWidth !== undefined &&
-        (edge._prevSankeyWidth > 0 || edge._introFromZero)
-      ) {
-        edge.y0 = lerp(edge._prevY0, edge._targetY0, t)
-        edge.y1 = lerp(edge._prevY1!, edge._targetY1!, t)
-        edge.sankeyWidth = lerp(
-          edge._prevSankeyWidth,
-          edge._targetSankeyWidth!,
-          t
-        )
-      }
+      interpolateEdgePosition(edge, t)
     }
 
     // Rebuild beziers for new interpolated positions
@@ -1150,26 +1063,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
         node._prevY1 = node.y1
       }
     }
-    const edgeSnapshot = this._boundedEdgeSnapshot
-    for (const edge of this.edges.values()) {
-      // For bounded re-ingestion, look up previous edge position from snapshot
-      if (edgeSnapshot && edge.sankeyWidth === 0) {
-        const src =
-          typeof edge.source === "string" ? edge.source : edge.source.id
-        const tgt =
-          typeof edge.target === "string" ? edge.target : edge.target.id
-        const prevEdge = edgeSnapshot.get(`${src}\0${tgt}`)
-        if (prevEdge) {
-          edge._prevY0 = prevEdge.y0
-          edge._prevY1 = prevEdge.y1
-          edge._prevSankeyWidth = prevEdge.sankeyWidth
-          continue
-        }
-      }
-      edge._prevY0 = edge.y0
-      edge._prevY1 = edge.y1
-      edge._prevSankeyWidth = edge.sankeyWidth
-    }
+    savePreviousEdgePositions(this.edges.values(), this._boundedEdgeSnapshot)
     // Only clear snapshots when nodes were present to process.
     // For hierarchical layouts, nodes are empty at this point — the snapshot
     // is consumed later in the post-plugin sync block inside runLayout.
@@ -1220,9 +1114,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       node._targetY1 = node.y1
     }
     for (const edge of this.edges.values()) {
-      edge._targetY0 = edge.y0
-      edge._targetY1 = edge.y1
-      edge._targetSankeyWidth = edge.sankeyWidth
+      saveTargetEdgePosition(edge)
     }
   }
 
@@ -1239,15 +1131,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       }
     }
     for (const edge of this.edges.values()) {
-      if (
-        edge._prevY0 !== undefined &&
-        edge._prevSankeyWidth !== undefined &&
-        edge._prevSankeyWidth > 0
-      ) {
-        edge.y0 = edge._prevY0
-        edge.y1 = edge._prevY1!
-        edge.sankeyWidth = edge._prevSankeyWidth
-      }
+      interpolateEdgePosition(edge, 0)
     }
     this.rebuildAllBeziers()
   }
@@ -1262,12 +1146,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       }
     }
     for (const edge of this.edges.values()) {
-      if (edge._targetY0 !== undefined) {
-        edge.y0 = edge._targetY0
-        edge.y1 = edge._targetY1!
-        edge.sankeyWidth = edge._targetSankeyWidth!
-      }
-      edge._introFromZero = undefined
+      restoreTargetEdgePosition(edge)
     }
     this.rebuildAllBeziers()
   }
@@ -1396,13 +1275,6 @@ export class NetworkPipelineStore implements UpdateResultStore {
     targetId: string,
     updater: (data: Datum) => Datum
   ): Datum[] {
-    const valAcc = this.config.valueAccessor
-    const valFn =
-      typeof valAcc === "function"
-        ? valAcc
-        : valAcc
-          ? (d: Datum) => d[valAcc]
-          : (d: Datum) => d.value
     const results: Datum[] = []
     for (const [, edge] of this.edges) {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
@@ -1410,8 +1282,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       if (src === sourceId && tgt === targetId) {
         results.push(edge.data ? { ...edge.data } : {})
         edge.data = updater(edge.data ?? {})
-        const newValue = valFn(edge.data)
-        if (newValue != null) edge.value = Number(newValue)
+        edge.value = normalizeNetworkValue(readNetworkAccessor(edge.data, this.config.valueAccessor, "value"))
       }
     }
     if (results.length > 0) {

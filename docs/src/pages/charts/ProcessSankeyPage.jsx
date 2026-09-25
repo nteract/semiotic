@@ -16,7 +16,7 @@ const processSankeyProps = [
   { name: "nodes", type: "array", description: "Optional node records; may carry xExtent: [start, end] for an explicit lifetime. Missing endpoints are inferred." },
   { name: "edges", type: "array", description: "Timed edge records; omit when ingesting through the push API." },
   { name: "domain", type: "[number, number]", required: true, description: "[tStart, tEnd] of the time axis." },
-  { name: "axisTicks", type: "array", description: "Optional [{ date, label }] tick overrides." },
+  { name: "axisTicks", type: "array", description: "Override automatic ticks with [{ date, label? }]; [] hides ticks." },
   { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Read time left-to-right or top-to-bottom." },
   { name: "xExtentAccessor", type: "string | function", description: "Per-node [start, end] lifetime accessor." },
   { name: "nodeLabel", type: "string | function", description: "Visible lane-label accessor; defaults to nodeIdAccessor." },
@@ -42,7 +42,7 @@ const processSankeyProps = [
   { name: "showQualityReadout", type: "boolean", description: "Overlay crossings, pixel length, transit occlusion, lane utilization, and validation warnings." },
   { name: "layoutExecution", type: '"auto" | "worker" | "sync"', default: '"auto"', description: "Offload dense packing/order to a module worker when auto cost threshold is met." },
   { name: "showParticles", type: "boolean", description: "Animate particles along ribbons (pair with particleStyle)." },
-  { name: "timeFormat", type: "function", description: "Formatter for axis ticks and tooltip time fields." },
+  { name: "timeFormat", type: "function", description: "Formats axis and tooltip times: numbers for numeric domains, Dates for Date/ISO domains." },
   { name: "valueFormat", type: "string | function", description: "Formatter for flow values." },
 ]
 
@@ -1164,7 +1164,7 @@ export default function ProcessSankeyPage() {
         </li>
         <li><code>edges</code> — array of edge records with <code>source</code>, <code>target</code>, <code>value</code>, <code>startTime</code>, <code>endTime</code>.</li>
         <li><code>domain</code> — <code>[tStart, tEnd]</code> of the chart&rsquo;s time axis.</li>
-        <li><code>axisTicks</code> — optional array of <code>{`{ date, label }`}</code>.</li>
+        <li><code>axisTicks</code> — override automatic ticks with <code>{`{ date, label? }`}</code> entries. Set <code>{`axisTicks={[]}`}</code> to hide ticks.</li>
         <li><code>orientation</code> — <code>&quot;horizontal&quot;</code> reads time left-to-right; <code>&quot;vertical&quot;</code> reads top-to-bottom with lanes distributed across the x-axis.</li>
       </ul>
 
@@ -1197,8 +1197,18 @@ export default function ProcessSankeyPage() {
         </li>
         <li>
           Time accessors return <code>number</code>, <code>Date</code>, or
-          a parseable date string. Internal computation uses ms since
-          epoch.
+          a numeric or ISO date string. Numeric strings such as <code>"1763"</code>
+          stay numeric. ISO dates and datetimes without a timezone use UTC;
+          include an offset when a local wall-clock time is intended. Ambiguous
+          locale dates such as <code>"02/01/2026"</code> are rejected.
+          Date values use milliseconds since epoch internally.
+        </li>
+        <li>
+          <code>timeFormat</code> receives a number when <code>domain</code> is
+          numeric (including numeric strings), and a <code>Date</code> when the
+          domain uses Dates or ISO strings. Automatic date ticks and default
+          tooltip dates use UTC; tooltips preserve time-of-day. Band tooltips
+          use the same <code>nodeLabel</code> as the lane labels.
         </li>
       </ul>
 

@@ -6,7 +6,7 @@ import {
   type AggregateConfig,
   type AggregatedRealtimeDatum
 } from "./aggregate"
-import { readRealtimeNumber } from "./realtimeAccessors"
+import { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
 import type { WindowAccumulator } from "../../realtime/WindowAccumulator"
 
 export const AGG_SERIES = "__aggSeries"
@@ -25,7 +25,7 @@ export class RealtimeAccumulator {
     timeAccessor?: ChartAccessor<Datum, number>,
     valueAccessor?: ChartAccessor<Datum, number>
   ): void {
-    const time = readRealtimeNumber(row, timeAccessor, "time")
+    const time = readRealtimeTime(row, timeAccessor, "time")
     const value = readRealtimeNumber(row, valueAccessor, "value")
     if (time == null || value == null) return
     const key =
@@ -42,7 +42,7 @@ export class RealtimeAccumulator {
       if (!acc) return
       this.groups.set(key, acc)
     }
-    acc.push(time, value)
+    acc.push(+time, value)
   }
 
   emit(config: AggregateConfig): AggregatedRealtimeDatum[] {

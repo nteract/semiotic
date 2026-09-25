@@ -69,7 +69,12 @@ export class PhysicsQuiescenceTracker {
     let quiescent = true
     for (const body of bodies) {
       if (body.sleeping) continue
-      if (body.vx * body.vx + body.vy * body.vy >= thresholdSq) {
+      const dx = body.x - body.prevX
+      const dy = body.y - body.prevY
+      // Position correction moves crowded bodies independently of velocity.
+      // Such a pile is still visibly moving and must not be declared idle.
+      if (body.vx * body.vx + body.vy * body.vy >= thresholdSq ||
+        (deltaSeconds > 0 && dx * dx + dy * dy >= thresholdSq * deltaSeconds * deltaSeconds)) {
         quiescent = false
         break
       }

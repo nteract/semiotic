@@ -6,6 +6,8 @@ import {
 import React from "react"
 import { createRoot } from "react-dom/client"
 
+window.__physicsChartHandles = {}
+
 const galtonData = Array.from({ length: 16 }, (_, index) => {
   const wave = Math.sin(index * 0.58) * 14
   const drift = (index % 6) * 6
@@ -53,6 +55,7 @@ function App() {
       TestCase,
       { title: "GaltonBoardChart settled", testId: "physics-galton-settled" },
       React.createElement(GaltonBoardChart, {
+        ref: (handle) => { window.__physicsChartHandles.galton = handle },
         data: galtonData,
         valueAccessor: "value",
         colorBy: "cohort",

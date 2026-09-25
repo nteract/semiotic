@@ -20,6 +20,22 @@ function DefaultNetworkTooltip({ data }: { data: HoverData }) {
       typeof edge.source === "object" ? edge.source.id : edge.source
     const targetId =
       typeof edge.target === "object" ? edge.target.id : edge.target
+    const contributors = edge.__chordEdges
+    if (contributors && contributors.length > 1) {
+      return (
+        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+          <div style={{ fontWeight: 600 }}>Connections: {contributors.length}</div>
+          {contributors.map((contributor, index) => (
+            <div key={contributor._edgeKey ?? index} style={{ marginTop: 4, opacity: 0.8 }}>
+              {typeof contributor.source === "object" ? contributor.source.id : contributor.source}
+              {" → "}
+              {typeof contributor.target === "object" ? contributor.target.id : contributor.target}
+              {": "}{contributor.value.toLocaleString()}
+            </div>
+          ))}
+        </div>
+      )
+    }
     return (
       <div className="semiotic-tooltip" style={defaultTooltipStyle}>
         <div style={{ fontWeight: 600 }}>

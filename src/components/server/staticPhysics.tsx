@@ -28,7 +28,7 @@ export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
   theme?: Parameters<typeof resolveTheme>[0]
   _idPrefix?: string
 } & StaticPhysicsChromeProps &
-  Pick<StreamPhysicsFrameProps, "regionEffects" | "seed">
+  Pick<StreamPhysicsFrameProps, "regionEffects" | "seed" | "initialSpawnPacing">
 
 const DEFAULT_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
 
@@ -78,9 +78,7 @@ export function renderPhysicsFrame(
   })
   const store = new PhysicsPipelineStore(config)
   if (Array.isArray(props.initialSpawns) && props.initialSpawns.length > 0) {
-    store.enqueue(
-      props.initialSpawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
-    )
+    store.enqueue(props.initialSpawns, props.initialSpawnPacing)
   }
   const result = renderPhysicsSettledSVG(store, {
     ...props,

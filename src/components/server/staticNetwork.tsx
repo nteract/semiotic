@@ -43,13 +43,13 @@ import type { ThemeAwareProps, CategoricalAccessor } from "./staticSVGChrome"
 import {
   reserveFrameLegendMargin,
   renderFrameLegend,
-  wrapSVG,
-  edgeEndpointId
+  wrapSVG
 } from "./staticSVGChrome"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
 import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { collectNetworkAnnotationAnchors } from "../stream/networkAnnotationAnchors"
 import { NetworkViewGroup } from "../stream/networkViewTransform"
+import { normalizeNetworkData } from "../stream/networkDataNormalization"
 
 registerBuiltInNetworkLayouts()
 
@@ -62,41 +62,32 @@ export function resolveAccessor(
   return (d: Datum) => d[accessor]
 }
 
+function realtimeNode([id, data]: [string, Datum]): RealtimeNode {
+  return {
+    id,
+    // Preserve pre-set positions from source data (for pinned layouts).
+    x: data.x ?? 0, y: data.y ?? 0,
+    x0: 0, x1: 0, y0: 0, y1: 0,
+    width: 0, height: 0, value: 0, data
+  }
+}
+
+function realtimeEdge(edge: ReturnType<typeof normalizeNetworkData>["edges"][number]): RealtimeEdge {
+  return { ...edge, y0: 0, y1: 0, sankeyWidth: 0 }
+}
+
 export function buildRealtimeNodes(
   propsNodes: Datum[],
   config: NetworkPipelineConfig
 ): RealtimeNode[] {
-  const nodeIDFn = resolveAccessor(config.nodeIDAccessor, "id")
-  return propsNodes.map((d) => ({
-    id: String(nodeIDFn(d)),
-    // Preserve pre-set positions from source data (for pinned layouts)
-    x: d.x ?? 0, y: d.y ?? 0,
-    x0: 0, x1: 0, y0: 0, y1: 0,
-    width: 0, height: 0, value: 0, data: d
-  }))
+  return Array.from(normalizeNetworkData(propsNodes, [], config).nodes, realtimeNode)
 }
 
 export function buildRealtimeEdges(
   propsEdges: Datum[],
   config: NetworkPipelineConfig
 ): RealtimeEdge[] {
-  const sourceFn = resolveAccessor(config.sourceAccessor, "source")
-  const targetFn = resolveAccessor(config.targetAccessor, "target")
-  const valueFn = resolveAccessor(config.valueAccessor, "value")
-  return propsEdges.map((d, index) => {
-    const numericValue = Number(valueFn(d))
-    const source = String(sourceFn(d))
-    const target = String(targetFn(d))
-    return {
-      source,
-      target,
-      value: Number.isFinite(numericValue) ? numericValue : 1,
-      y0: 0, y1: 0, sankeyWidth: 0, data: d,
-      // Match bounded browser ingestion: distinct rows between the same
-      // endpoints need distinct layout identities, even without authored ids.
-      _edgeKey: `${source}\0${target}\0${index}`
-    }
-  })
+  return normalizeNetworkData([], propsEdges, config).edges.map(realtimeEdge)
 }
 
 // ── Network SSR ─────────────────────────────────────────────────────────
@@ -341,24 +332,9 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       return renderEmptyNetwork()
     }
 
-    edges = buildRealtimeEdges(propsEdges, config)
-
-    if (propsNodes.length === 0 && edges.length > 0) {
-      const nodeIds = new Set<string>()
-      for (const e of edges) {
-        const src = edgeEndpointId(e.source)
-        const tgt = edgeEndpointId(e.target)
-        if (src) nodeIds.add(src)
-        if (tgt) nodeIds.add(tgt)
-      }
-      nodes = Array.from(nodeIds).map((id) => ({
-        id,
-        x: 0, y: 0, x0: 0, x1: 0, y0: 0, y1: 0,
-        width: 0, height: 0, value: 0, data: { id }
-      }))
-    } else {
-      nodes = buildRealtimeNodes(propsNodes, config)
-    }
+    const normalized = normalizeNetworkData(propsNodes, propsEdges, config)
+    nodes = Array.from(normalized.nodes, realtimeNode)
+    edges = normalized.edges.map(realtimeEdge)
   }
 
   // customLayout escape hatch — same dispatch the CSR pipeline uses in

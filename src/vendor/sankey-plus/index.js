@@ -582,13 +582,6 @@ function computeLinkBreadths(graph) {
   });
 }
 
-function adjustGraphExtents(graph, nodeWidth) {
-  // No-op: disabled while researching better cycle layout approaches.
-  // The original implementation shrank graph bounds to make room for cycles,
-  // which pushed nodes off-screen. Clamping the extents was too aggressive.
-  // See ATTRIBUTION.md for context on the research direction.
-}
-
 function fillHeight(graph) {
   var nodes = graph.nodes;
   var links = graph.links;
@@ -725,9 +718,6 @@ export function sankeyCircular() {
     );
     computeLinkBreadths(graph);
 
-    addCircularPathData(graph, id, circularGap, baseRadius, verticalMargin);
-    adjustGraphExtents(graph, dx);
-
     // Second pass for better positioning
     computeNodeBreadths(graph, nodeSort, id);
     resolveCollisionsAndRelax(
@@ -739,8 +729,6 @@ export function sankeyCircular() {
       iterations
     );
     computeLinkBreadths(graph);
-
-    addCircularPathData(graph, id, circularGap, baseRadius, verticalMargin);
 
     sortSourceLinks(graph, id);
     sortTargetLinks(graph, id);

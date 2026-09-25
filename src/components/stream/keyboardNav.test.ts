@@ -528,12 +528,14 @@ describe("extractGeoNavPoints", () => {
     expect(extractGeoNavPoints(asGeo([]))).toEqual([])
   })
 
-  it("ignores non-navigable node types", () => {
+  it("includes data-bearing lines while ignoring decorative graticules", () => {
     const scene = [
       { type: "line", path: [[0, 0], [100, 100]], datum: {} },
       { type: "graticule", pathData: "M...", datum: null }
     ]
-    expect(extractGeoNavPoints(asGeo(scene))).toEqual([])
+    expect(extractGeoNavPoints(asGeo(scene))).toEqual([
+      { x: 50, y: 50, datum: {}, shape: "path", pathData: "M0,0L100,100" }
+    ])
   })
 
   it("skips point nodes with null x", () => {

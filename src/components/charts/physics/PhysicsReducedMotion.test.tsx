@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { render, waitFor } from "@testing-library/react"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import GaltonBoardChart from "./GaltonBoardChart"
+import UnitPileChart from "./UnitPileChart"
 import GauntletChart from "./GauntletChart"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type { PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineStore"
@@ -78,6 +79,35 @@ describe("physics charts under prefers-reduced-motion", () => {
       expect(snapshot.queue).toHaveLength(0)
     })
   })
+
+  it.each([
+    { chart: "GaltonBoardChart", count: 1000 },
+    { chart: "UnitPileChart", count: 250 }
+  ] as const)(
+    "$chart admits all $count rows after more than ten seconds of paced arrivals",
+    async ({ chart, count }) => {
+      const ref = React.createRef<PhysicsFrameHandle>()
+      const data = Array.from({ length: count }, (_, index) => ({
+        id: `row-${index}`,
+        value: index % 21,
+        category: `category-${index % 10}`
+      }))
+      render(chart === "GaltonBoardChart" ? (
+        <GaltonBoardChart ref={ref} data={data} valueAccessor="value"
+          bins={21} ballRadius={1} size={[1000, 420]} seed={1} />
+      ) : (
+        <UnitPileChart ref={ref} data={data} categoryAccessor="category"
+          ballRadius={1} size={[1000, 420]} seed={1} />
+      ))
+
+      await waitFor(() => {
+        const snapshot = ref.current?.getCustomLayout?.() as PhysicsPipelineSnapshot
+        expect(snapshot.world.bodies).toHaveLength(data.length)
+        expect(snapshot.queue).toHaveLength(0)
+      })
+    },
+    30000
+  )
 
   it("GauntletChart applies its authored gate effects instead of freezing at the start", async () => {
     const states: Array<{

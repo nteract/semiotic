@@ -6,7 +6,7 @@
     "packageVersion": "3.10.4",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "0b034095f2bea15196d1b00c3bde8db8090b523a238a00b859388fa7861c388a",
+    "revision": "f79aad678503c25af5ed7da76c9584a49353e91bd402749549f65aa5998836de",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -70,7 +70,7 @@
         "ai/reference.md",
         "docs/public/llms.txt"
       ],
-      "bytes": 149823,
+      "bytes": 150048,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "historicalSkill": {
@@ -78,7 +78,7 @@
         "ai/reference.md",
         "agent-skill/semiotic-charts/SKILL.md"
       ],
-      "bytes": 146297,
+      "bytes": 146522,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "candidateFixedPackets": {
@@ -164,8 +164,8 @@
   "inventory": [
     {
       "path": "README.md",
-      "bytes": 43997,
-      "sha256": "7b276528d90c24da829de7a02c1a3673ae0efaea2b16df4f459f718313669179"
+      "bytes": 43998,
+      "sha256": "88cd5434b53ca1fc1b178ae938c7e439113a83d764665c923fe3eaf095c5dfc5"
     },
     {
       "path": "agent-skill/semiotic-charts/SKILL.md",
@@ -184,8 +184,8 @@
     },
     {
       "path": "ai/mcp-server.ts",
-      "bytes": 194107,
-      "sha256": "5a28254c56f0d5c4097661ac5b47eb16cbc6b752ef3d0127d8b3fdbfd9ab3d7e"
+      "bytes": 191934,
+      "sha256": "6b2cb24e6d064c147a817afe45b9f3c89278fe3a7f628ee07907c87b70e51055"
     },
     {
       "path": "ai/mcp-task-resources.test.ts",
@@ -199,13 +199,13 @@
     },
     {
       "path": "ai/reference.md",
-      "bytes": 138222,
-      "sha256": "a9dccdc369b0f79ed4d284f68496f9bf9837ae6d1e85da6e8cd8e6fe72c0bde2"
+      "bytes": 138447,
+      "sha256": "9799f4fcea4b3ac4eb50a14e2dc22dd2931da78e0d9f60268b0e43c1e0dbaaca"
     },
     {
       "path": "ai/schema.json",
-      "bytes": 1443183,
-      "sha256": "48f52c1b9240d0b44d467f50c45b2de426dd036b0dd5a7ec27f408b6d36ec520"
+      "bytes": 1443323,
+      "sha256": "710204a0ddcde374eff95a15124634aae6a3331ae7aeceda51f518546864a59c"
     },
     {
       "path": "ai/surface-manifest.json",
@@ -220,37 +220,37 @@
     {
       "path": "ai/task-packets/compare-category-totals.json",
       "bytes": 16605,
-      "sha256": "26c7f7bbff85f997f3a807b164ac78dd15ad55e76ea032dd73943db4e35994d1"
+      "sha256": "8a9facc832d06148abd7560bed0b75b56a3d9bd53056446415e639192e28964d"
     },
     {
       "path": "ai/task-packets/compare-category-totals.md",
       "bytes": 9153,
-      "sha256": "e4748c5a550c2cf492757f59f9c1061f54f1653d06abb34ba550cf1fff376b90"
+      "sha256": "e18a7626bbc2c2fe2de06213d1692f1abb68bc981014a1befa88c3957f2d5d80"
     },
     {
       "path": "ai/task-packets/correct-published-chart.json",
       "bytes": 30340,
-      "sha256": "6c3fa50e90538d7ef07ae61688df7ffb264b50aaf4926d19d5c1af6e2c39c3cf"
+      "sha256": "3f9d1f1a9a43802500048423f0132259e6e3541e6c803d1b78aabf9734272fa3"
     },
     {
       "path": "ai/task-packets/correct-published-chart.md",
       "bytes": 22970,
-      "sha256": "b331600f8809e046249fc682a7134667839961bc8e6b2715fd6e91377cd7085d"
+      "sha256": "79f6347f4d6c25fa7c50a6997379ee90933c6ff7b13cf09570a294a36e48bd23"
     },
     {
       "path": "ai/task-packets/index.json",
       "bytes": 1811,
-      "sha256": "0468a0a2d5306881524063b29c0003d23eb456722b117fd58826483017df686f"
+      "sha256": "d5a1a79158e329f21d2980cdd13d2f90299494a35d506f70cd86aa1dfeb21808"
     },
     {
       "path": "ai/task-packets/update-live-chart.json",
       "bytes": 25100,
-      "sha256": "7a9fe746e92d3162cd24807315feee089afd157411f05c0209728fb8b2087fb4"
+      "sha256": "e8372b424bf55e040b039a280acd4d827729d80dafcf2ca2f81cd857de98434b"
     },
     {
       "path": "ai/task-packets/update-live-chart.md",
       "bytes": 17432,
-      "sha256": "632721fda7b6b79a3b91e05b7c3815450fde70c2cfb4c1c68c9cd66855936326"
+      "sha256": "8c38167da9005588190ca2e71028bcbe12e728abd2a7e2cbe8df8d40eaa72b16"
     },
     {
       "path": "ai/tasks/compare-category-totals.json",
@@ -280,32 +280,32 @@
     {
       "path": "docs/public/tasks/compare-category-totals.json",
       "bytes": 16605,
-      "sha256": "26c7f7bbff85f997f3a807b164ac78dd15ad55e76ea032dd73943db4e35994d1"
+      "sha256": "8a9facc832d06148abd7560bed0b75b56a3d9bd53056446415e639192e28964d"
     },
     {
       "path": "docs/public/tasks/compare-category-totals.md",
       "bytes": 9153,
-      "sha256": "e4748c5a550c2cf492757f59f9c1061f54f1653d06abb34ba550cf1fff376b90"
+      "sha256": "e18a7626bbc2c2fe2de06213d1692f1abb68bc981014a1befa88c3957f2d5d80"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.json",
       "bytes": 30340,
-      "sha256": "6c3fa50e90538d7ef07ae61688df7ffb264b50aaf4926d19d5c1af6e2c39c3cf"
+      "sha256": "3f9d1f1a9a43802500048423f0132259e6e3541e6c803d1b78aabf9734272fa3"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.md",
       "bytes": 22970,
-      "sha256": "b331600f8809e046249fc682a7134667839961bc8e6b2715fd6e91377cd7085d"
+      "sha256": "79f6347f4d6c25fa7c50a6997379ee90933c6ff7b13cf09570a294a36e48bd23"
     },
     {
       "path": "docs/public/tasks/update-live-chart.json",
       "bytes": 25100,
-      "sha256": "7a9fe746e92d3162cd24807315feee089afd157411f05c0209728fb8b2087fb4"
+      "sha256": "e8372b424bf55e040b039a280acd4d827729d80dafcf2ca2f81cd857de98434b"
     },
     {
       "path": "docs/public/tasks/update-live-chart.md",
       "bytes": 17432,
-      "sha256": "632721fda7b6b79a3b91e05b7c3815450fde70c2cfb4c1c68c9cd66855936326"
+      "sha256": "8c38167da9005588190ca2e71028bcbe12e728abd2a7e2cbe8df8d40eaa72b16"
     },
     {
       "path": "evals/adoption/fixtures.json",
@@ -339,8 +339,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 35747,
-      "sha256": "4f48bc75017816ff71d335dfcab5332a4b46cc6a7f45435fabd723247bf498da"
+      "bytes": 35890,
+      "sha256": "3bf299bf62532e9309d049117e67ff73d8d8292226fe8b4443283c432990138b"
     },
     {
       "path": "scripts/lib/adoption-evals.mjs",

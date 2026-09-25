@@ -56,6 +56,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
+import { DEFAULT_MCP_BODY_TIMEOUT_MS, readMcpJsonBody } from "./mcp-http-body"
 import { diagnoseChart } from "./operations/diagnose"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
@@ -5271,95 +5272,12 @@ async function main() {
     const authScheme =
       (process.env.MCP_AUTH_SCHEME || "Bearer").trim() || "Bearer"
 
-    // Read the request body into memory with a hard byte cap. Returns the parsed
-    // JSON, or a sentinel for an over-limit / malformed body. Reading it here
-    // (rather than letting the transport consume the stream) is what lets us
-    // enforce the ceiling for both Content-Length and chunked requests.
-    type BodyResult =
-      | { ok: true; body: unknown; bodyBytes: number }
-      | {
-          ok: false
-          status: 413 | 400
-          code: -32600 | -32602
-          message: string
-          reason:
-            | "request_body_too_large"
-            | "invalid_json"
-            | "operation_limit"
-            | "request_stream_error"
-        }
-    const readJsonBodyWithLimit = (
-      req: import("http").IncomingMessage
-    ): Promise<BodyResult> =>
-      new Promise((resolve) => {
-        let size = 0
-        let done = false
-        const chunks: Buffer[] = []
-        const finish = (result: BodyResult) => {
-          if (done) return
-          done = true
-          resolve(result)
-        }
-        req.on("data", (chunk: Buffer) => {
-          if (done) return
-          size += chunk.length
-          if (size > maxBodyBytes) {
-            // Stop accumulating (memory is now bounded), but don't destroy the
-            // socket — the caller still needs to write the 413 response. Further
-            // inbound chunks are ignored by the `done` guard above.
-            finish({
-              ok: false,
-              status: 413,
-              code: -32600,
-              message: "Request body too large",
-              reason: "request_body_too_large"
-            })
-            return
-          }
-          chunks.push(chunk)
-        })
-        req.on("end", () => {
-          if (done) return
-          const raw = Buffer.concat(chunks).toString("utf-8")
-          if (!raw)
-            return finish({ ok: true, body: undefined, bodyBytes: size })
-          try {
-            const body = JSON.parse(raw)
-            const operationLimit = operationLimitForMcpRequest(
-              body,
-              operationLimits
-            )
-            if (operationLimit && !operationLimit.ok) {
-              finish({
-                ok: false,
-                status: 413,
-                code: -32602,
-                message: formatMcpOperationLimitError(operationLimit),
-                reason: "operation_limit"
-              })
-              return
-            }
-            finish({ ok: true, body, bodyBytes: size })
-          } catch {
-            finish({
-              ok: false,
-              status: 400,
-              code: -32600,
-              message: "Invalid JSON body",
-              reason: "invalid_json"
-            })
-          }
-        })
-        req.on("error", () =>
-          finish({
-            ok: false,
-            status: 400,
-            code: -32600,
-            message: "Request stream error",
-            reason: "request_stream_error"
-          })
-        )
-      })
+    const parsedBodyTimeout = Number(process.env.MCP_BODY_TIMEOUT_MS)
+    const bodyTimeoutMs =
+      Number.isInteger(parsedBodyTimeout) && parsedBodyTimeout > 0 &&
+      parsedBodyTimeout <= 2_147_483_647
+        ? parsedBodyTimeout
+        : DEFAULT_MCP_BODY_TIMEOUT_MS
 
     const buildInfo = buildInfoForProfile(toolProfile)
     const healthBody = () =>
@@ -5381,7 +5299,11 @@ async function main() {
       res.end(healthBody())
     }
 
-    const httpServer = http.createServer(async (req, res) => {
+    const httpServer = http.createServer({
+      headersTimeout: DEFAULT_MCP_BODY_TIMEOUT_MS,
+      requestTimeout: Math.max(bodyTimeoutMs, DEFAULT_MCP_BODY_TIMEOUT_MS),
+      connectionsCheckingInterval: 1000
+    }, async (req, res) => {
       const requestStartedAt = Date.now()
 
       // Route extraction deliberately excludes the query string. The logging
@@ -5609,6 +5531,34 @@ async function main() {
         return
       }
 
+      // Uploads do not reserve an execution slot. They have independent byte
+      // and wall-clock bounds, including chunked or deliberately stalled bodies.
+      const bodyResult = await readMcpJsonBody(req, maxBodyBytes, bodyTimeoutMs)
+      if (requestAbortSignal.aborted) return
+      if (!bodyResult.ok) {
+        mcpLogger.warn("request_rejected", {
+          reason: bodyResult.reason,
+          method: req.method,
+          route: pathname,
+          status: bodyResult.status
+        })
+        res.setHeader("Connection", "close")
+        res.once("finish", () => req.destroy())
+        writeJsonRpcError(res, bodyResult.status, bodyResult.code, bodyResult.message)
+        return
+      }
+      const operationLimit = operationLimitForMcpRequest(bodyResult.body, operationLimits)
+      if (operationLimit && !operationLimit.ok) {
+        mcpLogger.warn("request_rejected", {
+          reason: "operation_limit",
+          method: req.method,
+          route: pathname,
+          status: 413
+        })
+        writeJsonRpcError(res, 413, -32602, formatMcpOperationLimitError(operationLimit))
+        return
+      }
+
       const requestSlot = requestLimiter.tryAcquire()
       if (!requestSlot.ok) {
         res.setHeader(
@@ -5629,32 +5579,6 @@ async function main() {
       }
 
       try {
-        // Enforce the hard body-size ceiling and parse the JSON ourselves, then
-        // hand the parsed body to the transport (rather than let it drain the
-        // stream unbounded).
-        const bodyResult = await readJsonBodyWithLimit(req)
-        if (!bodyResult.ok) {
-          mcpLogger.warn("request_rejected", {
-            reason: bodyResult.reason,
-            method: req.method,
-            route: pathname,
-            status: bodyResult.status
-          })
-          if (!res.headersSent) {
-            res.writeHead(bodyResult.status, {
-              "Content-Type": "application/json"
-            })
-            res.end(
-              JSON.stringify({
-                jsonrpc: "2.0",
-                error: { code: bodyResult.code, message: bodyResult.message },
-                id: null
-              })
-            )
-          }
-          return
-        }
-
         // Stateless: one ephemeral server+transport for this request only. Reusing
         // a stateless transport across requests is a known SDK bug, so we never do.
         const srv = createServer(toolProfile, {

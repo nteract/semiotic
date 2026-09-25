@@ -179,7 +179,10 @@ export function buildPhysicsPile<TDatum extends Datum>(
         id: `pile-tube-${index}-${side < 0 ? "l" : "r"}`,
         shape: {
           type: "aabb",
-          x: centerX + (side * geom.tubeWidth) / 2,
+          // tubeWidth is the clear space used by spawn positions and perRow.
+          // Keep the solid wall outside it instead of consuming six pixels of
+          // packing capacity and forcing units into an unexpectedly tall pile.
+          x: centerX + (side * (geom.tubeWidth + 6)) / 2,
           y: (tubeTop + floorY) / 2,
           width: 6,
           height: floorY - tubeTop

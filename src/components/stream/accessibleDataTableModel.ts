@@ -169,8 +169,20 @@ export function buildNetworkTableModel(
   const edgeRows: DataRow[] = []
   let hasWeights = false
 
-  for (let index = 0; index < edges.length; index++) {
-    const edge = edges[index]
+  // Chord ribbons combine parallel rows and reciprocal directions. Expand
+  // their retained inputs for tables/degrees without duplicating painted marks.
+  const inputEdges = edges.flatMap((edge) => {
+    const contributors = datumRecord(edge?.datum).__chordEdges
+    return Array.isArray(contributors)
+      ? contributors.map((datum) => ({
+          ...edge,
+          datum,
+          accessibleDatum: datumRecord(datum).data ?? datum
+        }))
+      : [edge]
+  })
+  for (let index = 0; index < inputEdges.length; index++) {
+    const edge = inputEdges[index]
     if (!edge || typeof edge !== "object") continue
     const raw = datumRecord(edge.datum)
     const { source, target } = edgeEndpoints(edge)
@@ -221,7 +233,7 @@ export function buildNetworkTableModel(
   }
   nodeRows.sort((a, b) => b.degree - a.degree)
 
-  const summaryParts = [`${nodeRows.length} nodes, ${edges.length} edges.`]
+  const summaryParts = [`${nodeRows.length} nodes, ${edgeRows.length} edges.`]
   if (nodeRows.length > 0) {
     summaryParts.push(
       `Mean degree: ${fmt(degreeSum / nodeRows.length)}, max degree: ${maxDegree}.`,

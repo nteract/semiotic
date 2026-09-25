@@ -753,7 +753,7 @@ export interface StreamXYFrameProps<T = Datum>
   capacity?: number
   /** Alias for `windowMode`. */
   capacityMode?: WindowMode
-  timeAccessor?: string | ((d: T) => number)
+  timeAccessor?: string | ((d: T) => CoercibleNumber)
 
   // ── Scale types ─────────────────────────────────
   xScaleType?: "linear" | "log" | "time"

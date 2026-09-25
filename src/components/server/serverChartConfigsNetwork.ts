@@ -2,6 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSankey/frameMargins"
 import { buildProcessSankeyBackgroundGraphics } from "../charts/network/processSankey/axisChrome"
+import { toProcessSankeyTime as toTime, type ProcessSankeyTimeLike } from "../charts/network/processSankey/time"
 import { emitProcessSankeyScenes } from "../charts/network/processSankey/streamingLayout"
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import {
@@ -43,15 +44,15 @@ import * as React from "react"
 // function with byte-identical inputs.
 export const processSankey: ChartConfig = {
   frameType: "network",
-  layout: { margin: { top: 30, right: 80, bottom: 40, left: 80 } },
+  layout: {
+    margin: (props) => resolveProcessSankeyMarginDefaults(
+      Boolean(props.title),
+      Boolean(props.showQualityReadout),
+      !Array.isArray(props.axisTicks) || props.axisTicks.length > 0,
+      props.orientation === "vertical" ? "vertical" : "horizontal"
+    )
+  },
   buildProps: (_data, colorBy, colorScheme, common, rest) => {
-    const toTime = (v: unknown): number => {
-      if (v == null) return NaN
-      if (v instanceof Date) return v.getTime()
-      if (typeof v === "number") return v
-      return new Date(v as string).getTime()
-    }
-
     const sourceAccessor = rest.sourceAccessor || "source"
     const targetAccessor = rest.targetAccessor || "target"
     const valueAccessor = rest.valueAccessor || "value"
@@ -159,7 +160,7 @@ export const processSankey: ChartConfig = {
     const orientation =
       rest.orientation === "vertical" ? "vertical" : "horizontal"
     const hasAxisTicks =
-      Array.isArray(rest.axisTicks) && rest.axisTicks.length > 0
+      !Array.isArray(rest.axisTicks) || rest.axisTicks.length > 0
     const hasTitle = Boolean(common.title)
     const showQualityReadout = Boolean(rest.showQualityReadout)
     const defaultMargin = resolveProcessSankeyMarginDefaults(
@@ -344,6 +345,7 @@ export const processSankey: ChartConfig = {
           plotW,
           plotH,
           timelineExtent: orientation === "vertical" ? plotH : plotW,
+          domain: rest.domain as ProcessSankeyTimeLike[],
           axisTicks: Array.isArray(rest.axisTicks)
             ? (rest.axisTicks as Array<{ date: unknown; label?: string }>).map(
                 (tick) => ({
@@ -351,13 +353,13 @@ export const processSankey: ChartConfig = {
                   label: tick.label
                 })
               )
-            : [],
+            : undefined,
           showQualityReadout: Boolean(rest.showQualityReadout),
           showLaneRails: Boolean(rest.showLaneRails),
           timeFormat:
             typeof rest.timeFormat === "function"
-              ? (d: Date) =>
-                  (rest.timeFormat as (d: Date) => string | React.ReactNode)(d)
+              ? (d: number | Date) =>
+                  (rest.timeFormat as (d: number | Date) => string | React.ReactNode)(d)
               : undefined,
           colorOf,
           toTime: (v) => toTime(v),

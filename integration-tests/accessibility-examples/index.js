@@ -1,5 +1,6 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
+import { KeyboardMarkExample } from "./KeyboardMarkExample.jsx"
 import { createRoot } from "react-dom/client"
 import { lineData, scatterData, barData, colors } from "../test-data.js"
 
@@ -217,4 +218,29 @@ const examples = [
 ]
 
 const root = createRoot(document.getElementById("root"))
-root.render(React.createElement("div", { className: "test-grid" }, examples.map((ex, i) => React.cloneElement(ex, { key: `test-${i}` }))))
+const params = new URLSearchParams(window.location.search)
+
+function RadialAccessibilityExample() {
+  const [width, setWidth] = React.useState(400)
+  const Chart = Semiotic[params.get("radial")]
+  const gauge = params.get("radial") === "GaugeChart"
+  return React.createElement(React.Fragment, null,
+    React.createElement("button", { onClick: () => setWidth(280) }, "Narrow chart"),
+    React.createElement(Chart, {
+      ...(gauge ? { value: 65, sweep: 360 } : {
+        data: [{ category: "A", value: 30 }, { category: "B", value: 70 }],
+      }),
+      width,
+      height: 300,
+      showLegend: false,
+      margin: { top: 0, bottom: 0, left: 0, right: 0 },
+      frameProps: { oSort: false },
+    }),
+  )
+}
+
+root.render(params.has("keyboard-marks")
+  ? React.createElement(KeyboardMarkExample, { chart: params.get("keyboard-marks") })
+  : params.has("radial")
+  ? React.createElement(RadialAccessibilityExample)
+  : React.createElement("div", { className: "test-grid" }, examples.map((ex, i) => React.cloneElement(ex, { key: `test-${i}` }))))

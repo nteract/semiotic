@@ -545,6 +545,16 @@ export default function LineChartPage() {
         }}
       />
 
+      <p>
+        Date objects and date strings select calendar ticks automatically. Date-only strings
+        such as <code>2024-01</code> and <code>2024-01-01</code> use UTC midnight;
+        automatic tick labels also use UTC. Timestamps with an explicit offset preserve
+        that instant, while date-time strings without an offset use the runtime's local
+        timezone. Use <code>xScaleType="time"</code> for local calendar ticks and an
+        explicit <code>xFormat</code> for local labels. Numeric timestamps keep a linear
+        scale unless you specify <code>xScaleType="time"</code>.
+      </p>
+
       <h2 id="quick-start">Quick Start</h2>
 
       <p>

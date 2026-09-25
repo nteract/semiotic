@@ -35,7 +35,6 @@ import type { PhysicsBodyState } from "../stream/physics/PhysicsKernel"
 import { buildPhysicsSettledProjection } from "../stream/physics/PhysicsAccessibility"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { resolveThemeSemanticColors } from "../store/themeCore"
-import type { PhysicsQueuedSpawn } from "../stream/physics/PhysicsPipelineTypes"
 import { resolveTheme } from "./themeResolver"
 import {
   collisionSwarmProjectionOverlay,
@@ -63,10 +62,6 @@ const PHYSICS_CHART_LAYOUT: NonNullable<ChartConfig["layout"]> = {
       resolved.compactMode,
       props.mode as ChartMode | undefined
     )
-}
-
-function allAtOnce(spawns: PhysicsQueuedSpawn[]): PhysicsQueuedSpawn[] {
-  return spawns.map((spawn) => ({ ...spawn, spawnAt: undefined }))
 }
 
 function composePhysicsGraphics(
@@ -200,7 +195,8 @@ export const galtonBoardChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       foregroundGraphics: composePhysicsGraphics(
         galtonBoardOverlay(
@@ -245,7 +241,8 @@ export const eventDropChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       foregroundGraphics: composePhysicsGraphics(
         eventDropOverlay(
@@ -291,7 +288,8 @@ export const unitPileChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       foregroundGraphics: composePhysicsGraphics(
         pileProjectionOverlay(
@@ -334,7 +332,8 @@ export const collisionSwarmChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       foregroundGraphics: composePhysicsGraphics(
         collisionSwarmProjectionOverlay(
@@ -383,7 +382,8 @@ export const processFlowChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       regionEffects: metadata?.regionEffects,
       backgroundGraphics: composePhysicsGraphics(
@@ -439,7 +439,7 @@ export const gauntletChart: ChartConfig = {
     return {
       ...common,
       config: built.config,
-      initialSpawns: allAtOnce(built.initialSpawns),
+      initialSpawns: built.initialSpawns,
       projectionRows: [],
       backgroundGraphics: composePhysicsGraphics(
         physicsChromeEnabled(common, rest, "showChrome")
@@ -564,9 +564,7 @@ export const crucibleChart: ChartConfig = {
     return {
       ...common,
       config: plan.config,
-      initialSpawns: allAtOnce(
-        buildCrucibleStateSpawns(state, plan.layout, spawnOptions)
-      ),
+      initialSpawns: buildCrucibleStateSpawns(state, plan.layout, spawnOptions),
       projectionRows,
       bodyStyle: (body: PhysicsBodyState) =>
         crucibleBodyStyle(body, state, selectedColorBy, rest),
@@ -618,7 +616,8 @@ export const packetFlowChart: ChartConfig = {
     return {
       ...common,
       config: layout.config,
-      initialSpawns: allAtOnce(layout.initialSpawns),
+      initialSpawns: layout.initialSpawns,
+      initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
       foregroundGraphics: composePhysicsGraphics(
         physicalFlowOverlay(
@@ -667,7 +666,8 @@ export const physicsCustomChart: ChartConfig = {
     return {
       ...common,
       config: resolved.config,
-      initialSpawns: allAtOnce(resolved.initialSpawns),
+      initialSpawns: resolved.initialSpawns,
+      initialSpawnPacing: resolved.initialSpawnPacing,
       projectionRows: [],
       bodyStyle:
         resolved.result.bodyStyle ??

@@ -23,6 +23,8 @@ import * as net from "net"
 import * as path from "path"
 import { SERVER_PATH, SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
 
+import { openPartialMcpUpload } from "./mcpHttpUploadHarness"
+
 const HTTP_START_RETRIES = 3
 
 /** Spawn the MCP server process in Streamable HTTP mode. */
@@ -1239,6 +1241,53 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
       error: { code: -32600, message: "Request body too large" },
       id: null,
     })
+  })
+
+  it("keeps tool execution available while partial uploads expire", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+    const server = await spawnReadyHTTPServer({
+      MCP_MAX_CONCURRENT_REQUESTS: "2",
+      MCP_BODY_TIMEOUT_MS: "1000",
+    })
+    proc = server.proc
+    port = server.port
+    const uploads = [openPartialMcpUpload(port), openPartialMcpUpload(port)]
+    try {
+      await Promise.all(uploads.map((upload) => upload.ready))
+      const healthy = await requestHTTP(port, "/mcp", {
+        body: { jsonrpc: "2.0", id: "healthy", method: "tools/list" },
+      })
+      expect(healthy.status).toBe(200)
+      expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+      const responses = await Promise.all(uploads.map((upload) => upload.closed))
+      for (const response of responses) {
+        expect(response).toContain("408 Request Timeout")
+        expect(response).toContain("Request body timed out")
+        expect(response).toMatch(/connection: close/i)
+      }
+    } finally {
+      for (const upload of uploads) upload.socket.destroy()
+    }
+  })
+
+  it("closes an oversized chunked upload without waiting for its final chunk", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    proc = undefined
+    const server = await spawnReadyHTTPServer({ MCP_MAX_BODY_BYTES: "512" })
+    proc = server.proc
+    port = server.port
+    const upload = openPartialMcpUpload(port, "x".repeat(1024))
+    try {
+      const response = await upload.closed
+      expect(response).toContain("413 Payload Too Large")
+      expect(response).toContain("Request body too large")
+      expect(response).toMatch(/connection: close/i)
+    } finally {
+      upload.socket.destroy()
+    }
   })
 
   it("rejects over-limit tool arguments before MCP dispatch", async () => {

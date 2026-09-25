@@ -10,6 +10,7 @@ import {
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
 import { registerLayoutPlugin } from "./registry"
 import { resolveNodeSizeFn } from "./forceLayoutNodeSize"
+import { resolveForceEdgeWeight } from "./forceLayoutEdgeWeight"
 import { createSeededFrameRandom } from "../FrameRuntime"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import { resolveLabelFn, resolveNodeRefId } from "../accessorUtils"
@@ -188,12 +189,9 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
       // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
       // d3-force's internal typing knows the shape of source/target.
-      // `weight` isn't in the RealtimeEdge interface but duck-typed input may
-      // set it; widen the callback's parameter to read the optional field
-      // without losing the generic signatures everywhere else.
       const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
         .strength((d) => {
-          const weight = (d as RealtimeEdge & { weight?: number }).weight
+          const weight = resolveForceEdgeWeight(d)
           const sourceId = resolveNodeRefId(d.source)
           const targetId = resolveNodeRefId(d.target)
           const endpointDegree = Math.max(

@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { isProcessSankeyDateDomain, toProcessSankeyTime } from "./processSankey/time"
 
 export const ProcessSankeyCapability: ChartCapability = {
   component: "ProcessSankey",
@@ -53,16 +54,19 @@ export const ProcessSankeyCapability: ChartCapability = {
     // props are renderChart-runnable without a second agent patch.
     let tMin = Infinity
     let tMax = -Infinity
+    let dateDomain = false
     for (const e of edges) {
       const s = e?.[startKey]
       const en = e?.[endKey]
-      const sN = s instanceof Date ? s.getTime() : typeof s === "number" ? s : s != null ? new Date(s as string).getTime() : NaN
-      const eN = en instanceof Date ? en.getTime() : typeof en === "number" ? en : en != null ? new Date(en as string).getTime() : NaN
+      const sN = toProcessSankeyTime(s)
+      const eN = toProcessSankeyTime(en)
+      dateDomain ||= isProcessSankeyDateDomain([s, en])
       if (Number.isFinite(sN)) { tMin = Math.min(tMin, sN); tMax = Math.max(tMax, sN) }
       if (Number.isFinite(eN)) { tMin = Math.min(tMin, eN); tMax = Math.max(tMax, eN) }
     }
     if (Number.isFinite(tMin) && Number.isFinite(tMax) && tMax >= tMin) {
-      props.domain = [tMin, tMax === tMin ? tMin + 1 : tMax]
+      const domain = [tMin, tMax === tMin ? tMin + 1 : tMax]
+      props.domain = dateDomain ? domain.map(time => new Date(time).toISOString()) : domain
     }
     return props
   },

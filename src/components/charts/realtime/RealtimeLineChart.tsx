@@ -54,7 +54,7 @@ import {
 
 import {
   buildRealtimeFrameChromeProps,
-  readRealtimeNumber,
+  readRealtimeTime,
   useRealtimeChartMode,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
@@ -393,7 +393,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
     const eventAccessor = timeAccessor
     reorderRef.current = createReorderBuffer(
       eventTimeRef.current!,
-      (d) => readRealtimeNumber(d, eventAccessor, "time") ?? NaN
+      (d) => Number(readRealtimeTime(d, eventAccessor, "time") ?? NaN)
     )
   }, [etKey, eventTimeEnabled, routeReleased, timeAccessor])
 
@@ -419,7 +419,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
               cb({
                 type: "late-data",
                 datum: lp,
-                eventTime: readRealtimeNumber(lp, ta, "time") ?? NaN,
+                eventTime: Number(readRealtimeTime(lp, ta, "time") ?? NaN),
                 watermark: rb.watermark,
                 policy,
                 lateCount: rb.lateCount,

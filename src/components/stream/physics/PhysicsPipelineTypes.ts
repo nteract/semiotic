@@ -181,6 +181,7 @@ export interface PhysicsPipelineConfig {
   fixedDt?: number
   maxDeltaSeconds?: number
   maxSubsteps?: number
+  /** Settling steps after the last queued arrival when no explicit limit is supplied. */
   settleStepLimit?: number
   timeScale?: number
   observation?: PhysicsPipelineObservationOptions

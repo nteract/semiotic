@@ -7,6 +7,7 @@ import {
   scaleLog,
   scaleSymlog,
   scaleTime,
+  scaleUtc,
   type ScaleLinear
 } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -363,7 +364,7 @@ export function rescueDegenerateDomains(
 }
 
 export function makePipelineScale(
-  type: "linear" | "log" | "symlog" | "time" | undefined,
+  type: "linear" | "log" | "symlog" | "time" | "utc" | undefined,
   domain: [number, number],
   range: [number, number]
 ): ScaleLinear<number, number> {
@@ -382,8 +383,8 @@ export function makePipelineScale(
       .domain(domain)
       .range(range) as unknown as ScaleLinear<number, number>
   }
-  if (type === "time") {
-    return scaleTime()
+  if (type === "time" || type === "utc") {
+    return (type === "utc" ? scaleUtc() : scaleTime())
       .domain([new Date(domain[0]), new Date(domain[1])])
       .range(range) as unknown as ScaleLinear<number, number>
   }
@@ -395,8 +396,11 @@ export function buildPipelineScales(options: {
   layout: { width: number; height: number }
   xDomain: [number, number]
   yDomain: [number, number]
+  xIsDate?: boolean
 }): StreamScales {
   const { config, layout, xDomain } = options
+  // Automatic date labels use UTC; calendar ticks must use the same zone.
+  const xScaleType = config.xScaleType ?? (options.xIsDate ? "utc" : undefined)
   const yDomain: [number, number] = config.invertY
     ? [options.yDomain[1], options.yDomain[0]]
     : options.yDomain
@@ -416,7 +420,7 @@ export function buildPipelineScales(options: {
       ? [layout.width - sp, sp]
       : [sp, layout.width - sp]
     return {
-      x: scaleLinear().domain(xDomain).range(xRange),
+      x: makePipelineScale(xScaleType, xDomain, xRange),
       y: makePipelineScale(config.yScaleType, yDomain, [
         layout.height - sp,
         sp
@@ -425,7 +429,7 @@ export function buildPipelineScales(options: {
   }
 
   return {
-    x: makePipelineScale(config.xScaleType, xDomain, [sp, layout.width - sp]),
+    x: makePipelineScale(xScaleType, xDomain, [sp, layout.width - sp]),
     y: makePipelineScale(config.yScaleType, yDomain, [
       layout.height - sp,
       sp

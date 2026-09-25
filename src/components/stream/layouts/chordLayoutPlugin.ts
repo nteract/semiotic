@@ -15,7 +15,6 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
-import type { Datum } from "../../charts/shared/datumTypes"
 import { registerLayoutPlugin } from "./registry"
 
 const DEFAULT_PALETTE = schemeCategory10 as readonly string[]
@@ -36,6 +35,13 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     config: NetworkPipelineConfig,
     size: [number, number]
   ): void {
+    // A relayout may remove every positive edge. Discard geometry before
+    // any early return so old ribbons and isolated arcs cannot survive.
+    for (const node of nodes) delete node.__arcData
+    for (const edge of edges) {
+      delete edge.__chordData
+      delete edge.__chordEdges
+    }
     if (nodes.length === 0) return
 
     const { padAngle = 0.01, groupWidth = 20, sortGroups } = config
@@ -45,34 +51,48 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     const cx = size[0] / 2
     const cy = size[1] / 2
 
-    const valueAccessorFn = resolveValueAccessor(config.valueAccessor)
-
-    // ── Build node index map ──────────────────────────────────────────
-    const nodeIndex = new Map<string, number>()
-    for (let i = 0; i < nodes.length; i++) {
-      nodeIndex.set(nodes[i].id, i)
-    }
-
-    // ── Build NxN matrix from edges ───────────────────────────────────
-    const n = nodes.length
+    const nodeMap = new Map(nodes.map((node) => [node.id, node]))
+    const activeIds = new Set<string>()
+    const positiveEdges = edges.filter((edge) => {
+      const sourceId = resolveNodeRefId(edge.source)
+      const targetId = resolveNodeRefId(edge.target)
+      // Ingestion already resolved the user's accessor against the raw row.
+      // Negative and non-finite values have no meaningful angular extent.
+      if (
+        !Number.isFinite(edge.value) || edge.value <= 0 ||
+        !nodeMap.has(sourceId) || !nodeMap.has(targetId)
+      ) return false
+      activeIds.add(sourceId)
+      activeIds.add(targetId)
+      return true
+    })
+    const activeNodes = nodes.filter((node) => activeIds.has(node.id))
+    const n = activeNodes.length
+    if (n === 0) return
+    const nodeIndex = new Map(activeNodes.map((node, index) => [node.id, index]))
     const matrix: number[][] = Array.from({ length: n }, () =>
       new Array<number>(n).fill(0)
     )
-
-    for (const edge of edges) {
+    const edgeLookup = new Map<string, RealtimeEdge[]>()
+    for (const edge of positiveEdges) {
       const sourceId = resolveNodeRefId(edge.source)
       const targetId = resolveNodeRefId(edge.target)
-
-      const si = nodeIndex.get(sourceId)
-      const ti = nodeIndex.get(targetId)
-      if (si === undefined || ti === undefined) continue
-
-      const value = valueAccessorFn(edge)
-      matrix[si][ti] = value
+      const si = nodeIndex.get(sourceId)!
+      const ti = nodeIndex.get(targetId)!
+      matrix[si][ti] += edge.value
+      // One ribbon represents both directions and all parallel input rows.
+      const key = si <= ti ? `${si}\0${ti}` : `${ti}\0${si}`
+      const contributors = edgeLookup.get(key)
+      if (contributors) contributors.push(edge)
+      else edgeLookup.set(key, [edge])
     }
 
-    // ── Run chord generator ───────────────────────────────────────────
-    const chordGenerator = chord().padAngle(padAngle)
+    // Reserve at least half the circle for data, even with many categories.
+    const gap = Math.min(
+      Number.isFinite(padAngle) ? Math.max(0, padAngle) : 0.01,
+      Math.PI / n
+    )
+    const chordGenerator = chord().padAngle(gap)
     if (sortGroups) {
       chordGenerator.sortGroups(sortGroups)
     }
@@ -87,7 +107,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 
     // ── Set node positions from arc centroids ────────────────────────
     for (const group of groups) {
-      const node = nodes[group.index]
+      const node = activeNodes[group.index]
       // ChordGroup carries startAngle/endAngle but no innerRadius/outerRadius;
       // construct an explicit DefaultArcObject so the centroid call
       // satisfies d3-shape's typed accessor contract.
@@ -115,9 +135,6 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Resolve edge source/target to node references ─────────────────
     // The HOC edge style functions need d.source/d.target as node objects
     // (not string IDs) so they can look up colors via d.source.data.
-    const nodeMap = new Map<string, RealtimeNode>()
-    for (const n of nodes) nodeMap.set(n.id, n)
-
     for (const edge of edges) {
       const srcId = resolveNodeRefId(edge.source)
       const tgtId = resolveNodeRefId(edge.target)
@@ -127,28 +144,14 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       if (tgtNode) edge.target = tgtNode
     }
 
-    // ── Stash chord data on edges for buildScene ─────────────────────
-    // Build bidirectional edge lookup (chord may emit in either direction)
-    const edgeLookup = new Map<string, RealtimeEdge>()
-    for (const e of edges) {
-      const eSrc = resolveNodeRefId(e.source)
-      const eTgt = resolveNodeRefId(e.target)
-      // Store by source\0target for bidirectional lookup (chord parallel edges are less common)
-      edgeLookup.set(`${eSrc}\0${eTgt}`, e)
-    }
-
     for (const generatedChord of chords) {
-      const sourceId = nodes[generatedChord.source.index].id
-      const targetId = nodes[generatedChord.target.index].id
-
-      // d3-chord always emits source.index < target.index, which may
-      // not match the original edge direction. Try both key orders.
-      const matchedEdge =
-        edgeLookup.get(`${sourceId}\0${targetId}`) ||
-        edgeLookup.get(`${targetId}\0${sourceId}`)
-
-      if (matchedEdge) {
-        matchedEdge.__chordData = generatedChord
+      const si = generatedChord.source.index
+      const ti = generatedChord.target.index
+      const key = si <= ti ? `${si}\0${ti}` : `${ti}\0${si}`
+      const contributors = edgeLookup.get(key)!
+      for (const edge of contributors) {
+        edge.__chordData = generatedChord
+        edge.__chordEdges = contributors
       }
     }
   },
@@ -234,12 +237,22 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     // ── Build ribbon edges ───────────────────────────────────────────
     // d3-chord ribbon paths are centered at (0,0). Offset every
     // coordinate by (cx, cy) so they align with the arc nodes.
-    for (const edge of edges) {
+    const renderedChords = new Set<Chord>()
+    const activeNodes = nodes.filter((node) => node.__arcData)
+    for (let edge of edges) {
       // `edge.__chordData` is `unknown` on RealtimeEdge — narrow at
       // the read site rather than coupling networkTypes to d3-chord's
       // `Chord`.
       const chordData = edge.__chordData as Chord | undefined
-      if (!chordData) continue
+      if (!chordData || renderedChords.has(chordData)) continue
+      renderedChords.add(chordData)
+      // Preserve the historical representative used by style/custom tooltip
+      // callbacks: the last authored row in d3's source direction (the larger
+      // matrix cell). All contributing rows remain available on the datum.
+      const sourceId = activeNodes[chordData.source.index].id
+      for (const contributor of edge.__chordEdges || []) {
+        if (resolveNodeRefId(contributor.source) === sourceId) edge = contributor
+      }
 
       // d3-chord's ribbon() internally subtracts PI/2 from all angles
       // (converting from d3's 12-o'clock convention to standard math coords),
@@ -335,14 +348,6 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 registerLayoutPlugin("chord", chordLayoutPlugin)
-
-function resolveValueAccessor(
-  valueAccessor: string | ((d: Datum) => number) | undefined
-): (d: Datum) => number {
-  if (!valueAccessor) return (d: Datum) => d.value ?? 1
-  if (typeof valueAccessor === "function") return valueAccessor
-  return (d: Datum) => d[valueAccessor] ?? 1
-}
 
 /**
  * Translate all absolute coordinates in an SVG path string by (dx, dy).

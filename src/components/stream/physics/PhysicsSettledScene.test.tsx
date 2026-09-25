@@ -48,6 +48,28 @@ function svgMarkup(
 }
 
 describe("physics settled scene helpers", () => {
+  it("includes late arrivals in settled SVG marks and the evidence ledger", () => {
+    const store = new PhysicsPipelineStore({
+      kernel: { gravity: { x: 0, y: 0 }, sleepAfter: 0.01 }
+    })
+    store.enqueue([
+      { ...circle("early", 10, 10), spawnAt: 0 },
+      { ...circle("late", 20, 10), spawnAt: 60 }
+    ])
+
+    const result = buildPhysicsSettledScene(store, { charge: 2 })
+
+    expect(result.sceneNodes.map((node) => node._transitionKey)).toEqual(["early", "late"])
+    expect(result.snapshot.queue).toHaveLength(0)
+    expect(result.evidence).toMatchObject({
+      bodyCount: 2,
+      queuedCount: 0,
+      settled: true,
+      ledger: { charge: 2, live: 2, queued: 0, balanced: true }
+    })
+    expect(result.evidence.warnings).toEqual([])
+  })
+
   it("projects settled physics bodies into XY scene nodes reusable by SceneToSVG", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 1 / 60,

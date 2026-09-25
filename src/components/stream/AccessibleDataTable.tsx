@@ -304,7 +304,8 @@ export function AccessibleDataTable({
     ) : null
   }
 
-  const totalCount = scene.length
+  const allRows = extractAllRows(scene)
+  const totalCount = allRows.length
 
   if (!isExpanded) {
     return (
@@ -329,7 +330,6 @@ export function AccessibleDataTable({
   }
 
   // JIT: only compute stats + sample on activation
-  const allRows = extractAllRows(scene)
   const fieldStats = computeFieldStats(allRows)
   const summary = formatSummary(allRows.length, fieldStats)
   const shownCount = Math.min(visibleCount, allRows.length)

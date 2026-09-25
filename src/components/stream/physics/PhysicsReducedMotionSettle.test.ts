@@ -83,6 +83,58 @@ describe("reduced-motion settle admits paced arrivals", () => {
     expect(store.readBodies()).toHaveLength(40)
   })
 
+  it.each(["settle", "settleWithObservations"] as const)(
+    "%s admits arrivals beyond the default settling margin",
+    (method) => {
+      const store = new PhysicsPipelineStore({
+        settleStepLimit: 12,
+        kernel: { gravity: { x: 0, y: 0 }, sleepAfter: 0.01 }
+      })
+      store.enqueue(Array.from({ length: 1000 }, (_, index) => ({
+        id: `paced-${index}`,
+        x: index * 3,
+        y: 0,
+        shape: { type: "circle" as const, radius: 1 }
+      })), { pacing: { ratePerSec: 20 } })
+
+      store[method]()
+
+      expect(store.queueSize()).toBe(0)
+      expect(store.liveBodyCount()).toBe(1000)
+      expect(store.elapsed()).toBeGreaterThanOrEqual(999 / 20)
+      expect(store.hasPendingWork()).toBe(false)
+    }
+  )
+
+  it("skips idle time between sparse arrivals without changing admission times", () => {
+    const store = new PhysicsPipelineStore({
+      kernel: { gravity: { x: 0, y: 0 }, sleepAfter: 0.01 }
+    })
+    store.enqueue([
+      { id: "first", x: 0, y: 0, spawnAt: 0, shape: { type: "circle", radius: 1 } },
+      { id: "next-day", x: 10, y: 0, spawnAt: 86400, shape: { type: "circle", radius: 1 } }
+    ])
+
+    const result = store.settleWithObservations()
+
+    expect(result.spawned).toEqual(["first", "next-day"])
+    expect(result.steps).toBeLessThan(100)
+    expect(result.observations.find((event) =>
+      event.type === "physics-spawn" && event.bodyId === "next-day"
+    )?.timestamp).toBeCloseTo(86400, 6)
+    expect(store.queueSize()).toBe(0)
+  })
+
+  it("preserves explicitly bounded settling and reports unfinished arrivals", () => {
+    const { store } = pacedStore(1000)
+    const result = store.settleWithObservations(1)
+
+    expect(result.steps).toBe(1)
+    expect(result.queueSize).toBeGreaterThan(0)
+    expect(result.shouldContinue).toBe(true)
+    expect(store.snapshot().simulationState).toBe("running")
+  })
+
   it("holds for UnitPileChart pacing as well", () => {
     const layout = buildPhysicsPile({
       data: [

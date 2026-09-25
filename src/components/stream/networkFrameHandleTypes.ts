@@ -10,7 +10,9 @@ import type { NetworkLayoutResult } from "./networkCustomLayout"
 /** Imperative API exposed by `StreamNetworkFrame` refs. */
 export interface StreamNetworkFrameHandle {
   /** Ingest one edge immediately and coalesce its expensive layout with other
-   * pushes at the next animation frame. Geometry getters commit first. */
+   * pushes at the next animation frame. Geometry getters commit first.
+   * Source, target and value use the configured accessors. Repeated pairs
+   * accumulate values and merge raw fields, with the latest field winning. */
   push(edge: EdgePush): void
   /** Ingest and lay out an explicit edge batch synchronously, absorbing any
    * layout pending from prior single-edge pushes. */

@@ -180,7 +180,11 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `MCP_AUTH_TOKEN` | unset (disabled) | Optional bearer token required in `Authorization: Bearer <token>` for transport requests. Unset disables auth and preserves public health/challenge behavior. |
 | `MCP_AUTH_SCHEME` | `Bearer` | Optional auth scheme matcher. Keep as `Bearer` unless your front proxy rewrites credentials. |
 | `MCP_SUPPORTED_PROTOCOL_VERSIONS` | unset (disabled) | Optional comma-separated allowlist for inbound `MCP-Protocol-Version`. If unset, the server accepts any protocol value and still returns `MCP-Protocol-Version: 2024-11-05`. |
-| `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | Hard request-body ceiling; larger bodies get 413 before any tool runs. |
+| `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | Hard request-body ceiling; larger bodies get 413 and the connection closes before any tool runs. |
+| `MCP_BODY_TIMEOUT_MS` | `10000` | Total time to receive a JSON body; stalled uploads get 408 and the connection closes. Uploads do not occupy tool execution slots. HTTP headers also have a 10-second timeout. |
+| `MCP_MAX_CONCURRENT_REQUESTS` | `16` | Maximum requests executing after body parsing and operation-limit validation. |
+| `MCP_MAX_REQUESTS_PER_WINDOW` | `240` | Maximum validated requests admitted to execution per rate window. Invalid, oversized, and timed-out bodies do not consume this budget. |
+| `MCP_REQUEST_WINDOW_MS` | `60000` | Duration of the execution-admission rate window. |
 | `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. Requests over the ceiling get 413 before MCP dispatch. |

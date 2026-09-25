@@ -171,6 +171,14 @@ export default function ChordDiagramPage() {
         and you want to highlight who sends more to whom.
       </p>
 
+      <p>
+        Each arc measures its node’s outgoing total. A node with only incoming
+        relationships has a zero-width arc; for undirected relationships, include
+        equal-valued edges in both directions. Parallel edges are summed into
+        one ribbon, whose default tooltip lists all contributing rows. Zero and
+        negative values contribute no ribbon, and disconnected nodes are omitted.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
       {/* ----------------------------------------------------------------- */}

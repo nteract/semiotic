@@ -476,12 +476,15 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
         <div className="semiotic-tooltip" style={{ padding: "6px 10px", background: "var(--semiotic-tooltip-bg, white)", borderRadius: "var(--semiotic-tooltip-radius, 6px)", boxShadow: "var(--semiotic-tooltip-shadow, 0 2px 8px rgba(0,0,0,0.15))" }}>
           <div style={{ fontWeight: 600 }}>{zone}</div>
           <div style={{ fontSize: "0.85em", color: "var(--semiotic-text-secondary, #666)" }}>
-            {isFill ? `Current: ${Math.round(clampedValue)}` : "Remaining"}
+            Current: {valueFormat ? valueFormat(clampedValue) : Math.round(clampedValue)}
           </div>
+          {!isFill && <div style={{ fontSize: "0.85em", color: "var(--semiotic-text-secondary, #666)" }}>
+            Remaining: {valueFormat ? valueFormat(max - clampedValue) : Math.round(max - clampedValue)}
+          </div>}
         </div>
       )
     }
-  }, [clampedValue])
+  }, [clampedValue, max, valueFormat])
 
   const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
   const emptyEl = !loadingEl

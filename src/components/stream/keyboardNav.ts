@@ -14,16 +14,17 @@ import type { HoverData } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
 import type { SceneNode } from "./types"
-import type { OrdinalSceneNode } from "./ordinalTypes"
+import type { DistributionStats, OrdinalSceneNode } from "./ordinalTypes"
 import type { GeoSceneNode } from "./geoTypes"
 import { glyphHitGeometry } from "./glyphDef"
+import { normalizeHoverDatum } from "./hoverUtils"
 
 export interface NavPoint {
   x: number
   y: number
   datum: Datum | null
   /** Shape hint for focus ring rendering */
-  shape?: "circle" | "rect" | "wedge" | "geoarea"
+  shape?: "circle" | "rect" | "wedge" | "geoarea" | "path"
   /** Width of rect-shaped elements (bars, sankey nodes) */
   w?: number
   /** Height of rect-shaped elements */
@@ -31,6 +32,9 @@ export interface NavPoint {
   /** SVG path (plot-relative) for a geoarea focus ring — the shape is
    *  outlined instead of drawing a circle at the centroid. */
   pathData?: string
+  /** Distribution hover metadata, shared with pointer tooltips. */
+  stats?: DistributionStats
+  category?: string
   /** Group identifier for graph navigation (series name, category, node id) */
   group?: string
   /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
@@ -292,6 +296,17 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         })
         break
 
+      case "candlestick": {
+        if (node.datum == null) break
+        const top = node.isRange ? node.highY : Math.min(node.openY, node.closeY)
+        const bottom = node.isRange ? node.lowY : Math.max(node.openY, node.closeY)
+        points.push({
+          x: node.x, y: (top + bottom) / 2, datum: normalizeHoverDatum(node.datum),
+          shape: "rect", w: node.bodyWidth, h: Math.abs(bottom - top), group: "_default"
+        })
+        break
+      }
+
       case "heatcell":
         points.push({
           x: node.x + node.w / 2,
@@ -354,6 +369,45 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         w: geometry.halfWidth * 2,
         h: geometry.halfHeight * 2,
         group: "_default"
+      })
+    } else if (node.type === "boxplot") {
+      if (node.datum == null) continue
+      const vertical = node.projection === "vertical"
+      points.push({
+        x: vertical ? node.x : (node.q1Pos + node.q3Pos) / 2,
+        y: vertical ? (node.q1Pos + node.q3Pos) / 2 : node.y,
+        datum: normalizeHoverDatum(node.datum),
+        shape: "rect",
+        w: vertical ? node.columnWidth : Math.abs(node.q3Pos - node.q1Pos),
+        h: vertical ? Math.abs(node.q3Pos - node.q1Pos) : node.columnWidth,
+        stats: node.stats, category: node.category, group: "_default"
+      })
+    } else if (node.type === "violin" && node.bounds) {
+      if (node.datum == null) continue
+      const { x, y, width, height } = node.bounds
+      points.push({
+        x: x + width / 2, y: y + height / 2,
+        datum: normalizeHoverDatum(node.datum),
+        shape: "rect", w: width, h: height,
+        stats: node.stats, category: node.category, group: "_default"
+      })
+    } else if (node.type === "trapezoid") {
+      if (node.datum == null || node.points.length < 3) continue
+      points.push({
+        x: node.points.reduce((sum, point) => sum + point[0], 0) / node.points.length,
+        y: node.points.reduce((sum, point) => sum + point[1], 0) / node.points.length,
+        datum: normalizeHoverDatum(node.datum),
+        shape: "path", pathData: `M${node.points.map(point => point.join(",")).join("L")}Z`,
+        category: node.category, group: "_default"
+      })
+    } else if (node.type === "connector") {
+      if (node.datum == null || (node.style.strokeWidth ?? 1) <= 0 || node.style.stroke === "none") continue
+      if (node.x1 === node.x2 && node.y1 === node.y2) continue
+      points.push({
+        x: (node.x1 + node.x2) / 2, y: (node.y1 + node.y2) / 2,
+        datum: normalizeHoverDatum(node.datum),
+        shape: "path", pathData: `M${node.x1},${node.y1}L${node.x2},${node.y2}`,
+        category: node.group, group: node.group ?? "_default"
       })
     } else if (node.type === "wedge" && node.cx != null) {
       if (node.datum === null) continue
@@ -574,6 +628,29 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
         w: geometry.halfWidth * 2,
         h: geometry.halfHeight * 2,
       })
+    } else if (node.type === "line") {
+      if (node.datum == null || node.path.length < 2) continue
+      // Half the drawn path length keeps the tooltip on curved/resampled flows.
+      const lengths = node.path.slice(1).map((point, index) =>
+        Math.hypot(point[0] - node.path[index][0], point[1] - node.path[index][1]))
+      let remaining = lengths.reduce((sum, length) => sum + length, 0) / 2
+      if (!Number.isFinite(remaining) || remaining <= 0) continue
+      for (let index = 0; index < lengths.length; index++) {
+        const length = lengths[index]
+        if (length > 0 && remaining <= length) {
+          const start = node.path[index]
+          const end = node.path[index + 1]
+          const ratio = remaining / length
+          points.push({
+            x: start[0] + (end[0] - start[0]) * ratio,
+            y: start[1] + (end[1] - start[1]) * ratio,
+            datum: normalizeHoverDatum(node.datum), shape: "path",
+            pathData: `M${node.path.map(point => point.join(",")).join("L")}`
+          })
+          break
+        }
+        remaining -= length
+      }
     } else if (node.type === "geoarea" && node.centroid && node.interactive !== false) {
       // Skip non-interactive areas (e.g. the graticule, `datum: null`) so
       // keyboard nav lands only on hit-testable shapes — mirrors the
@@ -641,6 +718,8 @@ export function navPointToHover(point: NavPoint): HoverData {
   const rawDatum = point.datum || {}
   return {
     data: rawDatum,
+    ...(point.stats && { stats: point.stats }),
+    ...(point.category != null && { category: point.category }),
     x: point.x,
     y: point.y,
     __semioticHoverData: true,

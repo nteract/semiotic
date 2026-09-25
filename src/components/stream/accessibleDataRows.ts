@@ -21,6 +21,7 @@ export type AccessibleSceneNode = {
   closeY?: unknown
   highY?: unknown
   lowY?: unknown
+  stats?: unknown
 }
 
 export interface DataRow {
@@ -29,7 +30,7 @@ export interface DataRow {
 }
 
 /** Pull primitive, user-facing fields from a raw datum into a display row. */
-function datumToValues(datum: unknown): Record<string, string | number> {
+export function datumToValues(datum: unknown): Record<string, string | number> {
   const values: Record<string, string | number> = {}
   if (datum == null || typeof datum !== "object") return values
   for (const [key, value] of Object.entries(datum as Record<string, unknown>)) {
@@ -54,7 +55,7 @@ function nodeRecord(value: unknown): AccessibleSceneNode {
     : {}
 }
 
-function accessibleDatumFor(node: AccessibleSceneNode): unknown {
+export function accessibleDatumFor(node: AccessibleSceneNode): unknown {
   const accessibility = nodeRecord(node.accessibility)
   return accessibility.tableFields ?? node.accessibleDatum ?? node.datum
 }
@@ -95,27 +96,53 @@ export function extractAllRows(scene: AccessibleSceneNode[]): DataRow[] {
   const rows: DataRow[] = []
   if (!Array.isArray(scene)) return rows
 
-  const hasSeriesNodes = scene.some(
-    (node) => node && (node.type === "line" || node.type === "area"),
-  )
+  // Only suppress markers whose exact source row is already represented by a
+  // series or distribution. Geo lines and unrelated scatter layers must not
+  // hide points merely because they share a scene with a line.
+  const representedDatums = new Set<unknown>()
+  for (const node of scene) {
+    if (!node || !["line", "area", "boxplot", "violin"].includes(String(node.type))) continue
+    if (Array.isArray(node.datum)) {
+      for (const datum of node.datum) representedDatums.add(datum)
+    }
+  }
 
   for (const node of scene) {
     if (!node || typeof node !== "object") continue
     if (node.datum === null) continue
     try {
       switch (node.type) {
-        case "point": {
-          if (hasSeriesNodes) break
+        case "point":
+        case "symbol":
+        case "glyph": {
+          if (representedDatums.has(node.datum)) break
           rows.push({ label: "Point", values: datumToValues(accessibleDatumFor(node)) })
           break
         }
         case "line":
         case "area": {
           const accessible = accessibleDatumFor(node)
-          const data = Array.isArray(accessible) ? accessible : []
+          const data = Array.isArray(accessible)
+            ? accessible
+            : accessible != null && typeof accessible === "object" ? [accessible] : []
           const label = node.type === "line" ? "Line point" : "Area point"
           for (const datum of data) {
             rows.push({ label, values: datumToValues(datum) })
+          }
+          break
+        }
+        case "boxplot":
+        case "violin": {
+          const accessible = accessibleDatumFor(node)
+          const label = node.type === "boxplot" ? "Boxplot" : "Distribution"
+          const category: Record<string, string | number> = typeof node.category === "string" ? { category: node.category } : {}
+          if (Array.isArray(accessible)) {
+            rows.push({ label, values: { ...category, ...datumToValues(node.stats) } })
+            for (const datum of accessible) {
+              rows.push({ label: `${label} observation`, values: { ...category, ...datumToValues(datum) } })
+            }
+          } else {
+            rows.push({ label, values: { ...category, ...datumToValues(accessible) } })
           }
           break
         }
@@ -169,6 +196,13 @@ export function extractAllRows(scene: AccessibleSceneNode[]): DataRow[] {
           break
         case "candlestick":
           rows.push({ label: "Candlestick", values: datumToValues(accessibleDatumFor(node)) })
+          break
+        case "connector":
+        case "trapezoid":
+        case "bezier":
+        case "ribbon":
+        case "curved":
+          rows.push({ label: "Connection", values: datumToValues(accessibleDatumFor(node)) })
           break
         case "geoarea": {
           const datum = nodeRecord(accessibleDatumFor(node))

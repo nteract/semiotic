@@ -414,13 +414,14 @@ export class PhysicsPipelineStore {
     return result
   }
 
-  /** Steps-only settle. Kernel/sensor transitions are stepped but not observed. */
-  settle(maxSteps = this.config.settleStepLimit): number {
+  /** Steps-only settle. An explicit limit bounds the entire run; otherwise
+   * paced arrivals receive their scheduled time plus the settling margin. */
+  settle(maxSteps?: number): number {
     return this.runSettle(maxSteps, false).steps
   }
 
   settleWithObservations(
-    maxSteps = this.config.settleStepLimit,
+    maxSteps?: number,
     execution?: PhysicsPipelineExecution
   ): PhysicsPipelineTickResult {
     return this.runSettle(maxSteps, true, execution)
@@ -439,6 +440,10 @@ export class PhysicsPipelineStore {
       fixedDt: this.config.fixedDt,
       queueSize: () => this.queue.length,
       atRest: () => this.atRest(),
+      allSleeping: () => this.world.allSleeping(),
+      elapsed: () => this.elapsedSeconds,
+      nextArrival: () => this.queue[0]?.spawnAt,
+      lastArrival: () => this.queue.at(-1)?.spawnAt,
       advanceTime: (s) => { this.elapsedSeconds += s },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
       observeBodyBudget: (obs) => this.observeBodyBudget(obs),
@@ -456,7 +461,7 @@ export class PhysicsPipelineStore {
    * can't mean two different things. `observe` adds kernel/sensor observation
    * and the collected tick result; the stepping itself is identical.
    */
-  private runSettle(maxSteps: number, observe: boolean, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
+  private runSettle(maxSteps: number | undefined, observe: boolean, execution?: PhysicsPipelineExecution): PhysicsPipelineTickResult {
     const revisionBefore = this.revision
     const spawned: string[] = []
     const evicted: string[] = []
@@ -483,10 +488,12 @@ export class PhysicsPipelineStore {
       : { spawned }
     const afterStep = this.stepObserver(execution, { spawned, evicted, sedimented, events, observations: observations ?? [] })
     const { steps, budget }: PhysicsSettleRun =
-      runPhysicsSettleSteps(this.settleHost(), maxSteps, sink, {
+      runPhysicsSettleSteps(this.settleHost(), maxSteps ?? this.config.settleStepLimit, sink, {
         afterStep,
         continueWhile: execution?.continueWhile,
-        shouldStop: observe ? () => this.paused || !this.visible : undefined
+        shouldStop: observe ? () => this.paused || !this.visible : undefined,
+        drainArrivals: maxSteps === undefined,
+        skipIdle: maxSteps === undefined && !execution
       })
 
     const bodiesChanged = spawned.length + evicted.length + sedimented.length > 0

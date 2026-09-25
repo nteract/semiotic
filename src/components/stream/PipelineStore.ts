@@ -27,7 +27,7 @@ import type {
   SceneNode,
   Style
 } from "./types"
-import { resolveAccessor, resolveStringAccessor, accessorsEquivalent, type CoercibleNumber } from "./accessorUtils"
+import { resolveAccessor, resolveRawAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { coerceDateLikeValue, parseDateLikeString } from "../charts/shared/temporalStrings"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -128,7 +128,7 @@ export class PipelineStore implements UpdateResultStore {
   private growingCapacityWarned = false
   private windowSizeWarned = false
 
-  private getX: (d: Datum) => number
+  private getX!: (d: Datum) => number
   private getY: (d: Datum) => number
   private getGroup: ((d: Datum) => string) | undefined
   private getCategory: ((d: Datum) => string) | undefined
@@ -236,8 +236,9 @@ export class PipelineStore implements UpdateResultStore {
   /** Base (as-emitted) style per node, so restyle passes don't compound. */
   private _baseStyles = new WeakMap<object, Style>()
 
-  /** True when the x accessor returns Date objects (auto-detected on first data ingestion) */
+  /** True when the effective x accessor returns Date objects or date strings. */
   xIsDate = false
+  private xTypeDetected = false
 
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private spatialIndex = new PipelineSpatialIndex()
@@ -252,14 +253,13 @@ export class PipelineStore implements UpdateResultStore {
     const isStreamingType = ["bar", "swarm", "waterfall"].includes(config.chartType)
     const useStreamingDefaults = isStreamingType || config.runtimeMode === "streaming"
 
+    this.resolveXAccessor()
     if (useStreamingDefaults) {
-      this.getX = resolveAccessor(config.timeAccessor || config.xAccessor, "time")
       this.getY = resolveAccessor(
         config.valueAccessor || config.yAccessor,
         "value"
       )
     } else {
-      this.getX = resolveAccessor(config.xAccessor, "x")
       this.getY = resolveAccessor(config.yAccessor, "y")
     }
 
@@ -294,6 +294,31 @@ export class PipelineStore implements UpdateResultStore {
     if (config.pulse) {
       this.timestampBuffer = new RingBuffer(config.windowSize)
     }
+  }
+
+  /** Resolve and detect with the same accessor in bounded, push, and reconfigured charts. */
+  private resolveXAccessor(rows: Iterable<Datum> = this.buffer): void {
+    const streaming = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
+      || this.config.runtimeMode === "streaming"
+    const accessor = streaming
+      ? this.config.timeAccessor || this.config.xAccessor
+      : this.config.xAccessor
+    const getRawX = resolveRawAccessor<Datum, unknown>(accessor, streaming ? "time" : "x")
+    this.xIsDate = false
+    this.xTypeDetected = false
+    for (const row of rows) {
+      const value = getRawX(row)
+      if (value == null || value === "") continue
+      const date = (value instanceof Date && Number.isFinite(value.getTime())) ||
+        (typeof value === "string" && Number.isFinite(parseDateLikeString(value)))
+      if (!date && !Number.isFinite(Number(value))) continue
+      this.xIsDate = date
+      this.xTypeDetected = true
+      break
+    }
+    this.getX = this.xIsDate
+      ? (d) => coerceDateLikeValue(getRawX(d))
+      : (d) => +(getRawX(d) as number)
   }
 
   /**
@@ -415,39 +440,7 @@ export class PipelineStore implements UpdateResultStore {
       this.yExtent.clear()
       if (this.timestampBuffer) this.timestampBuffer.clear()
 
-      // Auto-detect Date x values on bounded ingestion.
-      // Reset getX to the default resolved accessor first, so a previous
-      // date-parsing override doesn't persist if data changes to non-date.
-      const isStreaming = ["bar", "swarm", "waterfall"].includes(this.config.chartType)
-        || this.config.runtimeMode === "streaming"
-      this.getX = isStreaming
-        ? resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
-        : resolveAccessor(this.config.xAccessor, "x")
-      this.xIsDate = false
-      if (changeset.inserts.length > 0) {
-        const sample = changeset.inserts[0]
-        const rawAccessor = this.config.xAccessor
-        const rawVal = typeof rawAccessor === "function"
-          ? rawAccessor(sample)
-          : (sample as Record<string, unknown>)[rawAccessor || "x"]
-
-        const isDateObj = rawVal instanceof Date
-        const isDateStr = typeof rawVal === "string"
-          && Number.isFinite(parseDateLikeString(rawVal))
-
-        this.xIsDate = isDateObj || isDateStr
-
-        // resolveAccessor wraps with unary + which converts Date objects to
-        // epoch ms correctly, but date strings like "2003-01-06" and
-        // year-month strings like "2003-01" become NaN.
-        // Swap getX to a date-parsing accessor when date strings are detected.
-        if (isDateStr) {
-          const key = typeof rawAccessor === "string" ? rawAccessor : undefined
-          this.getX = key
-            ? (d: Datum) => coerceDateLikeValue(d[key])
-            : (d: Datum) => coerceDateLikeValue((rawAccessor as (d: Datum) => CoercibleNumber)(d))
-        }
-      }
+      this.resolveXAccessor(changeset.inserts)
 
       // Auto-resize buffer to fit all bounded data.
       // totalSize is set when data is progressively chunked — pre-allocate
@@ -461,6 +454,8 @@ export class PipelineStore implements UpdateResultStore {
         this.pushDatumYExtent(d)
       }
     } else {
+      // The first usable pushed value establishes the temporal x contract.
+      if (!this.xTypeDetected) this.resolveXAccessor(changeset.inserts)
       // Streaming append
       for (const d of changeset.inserts) {
         if (this.config.windowMode === "growing" && this.buffer.full) {
@@ -624,7 +619,8 @@ export class PipelineStore implements UpdateResultStore {
       config,
       layout,
       xDomain,
-      yDomain
+      yDomain,
+      xIsDate: this.xIsDate
     })
 
     // Build scene graph based on chart type
@@ -766,7 +762,7 @@ export class PipelineStore implements UpdateResultStore {
     const xFlipped = oldXRange[0] > oldXRange[1]
     const yFlipped = oldYRange[0] < oldYRange[1]  // standard Y is [height, 0] (flipped = [0, height])
     this.scales = {
-      x: remapScale(this.config.xScaleType, xDomain,
+      x: remapScale(this.config.xScaleType ?? (this.xIsDate ? "utc" : undefined), xDomain,
         xFlipped ? [layout.width - rsp, rsp] : [rsp, layout.width - rsp]),
       y: remapScale(this.config.yScaleType, yDomain,
         yFlipped ? [rsp, layout.height - rsp] : [layout.height - rsp, rsp])
@@ -1271,6 +1267,7 @@ export class PipelineStore implements UpdateResultStore {
 
   clear(): void {
     this.buffer.clear()
+    this.resolveXAccessor()
     this.xExtent.clear()
     this.yExtent.clear()
     this._hasRenderedOnce = false
@@ -1461,11 +1458,10 @@ export class PipelineStore implements UpdateResultStore {
       const xChanged = modeChanged || !accessorsEquivalent(nextXAccessor, prevXAccessor)
       const yChanged = modeChanged || !accessorsEquivalent(nextYAccessor, prevYAccessor)
       if (xChanged || yChanged) {
+        if (xChanged) this.resolveXAccessor()
         if (useStreamingDefaults) {
-          this.getX = resolveAccessor(this.config.timeAccessor || this.config.xAccessor, "time")
           this.getY = resolveAccessor(this.config.valueAccessor || this.config.yAccessor, "value")
         } else {
-          this.getX = resolveAccessor(this.config.xAccessor, "x")
           this.getY = resolveAccessor(this.config.yAccessor, "y")
         }
         // The bounds ribbon (when present) captures `getY` in its closure
@@ -1545,6 +1541,7 @@ export class PipelineStore implements UpdateResultStore {
     // changing. Resolved accessors already call the live function, so we only
     // need to recompute derived extents and rebuild the scene.
     if ("accessorRevision" in config && config.accessorRevision !== prev.accessorRevision) {
+      this.resolveXAccessor()
       accessorChanged = true
       extentAccessorChanged = true
     }

@@ -30,15 +30,12 @@ export function addCircularPathData(
 
   var buffer = 5;
 
-  // Cap circular link widths to prevent oversized arcs.
-  // Circular arcs convey connection, not magnitude — their visual weight
-  // should be modest relative to the chart size.
-  var chartHeight = graph.y1 - graph.y0;
-  var maxCircularWidth = Math.max(8, chartHeight * 0.15);
-
+  // Circular flows use the same value-to-width scale as forward flows.
+  // The frame scales the complete layout uniformly to fit its viewport.
   graph.links.forEach(function (link) {
     if (link.circular) {
-      link._circularWidth = Math.min(link.width, maxCircularWidth);
+      link._circularWidth = link.width;
+      link._circularStub = false;
     }
   });
 
@@ -52,11 +49,6 @@ export function addCircularPathData(
       link.circularPathData = {};
     }
   });
-
-  // Mark top 4 circular links by value as full ribbons, rest as stubs
-  var allCircular = graph.links.filter(function (l) { return l.circular; });
-  allCircular.sort(function (a, b) { return b.value - a.value; });
-  allCircular.forEach(function (l, i) { l._circularStub = i >= 4; });
 
   // calc vertical offsets per top/bottom links
   var topLinks = graph.links.filter(function (l) {

@@ -248,13 +248,25 @@ export function buildGaugeArcModel(options: BuildGaugeArcModelOptions): GaugeArc
 
       if (fillPct > 0) {
         const key = makeZoneKey("fill", i)
-        data.push({ category: key, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true })
+        data.push({
+          category: key, value: fillPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: true,
+          __gaugeAccessibleDatum: {
+            category: zone.label || `Zone ${i + 1}`, value, min, max,
+            segmentStart: prevBound, segmentEnd: min + fillEnd * range, filled: true,
+          },
+        })
         styles.set(key, { fill: zone.color })
       }
 
       if (bgPct > 0) {
         const key = makeZoneKey("bg", i)
-        data.push({ category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false })
+        data.push({
+          category: key, value: bgPct, _zone: zone.label || `Zone ${i + 1}`, _isFill: false,
+          __gaugeAccessibleDatum: {
+            category: zone.label || `Zone ${i + 1}`, value, min, max,
+            segmentStart: Math.max(prevBound, clampedValue), segmentEnd: zone.value, filled: false,
+          },
+        })
         styles.set(key, { fill: backgroundColor, opacity: 0.4 })
       }
 

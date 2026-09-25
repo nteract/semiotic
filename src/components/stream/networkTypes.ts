@@ -84,9 +84,11 @@ export interface RealtimeEdge {
   _prevY0?: number
   _prevY1?: number
   _prevSankeyWidth?: number
+  _prevCircularPathData?: CircularPathData
   _targetY0?: number
   _targetY1?: number
   _targetSankeyWidth?: number
+  _targetCircularPathData?: CircularPathData
   /** Set during intro animation to allow edge interpolation from width 0 */
   _introFromZero?: boolean
   direction?: string
@@ -103,16 +105,12 @@ export interface RealtimeEdge {
   _circularWidth?: number
   _circularStub?: boolean
   /**
-   * @internal Chord-layout extension. Carries the d3-chord-generated
-   * source/target arc spans for this edge, set by `chordLayoutPlugin`
-   * during `computeLayout` and read by its `buildScene`. Typed
-   * `unknown` because the d3 `Chord` interface lives in `d3-chord`
-   * and importing the type here would couple `networkTypes` to that
-   * dep — consumers narrow at the read site. `__` prefix matches the
-   * `_circularWidth` / `_circularStub` internal-field convention on
-   * this same interface.
+   * @internal Source/target arc spans set and read by `chordLayoutPlugin`.
+   * Unknown avoids coupling shared network types to d3-chord; readers narrow it.
    */
   __chordData?: unknown
+  /** @internal All positive input edges represented by the same chord ribbon. */
+  __chordEdges?: RealtimeEdge[]
 }
 
 // ── Bezier cache ───────────────────────────────────────────────────────
@@ -187,11 +185,8 @@ export const DEFAULT_PARTICLE_STYLE: Required<
 
 // ── Push API ───────────────────────────────────────────────────────────
 
-export interface EdgePush {
-  source: string
-  target: string
-  value: number
-}
+/** Raw edge row resolved with the frame's source/target/value accessors. */
+export type EdgePush = Datum
 
 // ── Re-export HoverData ────────────────────────────────────────────────
 

@@ -1,5 +1,9 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
+import { ChordValuesFixture } from "./chordValuesFixture"
+import { SankeyValuesFixture } from "./sankeyValuesFixture"
+import { ForceLayoutFixture } from "../force-layout-fixture"
+import { NetworkIngestFixture } from "../network-ingest-fixture"
 import { createRoot } from "react-dom/client"
 import { networkData, hierarchyData, chordData, colors } from "../test-data.js"
 
@@ -208,5 +212,13 @@ const examples = [
 // Render all examples
 const root = createRoot(document.getElementById("root"))
 root.render(
-  React.createElement("div", { className: "test-grid" }, examples)
+  new URLSearchParams(location.search).has("chord-values")
+    ? React.createElement(ChordValuesFixture)
+    : new URLSearchParams(location.search).has("sankey-values")
+      ? React.createElement(SankeyValuesFixture)
+      : new URLSearchParams(location.search).has("force-layout-parity")
+        ? React.createElement(ForceLayoutFixture)
+        : new URLSearchParams(location.search).has("network-ingest")
+          ? React.createElement(NetworkIngestFixture)
+          : React.createElement("div", { className: "test-grid" }, examples)
 )

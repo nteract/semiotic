@@ -41,6 +41,8 @@ import {
   type NavGraph
 } from "./keyboardNav"
 import { FocusRing } from "./FocusRing"
+import { refreshNetworkKeyboardFocus } from "./networkKeyboardFocus"
+import type { NavPoint } from "./keyboardNav"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { hasOwnTooltipChrome } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
@@ -391,7 +393,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // fields that change node positions (so a change must re-ingest and
   // re-run the layout plugin): data accessors, hierarchy/sankey/force/orbit
   // layout parameters, and the custom layout. Render-only props (nodeStyle,
-  // edgeStyle, orbitRevolution, nodeSize, labels, colors, realtime encoding,
+  // edgeStyle, orbitRevolution, labels, colors, realtime encoding,
   // animation) are deliberately excluded — those are applied by the
   // `updateConfig` effect + the next `buildScene` without a re-ingest. The
   // hierarchy-ingest effect below depends on this instead of the full
@@ -422,6 +424,9 @@ const StreamNetworkFrame = memo(forwardRef<
     nodeWidth,
     iterations,
     forceStrength,
+    // Force charge, collision and link clearance all depend on node radius.
+    nodeSize: chartType === "force" ? nodeSize : undefined,
+    nodeSizeRange: chartType === "force" ? nodeSizeRange : undefined,
     padAngle,
     groupWidth,
     sortGroups,
@@ -472,6 +477,15 @@ const StreamNetworkFrame = memo(forwardRef<
   pipelineConfigRef.current = stablePipelineConfig
 
   const hoverRef = useRef<typeof hoverData>(null)
+  const kbFocusIndexRef = useRef(-1)
+  const focusedNavPointRef = useRef<NavPoint | null>(null)
+  const neighborIndexRef = useRef(-1)
+  const refreshKeyboardFocus = useCallback((store: NetworkPipelineStore) => {
+    refreshNetworkKeyboardFocus({
+      sceneNodes: store.sceneNodes, indexRef: kbFocusIndexRef,
+      pointRef: focusedNavPointRef, neighborIndexRef, hoverRef, setHoverData
+    })
+  }, [])
   const sceneCursorInventoryRef = useRef<NetworkCursorInventory>({
     nodes: false,
     edges: false
@@ -528,6 +542,7 @@ const StreamNetworkFrame = memo(forwardRef<
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
+      refreshKeyboardFocus(store)
       lastSceneSizeRef.current = sceneSize
       emitLegendCategories()
       syncColorMap(store)
@@ -539,7 +554,7 @@ const StreamNetworkFrame = memo(forwardRef<
       dirtyRef.current = false
       store.markStylePaintPending()
     },
-    [buildSceneWithDiagnostics, emitLegendCategories, syncColorMap]
+    [buildSceneWithDiagnostics, emitLegendCategories, syncColorMap, refreshKeyboardFocus]
   )
   const invalidateCanvasPaint = useCallback(() => {
     storeRef.current?.markStylePaintPending()
@@ -756,6 +771,9 @@ const StreamNetworkFrame = memo(forwardRef<
     setLayoutVersion(storeRef.current?.layoutVersion ?? 0)
     setHoverData(null)
     hoverRef.current = null
+    kbFocusIndexRef.current = -1
+    focusedNavPointRef.current = null
+    neighborIndexRef.current = -1
     dirtyRef.current = true
     scheduleRender()
   }, [emitLegendCategories, scheduleRender])
@@ -820,7 +838,7 @@ const StreamNetworkFrame = memo(forwardRef<
                 typeof edgeIdAccessor === "function"
                   ? edgeIdAccessor
                   : (d: Datum) => d?.[edgeIdAccessor]
-              matches = getEid(hoveredEdge) === sourceIdOrEdgeId
+              matches = getEid(hoveredEdge.data ?? hoveredEdge) === sourceIdOrEdgeId
             } else {
               matches = true // no accessor to compare — conservatively clear
             }
@@ -952,6 +970,14 @@ const StreamNetworkFrame = memo(forwardRef<
           (store.nodes.size > 0 || store.edges.size > 0)
         ) {
           clearAll()
+        }
+        // Push-mode graphs have no controlled arrays to re-ingest, but force
+        // parameter changes still need to re-solve their retained topology.
+        if (chartType === "force" && nodesProp == null && edgesProp == null && store.nodes.size > 0) {
+          store.runLayout([adjustedWidth, adjustedHeight])
+          rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
+          setLayoutVersion(store.layoutVersion)
+          scheduleRender()
         }
         // Nothing to lay out — the frame is no longer busy, so a consumer
         // watching a previously-pending worker layout gets released.
@@ -1224,13 +1250,6 @@ const StreamNetworkFrame = memo(forwardRef<
 
   // ── Keyboard navigation ───────────────────────────────────────────
 
-  const kbFocusIndexRef = useRef(-1)
-  const focusedNavPointRef = useRef<{
-    shape?: string
-    w?: number
-    h?: number
-  } | null>(null)
-  const neighborIndexRef = useRef(-1)
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (isInteractiveKeyboardTarget(e)) return
@@ -1294,11 +1313,7 @@ const StreamNetworkFrame = memo(forwardRef<
         kbFocusIndexRef.current = 0
         neighborIndexRef.current = -1
         const point = graph.flat[0]
-        focusedNavPointRef.current = {
-          shape: point.shape,
-          w: point.w,
-          h: point.h
-        }
+        focusedNavPointRef.current = point
         const rawDatum = point.datum || {}
         const hover: HoverData = buildHoverData(rawDatum, point.x, point.y, {
           nodeOrEdge: "node"
@@ -1329,11 +1344,7 @@ const StreamNetworkFrame = memo(forwardRef<
 
       kbFocusIndexRef.current = next
       const point = graph.flat[next]
-      focusedNavPointRef.current = {
-        shape: point.shape,
-        w: point.w,
-        h: point.h
-      }
+      focusedNavPointRef.current = point
       const rawDatum = point.datum || {}
       const hover: HoverData = {
         data: rawDatum,
@@ -1423,6 +1434,7 @@ const StreamNetworkFrame = memo(forwardRef<
       },
       syncColorMap: () => syncColorMap(store),
       onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
+        if (inventoryChanged || geometryChanged) refreshKeyboardFocus(store)
         if (inventoryChanged) {
           if (!refreshNetworkCursorInventory(
             sceneCursorInventoryRef.current,

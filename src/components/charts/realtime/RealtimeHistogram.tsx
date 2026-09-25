@@ -1,4 +1,4 @@
-import { readRealtimeNumber } from "./realtimeAccessors"
+import { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -568,7 +568,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
 
-  const numericTime = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
+  const numericTime = useCallback((datum: Datum) => readRealtimeTime(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
   const numericValue = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN, [valueAccessor])
   const windowMode = windowModeProp ?? capacityMode ?? "sliding"
   const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)

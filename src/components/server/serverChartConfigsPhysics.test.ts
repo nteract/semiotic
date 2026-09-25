@@ -5,8 +5,39 @@ import {
   eventDropChart
 } from "./serverChartConfigsPhysics"
 import { renderChartWithEvidence } from "./renderToStaticSVG"
+import { PhysicsPipelineStore } from "../stream/physics/PhysicsPipelineStore"
+import { buildPhysicsSettledScene } from "../stream/physics/PhysicsSettledScene"
+import { renderPhysicsFrame } from "./staticPhysics"
 
 describe("physics server configuration parity", () => {
+  it.each([
+    { chart: galtonBoardChart, pacing: { pacing: { ratePerSec: 55 } }, data: [{ value: 1 }, { value: 2 }] },
+    { chart: unitPileChart, pacing: { pacing: { ratePerSec: 20 } }, data: [{ category: "A" }, { category: "B" }] },
+    { chart: eventDropChart, pacing: { pacing: "arrival", timeScale: 1 }, data: [{ time: 0, arrivalTime: 0 }, { time: 60, arrivalTime: 60 }] }
+  ])("preserves browser arrival pacing in static physics configs", ({ chart, pacing, data }) => {
+    const props = chart.buildProps(data, undefined, undefined, { size: [400, 260] }, {})
+    expect(props.initialSpawnPacing).toMatchObject(pacing)
+  })
+
+  it("static frames preserve late spawn times and match the settled scene", () => {
+    const config = {
+      kernel: { gravity: { x: 0, y: 0 }, velocityDamping: 0.99, sleepAfter: 0.01 }
+    }
+    const initialSpawns = [
+      { id: "early", x: 10, y: 10, vx: 30, spawnAt: 0, shape: { type: "circle" as const, radius: 1 } },
+      { id: "late", x: 10, y: 10, vx: 0, spawnAt: 60, shape: { type: "circle" as const, radius: 1 } }
+    ]
+    const store = new PhysicsPipelineStore(config)
+    store.enqueue(initialSpawns)
+    const expected = buildPhysicsSettledScene(store)
+    const svg = renderPhysicsFrame({ config, initialSpawns })
+
+    const circleXs = Array.from(svg.matchAll(/<circle[^>]*cx="([^"]+)"/g), (match) => Number(match[1]))
+    expect(circleXs).toEqual(expected.bodies.map((body) => body.x))
+    expect(expected.snapshot.elapsedSeconds).toBeGreaterThan(60)
+    expect(expected.evidence.queuedCount).toBe(0)
+  })
+
   it.each([
     { chart: galtonBoardChart, radius: 6, data: [{ id: "a", value: 1 }] },
     {

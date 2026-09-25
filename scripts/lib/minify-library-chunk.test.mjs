@@ -4,11 +4,7 @@ import { gzipSync } from "node:zlib"
 import { minify } from "terser"
 import { build } from "esbuild"
 import { minifyLibraryChunk } from "./minify-library-chunk.mjs"
-
-const options = {
-  compress: { hoist_funs: true, reduce_funcs: false, passes: 3 },
-  format: { comments: /webpackIgnore|@vite-ignore/, preserve_annotations: true }
-}
+import { libraryTerserOptions as options } from "./library-minification-options.mjs"
 
 test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
   const source = `
@@ -93,4 +89,123 @@ test("preserves purity annotations for downstream named-import tree shaking", as
     `data:text/javascript,${encodeURIComponent(code)}`
   )
   assert.equal(exports.required, 42)
+})
+
+test("both production candidates preserve NaN comparisons, getters, and coercion order", async () => {
+  const source = `
+    export function guards(value, bound) {
+      return [!(value > bound), !(value >= bound), !(value < bound), !(value <= bound)]
+    }
+    export function readGetter(object) { object.value; return 1 }
+    export function orderedCoercion(a, b) { return !(a > b) }
+  `
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const original = await load(source)
+  const candidates = await Promise.all(
+    [true, false].map((hoist_funs) =>
+      minify(source, {
+        module: true,
+        ...options,
+        compress: { ...options.compress, hoist_funs }
+      })
+    )
+  )
+  candidates.push(
+    await minifyLibraryChunk(source, {
+      format: "esm",
+      filename: "semantics.js",
+      options
+    })
+  )
+  for (const candidate of candidates) {
+    const compact = await load(candidate.code)
+    for (const [value, bound] of [
+      [1, NaN],
+      [NaN, 1],
+      [1, "abc"],
+      [1, Infinity],
+      [-Infinity, 1],
+      [-0, 0]
+    ]) {
+      assert.deepEqual(
+        compact.guards(value, bound),
+        original.guards(value, bound)
+      )
+    }
+    let calls = 0
+    compact.readGetter({
+      get value() {
+        calls++
+        return 42
+      }
+    })
+    assert.equal(calls, 1, "a public datum getter is observable")
+    const order = []
+    const first = {
+      valueOf() {
+        order.push("first")
+        return NaN
+      }
+    }
+    const second = {
+      valueOf() {
+        order.push("second")
+        return 1
+      }
+    }
+    assert.equal(compact.orderedCoercion(first, second), true)
+    assert.deepEqual(order, ["first", "second"])
+  }
+})
+
+test("both production candidates preserve matchesThreshold source semantics", async () => {
+  const result = await build({
+    entryPoints: ["src/components/charts/shared/styleRules.ts"],
+    bundle: true,
+    write: false,
+    format: "esm",
+    platform: "node"
+  })
+  const source = result.outputFiles[0].text
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const original = await load(source)
+  const candidates = await Promise.all(
+    [true, false].map((hoist_funs) =>
+      minify(source, {
+        module: true,
+        ...options,
+        compress: { ...options.compress, hoist_funs }
+      })
+    )
+  )
+  candidates.push(
+    await minifyLibraryChunk(source, {
+      format: "esm",
+      filename: "thresholds.js",
+      options
+    })
+  )
+  const thresholds = [
+    { gt: NaN },
+    { gt: "abc" },
+    { gte: NaN },
+    { lt: NaN },
+    { lte: NaN },
+    { within: [0, NaN] },
+    { outside: [NaN, NaN] },
+    { gt: 0 },
+    { within: [0, 2] }
+  ]
+  for (const candidate of candidates) {
+    const compact = await load(candidate.code)
+    for (const threshold of thresholds) {
+      const rule = { field: "v", ...threshold }
+      assert.equal(
+        compact.matchesThreshold(rule, { v: 1 }, {}),
+        original.matchesThreshold(rule, { v: 1 }, {})
+      )
+    }
+  }
 })
