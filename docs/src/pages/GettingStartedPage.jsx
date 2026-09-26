@@ -9,17 +9,17 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 278,
+    "kb": 280,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
     "importPath": "semiotic/atlas/core",
-    "kb": 13,
+    "kb": 14,
     "blurb": "Network Atlas preparation, projections, and evidence queries"
   },
   {
     "importPath": "semiotic/access",
-    "kb": 28,
+    "kb": 29,
     "blurb": "Chart Access Contract factory and first-wave baseline contracts"
   },
   {
@@ -39,42 +39,42 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 136,
+    "kb": 137,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 167,
+    "kb": 168,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 131,
+    "kb": 132,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 154,
+    "kb": 157,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 159,
+    "kb": 162,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 108,
+    "kb": 109,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 169,
+    "kb": 172,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 168,
+    "kb": 171,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -119,7 +119,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 104,
+    "kb": 105,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -139,7 +139,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes/react",
-    "kb": 6,
+    "kb": 7,
     "blurb": "ThemeProvider/useTheme and hooks"
   },
   {
@@ -169,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 604,
+    "kb": 606,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -194,7 +194,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 380,
+    "kb": 384,
     "blurb": "Full chart API and shared utilities"
   }
 ])
