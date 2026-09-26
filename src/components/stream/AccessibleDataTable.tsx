@@ -1,27 +1,21 @@
 "use client"
 import * as React from "react"
-import { AccessibleTableMoreRows } from "./AccessibleTableMoreRows"
-import { AccessibleDataRowsTable } from "./AccessibleDataRowsTable"
 import { AccessibleTableShell } from "./AccessibleTableShell"
-import { SAMPLE_SIZE, PAGE_SIZE } from "./accessibleTableStyles"
 import { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
+import { useHydration } from "./useHydration"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
 import {
   countDataRows,
-  extractAllRows,
   type AccessibleSceneNode as AnySceneNode,
 } from "./accessibleDataRows"
-import {
-  computeFieldStats,
-  formatSummary,
-} from "./accessibleDataTableModel"
 export type { AccessibleTableOptions, AccessibleTablePortalTarget, AccessibleTableProp } from "./accessibleTableTypes"
 export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
 export { AriaLiveTooltip, SR_ONLY_STYLE } from "./AriaLiveTooltip"
 
 const AccessibleTablePortalImpl = React.lazy(() => import("./AccessibleTablePortalImpl"))
+const Content = React.lazy(() => import("./AccessibleDataTableContent"))
 
 /** Relocate the complete interactive accessible-table UI when a chart lives
  * inside a consumer-owned `role="img"`. The historical inline DOM remains
@@ -33,8 +27,11 @@ export function AccessibleTablePortal({
   accessibleTable: AccessibleTableProp
   children: React.ReactNode
 }) {
+  const hydrated = useHydration()
   if (typeof accessibleTable !== "object") return children
-  if (typeof document === "undefined") return null
+  // External targets only exist on the client. Keep the first hydration render
+  // identical to SSR even when this optional portal chunk is already cached.
+  if (!hydrated) return null
   return <React.Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></React.Suspense>
 }
 
@@ -104,7 +101,7 @@ export function computeNetworkAriaLabel(
 
 // ── AccessibleDataTable ─────────────────────────────────────────────────
 
-interface AccessibleDataTableProps {
+export interface AccessibleDataTableProps {
   scene: AnySceneNode[]
   /** Refresh semantic rows after an in-place scene update. */
   sceneRevision?: number
@@ -115,6 +112,22 @@ interface AccessibleDataTableProps {
   chartTitle?: string
 }
 
+/** Share the same skip-link target between the SVG and canvas paths. */
+export function AccessibleDataTableSlot({
+  accessibleTable,
+  ...props
+}: AccessibleDataTableProps & {
+  accessibleTable: AccessibleTableProp
+  tableId: string
+}) {
+  return accessibleTable ? (
+    <AccessibleTablePortal accessibleTable={accessibleTable}>
+      <SkipToTableLink tableId={props.tableId} />
+      <AccessibleDataTable {...props} />
+    </AccessibleTablePortal>
+  ) : null
+}
+
 
 /**
  * JIT accessible data summary. Renders a lightweight sr-only button by default.
@@ -122,37 +135,14 @@ interface AccessibleDataTableProps {
  * computes a statistical summary (.describe()-style) and shows a sample of rows
  * (5 to start), pageable to the full dataset via "Show more".
  */
-export function AccessibleDataTable({
-  scene,
-  sceneRevision,
-  chartType,
-  tableId,
-  chartTitle
-}: AccessibleDataTableProps) {
-  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
+export function AccessibleDataTable(props: AccessibleDataTableProps) {
+  const { scene, chartType, tableId, chartTitle } = props
   const interaction = useAccessibleTableInteraction()
-  const { isExpanded, revealRows } = interaction
-  const sceneKey = sceneRevision ?? scene
-  const model = React.useMemo(() => {
-    if (!isExpanded) return null
-    const allRows = extractAllRows(scene)
-    return { allRows, summary: formatSummary(allRows.length, computeFieldStats(allRows)) }
-    // A supplied semantic revision is authoritative across geometry-only builds.
-    // Without one, direct callers invalidate by replacing the scene array.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isExpanded, sceneKey])
   const regionLabel = chartTitle
     ? `Data summary for ${chartTitle}`
     : tableId
       ? `Data summary for ${chartType} ${tableId}`
       : `Data summary for ${chartType}`
-
-  // Reset paging whenever the panel collapses — via the close button, a blur in
-  // sr-only mode, or ChartContainer toggling visibility off — so reopening never
-  // re-renders the full (potentially huge) row set at once.
-  React.useEffect(() => {
-    if (!isExpanded) setVisibleCount(SAMPLE_SIZE)
-  }, [isExpanded])
 
   if (!scene || scene.length === 0) {
     return tableId ? (
@@ -160,26 +150,18 @@ export function AccessibleDataTable({
     ) : null
   }
 
-  const shell = { interaction, tableId, regionLabel, countLabel: `${countDataRows(scene)} elements` }
-  if (!isExpanded) return <AccessibleTableShell {...shell} />
-
-
-  // JIT: only compute stats + sample on activation
-  const { allRows, summary } = model!
-  const shownCount = Math.min(visibleCount, allRows.length)
-  const sampleRows = allRows.slice(0, shownCount)
-  const remaining = allRows.length - shownCount
-
-
-  const showMore = (event: React.MouseEvent<HTMLButtonElement>) => {
-    revealRows(event.currentTarget, shownCount, Math.min(shownCount + PAGE_SIZE, allRows.length), allRows.length)
-    setVisibleCount((c) => c + PAGE_SIZE)
-  }
-
   return (
-    <AccessibleTableShell {...shell} summary={summary}>
-      <AccessibleDataRowsTable rows={sampleRows} label={`Sample data for ${chartType}`} typeLabel="type" caption={remaining > 0 ? `First ${shownCount} of ${allRows.length} data points` : `All ${allRows.length} data points`} />
-      <AccessibleTableMoreRows remaining={remaining} onClick={showMore} kind="row" />
+    <AccessibleTableShell
+      interaction={interaction}
+      tableId={tableId}
+      regionLabel={regionLabel}
+      countLabel={`${countDataRows(scene)} elements`}
+    >
+      {interaction.isExpanded && (
+        <React.Suspense fallback={<div role="status">Loading data summary…</div>}>
+          <Content {...props} revealRows={interaction.revealRows} />
+        </React.Suspense>
+      )}
     </AccessibleTableShell>
   )
 }

@@ -189,7 +189,7 @@ describe("AccessibleDataTable styling hooks", () => {
     })
   })
 
-  it("renders stable classes and CSS variable hooks on the visible panel", () => {
+  it("renders stable classes and CSS variable hooks on the visible panel", async () => {
     render(
       <AccessibleDataTable
         tableId="semiotic-table-test"
@@ -208,7 +208,7 @@ describe("AccessibleDataTable styling hooks", () => {
     expect(screen.getByRole("button", { name: /close data summary/i })).toHaveClass(
       "semiotic-accessible-data-table-close"
     )
-    expect(screen.getByRole("table")).toHaveClass("semiotic-accessible-data-table-table")
+    expect(await screen.findByRole("table")).toHaveClass("semiotic-accessible-data-table-table")
   })
 
   it("renders the same public hook plus network marker for network tables", () => {
@@ -231,7 +231,7 @@ describe("AccessibleDataTable styling hooks", () => {
 })
 
 describe("NetworkAccessibleDataTable semantic rows", () => {
-  it("uses Palace-like tableFields and accessibleDatum while retaining degree metrics", () => {
+  it("uses Palace-like tableFields and accessibleDatum while retaining degree metrics", async () => {
     render(
       <NetworkAccessibleDataTable
         tableId="semantic-network"
@@ -287,7 +287,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
 
-    const nodeTable = screen.getByRole("table", {
+    const nodeTable = await screen.findByRole("table", {
       name: /node data and degree summary/i,
     })
     expect(within(nodeTable).getByText("The tools got better")).toBeInTheDocument()
@@ -311,7 +311,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     expect(screen.queryByText("Ignored because tableFields wins")).toBeNull()
   })
 
-  it("still exposes semantic edge rows when a custom layout has no scene nodes", () => {
+  it("still exposes semantic edge rows when a custom layout has no scene nodes", async () => {
     render(
       <NetworkAccessibleDataTable
         tableId="edges-only-network"
@@ -329,13 +329,13 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
 
     expect(screen.queryByRole("table", { name: /node data/i })).toBeNull()
-    const edgeTable = screen.getByRole("table", { name: /edge data/i })
+    const edgeTable = await screen.findByRole("table", { name: /edge data/i })
     expect(within(edgeTable).getByText("archive → court")).toBeInTheDocument()
     expect(within(edgeTable).getByText("informs")).toBeInTheDocument()
     expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edges.")
   })
 
-  it("omits decorative null-datum network nodes from counts and rows", () => {
+  it("omits decorative null-datum network nodes from counts and rows", async () => {
     render(
       <NetworkAccessibleDataTable
         tableId="decorative-network-node"
@@ -362,7 +362,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     })
     fireEvent.click(trigger)
 
-    const table = screen.getByRole("table", { name: /node data/i })
+    const table = await screen.findByRole("table", { name: /node data/i })
     expect(within(table).getAllByRole("row")).toHaveLength(2)
     expect(within(table).getByText("Station")).toBeInTheDocument()
     expect(screen.getByRole("note")).toHaveTextContent("1 nodes, 0 edges.")

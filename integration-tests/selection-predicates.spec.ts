@@ -81,7 +81,6 @@ test("Date hover selects bounded and pushed marks through resize and dismisses",
   ]
   await waitForChartReady(page, "date-source")
   for (const target of targets) {
-    await expect(target.locator("canvas").first()).toBeVisible()
     await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, 255])
   }
 

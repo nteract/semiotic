@@ -23,7 +23,7 @@ import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsDataCanvasPaint, needsInteractionCanvasPaint } from "./paintNeeds"
-import { AccessibleDataTable, AccessibleTablePortal, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTableSlot, AriaLiveTooltip, ScreenReaderSummary, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { FocusRing } from "./FocusRing"
@@ -1163,7 +1163,7 @@ const StreamGeoFrame = memo(
           // commit. See `StreamXYFrame.tsx` for the rationale.
           ref={combinedRef}
           className={`stream-geo-frame${className ? ` ${className}` : ""}`}
-          role="img"
+          role={accessibleTable ? "group" : "img"}
           aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
           style={{
             position: "relative",
@@ -1172,6 +1172,7 @@ const StreamGeoFrame = memo(
             height: responsiveHeight ? "100%" : size[1]
           }}
         >
+          <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
           <svg xmlns="http://www.w3.org/2000/svg" width={size[0]} height={size[1]} style={{ position: "absolute", left: 0, top: 0 }}>
             {surfaceBackground ? (
@@ -1251,7 +1252,7 @@ const StreamGeoFrame = memo(
         {process.env.NODE_ENV !== "production" && storeRef.current && (
           <SceneRevisionDiagnosticsObserver store={storeRef.current} diagnostics={sceneRevisionDiagnosticsRef.current} />
         )}
-        {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
+        <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}

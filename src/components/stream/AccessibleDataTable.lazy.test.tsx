@@ -8,7 +8,7 @@ import type { AccessibleSceneNode } from "./accessibleDataRows"
 
 it.each(["line", "area", "boxplot", "violin"])(
   "keeps collapsed live %s scenes cheap and current, then materializes full statistics on demand",
-  (type) => {
+  async (type) => {
     let fieldReads = 0
     const data = Array.from({ length: 10_000 }, (_, index) => ({
       index,
@@ -46,6 +46,7 @@ it.each(["line", "area", "boxplot", "violin"])(
       name: `View data summary (${count} elements)`
     })
     fireEvent.click(trigger)
+    await screen.findByRole("note")
     expect(fieldReads).toBeGreaterThanOrEqual(10_000)
     expect(screen.getByRole("note")).toHaveTextContent(`${count} data points.`)
     expect(screen.getByRole("note")).toHaveTextContent(
@@ -165,14 +166,14 @@ const rowCases: Array<{
 
 it.each(rowCases)(
   "keeps the collapsed $name count aligned with expanded and exported rows",
-  ({ scene, count }) => {
+  async ({ scene, count }) => {
     render(<AccessibleDataTable scene={scene} chartType="test" />)
     fireEvent.click(
       screen.getByRole("button", {
         name: `View data summary (${count} elements)`
       })
     )
-    expect(screen.getByRole("note")).toHaveTextContent(`${count} data points.`)
+    expect(await screen.findByRole("note")).toHaveTextContent(`${count} data points.`)
     expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(
       count + 1
     )
@@ -180,7 +181,7 @@ it.each(rowCases)(
   }
 )
 
-it("counts series observations once when markers share their raw datum, retaining independent points", () => {
+it("counts series observations once when markers share their raw datum, retaining independent points", async () => {
   const first = { value: 1 }
   const second = { value: 2 }
   const outlier = { value: 20 }
@@ -196,7 +197,7 @@ it("counts series observations once when markers share their raw datum, retainin
   fireEvent.click(
     screen.getByRole("button", { name: "View data summary (5 elements)" })
   )
-  expect(screen.getByRole("note")).toHaveTextContent("5 data points.")
+  expect(await screen.findByRole("note")).toHaveTextContent("5 data points.")
   expect(extractAllRows(scene).map((row) => row.values.value)).toEqual([
     1,
     2,
@@ -206,7 +207,7 @@ it("counts series observations once when markers share their raw datum, retainin
   ])
 })
 
-it("counts all chord contributors without materializing their fields until expanded", () => {
+it("counts all chord contributors without materializing their fields until expanded", async () => {
   let fieldReads = 0
   const contributors = Array.from({ length: 7 }, (_, index) => ({
     source: "A",
@@ -240,7 +241,7 @@ it("counts all chord contributors without materializing their fields until expan
   fireEvent.click(
     screen.getByRole("button", { name: "View data summary (2 nodes, 7 edges)" })
   )
-  expect(screen.getByRole("note")).toHaveTextContent("2 nodes, 7 edges.")
+  expect(await screen.findByRole("note")).toHaveTextContent("2 nodes, 7 edges.")
   const table = screen.getByRole("table", { name: "Edge data for chord" })
   expect(within(table).getAllByRole("row")).toHaveLength(6)
   expect(fieldReads).toBeGreaterThanOrEqual(7)

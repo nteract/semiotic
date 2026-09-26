@@ -287,6 +287,8 @@ describe("adjacency flow CSR/SSR parity", () => {
       "Forward and reverse weighted routes in an ordered matrix."
     )
     expect(html).toContain("B is the middle step.")
+    expect(html).toContain("semiotic-accessible-data-table")
+    expect(html.replace(/<!--.*?-->/g, "")).toContain("View data summary (3 nodes, 3 edges)")
 
     const container = document.createElement("div")
     document.body.appendChild(container)

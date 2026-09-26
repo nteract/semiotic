@@ -8,9 +8,8 @@ import "../../test-utils/registerBuiltInXYPlugins"
  *      mismatch warnings (the heuristic React uses to detect server/client
  *      structural disagreement).
  *   3. After the first post-commit re-render fires, the canvas branch is
- *      live: the chart's outer wrapper switches from `role="img"` (the
- *      SVG-only shape) to `role="group"` (the interactive wrapper with
- *      keyboard nav).
+ *      live: the chart's group wrapper gains keyboard navigation while
+ *      keeping its accessible table discoverable.
  *
  * This is the gate that protects the hydration boundary. If a future
  * change makes the server output diverge from the first client render,
@@ -54,9 +53,9 @@ describe("StreamXYFrame hydration parity", () => {
 
   it("renderToString emits SVG markup containing the data marks", () => {
     const html = renderToString(<StreamXYFrame {...baseProps} />)
-    // Outer wrapper carries role="img" in SVG-only mode (no keyboard nav).
+    // The outer group exposes the table alongside the SVG graphic.
     expect(html).toContain("stream-xy-frame")
-    expect(html).toContain('role="img"')
+    expect(html).toContain('role="group"')
     // The data marks are emitted as SVG path/rect/circle/etc. — at minimum
     // an <svg> element should be present (SceneToSVG output).
     expect(html).toContain("<svg")
@@ -91,10 +90,10 @@ describe("StreamXYFrame hydration parity", () => {
     const html = renderToString(<StreamXYFrame {...baseProps} />)
     container.innerHTML = html
 
-    // Pre-hydration: outer wrapper is role="img" (SVG-only shape).
+    // Pre-hydration: the group exposes the eager table target.
     const wrapper = container.querySelector(".stream-xy-frame") // test-quality-gate: allow-mount-only - precondition for semantic role assertion below.
     expect(wrapper).not.toBeNull()
-    expect(wrapper?.getAttribute("role")).toBe("img")
+    expect(wrapper?.getAttribute("role")).toBe("group")
 
     const rootBox: { current: ReturnType<typeof hydrateRoot> | null } = { current: null }
         act(() => {
@@ -102,8 +101,7 @@ describe("StreamXYFrame hydration parity", () => {
         })
 
     // Post-hydration: useLayoutEffect has fired, hydrated flipped to
-    // true, the canvas branch is now live. The wrapper's role flips
-    // to "group" (the interactive shape with keyboard nav + tabIndex).
+    // true, the canvas branch adds keyboard navigation to the group.
     const upgradedWrapper = container.querySelector(".stream-xy-frame")
     expect(upgradedWrapper?.getAttribute("role")).toBe("group")
     expect(upgradedWrapper?.getAttribute("tabIndex")).toBe("0")
@@ -135,7 +133,7 @@ describe("StreamXYFrame hydration parity", () => {
   //
   // The four tests above cover what jsdom can verify reliably:
   // (1) server SVG output is non-empty, (2) hydration produces no
-  // React mismatch warnings, (3) the wrapper upgrades from role="img"
-  // to role="group", and (4) renderToString's SSR branch doesn't leak
+  // React mismatch warnings, (3) the wrapper gains keyboard navigation,
+  // and (4) renderToString's SSR branch doesn't leak
   // canvas elements into the server output.
 })

@@ -4,7 +4,8 @@ import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkViewGroup } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import { ScreenReaderSummary } from "./AccessibleDataTable"
+import { AccessibleTablePortal, ScreenReaderSummary } from "./AccessibleDataTable"
+import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
 import {
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG
@@ -15,6 +16,7 @@ import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
 interface NetworkSSRFrameProps {
+  tableId: string
   props: StreamNetworkFrameProps
   store: NetworkPipelineStore | null
   responsiveRef: React.Ref<HTMLDivElement>
@@ -28,6 +30,7 @@ interface NetworkSSRFrameProps {
 }
 
 export function NetworkSSRFrame({
+  tableId,
   props,
   store,
   responsiveRef,
@@ -50,6 +53,7 @@ export function NetworkSSRFrame({
     responsiveWidth,
     responsiveHeight,
     summary,
+    accessibleTable = true,
     renderMode,
     legend,
     legendPosition,
@@ -102,7 +106,7 @@ export function NetworkSSRFrame({
     <div
       ref={responsiveRef}
       className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
+      role={accessibleTable || store?.customLayoutHtmlMarks?.length ? "group" : "img"}
       aria-label={
         description || (typeof title === "string" ? title : "Network chart")
       }
@@ -114,6 +118,17 @@ export function NetworkSSRFrame({
         overflow: props.viewTransform ? "clip" : undefined
       }}
     >
+      {accessibleTable && (
+        <AccessibleTablePortal accessibleTable={accessibleTable}>
+          <NetworkAccessibleDataTableSlot
+            nodes={sceneNodes}
+            edges={sceneEdges}
+            chartType="Network chart"
+            chartTitle={typeof title === "string" ? title : undefined}
+            tableId={tableId}
+          />
+        </AccessibleTablePortal>
+      )}
       <ScreenReaderSummary summary={summary} />
       <svg
         xmlns="http://www.w3.org/2000/svg"

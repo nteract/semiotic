@@ -69,12 +69,12 @@ function focusClick(element: HTMLElement) {
 }
 
 describe.each(cases)("$name table focus", ({ table, more }) => {
-  it("focuses revealed rows when the final paging button disappears and restores the trigger on close", () => {
+  it("focuses revealed rows when the final paging button disappears and restores the trigger on close", async () => {
     render(table)
     focusClick(screen.getByRole("button", { name: /View data summary/ }))
     const region = screen.getByRole("region")
     expect(region).toContainElement(document.activeElement as HTMLElement)
-    focusClick(screen.getByRole("button", { name: more }))
+    focusClick(await screen.findByRole("button", { name: more }))
     expect(document.activeElement).toBe(
       within(screen.getByRole("table")).getAllByRole("row")[6]
     )
@@ -118,7 +118,7 @@ it("returns focus to the context toolbar that opened the summary", () => {
   expect(toolbar).toHaveFocus()
 })
 
-it("reuses expanded rows on unrelated renders and refreshes a changed scene revision", () => {
+it("reuses expanded rows on unrelated renders and refreshes a changed scene revision", async () => {
   let reads = 0
   let value = 12
   const scene = [
@@ -136,6 +136,7 @@ it("reuses expanded rows on unrelated renders and refreshes a changed scene revi
     <AccessibleDataTable scene={scene} chartType="XY" sceneRevision={1} />
   )
   fireEvent.click(screen.getByRole("button", { name: /View data summary/ }))
+  await screen.findByRole("table")
   reads = 0
   rerender(
     <AccessibleDataTable
@@ -160,7 +161,7 @@ it("reuses expanded rows on unrelated renders and refreshes a changed scene revi
   expect(screen.getByRole("note")).toHaveTextContent("value: 24 to 24")
 })
 
-it("reuses network models across geometry changes but refreshes semantic revisions", () => {
+it("reuses network models across geometry changes but refreshes semantic revisions", async () => {
   let reads = 0
   let value = 12
   const datum = {
@@ -192,6 +193,7 @@ it("reuses network models across geometry changes but refreshes semantic revisio
     />
   )
   fireEvent.click(screen.getByRole("button", { name: /View data summary/ }))
+  await screen.findByRole("table", { name: "Node data and degree summary for Network" })
   reads = 0
   rerender(
     <NetworkAccessibleDataTable
@@ -225,7 +227,7 @@ it("reuses network models across geometry changes but refreshes semantic revisio
   ).toBeVisible()
 })
 
-it("focuses the first new row for both intermediate and final pages", () => {
+it("focuses the first new row for both intermediate and final pages", async () => {
   render(
     <AccessibleDataTable
       scene={Array.from({ length: 40 }, (_, id) => ({
@@ -236,7 +238,7 @@ it("focuses the first new row for both intermediate and final pages", () => {
     />
   )
   focusClick(screen.getByRole("button", { name: /View data summary/ }))
-  focusClick(screen.getByRole("button", { name: /more rows/ }))
+  focusClick(await screen.findByRole("button", { name: /more rows/ }))
   expect(document.activeElement).toBe(screen.getAllByRole("row")[6])
   expect(screen.getByRole("status")).toHaveTextContent("30 of 40 rows")
   focusClick(screen.getByRole("button", { name: /more rows/ }))

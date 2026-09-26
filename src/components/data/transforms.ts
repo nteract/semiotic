@@ -1,5 +1,4 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { getMinMax } from "../charts/shared/minMax"
 /**
  * Data transform helpers for common data shapes.
  * Import from "semiotic/data"
@@ -40,6 +39,8 @@ export function bin<T extends Datum>(
     )
   }
   const values: number[] = []
+  let min = Infinity
+  let max = -Infinity
   for (const row of data) {
     const raw = row?.[field]
     const value =
@@ -50,56 +51,42 @@ export function bin<T extends Datum>(
           : typeof raw === "string" && raw.trim() !== ""
             ? Number(raw)
             : NaN
-    if (Number.isFinite(value)) values.push(value)
+    if (Number.isFinite(value)) {
+      values.push(value)
+      if (value < min) min = value
+      if (value > max) max = value
+    }
   }
 
   if (values.length === 0) return []
 
-  const [dataMin, dataMax] = getMinMax(values)
-  const min = options.domain ? options.domain[0] : dataMin
-  const max = options.domain ? options.domain[1] : dataMax
-
-  if (min === max) {
-    const count = values.reduce(
-      (total, value) => total + (value === min ? 1 : 0),
-      0
-    )
-    return [{ category: formatRange(min, max), value: count, x0: min, x1: max }]
-  }
+  if (options.domain) [min, max] = options.domain
 
   // One shared edge array defines both membership and the returned bounds.
-  const edges = binEdges(min, max, bins)
-  for (let i = 1; i < edges.length; i++) {
-    if (!Number.isFinite(edges[i]) || edges[i] <= edges[i - 1]) {
+  const edges = min === max ? [min, max] : binEdges(min, max, bins)
+  const result = edges.slice(1).map((hi, i) => {
+    const lo = edges[i]
+    if (!Number.isFinite(hi) || (min !== max && hi <= lo)) {
       throw new RangeError(
         "bin domain is too narrow for the requested number of bins"
       )
     }
-  }
-  const counts = new Array(bins).fill(0)
+    return { category: formatRange(lo, hi), value: 0, x0: lo, x1: hi }
+  })
 
   for (const v of values) {
     if (v < min || v > max) continue
     let lo = 0
-    let hi = bins
+    let hi = result.length
     while (lo + 1 < hi) {
       const mid = Math.floor((lo + hi) / 2)
       if (v < edges[mid]) hi = mid
       else lo = mid
     }
-    counts[lo]++
+    result[lo].value++
   }
 
-  return counts.map((count, i) => {
-    const lo = edges[i]
-    const hi = edges[i + 1]
-    return {
-      category: formatRange(lo, hi),
-      value: count,
-      x0: lo,
-      x1: hi
-    }
-  })
+  return result
 }
 
 function binEdges(min: number, max: number, bins: number): number[] {
@@ -108,16 +95,16 @@ function binEdges(min: number, max: number, bins: number): number[] {
   // without a tolerance that would incorrectly admit values just below it.
   const parts = [min, max].map((value) => {
     const [coefficient, power] = value.toExponential().split("e")
-    return {
-      integer: Number(coefficient.replace(".", "")),
-      exponent: Number(power) - (coefficient.split(".")[1]?.length ?? 0)
-    }
+    return [
+      Number(coefficient.replace(".", "")),
+      Number(power) - (coefficient.split(".")[1]?.length ?? 0)
+    ]
   })
   const exponent = Math.min(
-    ...parts.filter((p) => p.integer !== 0).map((p) => p.exponent)
+    ...parts.map(([integer, exponent]) => (integer ? exponent : Infinity))
   )
-  const [a, b] = parts.map((p) =>
-    p.integer === 0 ? 0 : p.integer * 10 ** (p.exponent - exponent)
+  const [a, b] = parts.map(([integer, power]) =>
+    integer === 0 ? 0 : integer * 10 ** (power - exponent)
   )
   const decimalSafe =
     Number.isSafeInteger(a) &&

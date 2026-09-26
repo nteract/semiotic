@@ -66,13 +66,15 @@ export function AccessibleTableShell({
           >
             &times;
           </button>
-          <div
-            className="semiotic-accessible-data-table-summary"
-            role="note"
-            style={SUMMARY_NOTE_STYLE}
-          >
-            {summary}
-          </div>
+          {summary && (
+            <div
+              className="semiotic-accessible-data-table-summary"
+              role="note"
+              style={SUMMARY_NOTE_STYLE}
+            >
+              {summary}
+            </div>
+          )}
           {children}
         </>
       ) : (

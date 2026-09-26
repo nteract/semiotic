@@ -1516,7 +1516,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
+    return <NetworkSSRFrame tableId={tableId} props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
   }
 
   // ── Render ───────────────────────────────────────────────────────────
