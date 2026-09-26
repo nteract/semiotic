@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reduced the server entry graph below its existing 244 KiB gzip budget by
+  sharing geographic scene/chrome rendering and removing redundant legend
+  rendering and unused vertical item-layout allocations. Empty-scene overlays,
+  annotation evidence, cartogram chrome, and all four legend positions retain
+  their contracts; source and published server entry points are covered.
 - Dataset summaries infer types from the whole column and disclose missing and
   excluded values. Summary statistics and numeric health profiles share decimal
   parsing without coercing booleans, Dates, padded identifiers, or base-prefixed

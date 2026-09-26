@@ -12,7 +12,7 @@ import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveExplicitColor } from "../charts/shared/colorUtils"
 import type { SemioticTheme } from "../store/themeCore"
 import type { Datum } from "../charts/shared/datumTypes"
-import type { CategoricalLegendConfig, GradientLegendConfig, LegendGroup, LegendItem, LegendLayout } from "../types/legendTypes"
+import type { CategoricalLegendConfig, GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
 import {
   DEFAULT_LEGEND_ROW_HEIGHT,
   GRADIENT_LEGEND_HORIZONTAL_HEIGHT,
@@ -315,56 +315,21 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
     })),
     rowHeight
   )
-  let width = 0
-  const groups = legendGroups.map((group, groupIndex): StaticLegendGroupLayout => {
-    const itemWidths = group.items.map((item) => itemWidth(item.label, swatchSize, labelGap, theme))
-    const groupWidth = Math.max(
-      0,
-      ...itemWidths,
-      group.label ? itemWidth(group.label, 0, 0, theme) : 0
-    )
-    width = Math.max(width, groupWidth)
-    return {
-      group,
-      x: 0,
-      y: verticalLayouts[groupIndex].itemsY,
-      itemOffsetX: 0,
-      itemOffsetY: 0,
-      width: groupWidth,
-      height: group.items.length * rowHeight,
-      items: group.items.map((item, itemIndex) => ({
-        category: item.label,
-        width: itemWidths[itemIndex],
-        x: 0,
-        y: itemIndex * rowHeight,
-      })),
-    }
-  })
+  // Vertical rendering consumes the shared header geometry directly. Only
+  // measure its width here; horizontal per-item layout records are unused.
+  const width = legendGroups.reduce((max, group) => group.items.reduce(
+    (itemMax, item) => Math.max(itemMax, itemWidth(item.label, swatchSize, labelGap, theme)),
+    Math.max(max, group.label ? itemWidth(group.label, 0, 0, theme) : 0)
+  ), 0)
 
   return {
-    groups,
+    groups: [],
     width,
     height: verticalLayouts.at(-1)?.endY ?? 0,
     swatchSize,
     labelOffset,
     swatchRadius,
   }
-}
-
-function flattenLegendGroups(legendGroups: LegendGroup[]): Array<{
-  group: LegendGroup
-  item: LegendItem
-  itemIndex: number
-  label: string
-}> {
-  return legendGroups.flatMap((group) =>
-    group.items.map((item, itemIndex) => ({
-      group,
-      item,
-      itemIndex,
-      label: item.label,
-    }))
-  )
 }
 
 export function measureStaticLegendGroups(config: StaticLegendGroupsConfig): Omit<StaticLegendMetrics, "items" | "labelOffset" | "swatchRadius"> {
@@ -433,32 +398,14 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
     reservedWidth: sideLegendWidth,
   })
 
-  if (isHorizontal) {
-    const items = metrics.items.map((item, i) => (
-      <g key={`legend-${i}`} transform={`translate(${item.x},${item.y})`}>
-        <rect width={metrics.swatchSize} height={metrics.swatchSize} fill={colorScale(item.category)} rx={metrics.swatchRadius} />
-        <text
-          x={metrics.labelOffset}
-          y={metrics.swatchSize / 2}
-          dominantBaseline="central"
-          fontSize={legendFontSize(theme)}
-          fill={theme.colors.text}
-          fontFamily={legendFontFamily(theme)}
-        >
-          {item.category}
-        </text>
-      </g>
-    ))
-    return <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(theme)}>{items}</g>
-  }
-
-  // Vertical layout
-  const verticalLayout = layoutVerticalLegendGroups(
+  // Both orientations paint identical swatches and labels; vertical legends
+  // additionally reserve the shared header and neatline above their items.
+  const verticalLayout = isHorizontal ? undefined : layoutVerticalLegendGroups(
     [{ hasLabel: false, itemCount: categories.length }],
     Math.max(metrics.swatchSize, config.legendLayout?.rowHeight ?? ROW_HEIGHT)
   )[0]
   const items = metrics.items.map((item, i) => (
-    <g key={`legend-${i}`} transform={`translate(${item.x},${item.y + verticalLayout.itemsY})`}>
+    <g key={`legend-${i}`} transform={`translate(${item.x},${item.y + (verticalLayout?.itemsY ?? 0)})`}>
       <rect width={metrics.swatchSize} height={metrics.swatchSize} fill={colorScale(item.category)} rx={metrics.swatchRadius} />
       <text
         x={metrics.labelOffset}
@@ -475,14 +422,14 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
 
   return (
     <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(theme)}>
-      <line x1={0} y1={verticalLayout.lineY} x2={sideLegendWidth} y2={verticalLayout.lineY} stroke="gray" />
+      {verticalLayout && <line x1={0} y1={verticalLayout.lineY} x2={sideLegendWidth} y2={verticalLayout.lineY} stroke="gray" />}
       {items}
     </g>
   )
 }
 
 export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): React.ReactNode {
-  if (flattenLegendGroups(config.legendGroups).length === 0) return null
+  if (!config.legendGroups.some(group => group.items.some(() => true))) return null
 
   const metrics = computeStaticLegendGroupsLayout(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
@@ -581,31 +528,18 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
     const groupNodes: React.ReactNode[] = []
 
     if (group.label) {
-      groupNodes.push(isHorizontal
-        ? (
-          <text
-            key={`legend-group-label-${groupIndex}`}
-            transform={`translate(${groupLayout.x},${groupLayout.y}) rotate(90)`}
-            textAnchor="start"
-            fontSize={legendFontSize(config.theme)}
-            fill={config.theme.colors.text}
-            fontFamily={legendFontFamily(config.theme)}
-          >
-            {group.label}
-          </text>
-        )
-        : (
-          <text
-            key={`legend-group-label-${groupIndex}`}
-            x={groupLayout.x}
-            y={groupLayout.y + legendFontSize(config.theme)}
-            fontSize={legendFontSize(config.theme)}
-            fill={config.theme.colors.text}
-            fontFamily={legendFontFamily(config.theme)}
-          >
-            {group.label}
-          </text>
-        ))
+      groupNodes.push(
+        <text
+          key={`legend-group-label-${groupIndex}`}
+          transform={`translate(${groupLayout.x},${groupLayout.y}) rotate(90)`}
+          textAnchor="start"
+          fontSize={legendFontSize(config.theme)}
+          fill={config.theme.colors.text}
+          fontFamily={legendFontFamily(config.theme)}
+        >
+          {group.label}
+        </text>
+      )
     }
 
     groupNodes.push(...groupLayout.items.map((layout, itemIndex) => {
@@ -637,7 +571,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
       )
     }))
 
-    if (isHorizontal && groupIndex < metrics.groups.length - 1) {
+    if (groupIndex < metrics.groups.length - 1) {
       const x = groupLayout.x + groupLayout.width + 6
       groupNodes.push(
         <line
@@ -655,7 +589,7 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
   })
 
   return (
-    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation={isHorizontal ? "horizontal" : "vertical"} fontWeight={legendFontWeight(config.theme)}>
+    <g className="semiotic-legend" transform={`translate(${tx},${ty})`} data-orientation="horizontal" fontWeight={legendFontWeight(config.theme)}>
       {items}
     </g>
   )

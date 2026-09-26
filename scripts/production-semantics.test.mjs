@@ -110,6 +110,53 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
       `
       )
     })
+    test(`${entry} ${target.conditions} retains geo chrome and evidence for empty and populated scenes`, () => {
+      exercise(
+        target,
+        `
+        const { createElement } = await import("react")
+        for (const points of [[], [{ lon: 5, lat: 5 }]]) {
+          const { svg, evidence } = api.renderChartWithEvidence("GeoCustomChart", {
+            points, width: 400, height: 300,
+            title: "Geo title", description: "Geo description",
+            annotations: [{ type: "label", x: 20, y: 30, label: "Pinned" }],
+            layout: (ctx) => ({
+              nodes: ctx.points.map(datum => ({
+                type: "geoarea", pathData: "M0,0h10v10h-10Z",
+                centroid: [5, 5], bounds: [[0, 0], [10, 10]], screenArea: 100,
+                datum, style: { fill: "#125678" }
+              })),
+              overlays: createElement("text", { "data-layer": "overlay" }, "Layout overlay")
+            }),
+            frameProps: {
+              projectionExtent: [[0, 0], [10, 10]],
+              backgroundGraphics: createElement("text", { "data-layer": "background" }, "Behind"),
+              foregroundGraphics: createElement("text", { "data-layer": "foreground" }, "Above"),
+              legend: createElement("text", null, "Map legend")
+            }
+          })
+          assert.equal(evidence.markCount, points.length)
+          assert.equal(evidence.empty, points.length === 0)
+          assert.equal(evidence.annotationCount, 1)
+          assert.equal(evidence.legendItems, 1)
+          assert.equal(evidence.ariaLabel, "Geo description")
+          assert.equal((svg.match(/fill="#125678"/g) || []).length, points.length)
+          assert.match(svg, new RegExp("<title[^>]*>Geo title</title>"))
+          assert.match(svg, new RegExp("<desc[^>]*>Geo description</desc>"))
+          assert.match(svg, /Map legend/)
+          const layers = ['data-layer="background"', ...(points.length ? ['fill="#125678"'] : []),
+            "Pinned", 'data-layer="foreground"', 'data-layer="overlay"']
+          let previous = -1
+          for (const layer of layers) {
+            const position = svg.indexOf(layer)
+            assert.ok(position > previous, layer + " must be painted in scene order")
+            previous = position
+          }
+          assert.doesNotMatch(svg, /NaN|Infinity/)
+        }
+      `
+      )
+    })
   }
 }
 
