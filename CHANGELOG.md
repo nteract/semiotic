@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Dataset summaries infer types from the whole column and disclose missing and
+  excluded values. Summary statistics and numeric health profiles share decimal
+  parsing without coercing booleans, Dates, padded identifiers, or base-prefixed
+  literals into numbers. ISO date extents use UTC consistently. The related-surface
+  audit covers chart profiling, interrogation hooks, MCP responses, and built
+  CommonJS/ESM AI entry points, including date-ordering recommendations. (#1496)
+- Annotation freshness uses the maximum finite timestamp across unsorted data
+  extents, supports week and fractional fixed-length TTLs, and rejects invalid,
+  nonpositive, and unsupported calendar durations explicitly. Quality-check
+  labels and coordinates agree in UTC while preserving epoch-millisecond inputs;
+  invalid timestamps are reported as unplaced. Lifecycle filtering, serialized
+  annotations, and built exports are covered across host locales/timezones. (#1483)
 - Accessible data tables retain focus while revealing rows, announce paging
   progress, and restore the opener on close without stealing focus on blur.
   Scene, network-node/edge, and physics tables share the corrected interaction;

@@ -2,6 +2,14 @@ import { describe, expect, it } from "vitest"
 import { profileNumericFields } from "./numericFieldProfiler"
 
 describe("profileNumericFields — dirty-numeric classification", () => {
+  it("accepts decimal syntax without treating identifiers, base prefixes, booleans, or dates as numbers", () => {
+    const values = [".5", "+5", "1.", "-2e2", " 3 ", "02134", "0x10", "0b11", "0o7", true, new Date(0), "1e999", " "]
+    expect(profileNumericFields(values.map(value => ({ value }))).value).toMatchObject({
+      observedCount: 12, finiteCount: 5, nonNumericCount: 6,
+      nonFiniteCount: 1, missingCount: 1, min: -200, max: 5
+    })
+  })
+
   it.each([true, false])("retains health counts and extents with quantiles=%s", (quantiles) => {
     const data = [
       { value: 4 }, { value: "-2.5" }, { value: 0 }, { value: "  " },

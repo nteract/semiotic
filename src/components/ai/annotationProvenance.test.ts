@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   annotationFreshnessFor,
   applyAnnotationLifecycle,
@@ -201,6 +201,45 @@ describe("annotationProvenance — type surface", () => {
 })
 
 describe("annotationProvenance — computeAnnotationFreshness", () => {
+  it("uses the maximum finite timestamp across unsorted, large extents", () => {
+    const a = ann(day(1), "P1D")
+    const extent = Array.from({ length: 200_000 }, () => day(1))
+    extent[50] = day(30)
+    expect(computeAnnotationFreshness([a], { dataExtent: extent })[0].lifecycle?.freshness).toBe("expired")
+    expect(computeAnnotationFreshness([a], {
+      now: NaN, dataExtent: [new Date(NaN), Infinity, day(30), "invalid", day(1)]
+    })[0].lifecycle?.freshness).toBe("expired")
+  })
+
+  it("prefers valid explicit now and falls back past invalid references deterministically", () => {
+    const a = ann(day(1), "P1D")
+    expect(computeAnnotationFreshness([a], { now: day(1), dataExtent: [day(30)] })[0].lifecycle?.freshness).toBe("fresh")
+    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.parse(day(30)))
+    try {
+      for (const dataExtent of [[], [NaN, new Date(NaN), "bad"], { min: day(1), max: NaN }]) {
+        expect(computeAnnotationFreshness([a], { now: Infinity, dataExtent })[0].lifecycle?.freshness).toBe("expired")
+      }
+    } finally {
+      clock.mockRestore()
+    }
+  })
+
+  it.each([
+    ["P1W", 7 * DAY], ["P0.5D", DAY / 2], ["PT0.5S", 500],
+    ["P1DT2H3M4.5S", DAY + 2 * 3600000 + 3 * 60000 + 4500], ["PT1,5M", 90000]
+  ])("ages against the fixed duration %s", (ttl, ms) => {
+    const start = Date.parse(day(1))
+    expect(annotationFreshnessFor(ann(day(1), ttl), start + Number(ms))).toBe("aging")
+    expect(annotationFreshnessFor(ann(day(1), ttl), start + 3 * Number(ms))).toBe("expired")
+  })
+
+  it.each(["P1M", "P1Y", "garbage", "", "P", "PT", "P1DT", "P1W1D", "PT1.5H1M", "PT0S", "-P1D", `P${"9".repeat(400)}D`, 0, -1, NaN, Infinity])(
+    "rejects invalid or unsupported TTL %s instead of silently keeping notes fresh", ttl => {
+      expect(() => annotationFreshnessFor(ann(day(1), ttl), Date.parse(day(30)))).toThrow(/ttlHint/)
+      expect(() => applyAnnotationLifecycle([ann(day(1), ttl)], { now: day(30) })).toThrow(/ttlHint/)
+    }
+  )
+
   it("classifies bands from createdAt + ttlHint relative to `now`", () => {
     const a = ann(day(1), "P10D") // created Jan 1, TTL 10 days
     // age 5 days → < 1× TTL → fresh

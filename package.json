@@ -463,7 +463,7 @@
     "check:d3-packaging": "node scripts/check-d3-packaging.mjs",
     "measure:d3-packaging": "node scripts/measure-d3-packaging.mjs",
     "check:preflight": "npm run check:router-alignment && npm run check:playwright-alignment && npm run lint && npm run check:custom-lints && npm run check:file-size && npm run check:test-quality && npm run check:chart-specs && npm run check:artifact-contract && npm run check:capabilities && npm run check:visual-baseline-capabilities && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:ai-reference-coverage && npm run check:context7 && npm run check:mcp-registry && npm run check:surface && npm run check:ai-surface && npm run check:ai-contracts && npm run check:ai-instructions && npm run check:ssr && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run check:protected-doc-boundaries",
-    "test:production-semantics:from-dist": "node --test scripts/production-semantics.test.mjs",
+    "test:production-semantics:from-dist": "node --test scripts/production-semantics.test.mjs scripts/data-semantics-artifacts.test.mjs",
     "check:package-contracts:from-dist": "npm run test:production-semantics:from-dist && npm run check:package-surface && npm run check:bundle-sizes && npm run check:cold-consumer && npm run size",
     "check:package-contracts": "npm run dist:prod && npm run check:api-surface && npm run check:package-contracts:from-dist",
     "check:fast": "npm run check:preflight && npm run check:package-contracts",
