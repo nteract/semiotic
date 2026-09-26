@@ -1,9 +1,11 @@
 import * as React from "react"
+import { ticks as domainTicks } from "d3-array"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
 import { packIntervals } from "./intervals"
 import { bandLabel, linearAxis } from "./recipeChrome"
+import { nonNegativeFinite, resolveAccessor } from "./recipeUtils"
 
 /**
  * `intervalLanesLayout` — a Gantt / swimlane timeline as an `OrdinalCustomChart`
@@ -65,7 +67,7 @@ export interface IntervalLanesConfig<T = Datum> {
   minBarHeight?: number
   /** @default 10 */
   maxBarHeight?: number
-  /** Vertical padding inside each lane, px. @default 7 */
+  /** Vertical padding, capped at a quarter of the lane height. @default 7 */
   lanePadding?: number
   /** Bar corner radius, px. @default 2 */
   cornerRadius?: number
@@ -80,14 +82,10 @@ export interface IntervalLanesConfig<T = Datum> {
   periods?: Array<{ start: number; end: number; name?: string }>
   /** Draw a top time axis with gridlines. @default true */
   showAxis?: boolean
-  /** Explicit axis tick values. @default ~7 evenly-spaced across `domain`. */
+  /** Explicit axis tick values. @default ~7 nice ticks across `domain`. */
   axisTicks?: number[]
   /** Format axis tick labels. @default `String` */
   tickFormat?: (v: number) => string
-}
-
-function fn<T>(a: string | ((d: T) => unknown)): (d: T) => unknown {
-  return typeof a === "function" ? a : (d: T) => (d as Record<string, unknown>)[a]
 }
 
 /** Horizontal gap (px) inserted between adjacent bars on the same sub-track so
@@ -101,23 +99,26 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
     return { nodes: [] }
   }
 
-  const getLane = fn(cfg.laneAccessor) as (d: Datum) => string
-  const getStart = fn(cfg.startAccessor) as (d: Datum) => number
-  const getEnd = fn(cfg.endAccessor) as (d: Datum) => number
-  const getId = cfg.idAccessor ? (fn(cfg.idAccessor) as (d: Datum) => unknown) : null
+  const getLane = resolveAccessor(cfg.laneAccessor) as (d: Datum) => string
+  const getStart = resolveAccessor(cfg.startAccessor) as (d: Datum) => number
+  const getEnd = resolveAccessor(cfg.endAccessor) as (d: Datum) => number
+  const getId = cfg.idAccessor ? (resolveAccessor(cfg.idAccessor) as (d: Datum) => unknown) : null
   const unit = cfg.unit ?? 0
-  const barGap = cfg.barGap ?? 1.5
+  const barGap = nonNegativeFinite(cfg.barGap ?? 1.5)
   const minBarWidth = Math.max(0, cfg.minBarWidth ?? 2)
-  const minBar = cfg.minBarHeight ?? 3.5
-  const maxBar = cfg.maxBarHeight ?? 10
-  const lanePad = cfg.lanePadding ?? 7
+  const minBar = nonNegativeFinite(cfg.minBarHeight ?? 3.5) || 3.5
+  const maxBar = nonNegativeFinite(cfg.maxBarHeight ?? 10) || 10
   const corner = cfg.cornerRadius ?? 2
-  const bottomInset = cfg.bottomInset ?? 0
+  const bottomInset = nonNegativeFinite(cfg.bottomInset ?? 0)
   const colorFor = cfg.color ?? ((_: Datum, lane: string) => ctx.resolveColor(lane))
 
   // Single linear time scale shared by bars + bands + axis (the example used two
   // mismatched scales; one scale keeps bars and ticks aligned).
   const [d0, d1] = cfg.domain
+  if (
+    !Number.isFinite(d0) || !Number.isFinite(d1) || d0 > d1 ||
+    !Number.isFinite(d1 - d0)
+  ) return { nodes: [] }
   const span = d1 - d0 || 1
   const xPx = (v: number) => plot.x + ((v - d0) / span) * plot.width
 
@@ -128,6 +129,8 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
 
   const laneAreaH = Math.max(0, plot.height - bottomInset)
   const laneHeight = laneAreaH / Math.max(1, lanes.length)
+  if (laneHeight <= 0) return { nodes: [] }
+  const lanePad = Math.min(laneHeight / 4, nonNegativeFinite(cfg.lanePadding ?? 7))
 
   // ── Bars ───────────────────────────────────────────────────────────────────
   // Pack in *rendered-pixel* space, not raw domain units. A bar is drawn from
@@ -158,24 +161,22 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
     // shave this bar's right edge so back-to-back intervals keep a visible
     // seam. Only abutting bars change; everything else keeps its exact width.
     const nextStartOnTrack = new Map<Datum, number>()
-    const trackItems = new Map<number, Datum[]>()
+    const previousOnTrack = new Map<number, Datum>()
+    // packIntervals already sorts by start, so no per-track sort is needed.
     for (const { item, track } of packed) {
-      const items = trackItems.get(track)
-      if (items) items.push(item)
-      else trackItems.set(track, [item])
-    }
-    for (const items of trackItems.values()) {
-      items.sort((a, b) => startPx(a) - startPx(b))
-      for (let i = 0; i < items.length - 1; i++) {
-        nextStartOnTrack.set(items[i], startPx(items[i + 1]))
-      }
+      const previous = previousOnTrack.get(track)
+      if (previous) nextStartOnTrack.set(previous, startPx(item))
+      previousOnTrack.set(track, item)
     }
     // Space sub-tracks by the exact slot height so bars can never overflow the
     // lane (and bleed into a neighbouring lane) even when the sub-track count is
     // high enough that the `minBarHeight` floor would otherwise force bars taller
     // than their slot. `barHeight` is clamped to the slot and capped at `maxBar`.
     const trackPitch = (laneHeight - 2 * lanePad) / trackCount
-    const barHeight = Math.min(maxBar, Math.max(Math.min(minBar, trackPitch), trackPitch - barGap))
+    const barHeight = Math.min(
+      maxBar, trackPitch,
+      Math.max(minBar, trackPitch - barGap)
+    )
     for (const { item, track } of packed) {
       const x = startPx(item)
       const nextStart = nextStartOnTrack.get(item)
@@ -275,7 +276,7 @@ export const intervalLanesLayout: OrdinalCustomLayout<IntervalLanesConfig> = (ct
   // Top time axis with gridlines spanning the full plot height.
   if (cfg.showAxis !== false) {
     const ticks =
-      cfg.axisTicks ?? Array.from({ length: 8 }, (_, i) => Math.round(d0 + (i / 7) * span))
+      cfg.axisTicks ?? domainTicks(d0, d1, 7)
     children.push(
       linearAxis({
         keyId: "interval-axis",

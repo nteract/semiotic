@@ -22,17 +22,13 @@ export const chordDiagram: ChartConfig = {
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Match ChordDiagram HOC coloring:
     //  - colorBy → categorical scale fill
-    //  - else → stable per-node palette slot (NOT monochrome resolveDefaultFill,
-    //    which painted every SSR arc the same and broke ssr-csr-chord parity)
+    //  - else → stable per-node palette slot
     //  - styleRules layer on top when present
-    // When nothing needs a custom nodeStyle, omit it so the layout plugin's
-    // built-in path stays identical to the pre-styleRules SSR config.
+    // Use the layout plugin's default style when no override is needed.
     const hasStyleRules =
       Array.isArray(rest.styleRules) &&
       (rest.styleRules as unknown[]).length > 0
-    // Top-level primitives need a nodeStyle too — without them in this gate,
-    // `renderChart("ChordDiagram", { stroke })` took the built-in path below
-    // and the arcs kept their default black outline.
+    // Top-level primitive overrides require a nodeStyle callback too.
     const needsNodeStyle = Boolean(
       colorBy ||
       hasStyleRules ||
@@ -112,9 +108,7 @@ export const chordDiagram: ChartConfig = {
       }
       return {
         fill,
-        // Read the top-level primitives off `rest`: they are deliberately not
-        // in COMMON_FRAME_PROP_KEYS, so `common.stroke` is always undefined
-        // and this used to collapse to the hardcoded default every time.
+        // Top-level primitive styling lives in rest, outside COMMON_FRAME_PROP_KEYS.
         stroke: (rest.stroke as string | undefined) ?? "black",
         strokeWidth: (rest.strokeWidth as number | undefined) ?? 1,
         ...(rest.opacity !== undefined && { opacity: rest.opacity })

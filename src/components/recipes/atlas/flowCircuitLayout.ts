@@ -1,7 +1,7 @@
 import * as React from "react"
 import type { PhysicsCustomLayout } from "../../charts/physics/PhysicsCustomChart"
 import { processLaneWalls } from "../processPhysics"
-import { seededRandom } from "../../charts/physics/physicsChartShared"
+import { mulberry32 as seededRandom } from "../random"
 import { layoutFlowCircuit, circuitRoutePoint } from "./flowCircuitGeometry"
 import {
   resolveCircuitColors,

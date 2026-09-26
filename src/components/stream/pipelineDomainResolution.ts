@@ -353,8 +353,9 @@ export function rescueDegenerateDomains(
   let y = yDomain
   if (x[0] === Infinity || x[1] === -Infinity) {
     if (xScaleType === "time") {
-      const now = Date.now()
-      x = [now - 86400000, now]
+      // Empty charts have no observation time. A fixed epoch keeps static
+      // exports and the first hydration render on the same scale.
+      x = [0, 86400000]
     } else {
       x = [0, 1]
     }

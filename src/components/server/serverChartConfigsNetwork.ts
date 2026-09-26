@@ -369,21 +369,13 @@ export const processSankey: ChartConfig = {
 
     return {
       chartType: "force",
-      // Pass raw nodes/edges (not pre-wrapped { id, data }) — the
-      // frame's `buildRealtimeNodes/buildRealtimeEdges` already wraps
-      // them, so a `{ id, data: raw }` input would land as
-      // `RealtimeNode.data = { id, data: raw }`. The auto-legend
-      // pulls categories off `node.data[colorBy]`, so the double
-      // wrap surfaced as an empty/incorrect legend on SSR.
+      // The frame normalizes raw nodes/edges and preserves their payload for
+      // accessors and automatic legend categories.
       nodes: rawNodes,
       edges: rawEdges,
       customNetworkLayout: emitProcessSankeyScenes,
       layoutConfig,
-      // Thread accessors + colorBy through so the SSR auto-legend can
-      // resolve categories. `colorBy` arrives as a positional buildProps
-      // arg (not via `common`), so without this passthrough the frame
-      // would fall back to nodeIDAccessor and produce per-node swatches
-      // instead of per-category. Match the shape SankeyDiagram returns.
+      // colorBy arrives separately from common; forward it for legend categories.
       sourceAccessor,
       targetAccessor,
       valueAccessor,
@@ -399,12 +391,7 @@ export const processSankey: ChartConfig = {
       // supplied value already includes both that chart-owned legend and any
       // caller groups, so the static frame must not infer it a second time.
       __legendIncludesAutomatic: true,
-      // Apply the resolved margin AFTER `...common` so the spread
-      // (which carries the user's original margin if any) doesn't
-      // overwrite our legend-aware adjustment. Bands/ribbons were
-      // computed against this exact `plotW`/`plotH`; without this the
-      // frame would overlay the data on a slightly different inner
-      // rect (visible as legend-clipping or band-shift).
+      // Keep the resolved margin used by the band/ribbon layout after common.
       margin
     }
   }
@@ -686,11 +673,8 @@ export const treemap: ChartConfig = {
         strokeOpacity: 0.8
       }
     }
-    // Mirror Treemap.tsx's resolvedPaddingTop: reserve a label band on parent
-    // tiles when labels cover parents. Without this SSR parent labels have no
-    // room and the tile chrome differs from CSR. Prefer top-level rest, then
-    // frameProps (already flattened into `common`) so hide-root wrappers that
-    // pass paddingTop only via frameProps still get the nested header band.
+    // Reserve the same parent-label band as Treemap. Top-level paddingTop
+    // takes precedence over frameProps, which are flattened into common.
     const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as
       boolean | undefined
     const labelMode = rest.labelMode as "leaf" | "parent" | "all" | undefined

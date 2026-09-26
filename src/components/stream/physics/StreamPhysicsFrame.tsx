@@ -858,17 +858,30 @@ export const StreamPhysicsFrame = memo(
         }
       }, [simulationExecution, workerBodyThreshold, workerUnsupportedReason])
 
-      const applyWorkerFrame = useCallback((frame: PhysicsWorkerFrame) => {
-        const store = storeRef.current
-        if (!store || !frame.snapshot) return store
-        store.restore(frame.snapshot)
-        dirtyRef.current = true
-        return store
-      }, [])
+      const applyWorkerFrame = useCallback(
+        (frame: PhysicsWorkerFrame, replayObservations = true) => {
+          const store = storeRef.current
+          if (!store || !frame.snapshot) return store
+          store.restore(frame.snapshot)
+          // Worker callbacks are stripped for structured cloning. Deliver their
+          // observations after restoring bodies so region callbacks have context.
+          if (replayObservations)
+            for (const event of frame.result.observations) {
+              augmentedConfig?.observation?.onObservation?.(event)
+            }
+          dirtyRef.current = true
+          return store
+        },
+        [augmentedConfig]
+      )
 
       const finishWorkerFrame = useCallback(
-        (frame: PhysicsWorkerFrame, notifyTick = true) => {
-          const store = applyWorkerFrame(frame)
+        (
+          frame: PhysicsWorkerFrame,
+          notifyTick = true,
+          replayObservations = true
+        ) => {
+          const store = applyWorkerFrame(frame, replayObservations)
           if (!store) return
           if (notifyTick) onTick?.(frame.result, store.controls())
           paint()
@@ -978,7 +991,14 @@ export const StreamPhysicsFrame = memo(
             .then((payload) => {
               if (workerGenerationRef.current !== generation) return
               const frame = frameFromPayload(payload)
-              if (frame) finishWorkerFrame(frame, notifyTick)
+              // Imperative tick/settle already deliver observations in the
+              // synchronous mirror used to provide their immediate return value.
+              if (frame)
+                finishWorkerFrame(
+                  frame,
+                  notifyTick,
+                  command.type !== "tick" && command.type !== "settle"
+                )
             })
             .catch(handleWorkerError)
         },

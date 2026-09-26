@@ -79,8 +79,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     hasTitle: hasVisibleTitle,
   })
 
-  const width = size[0] - margin.left - margin.right
-  const height = size[1] - margin.top - margin.bottom
+  const width = Math.max(1, size[0] - margin.left - margin.right)
+  const height = Math.max(1, size[1] - margin.top - margin.bottom)
 
   const isStreaming = props.runtimeMode === "streaming" ||
     ["bar", "swarm", "waterfall"].includes(props.chartType)
@@ -103,9 +103,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     valueAccessor: props.valueAccessor,
     colorAccessor: props.colorAccessor,
     sizeAccessor: props.sizeAccessor,
-    // symbolAccessor/symbolMap drive the Scatterplot symbolBy glyph-shape
-    // channel (store.getSymbol → "symbol" scene nodes). The client frame
-    // passes them through; without them here symbolBy no-ops in SSR.
+    // Scatterplot symbolBy resolves through symbolAccessor/symbolMap in the pipeline.
     symbolAccessor: props.symbolAccessor,
     symbolMap: props.symbolMap,
     groupAccessor: props.groupAccessor || (props.lineDataAccessor ? "_lineGroup" : undefined),
@@ -124,22 +122,15 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     scalePadding: props.scalePadding,
     binSize: props.binSize,
     normalize: props.normalize,
-    // StackedArea streamgraph/silhouette/diverging — client threads baseline
-    // into the pipeline; without it SSR always paints zero-baseline stacks.
+    // StackedArea baseline selects streamgraph, silhouette, or diverging offsets.
     baseline: props.baseline,
     stackOrder: props.stackOrder,
     boundsAccessor: props.boundsAccessor,
     boundsStyle: props.boundsStyle,
-    // `band` (LineChart/AreaChart shaded envelope) normalizes to ribbons in the
-    // pipeline store. The client frame threads it through its pipeline config;
-    // SSR must too or the band never paints server-side.
+    // LineChart/AreaChart bands normalize to ribbons in the shared pipeline.
     band: props.band,
-    // Mixed-frame props (DifferenceChart, LineChart fillArea[]).
-    // Without these the mixed scene builder treats every group as a
-    // line and the difference fills never paint — the regression that
-    // shipped the empty OG card for the DifferenceChart blog entry.
-    // `areaGroups` arrives from the HOC's `buildProps` as a string[];
-    // PipelineConfig stores a Set so membership checks are O(1).
+    // Mixed frames use y0Accessor and areaGroups to distinguish filled series.
+    // The HOC supplies an array; pipeline membership checks use a Set.
     y0Accessor: props.y0Accessor,
     areaGroups: props.areaGroups
       ? (props.areaGroups instanceof Set ? props.areaGroups : new Set(props.areaGroups as Iterable<string>))
@@ -169,9 +160,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     layoutMargin: margin,
     layoutSelection: props.layoutSelection,
     barColors: props.barColors,
-    // Heatmap labels are scene metadata, not an SVG overlay. Omitting these
-    // fields meant `showValues` appeared to be accepted by renderChart() but
-    // no heatcell ever received a label on the SSR path.
+    // Heatmap labels are scene metadata consumed by both renderers.
     showValues: props.showValues,
     heatmapValueFormat: props.heatmapValueFormat,
     heatmapColorScale: props.heatmapColorScale,

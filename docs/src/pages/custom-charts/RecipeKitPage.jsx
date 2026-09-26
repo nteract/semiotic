@@ -416,7 +416,11 @@ export default function RecipeKitPage() {
               </td>
               <td>any</td>
               <td>
-                greedy Gantt sub-track packing + the concurrency step series that pairs with it
+                greedy Gantt sub-track packing + the concurrency step series that pairs with it.
+                Sampling requires finite ordered domain bounds and a finite positive step;
+                invalid inputs return an empty array. Fractional steps include an on-grid
+                endpoint without cumulative drift. <code>intervalLanesLayout</code> caps padding
+                in short lanes and uses fractional ticks for small domains.
               </td>
             </tr>
             <tr>

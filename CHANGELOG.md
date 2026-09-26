@@ -14,6 +14,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Composed Dagre/Flextree layouts retain dimensions and routed waypoints stored
+  on frame wrappers when the raw datum omits them. Raw geometry takes precedence;
+  frame-created zero dimension placeholders use defaults while authored invalid
+  sizes remain rejected. The audit covers fitted/authored coordinates, both edge
+  styles, bounded/pushed hover through resize and dismissal, and ESM/CommonJS
+  browser/Node/edge rendering. (#1503, #1508)
+- Invalid waffle grids retain their accessible notice with zero input rows;
+  valid empty waffle and bullet charts still suppress omission notices. The
+  audit covers invalid dimensions/gutters, bounded charts with `emptyContent={false}`,
+  empty push-mode charts, and public recipe and server SVG exports. (#1505)
+- Flextree labels and node/edge tooltips receive original data objects, including
+  objects with their own `data` field. Negative coordinates and variable node
+  sizes fit inside the plot by default; `fit: "none"` retains authored pixels.
+  The audit covers both orientations, bounded and pushed canvas hover, resize
+  and dismissal, nonzero plot origins, invalid geometry, and ESM/CommonJS
+  browser/Node/edge static exports. Examples use `NetworkCustomChart`. (#1503)
+- The related Dagre audit fixes the same raw-datum and plot-fitting defects,
+  including waypoint bounds and invalid coordinates. Direction markers and
+  lineage layout cases remain open under #1508. (R0878, partial)
+- Consolidated identical UTF-16 FNV-1a, Mulberry32, clamp, and prototype-safe
+  dictionary helpers across recipes, physics, category colors, hatch fills,
+  rough rendering, and static rendering. Golden vectors and family regressions
+  preserve their outputs; distinct packing PRNG/clamp behavior and HyperLogLog's
+  avalanche remain intact. The recipes selection hook now shares the chart
+  context without loading unrelated theme utilities, reducing the recipes entry
+  graph to 99.1 KiB within its unchanged 104 KiB budget. This addresses helper
+  duplication in R0877/R0887; other #1542 cases remain open.
+- Interval sampling rejects invalid steps and non-finite or unrepresentable
+  domains, and includes fractional on-grid endpoints without cumulative drift.
+  Timeline lanes keep positive bar heights inside short lanes and use distinct
+  fractional ticks. Bullet charts compact skipped rows and disclose truncation;
+  waffle charts disclose categories receiving no cells and invalid grids. The
+  audit covers direct/sweep counting, tiny and crowded plots, zero values,
+  category-order ties, bounded/pushed canvas hover through resize and dismissal,
+  accessible SVG notices, and ESM/CommonJS browser/Node/edge exports. (#1505)
+- Process region factories preserve per-body attribute callbacks and protect
+  their `primitive` identity while retaining authored overrides of other defaults.
+  Worker observations now reach region callbacks without duplicating events from
+  imperative steps. The audit covers all eight factories, public ESM/CommonJS
+  exports, initial and pushed bodies, and sync/worker canvas hover through resize
+  and dismissal.
+  Static physics SVG retains geometry without running live region callbacks.
+  (#1510)
+- Isometric landmark selection keeps landmarks in their geographic cells unless
+  an explicit `centerId` moves one. Middle-cell preference and name/id tie-breaking
+  are deterministic; diversity scoring counts the actual center kind once. The
+  audit covers bounded/pushed maps, input reordering, empty and overridden centers,
+  canvas hover/resize, SVG overlays, and browser/Node/edge server exports. (#1506)
+- Small charts retain a finite, positive plot size after margins, preventing
+  negative SVG dimensions and degenerate Sankey geometry. Empty time scales use
+  a fixed epoch-day domain so SVG, render evidence, and hydration are independent
+  of the wall clock. The related-surface audit covers all five frame families,
+  bounded and pushed XY data, controlled realtime snapshots, ESM/CommonJS server
+  entries (browser, Node, and edge), and browser resize/hover recovery. (#1532)
+  Follow-up: align the time-scale integration test with the fixed UTC epoch-day
+  contract, asserting Date endpoints and exact timestamps instead of a recent year.
+- Hydration guides describe all five frame families, controlled realtime SSR,
+  push-mode data requirements, SVG layering, and current pre-hydration differences.
+  Shared-hook and server-renderer comments describe current behavior instead of
+  past incidents. The audit includes the public SSR guide, frame/store lifecycle
+  code, and static renderer mappings. (#1531)
 - Reduced the server entry graph below its existing 244 KiB gzip budget by
   sharing geographic scene/chrome rendering and removing redundant legend
   rendering and unused vertical item-layout allocations. Empty-scene overlays,

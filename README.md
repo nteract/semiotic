@@ -423,9 +423,9 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/utils` | **100 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **93 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **112 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **105 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/react` | **8 KB** | Glyph and React layout-selection helpers |
+| `semiotic/recipes` | **108 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **106 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/react` | **2 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **11 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **11 KB** | Theme presets and token helpers |
 | `semiotic/themes/react` | **7 KB** | ThemeProvider/useTheme and hooks |
@@ -439,7 +439,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/controls` | **11 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic/text` | **2 KB** | Optional Pretext annotation hook — peer package excluded |
-| `semiotic` | **384 KB** | Full chart API and shared utilities |
+| `semiotic` | **383 KB** | Full chart API and shared utilities |
 
 <!-- semiotic-bundle-sizes:end -->
 
@@ -467,24 +467,24 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { LineChart } from "semiotic/line"` | browser | **148.1 KiB** |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **136.5 KiB** |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **162.1 KiB** |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **166.5 KiB** |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **150.7 KiB** |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **166.6 KiB** |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **150.6 KiB** |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** |
-| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **153.0 KiB** |
+| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **152.9 KiB** |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.2 KiB** |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** |
-| `import { renderChart } from "semiotic/server"` | node | **280.1 KiB** |
+| `import { renderChart } from "semiotic/server"` | node | **279.7 KiB** |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **142.7 KiB** |
-| `import { renderToImage } from "semiotic/server/node"` | node | **281.0 KiB** |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **260.2 KiB** |
+| `import { renderToImage } from "semiotic/server/node"` | node | **280.5 KiB** |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **260.1 KiB** |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **39.5 KiB** |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **13.0 KiB** |
 | `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.8 KiB** |
-| `import { createChartAccessContract } from "semiotic/access"` | browser | **27.0 KiB** |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **27.1 KiB** |
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **42.7 KiB** |
 | `import { bin } from "semiotic/data"` | browser | **0.9 KiB** |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **118.7 KiB** |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **118.8 KiB** |
 | `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** |
@@ -493,8 +493,8 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { validateProps } from "semiotic/utils"` | browser | **9.8 KiB** |
 | `import { smartTickFormat } from "semiotic/utils/core"` | browser | **2.0 KiB** |
 | `import { useReducedMotion } from "semiotic/utils/react"` | browser | **2.4 KiB** |
-| `import { waffleLayout } from "semiotic/recipes"` | browser | **1.7 KiB** |
-| `import { waffleLayout } from "semiotic/recipes/core"` | browser | **1.7 KiB** |
+| `import { waffleLayout } from "semiotic/recipes"` | browser | **2.3 KiB** |
+| `import { waffleLayout } from "semiotic/recipes/core"` | browser | **2.3 KiB** |
 | `import { Glyph } from "semiotic/recipes/react"` | browser | **0.8 KiB** |
 | `import { BigNumber } from "semiotic/value"` | browser | **6.0 KiB** |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.3 KiB** |

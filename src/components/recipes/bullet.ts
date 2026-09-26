@@ -2,8 +2,9 @@ import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
-import { resolveAccessor, createSafeDatum } from "./recipeUtils"
+import { resolveAccessor, createSafeDatum, nonNegativeFinite } from "./recipeUtils"
 import { bandLabel } from "./recipeChrome"
+import { recipeNotice, RECIPE_NOTICE_HEIGHT } from "./recipeNotice"
 
 export interface BulletConfig {
   /** Field (or function) yielding the row label per datum. Each row is one bullet. */
@@ -64,7 +65,8 @@ export interface BulletConfig {
  * All inputs (`actual`, `target`, range thresholds) are treated as
  * non-negative — values < 0 or non-finite are clamped to 0. Range
  * thresholds are also sorted ascending so band order is always
- * deterministic regardless of input order.
+ * deterministic regardless of input order. Rows without positive values or
+ * enough plot space are omitted with a visible count in the SVG overlay.
  *
  * @example
  * ```tsx
@@ -94,10 +96,10 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   const { plot } = ctx.dimensions
   if (plot.width <= 0 || plot.height <= 0 || ctx.data.length === 0) return { nodes: [] }
 
-  const rowH = cfg.rowHeight ?? 28
-  const rowGap = cfg.rowGap ?? 12
+  const rowH = Math.max(1, nonNegativeFinite(cfg.rowHeight ?? 28))
+  const rowGap = nonNegativeFinite(cfg.rowGap ?? 12)
   const showLabels = cfg.showLabels !== false
-  const labelW = showLabels ? (cfg.labelWidth ?? 120) : 0
+  const labelW = showLabels ? nonNegativeFinite(cfg.labelWidth ?? 120) : 0
   const showTicks = cfg.showTicks !== false
   const tickAreaH = showTicks ? 14 : 0
   const tickFormat = cfg.tickFormat ?? ((v: number) => v.toLocaleString())
@@ -105,27 +107,14 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   // Bullet area sits to the right of the labels. Bars draw inside [bulletX, plot.right].
   const bulletX = plot.x + labelW
   const bulletW = Math.max(0, plot.width - labelW)
-  if (bulletW <= 0) return { nodes: [] }
 
   const getCategory = resolveAccessor(cfg.categoryAccessor) as (d: Datum) => string
   // Bullet charts are inherently non-negative (they measure progress along
   // a 0-anchored axis). Clamp every numeric input at 0 so a stray negative
   // can't produce inverted rect geometry. Same for non-finite values.
-  const clampNonNegative = (v: unknown): number => {
-    const n = Number(v)
-    return Number.isFinite(n) && n > 0 ? n : 0
-  }
-  const getValue = (d: Datum): number =>
-    clampNonNegative(typeof cfg.valueAccessor === "function" ? cfg.valueAccessor(d) : d[cfg.valueAccessor])
-  const getTarget = (d: Datum): number =>
-    clampNonNegative(typeof cfg.targetAccessor === "function" ? cfg.targetAccessor(d) : d[cfg.targetAccessor])
-  const getRanges = (d: Datum): number[] => {
-    const v = typeof cfg.rangesAccessor === "function" ? cfg.rangesAccessor(d) : d[cfg.rangesAccessor]
-    if (!Array.isArray(v)) return []
-    // Clamp at 0 and sort ascending so range bands always paint left-to-right
-    // even if the user passed thresholds out of order.
-    return v.map(clampNonNegative).sort((a, b) => a - b)
-  }
+  const getValue = resolveAccessor(cfg.valueAccessor)
+  const getTarget = resolveAccessor(cfg.targetAccessor)
+  const getRanges = resolveAccessor(cfg.rangesAccessor)
 
   // Datum keys readable by the default tooltip — prefer user-supplied
   // accessor names (when string) plus generic fallbacks.
@@ -158,32 +147,31 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
   const nodes: RectSceneNode[] = []
   // Per-row info captured for overlay rendering after the bar pass.
-  const rowInfo: Array<{
-    yTop: number
-    label: string
-    actual: number
-    target: number
-    maxVal: number
-  }> = []
+  const rows = ctx.data
+    .map((d) => {
+      const rawRanges = getRanges(d)
+      const ranges = Array.isArray(rawRanges)
+        ? rawRanges.map(nonNegativeFinite).sort((a, b) => a - b)
+        : []
+      const actual = nonNegativeFinite(getValue(d))
+      const target = nonNegativeFinite(getTarget(d))
+      return {
+        label: getCategory(d), ranges, actual, target,
+        maxVal: Math.max(actual, target, ...ranges)
+      }
+    })
+    .filter((row) => row.maxVal > 0)
+  const capacity = (height: number) =>
+    bulletW > 0
+      ? Math.max(0, Math.floor((height + rowGap) / (rowH + rowGap + tickAreaH)))
+      : 0
+  const omitted = Math.min(rows.length, capacity(plot.height)) < ctx.data.length
+  const rowInfo = rows
+    .slice(0, capacity(plot.height - (omitted ? RECIPE_NOTICE_HEIGHT : 0)))
+    .map((row, i) => ({ ...row, yTop: plot.y + i * (rowH + rowGap + tickAreaH) }))
 
-  for (let i = 0; i < ctx.data.length; i++) {
-    const d = ctx.data[i]
-    const ranges = getRanges(d)
-    const actual = getValue(d)
-    const target = getTarget(d)
-    const maxVal = Math.max(actual, target, ...(ranges.length ? ranges : [0]))
-    if (maxVal <= 0) continue
-
-    const yTop = plot.y + i * (rowH + rowGap + tickAreaH)
-    // Overflow guard accounts for tick chrome too — when showTicks is
-    // enabled the row's footprint is rowH + tickAreaH (the bar plus the
-    // ticks/labels rendered below it). Without including tickAreaH here,
-    // the last row's tick labels can spill past the plot rect.
-    if (yTop + rowH + tickAreaH > plot.y + plot.height) break
-    rowInfo.push({ yTop, label: getCategory(d), actual, target, maxVal })
-
+  for (const { yTop, label: cat, ranges, actual, target, maxVal } of rowInfo) {
     const xToPx = (v: number) => bulletX + (v / maxVal) * bulletW
-    const cat = getCategory(d)
 
     // makeDatum runs every assignment through createSafeDatum's
     // null-prototype writer — including user-supplied accessor names.
@@ -225,7 +213,7 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
     }
 
     // Actual value bar — thinner, centered vertically inside the row.
-    const actualH = Math.max(6, Math.floor(rowH * 0.45))
+    const actualH = Math.min(rowH, Math.max(6, Math.floor(rowH * 0.45)))
     nodes.push({
       type: "rect",
       x: bulletX,
@@ -243,7 +231,7 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
     // Target tick — narrow vertical mark spanning ~80% of row height.
     const tickW = 3
-    const tickH = Math.floor(rowH * 0.8)
+    const tickH = rowH * 0.8
     nodes.push({
       type: "rect",
       x: xToPx(target) - tickW / 2,
@@ -263,6 +251,11 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   // Chrome overlays (labels + per-row tick marks). Built as React
   // elements via React.createElement so the recipe stays JSX-free.
   const overlayChildren: React.ReactNode[] = []
+  const notice = recipeNotice(
+    plot, rowInfo.length, ctx.data.length, "rows",
+    "Rows without positive values or enough plot space are omitted."
+  )
+  if (notice) overlayChildren.push(notice)
   for (let i = 0; i < rowInfo.length; i++) {
     const info = rowInfo[i]
     const rowMid = info.yTop + rowH / 2
@@ -316,4 +309,3 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
 
   return { nodes, overlays }
 }
-

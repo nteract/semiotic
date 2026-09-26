@@ -1,3 +1,4 @@
+import { clamp } from "../utils/clamp"
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type {
@@ -118,10 +119,6 @@ const DEFAULT_ASPECT_RATIO = 1.8
 function finitePositiveInteger(value: number | undefined): number | undefined {
   if (!Number.isFinite(value)) return undefined
   return Math.max(1, Math.round(value as number))
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 function finiteExtent(values: number[]): [number, number] {

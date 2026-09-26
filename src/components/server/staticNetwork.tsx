@@ -172,8 +172,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     margin,
     hasTitle: hasVisibleTitle,
   })
-  const innerWidth = size[0] - margin.left - margin.right
-  const innerHeight = size[1] - margin.top - margin.bottom
+  const innerWidth = Math.max(1, size[0] - margin.left - margin.right)
+  const innerHeight = Math.max(1, size[1] - margin.top - margin.bottom)
   const resolvedBackgroundGraphics = resolveFrameGraphics(
     props.backgroundGraphics,
     size,
@@ -337,14 +337,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     edges = normalized.edges.map(realtimeEdge)
   }
 
-  // customLayout escape hatch — same dispatch the CSR pipeline uses in
-  // NetworkPipelineStore.runLayout/buildScene. When the caller supplies
-  // a `customNetworkLayout` (ProcessSankey via the SSR config does this),
-  // skip the built-in plugin and emit scene primitives from the custom
-  // layout function directly. Without this, charts that compose via the
-  // escape hatch would silently fall through to the force/sankey/etc.
-  // plugin during SSR — visible regression class for any registered
-  // custom-layout chart.
+  // customNetworkLayout supplies scene primitives directly, taking precedence
+  // over the built-in plugin just as it does in NetworkPipelineStore.
   let sceneNodes: NetworkSceneNode[] = []
   let sceneEdges: NetworkSceneEdge[] = []
   let labels: import("../stream/networkTypes").NetworkLabel[] = []
@@ -353,12 +347,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   let customLayoutBackgrounds: import("react").ReactNode = null
   let customLayoutOverlays: import("react").ReactNode = null
   if (config.customNetworkLayout) {
-    // Reuse the same palette + resolver helpers NetworkPipelineStore
-    // uses for the CSR custom-layout context, so a `colorScheme` named
-    // string (e.g. `"tableau10"`) or object map resolves identically on
-    // both paths. Without this, SSR would silently fall through to
-    // `theme.colors.categorical` whenever the caller passed a string
-    // scheme — visible drift from CSR for any registered custom layout.
+    // Share named-palette and category-map resolution with NetworkPipelineStore.
     const customColorScheme = config.colorScheme as
       | string
       | string[]
@@ -456,12 +445,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       {labelElements}
       {annotationNodes}
       {resolvedForegroundGraphics}
-      {/* customLayout-emitted overlays paint above the data layer,
-          matching `NetworkSVGOverlay`'s `composeOverlays(foreground,
-          customLayoutOverlays)` ordering on CSR. Without this, SSR
-          snapshots for any registered custom layout would be missing
-          axis chrome / particles / quality readouts that the live
-          chart shows. */}
+      {/* Layout overlays paint above foreground graphics, matching NetworkSVGOverlay. */}
       {customLayoutOverlays}
     </>
   )

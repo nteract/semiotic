@@ -109,9 +109,7 @@ export interface StaticAnnotationConfig {
    * Custom SVG annotation renderer — same contract as the client
    * `svgAnnotationRules` frame prop. When present, each annotation is
    * offered to this rule first; returning `null`/`undefined` falls through
-   * to the built-in static type handlers. Without this, custom middle-
-   * marker / bulb overlays (and any other non-built-in annotation type)
-   * silently vanished from `renderChart` SVG.
+   * to the built-in static type handlers.
    */
   svgAnnotationRules?: (
     annotation: Datum,

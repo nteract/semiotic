@@ -114,17 +114,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 112,
+    "kb": 108,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 105,
+    "kb": 106,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/react",
-    "kb": 8,
+    "kb": 2,
     "blurb": "Glyph and React layout-selection helpers"
   },
   {
@@ -194,7 +194,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 384,
+    "kb": 383,
     "blurb": "Full chart API and shared utilities"
   }
 ])

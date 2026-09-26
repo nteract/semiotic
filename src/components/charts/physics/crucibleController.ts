@@ -1,3 +1,4 @@
+import { fnv1a32 as hashText } from "../../utils/hash"
 /**
  * React-facing replay and motion helpers for CrucibleChart.
  *
@@ -123,15 +124,6 @@ export function reconcileCrucibleBodies(
 export interface CrucibleBodyTarget {
   x: number
   y: number
-}
-
-function hashText(value: string): number {
-  let hash = 2166136261
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
 }
 
 function unit(value: string, salt: number): number {

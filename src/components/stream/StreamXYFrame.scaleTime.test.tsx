@@ -50,7 +50,7 @@ describe("PipelineStore xScaleType=time produces Date ticks", () => {
     }
   })
 
-  it("uses empty-time-fallback domain (not [0,1]) when no data ingested", () => {
+  it("uses a fixed UTC epoch-day domain when no data is ingested", () => {
     const store = new PipelineStore({
       chartType: "line",
       xAccessor: "date",
@@ -68,10 +68,10 @@ describe("PipelineStore xScaleType=time produces Date ticks", () => {
 
     expect(store.scales).not.toBeNull()
     const domain = store.scales!.x.domain()
-    // Should NOT be [0, 1] (which produces Dec 31 1969 ticks)
-    // Should be a recent time range
-    const d0 = new Date(domain[0])
-    expect(d0.getFullYear()).toBeGreaterThanOrEqual(2020)
+    // Empty charts use a full epoch day so SSR and hydration agree regardless
+    // of the wall clock. The time scale must still expose Date endpoints.
+    for (const endpoint of domain) expect(endpoint).toBeInstanceOf(Date)
+    expect(domain.map(Number)).toEqual([0, 86_400_000])
   })
 
   it("produces number ticks (not Date) when xScaleType is unset", () => {

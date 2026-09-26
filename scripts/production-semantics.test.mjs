@@ -91,8 +91,214 @@ for (const entry of [
   }
 }
 
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} bounds interval sampling and discloses omitted recipe data (#1505)`, () => {
+      exercise(target, `
+        import { renderToStaticMarkup } from "react-dom/server"
+        for (const step of [0, -1, NaN, Infinity]) {
+          assert.deepEqual(api.activeCountOverDomain([], { domain: [0, 1], step }), [])
+        }
+        assert.deepEqual(api.activeCountOverDomain([{ start: 0, end: 0.3 }], {
+          domain: [0, 0.3], step: 0.1
+        }), [0, 0.1, 0.2, 0.3].map(value => ({ value, count: 1 })))
+        const ctx = {
+          dimensions: { plot: { x: 0, y: 0, width: 400, height: 100 } },
+          theme: { semantic: {}, categorical: [] }, resolveColor: () => "blue"
+        }
+        const lanes = api.intervalLanesLayout({ ...ctx,
+          data: Array.from({ length: 10 }, (_, i) => ({ lane: String(i), start: 0, end: 1 })),
+          config: { laneAccessor: "lane", startAccessor: "start", endAccessor: "end", domain: [0, 1] }
+        })
+        assert.equal(lanes.nodes.length, 10)
+        for (const node of lanes.nodes) {
+          assert.ok(node.h > 0)
+          assert.ok(node.y >= Number(node.group) * 10)
+          assert.ok(node.y + node.h <= (Number(node.group) + 1) * 10)
+        }
+        const bullet = api.bulletLayout({ ...ctx,
+          data: Array.from({ length: 4 }, (_, i) => ({ metric: String(i), actual: 60, target: 80, ranges: [100] })),
+          config: { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" }
+        })
+        assert.equal(bullet.nodes.filter(n => n.group === "actual").length, 1)
+        assert.match(renderToStaticMarkup(bullet.overlays), /1 of 4 rows shown/)
+        const waffle = api.waffleLayout({ ...ctx,
+          data: [{ cat: "A", value: 100 }, { cat: "B", value: 0.001 }],
+          config: { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" }
+        })
+        assert.equal(waffle.nodes.length, 4)
+        assert.match(renderToStaticMarkup(waffle.overlays), /1 of 2 categories shown/)
+        const invalidEmpty = api.waffleLayout({ ...ctx, data: [], config: { rows: 0 } })
+        assert.equal(invalidEmpty.nodes.length, 0)
+        assert.match(renderToStaticMarkup(invalidEmpty.overlays), /0 of 0 rows shown/)
+        assert.match(renderToStaticMarkup(invalidEmpty.overlays), /positive integer dimensions/)
+        assert.equal(api.waffleLayout({ ...ctx, data: [], config: {} }).overlays, null)
+      `)
+    })
+    test(`${entry} ${target.conditions} retains geographic cells and lazy region attributes`, () => {
+      exercise(
+        target,
+        `
+      const points = [
+        { id: "city", name: "Corner City", kind: "city", lon: 0.5, lat: 0.5 },
+        { id: "monument", name: "Middle Monument", kind: "monument", lon: 0, lat: 0 }
+      ]
+      const config = { center: { lon: 0, lat: 0 }, gridSize: 3 }
+      const tiles = api.selectIsometricLandmarks(points, config)
+      assert.equal(tiles[2].landmark.id, "city")
+      assert.equal(tiles[4].landmark.id, "monument")
+      assert.deepEqual(api.selectIsometricLandmarks([...points].reverse(), config), tiles)
+      let calls = 0
+      const attributes = context => {
+        calls++
+        return { bodyId: context.body.id, primitive: "spoofed" }
+      }
+      for (const [factory, primitive] of [
+        ["membraneRegion", "membrane"], ["chargeGateRegion", "chargeGate"],
+        ["routeSurfaceRegion", "routeSurface"], ["pressureFieldRegion", "pressureField"],
+        ["capacitatedRegion", "capacitatedSensor"], ["portalRegion", "portal"],
+        ["absorbRegion", "absorb"], ["forceFieldRegion", "forceField"]
+      ]) {
+        const options = { id: "gate", x: 50, y: 50, width: 80, height: 80, cost: 1, capacity: 2 }
+        const before = calls
+        const region = api[factory]({ ...options, attributes })
+        assert.equal(calls, before)
+        assert.equal(typeof region.attributes, "function")
+        const resolved = region.attributes({ body: { id: "parcel" }, region, regionState: {} })
+        assert.equal(resolved.primitive, primitive)
+        assert.equal(resolved.bodyId, "parcel")
+        assert.equal(calls, before + 1)
+        assert.equal(api[factory]({ ...options, attributes: { primitive: "spoofed" } }).attributes.primitive, primitive)
+      }
+    `
+      )
+    })
+  }
+}
+
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} exports recipe omissions and small-lane geometry (#1505)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const [component, layout, data, layoutConfig, count, note] of [
+          ["OrdinalCustomChart", recipes.bulletLayout,
+            Array.from({ length: 4 }, (_, i) => ({ metric: String(i), actual: 60, target: 80, ranges: [100] })),
+            { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" },
+            9, "3 of 4 rows shown"],
+          ["XYCustomChart", recipes.waffleLayout,
+            [{ cat: "A", value: 100 }, { cat: "B", value: 0.001 }],
+            { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" },
+            4, "1 of 2 categories shown"],
+          ["XYCustomChart", recipes.waffleLayout,
+            [{ cat: "Empty", value: 0 }],
+            { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" },
+            0, "0 of 1 categories shown"],
+          ["XYCustomChart", recipes.waffleLayout, [], { rows: 0, columns: 2 },
+            0, "0 of 0 rows shown"],
+          ["OrdinalCustomChart", recipes.bulletLayout,
+            [{ metric: "Empty", actual: 0, target: 0, ranges: [] }],
+            { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" },
+            0, "0 of 1 rows shown"],
+          ["OrdinalCustomChart", recipes.intervalLanesLayout,
+            Array.from({ length: 20 }, (_, i) => ({ lane: String(i), start: 0, end: 1 })),
+            { laneAccessor: "lane", startAccessor: "start", endAccessor: "end", domain: [0, 1] },
+            20, "0.2"]
+        ]) {
+          let nodes
+          const result = api.renderChartWithEvidence(component, {
+            data, layoutConfig, width: 440, height: 220, margin: 20,
+            categoryAccessor: layoutConfig.laneAccessor || "metric", valueAccessor: "actual",
+            layout: ctx => { const result = layout(ctx); nodes = result.nodes; return result }
+          })
+          assert.equal(result.evidence.markCount, count)
+          assert.equal(result.evidence.empty, count === 0)
+          assert.ok(result.svg.includes(note))
+          assert.doesNotMatch(result.svg, /NaN|Infinity/)
+          for (const node of nodes) assert.ok(node.h > 0 && node.w > 0)
+        }
+      `)
+    })
+    test(`${entry} ${target.conditions} preserves recipe geometry and static callback boundaries`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        const points = [
+          { id: "city", name: "Corner City", kind: "city", lon: 0.5, lat: 0.5 },
+          { id: "monument", name: "Middle Monument", kind: "monument", lon: 0, lat: 0 }
+        ]
+        let nodes
+        const { svg, evidence } = api.renderChartWithEvidence("GeoCustomChart", {
+          points, width: 500, height: 280, margin: 20,
+          layoutConfig: { center: { lon: 0, lat: 0 }, gridSize: 3 },
+          layout: context => {
+            const result = recipes.isometricLandmarkLayout(context)
+            nodes = result.nodes
+            return result
+          }
+        })
+        const city = nodes.find(node => node.datum.id === "city")
+        const monument = nodes.find(node => node.datum.id === "monument")
+        assert.equal(city.datum.cellId, "tile-0-2")
+        assert.equal(monument.datum.cellId, "tile-1-1")
+        assert.equal(city.centroid[0] - monument.centroid[0], 80)
+        assert.equal(city.centroid[1], monument.centroid[1])
+        assert.equal(evidence.markCount, 9)
+        assert.equal(evidence.empty, false)
+        assert.ok(svg.includes(city.pathData))
+        assert.ok(svg.includes(monument.pathData))
+        assert.ok(svg.includes(">CORNER CITY</text>"))
+        assert.doesNotMatch(svg, /NaN|Infinity/)
+
+        // Static physics snapshots paint region/body geometry without running
+        // live region-entry callbacks. Keep this boundary explicit.
+        let calls = 0
+        const region = recipes.chargeGateRegion({
+          id: "gate", x: 100, y: 100, width: 80, height: 80,
+          attributes: () => { calls++; return { parcel: "static" } }
+        })
+        const snapshot = api.renderChartWithEvidence("PhysicsCustomChart", {
+          data: [{ id: "parcel" }], width: 300, height: 240,
+          layout: () => ({
+            bodies: [{ id: "parcel", x: 100, y: 100, shape: { type: "circle", radius: 5 } }],
+            regionEffects: [region],
+            config: { kernel: { gravity: { x: 0, y: 0 } }, settleStepLimit: 2 }
+          })
+        })
+        assert.equal(snapshot.evidence.markCount, 1)
+        assert.ok(snapshot.svg.includes('<circle'))
+        assert.equal(calls, 0)
+      `)
+    })
+    test(`${entry} ${target.conditions} keeps small plots finite and empty time snapshots deterministic`, () => {
+      exercise(target, `
+        for (const [component, props] of [
+          ["LineChart", { data: [{ x: 0, y: 1 }, { x: 1, y: 2 }] }],
+          ["BarChart", { data: [{ category: "A", value: 2 }] }],
+          ["SankeyDiagram", { edges: [{ source: "a", target: "b", value: 2 }] }],
+          ["ProportionalSymbolMap", { points: [{ lon: 0, lat: 0 }, { lon: 1, lat: 1 }] }]
+        ]) {
+          const { svg, evidence } = api.renderChartWithEvidence(component, {
+            ...props, width: 30, height: 20, showLegend: false,
+            margin: { top: 50, right: 50, bottom: 50, left: 50 }
+          })
+          assert.doesNotMatch(svg, /NaN|Infinity/)
+          assert.doesNotMatch(svg, /(?:width|height|r|rx|ry)="-/)
+          assert.equal(evidence.plot.width, 1)
+          assert.equal(evidence.plot.height, 1)
+          assert.ok(evidence.markCount > 0)
+        }
+        for (const component of ["LineChart", "RealtimeLineChart"]) {
+          const props = { data: [], xScaleType: "time" }
+          Date.now = () => Date.UTC(2025, 0, 1)
+          const first = api.renderChartWithEvidence(component, props)
+          Date.now = () => Date.UTC(2026, 8, 25)
+          const second = api.renderChartWithEvidence(component, props)
+          assert.equal(first.evidence.empty, true)
+          assert.deepEqual(first.evidence.xDomain, [0, 86400000])
+          assert.deepEqual(second, first)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} paints valid source semantics through the shipped renderer`, () => {
       exercise(
         target,
@@ -210,3 +416,110 @@ for (const entry of ["./ai", "./ai/core"]) {
     assert.equal(execution.status, 0, execution.stderr || execution.error || execution.stdout)
   })
 }
+
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} fits pre-positioned networks and preserves raw callbacks (#1503)`, () => {
+      exercise(target, `
+        const nodes = [
+          { id: "root", label: "Root", x: -1000, y: -100, width: 120, height: 40, data: { label: "Nested" } },
+          { id: "leaf", label: "Leaf", x: 1000, y: 900, width: 240, height: 80 }
+        ]
+        const edge = { source: "root", target: "leaf" }
+        for (const layout of [api.flextreeLayout, api.dagreLayout]) {
+          const called = []
+          const ctx = {
+            nodes: nodes.map(data => ({ id: data.id, data })), edges: [{ ...edge, data: edge }],
+            config: { labelAccessor: datum => { called.push(datum); return datum.label } },
+            dimensions: { plot: { x: 30, y: 20, width: 300, height: 180 } },
+            theme: { semantic: {} }, resolveColor: () => "blue"
+          }
+          const scene = layout(ctx)
+          assert.deepEqual(called, nodes)
+          assert.equal(called[0], nodes[0])
+          assert.deepEqual(scene.labels.map(label => label.text), ["Root", "Leaf"])
+          scene.sceneNodes.forEach((node, i) => {
+            assert.equal(node.datum, nodes[i])
+            assert.ok(node.x >= 30 && node.x + node.w <= 330)
+            assert.ok(node.y >= 20 && node.y + node.h <= 200)
+          })
+          assert.equal(scene.sceneEdges[0].datum, edge)
+          const authored = layout({ ...ctx, config: { fit: "none" } }).sceneNodes[0]
+          assert.equal(authored.x, -1060)
+          assert.equal(authored.y, -120)
+          const composed = { ...ctx, config: { fit: "none" },
+            nodes: nodes.map(data => ({ ...data, createdByFrame: true, data: { id: data.id, label: data.label } })),
+            edges: [{ ...edge, data: edge, points: [{ x: -1000, y: -80 }, { x: -1500, y: 500 }, { x: 1000, y: 860 }] }]
+          }
+          const composedScene = layout(composed)
+          assert.equal(composedScene.sceneNodes[0].w, 120)
+          assert.equal(composedScene.sceneNodes[0].h, 40)
+          assert.equal(composedScene.sceneNodes[0].datum, composed.nodes[0].data)
+          if (layout === api.dagreLayout) {
+            assert.equal(composedScene.sceneEdges[0].pathD, "M-1000,-80 L -1500,500 L 1000,860")
+            const fitted = layout({ ...composed, config: {} }).sceneEdges[0].pathD
+            const points = fitted.match(/-?[0-9]+(?:[.][0-9]+)?/g).map(Number)
+            for (let i = 0; i < points.length; i += 2) {
+              assert.ok(points[i] >= 30 && points[i] <= 330)
+              assert.ok(points[i + 1] >= 20 && points[i + 1] <= 200)
+            }
+          }
+        }
+      `)
+    })
+  }
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} renders fitted network recipes with evidence (#1503)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const layout of [recipes.flextreeLayout, recipes.dagreLayout]) {
+          const result = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes: [
+              { id: "root", label: "Root", x: -1000, y: -100, width: 120, height: 40 },
+              { id: "leaf", label: "Leaf", x: 1000, y: 900, width: 240, height: 80 }
+            ], edges: [{ source: "root", target: "leaf" }],
+            width: 400, height: 240, margin: 20, title: "Fitted tree",
+            layoutConfig: { labelAccessor: datum => datum.label }, layout
+          })
+          assert.equal(result.evidence.empty, false)
+          assert.ok(result.evidence.markCount >= 2)
+          assert.ok(result.svg.includes(">Root</text>"))
+          assert.ok(result.svg.includes(">Leaf</text>"))
+          assert.doesNotMatch(result.svg, /NaN|Infinity|undefined/)
+          let scene
+          const composed = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes: [{ id: "root", label: "Root" }, { id: "leaf", label: "Leaf" }],
+            edges: [{ source: "root", target: "leaf" }],
+            width: 400, height: 240, margin: 20,
+            layoutConfig: { labelAccessor: "label" },
+            layout: ctx => {
+              ctx.nodes.forEach((node, i) => Object.assign(node, { x: i * 200, y: i * 100, width: 120, height: 40 }))
+              ctx.edges[0].points = [{ x: 0, y: 20 }, { x: -200, y: 50 }, { x: 200, y: 80 }]
+              scene = layout(ctx)
+              return scene
+            }
+          })
+          assert.equal(composed.evidence.empty, false)
+          assert.ok(composed.evidence.markCount >= 2)
+          assert.ok(Math.abs(scene.sceneNodes[0].w / scene.sceneNodes[0].h - 3) < 1e-12)
+          assert.equal(scene.sceneNodes[0].datum.label, "Root")
+          assert.ok(composed.svg.includes(scene.sceneEdges[0].pathD))
+          assert.doesNotMatch(composed.svg, /NaN|Infinity|undefined/)
+        }
+      `)
+    })
+  }
+}
+
+test("recipe selection hook shares the network provider context without loading theme utilities", async () => {
+  const recipes = await import("../dist/semiotic-recipes-react.module.min.js")
+  const anchor = await import("../dist/semiotic-client-selection.module.min.js")
+  const shared = await import("../dist/semiotic-client-shared.module.min.js")
+  assert.equal(recipes.useCustomLayoutSelection, anchor.useCustomLayoutSelection)
+  assert.equal(recipes.useCustomLayoutSelection, shared.useCustomLayoutSelection)
+  const source = readFileSync(resolve(root, "dist/semiotic-recipes-react.module.min.js"), "utf8")
+  assert.doesNotMatch(source, /semiotic-client-shared/)
+})

@@ -1027,7 +1027,7 @@ function writeClientPassThroughFacades() {
     "semiotic-utils-react.module.min.js":
       '"use client";\nexport{ThemeProvider,useTheme,useReducedMotion,useHighContrast}from"./semiotic-client-shared.module.min.js";export{useResponsiveSize,resolveResponsiveDimension}from"./semiotic-client-responsive.module.min.js";\n',
     "semiotic-recipes-react.module.min.js":
-      '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-shared.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";\n',
+      '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-selection.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";\n',
     "semiotic-utils.module.min.js":
       '"use client";\nexport*from"./semiotic-utils-core.module.min.js";export{ThemeProvider,useTheme,useReducedMotion,useHighContrast,useResponsiveSize}from"./semiotic-utils-react.module.min.js";\n',
     "semiotic-recipes.module.min.js":
@@ -1449,6 +1449,10 @@ async function build() {
   )
   primaryClientEntries["semiotic-client-shared"] =
     "src/components/semiotic-client-shared.ts"
+  // Recipes only need this context hook. A dedicated anchor preserves identity
+  // with frame providers without making recipes load theme/selection-store code.
+  primaryClientEntries["semiotic-client-selection"] =
+    "src/components/stream/customLayoutSelection.tsx"
   // Pure artifact tables and hash helpers follow their actual consumers.
   // Additional private entries here create unnecessary gzip/chunk boundaries;
   // purity annotations preserve downstream named-import tree shaking.

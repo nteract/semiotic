@@ -1,3 +1,5 @@
+import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
+
 /**
  * Network-analysis kit — pure graph algorithms for network visualizations.
  *
@@ -25,28 +27,6 @@ export interface GraphEdge {
 export interface Point {
   x: number
   y: number
-}
-
-function hasOwn(record: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(record, key)
-}
-
-function ownValue<T>(record: Record<string, T>, key: string): T | undefined {
-  return hasOwn(record, key) ? record[key] : undefined
-}
-
-/** Define arbitrary author ids as data properties, including `__proto__`. */
-function setOwnValue<T>(record: Record<string, T>, key: string, value: T): void {
-  Object.defineProperty(record, key, {
-    value,
-    enumerable: true,
-    configurable: true,
-    writable: true
-  })
-}
-
-function idDictionary<T>(): Record<string, T> {
-  return Object.create(null) as Record<string, T>
 }
 
 export {
