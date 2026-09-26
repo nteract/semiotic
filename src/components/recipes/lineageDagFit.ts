@@ -28,7 +28,7 @@ export type LineageDagFitConfig = Pick<
 export interface LineageDagFit {
   /** Resolved layer count (one for empty data unless explicitly configured). */
   layerCount: number
-  /** Resolved largest layer population. */
+  /** Resolved row-domain span plus one (at least one). */
   maxLayerSize: number
   /** Fitted glyph width, including the dot-LOD size adjustment. */
   nodeWidth: number
@@ -65,19 +65,36 @@ export function createLineageDagFit(
 ): LineageDagFit {
   const layerAcc = config.layerAccessor ?? "x"
   const rowAcc = config.rowAccessor ?? "y"
-  let layerCount = config.layerCount
-  let maxLayerSize = config.maxLayerSize
-  if (layerCount == null || maxLayerSize == null) {
-    let maxLayer = 0
-    const rowsByLayer = new Map<number, number>()
-    for (const node of nodes) {
-      const layer = Math.round(Number(readField(node, layerAcc, 0)))
-      maxLayer = Math.max(maxLayer, layer)
-      rowsByLayer.set(layer, (rowsByLayer.get(layer) ?? 0) + 1)
-    }
-    layerCount = layerCount ?? maxLayer + 1
-    maxLayerSize = maxLayerSize ?? Math.max(1, ...rowsByLayer.values())
+  let minLayer = Infinity,
+    maxLayer = -Infinity
+  let minRow = Infinity,
+    maxRow = -Infinity
+  for (const node of nodes) {
+    const layer = Number(readField(node, layerAcc, 0))
+    const row = Number(readField(node, rowAcc, 0))
+    if (!Number.isFinite(layer) || !Number.isFinite(row)) continue
+    minLayer = Math.min(minLayer, layer)
+    maxLayer = Math.max(maxLayer, layer)
+    minRow = Math.min(minRow, row)
+    maxRow = Math.max(maxRow, row)
   }
+  if (minLayer === Infinity) minLayer = maxLayer = minRow = maxRow = 0
+  // Explicit counts reserve the legacy zero-based / centered domains, while
+  // still including coordinates outside them. Automatic fits use actual extents.
+  if (Number.isFinite(config.layerCount) && config.layerCount! > 0) {
+    minLayer = Math.min(minLayer, 0)
+    maxLayer = Math.max(maxLayer, config.layerCount! - 1)
+  }
+  if (Number.isFinite(config.maxLayerSize) && config.maxLayerSize! > 0) {
+    const halfSpan = Math.max(0, config.maxLayerSize! - 1) / 2
+    minRow = Math.min(minRow, -halfSpan)
+    maxRow = Math.max(maxRow, halfSpan)
+  }
+  const layerSpan = maxLayer - minLayer
+  const rowSpan = Math.max(1, maxRow - minRow)
+  const rowStart = (minRow + maxRow - rowSpan) / 2
+  const layerCount = layerSpan + 1
+  const maxLayerSize = maxRow - minRow + 1
   const availW = plot.width / Math.max(1, layerCount)
   const availH = plot.height / Math.max(1, maxLayerSize)
   let w = Math.min(
@@ -105,12 +122,14 @@ export function createLineageDagFit(
   }
   const usableW = Math.max(1, plot.width - w)
   const usableH = Math.max(1, plot.height - h)
-  const rowSpan = Math.max(1, maxLayerSize - 1)
   // Capture scalars: mutating the caller's plot object must not change this fit.
   const { x, y } = plot
   const project = (layer: number, row: number) => ({
-    x: x + w / 2 + (layerCount > 1 ? layer / (layerCount - 1) : 0.5) * usableW,
-    y: y + h / 2 + ((row + rowSpan / 2) / rowSpan) * usableH
+    x:
+      x +
+      w / 2 +
+      (layerSpan > 0 ? (layer - minLayer) / layerSpan : 0.5) * usableW,
+    y: y + h / 2 + ((row - rowStart) / rowSpan) * usableH
   })
   return {
     layerCount,
@@ -121,8 +140,10 @@ export function createLineageDagFit(
     project,
     invert: (px, py) => ({
       layer:
-        layerCount > 1 ? ((px - x - w / 2) / usableW) * (layerCount - 1) : null,
-      row: ((py - y - h / 2) / usableH) * rowSpan - rowSpan / 2
+        layerSpan > 0
+          ? minLayer + ((px - x - w / 2) / usableW) * layerSpan
+          : null,
+      row: ((py - y - h / 2) / usableH) * rowSpan + rowStart
     }),
     nodeBounds: (node) => {
       const center = project(

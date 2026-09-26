@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Lineage domains use actual layer/row extents, including negative layers and
+  uncentered or sparse rows. Backedges are inferred when no override is supplied;
+  cycles and self-loops stay inside the plot and carry direction arrows. Dagre
+  adds arrows for routed and fallback edges, clips fallback endpoints to node
+  borders, and truncates visible labels while retaining full semantic labels.
+  The audit fixes dash/cap rendering across canvas and SVG edge types, preserves
+  raw lineage callback data, and covers minimap inversion, all LODs, bounded/pushed
+  hover through resize and dismissal, and ESM/CommonJS browser/Node/edge static
+  exports. Stale lineage documentation references were removed. (#1508)
+- Static network wrappers identify their zero dimension placeholders so Dagre and
+  Flextree use default sizes when dimensions are omitted, matching the browser;
+  authored zero sizes remain invalid. Verified through static scene tests and
+  production server exports. (#1503, #1508)
 - Composed Dagre/Flextree layouts retain dimensions and routed waypoints stored
   on frame wrappers when the raw datum omits them. Raw geometry takes precedence;
   frame-created zero dimension placeholders use defaults while authored invalid
@@ -31,8 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and dismissal, nonzero plot origins, invalid geometry, and ESM/CommonJS
   browser/Node/edge static exports. Examples use `NetworkCustomChart`. (#1503)
 - The related Dagre audit fixes the same raw-datum and plot-fitting defects,
-  including waypoint bounds and invalid coordinates. Direction markers and
-  lineage layout cases remain open under #1508. (R0878, partial)
+  including waypoint bounds and invalid coordinates. (#1508, R0878)
 - Consolidated identical UTF-16 FNV-1a, Mulberry32, clamp, and prototype-safe
   dictionary helpers across recipes, physics, category colors, hatch fills,
   rough rendering, and static rendering. Golden vectors and family regressions

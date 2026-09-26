@@ -10,6 +10,7 @@ import type {
 } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { clamp, nonNegativeFinite, readField } from "./recipeUtils"
+import { edgeArrow } from "./directedEdge"
 import { createLineageDagFit } from "./lineageDagFit"
 import {
   renderLineageHullBackgrounds,
@@ -31,9 +32,9 @@ export interface LineageStoreSlot {
 }
 
 export interface LineageDagConfig {
-  /** Number of layers (x domain). Computed from node `x` extents when omitted. */
+  /** Reserve layers 0 through count - 1; actual layer extents are always included. */
   layerCount?: number
-  /** Largest layer's row count (y domain). Computed from the data when omitted. */
+  /** Reserve a centered row domain of size - 1; actual row extents are always included. */
   maxLayerSize?: number
 
   /** Target full-glyph width / height in px. Shrunk to fit the plot. @default 172 / 54 */
@@ -59,9 +60,9 @@ export interface LineageDagConfig {
   dimOpacity?: number
 
   // ── field accessors on the node/edge datum ──────────────────────────────
-  /** Logical layer index (0 = leftmost). @default "x" */
+  /** Logical layer coordinate (may be negative or fractional). @default "x" */
   layerAccessor?: string
-  /** Logical row offset within the layer (centered on 0). @default "y" */
+  /** Logical row coordinate (need not be centered). @default "y" */
   rowAccessor?: string
   /** Node partition → fill family. @default "partition" */
   partitionAccessor?: string
@@ -71,7 +72,7 @@ export interface LineageDagConfig {
   labelAccessor?: string
   /** Store list — `string[]` or `{storeName,slotIndex}[]`. @default "stores" */
   storesAccessor?: string
-  /** Edge "closes a cycle" flag. @default "isBackEdge" */
+  /** Optional backedge override; when absent, inferred from source layer >= target layer. @default "isBackEdge" */
   backEdgeAccessor?: string
   /** Edge type, drives edge color. @default "edgeType" */
   edgeTypeAccessor?: string
@@ -162,9 +163,8 @@ function hullOpacity(value: number | undefined, fallback: number): number {
  * `lineageDagLayout` — a reusable layout recipe for **pre-positioned layered
  * lineage / DAG graphs** with rich, composite node glyphs. Used here for the
  * Kafka Streams topology viewer, but domain-agnostic: it reads logical
- * `x` (layer) / `y` (row) coordinates the caller already computed (e.g. from a
- * `dagLayoutFromGraph` pipeline) and maps them into the plot — it never runs a
- * force sim or re-lays-out, so output is deterministic.
+ * `x` (layer) / `y` (row) coordinates the caller already computed and maps
+ * them into the plot without running a force simulation, so output is deterministic.
  *
  * **Composite glyphs as one hit-testable unit.** Each node emits exactly one
  * `rect` (or `circle` in `dot` LOD) scene node — that single mark owns the
@@ -172,7 +172,7 @@ function hullOpacity(value: number | undefined, fallback: number): number {
  * icon, type label, truncated name, per-store chips, selection ring) is drawn
  * in the returned `overlays` layer, which is `pointer-events: none`, so it
  * decorates without ever intercepting a hover. Hover/click therefore always
- * resolve to the underlying node as a unit — see §5.2(a) of the spec.
+ * resolve to the underlying node as a unit.
  *
  * **Controlled dimming + selection, from outside.** `config.reachableIds`
  * (host-computed set) dims everything outside it; `config.selectedId` draws
@@ -251,6 +251,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const rawDatum = (node.data ?? node) as Datum
 
     const { cx, cy } = fit.nodeBounds(node)
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue
     positions.set(id, { cx, cy })
 
     // Reach (host-owned set) is the dimming source when present; otherwise the
@@ -283,7 +284,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
           stroke: selected ? accent : "transparent",
           strokeWidth: selected ? 2 : 0,
         },
-        datum: node,
+        datum: rawDatum,
         id,
         label,
       }
@@ -301,7 +302,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
           stroke: selected ? accent : border,
           strokeWidth: selected ? 3 : 1,
         },
-        datum: node,
+        datum: rawDatum,
         id,
         label,
       }
@@ -322,6 +323,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
 
   // ── Edges ───────────────────────────────────────────────────────────────
   const sceneEdges: NetworkSceneEdge[] = []
+  const arrows: ReactNode[] = []
   for (const edge of ctx.edges) {
     const sId = typeof edge.source === "string" ? edge.source : edge.source.id
     const tId = typeof edge.target === "string" ? edge.target : edge.target.id
@@ -329,7 +331,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const t = positions.get(tId)
     if (!s || !t) continue
 
-    const isBack = Boolean(readField(edge, backAcc, false))
+    const isBack = Boolean(readField(edge, backAcc, null) ?? (s.cx >= t.cx))
     const edgeType = String(readField(edge, edgeTypeAcc, "internal"))
     const dimmed = dimById.get(sId) || dimById.get(tId)
     const opacity = dimmed ? Math.min(edgeOpacity, dimOpacity * 1.4) : edgeOpacity
@@ -339,24 +341,42 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
         ? edgeColors[edgeType] : edgeColors.internal
 
     let pathD: string
+    let tip: { x: number; y: number }
+    let tangent: { x: number; y: number }
     if (isBack) {
-      // Back-edge: a distinct dashed loop bowing *below* the layers, so the
-      // cycle reads clearly against the forward L→R flow.
-      const sx = s.cx
-      const sy = s.cy + h / 2
-      const tx = t.cx
-      const ty = t.cy + h / 2
-      const bow = Math.max(48, Math.abs(sx - tx) * 0.28) + h
-      pathD = `M${sx},${sy} C${sx},${sy + bow} ${tx},${ty + bow} ${tx},${ty}`
+      // Prefer the interior side of the plot, keeping every control point in
+      // bounds. When the endpoints span its full height, use the space between
+      // their facing borders instead of sending a loop outside the viewport.
+      const above = Math.min(s.cy, t.cy) - h / 2 - plot.y
+      const below = plot.y + plot.height - Math.max(s.cy, t.cy) - h / 2
+      const preferAbove = (s.cy + t.cy) / 2 > plot.y + plot.height / 2
+      const side = preferAbove
+        ? above > 8 ? -1 : below > 8 ? 1 : 0
+        : below > 8 ? 1 : above > 8 ? -1 : 0
+      const bow = Math.max(48, Math.abs(s.cx - t.cx) * 0.28) + h
+      const bowY = side < 0
+        ? Math.max(plot.y + 1, Math.min(s.cy, t.cy) - h / 2 - bow)
+        : side > 0
+          ? Math.min(plot.y + plot.height - 1, Math.max(s.cy, t.cy) + h / 2 + bow)
+          : (s.cy + t.cy) / 2
+      const self = sId === tId
+      const offset = self ? w / 4 : 0
+      const halfHeight = self && lod === "dot"
+        ? Math.sqrt((h / 2) ** 2 - offset ** 2) : h / 2
+      const sx = s.cx - offset
+      const sy = s.cy + Math.sign(bowY - s.cy) * halfHeight
+      tip = { x: t.cx + offset, y: t.cy + Math.sign(bowY - t.cy) * halfHeight }
+      tangent = { x: tip.x, y: bowY }
+      pathD = `M${sx},${sy} C${sx},${bowY} ${tangent.x},${tangent.y} ${tip.x},${tip.y}`
     } else {
-      // Forward edge: cubic-bezier S-curve, source right edge → target left edge.
-      const sx = s.cx + w / 2
-      const sy = s.cy
-      const tx = t.cx - w / 2
-      const ty = t.cy
-      const mx = (sx + tx) / 2
-      pathD = `M${sx},${sy} C${mx},${sy} ${mx},${ty} ${tx},${ty}`
+      const direction = Math.sign(t.cx - s.cx) || 1
+      const sx = s.cx + direction * w / 2
+      tip = { x: t.cx - direction * w / 2, y: t.cy }
+      const mx = (sx + tip.x) / 2
+      tangent = { x: mx, y: tip.y }
+      pathD = `M${sx},${s.cy} C${mx},${s.cy} ${mx},${tip.y} ${tip.x},${tip.y}`
     }
+    arrows.push(edgeArrow(arrows.length, tip, tangent, stroke, Math.min(7, w / 4, h / 3), opacity))
 
     const curved: NetworkCurvedEdge = {
       type: "curved",
@@ -368,26 +388,31 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
         opacity,
         ...(isBack ? { strokeDasharray: "5 4", strokeLinecap: "round" as const } : {}),
       },
-      datum: edge,
+      datum: edge.data ?? edge,
     }
     sceneEdges.push(curved)
   }
 
   // ── Glyph chrome overlay (pointer-events:none; never steals a hit) ───────
   const overlays: ReactNode =
-    glyphs.length === 0 ? null : (
-      <g className="lineage-dag-glyphs">
-        {glyphs.map((g) =>
-          renderGlyph(g, {
-            w,
-            h,
-            lod,
-            partColors,
-            chipColor,
-            showChips,
-            renderIcon: cfg.renderIcon,
-            typeLabel: cfg.typeLabel,
-          })
+    glyphs.length === 0 && arrows.length === 0 ? null : (
+      <g>
+        {arrows}
+        {glyphs.length > 0 && (
+          <g className="lineage-dag-glyphs">
+            {glyphs.map((g) =>
+              renderGlyph(g, {
+                w,
+                h,
+                lod,
+                partColors,
+                chipColor,
+                showChips,
+                renderIcon: cfg.renderIcon,
+                typeLabel: cfg.typeLabel,
+              })
+            )}
+          </g>
         )}
       </g>
     )

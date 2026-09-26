@@ -3,8 +3,42 @@ import type { NetworkPipelineConfig } from "../stream/networkTypes"
 import { NetworkPipelineStore } from "../stream/NetworkPipelineStore"
 import { renderNetworkToStaticSVG } from "./renderToStaticSVG"
 import { buildRealtimeEdges, buildRealtimeNodes } from "./staticNetwork"
+import { dagreLayout } from "../recipes/dagre"
+import { flextreeLayout } from "../recipes/flextree"
 
 describe("network ingestion across browser and static renderers", () => {
+  it.each([dagreLayout, flextreeLayout])(
+    "renders default recipe dimensions in SSR while rejecting authored zero sizes",
+    (layout) => {
+      const nodes = [
+        { id: "a", x: 100, y: 100, label: "Source" },
+        { id: "b", x: 300, y: 200, label: "Sink" },
+        { id: "invalid", x: 400, y: 200, width: 0 }
+      ]
+      let count = 0
+      const svg = renderNetworkToStaticSVG({
+        nodes,
+        edges: [{ source: "a", target: "b" }],
+        size: [500, 300],
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        chartType: "force",
+        layoutConfig: { labelAccessor: "label" },
+        customNetworkLayout: (ctx) => {
+          const result = layout(ctx)
+          count = result.sceneNodes!.length
+          expect(result.sceneNodes!.map((node) => node.id)).toEqual(["a", "b"])
+          expect(result.sceneNodes![0].datum).toBe(nodes[0])
+          expect(result.sceneEdges).toHaveLength(1)
+          return result
+        }
+      })
+      expect(count).toBe(2)
+      expect(svg).toContain(">Source</text>")
+      expect(svg).toContain(">Sink</text>")
+      expect(svg).not.toMatch(/NaN|Infinity/)
+    }
+  )
+
   it.each(["force", "sankey", "chord"] as const)(
     "%s preserves custom edge rows and infers missing nodes beside supplied nodes",
     (chartType) => {

@@ -12,6 +12,38 @@ const nodes = [
 const plot = { x: 10, y: 20, width: 900, height: 500 }
 
 describe("createLineageDagFit", () => {
+  it.each([{}, { layerCount: 3, maxLayerSize: 3 }])(
+    "contains negative layers and sparse, uncentered rows with hints %j",
+    (config) => {
+      const input = [
+        { id: "a", x: -2.5, y: 3 },
+        { id: "b", x: -1, y: 5 },
+        { id: "c", x: 0, y: 9 }
+      ]
+      const fit = createLineageDagFit(input, plot, config)
+      for (const node of input) {
+        const box = fit.nodeBounds(node)
+        expect(box.x).toBeGreaterThanOrEqual(plot.x)
+        expect(box.y).toBeGreaterThanOrEqual(plot.y)
+        expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width)
+        expect(box.y + box.height).toBeLessThanOrEqual(plot.y + plot.height)
+        const logical = fit.invert(box.cx, box.cy)
+        expect(logical.layer).toBeCloseTo(node.x)
+        expect(logical.row).toBeCloseTo(node.y)
+      }
+      const first = fit.nodeBounds(input[0]), last = fit.nodeBounds(input[2])
+      expect(first.x).toBe(plot.x)
+      expect(last.y + last.height).toBe(plot.y + plot.height)
+    }
+  )
+
+  it("centers a shifted singleton and excludes nonfinite coordinates from fitting", () => {
+    const node = { x: -4, y: 7 }
+    const fit = createLineageDagFit([node, { x: Infinity, y: NaN }], plot)
+    expect(fit.project(-4, 7)).toEqual({ x: 460, y: 270 })
+    expect(fit.invert(460, 270)).toEqual({ layer: null, row: 7 })
+  })
+
   it("preserves the recipe's established default centers and bounds", () => {
     const fit = createLineageDagFit(nodes, plot)
     expect(fit).toMatchObject({

@@ -61,6 +61,10 @@ function renderBezierEdge(
   if (!edge.pathD) return
 
   ctx.save()
+  if (edge.style.strokeDasharray) {
+    ctx.setLineDash(edge.style.strokeDasharray.split(/[\s,]+/).map(Number))
+  }
+  if (edge.style.strokeLinecap) ctx.lineCap = edge.style.strokeLinecap
 
   const path = getOrBuildEdgePath2D(edge)
 
@@ -112,15 +116,16 @@ function renderLineEdge(
 ): void {
   if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return
   ctx.save()
+  if (edge.style.strokeDasharray) {
+    ctx.setLineDash(edge.style.strokeDasharray.split(/[\s,]+/).map(Number))
+  }
+  if (edge.style.strokeLinecap) ctx.lineCap = edge.style.strokeLinecap
 
   const lineStroke = edge.style.stroke || "#999"
   ctx.strokeStyle = resolveCSSColor(ctx, lineStroke) || lineStroke
   ctx.lineWidth = edge.style.strokeWidth ?? 1
   if (edge.style.opacity !== undefined) {
     ctx.globalAlpha = edge.style.opacity
-  }
-  if (edge.style.strokeDasharray) {
-    ctx.setLineDash(edge.style.strokeDasharray.split(/[\s,]+/).map(Number))
   }
 
   ctx.beginPath()
@@ -150,6 +155,10 @@ function renderRibbonEdge(
   if (!edge.pathD) return
 
   ctx.save()
+  if (edge.style.strokeDasharray) {
+    ctx.setLineDash(edge.style.strokeDasharray.split(/[\s,]+/).map(Number))
+  }
+  if (edge.style.strokeLinecap) ctx.lineCap = edge.style.strokeLinecap
 
   const path = getOrBuildEdgePath2D(edge)
 
@@ -187,6 +196,10 @@ function renderCurvedEdge(
   if (!edge.pathD) return
 
   ctx.save()
+  if (edge.style.strokeDasharray) {
+    ctx.setLineDash(edge.style.strokeDasharray.split(/[\s,]+/).map(Number))
+  }
+  if (edge.style.strokeLinecap) ctx.lineCap = edge.style.strokeLinecap
 
   const path = getOrBuildEdgePath2D(edge)
 

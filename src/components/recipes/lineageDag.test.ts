@@ -70,12 +70,12 @@ describe("lineageDagLayout", () => {
 
   it("renders back-edges visibly distinct (dashed + danger color)", () => {
     const r = lineageDagLayout(makeCtx(baseConfig, nodes, edges))
-    const back = (r.sceneEdges as NetworkCurvedEdge[]).find((e) => e.datum && (e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)
+    const back = (r.sceneEdges as NetworkCurvedEdge[]).find((e) => e.datum && (e.datum as { isBackEdge?: boolean }).isBackEdge)
     expect(back).toBeTruthy()
     expect(back!.style.strokeDasharray).toBeTruthy()
-    const forward = (r.sceneEdges as NetworkCurvedEdge[]).find((e) => !(e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)
+    const forward = (r.sceneEdges as NetworkCurvedEdge[]).find((e) => !(e.datum as { isBackEdge?: boolean }).isBackEdge)
     expect(forward!.style.strokeDasharray).toBeFalsy()
-    // back-edge bows below (its path differs from a straight forward S-curve)
+    // back-edge uses a loop (its path differs from a straight forward S-curve)
     expect(back!.pathD).not.toEqual(forward!.pathD)
   })
 
@@ -89,7 +89,7 @@ describe("lineageDagLayout", () => {
   it("dims an edge when either endpoint is dimmed", () => {
     const r = lineageDagLayout(makeCtx({ ...baseConfig, reachableIds: ["src", "agg", "snk"], dimOpacity: 0.1, edgeOpacity: 0.5 }, nodes, edges))
     const edgeTo = (tid: string) =>
-      (r.sceneEdges as NetworkCurvedEdge[]).find((e) => (e.datum as { data?: { target?: string } }).data?.target === tid)
+      (r.sceneEdges as NetworkCurvedEdge[]).find((e) => (e.datum as { target?: string }).target === tid)
     expect(edgeTo("flt")!.style.opacity).toBeLessThan(0.5) // src→flt: flt dimmed
     expect(edgeTo("snk")!.style.opacity).toBe(0.5) // agg→snk: both in reach
   })
@@ -116,13 +116,13 @@ describe("lineageDagLayout", () => {
 
   it("applies configurable edge widths (forward + back)", () => {
     const def = lineageDagLayout(makeCtx(baseConfig, nodes, edges)).sceneEdges as NetworkCurvedEdge[]
-    expect(def.find((e) => !(e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)!.style.strokeWidth).toBe(1.25)
-    expect(def.find((e) => (e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)!.style.strokeWidth).toBe(1.5)
+    expect(def.find((e) => !(e.datum as { isBackEdge?: boolean }).isBackEdge)!.style.strokeWidth).toBe(1.25)
+    expect(def.find((e) => (e.datum as { isBackEdge?: boolean }).isBackEdge)!.style.strokeWidth).toBe(1.5)
 
     const wide = lineageDagLayout(makeCtx({ ...baseConfig, edgeWidth: 3 }, nodes, edges)).sceneEdges as NetworkCurvedEdge[]
-    expect(wide.find((e) => !(e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)!.style.strokeWidth).toBe(3)
+    expect(wide.find((e) => !(e.datum as { isBackEdge?: boolean }).isBackEdge)!.style.strokeWidth).toBe(3)
     // backEdgeWidth falls back to edgeWidth when unset
-    expect(wide.find((e) => (e.datum as { data?: { isBackEdge?: boolean } }).data?.isBackEdge)!.style.strokeWidth).toBe(3)
+    expect(wide.find((e) => (e.datum as { isBackEdge?: boolean }).isBackEdge)!.style.strokeWidth).toBe(3)
   })
 
   it("collapses to dot circles with no glyph overlay in dot LOD", () => {
@@ -130,7 +130,8 @@ describe("lineageDagLayout", () => {
     for (const n of r.sceneNodes!) expect(n.type).toBe("circle")
     const r0 = r.sceneNodes![0] as NetworkCircleNode
     expect(r0.r).toBeGreaterThan(0)
-    expect(r.overlays).toBeNull() // dots carry no overlay chrome
+    expect(renderToStaticMarkup(r.overlays)).not.toContain("lineage-dag-glyphs")
+    expect(renderToStaticMarkup(r.overlays).match(/recipe-edge-arrow/g)).toHaveLength(5)
   })
 
   it("auto-derives a tighter LOD when the plot is crowded", () => {
@@ -138,7 +139,7 @@ describe("lineageDagLayout", () => {
     const tight = makeCtx(baseConfig, nodes, edges, undefined, { x: 0, y: 0, width: 120, height: 80 })
     const r = lineageDagLayout(tight)
     // crowded → dots (no overlay) rather than full glyphs
-    expect(r.overlays).toBeNull()
+    expect(renderToStaticMarkup(r.overlays)).not.toContain("lineage-dag-glyphs")
   })
 
   it("is deterministic — identical input yields identical geometry", () => {

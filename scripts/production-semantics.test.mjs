@@ -523,3 +523,72 @@ test("recipe selection hook shares the network provider context without loading 
   const source = readFileSync(resolve(root, "dist/semiotic-recipes-react.module.min.js"), "utf8")
   assert.doesNotMatch(source, /semiotic-client-shared/)
 })
+
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} fits and directs lineage cycles (#1508)`, () => {
+      exercise(target, `
+        const { renderToStaticMarkup } = await import("react-dom/server")
+        const nodes = [{ id: "a", x: -1, y: 0 }, { id: "b", x: 0, y: 1 }, { id: "c", x: 1, y: 2 }]
+        const edges = [{ source: "a", target: "b" }, { source: "c", target: "a" }, { source: "c", target: "c" }]
+        const plot = { x: 10, y: 20, width: 500, height: 300 }
+        const ctx = {
+          nodes: nodes.map(data => ({ ...data, data })), edges: edges.map(data => ({ ...data, data })),
+          dimensions: { plot }, theme: { semantic: {} }, resolveColor: () => "blue", config: {}
+        }
+        const fit = api.createLineageDagFit(nodes, plot)
+        const scene = api.lineageDagLayout(ctx)
+        scene.sceneNodes.forEach((node, i) => {
+          assert.equal(node.datum, nodes[i])
+          assert.equal(node.x, fit.nodeBounds(nodes[i]).x)
+          assert.equal(node.y, fit.nodeBounds(nodes[i]).y)
+          assert.ok(node.x >= 10 && node.x + node.w <= 510)
+          assert.ok(node.y >= 20 && node.y + node.h <= 320)
+          const logical = fit.invert(node.x + node.w / 2, node.y + node.h / 2)
+          assert.equal(logical.layer, nodes[i].x)
+          assert.equal(logical.row, nodes[i].y)
+        })
+        assert.equal(scene.sceneEdges.length, 3)
+        assert.equal(scene.sceneEdges[1].style.strokeDasharray, "5 4")
+        assert.equal(scene.sceneEdges[2].style.strokeDasharray, "5 4")
+        assert.equal((renderToStaticMarkup(scene.overlays).match(/recipe-edge-arrow/g) || []).length, 3)
+        const dagre = api.dagreLayout({ ...ctx, nodes: [
+          { id: "a", data: { x: 100, y: 100, width: 100, height: 40 } },
+          { id: "b", data: { x: 300, y: 300, width: 100, height: 40 } }
+        ], edges: [ctx.edges[0]], config: { fit: "none" } })
+        assert.equal(dagre.sceneEdges[0].x1, 120)
+        assert.equal(dagre.sceneEdges[0].x2, 280)
+        assert.match(renderToStaticMarkup(dagre.overlays), /recipe-edge-arrow/)
+      `)
+    })
+  }
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} retains directed recipe marks and dash styles in static evidence (#1508)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const layout of [recipes.lineageDagLayout, recipes.dagreLayout]) {
+          let scene
+          const nodes = [{ id: "a", x: -1, y: 0, label: "Source" }, { id: "b", x: 1, y: 2, label: "Sink" }]
+          const result = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes, edges: [{ source: "a", target: "b" }, { source: "b", target: "a" }],
+            width: 500, height: 300, margin: 20, title: "Directed lineage",
+            layout: ctx => { scene = layout(ctx); return scene }
+          })
+          assert.equal(scene.sceneNodes.length, 2)
+          assert.equal(scene.sceneEdges.length, 2)
+          assert.equal(scene.sceneNodes[0].datum.label, "Source")
+          assert.equal(result.evidence.empty, false)
+          assert.equal((result.svg.match(/recipe-edge-arrow/g) || []).length, 2)
+          assert.doesNotMatch(result.svg, /NaN|Infinity/)
+          if (layout === recipes.lineageDagLayout) {
+            assert.match(result.svg, /stroke-dasharray="5 4"/)
+            assert.match(result.svg, /stroke-linecap="round"/)
+          }
+        }
+      `)
+    })
+  }
+}
