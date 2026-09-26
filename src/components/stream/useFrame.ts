@@ -1,5 +1,5 @@
 /**
- * useFrame — composition hook shared by all four Stream Frames.
+ * useFrame — composition hook shared by all five Stream Frames.
  *
  * Bundles the concerns that all four frames duplicate identically (or with
  * trivial variation): reduced-motion tracking, responsive sizing, theme
@@ -215,9 +215,9 @@ export interface UseFrameResult {
   size: [number, number]
   /** Effective margin (`marginDefault` ⊕ `userMargin`). */
   margin: FrameMargin
-  /** `size[0] - margin.left - margin.right`. */
+  /** Plot width after margins, with a one-pixel minimum for layout. */
   adjustedWidth: number
-  /** `size[1] - margin.top - margin.bottom`. */
+  /** Plot height after margins, with a one-pixel minimum for layout. */
   adjustedHeight: number
   /** Resolved foreground (function-or-node, evaluated). */
   resolvedForeground: ReactNode
@@ -362,8 +362,9 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     hasTopLegend,
     legendSize,
   ])
-  const adjustedWidth = size[0] - margin.left - margin.right
-  const adjustedHeight = size[1] - margin.top - margin.bottom
+  // Keep layouts nondegenerate when chrome consumes the available space.
+  const adjustedWidth = Math.max(1, size[0] - margin.left - margin.right)
+  const adjustedHeight = Math.max(1, size[1] - margin.top - margin.bottom)
 
   // ── Foreground / background resolution ────────────────────────────────
   const resolvedForeground = resolveGraphics(input.foregroundGraphics, size, margin)

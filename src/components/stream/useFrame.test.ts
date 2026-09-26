@@ -46,6 +46,19 @@ describe("useFrame — sizing", () => {
     expect(result.current.adjustedHeight).toBe(600 - 20 - 40) // 540
   })
 
+  it("keeps a finite plot when margins exhaust the frame and restores it on resize", () => {
+    const { result, rerender } = renderHook(
+      ({ sizeProp }: { sizeProp: [number, number] }) => useFrame({ ...DEFAULT_INPUT, sizeProp }),
+      { wrapper, initialProps: { sizeProp: [30, 20] as [number, number] } },
+    )
+    expect(result.current.adjustedWidth).toBe(1)
+    expect(result.current.adjustedHeight).toBe(1)
+    expect(result.current.margin).toEqual(DEFAULT_INPUT.marginDefault)
+    rerender({ sizeProp: [800, 600] })
+    expect(result.current.adjustedWidth).toBe(720)
+    expect(result.current.adjustedHeight).toBe(540)
+  })
+
   it("returns a stable responsiveRef for attaching to a container", () => {
     const { result, rerender } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     const ref1 = result.current.responsiveRef

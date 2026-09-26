@@ -9,20 +9,14 @@
  * hydration: server output equals first-client-render output, then a
  * post-commit re-render swaps in the canvas + interactivity layer.
  *
- * The hook is the same shape across every frame family — adding hydration
- * support to a new frame is a one-line `useHydration()` call plus
- * extending its existing `isServerEnvironment` branch to also fire when
- * `!hydrated`.
+ * Frames gate that branch on `isServerEnvironment ||
+ * (!hydrated && wasHydratingFromSSR)`. Pure client mounts start with canvas.
  *
  * Implementation note: we use `useLayoutEffect` on the client and
  * `useEffect` on the server (the standard `useIsomorphicLayoutEffect`
  * pattern). `useLayoutEffect` fires synchronously after commit but
- * before the browser paints — and crucially before React Testing
- * Library's `render()` returns — so the post-hydration re-render
- * happens in the same paint frame as the initial render. No visible
- * flicker between SVG and canvas, and tests that assert canvas state
- * immediately after `render()` keep working without needing
- * `await waitFor(...)`.
+ * before the browser paints, so the post-hydration re-render and canvas
+ * paint happen in the same paint frame as the initial render.
  */
 "use client"
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react"
@@ -53,19 +47,16 @@ const ssrSnapshot = () => true
  * hydration (i.e. there was server-rendered HTML to hydrate from), and
  * `false` when it was mounted via pure client-side rendering (no SSR).
  *
- * The trick: `useSyncExternalStore`'s `getServerSnapshot` callback is
- * called *only* during hydration of server-rendered content — never
- * during a fresh CSR mount. Returning different values from the two
+ * `useSyncExternalStore` calls `getServerSnapshot` during SSR and initial
+ * hydration, but never during a fresh CSR mount. Distinct values from the two
  * snapshots lets us read the hydration mode on the very first render,
  * then we capture it into a ref so it survives later renders.
  *
  * Stream Frames use this to decide whether to skip the intro animation
  * on the canvas's first paint: when SSR has already shown the chart in
  * its final state, re-animating from blank when the canvas takes over
- * looks like a regression. CSR mounts keep their intro animation
- * because the SVG branch's output never actually paints (it's
- * overwritten by the canvas branch within the same paint frame, before
- * the browser commits a frame).
+ * would replay the introduction. CSR mounts start with canvas and keep
+ * their intro animation.
  */
 export function useWasHydratingFromSSR(): boolean {
   const isHydrating = useSyncExternalStore(noopSubscribe, csrSnapshot, ssrSnapshot)
@@ -80,14 +71,13 @@ export function useWasHydratingFromSSR(): boolean {
 /**
  * Shared post-hydration lifecycle for every Stream Frame.
  *
- * Three things happen on every commit-after-hydration:
+ * When the hydration signals change and `hydrated` is true:
  *
  * 1. If we just rehydrated from SSR, cancel the intro animation that
  *    the SVG-branch's `computeScene` installed (the server already
- *    painted the chart in its final state — re-animating from blank
- *    on the canvas takeover is a visual regression).
- * 2. Mark the scene dirty so the canvas-paint pipeline rebuilds.
- * 3. **Paint the canvas synchronously** via `renderFnRef.current()`.
+ *    painted the chart in its final state).
+ * 2. Mark the scene dirty, or request a repaint of an already-built CSR scene.
+ * 3. Cancel queued rendering and paint synchronously via `renderFnRef.current()`.
  *
  * Step 3 is the timing-critical bit. The hook fires inside an
  * isomorphic layout effect — `useLayoutEffect` on the client (runs
@@ -102,7 +92,7 @@ export function useWasHydratingFromSSR(): boolean {
  *
  * Each frame supplies its own `cleanup` for unmount work that's
  * frame-specific (XY/Ordinal clear the streaming adapter; Geo clears
- * its tile cache; Network has no extra cleanup).
+ * its tile cache). Physics manages worker/store cleanup in its own lifecycle.
  */
 export interface HydrationLifecycleOptions {
   hydrated: boolean
@@ -110,11 +100,10 @@ export interface HydrationLifecycleOptions {
   /**
    * Ref to the frame's pipeline store. The store optionally implements
    * `cancelIntroAnimation()`; the hook calls it when the SVG → canvas
-   * swap fires after SSR rehydration. (Currently every shipped store
-   * implements the method, but the optional shape lets a custom store
-   * opt out.) `sceneNodes` + `markStylePaintPending()` let the hook
-   * repaint an already-built scene instead of forcing a rebuild (see the
-   * effect body); both are optional so a minimal custom store still works.
+   * swap fires after SSR rehydration. Physics and custom stores without
+   * intro transitions can omit it. `sceneNodes` + `markStylePaintPending()`
+   * let the hook repaint an already-built scene instead of forcing a rebuild;
+   * both are optional so a minimal custom store still works.
    */
   storeRef: RefObject<{
     cancelIntroAnimation?: () => void
@@ -123,8 +112,7 @@ export interface HydrationLifecycleOptions {
   } | null>
   /**
    * Mutable dirty flag the renderer reads on its next paint. The hook
-   * sets it to true on every commit so the post-hydration paint
-   * rebuilds the scene from scratch.
+   * sets it when a post-hydration rebuild is needed.
    */
   dirtyRef: MutableRefObject<boolean>
   /**
@@ -191,22 +179,12 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     // from a layout effect doesn't conflict with the in-flight
     // scheduling that other paths use.
     renderFnRef.current()
-    // Stable refs (`storeRef`, `dirtyRef`, `renderFnRef`) intentionally
-    // omitted from deps — including them would just trip
-    // exhaustive-deps without changing behavior.
+    // Stable refs expose the latest store and render closure; the hydration
+    // signals determine when this handoff runs.
   }, [hydrated, wasHydratingFromSSR])
 
-  // Unmount-only cleanup. Held in its own `useEffect([])` so it fires
-  // exactly once on dismount and never on a deps change of the layout
-  // effect above. Returning `cleanup` from THAT effect's `[hydrated,
-  // wasHydratingFromSSR]` form ran on every deps change too — and
-  // `hydrated` flips false→true once after mount, so the cleanup ran
-  // immediately after every initial paint. For the XY/Ordinal frames
-  // that path called `adapter.clear()` and wiped any rows a parent
-  // had pushed via a callback ref's pre-seed pattern. The bug was
-  // hidden until a parent passed `ref={callback}` and pushed inside
-  // the callback (the pattern in the docs `/features/push-api`
-  // BarUpdateDemo and `/charts/sankey-diagram` PushApiDemo).
+  // Keep resource cleanup separate from hydration-signal changes so the
+  // first canvas handoff preserves rows pushed through a callback ref.
   const cleanupRef = useRef(cleanup)
   cleanupRef.current = cleanup
   useEffect(() => {

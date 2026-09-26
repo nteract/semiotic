@@ -333,8 +333,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
     // declared (below), so a function form can anchor to the frame's resolved
     // scales — see `resolveFrameGraphics`.
 
-    const adjustedWidth = size[0] - margin.left - margin.right
-    const adjustedHeight = size[1] - margin.top - margin.bottom
+    const adjustedWidth = Math.max(1, size[0] - margin.left - margin.right)
+    const adjustedHeight = Math.max(1, size[1] - margin.top - margin.bottom)
     const yAxisExtent = (axesConfig?.find(axis => axis.orient === "left")
       ?? axesConfig?.find(axis => axis.orient === "right"))?.extent ?? axisExtent
     const safeData = useMemo(() => filterSparseArray(data), [data])

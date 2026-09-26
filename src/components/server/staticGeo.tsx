@@ -72,8 +72,8 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     margin,
     hasTitle: hasVisibleTitle,
   })
-  const width = size[0] - (margin.left ?? 0) - (margin.right ?? 0)
-  const height = size[1] - (margin.top ?? 0) - (margin.bottom ?? 0)
+  const width = Math.max(1, size[0] - margin.left - margin.right)
+  const height = Math.max(1, size[1] - margin.top - margin.bottom)
 
   const config: GeoPipelineConfig = {
     projection: props.projection || "equalEarth",

@@ -93,6 +93,36 @@ for (const entry of [
 
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} keeps small plots finite and empty time snapshots deterministic`, () => {
+      exercise(target, `
+        for (const [component, props] of [
+          ["LineChart", { data: [{ x: 0, y: 1 }, { x: 1, y: 2 }] }],
+          ["BarChart", { data: [{ category: "A", value: 2 }] }],
+          ["SankeyDiagram", { edges: [{ source: "a", target: "b", value: 2 }] }],
+          ["ProportionalSymbolMap", { points: [{ lon: 0, lat: 0 }, { lon: 1, lat: 1 }] }]
+        ]) {
+          const { svg, evidence } = api.renderChartWithEvidence(component, {
+            ...props, width: 30, height: 20, showLegend: false,
+            margin: { top: 50, right: 50, bottom: 50, left: 50 }
+          })
+          assert.doesNotMatch(svg, /NaN|Infinity/)
+          assert.doesNotMatch(svg, /(?:width|height|r|rx|ry)="-/)
+          assert.equal(evidence.plot.width, 1)
+          assert.equal(evidence.plot.height, 1)
+          assert.ok(evidence.markCount > 0)
+        }
+        for (const component of ["LineChart", "RealtimeLineChart"]) {
+          const props = { data: [], xScaleType: "time" }
+          Date.now = () => Date.UTC(2025, 0, 1)
+          const first = api.renderChartWithEvidence(component, props)
+          Date.now = () => Date.UTC(2026, 8, 25)
+          const second = api.renderChartWithEvidence(component, props)
+          assert.equal(first.evidence.empty, true)
+          assert.deepEqual(first.evidence.xDomain, [0, 86400000])
+          assert.deepEqual(second, first)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} paints valid source semantics through the shipped renderer`, () => {
       exercise(
         target,

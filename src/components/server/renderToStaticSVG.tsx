@@ -124,9 +124,7 @@ export function renderGeoToStaticSVG(
 
 /**
  * Chart component names renderable via `renderChart()`. Derived from the
- * registry so adding a chart to `CHART_CONFIGS` automatically widens this
- * union — no second edit required, no silent drift like the CandlestickChart
- * gap that motivated this refactor.
+ * registry so adding a chart to `CHART_CONFIGS` also widens this union.
  */
 export type RenderChartName = keyof typeof CHART_CONFIGS | ValueChartName
 
@@ -276,16 +274,12 @@ const COMMON_FRAME_PROP_KEYS = [
   "backgroundGraphics",
   "foregroundGraphics",
   "svgPreRenderers",
-  // Custom SVG annotation renderer — same as StreamXYFrame.svgAnnotationRules.
-  // Without this top-level key, renderChart dropped middle-marker overlays and
-  // other bespoke annotation types that only exist via a custom rule.
+  // Custom annotation rules share the Stream Frame callback contract.
   "svgAnnotationRules",
   "barColors",
   "legend",
   "legendLayout",
-  // BaseChartProps / AI annotation workflows — without this top-level
-  // renderChart(..., { autoPlaceAnnotations: true }) silently no-ops
-  // (static* frames honor the prop when present on the built frame props).
+  // Forward the public annotation-placement option to the static frame.
   "autoPlaceAnnotations"
 ] as const
 
