@@ -2,6 +2,7 @@ import { stronglyConnectedComponents } from "./directedGraph"
 import { buildRootedForest } from "./rootedForest"
 import { assertEdgeCoverage } from "./forests"
 import type { PreparedNetworkAtlas } from "./types"
+import { ownValue } from "./ids"
 
 /** Prepared once outside rendering. Layout choices cannot change atlas facts. */
 export function prepareDependencyForest(
@@ -38,6 +39,11 @@ export function prepareDependencyForest(
   for (const [id, parent] of Object.entries(
     atlas.requiredPaths?.immediateDominatorByNode ?? {}
   )) {
+    if (
+      !requiredChildren.has(id) ||
+      (parent !== null && !requiredChildren.has(parent))
+    )
+      throw new Error("Invalid required-path dominator parent")
     if (parent !== null) requiredChildren.get(parent)!.push(id)
   }
   return {
@@ -65,7 +71,7 @@ export function branchMembers(
     const id = stack.pop()!
     if (members.has(id)) continue
     members.add(id)
-    const children = projection.children[id]
+    const children = ownValue(projection.children, id)
     if (Array.isArray(children)) stack.push(...children)
   }
   return members
@@ -76,12 +82,20 @@ export function requiredTargets(
   root: string
 ) {
   const result: string[] = []
-  const initial = projection.requiredChildren[root]
-  const stack = Array.isArray(initial) ? [...initial] : []
+  const initial = ownValue(projection.requiredChildren, root)
+  if (initial === undefined) return result
+  if (!Array.isArray(initial))
+    throw new Error("Invalid required-path dominator children")
+  const stack = [...initial]
+  const visited = new Set([root])
   while (stack.length) {
     const id = stack.pop()!
+    const children = ownValue(projection.requiredChildren, id)
+    if (typeof id !== "string" || visited.has(id) || !Array.isArray(children))
+      throw new Error("Invalid required-path dominator chain")
+    visited.add(id)
     result.push(id)
-    stack.push(...projection.requiredChildren[id])
+    for (const child of children) stack.push(child)
   }
   return result.sort()
 }

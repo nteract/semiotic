@@ -72,10 +72,11 @@ export function circuitModuleChrome(
   colors: CircuitColors = circuitColors,
   nodeOpacity?: (id: string) => number
 ) {
-  const queues = Object.values(reading.entry.nodes).map(
-    (node) => node.queued ?? 0
-  )
-  const queueScale = Math.max(1, ...queues)
+  const queueScale =
+    Object.values(reading.entry.nodes).reduce(
+      (max, node) => Math.max(max, node.queued ?? 0),
+      0
+    ) || 1
   return geometry.modules.map((region) => {
     const { module, x, y, width, height, queue } = region
     const value = reading.entry.nodes[module.nodeId]
@@ -213,11 +214,12 @@ export function circuitHistoryChrome(
         ]
       : entry.totals[metric]
   )
-  const max = Math.max(1, ...values.map((value) => value ?? 0))
+  const max =
+    values.reduce<number>((max, value) => Math.max(max, value ?? 0), 0) || 1
   const start = edition.entries[0].at
   const end = edition.entries[edition.entries.length - 1].at
-  const x = (at: number) =>
-    history.x + ((at - start) / Math.max(1, end - start)) * history.width
+  const span = end > start ? end - start : 1
+  const x = (at: number) => history.x + ((at - start) / span) * history.width
   let path = ""
   let connected = false
   for (const [index, entry] of edition.entries.entries()) {

@@ -14,6 +14,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Embedded artifact packets escape XML terminators in titles and claims,
+  preserving valid SVG and exact JSON round-trips across SVG root forms and
+  adjacent sidecar formats. (#1494)
+- Portable capability binding retains host variants when omitted, honors
+  explicitly empty policy, and snapshots portable metadata so source edits
+  cannot silently change bound recommendations. (#1539)
+- Crossfilter intersects every other chart's active filter. Interval selections
+  exclude missing and coercible nonnumeric values, and point selections match
+  valid Dates by timestamp while preserving value types. Shared hooks, aggregate
+  provenance, bounded and pushed charts, and static rendering use the corrected
+  predicates. (#1360)
+- Atlas required-path queries detect cyclic, missing, inherited, or malformed
+  dominator links and report unknown ancestry without partial claims. Reverse
+  ancestry traversal also rejects invalid chains instead of hanging dependency
+  rendering. (#1540)
+- Axis label assessments refresh when web fonts finish loading, clear when
+  disabled, and release font listeners on disable or unmount. (#1541)
+- FlowCircuit charts normalize fractional flows, queue gauges, and history
+  values to their actual maxima. Sub-second histories use the full time range;
+  zero-valued and single-sample tapes remain finite in React and static SVG.
+  (#1543)
 - `markTooltipChrome` accepts tooltip renderers and preserves ownership through
   normalization and both BumpChart adapters. Wrapped styled tooltips avoid a
   second surface, plain content keeps the default surface, and empty callback

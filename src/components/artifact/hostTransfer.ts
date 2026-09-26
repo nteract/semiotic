@@ -31,6 +31,7 @@ function assertPacket(packet: ArtifactPacket): void {
 function packetJson(packet: ArtifactPacket): string {
   return JSON.stringify(packet)
     .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
     .replace(/\u2028/g, "\\u2028")
     .replace(/\u2029/g, "\\u2029")
 }

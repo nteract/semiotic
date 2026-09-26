@@ -2,6 +2,7 @@ import React from "react"
 import { renderHook, act } from "@testing-library/react"
 import { useSelection, useLinkedHover, useBrushSelection, useFilteredData } from "./useSelection"
 import { SelectionProvider } from "./SelectionStore"
+import { LinkedCharts } from "../LinkedCharts"
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <SelectionProvider>{children}</SelectionProvider>
@@ -412,29 +413,38 @@ describe("useFilteredData", () => {
   })
 
   it("excludes own clause in crossfilter mode", () => {
-    // We need to set up crossfilter resolution via the store
-    // Use two selections in the same named selection with different clientIds
     const { result } = renderHook(
       () => {
         const sel1 = useSelection({ name: "cf", clientId: "chart-1" })
         const sel2 = useSelection({ name: "cf", clientId: "chart-2" })
         const filtered1 = useFilteredData(data, "cf", "chart-1")
         const filtered2 = useFilteredData(data, "cf", "chart-2")
-        return { sel1, sel2, filtered1, filtered2 }
+        const filtered3 = useFilteredData(data, "cf", "chart-3")
+        return { sel1, sel2, filtered1, filtered2, filtered3 }
       },
-      { wrapper }
+      {
+        wrapper: ({ children }) => (
+          <LinkedCharts
+            selections={{ cf: { resolution: "crossfilter" } }}
+            showLegend={false}
+          >
+            {children}
+          </LinkedCharts>
+        )
+      }
     )
 
-    // Set crossfilter resolution by using setResolution through the store
-    // Since we can't directly access the store, we test the default union behavior
-    // The crossfilter exclusion is already tested in SelectionStore.test.ts
-    // Here we verify useFilteredData passes clientId correctly
     act(() => {
       result.current.sel1.selectPoints({ category: ["A"] })
+      result.current.sel2.selectInterval({ x: [15, 35] })
     })
 
-    // Both see the filter (union mode by default, no crossfilter exclusion)
-    expect(result.current.filtered1.length).toBe(2)
-    expect(result.current.filtered2.length).toBe(2)
+    expect(result.current.filtered1.map((d) => d.id)).toEqual([2, 3])
+    expect(result.current.filtered2.map((d) => d.id)).toEqual([1, 3])
+    expect(result.current.filtered3.map((d) => d.id)).toEqual([3])
+
+    act(() => result.current.sel1.clear())
+    expect(result.current.filtered2).toEqual(data)
+    expect(result.current.filtered3.map((d) => d.id)).toEqual([2, 3])
   })
 })

@@ -65,6 +65,7 @@ export default defineConfig(({ mode }) => ({
         chartFeatures: resolve(integrationRoot, "chart-features-examples/index.html"),
         chartModes: resolve(integrationRoot, "chart-modes-examples/index.html"),
         coordinated: resolve(integrationRoot, "coordinated-examples/index.html"),
+        selectionPredicates: resolve(integrationRoot, "selection-predicates-examples/index.html"),
         linkedColors: resolve(integrationRoot, "linked-color-examples/index.html"),
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),
         geo: resolve(integrationRoot, "geo-examples/index.html"),

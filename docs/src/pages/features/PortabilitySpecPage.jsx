@@ -441,6 +441,13 @@ const suggestions = suggestCharts(data, {
       <h2>The metadata is actionable, not decorative</h2>
 
       <p>
+        Omitted <code>intentScores</code> and <code>variants</code> retain the
+        host capability's defaults. Explicit empty objects or arrays clear that
+        policy. Binding captures a copy of the portable descriptor, so later
+        edits to the source metadata do not change the bound recommendation.
+      </p>
+
+      <p>
         Because the capability and audience profile travel on the spec, an
         IDID-aware host can activate both in its suggestion engine. The portable
         descriptor deliberately contains no executable data-fit or prop-building

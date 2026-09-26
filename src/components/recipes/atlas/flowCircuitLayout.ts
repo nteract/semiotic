@@ -80,10 +80,11 @@ export const flowCircuitLayout: PhysicsCustomLayout<
     selection.relationScopeId === "directed-admitted"
       ? selection.nodeId
       : undefined
-  const maxFlow = Math.max(
-    1,
-    ...reading.entry.flows.map((flow) => flow.perSecond ?? 0)
-  )
+  const maxFlow =
+    reading.entry.flows.reduce(
+      (max, flow) => Math.max(max, flow.perSecond ?? 0),
+      0
+    ) || 1
   const flows = new Map(reading.entry.flows.map((flow) => [flow.edgeId, flow]))
   const moduleData = new Map(
     circuit.modules.map((module) => [

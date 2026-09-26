@@ -1,6 +1,7 @@
 import { graphAdjacency } from "./directedGraph"
 import type { StructuralPath } from "./dependencyTypes"
 import type { PreparedNetworkAtlas, QueryResult } from "./types"
+import { ownValue } from "./ids"
 
 const limitations = [
   "Structural paths in the admitted directed graph; not capacity, AND prerequisites, or failure probability.",
@@ -24,7 +25,10 @@ function result<T>(atlas: PreparedNetworkAtlas, value?: T): QueryResult<T> {
   }
 }
 
-/** Ancestry is a derived relation, not a series of original transport edges. */
+/**
+ * Ancestry is a derived relation, not a series of original transport edges.
+ * Malformed or cyclic serialized chains return unknown with no partial value.
+ */
 export function getRequiredPaths(atlas: PreparedNetworkAtlas, target: string) {
   const answer = result<{
     target: string
@@ -37,15 +41,41 @@ export function getRequiredPaths(atlas: PreparedNetworkAtlas, target: string) {
     return answer
   }
   const dominatorIds: string[] = []
-  let parent = required.immediateDominatorByNode[target]
-  while (typeof parent === "string") {
-    dominatorIds.unshift(parent)
-    parent = required.immediateDominatorByNode[parent]
+  const parents = required.immediateDominatorByNode
+  const invalid = () => {
+    answer.status = "unknown"
+    answer.limitations.push(
+      "Invalid required-path dominator chain; ancestry cannot be established."
+    )
+    return answer
+  }
+  if (!parents || typeof parents !== "object" || Array.isArray(parents))
+    return invalid()
+  const nodeIds = new Set(atlas.source.nodes.map((node) => node.id))
+  const reachableIds = new Set(required.reachableNodeIds)
+  const reachable = reachableIds.has(target)
+  const visited = new Set([target])
+  let parent = ownValue(parents, target)
+  // Unreachable nodes have no dominator entry; reachable chains end at null.
+  if (!reachable && parent !== undefined) return invalid()
+  if (!reachable && parent === undefined) parent = null
+  while (parent !== null) {
+    if (
+      typeof parent !== "string" ||
+      !reachable ||
+      !nodeIds.has(parent) ||
+      !reachableIds.has(parent) ||
+      visited.has(parent)
+    )
+      return invalid()
+    visited.add(parent)
+    dominatorIds.push(parent)
+    parent = ownValue(parents, parent)
   }
   answer.value = {
     target,
-    reachable: required.reachableNodeIds.includes(target),
-    dominatorIds
+    reachable,
+    dominatorIds: dominatorIds.reverse()
   }
   answer.evidenceRefs = atlas.source.edges.map((edge) => edge.id)
   return answer
