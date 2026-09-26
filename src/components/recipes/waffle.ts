@@ -1,7 +1,8 @@
 import type { CustomLayout } from "../stream/customLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
-import { createSafeDatum } from "./recipeUtils"
+import { createSafeDatum, resolveAccessor, nonNegativeFinite } from "./recipeUtils"
+import { recipeNotice, RECIPE_NOTICE_HEIGHT } from "./recipeNotice"
 
 export interface WaffleConfig {
   /** Number of rows in the grid. @default 10 */
@@ -27,6 +28,8 @@ export interface WaffleConfig {
  * Waffle chart — a grid of cells where each cell represents one share of the
  * total. Categories are filled in row-major order, scaled so the count of
  * cells per category is proportional to its value (rounded to nearest cell).
+ * A visible count discloses categories receiving no cells. Invalid grids or
+ * grids whose gutters leave no space for cells disclose that no rows are shown.
  *
  * Layouts that don't drive scales (waffle, calendar) ignore them — the grid
  * is sized to the plot rect directly.
@@ -52,67 +55,56 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const rows = cfg.rows ?? 10
   const columns = cfg.columns ?? 10
   const gutter = cfg.gutter ?? 2
-
-  const totalCells = rows * columns
-  if (rows <= 0 || columns <= 0 || totalCells <= 0) return { nodes: [] }
   const { plot } = ctx.dimensions
   if (plot.width <= 0 || plot.height <= 0) return { nodes: [] }
+  const emptyGrid = () => ({ nodes: [], overlays: recipeNotice(plot, 0, ctx.data.length, "rows",
+    "The grid needs positive integer dimensions and enough space for its gutters.") })
+  const totalCells = rows * columns
+  if (!Number.isSafeInteger(rows) || !Number.isSafeInteger(columns) ||
+      !Number.isSafeInteger(totalCells) || rows <= 0 || columns <= 0 ||
+      !Number.isFinite(gutter) || gutter < 0) return emptyGrid()
 
   // Cell footprint includes one gutter; subtract one extra gutter at the end.
   const cellW = (plot.width - gutter * (columns - 1)) / columns
-  const cellH = (plot.height - gutter * (rows - 1)) / rows
-  if (cellW <= 0 || cellH <= 0) return { nodes: [] }
+  if (cellW <= 0 || plot.height <= gutter * (rows - 1)) return emptyGrid()
 
   // Build per-category cell allocations.
-  const getCategory = resolveStringOrFn(cfg.categoryAccessor) ?? (() => "_default")
-  const getValue = resolveNumberOrFn(cfg.valueAccessor) ?? (() => 1)
+  const getCategory = cfg.categoryAccessor == null ? () => "_default" : resolveAccessor(cfg.categoryAccessor)
+  const getValue = cfg.valueAccessor == null ? () => 1 : resolveAccessor(cfg.valueAccessor)
 
   const totals = new Map<string, number>()
-  const order: string[] = []
   for (const d of ctx.data) {
     const cat = String(getCategory(d))
     const raw = Number(getValue(d))
     // Clamp non-finite/negative values: a waffle cell is a count and can't go below zero.
-    const val = Number.isFinite(raw) ? Math.max(0, raw) : 0
-    if (!totals.has(cat)) order.push(cat)
+    const val = nonNegativeFinite(raw)
     totals.set(cat, (totals.get(cat) ?? 0) + val)
   }
 
   const grandTotal = Array.from(totals.values()).reduce((a, b) => a + b, 0)
-  if (grandTotal <= 0) return { nodes: [] }
+  if (!(grandTotal > 0) || !Number.isFinite(grandTotal)) return {
+    nodes: [], overlays: recipeNotice(plot, 0, totals.size, "categories",
+      "Category values must have a finite positive total.")
+  }
 
   // categoryOrder is an ordering *hint*: hinted categories that exist in the
   // data come first (in user-specified order, de-duplicated), then any
   // remaining categories from the data follow in insertion order. Categories
   // never get silently dropped just because they were omitted from the hint.
-  let finalOrder: string[]
-  if (cfg.categoryOrder && cfg.categoryOrder.length > 0) {
-    const seen = new Set<string>()
-    const hinted: string[] = []
-    for (const c of cfg.categoryOrder) {
-      if (totals.has(c) && !seen.has(c)) {
-        seen.add(c)
-        hinted.push(c)
-      }
-    }
-    finalOrder = [...hinted, ...order.filter((c) => !seen.has(c))]
-  } else {
-    finalOrder = order
-  }
-  if (finalOrder.length === 0) return { nodes: [] }
+  const finalOrder = [...new Set([...(cfg.categoryOrder ?? []), ...totals.keys()])]
+    .filter((cat) => totals.has(cat))
 
   // Allocate integer cell counts proportional to category share.
   // Use largest-remainder method to avoid drift from rounding each independently.
-  const exactCounts = finalOrder.map((c) => ({ cat: c, exact: ((totals.get(c) ?? 0) / grandTotal) * totalCells }))
-  const floored = exactCounts.map((r) => ({ ...r, count: Math.floor(r.exact) }))
-  const assigned = floored.reduce((s, r) => s + r.count, 0)
-  // Distribute leftover cells to categories with the highest remainder.
-  const remainders = floored
-    .map((r, i) => ({ i, rem: r.exact - r.count }))
-    .sort((a, b) => b.rem - a.rem)
-  for (let k = 0; k < totalCells - assigned; k++) {
-    floored[remainders[k % remainders.length].i].count += 1
-  }
+  const floored = allocate(
+    finalOrder.map((key) => ({ key, weight: totals.get(key) ?? 0 })),
+    totalCells, undefined, true
+  )
+  const shown = floored.filter((slot) => slot.cells > 0).length
+  const overlays = recipeNotice(plot, shown, finalOrder.length, "categories",
+    "Zero-valued categories and categories rounded to zero cells are omitted.")
+  const cellH = (plot.height - (overlays ? RECIPE_NOTICE_HEIGHT : 0) - gutter * (rows - 1)) / rows
+  if (cellH <= 0) return emptyGrid()
 
   // Resolve string accessor names once for the datum-emit loop. Each
   // cell's datum surfaces the category and the category's TOTAL value
@@ -151,8 +143,8 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const nodes: RectSceneNode[] = []
   let cellIndex = 0
   for (const slot of floored) {
-    const color = ctx.resolveColor(slot.cat)
-    for (let n = 0; n < slot.count; n++) {
+    const color = ctx.resolveColor(slot.key)
+    for (let n = 0; n < slot.cells; n++) {
       const r = Math.floor(cellIndex / columns)
       const c = cellIndex % columns
       // Bottom-up fill reads more naturally for proportions.
@@ -164,15 +156,15 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
         w: cellW,
         h: cellH,
         style: { fill: color, stroke: "none" },
-        datum: buildCellDatum(slot.cat, cellIndex, slot.count),
-        group: slot.cat,
-        _transitionKey: `waffle-${slot.cat}-${n}`,
+        datum: buildCellDatum(slot.key, cellIndex, slot.cells),
+        group: slot.key,
+        _transitionKey: `waffle-${slot.key}-${n}`,
       })
       cellIndex++
     }
   }
 
-  return { nodes }
+  return { nodes, overlays }
 }
 
 export interface CellWeight {
@@ -229,6 +221,17 @@ export function allocateCells<T extends CellWeight>(
   totalCells: number,
   opts?: AllocateCellsOptions,
 ): AllocatedCellsFor<T>[] {
+  return allocate(weights, totalCells, opts)
+}
+
+// Waffles historically resolve tied remainders in category order. Keep that
+// policy while sharing the allocation/zero-weight logic with the public helper.
+function allocate<T extends CellWeight>(
+  weights: readonly T[],
+  totalCells: number,
+  opts?: AllocateCellsOptions,
+  stableOrder = false
+): AllocatedCellsFor<T>[] {
   const cellBudget = Number.isFinite(totalCells) ? Math.max(0, Math.floor(totalCells)) : 0
   const safeWeight = (weight: number) => Number.isFinite(weight) ? Math.max(0, weight) : 0
   const positiveCategoryCount = weights.reduce(
@@ -272,8 +275,7 @@ export function allocateCells<T extends CellWeight>(
     .filter((group) => safeWeight(group.weight) > 0)
     .sort(
       (a, b) => b.remainder - a.remainder
-        || safeWeight(b.weight) - safeWeight(a.weight)
-        || a.key.localeCompare(b.key),
+        || (stableOrder ? 0 : safeWeight(b.weight) - safeWeight(a.weight) || a.key.localeCompare(b.key)),
     )
   for (let i = 0; assigned < cellBudget; i++) {
     ranked[i % ranked.length].cells++
@@ -281,15 +283,4 @@ export function allocateCells<T extends CellWeight>(
   }
 
   return groups
-}
-
-function resolveStringOrFn<T>(a: string | ((d: Datum) => T) | undefined): ((d: Datum) => T) | null {
-  if (a == null) return null
-  if (typeof a === "function") return a
-  return (d: Datum) => d[a] as T
-}
-function resolveNumberOrFn(a: string | ((d: Datum) => number) | undefined): ((d: Datum) => number) | null {
-  if (a == null) return null
-  if (typeof a === "function") return a
-  return (d: Datum) => Number(d[a])
 }

@@ -93,6 +93,43 @@ for (const entry of [
 
 for (const entry of ["./recipes", "./recipes/core"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} bounds interval sampling and discloses omitted recipe data (#1505)`, () => {
+      exercise(target, `
+        import { renderToStaticMarkup } from "react-dom/server"
+        for (const step of [0, -1, NaN, Infinity]) {
+          assert.deepEqual(api.activeCountOverDomain([], { domain: [0, 1], step }), [])
+        }
+        assert.deepEqual(api.activeCountOverDomain([{ start: 0, end: 0.3 }], {
+          domain: [0, 0.3], step: 0.1
+        }), [0, 0.1, 0.2, 0.3].map(value => ({ value, count: 1 })))
+        const ctx = {
+          dimensions: { plot: { x: 0, y: 0, width: 400, height: 100 } },
+          theme: { semantic: {}, categorical: [] }, resolveColor: () => "blue"
+        }
+        const lanes = api.intervalLanesLayout({ ...ctx,
+          data: Array.from({ length: 10 }, (_, i) => ({ lane: String(i), start: 0, end: 1 })),
+          config: { laneAccessor: "lane", startAccessor: "start", endAccessor: "end", domain: [0, 1] }
+        })
+        assert.equal(lanes.nodes.length, 10)
+        for (const node of lanes.nodes) {
+          assert.ok(node.h > 0)
+          assert.ok(node.y >= Number(node.group) * 10)
+          assert.ok(node.y + node.h <= (Number(node.group) + 1) * 10)
+        }
+        const bullet = api.bulletLayout({ ...ctx,
+          data: Array.from({ length: 4 }, (_, i) => ({ metric: String(i), actual: 60, target: 80, ranges: [100] })),
+          config: { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" }
+        })
+        assert.equal(bullet.nodes.filter(n => n.group === "actual").length, 1)
+        assert.match(renderToStaticMarkup(bullet.overlays), /1 of 4 rows shown/)
+        const waffle = api.waffleLayout({ ...ctx,
+          data: [{ cat: "A", value: 100 }, { cat: "B", value: 0.001 }],
+          config: { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" }
+        })
+        assert.equal(waffle.nodes.length, 4)
+        assert.match(renderToStaticMarkup(waffle.overlays), /1 of 2 categories shown/)
+      `)
+    })
     test(`${entry} ${target.conditions} retains geographic cells and lazy region attributes`, () => {
       exercise(
         target,
@@ -136,6 +173,45 @@ for (const entry of ["./recipes", "./recipes/core"]) {
 
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} exports recipe omissions and small-lane geometry (#1505)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const [component, layout, data, layoutConfig, count, note] of [
+          ["OrdinalCustomChart", recipes.bulletLayout,
+            Array.from({ length: 4 }, (_, i) => ({ metric: String(i), actual: 60, target: 80, ranges: [100] })),
+            { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" },
+            9, "3 of 4 rows shown"],
+          ["XYCustomChart", recipes.waffleLayout,
+            [{ cat: "A", value: 100 }, { cat: "B", value: 0.001 }],
+            { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" },
+            4, "1 of 2 categories shown"],
+          ["XYCustomChart", recipes.waffleLayout,
+            [{ cat: "Empty", value: 0 }],
+            { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" },
+            0, "0 of 1 categories shown"],
+          ["OrdinalCustomChart", recipes.bulletLayout,
+            [{ metric: "Empty", actual: 0, target: 0, ranges: [] }],
+            { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" },
+            0, "0 of 1 rows shown"],
+          ["OrdinalCustomChart", recipes.intervalLanesLayout,
+            Array.from({ length: 20 }, (_, i) => ({ lane: String(i), start: 0, end: 1 })),
+            { laneAccessor: "lane", startAccessor: "start", endAccessor: "end", domain: [0, 1] },
+            20, "0.2"]
+        ]) {
+          let nodes
+          const result = api.renderChartWithEvidence(component, {
+            data, layoutConfig, width: 440, height: 220, margin: 20,
+            categoryAccessor: layoutConfig.laneAccessor || "metric", valueAccessor: "actual",
+            layout: ctx => { const result = layout(ctx); nodes = result.nodes; return result }
+          })
+          assert.equal(result.evidence.markCount, count)
+          assert.equal(result.evidence.empty, count === 0)
+          assert.ok(result.svg.includes(note))
+          assert.doesNotMatch(result.svg, /NaN|Infinity/)
+          for (const node of nodes) assert.ok(node.h > 0 && node.w > 0)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} preserves recipe geometry and static callback boundaries`, () => {
       exercise(target, `
         const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")

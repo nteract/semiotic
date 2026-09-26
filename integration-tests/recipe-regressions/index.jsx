@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
+import Bounds from "./Bounds"
 import { GeoCustomChart } from "../../dist/geo.module.min.js"
 import { StreamPhysicsFrame } from "../../dist/physics.module.min.js"
 import {
@@ -149,4 +150,6 @@ function App() {
   )
 }
 
-createRoot(document.getElementById("root")).render(<App />)
+createRoot(document.getElementById("root")).render(
+  new URLSearchParams(location.search).get("case") === "bounds" ? <Bounds /> : <App />
+)

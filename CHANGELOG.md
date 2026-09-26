@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Interval sampling rejects invalid steps and non-finite or unrepresentable
+  domains, and includes fractional on-grid endpoints without cumulative drift.
+  Timeline lanes keep positive bar heights inside short lanes and use distinct
+  fractional ticks. Bullet charts compact skipped rows and disclose truncation;
+  waffle charts disclose categories receiving no cells and invalid grids. The
+  audit covers direct/sweep counting, tiny and crowded plots, zero values,
+  category-order ties, bounded/pushed canvas hover through resize and dismissal,
+  accessible SVG notices, and ESM/CommonJS browser/Node/edge exports. (#1505)
 - Process region factories preserve per-body attribute callbacks and protect
   their `primitive` identity while retaining authored overrides of other defaults.
   Worker observations now reach region callbacks without duplicating events from
