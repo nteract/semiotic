@@ -44,13 +44,16 @@ function refreshFocusedPoint(
 ) {
   const previous = pointRef.current
   if (indexRef.current < 0 || !previous) return
-  const matches = (point: NavPoint) => point.datum === previous.datum && point.group === previous.group && point.shape === previous.shape
+  const matches = (point: NavPoint) =>
+    (point.datum === previous.datum ||
+      (previous.semanticKey !== undefined && point.semanticKey === previous.semanticKey)) &&
+    point.group === previous.group && point.shape === previous.shape
   const index = points[indexRef.current] && matches(points[indexRef.current])
     ? indexRef.current : points.findIndex(matches)
   const next = points[index]
   indexRef.current = index
   pointRef.current = next ?? null
-  if (next && next.x === previous.x && next.y === previous.y && next.w === previous.w && next.h === previous.h && next.pathData === previous.pathData && next.stats === previous.stats) return
+  if (next && next.datum === previous.datum && next.x === previous.x && next.y === previous.y && next.w === previous.w && next.h === previous.h && next.pathData === previous.pathData && next.stats === previous.stats) return
   const hover = next ? toHover(next) : null
   hoverRef.current = hover
   setHoverPoint(hover)

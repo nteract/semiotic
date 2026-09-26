@@ -1,7 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { summarizeData, type FieldSummary } from "../data/DataSummarizer"
+import { parseSummaryDate, summarizeData, type FieldSummary } from "../data/DataSummarizer"
 import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabilityTypes"
 import { profileNumericFields } from "../data/auditData"
+import { isMissingValue, parseNumericValue } from "../data/numericValue"
 import { deriveProfileFields } from "./deriveProfileFields"
 import {
   fieldRoleCandidateMatch,
@@ -35,13 +36,13 @@ function nameBonus(field: string, hint: RegExp): number {
   return hint.test(field) ? 0.2 : 0
 }
 
-function monotonic(data: ReadonlyArray<Datum>, field: string): boolean {
+function monotonic(data: ReadonlyArray<Datum>, field: string, kind: FieldKind): boolean {
   let prev: number | null = null
   for (let i = 0; i < data.length; i++) {
     const v = data[i]?.[field]
-    if (v == null) continue
-    const n = v instanceof Date ? v.getTime() : Number(v)
-    if (!Number.isFinite(n)) return false
+    if (isMissingValue(v)) continue
+    const n = kind === "date" ? parseSummaryDate(v) : parseNumericValue(v)
+    if (n === undefined || !Number.isFinite(n)) return false
     if (prev !== null && n < prev) return false
     prev = n
   }
@@ -92,7 +93,7 @@ function rankCandidates(
       ...(hinted ? { hinted: true } : {}),
     }
     if (options.computeMonotonic && (kind === "numeric" || kind === "date")) {
-      candidate.monotonic = monotonic(data, field)
+      candidate.monotonic = monotonic(data, field, kind)
       if (candidate.monotonic) candidate.quality = Math.min(1, candidate.quality + 0.2)
     }
     out.push(candidate)

@@ -24,6 +24,7 @@
 // chart already accepts.
 
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 export { filterAnnotationsByStatus }
 
 // ── Provenance ────────────────────────────────────────────────────────
@@ -202,9 +203,12 @@ export interface AnnotationLifecycle {
    */
   supersedes?: string
   /**
-   * How long this annotation should be considered fresh. Either an
-   * ISO 8601 duration string (`"PT24H"`, `"P7D"`) or a number of
-   * milliseconds. The freshness computation walks `fresh → aging
+   * How long this annotation should be considered fresh. A positive
+   * fixed-length ISO 8601 duration (`"PT24H"`, `"P1W"`, `"PT0.5S"`)
+   * or a positive finite number of milliseconds. Fractions are supported on the
+   * smallest unit. Calendar years/months and malformed durations throw RangeError
+   * during freshness computation; use days or milliseconds for an explicit TTL.
+   * The freshness computation walks `fresh → aging
    * → stale → expired` as the chart's "now" advances past
    * `createdAt + ttlHint`.
    */
@@ -309,8 +313,8 @@ export function withCurrentProvenance<T extends object>(
  */
 export interface ComputeAnnotationFreshnessOptions {
   /**
-   * "Now" reference for age calculations. Number is epoch ms; string is
-   * any value `Date.parse` accepts. When omitted, defaults to the max
+   * "Now" reference for age calculations. Number is epoch ms; strings use ISO
+   * dates/timestamps (timezone-free values are UTC). When omitted or invalid, uses the max
    * of `dataExtent`, falling back to `Date.now()`.
    */
   now?: number | Date | string
@@ -332,9 +336,7 @@ export interface ComputeAnnotationFreshnessOptions {
 
 function toMs(value: number | Date | string | undefined): number | null {
   if (value == null) return null
-  if (typeof value === "number") return value
-  if (value instanceof Date) return value.getTime()
-  const parsed = Date.parse(value)
+  const parsed = coerceUtcTimeValue(value)
   return Number.isFinite(parsed) ? parsed : null
 }
 
@@ -343,13 +345,13 @@ function resolveNow(options?: ComputeAnnotationFreshnessOptions): number {
   if (explicit != null) return explicit
   const extent = options?.dataExtent
   if (extent) {
-    // `Array.isArray` does narrow ReadonlyArray vs. object in modern TS,
-    // but the union including `{ min, max }` confuses it; fall back to
-    // `"max" in extent` for the object branch.
     if (Array.isArray(extent)) {
-      const last = extent[extent.length - 1]
-      const ms = toMs(last)
-      if (ms != null) return ms
+      let max = -Infinity
+      for (const value of extent) {
+        const ms = toMs(value)
+        if (ms != null && ms > max) max = ms
+      }
+      if (max !== -Infinity) return max
     } else if ("max" in extent) {
       const ms = toMs(extent.max)
       if (ms != null) return ms
@@ -359,20 +361,27 @@ function resolveNow(options?: ComputeAnnotationFreshnessOptions): number {
 }
 
 function parseIsoDuration(s: string): number {
-  const m = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(s)
-  if (!m) return 0
-  const days = parseInt(m[1] || "0", 10)
-  const hours = parseInt(m[2] || "0", 10)
-  const minutes = parseInt(m[3] || "0", 10)
-  const seconds = parseInt(m[4] || "0", 10)
-  return ((days * 24 + hours) * 3600 + minutes * 60 + seconds) * 1000
+  const m = /^P(?:(\d+(?:[.,]\d+)?)W|(?:(\d+(?:[.,]\d+)?)D)?(?:T(?:(\d+(?:[.,]\d+)?)H)?(?:(\d+(?:[.,]\d+)?)M)?(?:(\d+(?:[.,]\d+)?)S)?)?)$/.exec(s)
+  if (!m || s.endsWith("T")) return NaN
+  const units = [604800000, 86400000, 3600000, 60000, 1000]
+  let total = 0
+  let fractional = false
+  for (let i = 1; i < m.length; i++) {
+    if (m[i] === undefined) continue
+    if (fractional) return NaN
+    fractional = /[.,]/.test(m[i])
+    total += Number(m[i].replace(",", ".")) * units[i - 1]
+  }
+  return total
 }
 
 function ttlToMs(ttl: string | number | undefined): number | null {
   if (ttl == null) return null
-  if (typeof ttl === "number") return ttl
-  const parsed = parseIsoDuration(ttl)
-  return parsed > 0 ? parsed : null
+  const parsed = typeof ttl === "number" ? ttl : typeof ttl === "string" ? parseIsoDuration(ttl) : NaN
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new RangeError("ttlHint must be positive finite milliseconds or a fixed ISO duration (weeks, days, hours, minutes, seconds); calendar months/years are unsupported")
+  }
+  return parsed
 }
 
 /**
@@ -382,7 +391,7 @@ function ttlToMs(ttl: string | number | undefined): number | null {
  *
  * Returns the annotation's existing `lifecycle.freshness` verbatim if
  * the annotation lacks the `createdAt` or `ttlHint` needed to compute
- * a band — i.e. an explicit assignment always wins over inference.
+ * a band. When both inputs are available, the computed band is used.
  */
 export function annotationFreshnessFor<T>(
   annotation: Annotated<T>,
@@ -406,8 +415,7 @@ export function annotationFreshnessFor<T>(
  *
  * Pure function — returns a new array; does not mutate input. Safe
  * to call in SSR. Annotations missing the inputs needed to compute a
- * band keep whatever `lifecycle.freshness` they already had (so an
- * explicit assignment always wins).
+ * band keep whatever `lifecycle.freshness` they already had.
  *
  * For non-temporal charts, pass `now` explicitly. For streaming /
  * time-series charts, pass `dataExtent` — the helper picks the latest

@@ -16,11 +16,11 @@ const distribution = [
   { category: "B", value: 30 }, { category: "B", value: 40 },
 ]
 
-function openTable() {
+async function openTable() {
   const trigger = screen.getByRole("button", { name: /View data summary/ })
   const count = Number(trigger.textContent?.match(/\((\d+) elements\)/)?.[1])
   fireEvent.click(trigger)
-  const table = screen.getByRole("table")
+  const table = await screen.findByRole("table")
   const more = screen.queryByRole("button", { name: /Show \d+ more/ })
   if (more) fireEvent.click(more)
   const rows = within(table).getAllByRole("row").slice(1)
@@ -30,7 +30,7 @@ function openTable() {
 }
 
 describe("public chart accessibility data", () => {
-  it.each([PieChart, DonutChart])("announces and tabulates radial categories and original values", (Chart) => {
+  it.each([PieChart, DonutChart])("announces and tabulates radial categories and original values", async (Chart) => {
     const { container } = render(<TooltipProvider><Chart data={slices} showLegend={false} /></TooltipProvider>)
     const frame = container.querySelector(".stream-ordinal-frame")!
     fireEvent.keyDown(frame, { key: "Home" })
@@ -40,7 +40,7 @@ describe("public chart accessibility data", () => {
     expect(live.textContent).toContain("percent:")
     fireEvent.keyDown(frame, { key: "Escape" })
     expect(live.textContent).toBe("")
-    const { table, rows } = openTable()
+    const { table, rows } = await openTable()
     expect(within(table).getByRole("columnheader", { name: "category" })).toBeTruthy()
     expect(within(table).getByRole("columnheader", { name: "value" })).toBeTruthy()
     expect(rows.map((row) => row.textContent)).toEqual(expect.arrayContaining([
@@ -48,39 +48,39 @@ describe("public chart accessibility data", () => {
     ]))
   })
 
-  it("tabulates and announces gauge segments", () => {
+  it("tabulates and announces gauge segments", async () => {
     const { container } = render(<TooltipProvider><GaugeChart value={65} /></TooltipProvider>)
     fireEvent.keyDown(container.querySelector(".stream-ordinal-frame")!, { key: "Home" })
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain("value: 65")
-    const { table, rows } = openTable()
+    const { table, rows } = await openTable()
     expect(within(table).getByRole("columnheader", { name: "value" })).toBeTruthy()
     expect(rows.every((row) => within(row).getAllByRole("cell", { name: "65" }).length > 0)).toBe(true)
   })
 
-  it.each([BoxPlot, ViolinPlot, RidgelinePlot])("tabulates distribution statistics and raw observations", (Chart) => {
+  it.each([BoxPlot, ViolinPlot, RidgelinePlot])("tabulates distribution statistics and raw observations", async (Chart) => {
     render(<TooltipProvider><Chart data={distribution} /></TooltipProvider>)
-    const { table, rows } = openTable()
+    const { table, rows } = await openTable()
     expect(rows).toHaveLength(6)
     expect(within(table).getByRole("columnheader", { name: "median" })).toBeTruthy()
     expect(within(table).getAllByRole("cell", { name: "10" }).length).toBeGreaterThan(0)
     expect(within(table).getAllByRole("cell", { name: "40" }).length).toBeGreaterThan(0)
   })
 
-  it("retains symbol scatterplot rows", () => {
+  it("retains symbol scatterplot rows", async () => {
     render(<TooltipProvider><Scatterplot data={slices} xAccessor="value" yAccessor="value" symbolBy="category" /></TooltipProvider>)
-    const { rows } = openTable()
+    const { rows } = await openTable()
     expect(rows).toHaveLength(2)
     expect(rows[0].textContent).toContain("A30")
   })
 
-  it("retains both city points and flows in a FlowMap", () => {
+  it("retains both city points and flows in a FlowMap", async () => {
     render(<TooltipProvider><FlowMap
       nodes={[{ id: "London", lon: 0, lat: 51 }, { id: "Paris", lon: 2, lat: 49 }]}
       flows={[{ source: "London", target: "Paris", travelers: 27 }]}
       valueAccessor="travelers"
       areas={[]}
     /></TooltipProvider>)
-    const { rows, table } = openTable()
+    const { rows, table } = await openTable()
     expect(rows).toHaveLength(3)
     expect(table.textContent).toContain("London")
     expect(table.textContent).toContain("Paris")

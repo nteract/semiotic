@@ -5,7 +5,7 @@ import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import StreamNetworkFrame from "../stream/StreamNetworkFrame"
 import { NetworkPipelineStore } from "../stream/NetworkPipelineStore"
 import { DefaultNetworkTooltip } from "../stream/networkDefaultTooltip"
-import { buildNetworkTableModel } from "../stream/accessibleDataTableModel"
+import { buildNetworkTableModel } from "../stream/networkAccessibleDataTableModel"
 import {
   renderChartWithEvidence,
   renderNetworkToStaticSVG

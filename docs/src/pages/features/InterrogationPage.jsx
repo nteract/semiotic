@@ -252,6 +252,16 @@ function InterrogatableChart({ data }) {
       </CodeBlock>
 
       <p>
+        Field types reflect the whole column, not its first value. Each field
+        includes <code>observedCount</code>, <code>missingCount</code>, and{" "}
+        <code>excludedCount</code> so an answer can disclose incomplete statistics.
+        Numeric/date types require a majority of recognized scalar values; ties
+        are categorical. Blank cells are missing, nonfinite/unsupported values
+        do not vote, and booleans or Dates are never coerced into numbers.
+        Padded integer identifiers stay categorical. ISO timestamps without a
+        timezone use UTC; slash-form dates are not inferred as dates.
+      </p>
+      <p>
         Use <code>summarizeData</code> directly if you want the summary without the hook —
         for server-side prompting, batch jobs, or the <code>interrogateChart</code> MCP tool.
       </p>

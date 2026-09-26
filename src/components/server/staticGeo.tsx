@@ -139,67 +139,10 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     fallback: (node, index) => geoSceneNodeToSVG(node, index),
   })
 
-  if (renderedScene.length === 0) {
-    let annotationRender: StaticAnnotationRenderResult | undefined
-    const annotationNodes = props.annotations ? renderStaticAnnotations({
-      annotations: props.annotations,
-      autoPlaceAnnotations: props.autoPlaceAnnotations,
-      svgAnnotationRules: props.svgAnnotationRules,
-      scales: {
-        geoProjection: store.scales?.projectedPoint
-          ? (([lon, lat]) => store.scales!.projectedPoint(lon, lat))
-          : undefined,
-      },
-      layout: { width, height },
-      theme,
-      pointNodes: collectGeoAnnotationAnchors(store.scene),
-      idPrefix: props._idPrefix,
-      onRender: result => { annotationRender = result },
-    }) : null
-    if (sink) {
-      sink.evidence = buildEvidence({
-        frameType: "geo",
-        width: size[0], height: size[1],
-        marks: renderedScene.map(entry => entry.node),
-        title: props.title, description: props.description,
-        annotations: props.annotations,
-        annotationRender,
-        legendItems: geoLegendCategories.length > 0
-          ? geoLegendCategories.length
-          : props.legend != null
-            ? 1
-            : undefined,
-        margin,
-      })
-    }
-    // Even when the data scene is empty, bg/fg graphics and annotations are
-    // valid surfaces a caller may have legitimately set. Pipe them through
-    // so the empty-data path doesn't silently drop them.
-    const emptyContent = (resolvedBackgroundGraphics || resolvedForegroundGraphics || props.annotations || store.customLayoutOverlays)
-      ? (
-        <>
-          {resolvedBackgroundGraphics}
-          {annotationNodes}
-          {resolvedForegroundGraphics}
-          {store.customLayoutOverlays}
-        </>
-      )
-      : null
-    return ReactDOMServer.renderToStaticMarkup(
-      wrapSVG(emptyContent, {
-        width: size[0], height: size[1],
-        className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description, background: props.background,
-        theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
-        innerWidth: width, innerHeight: height,
-        legend: geoLegend,
-        idPrefix: props._idPrefix,
-      })
-    )
-  }
-
   const dataMarks = renderedScene.map(entry => entry.element)
-  const cartogramChrome = (props as StreamGeoFrameProps & {
+  // Reference rings require painted data, including when a backend suppresses
+  // every mark. All other chrome remains valid for empty scenes below.
+  const cartogramChrome = renderedScene.length > 0 && (props as StreamGeoFrameProps & {
     cartogramChrome?: {
       showRings?: boolean | number | number[]
       showNorth?: boolean

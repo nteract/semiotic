@@ -80,9 +80,8 @@ it("keeps table navigation and a single authored announcement outside the physic
       clientX: 50,
       clientY: 50
     })
-    expect(announcements()).toEqual([
-      "Data point: reading: Module has 12 items waiting"
-    ])
+    expect(announcements()).toEqual([])
+    expect(frame.querySelector(".stream-physics-tooltip")).toHaveTextContent("units: 12")
     fireEvent.keyDown(frame, { key: "Home" })
     expect(announcements()).toEqual(["Module has 12 items waiting"])
     const descriptionId = frame.getAttribute("aria-describedby")!
@@ -94,6 +93,16 @@ it("keeps table navigation and a single authored announcement outside the physic
         region.closest('[role="img"]')
       )
     ).toHaveLength(0)
+    // Returning to the same body with a pointer clears keyboard speech even
+    // when hover's same-body deduplication does not update tooltip data.
+    fireEvent.pointerMove(frame.querySelector("canvas")!, {
+      clientX: 50,
+      clientY: 50
+    })
+    expect(announcements()).toEqual([])
+    expect(frame.querySelector(".stream-physics-tooltip")).toHaveTextContent("units: 12")
+    fireEvent.keyDown(frame, { key: "Home" })
+    expect(announcements()).toEqual(["Module has 12 items waiting"])
     fireEvent.keyDown(frame, { key: "Escape" })
     expect(announcements()).toEqual([])
 
@@ -102,7 +111,8 @@ it("keeps table navigation and a single authored announcement outside the physic
       clientX: 50,
       clientY: 50
     })
-    expect(announcements()).toEqual(["Data point: units: 12"])
+    expect(announcements()).toEqual([])
+    expect(frame.querySelector(".stream-physics-tooltip")).toHaveTextContent("units: 12")
     expect(
       screen.queryByRole("link", { name: "Skip to data table" })
     ).toBeNull()

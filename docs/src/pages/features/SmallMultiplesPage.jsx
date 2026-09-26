@@ -423,7 +423,8 @@ function FilteredBarChart({ data }) {
       <h3 id="cross-filtering">Cross-Filtering</h3>
       <p>
         With <code>resolution: "crossfilter"</code>, each chart's own brush is
-        excluded from its filter — the standard SPLOM interaction model:
+        excluded from its filter. A row must match every other chart's active
+        filter. With two brushes active, a third chart shows their intersection:
       </p>
 
       <CodeBlock
@@ -623,6 +624,14 @@ const { brushInteraction, predicate, isActive, clear } =
 const filtered = useFilteredData(data, "mySelection")`}
         language="jsx"
       />
+      <p>
+        Point selections match exact values. Two valid <code>Date</code> objects
+        match when their timestamps are equal; numbers and strings remain
+        distinct. Interval selections use inclusive numeric bounds and accept
+        finite numbers or valid Dates measured in epoch milliseconds. Missing
+        values, strings, booleans, arrays, and invalid Dates do not match an
+        interval, even when it includes zero.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}

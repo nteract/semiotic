@@ -441,7 +441,7 @@ interface BrushObservation extends ObservationBase
 interface BuildArtifactGroundingOptions
 interface BuildNavigationTreeOptions
 interface CanonicalJsonResult
-interface CategoricalFieldSummary
+interface CategoricalFieldSummary extends FieldSummaryCounts
 interface CategoryColorProviderProps
 interface ChartAbandonedEvent extends ConversationArcEventBase
 interface ChartArtifactTransferStatus extends ArtifactTransferStatus
@@ -511,7 +511,7 @@ interface DataQualityResult
 interface DataRoleDefinition
 interface DataScaleProfile
 interface DataSummary
-interface DateFieldSummary
+interface DateFieldSummary extends FieldSummaryCounts
 interface DbtArtifacts
 interface DeclaredRecipeSemantics
 interface DerivedProfileFields
@@ -596,7 +596,7 @@ interface NumericAggregateContract
 interface NumericContracts
 interface NumericFieldContract
 interface NumericFieldProfile
-interface NumericFieldSummary
+interface NumericFieldSummary extends FieldSummaryCounts
 interface ObligationResult
 interface ObligationSummary
 interface ObservationReadoutProps<TDatum extends Datum = Datum>
@@ -727,7 +727,7 @@ interface TokenGridOptions
 interface TokenSet<D = unknown>
 interface TransformationRecord
 interface UnknownArtifactContract extends JsonObject
-interface UnknownFieldSummary
+interface UnknownFieldSummary extends FieldSummaryCounts
 interface UnplacedDataQualityResult
 interface UseChartFocusOptions
 interface UseChartInterrogationOptions

@@ -2,6 +2,48 @@ import { describe, it, expect } from "vitest"
 import { summarizeData } from "./DataSummarizer"
 
 describe("summarizeData", () => {
+  it("discloses missing and unsupported cells even when no type can be inferred", () => {
+    expect(summarizeData([{ v: null }, { v: " " }, {}, { v: {} }, { v: NaN }]).fields.v).toEqual({
+      type: "unknown", observedCount: 2, missingCount: 3, excludedCount: 2
+    })
+  })
+
+  it("infers from the whole column, independently of row order", () => {
+    for (const values of [["1", "abc", "def", "ghi"], [1, "A", "B", true, new Date(0)]]) {
+      for (const ordered of [values, [...values].reverse()]) {
+        const field = summarizeData(ordered.map(v => ({ v }))).fields.v
+        expect(field).toMatchObject({ type: "categorical", observedCount: values.length, missingCount: 0, excludedCount: 0 })
+      }
+    }
+  })
+
+  it("discloses excluded and missing values without coercing booleans or Dates into numbers", () => {
+    const values = [1, "2", ".5", "+5", 3, true, new Date(0), "bad", NaN, null, " ", undefined]
+    expect(summarizeData(values.map(v => ({ v }))).fields.v).toEqual({
+      type: "numeric", min: 0.5, max: 5, mean: 2.3, median: 2,
+      observedCount: 9, missingCount: 3, excludedCount: 4
+    })
+  })
+
+  it("keeps padded identifiers and nondecimal strings categorical", () => {
+    for (const value of ["02134", "001", "0x10", "0b11", "0o7"]) {
+      expect(summarizeData([{ v: value }]).fields.v).toMatchObject({
+        type: "categorical", distinctValues: [value]
+      })
+    }
+  })
+
+  it("uses UTC ISO dates and discloses unsupported date syntax", () => {
+    expect(summarizeData([
+      { v: "2020-01-01" }, { v: "2020-01-01T00:00:00" },
+      { v: "2019-12-31T16:00:00-08:00" }, { v: "2020/01/01" }, { v: "2020-02-30" }
+    ]).fields.v).toEqual({
+      type: "date", min: "2020-01-01T00:00:00.000Z", max: "2020-01-01T00:00:00.000Z",
+      observedCount: 5, missingCount: 0, excludedCount: 2
+    })
+    expect(summarizeData([{ v: "2020-01-15" }, { v: "Q3" }, { v: "n/a" }]).fields.v.type).toBe("categorical")
+  })
+
   it("preserves source order and summation order while computing the median", () => {
     const data = [
       Object.freeze({ value: 1e16 }),
@@ -12,7 +54,8 @@ describe("summarizeData", () => {
     ]
     const summary = summarizeData(Object.freeze(data))
     expect(summary.fields.value).toEqual({
-      type: "numeric", min: -1e16, max: 1e16, mean: 0.75, median: 2
+      type: "numeric", min: -1e16, max: 1e16, mean: 0.75, median: 2,
+      observedCount: 5, missingCount: 0, excludedCount: 1
     })
     expect(summary.sample).toEqual(data)
     expect(summary.sample[0]).toBe(data[0])
@@ -30,9 +73,12 @@ describe("summarizeData", () => {
       { date: "invalid" },
       { date: new Date("2024-01-01") }
     ]).fields.date).toEqual({
-      type: "date", min: "2024-01-01T00:00:00.000Z", max: "2024-12-31T00:00:00.000Z"
+      type: "date", min: "2024-01-01T00:00:00.000Z", max: "2024-12-31T00:00:00.000Z",
+      observedCount: 4, missingCount: 0, excludedCount: 2
     })
-    expect(summarizeData([{ date: new Date(NaN) }]).fields.date).toEqual({ type: "unknown" })
+    expect(summarizeData([{ date: new Date(NaN) }]).fields.date).toEqual({
+      type: "unknown", observedCount: 1, missingCount: 0, excludedCount: 1
+    })
   })
 
   it("summarizes numeric fields with min/max/mean/median", () => {

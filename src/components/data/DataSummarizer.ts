@@ -1,8 +1,19 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
+import { isMissingValue, parseNumericValue } from "./numericValue"
 
 export type FieldType = "numeric" | "categorical" | "date" | "unknown"
 
-export interface NumericFieldSummary {
+interface FieldSummaryCounts {
+  /** Nonmissing cells, including those excluded from the reported statistics. */
+  observedCount?: number
+  /** Null, undefined, absent, and blank string cells. */
+  missingCount?: number
+  /** Nonmissing cells not represented by this summary's statistics. */
+  excludedCount?: number
+}
+
+export interface NumericFieldSummary extends FieldSummaryCounts {
   type: "numeric"
   min: number
   max: number
@@ -10,20 +21,20 @@ export interface NumericFieldSummary {
   median: number
 }
 
-export interface DateFieldSummary {
+export interface DateFieldSummary extends FieldSummaryCounts {
   type: "date"
   min: string
   max: string
 }
 
-export interface CategoricalFieldSummary {
+export interface CategoricalFieldSummary extends FieldSummaryCounts {
   type: "categorical"
   distinctCount: number
   topValues: ReadonlyArray<{ value: string; count: number }>
   distinctValues?: ReadonlyArray<string>
 }
 
-export interface UnknownFieldSummary {
+export interface UnknownFieldSummary extends FieldSummaryCounts {
   type: "unknown"
 }
 
@@ -46,27 +57,15 @@ export interface SummarizeOptions {
   keyScanRows?: number
 }
 
-const DATE_LIKE = /^\d{4}[-/]\d{2}/
-const NUMERIC_STRING = /^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/
-
-function inferType(val: unknown): FieldType {
-  if (typeof val === "number") return Number.isFinite(val) ? "numeric" : "unknown"
-  if (val instanceof Date) return "date"
-  if (typeof val === "string") {
-    if (DATE_LIKE.test(val) && !Number.isNaN(Date.parse(val))) return "date"
-    // CSV/JSON often carries numerics as strings ("42", "3.14e6"). The numeric
-    // branch later coerces via Number(), so classify those as numeric up-front
-    // rather than dropping them into categorical and losing min/max/mean.
-    if (NUMERIC_STRING.test(val) && Number.isFinite(Number(val))) return "numeric"
-    return "categorical"
-  }
-  if (typeof val === "boolean") return "categorical"
-  return "unknown"
+/** Date-valued cells only: numeric values and numeric strings are not timestamps here. */
+export function parseSummaryDate(value: unknown): number {
+  return value instanceof Date || (typeof value === "string" && /^\d{4}-/.test(value.trim()))
+    ? coerceUtcTimeValue(value) : NaN
 }
 
 function median(sorted: ReadonlyArray<number>): number {
   const n = sorted.length
-  if (n === 0) return NaN
+  // A numeric majority guarantees at least one value.
   const mid = n >> 1
   return n % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
 }
@@ -75,7 +74,9 @@ function median(sorted: ReadonlyArray<number>): number {
  * Summarize a dataset for an LLM. Returns row count, per-field statistics, and a small sample.
  *
  * Designed so a model can answer questions about ranges, peaks, distributions, and categories
- * without seeing the full dataset.
+ * without seeing the full dataset. Numeric/date types require a majority of recognized
+ * scalar values; ties and mixed columns are categorical. Nonfinite/unsupported values do
+ * not vote. Counts disclose missing cells and values excluded from the chosen statistics.
  */
 export function summarizeData(
   data: ReadonlyArray<Datum> | null | undefined,
@@ -101,83 +102,69 @@ export function summarizeData(
 
   for (const key of keys) {
     const raw: unknown[] = []
-    for (let i = 0; i < data.length; i++) {
-      const v = data[i]?.[key]
-      if (v != null) raw.push(v)
+    const numeric: number[] = []
+    const dates: number[] = []
+    let observedCount = 0
+    for (const row of data) {
+      const v = row?.[key]
+      if (isMissingValue(v)) continue
+      observedCount++
+      const number = parseNumericValue(v)
+      if (number !== undefined) {
+        if (!Number.isFinite(number)) continue
+        numeric.push(number)
+      } else {
+        const date = parseSummaryDate(v)
+        if (Number.isFinite(date)) dates.push(date)
+        else if (typeof v !== "string" && typeof v !== "boolean") continue
+      }
+      raw.push(v)
     }
 
-    if (raw.length === 0) {
-      fields[key] = { type: "unknown" }
-      continue
-    }
+    const type: FieldType = numeric.length > raw.length / 2 ? "numeric"
+      : dates.length > raw.length / 2 ? "date"
+      : raw.length > 0 ? "categorical" : "unknown"
+    let includedCount = raw.length
 
-    const type = inferType(raw[0])
-
-    if (type === "numeric") {
-      const nums: number[] = []
+    if (type === "numeric" || type === "date") {
+      const values = type === "numeric" ? numeric : dates
+      includedCount = values.length
       let min = Infinity
       let max = -Infinity
       let sum = 0
-      for (let i = 0; i < raw.length; i++) {
-        const n = Number(raw[i])
-        if (!Number.isFinite(n)) continue
-        nums.push(n)
+      for (const n of values) {
         if (n < min) min = n
         if (n > max) max = n
         sum += n
       }
-      if (nums.length === 0) {
-        fields[key] = { type: "unknown" }
-        continue
-      }
-      // nums is local; preserve source order for summation, then sort in place.
-      nums.sort((a, b) => a - b)
-      fields[key] = {
-        type: "numeric",
-        min,
-        max,
-        mean: sum / nums.length,
-        median: median(nums),
-      }
-    } else if (type === "date") {
-      let min = Infinity
-      let max = -Infinity
-      for (let i = 0; i < raw.length; i++) {
-        const v = raw[i]
-        const t = v instanceof Date ? v.getTime() : Date.parse(v as string)
-        if (!Number.isFinite(t)) continue
-        if (t < min) min = t
-        if (t > max) max = t
-      }
-      if (min === Infinity) {
-        fields[key] = { type: "unknown" }
-        continue
-      }
-      fields[key] = {
-        type: "date",
-        min: new Date(min).toISOString(),
-        max: new Date(max).toISOString(),
+      if (type === "numeric") {
+        // Preserve source order for summation, then sort the local array in place.
+        values.sort((a, b) => a - b)
+        fields[key] = { type, min, max, mean: sum / values.length, median: median(values) }
+      } else {
+        fields[key] = { type, min: new Date(min).toISOString(), max: new Date(max).toISOString() }
       }
     } else if (type === "categorical") {
-      const counts = new Map<string, number>()
-      for (let i = 0; i < raw.length; i++) {
-        const v = String(raw[i])
-        counts.set(v, (counts.get(v) ?? 0) + 1)
+      const categories = new Map<string, number>()
+      for (const value of raw) {
+        const v = value instanceof Date ? value.toISOString() : String(value)
+        categories.set(v, (categories.get(v) ?? 0) + 1)
       }
-      const topValues = [...counts.entries()]
+      const topValues = [...categories.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, maxDistinct)
         .map(([value, count]) => ({ value, count }))
       fields[key] = {
         type: "categorical",
-        distinctCount: counts.size,
+        distinctCount: categories.size,
         topValues,
         distinctValues:
-          counts.size <= maxDistinct ? topValues.map((v) => v.value) : undefined,
+          categories.size <= maxDistinct ? topValues.map((v) => v.value) : undefined,
       }
     } else {
       fields[key] = { type: "unknown" }
     }
+    Object.assign(fields[key], { observedCount, missingCount: data.length - observedCount, excludedCount: observedCount - includedCount })
   }
 
   return { rowCount: data.length, fields, sample: data.slice(0, sampleSize) }

@@ -10,6 +10,19 @@ const data = [
 ]
 
 describe("useChartInterrogation", () => {
+  it("forwards representative types and exclusion counts after data updates", async () => {
+    const onQuery = vi.fn().mockResolvedValue({ answer: "ok" })
+    const { result, rerender } = renderHook(({ rows }) => useChartInterrogation({ data: rows, onQuery }), {
+      initialProps: { rows: [{ value: "1" }, { value: "A" }, { value: "B" }] }
+    })
+    expect(result.current.summary.fields.value.type).toBe("categorical")
+    rerender({ rows: [{ value: "1" }, { value: "2" }, { value: "B" }] })
+    await act(async () => { await result.current.ask("What values are represented?") })
+    expect(onQuery.mock.calls[0][1].summary.fields.value).toMatchObject({
+      type: "numeric", min: 1, max: 2, mean: 1.5, observedCount: 3, missingCount: 0, excludedCount: 1
+    })
+  })
+
   it("exposes a memoized summary derived from data", () => {
     const onQuery: InterrogationQuery = async () => ({ answer: "" })
     const { result } = renderHook(() => useChartInterrogation({ data, onQuery }))

@@ -61,10 +61,13 @@ export default defineConfig(({ mode }) => ({
       input: {
         main: resolve(integrationRoot, "index.html"),
         accessibility: resolve(integrationRoot, "accessibility-examples/index.html"),
+        accessibilityRegressions: resolve(integrationRoot, "accessibility-regression-examples/index.html"),
         backgroundGraphics: resolve(integrationRoot, "background-graphics-examples/index.html"),
+        bobaValidation: resolve(integrationRoot, "boba-validation-examples/index.html"),
         chartFeatures: resolve(integrationRoot, "chart-features-examples/index.html"),
         chartModes: resolve(integrationRoot, "chart-modes-examples/index.html"),
         coordinated: resolve(integrationRoot, "coordinated-examples/index.html"),
+        selectionPredicates: resolve(integrationRoot, "selection-predicates-examples/index.html"),
         linkedColors: resolve(integrationRoot, "linked-color-examples/index.html"),
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),
         geo: resolve(integrationRoot, "geo-examples/index.html"),

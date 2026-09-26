@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
+import { ClipboardStatus, useClipboard } from "../../../src/components/useClipboard"
+import { copyWithFallback } from "./clipboard"
 import { StreamOrdinalFrame } from "semiotic"
 import { propertyToString, getFunctionString, getFramePropsString, getCodeBlock } from "./codegen"
 import CodeBlock from "./CodeBlock"
@@ -28,7 +30,8 @@ export default function LiveExample({
   const { blocksMode } = useBlocksView()
   useRegisterBlocksExample()
   const [codeState, setCodeState] = useState(startHidden ? "hidden" : "expanded")
-  const [copied, setCopied] = useState(false)
+  const { status, copy } = useClipboard(2000)
+  const copied = status === "copied"
   const codeRef = useRef(null)
   const vizContainerRef = useRef(null)
   const [containerWidth, setContainerWidth] = useState(null)
@@ -114,21 +117,7 @@ export default function LiveExample({
     importStatement,
   )
 
-  // Copy handler with fallback
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(fullCode)
-    } catch {
-      const textarea = document.createElement("textarea")
-      textarea.value = fullCode
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand("copy")
-      document.body.removeChild(textarea)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const handleCopy = () => void copy(() => copyWithFallback(fullCode))
 
   // Toggle handlers
   const showCode = () => {
@@ -227,8 +216,9 @@ export default function LiveExample({
           color: copied ? "var(--accent)" : "var(--text-secondary)",
         }}
       >
-        {copied ? "Copied!" : "Copy"}
+        {copied ? "Copied!" : status === "failed" ? "Copy failed" : "Copy"}
       </button>
+      <ClipboardStatus status={status} />
     </div>
   )
 

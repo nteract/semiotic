@@ -1,7 +1,7 @@
 /**
  * Bind a library-neutral IDID capability descriptor to a Semiotic runtime
- * capability. A portable `intentScores` field is authoritative when present;
- * omission retains the host's ranking policy.
+ * capability. Portable `intentScores` and `variants` are authoritative when
+ * present; omission retains the host's ranking policy.
  *
  * The portable descriptor intentionally cannot contain executable `fits` or
  * `buildProps` functions. Treating it as a complete runtime capability would
@@ -16,23 +16,23 @@
 import type {
   ChartCapability,
   ChartDataProfile,
-  ChartVariant,
+  ChartVariant
 } from "../../ai/chartCapabilityTypes"
 import {
   IDID_SPEC_VERSION,
   validatePortableCapability,
   type PortableChartCapability,
   type PortableChartVariant,
-  type PortableMobileCapability,
+  type PortableMobileCapability
 } from "./spec"
 import type {
   PortabilityDiagnostic,
   PortabilityLoss,
   PortabilityProvenance,
-  PortabilityStatus,
+  PortabilityStatus
 } from "./result"
 
-/** Runtime capability plus the exact portable descriptor that shaped it. */
+/** Runtime capability plus a detached snapshot of its portable descriptor. */
 export interface BoundPortableChartCapability extends ChartCapability {
   readonly portableDescriptor: PortableChartCapability
 }
@@ -46,9 +46,7 @@ export interface PortableCapabilityBindingResult {
   provenance: PortabilityProvenance
 }
 
-function bindingProvenance(
-  descriptor: unknown,
-): PortabilityProvenance {
+function bindingProvenance(descriptor: unknown): PortabilityProvenance {
   const value = descriptor as { specVersion?: unknown } | null
   return {
     adapter: "semiotic/idid-capability-binding",
@@ -58,13 +56,13 @@ function bindingProvenance(
     specVersion:
       typeof value?.specVersion === "string"
         ? value.specVersion
-        : IDID_SPEC_VERSION,
+        : IDID_SPEC_VERSION
   }
 }
 
 function refused(
   descriptor: unknown,
-  diagnostics: PortabilityDiagnostic[],
+  diagnostics: PortabilityDiagnostic[]
 ): PortableCapabilityBindingResult {
   return {
     status: "refused",
@@ -72,9 +70,9 @@ function refused(
     lossReport: diagnostics.map(({ code, message, path }) => ({
       code,
       message,
-      path,
+      path
     })),
-    provenance: bindingProvenance(descriptor),
+    provenance: bindingProvenance(descriptor)
   }
 }
 
@@ -92,15 +90,13 @@ function bindVariant(variant: PortableChartVariant): ChartVariant {
     ...(variant.rubricDeltas !== undefined
       ? { rubricDeltas: { ...variant.rubricDeltas } }
       : {}),
-    ...(variant.caveats !== undefined
-      ? { caveats: [...variant.caveats] }
-      : {}),
-    ...(variant.tags !== undefined ? { tags: [...variant.tags] } : {}),
+    ...(variant.caveats !== undefined ? { caveats: [...variant.caveats] } : {}),
+    ...(variant.tags !== undefined ? { tags: [...variant.tags] } : {})
   }
 }
 
 function bindMobile(
-  mobile: PortableMobileCapability,
+  mobile: PortableMobileCapability
 ): NonNullable<ChartCapability["mobile"]> {
   const bound: NonNullable<ChartCapability["mobile"]> = {}
   if (mobile.strategy !== undefined) bound.strategy = mobile.strategy
@@ -147,17 +143,13 @@ function bindMobile(
 
 function combinedCaveats(
   host: ChartCapability,
-  portable: PortableChartCapability,
+  portable: PortableChartCapability
 ): ((profile: ChartDataProfile) => readonly string[]) | undefined {
-  const portableCaveats = portable.caveats
-    ? [...portable.caveats]
-    : []
+  const portableCaveats = portable.caveats ? [...portable.caveats] : []
   if (!host.caveats && portableCaveats.length === 0) return undefined
 
   return (profile) => {
-    const hostCaveats = host.caveats
-      ? Array.from(host.caveats(profile))
-      : []
+    const hostCaveats = host.caveats ? Array.from(host.caveats(profile)) : []
     return [...new Set([...hostCaveats, ...portableCaveats])]
   }
 }
@@ -168,13 +160,13 @@ function combinedCaveats(
  *
  * The component ids must match. The portable rubric/intent scores are
  * authoritative for ranking; portable variants replace host variants when the
- * field is present (an omitted variants field means no carried variants).
+ * field is present, including an empty array. Omitted fields retain host policy.
  * Host `fits`, `buildProps`, numeric contracts, scale/quality gates, and
  * dynamic caveats remain in force.
  */
 export function bindPortableCapability(
   descriptor: unknown,
-  host: ChartCapability | undefined,
+  host: ChartCapability | undefined
 ): PortableCapabilityBindingResult {
   const validation = validatePortableCapability(descriptor)
   if (!validation.valid) {
@@ -183,31 +175,58 @@ export function bindPortableCapability(
       validation.errors.map((message) => ({
         code: "INVALID_PORTABLE_CAPABILITY",
         severity: "error" as const,
-        message,
-      })),
+        message
+      }))
     )
   }
 
-  const portable = descriptor as PortableChartCapability
+  let portable = descriptor as PortableChartCapability
   if (!host) {
-    return refused(descriptor, [{
-      code: "HOST_CAPABILITY_NOT_FOUND",
-      severity: "error",
-      path: "/component",
-      message:
-        `No host capability is registered for "${portable.component}". ` +
-        "Resolve or register the renderer's executable capability before binding portable metadata.",
-    }])
+    return refused(descriptor, [
+      {
+        code: "HOST_CAPABILITY_NOT_FOUND",
+        severity: "error",
+        path: "/component",
+        message:
+          `No host capability is registered for "${portable.component}". ` +
+          "Resolve or register the renderer's executable capability before binding portable metadata."
+      }
+    ])
   }
   if (portable.component !== host.component) {
-    return refused(descriptor, [{
-      code: "CAPABILITY_COMPONENT_MISMATCH",
-      severity: "error",
-      path: "/component",
-      message:
-        `Portable component "${portable.component}" cannot bind to host component ` +
-        `"${host.component}".`,
-    }])
+    return refused(descriptor, [
+      {
+        code: "CAPABILITY_COMPONENT_MISMATCH",
+        severity: "error",
+        path: "/component",
+        message:
+          `Portable component "${portable.component}" cannot bind to host component ` +
+          `"${host.component}".`
+      }
+    ])
+  }
+
+  try {
+    portable =
+      typeof structuredClone === "function"
+        ? structuredClone(portable)
+        : (JSON.parse(
+            JSON.stringify(portable, (_key, value: unknown) => {
+              if (typeof value === "function" || typeof value === "symbol") {
+                throw new TypeError("Nonportable capability value")
+              }
+              return value
+            })
+          ) as PortableChartCapability)
+  } catch {
+    return refused(descriptor, [
+      {
+        code: "INVALID_PORTABLE_CAPABILITY",
+        severity: "error",
+        message:
+          "Portable capability metadata must support cloning without executable values."
+      }
+    ])
   }
 
   const caveats = combinedCaveats(host, portable)
@@ -217,14 +236,15 @@ export function bindPortableCapability(
     intentScores: portable.intentScores
       ? { ...portable.intentScores }
       : { ...host.intentScores },
-    // The portable descriptor is the source of variant-level scoring policy.
-    // Omission means the transported descriptor did not declare variants.
-    variants: portable.variants?.map(bindVariant),
+    variants:
+      portable.variants === undefined
+        ? host.variants
+        : portable.variants.map(bindVariant),
     ...(caveats ? { caveats } : { caveats: undefined }),
     ...(portable.mobile !== undefined
       ? { mobile: bindMobile(portable.mobile) }
       : {}),
-    portableDescriptor: portable,
+    portableDescriptor: portable
   }
 
   return {
@@ -232,6 +252,6 @@ export function bindPortableCapability(
     capability,
     diagnostics: [],
     lossReport: [],
-    provenance: bindingProvenance(descriptor),
+    provenance: bindingProvenance(descriptor)
   }
 }

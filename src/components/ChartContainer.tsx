@@ -2,6 +2,7 @@
 import * as React from "react"
 import { exportChart } from "./export/exportChart"
 import { copyConfig as copyConfigFn } from "./export/chartConfig"
+import { ChartCopyAction } from "./chartContainerCopyAction"
 import type { ChartConfig, CopyFormat } from "./export/chartConfig"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 import { DataSummaryProvider, useDataSummaryToggle } from "./DataSummaryContext"
@@ -1154,27 +1155,7 @@ export const ChartContainer = React.forwardRef<
                 </button>
               )}
               {showCopyConfig && (
-                <button
-                  className="semiotic-chart-action"
-                  onClick={() => handleCopyConfig()}
-                  title="Copy config"
-                  aria-label="Copy chart configuration"
-                  style={actionButtonStyle}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="5" y="5" width="8" height="8" rx="1" />
-                    <path d="M9 5V2a1 1 0 00-1-1H2a1 1 0 00-1 1v6a1 1 0 001 1h3" />
-                  </svg>
-                </button>
+                <ChartCopyAction copy={handleCopyConfig} style={actionButtonStyle} />
               )}
               {status && (
                 <div

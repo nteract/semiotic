@@ -5,15 +5,18 @@ import { getSelectionProvenance } from "./selectionProvenance"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+/** Crossfilter intersects all clauses except the requesting client's own. */
 export type ResolutionMode = "union" | "intersect" | "crossfilter"
 
 export interface FieldConstraint {
   type: "point"
+  /** Exact values; valid Dates match other Dates with the same timestamp. */
   values: Set<unknown>
 }
 
 export interface IntervalConstraint {
   type: "interval"
+  /** Inclusive bounds for finite numbers and valid Dates (epoch milliseconds). */
   range: [number, number]
 }
 
@@ -48,12 +51,27 @@ function buildRowClausePredicate(
 
   for (const [field, constraint] of Object.entries(clause.fields)) {
     if (constraint.type === "point") {
-      fieldTests.push((d) => constraint.values.has(d[field]))
+      // Compile Date membership once per predicate, keeping ordinary point
+      // values type-sensitive and avoiding a value scan for every data row.
+      let timestamps: Set<number> | undefined
+      for (const value of constraint.values) {
+        if (value instanceof Date && Number.isFinite(value.getTime())) {
+          timestamps ??= new Set<number>()
+          timestamps.add(value.getTime())
+        }
+      }
+      fieldTests.push((d) => {
+        const value = d[field]
+        return value instanceof Date
+          ? (timestamps?.has(value.getTime()) ?? false)
+          : constraint.values.has(value)
+      })
     } else {
       const [lo, hi] = constraint.range
       fieldTests.push((d) => {
-        const v = d[field]
-        return v >= lo && v <= hi
+        const value = d[field]
+        const v = value instanceof Date ? value.getTime() : value
+        return typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi
       })
     }
   }
@@ -80,13 +98,11 @@ export function buildPredicate(
   if (rowClausePredicates.length === 0) return () => true
 
   // An aggregate represents a set of source rows. Intersected clauses must
-  // all match the same row; union/crossfilter need any clause on any row.
+  // all match the same row, including crossfilter's remaining clauses.
   const matchesRow =
-    selection.resolution === "intersect"
-      ? (row: Datum) =>
-          rowClausePredicates.every((predicate) => predicate(row))
-      : (row: Datum) =>
-          rowClausePredicates.some((predicate) => predicate(row))
+    selection.resolution !== "union"
+      ? (row: Datum) => rowClausePredicates.every((predicate) => predicate(row))
+      : (row: Datum) => rowClausePredicates.some((predicate) => predicate(row))
 
   return (datum) =>
     matchesRow(datum) ||

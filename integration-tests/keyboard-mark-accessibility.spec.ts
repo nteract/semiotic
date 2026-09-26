@@ -45,6 +45,7 @@ for (const chart of ["BoxPlot", "ViolinPlot", "RidgelinePlot", "CandlestickChart
         await expect(tooltip).toHaveCount(0)
         await frame.hover({ position: point })
         await expect(tooltip).toContainText(expected)
+        await expect(live).toBeEmpty()
         const tip = (await tooltip.boundingBox())!
         expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
         expect(tip.y).toBeGreaterThanOrEqual(bounds.y)

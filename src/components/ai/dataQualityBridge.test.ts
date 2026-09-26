@@ -14,6 +14,16 @@ import type { DataQualityResult } from "./dataQualityBridge"
 // ── Normalized core ──────────────────────────────────────────────────────────
 
 describe("dataQualityToAnnotations", () => {
+  it.each([NaN, Infinity, -Infinity, 9e15, "2020/01/01", "invalid"])("declines an invalid freshness coordinate %s", at => {
+    const result = dataQualityToAnnotations([{ id: "bad-time", kind: "freshness", status: "fail", at }])
+    expect(result.annotations).toEqual([])
+    expect(result.unplaced[0].reason).toContain("no parseable timestamp")
+  })
+
+  it.each([0, 1718668800, 1718668800000])("preserves epoch-millisecond coordinates without guessing seconds: %s", at => {
+    expect(dataQualityToAnnotations([{ id: "time", kind: "freshness", status: "fail", at }]).annotations[0].value).toBe(at)
+  })
+
   it("maps a failing range check to a danger band with provenance + lifecycle", () => {
     const results: DataQualityResult[] = [
       {
@@ -134,6 +144,15 @@ describe("dataQualityToAnnotations", () => {
 // ── dbt parser ───────────────────────────────────────────────────────────────
 
 describe("fromDbtArtifacts", () => {
+  it.each(["2026-06-20T00:00:00Z", "2026-06-20T00:00:00", "2026-06-19T17:00:00-07:00"])(
+    "uses the same UTC date in labels and coordinates for %s", max_loaded_at => {
+      const result = fromDbtArtifacts({ sources: { results: [{ unique_id: "source.shop.orders", status: "error", max_loaded_at }] } })
+      expect(result.annotations[0]).toMatchObject({
+        label: "orders stale since Jun 20", value: Date.UTC(2026, 5, 20)
+      })
+    }
+  )
+
   it("maps source freshness to provenanced time thresholds", () => {
     const { annotations } = fromDbtArtifacts({
       sources: {

@@ -297,7 +297,7 @@ describe("StreamNetworkFrame", () => {
     expect(canvas.style.cursor).toBe("")
   })
 
-  it.each([false, true])("announces authored node and edge readings (shared render datum: %s)", async (sharedDatum) => {
+  it.each([false, true])("keeps pointer readings visual and announces authored keyboard focus (shared render datum: %s)", async (sharedDatum) => {
     const scheduler = createFrameScheduler(0)
     const nodeDatum = { id: "a", geometry: "node render internals" }
     const edgeDatum = sharedDatum ? nodeDatum : { id: "ab", geometry: "edge render internals" }
@@ -331,6 +331,7 @@ describe("StreamNetworkFrame", () => {
         size={[240, 180]}
         frameScheduler={scheduler.scheduler}
         customHoverBehavior={customHoverBehavior}
+        tooltipContent={hover => JSON.stringify(hover.data)}
       />
     )
     await act(async () => scheduler.flush())
@@ -340,17 +341,19 @@ describe("StreamNetworkFrame", () => {
 
     fireEvent.mouseMove(image, { clientX: 40, clientY: 40 })
     await act(async () => scheduler.flush())
-    expect(live).toHaveTextContent("Data point: vertex: Arrival")
+    expect(live).toBeEmptyDOMElement()
+    expect(container.querySelector(".stream-network-tooltip")).toHaveTextContent(JSON.stringify(nodeDatum))
 
     fireEvent.mouseMove(image, { clientX: 100, clientY: 90 })
     await act(async () => scheduler.flush())
-    expect(live).toHaveTextContent("Data point: route: A to B, traffic: 8")
-    expect(live).not.toHaveTextContent("render internals")
+    expect(live).toBeEmptyDOMElement()
+    expect(container.querySelector(".stream-network-tooltip")).toHaveTextContent(JSON.stringify(edgeDatum))
     expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(edgeDatum)
 
     fireEvent.mouseMove(image, { clientX: 100, clientY: 140 })
     await act(async () => scheduler.flush())
-    expect(live).toHaveTextContent("Data point: route: B to C, traffic: 3")
+    expect(live).toBeEmptyDOMElement()
+    expect(container.querySelector(".stream-network-tooltip")).toHaveTextContent(JSON.stringify(fallbackDatum))
     expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(fallbackDatum)
 
     fireEvent.mouseLeave(image)

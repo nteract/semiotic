@@ -180,8 +180,7 @@ describe("SSR feature parity: annotations", () => {
   it("geo renders annotation overlay group with [lon, lat] coordinates", () => {
     // Geo annotations use `coordinates: [lon, lat]`; the resolved
     // projection from GeoPipelineStore.scales projects them to pixel space.
-    // Need at least one area for the projection to fit; an empty fixture
-    // hits the early-return path that doesn't render annotations.
+    // Supply an area so the projection fits a known geographic extent.
     const svg = renderGeoToStaticSVG({
       chartType: "geo",
       areas: [{

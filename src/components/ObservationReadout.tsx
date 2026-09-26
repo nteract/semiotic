@@ -45,7 +45,9 @@ export interface ObservationReadoutProps<TDatum extends Datum = Datum> {
   /** Semantic wrapper element. @default "div" */
   as?: "div" | "p" | "output"
 
-  /** Live-region politeness. Set to "off" to disable announcements. @default "polite" */
+  /** Live-region politeness. By default, hover/end events are visual-only and
+   * other interactions are polite. Set explicitly to opt into hover announcements,
+   * or use "off" to disable all announcements. */
   live?: "off" | "polite" | "assertive"
 
   /** Whether assistive technology should announce the whole readout. @default true */
@@ -69,7 +71,7 @@ export function ObservationReadout<TDatum extends Datum = Datum>({
   types = DEFAULT_OBSERVATION_TYPES,
   fallback = null,
   as = "div",
-  live = "polite",
+  live,
   atomic = true,
   className,
   style
@@ -86,7 +88,7 @@ export function ObservationReadout<TDatum extends Datum = Datum>({
     {
       className,
       style,
-      "aria-live": live,
+      "aria-live": live ?? (observation?.type === "hover" || observation?.type === "hover-end" ? "off" : "polite"),
       "aria-atomic": atomic
     },
     content

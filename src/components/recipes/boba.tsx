@@ -22,6 +22,10 @@ import { resolveAccessor, datumFromFields, stableGlyphId } from "./recipeUtils"
  * counts) into the Semiotic scene graph for hover, selection, SSR evidence,
  * and transitions; the cup silhouette, tea, pearls, ice, lid, and straw are
  * pointer-events-none SVG overlays keyed by cup name.
+ * Invalid/nonpositive dimensions use defaults, and negative volumes become
+ * zero. Drawing is capped at 2,000 pearls and 2,000 ice pieces per cup without
+ * reducing its volume/count metadata. Captions disclose omitted pieces, with
+ * `renderedBobas` and `renderedIce` available on the hit datum.
  */
 
 const INCH_TO_CM = 2.54
@@ -34,6 +38,8 @@ const PEARL_FILL = "#222222"
 const ICE_FILL = "#a5f2f3"
 const STRAW_FILL = "#4F91CB"
 const CUP_STROKE = "#222222"
+const MAX_PIECES = 2000
+const DEFAULT_CUP: Cup = { height: 15.5, topRadius: 4.75, bottomRadius: 3.75 }
 
 export interface BobaConfig {
   /** Category — one cup per distinct value. @default "name" */
@@ -50,7 +56,7 @@ export interface BobaConfig {
   cupTopRadiusAccessor?: string | ((d: Datum) => number)
   /** Cup bottom radius (cm). @default field "cupBottomRadius" → 3.75 */
   cupBottomRadiusAccessor?: string | ((d: Datum) => number)
-  /** Pearl radius (cm). @default field "bobaRadius" → 0.6 */
+  /** Pearl radius (cm); invalid/nonpositive values use 0.6. @default field "bobaRadius" → 0.6 */
   bobaRadiusAccessor?: string | ((d: Datum) => number)
   /** Fraction of each band the cup glyph may occupy. @default 0.82 */
   cupWidthRatio?: number
@@ -65,11 +71,12 @@ interface Cup {
 // ── Ported geometry from the notebook ───────────────────────────────────────
 
 function frustumVolume(r1: number, r2: number, h: number): number {
-  return (Math.PI * h) / 3 * (r1 * r1 + r1 * r2 + r2 * r2)
+  return ((Math.PI * h) / 3) * (r1 * r1 + r1 * r2 + r2 * r2)
 }
 
 function radiusAtDrinkHeight(cup: Cup, h: number): number {
-  return cup.topRadius + ((h - cup.height) / cup.height) * (cup.topRadius - cup.bottomRadius)
+  const t = Math.min(1, Math.max(0, h / cup.height))
+  return cup.bottomRadius * (1 - t) + cup.topRadius * t
 }
 
 function volumeFromDrinkHeight(cup: Cup, h: number): number {
@@ -77,34 +84,38 @@ function volumeFromDrinkHeight(cup: Cup, h: number): number {
 }
 
 function drinkHeightFromVolume(cup: Cup, v: number): number {
-  const r = (cup.topRadius + cup.bottomRadius) / 2
-  const area = Math.PI * r * r
-  let estimate = v / area
-  let diff = v - volumeFromDrinkHeight(cup, estimate)
-  let counter = 0
-  while (counter < 100 && Math.abs(diff) > 0.0001) {
-    estimate += diff / area
-    diff = v - volumeFromDrinkHeight(cup, estimate)
-    counter++
+  if (v <= 0) return 0
+  if (v >= volumeFromDrinkHeight(cup, cup.height)) return cup.height
+  let lo = 0
+  let hi = cup.height
+  for (let i = 0; i < 60; i++) {
+    const mid = lo + (hi - lo) / 2
+    if (volumeFromDrinkHeight(cup, mid) < v) lo = mid
+    else hi = mid
   }
-  return estimate
+  return lo + (hi - lo) / 2
 }
 
 /** Deterministic ±amount jitter from an integer index (replaces Math.random). */
 function jitter(i: number, amount: number): number {
   const f = Math.sin(i * 12.9898 + 78.233) * 43758.5453
-  return ((f - Math.floor(f)) - 0.5) * 2 * amount
+  return (f - Math.floor(f) - 0.5) * 2 * amount
 }
 
 /**
  * Pack `rSmall`-radius circles inside an `rLarge`-radius disk in concentric
  * rings. Ported from the notebook's `Circle.placeCirclesInside`.
  */
-function placeCirclesInside(rLarge: number, rSmall: number): Array<{ x: number; y: number }> {
-  if (rSmall > rLarge || rLarge < 2 * rSmall) return [{ x: 0, y: 0 }]
+function placeCirclesInside(
+  rLarge: number,
+  rSmall: number
+): Array<{ x: number; y: number }> {
+  if (!(rSmall > 0) || !Number.isFinite(rLarge) || rSmall > rLarge) return []
+  if (rLarge < 2 * rSmall) return [{ x: 0, y: 0 }]
   const circles: Array<{ x: number; y: number }> = []
-  const make = (rc: number): void => {
-    let no = Math.floor((2 * Math.PI * rc) / (2 * rSmall))
+  let rc = rLarge - rSmall
+  while (circles.length < MAX_PIECES) {
+    let no = Math.min(MAX_PIECES, Math.floor((Math.PI * rc) / rSmall))
     if (no < 1) no = 1
     const x0 = rc * Math.cos(0)
     const y0 = rc * Math.sin(0)
@@ -112,14 +123,20 @@ function placeCirclesInside(rLarge: number, rSmall: number): Array<{ x: number; 
     const y1 = rc * Math.sin((2 * Math.PI) / no)
     const dist = Math.hypot(x0 - x1, y0 - y1)
     if (dist < 2 * rSmall && no > 1) no--
-    for (let i = 0; i < no; i++) {
-      circles.push({ x: rc * Math.cos((i * 2 * Math.PI) / no), y: rc * Math.sin((i * 2 * Math.PI) / no) })
+    for (let i = 0; i < no && circles.length < MAX_PIECES; i++) {
+      circles.push({
+        x: rc * Math.cos((i * 2 * Math.PI) / no),
+        y: rc * Math.sin((i * 2 * Math.PI) / no)
+      })
     }
     const rcNext = rc - 2 * rSmall
-    if (rcNext >= rSmall) make(rcNext)
-    else if (rc > 2 * rSmall) circles.push({ x: 0, y: 0 })
+    if (rcNext >= rSmall) rc = rcNext
+    else {
+      if (rc > 2 * rSmall && circles.length < MAX_PIECES)
+        circles.push({ x: 0, y: 0 })
+      break
+    }
   }
-  make(rLarge - rSmall)
   return circles
 }
 
@@ -129,19 +146,30 @@ interface Pearl {
 }
 
 /** Stack pearls in layers at the bottom of the cup. Returns positions + layer count. */
-function createBobaLayers(cup: Cup, bobaRadius: number, numBobas: number): { pearls: Pearl[]; layers: number } {
+function createBobaLayers(
+  cup: Cup,
+  bobaRadius: number,
+  numBobas: number
+): { pearls: Pearl[]; layers: number } {
   const pearls: Pearl[] = []
-  let remaining = numBobas
+  let remaining = Math.min(numBobas, MAX_PIECES)
   let layer = 0
   while (remaining > 0 && layer < 60) {
     const h = bobaRadius * (1 + 2 * layer)
+    if (h + bobaRadius > cup.height) break
     const drinkRadius = radiusAtDrinkHeight(cup, h)
     const ring = placeCirclesInside(drinkRadius, bobaRadius)
     const diff = ring.length - remaining
-    const chosen = diff > 1 ? ring.slice(Math.floor(diff / 2), Math.floor(diff / 2) + remaining) : ring
+    const chosen =
+      diff > 0
+        ? ring.slice(Math.floor(diff / 2), Math.floor(diff / 2) + remaining)
+        : ring
     const z = cup.height - h
     chosen.forEach((p, i) => {
-      pearls.push({ x: p.x + jitter(layer * 97 + i, 0.15), z: z + jitter(layer * 31 + i, 0.05) })
+      pearls.push({
+        x: p.x + jitter(layer * 97 + i, 0.15),
+        z: z + jitter(layer * 31 + i, 0.05)
+      })
     })
     remaining -= chosen.length
     layer++
@@ -156,7 +184,9 @@ function countIceLayers(cup: Cup, bobaHeight: number, numIce: number): number {
   let layer = 0
   while (remaining > 0 && layer < 60) {
     const h = bobaHeight + (ICE_WIDTH / 2) * (1 + 2 * layer)
+    if (h + ICE_WIDTH / 2 > cup.height) break
     const r = radiusAtDrinkHeight(cup, h)
+    if (2 * r < ICE_WIDTH) break
     const per = Math.max(1, Math.floor((2 * r) / ICE_WIDTH))
     remaining -= per
     layer++
@@ -170,8 +200,14 @@ interface IcePiece {
   rotation: number
 }
 
-function createIcePieces(cup: Cup, bobaHeight: number, teaHeight: number, numIce: number): IcePiece[] {
+function createIcePieces(
+  cup: Cup,
+  bobaHeight: number,
+  teaHeight: number,
+  numIce: number
+): IcePiece[] {
   if (numIce <= 0) return []
+  numIce = Math.min(numIce, MAX_PIECES)
   const numLayers = countIceLayers(cup, bobaHeight, numIce)
   const iceHeight = numLayers * ICE_WIDTH
   const iceStartY = Math.max(bobaHeight, teaHeight - iceHeight) + ICE_WIDTH / 2
@@ -189,7 +225,7 @@ function createIcePieces(cup: Cup, bobaHeight: number, teaHeight: number, numIce
       pieces.push({
         cx: xLeft + ICE_WIDTH / 2,
         cy: yTop + ICE_WIDTH / 2,
-        rotation: jitter(i * 53 + j, 10),
+        rotation: jitter(i * 53 + j, 10)
       })
       placed++
     }
@@ -204,20 +240,39 @@ function num(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback
 }
 
+function positiveNum(value: unknown, fallback: number): number {
+  const n = num(value, fallback)
+  return n > 0 ? n : fallback
+}
+
 export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
   const cfg = ctx.config
   const { plot } = ctx.dimensions
-  if (plot.width <= 0 || plot.height <= 0) return { nodes: [] }
+  if (
+    !Number.isFinite(plot.width) ||
+    !Number.isFinite(plot.height) ||
+    plot.width <= 0 ||
+    plot.height <= 0
+  )
+    return { nodes: [] }
 
   const getCategory = resolveAccessor<string>(cfg.categoryAccessor ?? "name")
   const getTea = resolveAccessor<number>(cfg.teaVolumeAccessor ?? "teaVolume")
-  const getBoba = resolveAccessor<number>(cfg.bobaVolumeAccessor ?? "bobaVolume")
+  const getBoba = resolveAccessor<number>(
+    cfg.bobaVolumeAccessor ?? "bobaVolume"
+  )
   const getIce = resolveAccessor<number>(cfg.iceVolumeAccessor ?? "iceVolume")
   const getCupH = resolveAccessor<number>(cfg.cupHeightAccessor ?? "cupHeight")
-  const getTopR = resolveAccessor<number>(cfg.cupTopRadiusAccessor ?? "cupTopRadius")
-  const getBotR = resolveAccessor<number>(cfg.cupBottomRadiusAccessor ?? "cupBottomRadius")
-  const getBobaR = resolveAccessor<number>(cfg.bobaRadiusAccessor ?? "bobaRadius")
-  const widthRatio = cfg.cupWidthRatio ?? 0.82
+  const getTopR = resolveAccessor<number>(
+    cfg.cupTopRadiusAccessor ?? "cupTopRadius"
+  )
+  const getBotR = resolveAccessor<number>(
+    cfg.cupBottomRadiusAccessor ?? "cupBottomRadius"
+  )
+  const getBobaR = resolveAccessor<number>(
+    cfg.bobaRadiusAccessor ?? "bobaRadius"
+  )
+  const widthRatio = positiveNum(cfg.cupWidthRatio, 0.82)
 
   const o = ctx.scales.o
   const bandW = o.bandwidth()
@@ -234,23 +289,38 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
     const bandX = o(category)
     if (bandX == null) continue
 
-    const cup: Cup = {
-      height: num(getCupH(d), 15.5),
-      topRadius: num(getTopR(d), 4.75),
-      bottomRadius: num(getBotR(d), 3.75),
+    let cup: Cup = {
+      height: positiveNum(getCupH(d), DEFAULT_CUP.height),
+      topRadius: positiveNum(getTopR(d), DEFAULT_CUP.topRadius),
+      bottomRadius: positiveNum(getBotR(d), DEFAULT_CUP.bottomRadius)
     }
-    const bobaRadius = num(getBobaR(d), 0.6)
+    const capacity = volumeFromDrinkHeight(cup, cup.height)
+    if (!Number.isFinite(capacity) || capacity <= 0) cup = DEFAULT_CUP
+    let bobaRadius = positiveNum(getBobaR(d), 0.6)
     const teaVolume = Math.max(0, num(getTea(d), 450))
     const bobaVolume = Math.max(0, num(getBoba(d), 110))
     const iceVolume = Math.max(0, num(getIce(d), 135))
 
     // Pearl / ice counts (the notebook's 2D area model for a pearl).
-    const bobaBallVolume = Math.PI * bobaRadius * bobaRadius
+    let bobaBallVolume = Math.PI * bobaRadius * bobaRadius
+    if (
+      !Number.isFinite(bobaBallVolume) ||
+      bobaBallVolume <= 0 ||
+      !Number.isFinite(bobaVolume / bobaBallVolume)
+    ) {
+      bobaRadius = 0.6
+      bobaBallVolume = Math.PI * bobaRadius * bobaRadius
+    }
     const numBobas = Math.floor(bobaVolume / bobaBallVolume)
-    const realBobaVolume = numBobas * bobaBallVolume
+    const realBobaVolume = Math.min(bobaVolume, numBobas * bobaBallVolume)
     const numIce = Math.floor(iceVolume / (ICE_WIDTH * ICE_WIDTH * ICE_WIDTH))
-    const realIceVolume = numIce * ICE_WIDTH * ICE_WIDTH * ICE_WIDTH
+    const realIceVolume = Math.min(
+      iceVolume,
+      numIce * ICE_WIDTH * ICE_WIDTH * ICE_WIDTH
+    )
     const totalVolume = teaVolume + realBobaVolume + realIceVolume
+    if (!Number.isFinite(totalVolume))
+      throw new RangeError("Boba total volume exceeds the finite numeric range")
 
     const rawDrinkHeight = drinkHeightFromVolume(cup, totalVolume)
     const drinkHeight = Math.min(cup.height, Math.max(0, rawDrinkHeight))
@@ -284,7 +354,9 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
       totalVolume: Math.round(totalVolume),
       numBobas,
       numIce,
-      kind: "boba cup",
+      renderedBobas: pearls.length,
+      renderedIce: ices.length,
+      kind: "boba cup"
     })
 
     nodes.push({
@@ -296,7 +368,7 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
       style: { fill: "rgba(0,0,0,0)", stroke: "none" },
       datum,
       group: category,
-      _transitionKey: `boba-${stableGlyphId(category)}`,
+      _transitionKey: `boba-${stableGlyphId(category)}`
     })
 
     const teaY = cup.height - teaHeight
@@ -313,7 +385,14 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
         ) : null}
         {/* pearls */}
         {pearls.map((p, i) => (
-          <circle key={`p-${i}`} cx={sx(p.x)} cy={sy(p.z)} r={bobaRadius * scale} fill={PEARL_FILL} opacity={0.5} />
+          <circle
+            key={`p-${i}`}
+            cx={sx(p.x)}
+            cy={sy(p.z)}
+            r={bobaRadius * scale}
+            fill={PEARL_FILL}
+            opacity={0.5}
+          />
         ))}
         {/* ice */}
         {ices.map((ice, i) => (
@@ -357,11 +436,24 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
           />
         ) : null}
         {/* name + volume */}
-        <text x={centerX} y={glyphBottom + 16} textAnchor="middle" fontSize={12} fontWeight={600} fill="var(--semiotic-text, #333)">
+        <text
+          x={centerX}
+          y={glyphBottom + 16}
+          textAnchor="middle"
+          fontSize={12}
+          fontWeight={600}
+          fill="var(--semiotic-text, #333)"
+        >
           {category}
         </text>
-        <text x={centerX} y={glyphBottom + 30} textAnchor="middle" fontSize={10} fill={accent}>
-          {`${numBobas} pearls · ${Math.round(totalVolume)} cm³`}
+        <text
+          x={centerX}
+          y={glyphBottom + 30}
+          textAnchor="middle"
+          fontSize={10}
+          fill={accent}
+        >
+          {`${numBobas} pearls${pearls.length < numBobas ? ` (${pearls.length} shown)` : ""}${ices.length < numIce ? ` · ${ices.length}/${numIce} ice shown` : ""} · ${Math.round(totalVolume)} cm³`}
         </text>
       </g>
     )
@@ -373,6 +465,6 @@ export const bobaLayout: OrdinalCustomLayout<BobaConfig> = (ctx) => {
       <g className="semiotic-boba" style={{ pointerEvents: "none" }}>
         {overlays}
       </g>
-    ),
+    )
   }
 }

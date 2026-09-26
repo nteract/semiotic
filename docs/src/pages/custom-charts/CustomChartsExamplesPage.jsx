@@ -79,6 +79,14 @@ export default function CustomChartsExamplesPage() {
           silhouette, tea fill, tapioca pearls, ice cubes, lid, and straw as pointer-events-none SVG
           overlays keyed by drink.
         </p>
+        <p>
+          Invalid or nonpositive cup dimensions and pearl radii use the defaults
+          (a 0.6 cm pearl radius); negative volumes become zero. To keep extreme
+          inputs responsive, each cup draws at most 2,000 pearls and 2,000 ice
+          pieces. Counts and volumes retain their original meaning, while the
+          caption discloses omitted pieces and the hover datum includes
+          <code> renderedBobas</code> and <code>renderedIce</code>.
+        </p>
         <div style={{ margin: "1.5rem 0" }}>
           <OrdinalCustomChart
             data={bobaData}

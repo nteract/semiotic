@@ -36,17 +36,20 @@ describe("StreamPhysicsFrame authored cursors", () => {
   afterEach(() => cleanupCanvas())
 
   it.each([
-    { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5 },
-    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75 }
+    { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 0 },
+    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 0 },
+    { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 20 },
+    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20 }
   ])(
     "keeps $pointerType hover and activation on the painted body after CSS scaling",
-    ({ pointerType, scaleX, scaleY }) => {
+    ({ pointerType, scaleX, scaleY, margin }) => {
       const onBodyHover = vi.fn()
       const onBodyPointerDown = vi.fn()
       const onClick = vi.fn()
       const { container } = render(
         <StreamPhysicsFrame
           size={[200, 120]}
+          margin={{ left: margin, top: margin, right: 0, bottom: 0 }}
           paused
           config={{ kernel: quietKernel }}
           initialSpawns={[
@@ -73,8 +76,8 @@ describe("StreamPhysicsFrame authored cursors", () => {
         new DOMRect(20, 30, 200 * scaleX, 120 * scaleY)
       )
       const pointer = {
-        clientX: 20 + 100 * scaleX,
-        clientY: 30 + 60 * scaleY,
+        clientX: 20 + (100 + margin) * scaleX,
+        clientY: 30 + (60 + margin) * scaleY,
         pointerType
       }
       fireEvent.pointerMove(canvas, pointer)
@@ -93,8 +96,8 @@ describe("StreamPhysicsFrame authored cursors", () => {
         expect.objectContaining({ x: 100, y: 60 })
       )
       fireEvent.pointerDown(canvas, {
-        clientX: 20 + 180 * scaleX,
-        clientY: 30 + 100 * scaleY,
+        clientX: 20 + (180 + margin) * scaleX,
+        clientY: 30 + (100 + margin) * scaleY,
         pointerType
       })
       expect(onClick).toHaveBeenLastCalledWith(null, {

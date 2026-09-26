@@ -59,12 +59,11 @@ import {
 } from "./useHydration"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
+import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
 import {
-  NetworkAccessibleDataTable,
   AccessibleTablePortal,
   AriaLiveTooltip,
   ScreenReaderSummary,
-  SkipToTableLink,
   computeNetworkAriaLabel
 } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -1517,7 +1516,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    return <NetworkSSRFrame props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
+    return <NetworkSSRFrame tableId={tableId} props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
   }
 
   // ── Render ───────────────────────────────────────────────────────────
@@ -1551,8 +1550,8 @@ const StreamNetworkFrame = memo(forwardRef<
       )}
       {accessibleTable && (
         <AccessibleTablePortal accessibleTable={accessibleTable}>
-          <SkipToTableLink tableId={tableId} />
-          <NetworkAccessibleDataTable
+          <NetworkAccessibleDataTableSlot
+            sceneRevision={layoutPending ? undefined : store?.getUpdateSnapshot().revisions.accessibility}
             nodes={store?.sceneNodes ?? []}
             edges={store?.sceneEdges ?? []}
             chartType="Network chart"
@@ -1564,7 +1563,7 @@ const StreamNetworkFrame = memo(forwardRef<
       <ScreenReaderSummary summary={summary} />
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
-      <AriaLiveTooltip hoverPoint={hoverData && {
+      <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverData && {
         data: (hoverData.nodeOrEdge === "edge"
           ? storeRef.current?.sceneEdges
           : storeRef.current?.sceneNodes

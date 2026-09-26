@@ -14,6 +14,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reduced the server entry graph below its existing 244 KiB gzip budget by
+  sharing geographic scene/chrome rendering and removing redundant legend
+  rendering and unused vertical item-layout allocations. Empty-scene overlays,
+  annotation evidence, cartogram chrome, and all four legend positions retain
+  their contracts; source and published server entry points are covered.
+- Dataset summaries infer types from the whole column and disclose missing and
+  excluded values. Summary statistics and numeric health profiles share decimal
+  parsing without coercing booleans, Dates, padded identifiers, or base-prefixed
+  literals into numbers. ISO date extents use UTC consistently. The related-surface
+  audit covers chart profiling, interrogation hooks, MCP responses, and built
+  CommonJS/ESM AI entry points, including date-ordering recommendations. (#1496)
+- Annotation freshness uses the maximum finite timestamp across unsorted data
+  extents, supports week and fractional fixed-length TTLs, and rejects invalid,
+  nonpositive, and unsupported calendar durations explicitly. Quality-check
+  labels and coordinates agree in UTC while preserving epoch-millisecond inputs;
+  invalid timestamps are reported as unplaced. Lifecycle filtering, serialized
+  annotations, and built exports are covered across host locales/timezones. (#1483)
+- Accessible data tables retain focus while revealing rows, announce paging
+  progress, and restore the opener on close without stealing focus on blur.
+  Scene, network-node/edge, and physics tables share the corrected interaction;
+  expanded semantic models are cached across unchanged revisions. Portal and
+  toolbar openers are covered. Follow-up: keep skip-link targets, summary
+  controls, and close/focus handling eager through SSR and hydration; defer only
+  expanded scene/network rows and statistics. The related-surface audit covers
+  XY, ordinal, network, geographic, and physics SSR, inline/disabled/portaled
+  tables, delayed content, and browser paging, hover, resize, and dismissal.
+  Client entry graphs and the combined-import bundle stay within their existing
+  budgets. (#1521)
+- IntentMark, chart-toolbar, and documentation copy actions report clipboard
+  failures and announce success/failure. Shared feedback cleans up timers,
+  ignores stale completions, and checks legacy copy fallback results. (#1534)
+- Chart live regions announce keyboard focus without announcing pointer hover
+  across XY, ordinal, network, geographic, and physics frames. ObservationReadout
+  keeps hover visual-only by default while preserving explicit live-region
+  overrides and announcements for deliberate interactions. The related-surface
+  audit also fixes resized aggregate-bar focus identity and physics hover/click
+  coordinates and tooltip placement with nonzero margins. (#1544)
+- Boba layouts validate cup and pearl dimensions, bound pearl/ice allocation,
+  and keep excessive fill heights finite. Captions and hover data disclose drawn
+  counts without changing the underlying quantities. Shared layout, public
+  recipe, React push/bounded, and static SVG paths are covered. (#1392)
+- `bin` validates counts/domains, excludes nonfinite and nonnumeric values, and
+  assigns decimal boundaries consistently. Public data transforms return numeric
+  `x0`/`x1` bounds with distinct labels for small and negative intervals.
+  Follow-up: combine extent collection and bin counting to reduce the packed
+  standalone import from 1,844 to 1,584 bytes raw (1,002 to 902 bytes gzip).
+  Regenerated cold-consumer measurements intentionally retain validation and
+  exact decimal membership, which the earlier 658/442-byte baseline did not
+  provide; tolerance rules and bundle budgets are unchanged. The measurement
+  refresh also records the accessible-content chunk split and existing stale
+  module counts. Public transform tests and built CommonJS/ESM checks cover the
+  retained semantics. (#1495)
+- Embedded artifact packets escape XML terminators in titles and claims,
+  preserving valid SVG and exact JSON round-trips across SVG root forms and
+  adjacent sidecar formats. (#1494)
+- Portable capability binding retains host variants when omitted, honors
+  explicitly empty policy, and snapshots portable metadata so source edits
+  cannot silently change bound recommendations. (#1539)
+- Crossfilter intersects every other chart's active filter. Interval selections
+  exclude missing and coercible nonnumeric values, and point selections match
+  valid Dates by timestamp while preserving value types. Shared hooks, aggregate
+  provenance, bounded and pushed charts, and static rendering use the corrected
+  predicates. Follow-up: remove the redundant canvas-visibility assertion while
+  retaining pixel-alpha, hover, resize, and dismissal checks; the test-quality
+  baseline is unchanged. (#1360)
+- Atlas required-path queries detect cyclic, missing, inherited, or malformed
+  dominator links and report unknown ancestry without partial claims. Reverse
+  ancestry traversal also rejects invalid chains instead of hanging dependency
+  rendering. (#1540)
+- Axis label assessments refresh when web fonts finish loading, clear when
+  disabled, and release font listeners on disable or unmount. (#1541)
+- FlowCircuit charts normalize fractional flows, queue gauges, and history
+  values to their actual maxima. Sub-second histories use the full time range;
+  zero-valued and single-sample tapes remain finite in React and static SVG.
+  (#1543)
 - `markTooltipChrome` accepts tooltip renderers and preserves ownership through
   normalization and both BumpChart adapters. Wrapped styled tooltips avoid a
   second surface, plain content keeps the default surface, and empty callback

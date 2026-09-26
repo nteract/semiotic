@@ -58,6 +58,34 @@ describe("renderStaticLegend", () => {
     expect(svg).toContain(">C<")
   })
 
+  it.each(["right", "left", "top", "bottom"] as const)(
+    "preserves item geometry, colors and labels in a %s legend",
+    (position) => {
+      const svg = renderLegendString({
+        ...baseConfig,
+        position,
+        colorScheme: ["#123456", "#abcdef", "#654321"],
+        legendLayout: { swatchSize: 12, rowHeight: 26 }
+      })
+      const document = new DOMParser().parseFromString(svg, "image/svg+xml")
+      const legend = document.querySelector(".semiotic-legend")!
+      const items = Array.from(legend.children).filter(node => node.tagName === "g")
+      expect(items.map(item => item.querySelector("text")?.textContent)).toEqual(["A", "B", "C"])
+      expect(items.map(item => item.querySelector("rect")?.getAttribute("fill"))).toEqual(["#123456", "#abcdef", "#654321"])
+      for (const item of items) {
+        expect(item.querySelector("rect")?.getAttribute("width")).toBe("12")
+        expect(item.querySelector("rect")?.getAttribute("height")).toBe("12")
+        expect(item.querySelector("text")?.getAttribute("y")).toBe("6")
+        expect(item.querySelector("text")?.getAttribute("dominant-baseline")).toBe("central")
+      }
+      const horizontal = position === "top" || position === "bottom"
+      expect(legend.querySelectorAll("line")).toHaveLength(horizontal ? 0 : 1)
+      expect(items.map(item => item.getAttribute("transform"))).toEqual(horizontal
+        ? ["translate(0,0)", "translate(35,0)", "translate(70,0)"]
+        : ["translate(0,37)", "translate(0,63)", "translate(0,89)"])
+    }
+  )
+
   it("uses the shared client vertical header geometry", () => {
     const svg = renderLegendString(baseConfig)
     expect(svg).toContain('y1="29" x2="100" y2="29"')
@@ -223,6 +251,59 @@ describe("renderStaticLegendGroups", () => {
       ],
     }],
   }
+
+  it("does not render groups without any items, including sparse arrays", () => {
+    for (const items of [[], new Array(3)]) {
+      expect(renderStaticLegendGroups({
+        ...baseConfig,
+        legendGroups: [{ ...baseConfig.legendGroups[0], items }]
+      })).toBeNull()
+    }
+  })
+
+  it("measures a large vertical group without an argument-limit overflow", () => {
+    const measured = measureStaticLegendGroups({
+      ...baseConfig,
+      legendGroups: [{
+        ...baseConfig.legendGroups[0],
+        label: "",
+        items: Array.from({ length: 150000 }, () => ({ label: "A" }))
+      }]
+    })
+    expect(measured.width).toBe(29)
+    // Shared vertical geometry includes the 37px header and 8px trailing gap.
+    expect(measured.height).toBe(45 + 150000 * 22)
+  })
+
+  it.each(["right", "left", "top", "bottom"] as const)(
+    "preserves group headers, swatches and separators in a %s legend",
+    (position) => {
+      const node = renderStaticLegendGroups({
+        ...baseConfig,
+        position,
+        legendGroups: [baseConfig.legendGroups[0], {
+          label: "Group B",
+          type: "fill",
+          styleFn: () => ({ fill: "#125678" }),
+          items: [{ label: "Gamma" }]
+        }]
+      })
+      const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
+      const document = new DOMParser().parseFromString(svg, "image/svg+xml")
+      const legend = document.querySelector(".semiotic-legend")!
+      const horizontal = position === "top" || position === "bottom"
+      expect(legend.getAttribute("data-orientation")).toBe(horizontal ? "horizontal" : "vertical")
+      expect(Array.from(legend.querySelectorAll("text"), label => label.textContent)).toEqual([
+        "Group A", "Alpha", "Beta", "Group B", "Gamma"
+      ])
+      const headers = Array.from(legend.querySelectorAll("text")).filter(label => label.textContent?.startsWith("Group"))
+      expect(headers.filter(label => label.getAttribute("transform")?.includes("rotate(90)"))).toHaveLength(horizontal ? 2 : 0)
+      expect(legend.querySelectorAll("rect")).toHaveLength(1)
+      expect(legend.querySelector("rect")?.getAttribute("style")).toContain("fill:#125678")
+      // Two diagonal line swatches plus one horizontal separator or two neatlines.
+      expect(legend.querySelectorAll("line")).toHaveLength(horizontal ? 3 : 4)
+    }
+  )
 
   it("includes group labels in measurement and output", () => {
     const grouped = measureStaticLegendGroups(baseConfig)

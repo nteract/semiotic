@@ -36,7 +36,7 @@ import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
 export { withAlpha } from "./frameThemeColors"
-import { AccessibleDataTable, AccessibleTablePortal, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTableSlot, AriaLiveTooltip, ScreenReaderSummary, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
@@ -1235,7 +1235,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           // it would never re-run to see the now-attached element.
           ref={responsiveRef}
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
-          role="img"
+          role={accessibleTable ? "group" : "img"}
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
@@ -1244,6 +1244,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             height: responsiveHeight ? "100%" : size[1],
           }}
         >
+          <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1347,11 +1348,11 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             diagnostics={sceneRevisionDiagnosticsRef.current}
           />
         )}
-        {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
+        <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />
         {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div
           role="img"

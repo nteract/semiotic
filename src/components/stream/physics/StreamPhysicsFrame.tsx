@@ -540,6 +540,7 @@ export const StreamPhysicsFrame = memo(
         wallClockRef
       })
       const {
+        clearSemanticFocus,
         resolveSemanticBody,
         clearHover,
         focusedBodyIdRef,
@@ -552,6 +553,7 @@ export const StreamPhysicsFrame = memo(
         setHoverData,
         syncBodySemanticItems
       } = usePhysicsSemanticNavigation({
+        margin,
         allSemanticItems,
         bodySemanticItemLimit,
         bodySemanticItems,
@@ -597,6 +599,8 @@ export const StreamPhysicsFrame = memo(
         ]
       })
       const physicsCanvasPointer = usePhysicsCanvasPointer({
+        margin,
+        clearKeyboardFocus: clearSemanticFocus,
         hoverDataRef,
         resolveSemanticBody,
         canvasRef,
@@ -1401,6 +1405,16 @@ export const StreamPhysicsFrame = memo(
         plotHeight,
         margin
       })
+      const table = accessibleTable ? (
+        <AccessibleTablePortal accessibleTable={accessibleTable}>
+          <SkipToTableLink tableId={tableId} />
+          <PhysicsSemanticDataTable
+            chartTitle={typeof title === "string" ? title : description}
+            items={allSemanticItems}
+            tableId={tableId}
+          />
+        </AccessibleTablePortal>
+      ) : null
 
       if (serverLikeRender) {
         const store =
@@ -1461,13 +1475,14 @@ export const StreamPhysicsFrame = memo(
             ref={responsiveRef}
             className={wrapperClassName}
             data-semiotic-mode={chartMode}
-            role="img"
+            role={accessibleTable ? "group" : "img"}
             aria-label={ariaLabel}
             style={{
               width: responsiveWidth ? "100%" : size[0],
               height: responsiveHeight ? "100%" : size[1]
             }}
           >
+            {table}
             <ScreenReaderSummary summary={summary} />
             {element}
           </div>
@@ -1496,18 +1511,7 @@ export const StreamPhysicsFrame = memo(
               diagnostics={sceneRevisionDiagnosticsRef.current}
             />
           )}
-          {accessibleTable ? (
-            <AccessibleTablePortal accessibleTable={accessibleTable}>
-              <SkipToTableLink tableId={tableId} />
-              <PhysicsSemanticDataTable
-                chartTitle={
-                  typeof title === "string" ? title : description
-                }
-                items={allSemanticItems}
-                tableId={tableId}
-              />
-            </AccessibleTablePortal>
-          ) : null}
+          {table}
           <ScreenReaderSummary summary={summary} />
           {renderPhysicsAnnouncements(
             allSemanticItems,

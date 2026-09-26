@@ -328,6 +328,14 @@ const annotated = withProvenance(
         latest data point becomes <code>now</code> — freshness then tracks chart-time, not
         wall-clock.
       </p>
+      <p>
+        The extent may be unsorted: its largest finite timestamp is used.
+        Numeric timestamps are epoch milliseconds; timezone-free ISO timestamps
+        use UTC. TTLs must be positive finite milliseconds or fixed-length ISO
+        durations such as <code>P1W</code>, <code>P2D</code>, or <code>PT0.5S</code>.
+        Fractions belong on the smallest unit. Invalid TTLs and calendar months/years
+        throw <code>RangeError</code>; use explicit days or milliseconds instead.
+      </p>
 
       <Table
         head={["Band", "Threshold (× TTL)", "Default visual treatment"]}

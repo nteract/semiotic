@@ -45,7 +45,7 @@ import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
-import { AccessibleDataTable, AccessibleTablePortal, AriaLiveTooltip, ScreenReaderSummary, SkipToTableLink, computeCanvasAriaLabel } from "./AccessibleDataTable"
+import { AccessibleDataTableSlot, AriaLiveTooltip, ScreenReaderSummary, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
@@ -880,7 +880,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           // commit. See `StreamXYFrame.tsx` for the full rationale.
           ref={responsiveRef}
           className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
-          role="img"
+          role={accessibleTable ? "group" : "img"}
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{
             position: "relative",
@@ -889,6 +889,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
             height: responsiveHeight ? "100%" : size[1],
           }}
         >
+          <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -984,11 +985,11 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           diagnostics={sceneRevisionDiagnosticsRef.current}
         />
       )}
-      {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
+      <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
+        <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}

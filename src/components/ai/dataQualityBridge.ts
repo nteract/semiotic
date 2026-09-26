@@ -24,6 +24,7 @@
  * definitions; this bridge owns only the visual overlay and its provenance.
  */
 import type { Datum } from "../charts/shared/datumTypes"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 import type {
   AnnotationAnchor,
   AnnotationBasis,
@@ -135,9 +136,8 @@ const DEFAULTS = {
 }
 
 function toEpoch(at: string | number): number | undefined {
-  if (typeof at === "number") return at
-  const parsed = Date.parse(at)
-  return Number.isNaN(parsed) ? undefined : parsed
+  const parsed = coerceUtcTimeValue(at)
+  return Number.isFinite(parsed) && Math.abs(parsed) <= 8.64e15 ? parsed : undefined
 }
 
 function colorFor(status: DataQualityStatus, opts: DataQualityAnnotationOptions): string {
@@ -146,12 +146,12 @@ function colorFor(status: DataQualityStatus, opts: DataQualityAnnotationOptions)
   return opts.failColor ?? DEFAULTS.failColor
 }
 
-/** Friendly short date for a timestamp (ISO or epoch ms); undefined if unparseable. */
+/** Stable UTC short date for a timestamp (ISO or epoch ms). */
 function formatWhen(at: string | number | undefined): string | undefined {
   if (at == null) return undefined
-  const ms = typeof at === "number" ? at : Date.parse(at)
-  if (Number.isNaN(ms)) return undefined
-  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+  const ms = toEpoch(at)
+  if (ms === undefined) return undefined
+  return new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
 }
 
 /**

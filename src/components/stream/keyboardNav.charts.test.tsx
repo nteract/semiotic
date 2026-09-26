@@ -3,6 +3,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import { BoxPlot } from "../charts/ordinal/BoxPlot"
+import { BarChart } from "../charts/ordinal/BarChart"
 import { ViolinPlot } from "../charts/ordinal/ViolinPlot"
 import { RidgelinePlot } from "../charts/ordinal/RidgelinePlot"
 import { CandlestickChart } from "../charts/xy/CandlestickChart"
@@ -44,13 +45,14 @@ describe("public chart keyboard mark access", () => {
     expect(Number(frame.querySelector('svg[aria-hidden="true"] rect[stroke-dasharray]')?.getAttribute("width"))).toBeGreaterThan(6)
   })
 
-  for (const chart of ["box", "candle"] as const) {
+  for (const chart of ["bar", "box", "candle"] as const) {
     it(`keeps the ${chart} datum focused when a scene is resized without replaying hover callbacks`, async () => {
       const customHoverBehavior = vi.fn()
       const candle = [{ x: 1, open: 20, close: 30, high: 40, low: 10 }]
       const makeChart = (width: number) => {
         const common = { width, height: 300, margin: { left: 60, right: 20, top: 30, bottom: 50 }, frameProps: { customHoverBehavior } }
-        return chart === "box" ? <BoxPlot data={data} {...common} /> : <CandlestickChart data={candle} openAccessor="open" closeAccessor="close" {...common} />
+        return chart === "bar" ? <BarChart data={data} categoryAccessor="category" valueAccessor="value" {...common} />
+          : chart === "box" ? <BoxPlot data={data} {...common} /> : <CandlestickChart data={candle} openAccessor="open" closeAccessor="close" {...common} />
       }
       const { container, rerender } = render(makeChart(440))
       const frame = container.querySelector<HTMLElement>(".stream-ordinal-frame, .stream-xy-frame")!

@@ -3,6 +3,27 @@ import { profileData } from "./profileData"
 import { rederiveProfile } from "./deriveProfileFields"
 
 describe("profileData", () => {
+  it("keeps summary types, numeric health, and encoding candidates consistent", () => {
+    const profile = profileData([
+      { zip: "02134", value: ".5", mixed: "1" },
+      { zip: "02135", value: "+5", mixed: "A" },
+      { zip: "02136", value: "bad", mixed: "B" },
+    ])
+    expect(profile.fields.value).toMatchObject({ type: "numeric", min: 0.5, max: 5, excludedCount: 1 })
+    expect(profile.numericFields!.value).toMatchObject({ finiteCount: 2, nonNumericCount: 1 })
+    expect(profile.candidates.y.map(c => c.field)).toEqual(["value"])
+    expect(profile.fields.mixed.type).toBe("categorical")
+    expect(profile.numericFields!.zip.finiteCount).toBe(0)
+  })
+
+  it("uses the summary's UTC date semantics for monotonic candidates", () => {
+    const data = ["2020-01-01", "2020-01-01T00:00:00", "2020-01-01T01:00:00Z"].map(date => ({ date, value: 1 }))
+    expect(profileData(data).monotonicX).toBe(true)
+    expect(profileData([...data].reverse()).monotonicX).toBe(false)
+    expect(profileData([{ date: "02134", value: 1 }, ...data]).monotonicX).toBe(false)
+    expect(profileData([{ x: 0 }, { x: true }, { x: 2 }]).monotonicX).toBe(false)
+  })
+
   it("identifies time/x/y/series candidates from a temporal dataset", () => {
     const data = [
       { date: "2024-01-01", revenue: 1200, region: "EU" },

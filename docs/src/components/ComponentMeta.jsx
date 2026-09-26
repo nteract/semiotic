@@ -1,4 +1,6 @@
-import React, { useState } from "react"
+import React from "react"
+import { ClipboardStatus, useClipboard } from "../../../src/components/useClipboard"
+import { copyWithFallback } from "./clipboard"
 import { Link } from "react-router-dom"
 
 export default function ComponentMeta({
@@ -9,22 +11,9 @@ export default function ComponentMeta({
   wrapsPath,
   related
 }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(importStatement)
-    } catch {
-      const textarea = document.createElement("textarea")
-      textarea.value = importStatement
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand("copy")
-      document.body.removeChild(textarea)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const { status, copy } = useClipboard(2000)
+  const copied = status === "copied"
+  const handleCopy = () => void copy(() => copyWithFallback(importStatement))
 
   const tierLabel =
     tier === "charts" ? "Chart" : tier === "frames" ? "Frame" : "Utility"
@@ -104,8 +93,9 @@ export default function ComponentMeta({
       <div className="component-meta-import" style={styles.importLine}>
         <code style={styles.importCode}>{importStatement}</code>
         <button onClick={handleCopy} style={styles.copyButton}>
-          {copied ? "Copied!" : "Copy"}
+          {status === "copied" ? "Copied!" : status === "failed" ? "Copy failed" : "Copy"}
         </button>
+        <ClipboardStatus status={status} />
       </div>
 
       {wraps && (

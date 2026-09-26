@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest"
-import { buildArtifactContract } from "./contract"
+import {
+  artifactContractScriptTag,
+  buildArtifactContract
+} from "semiotic/artifact"
 import {
   createArtifactPacket,
   validateArtifactPacket,
   type ArtifactTransferFormat
-} from "./inheritance"
+} from "semiotic/artifact"
 import {
   createAdjacentArtifactSidecar,
   embedArtifactPacketInSvg,
   type ArtifactSidecarFormat
-} from "./hostTransfer"
+} from "semiotic/artifact"
 
 function hostContract(id = "host-transfer") {
   return buildArtifactContract(
@@ -43,6 +46,19 @@ function hostContract(id = "host-transfer") {
 }
 
 describe("artifact host transfers", () => {
+  it("preserves the same packet text in HTML script transfers", () => {
+    const contract = hostContract()
+    contract.claims[0].text = "x]]>y </script><script> & \u2028 \u2029"
+    const packet = createArtifactPacket(contract, { format: "html" })
+    const root = new DOMParser().parseFromString(
+      artifactContractScriptTag(packet),
+      "text/html"
+    )
+    expect(root.querySelectorAll("script")).toHaveLength(1)
+    expect(JSON.parse(root.querySelector("script")!.textContent!)).toEqual(
+      packet
+    )
+  })
   it("rejects unsupported packet formats during construction and validation", () => {
     expect(() =>
       createArtifactPacket(hostContract(), {
@@ -57,9 +73,15 @@ describe("artifact host transfers", () => {
     )
   })
 
-  it("embeds a complete, escaped packet in SVG metadata", () => {
+  it.each([
+    "</metadata><script>alert(1)</script> & context",
+    "x]]>y]]>z < & > \u2028 \u2029",
+    "",
+    "literal \\u003e and &amp; stay literal"
+  ])("embeds a complete, escaped packet in SVG metadata: %s", (text) => {
     const contract = hostContract('svg"><unsafe\t\n\r')
-    contract.claims[0].text = "</metadata><script>alert(1)</script> & context"
+    if (text) contract.artifact.title = text
+    if (text) contract.claims[0].text = text
     const packet = createArtifactPacket(contract, { format: "svg" })
     const svg = embedArtifactPacketInSvg(
       '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0" /></svg>',
@@ -84,7 +106,9 @@ describe("artifact host transfers", () => {
     '<!DOCTYPE svg [<!ENTITY decoy "<svg>">]><svg xmlns="http://www.w3.org/2000/svg"/>',
     '<s:svg xmlns:s="http://www.w3.org/2000/svg" aria-label="A > B"/>'
   ])("inserts metadata inside the actual SVG root: %s", (host) => {
-    const packet = createArtifactPacket(hostContract(), { format: "svg" })
+    const contract = hostContract()
+    contract.claims[0].text = "XML terminator ]]> in a claim"
+    const packet = createArtifactPacket(contract, { format: "svg" })
     const svg = embedArtifactPacketInSvg(host, packet)
     const document = new DOMParser().parseFromString(svg, "image/svg+xml")
     expect(document.querySelector("parsererror")).toBeNull()
@@ -131,7 +155,9 @@ describe("artifact host transfers", () => {
   ] as const)(
     "delivers a %s packet as an adjacent JSON sidecar",
     (format, hostPath, sidecarPath) => {
-      const packet = createArtifactPacket(hostContract(format), { format })
+      const contract = hostContract(format)
+      contract.claims[0].text = "x]]>y < & > \u2028 \u2029"
+      const packet = createArtifactPacket(contract, { format })
       const sidecar = createAdjacentArtifactSidecar(packet, hostPath)
 
       expect(sidecar).toMatchObject({

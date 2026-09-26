@@ -1,5 +1,5 @@
 import { vi } from "vitest"
-import { fireEvent, render } from "@testing-library/react"
+import { fireEvent, render, within } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -217,7 +217,7 @@ describe("ScatterplotMatrix", () => {
     expect(streamFrames.length).toBe(0)
   })
 
-  it("owns one semantic description and one accessible table for the whole matrix", () => {
+  it("owns one semantic description and one accessible table for the whole matrix", async () => {
     const { container } = render(
       <TooltipProvider>
         <ScatterplotMatrix
@@ -237,7 +237,7 @@ describe("ScatterplotMatrix", () => {
     expect(container.querySelectorAll("a[href*='data-table']")).toHaveLength(1)
     expect(container.textContent).toContain("A and B rise together.")
     fireEvent.click(container.querySelector(".semiotic-accessible-data-table button")!)
-    expect(container.querySelectorAll("table")).toHaveLength(1)
+    expect(await within(container).findAllByRole("table")).toHaveLength(1)
   })
 
   it("can suppress the matrix-level accessible table without creating child tables", () => {

@@ -1,4 +1,6 @@
-import React, { useState } from "react"
+import React from "react"
+import { ClipboardStatus, useClipboard } from "../../../src/components/useClipboard"
+import { copyWithFallback } from "./clipboard"
 
 export default function CodeBlock({
   code,
@@ -12,22 +14,9 @@ export default function CodeBlock({
 }) {
   // Support children as fallback for code prop
   code = code || (typeof children === "string" ? children : "")
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(code)
-    } catch {
-      const textarea = document.createElement("textarea")
-      textarea.value = code
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand("copy")
-      document.body.removeChild(textarea)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const { status, copy } = useClipboard(2000)
+  const copied = status === "copied"
+  const handleCopy = () => void copy(() => copyWithFallback(code))
 
   // Escape HTML entities for safe rendering when Prism isn't available
   const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -146,11 +135,12 @@ export default function CodeBlock({
           <button
             onClick={handleCopy}
             style={styles.copyButton}
-            aria-label={copied ? "Copied" : "Copy code to clipboard"}
+            aria-label={copied ? "Copied" : status === "failed" ? "Copy failed" : "Copy code to clipboard"}
           >
-            {copied ? "Copied!" : "Copy"}
+            {copied ? "Copied!" : status === "failed" ? "Copy failed" : "Copy"}
           </button>
         )}
+        <ClipboardStatus status={status} />
       </div>
       <div
         style={styles.codeArea}

@@ -95,6 +95,7 @@ describe("network camera server rendering", () => {
       const report = vi.fn()
       const markup = renderToString(
         <NetworkSSRFrame
+          tableId="camera-summary"
           props={{
             chartType: "force",
             viewTransform,
