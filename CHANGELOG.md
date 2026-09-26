@@ -14,6 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Flextree labels and node/edge tooltips receive original data objects, including
+  objects with their own `data` field. Negative coordinates and variable node
+  sizes fit inside the plot by default; `fit: "none"` retains authored pixels.
+  The audit covers both orientations, bounded and pushed canvas hover, resize
+  and dismissal, nonzero plot origins, invalid geometry, and ESM/CommonJS
+  browser/Node/edge static exports. Examples use `NetworkCustomChart`. (#1503)
+- The related Dagre audit fixes the same raw-datum and plot-fitting defects,
+  including waypoint bounds and invalid coordinates. Direction markers and
+  lineage layout cases remain open under #1508. (R0878, partial)
+- Consolidated identical UTF-16 FNV-1a, Mulberry32, clamp, and prototype-safe
+  dictionary helpers across recipes, physics, category colors, hatch fills,
+  rough rendering, and static rendering. Golden vectors and family regressions
+  preserve their outputs; distinct packing PRNG/clamp behavior and HyperLogLog's
+  avalanche remain intact. The recipes selection hook now shares the chart
+  context without loading unrelated theme utilities, reducing the recipes entry
+  graph to 99.1 KiB within its unchanged 104 KiB budget. This addresses helper
+  duplication in R0877/R0887; other #1542 cases remain open.
 - Interval sampling rejects invalid steps and non-finite or unrepresentable
   domains, and includes fractional on-grid endpoints without cumulative drift.
   Timeline lanes keep positive bar heights inside short lanes and use distinct

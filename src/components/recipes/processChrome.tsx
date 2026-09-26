@@ -1,3 +1,4 @@
+import { clamp } from "../utils/clamp"
 /**
  * Process-physics chrome kit — stage bays, capacity badges, absorb basins,
  * feature sockets, and flow spines for ProcessFlow / custom process layouts.
@@ -73,10 +74,6 @@ const ROLE_PALETTE = {
 } as const
 
 const AVG_LABEL_CHAR_PX = 6.2
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
-}
 
 function estimateLabelWidth(label: string): number {
   return label.length * AVG_LABEL_CHAR_PX

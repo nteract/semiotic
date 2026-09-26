@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../../utils/hash"
 // NOTE: intentionally no "use client" directive — this module is imported by
 // the server SVG path (semiotic/server via staticAnnotations + geo configs) and
 // must stay server-importable in RSC frameworks. It has no hooks or top-level
@@ -81,15 +82,7 @@ export function hatchFillKey(h: HatchFill): string {
 
 /** Deterministic, SVG-id-safe identifier for a hatch descriptor. */
 export function hatchFillId(prefix: string, h: HatchFill): string {
-  // Hash the content key to a short, charset-safe suffix. A tiny FNV-1a is
-  // plenty here — collisions only cost a shared (identical) pattern def.
-  let hash = 0x811c9dc5
-  const key = hatchFillKey(h)
-  for (let i = 0; i < key.length; i++) {
-    hash ^= key.charCodeAt(i)
-    hash = Math.imul(hash, 0x01000193)
-  }
-  return `${prefix}-hatch-${(hash >>> 0).toString(36)}`
+  return `${prefix}-hatch-${fnv1a32(hatchFillKey(h)).toString(36)}`
 }
 
 // Canvas patterns are cached by (content key + device-pixel-ratio) so a

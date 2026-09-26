@@ -1,10 +1,7 @@
+import { clamp } from "../utils/clamp"
 /** Renderable polygons derived from the same geometry as process barriers. */
 
 import type { ProcessVolumeLayout } from "./processPhysics"
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
-}
 
 export type ProcessVolumePoint = [x: number, y: number]
 

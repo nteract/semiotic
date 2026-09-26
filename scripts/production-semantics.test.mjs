@@ -409,3 +409,74 @@ for (const entry of ["./ai", "./ai/core"]) {
     assert.equal(execution.status, 0, execution.stderr || execution.error || execution.stdout)
   })
 }
+
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} fits pre-positioned networks and preserves raw callbacks (#1503)`, () => {
+      exercise(target, `
+        const nodes = [
+          { id: "root", label: "Root", x: -1000, y: -100, width: 120, height: 40, data: { label: "Nested" } },
+          { id: "leaf", label: "Leaf", x: 1000, y: 900, width: 240, height: 80 }
+        ]
+        const edge = { source: "root", target: "leaf" }
+        for (const layout of [api.flextreeLayout, api.dagreLayout]) {
+          const called = []
+          const ctx = {
+            nodes: nodes.map(data => ({ id: data.id, data })), edges: [{ ...edge, data: edge }],
+            config: { labelAccessor: datum => { called.push(datum); return datum.label } },
+            dimensions: { plot: { x: 30, y: 20, width: 300, height: 180 } },
+            theme: { semantic: {} }, resolveColor: () => "blue"
+          }
+          const scene = layout(ctx)
+          assert.deepEqual(called, nodes)
+          assert.equal(called[0], nodes[0])
+          assert.deepEqual(scene.labels.map(label => label.text), ["Root", "Leaf"])
+          scene.sceneNodes.forEach((node, i) => {
+            assert.equal(node.datum, nodes[i])
+            assert.ok(node.x >= 30 && node.x + node.w <= 330)
+            assert.ok(node.y >= 20 && node.y + node.h <= 200)
+          })
+          assert.equal(scene.sceneEdges[0].datum, edge)
+          const authored = layout({ ...ctx, config: { fit: "none" } }).sceneNodes[0]
+          assert.equal(authored.x, -1060)
+          assert.equal(authored.y, -120)
+        }
+      `)
+    })
+  }
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} renders fitted network recipes with evidence (#1503)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const layout of [recipes.flextreeLayout, recipes.dagreLayout]) {
+          const result = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes: [
+              { id: "root", label: "Root", x: -1000, y: -100, width: 120, height: 40 },
+              { id: "leaf", label: "Leaf", x: 1000, y: 900, width: 240, height: 80 }
+            ], edges: [{ source: "root", target: "leaf" }],
+            width: 400, height: 240, margin: 20, title: "Fitted tree",
+            layoutConfig: { labelAccessor: datum => datum.label }, layout
+          })
+          assert.equal(result.evidence.empty, false)
+          assert.ok(result.evidence.markCount >= 2)
+          assert.ok(result.svg.includes(">Root</text>"))
+          assert.ok(result.svg.includes(">Leaf</text>"))
+          assert.doesNotMatch(result.svg, /NaN|Infinity|undefined/)
+        }
+      `)
+    })
+  }
+}
+
+test("recipe selection hook shares the network provider context without loading theme utilities", async () => {
+  const recipes = await import("../dist/semiotic-recipes-react.module.min.js")
+  const anchor = await import("../dist/semiotic-client-selection.module.min.js")
+  const shared = await import("../dist/semiotic-client-shared.module.min.js")
+  assert.equal(recipes.useCustomLayoutSelection, anchor.useCustomLayoutSelection)
+  assert.equal(recipes.useCustomLayoutSelection, shared.useCustomLayoutSelection)
+  const source = readFileSync(resolve(root, "dist/semiotic-recipes-react.module.min.js"), "utf8")
+  assert.doesNotMatch(source, /semiotic-client-shared/)
+})

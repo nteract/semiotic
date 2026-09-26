@@ -1,3 +1,4 @@
+import { fnv1a32 as hashText } from "../../utils/hash"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type {
@@ -19,15 +20,6 @@ const PALETTE = [
   "#8f5c3a",
   "#41717b"
 ]
-
-function hashText(value: string): number {
-  let hash = 2166136261
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
-}
 
 export function numericCrucibleSeed(seed: number | string | undefined): number {
   return typeof seed === "number" && Number.isFinite(seed)

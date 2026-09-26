@@ -1,3 +1,4 @@
+import { clamp } from "../utils/clamp"
 /**
  * Process-physics authoring kit.
  *
@@ -142,10 +143,6 @@ export interface ProcessVolumeLayout {
   regionEffects: StreamPhysicsRegionEffect[]
   /** Interior height of the volume at x (top/bottom boundary). */
   boundaryY: (x: number, side: "top" | "bottom") => number
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 function sumShares(stages: readonly ProcessStageDef[]): number {

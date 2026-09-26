@@ -668,6 +668,13 @@ import { waffleLayout } from "semiotic/recipes"
             margin={{ top: 20, right: 80, bottom: 30, left: 80 }}
           />
         </div>
+        <p>
+          Flextree and Dagre center and uniformly shrink the node bounds into the plot,
+          including negative coordinates. Labels and tooltips receive your original
+          data objects. Set <code>{'layoutConfig={{ fit: "none" }}'}</code> to preserve
+          authored pixel positions. Non-finite positions and nonpositive node sizes
+          are skipped. Dagre includes edge waypoints in the fitted bounds.
+        </p>
         <CodeBlock language="jsx">{`import flextree from "d3-flextree"
 import { NetworkCustomChart } from "semiotic/network"
 import { flextreeLayout } from "semiotic/recipes"

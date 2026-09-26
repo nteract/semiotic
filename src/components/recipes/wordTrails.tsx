@@ -1,3 +1,4 @@
+import { hashUnit } from "../utils/hash"
 import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -160,16 +161,6 @@ export interface WordTrailsConfig {
    * starts larger and lets the greedy placer crowd words in. @default 0.6
    */
   packingDensity?: number
-}
-
-/** Deterministic [0,1) hash (FNV-1a) — stable jitter + rotation per word. */
-function hashUnit(value: string): number {
-  let hash = 2166136261
-  for (let i = 0; i < value.length; i++) {
-    hash ^= value.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) / 4294967295
 }
 
 const LINE_HEIGHT_RATIO = 1.15

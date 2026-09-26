@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../utils/hash"
 import * as React from "react"
 import rough from "roughjs"
 import type { Drawable, OpSet, Options } from "roughjs/bin/core"
@@ -163,12 +164,7 @@ function stableString(value: unknown): string {
 /** Deterministic FNV-1a seed helper suitable for Rough.js's non-zero seed range. */
 export function stableRoughSeed(value: unknown): number {
   const input = typeof value === "string" ? value : stableString(value)
-  let hash = 2_166_136_261
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i)
-    hash = Math.imul(hash, 16_777_619)
-  }
-  return (hash >>> 0) % MAX_ROUGH_SEED + 1
+  return fnv1a32(input) % MAX_ROUGH_SEED + 1
 }
 
 function normalizeSeed(seed: number | undefined): number {

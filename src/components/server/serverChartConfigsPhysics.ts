@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../utils/hash"
 import * as React from "react"
 import {
   buildCollisionSwarmPhysics,
@@ -102,12 +103,7 @@ const CRUCIBLE_PALETTE = [
 ]
 
 function crucibleColor(key: string): string {
-  let hash = 2166136261
-  for (let index = 0; index < key.length; index += 1) {
-    hash ^= key.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return CRUCIBLE_PALETTE[(hash >>> 0) % CRUCIBLE_PALETTE.length]
+  return CRUCIBLE_PALETTE[fnv1a32(key) % CRUCIBLE_PALETTE.length]
 }
 
 function crucibleBodyStyle(

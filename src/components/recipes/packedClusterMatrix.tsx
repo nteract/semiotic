@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../utils/hash"
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
@@ -907,16 +908,8 @@ function packCell(
 /** FNV-1a fingerprint of the inputs that affect packing geometry. */
 function fingerprint(raw: RawMark[]): string {
   let h = 2166136261 >>> 0
-  const mix = (str: string): void => {
-    for (let i = 0; i < str.length; i++) {
-      h ^= str.charCodeAt(i)
-      h = Math.imul(h, 16777619)
-    }
-  }
   for (const m of raw) {
-    mix(m.id)
-    mix(m.col)
-    mix(m.row)
+    h = fnv1a32(m.row, fnv1a32(m.col, fnv1a32(m.id, h)))
     h ^= Math.round(m.packR * 8)
     h = Math.imul(h, 16777619)
   }
