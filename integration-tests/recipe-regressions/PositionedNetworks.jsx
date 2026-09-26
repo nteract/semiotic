@@ -20,20 +20,42 @@ const nodes = [
 const edges = [{ source: "root", target: "leaf", label: "Root to Leaf" }]
 const margin = { left: 20, right: 20, top: 20, bottom: 20 }
 const config = { labelAccessor: (datum) => datum.label }
+const composedNodes = nodes.map(({ id, label, data }) => ({ id, label, data }))
+const compose = (layout) => (ctx) => {
+  for (const node of ctx.nodes) {
+    const geometry = nodes.find((d) => d.id === node.id)
+    Object.assign(node, {
+      x: geometry.x,
+      y: geometry.y,
+      width: geometry.width,
+      height: geometry.height
+    })
+  }
+  for (const edge of ctx.edges)
+    edge.points = [
+      { x: -100, y: -80 },
+      { x: -100, y: 60 },
+      { x: 100, y: 60 }
+    ]
+  return layout(ctx)
+}
+const composedFlextree = compose(flextreeLayout)
+const composedDagre = compose(dagreLayout)
 
-function Chart({ name, layout, width, push }) {
+function Chart({ name, layout, width, push, composed }) {
   const ref = useRef(null)
+  const inputNodes = composed ? composedNodes : nodes
   useEffect(() => {
     if (!push) return
     ref.current.clear()
     ref.current.pushMany(edges)
-    for (const node of nodes) ref.current.update(node.id, () => node)
-  }, [push])
+    for (const node of inputNodes) ref.current.update(node.id, () => node)
+  }, [push, inputNodes])
   return (
     <section data-testid={name}>
       <NetworkCustomChart
         ref={ref}
-        nodes={push ? undefined : nodes}
+        nodes={push ? undefined : inputNodes}
         edges={push ? undefined : edges}
         layout={layout}
         layoutConfig={config}
@@ -56,16 +78,25 @@ function Chart({ name, layout, width, push }) {
 export default function PositionedNetworks() {
   const [width, setWidth] = useState(500)
   const push = new URLSearchParams(location.search).get("input") === "push"
+  const composed =
+    new URLSearchParams(location.search).get("geometry") === "wrapper"
   return (
     <main>
       <button onClick={() => setWidth(280)}>Resize charts</button>
       <Chart
         name="flextree"
-        layout={flextreeLayout}
+        layout={composed ? composedFlextree : flextreeLayout}
         width={width}
         push={push}
+        composed={composed}
       />
-      <Chart name="dagre" layout={dagreLayout} width={width} push={push} />
+      <Chart
+        name="dagre"
+        layout={composed ? composedDagre : dagreLayout}
+        width={width}
+        push={push}
+        composed={composed}
+      />
     </main>
   )
 }

@@ -61,6 +61,56 @@ function inside(rect: NetworkRectNode) {
 describe.each([flextreeLayout, dagreLayout])(
   "pre-positioned network recipe %s (#1503)",
   (layout) => {
+    it("uses composed wrapper geometry while preserving raw callback data", () => {
+      const ctx = context({ fit: "none", labelAccessor: "label" })
+      const raw = { id: "root", label: "Composed root" }
+      ctx.nodes = [
+        { ...ctx.nodes[0], x: -100, y: 80, width: 240, height: 90, data: raw }
+      ]
+      const result = layout(ctx)
+      expect(result.sceneNodes![0]).toMatchObject({
+        x: -220,
+        y: 35,
+        w: 240,
+        h: 90,
+        label: "Composed root"
+      })
+      expect(result.sceneNodes![0].datum).toBe(raw)
+      const fitted = layout({ ...ctx, config: {} })
+        .sceneNodes![0] as NetworkRectNode
+      inside(fitted)
+      expect(fitted.w / fitted.h).toBeCloseTo(240 / 90)
+    })
+
+    it("defaults frame-created zero dimensions but rejects authored invalid dimensions", () => {
+      const ctx = context({ fit: "none", nodeWidth: 70, nodeHeight: 25 })
+      ctx.nodes = [
+        {
+          ...ctx.nodes[0],
+          width: 0,
+          height: 0,
+          createdByFrame: true,
+          data: { id: "root" }
+        }
+      ]
+      expect(layout(ctx).sceneNodes![0]).toMatchObject({ w: 70, h: 25 })
+      ctx.nodes[0].createdByFrame = false
+      expect(layout(ctx).sceneNodes).toEqual([])
+      ctx.nodes[0].createdByFrame = true
+      for (const field of ["width", "height"] as const) {
+        for (const invalid of [-1, NaN, Infinity]) {
+          ctx.nodes[0].width = 0
+          ctx.nodes[0].height = 0
+          ctx.nodes[0][field] = invalid
+          expect(layout(ctx).sceneNodes).toEqual([])
+        }
+      }
+      ctx.nodes[0].data = { id: "root", width: 120, height: 60 }
+      expect(layout(ctx).sceneNodes![0]).toMatchObject({ w: 120, h: 60 })
+      ctx.nodes[0].data.width = 0
+      expect(layout(ctx).sceneNodes).toEqual([])
+    })
+
     it("fits negative coordinates and variable sizes, passing original objects exactly once", () => {
       const labelAccessor = vi.fn((d) => d.label)
       const result = layout(context({ labelAccessor }))
@@ -147,6 +197,45 @@ describe.each([flextreeLayout, dagreLayout])(
         ])
       }
     })
+  }
+)
+
+it.each(["polyline", "smooth"] as const)(
+  "uses wrapper Dagre waypoints for %s paths and fitted bounds",
+  (edgeStyle) => {
+    for (const fit of ["none", "contain"] as const) {
+      const ctx = context({ edgeStyle, fit })
+      const expected = dagreLayout(ctx)
+      const raw = { source: "root", target: "leaf", label: "Composed edge" }
+      ctx.edges[0].data = raw
+      const result = dagreLayout(ctx)
+      expect(result.sceneEdges![0]).toMatchObject({
+        type: "curved",
+        pathD: (expected.sceneEdges![0] as NetworkCurvedEdge).pathD
+      })
+      expect(result.sceneEdges![0].datum).toBe(raw)
+      expect(result.sceneNodes).toEqual(expected.sceneNodes)
+      // An explicitly supplied empty/invalid raw route still takes precedence.
+      for (const points of [
+        [],
+        [
+          { x: NaN, y: 0 },
+          { x: 0, y: 0 }
+        ]
+      ]) {
+        ctx.edges[0].data = { ...raw, points }
+        expect(dagreLayout(ctx).sceneEdges![0].type).toBe("line")
+      }
+      ctx.edges[0] = {
+        ...ctx.edges[0],
+        points: [
+          { x: Infinity, y: 0 },
+          { x: 0, y: 0 }
+        ],
+        data: raw
+      } as RealtimeEdge
+      expect(dagreLayout(ctx).sceneEdges![0].type).toBe("line")
+    }
   }
 )
 

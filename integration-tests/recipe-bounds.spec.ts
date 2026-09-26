@@ -13,6 +13,19 @@ for (const input of ["bounded", "push"]) {
     for (const width of [500, 380]) {
       if (width === 380)
         await page.getByRole("button", { name: "Resize charts" }).click()
+      const invalidNotice = page
+        .getByTestId("empty-waffle-0")
+        .getByRole("img", {
+          name: "0 of 0 rows shown. The grid needs positive integer dimensions and enough space for its gutters.",
+          exact: true
+        })
+      await expect(invalidNotice).toBeVisible()
+      await expect(invalidNotice).toContainText("0 of 0 rows shown")
+      await expect(
+        page
+          .getByTestId("empty-waffle-2")
+          .getByRole("img", { name: /rows shown/ })
+      ).toHaveCount(0)
       await expect(
         page
           .getByTestId("bullet-bounds")

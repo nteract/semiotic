@@ -43,6 +43,33 @@ const kpis = ["Revenue", "Profit", "Orders", "Retention"].map((metric) => ({
 }))
 
 describe("recipe bounds and omission disclosure (#1505)", () => {
+  it.each([
+    { rows: 0 },
+    { columns: 1.5 },
+    { rows: Infinity },
+    { gutter: -1 },
+    { gutter: NaN },
+    { gutter: 100 }
+  ])("discloses invalid empty waffle grids %j", (config) => {
+    const result = waffleLayout(context([], config))
+    expect(result.nodes).toEqual([])
+    const svg = renderToStaticMarkup(result.overlays)
+    expect(svg).toContain("0 of 0 rows shown")
+    expect(svg).toContain(
+      "The grid needs positive integer dimensions and enough space for its gutters."
+    )
+    expect(svg).toContain('role="img"')
+  })
+
+  it("keeps valid empty waffle and bullet charts free of omission notices", () => {
+    expect(
+      waffleLayout(context([], { rows: 2, columns: 2 })).overlays
+    ).toBeNull()
+    expect(
+      renderToStaticMarkup(bulletLayout(context([], bulletConfig)).overlays)
+    ).not.toContain("rows shown")
+  })
+
   it("preserves waffle category order when remainders tie", () => {
     const result = waffleLayout(
       context(

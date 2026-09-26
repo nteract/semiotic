@@ -8,9 +8,10 @@ export function recipeNotice(
   shown: number,
   total: number,
   unit: string,
-  reason: string
+  reason: string,
+  { force = false }: { force?: boolean } = {}
 ) {
-  if (shown === total) return null
+  if (shown === total && !force) return null
   const text = `${shown} of ${total} ${unit} shown`
   return createElement(
     "text",

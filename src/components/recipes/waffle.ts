@@ -58,7 +58,7 @@ export const waffleLayout: CustomLayout<WaffleConfig> = (ctx) => {
   const { plot } = ctx.dimensions
   if (plot.width <= 0 || plot.height <= 0) return { nodes: [] }
   const emptyGrid = () => ({ nodes: [], overlays: recipeNotice(plot, 0, ctx.data.length, "rows",
-    "The grid needs positive integer dimensions and enough space for its gutters.") })
+    "The grid needs positive integer dimensions and enough space for its gutters.", { force: true }) })
   const totalCells = rows * columns
   if (!Number.isSafeInteger(rows) || !Number.isSafeInteger(columns) ||
       !Number.isSafeInteger(totalCells) || rows <= 0 || columns <= 0 ||

@@ -67,7 +67,9 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
   const waypoints = new Map(
     ctx.edges.map((edge) => {
       const raw = (edge.data ?? edge) as Datum
-      const points = raw.points
+      const points = Array.isArray(raw.points)
+        ? raw.points
+        : (edge as { points?: unknown }).points
       return [
         edge,
         Array.isArray(points) &&

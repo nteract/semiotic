@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Composed Dagre/Flextree layouts retain dimensions and routed waypoints stored
+  on frame wrappers when the raw datum omits them. Raw geometry takes precedence;
+  frame-created zero dimension placeholders use defaults while authored invalid
+  sizes remain rejected. The audit covers fitted/authored coordinates, both edge
+  styles, bounded/pushed hover through resize and dismissal, and ESM/CommonJS
+  browser/Node/edge rendering. (#1503, #1508)
+- Invalid waffle grids retain their accessible notice with zero input rows;
+  valid empty waffle and bullet charts still suppress omission notices. The
+  audit covers invalid dimensions/gutters, bounded charts with `emptyContent={false}`,
+  empty push-mode charts, and public recipe and server SVG exports. (#1505)
 - Flextree labels and node/edge tooltips receive original data objects, including
   objects with their own `data` field. Negative coordinates and variable node
   sizes fit inside the plot by default; `fit: "none"` retains authored pixels.

@@ -125,6 +125,23 @@ export default function Bounds() {
           )}
         />
       </section>
+      {[0, 2].map((rows) => (
+        <section key={rows} data-testid={`empty-waffle-${rows}`}>
+          <XYCustomChart
+            data={push ? undefined : []}
+            // Render recipe decorations instead of the HOC's empty-data placeholder.
+            emptyContent={false}
+            layout={waffleLayout}
+            layoutConfig={{ rows, columns: 2 }}
+            width={width}
+            height={180}
+            margin={margin}
+            showAxes={false}
+            title="Empty waffle"
+            description="Invalid grid configuration stays visible without input rows."
+          />
+        </section>
+      ))}
     </main>
   )
 }

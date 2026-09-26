@@ -128,6 +128,11 @@ for (const entry of ["./recipes", "./recipes/core"]) {
         })
         assert.equal(waffle.nodes.length, 4)
         assert.match(renderToStaticMarkup(waffle.overlays), /1 of 2 categories shown/)
+        const invalidEmpty = api.waffleLayout({ ...ctx, data: [], config: { rows: 0 } })
+        assert.equal(invalidEmpty.nodes.length, 0)
+        assert.match(renderToStaticMarkup(invalidEmpty.overlays), /0 of 0 rows shown/)
+        assert.match(renderToStaticMarkup(invalidEmpty.overlays), /positive integer dimensions/)
+        assert.equal(api.waffleLayout({ ...ctx, data: [], config: {} }).overlays, null)
       `)
     })
     test(`${entry} ${target.conditions} retains geographic cells and lazy region attributes`, () => {
@@ -189,6 +194,8 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
             [{ cat: "Empty", value: 0 }],
             { rows: 2, columns: 2, categoryAccessor: "cat", valueAccessor: "value" },
             0, "0 of 1 categories shown"],
+          ["XYCustomChart", recipes.waffleLayout, [], { rows: 0, columns: 2 },
+            0, "0 of 0 rows shown"],
           ["OrdinalCustomChart", recipes.bulletLayout,
             [{ metric: "Empty", actual: 0, target: 0, ranges: [] }],
             { categoryAccessor: "metric", valueAccessor: "actual", targetAccessor: "target", rangesAccessor: "ranges" },
@@ -440,6 +447,23 @@ for (const entry of ["./recipes", "./recipes/core"]) {
           const authored = layout({ ...ctx, config: { fit: "none" } }).sceneNodes[0]
           assert.equal(authored.x, -1060)
           assert.equal(authored.y, -120)
+          const composed = { ...ctx, config: { fit: "none" },
+            nodes: nodes.map(data => ({ ...data, createdByFrame: true, data: { id: data.id, label: data.label } })),
+            edges: [{ ...edge, data: edge, points: [{ x: -1000, y: -80 }, { x: -1500, y: 500 }, { x: 1000, y: 860 }] }]
+          }
+          const composedScene = layout(composed)
+          assert.equal(composedScene.sceneNodes[0].w, 120)
+          assert.equal(composedScene.sceneNodes[0].h, 40)
+          assert.equal(composedScene.sceneNodes[0].datum, composed.nodes[0].data)
+          if (layout === api.dagreLayout) {
+            assert.equal(composedScene.sceneEdges[0].pathD, "M-1000,-80 L -1500,500 L 1000,860")
+            const fitted = layout({ ...composed, config: {} }).sceneEdges[0].pathD
+            const points = fitted.match(/-?[0-9]+(?:[.][0-9]+)?/g).map(Number)
+            for (let i = 0; i < points.length; i += 2) {
+              assert.ok(points[i] >= 30 && points[i] <= 330)
+              assert.ok(points[i + 1] >= 20 && points[i + 1] <= 200)
+            }
+          }
         }
       `)
     })
@@ -465,6 +489,25 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
           assert.ok(result.svg.includes(">Root</text>"))
           assert.ok(result.svg.includes(">Leaf</text>"))
           assert.doesNotMatch(result.svg, /NaN|Infinity|undefined/)
+          let scene
+          const composed = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes: [{ id: "root", label: "Root" }, { id: "leaf", label: "Leaf" }],
+            edges: [{ source: "root", target: "leaf" }],
+            width: 400, height: 240, margin: 20,
+            layoutConfig: { labelAccessor: "label" },
+            layout: ctx => {
+              ctx.nodes.forEach((node, i) => Object.assign(node, { x: i * 200, y: i * 100, width: 120, height: 40 }))
+              ctx.edges[0].points = [{ x: 0, y: 20 }, { x: -200, y: 50 }, { x: 200, y: 80 }]
+              scene = layout(ctx)
+              return scene
+            }
+          })
+          assert.equal(composed.evidence.empty, false)
+          assert.ok(composed.evidence.markCount >= 2)
+          assert.ok(Math.abs(scene.sceneNodes[0].w / scene.sceneNodes[0].h - 3) < 1e-12)
+          assert.equal(scene.sceneNodes[0].datum.label, "Root")
+          assert.ok(composed.svg.includes(scene.sceneEdges[0].pathD))
+          assert.doesNotMatch(composed.svg, /NaN|Infinity|undefined/)
         }
       `)
     })

@@ -1,11 +1,16 @@
 import { expect, test } from "@playwright/test"
 import { waitForChartReady } from "./helpers"
 
-for (const input of ["bounded", "push"]) {
-  test(`${input} positioned recipes keep raw node/edge hover through resize (#1503)`, async ({
+const cases = ["bounded", "push"].flatMap((input) =>
+  ["raw", "wrapper"].map((geometry) => ({ input, geometry }))
+)
+for (const { input, geometry } of cases) {
+  test(`${input} ${geometry} positioned recipes keep raw node/edge hover through resize (#1503)`, async ({
     page
   }) => {
-    await page.goto(`/recipe-regressions/?case=positioned&input=${input}`)
+    await page.goto(
+      `/recipe-regressions/?case=positioned&input=${input}&geometry=${geometry}`
+    )
     for (const name of ["flextree", "dagre"])
       await waitForChartReady(page, name)
     for (const width of [500, 280]) {
@@ -30,7 +35,10 @@ for (const input of ["bounded", "push"]) {
           leaf = centers[1]
         const midpoint = {
           x: (root.x + leaf.x) / 2,
-          y: (root.y + leaf.y) / 2 - (name === "flextree" ? 10 * scale : 0)
+          y:
+            name === "dagre" && geometry === "wrapper"
+              ? leaf.y - 40 * scale
+              : (root.y + leaf.y) / 2 - (name === "flextree" ? 10 * scale : 0)
         }
         for (const [point, content] of [
           [root, "Root (Nested)"],

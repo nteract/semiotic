@@ -36,8 +36,15 @@ export function positionedNetworkNodes(
     const raw = node.data ?? node
     const x = raw.x ?? node.x,
       y = raw.y ?? node.y
-    const w = raw.width ?? cfg.nodeWidth,
-      h = raw.height ?? cfg.nodeHeight
+    // Composed layouts may write geometry on wrappers while retaining raw data.
+    // Only the frame's zero placeholders are unset; authored invalid sizes
+    // still reach validation below instead of silently taking the defaults.
+    const wrapperW =
+      node.createdByFrame && node.width === 0 ? undefined : node.width
+    const wrapperH =
+      node.createdByFrame && node.height === 0 ? undefined : node.height
+    const w = raw.width ?? wrapperW ?? cfg.nodeWidth,
+      h = raw.height ?? wrapperH ?? cfg.nodeHeight
     if (
       typeof x !== "number" ||
       typeof y !== "number" ||
