@@ -25,6 +25,8 @@ type PhysicsFrameObservationEmitter = (
 ) => void
 
 interface PhysicsCanvasPointerOptions {
+  margin?: { left: number; top: number }
+  clearKeyboardFocus?: () => void
   resolveSemanticBody?: (body: PhysicsBodyState) => PhysicsBodyState
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   clearHover: () => void
@@ -62,6 +64,8 @@ function collectPhysicsBodyCursor(
 
 /** Owns canvas hit-testing that is shared by physics hover and authored cursors. */
 export function usePhysicsCanvasPointer({
+  margin,
+  clearKeyboardFocus,
   resolveSemanticBody,
   canvasRef,
   clearHover,
@@ -125,6 +129,7 @@ export function usePhysicsCanvasPointer({
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       if (!enableHover && !bodyCursorCollectionRef.current?.targets?.size)
         return
+      clearKeyboardFocus?.()
       if (!enableHover && event.pointerType === "touch") {
         pointerRef.current.inside = false
         setCanvasMarkCursor(event.currentTarget)
@@ -134,7 +139,8 @@ export function usePhysicsCanvasPointer({
       const { x, y } = physicsCanvasCoordinates(
         event.currentTarget,
         event.clientX,
-        event.clientY
+        event.clientY,
+        margin
       )
       const pointer = pointerRef.current
       pointer.inside = true
@@ -170,6 +176,8 @@ export function usePhysicsCanvasPointer({
     },
     [
       clearHover,
+      clearKeyboardFocus,
+      margin,
       emitObservation,
       enableHover,
       hoverRadius,

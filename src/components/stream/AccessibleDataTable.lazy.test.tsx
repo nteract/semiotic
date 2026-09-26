@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
-  NetworkAccessibleDataTable,
   extractAllRows
 } from "./AccessibleDataTable"
+import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
 import type { AccessibleSceneNode } from "./accessibleDataRows"
 
 it.each(["line", "area", "boxplot", "violin"])(

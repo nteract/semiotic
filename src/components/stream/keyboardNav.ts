@@ -23,6 +23,8 @@ export interface NavPoint {
   x: number
   y: number
   datum: Datum | null
+  /** Logical identity for aggregates whose datum is rebuilt during layout. */
+  semanticKey?: string
   /** Shape hint for focus ring rendering */
   shape?: "circle" | "rect" | "wedge" | "geoarea" | "path"
   /** Width of rect-shaped elements (bars, sankey nodes) */
@@ -350,6 +352,9 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         shape: "rect",
         w: node.w,
         h: node.h,
+        semanticKey: node.datum.__aggregateValue !== undefined
+          ? JSON.stringify([category, node.group ?? category])
+          : undefined,
         group: node.group ?? category
       })
     } else if (node.type === "point") {

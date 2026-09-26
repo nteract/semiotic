@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Accessible data tables retain focus while revealing rows, announce paging
+  progress, and restore the opener on close without stealing focus on blur.
+  Scene, network-node/edge, and physics tables share the corrected interaction;
+  expanded semantic models are cached across unchanged revisions. Portal and
+  toolbar openers are covered, and optional network summaries load with their
+  skip-link targets without widening eager chart entry graphs. (#1521)
+- IntentMark, chart-toolbar, and documentation copy actions report clipboard
+  failures and announce success/failure. Shared feedback cleans up timers,
+  ignores stale completions, and checks legacy copy fallback results. (#1534)
+- Chart live regions announce keyboard focus without announcing pointer hover
+  across XY, ordinal, network, geographic, and physics frames. ObservationReadout
+  keeps hover visual-only by default while preserving explicit live-region
+  overrides and announcements for deliberate interactions. The related-surface
+  audit also fixes resized aggregate-bar focus identity and physics hover/click
+  coordinates and tooltip placement with nonzero margins. (#1544)
 - Boba layouts validate cup and pearl dimensions, bound pearl/ice allocation,
   and keep excessive fill heights finite. Captions and hover data disclose drawn
   counts without changing the underlying quantities. Shared layout, public

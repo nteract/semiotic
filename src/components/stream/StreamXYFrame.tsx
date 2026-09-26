@@ -1347,11 +1347,11 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             diagnostics={sceneRevisionDiagnosticsRef.current}
           />
         )}
-        {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
+        {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip hoverPoint={hoverPoint} />
+        <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />
         {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div
           role="img"

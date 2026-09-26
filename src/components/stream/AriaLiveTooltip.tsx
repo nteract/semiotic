@@ -1,26 +1,20 @@
 "use client"
 
 import * as React from "react"
+import { SR_ONLY_STYLE } from "../screenReaderStyles"
+export { SR_ONLY_STYLE } from "../screenReaderStyles"
 import type { HoverData } from "../realtime/types"
 import { accessibleDatumFor, datumToValues, type AccessibleSceneNode } from "./accessibleDataRows"
 
-export const SR_ONLY_STYLE: React.CSSProperties = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  overflow: "hidden",
-  clip: "rect(0,0,0,0)",
-  whiteSpace: "nowrap",
-  border: 0
-}
-
 /** Visually-hidden aria-live region that mirrors tooltip text for screen readers. */
-export function AriaLiveTooltip({ hoverPoint, scene }: {
+export function AriaLiveTooltip({ hoverPoint, scene, active = true }: {
   hoverPoint: Pick<HoverData, "data" | "stats" | "category"> | { data: object } | null
   scene?: AccessibleSceneNode[]
+  /** Frames enable announcements for keyboard focus, not pointer hover. */
+  active?: boolean
 }) {
   let text = ""
-  if (hoverPoint) {
+  if (active && hoverPoint) {
     const raw = hoverPoint.data ?? hoverPoint
     const stats = "stats" in hoverPoint ? hoverPoint.stats : undefined
     // A distribution summary and its outlier marks may share a source row.

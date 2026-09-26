@@ -540,6 +540,7 @@ export const StreamPhysicsFrame = memo(
         wallClockRef
       })
       const {
+        clearSemanticFocus,
         resolveSemanticBody,
         clearHover,
         focusedBodyIdRef,
@@ -552,6 +553,7 @@ export const StreamPhysicsFrame = memo(
         setHoverData,
         syncBodySemanticItems
       } = usePhysicsSemanticNavigation({
+        margin,
         allSemanticItems,
         bodySemanticItemLimit,
         bodySemanticItems,
@@ -597,6 +599,8 @@ export const StreamPhysicsFrame = memo(
         ]
       })
       const physicsCanvasPointer = usePhysicsCanvasPointer({
+        margin,
+        clearKeyboardFocus: clearSemanticFocus,
         hoverDataRef,
         resolveSemanticBody,
         canvasRef,

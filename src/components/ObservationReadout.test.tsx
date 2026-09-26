@@ -43,10 +43,11 @@ describe("ObservationReadout", () => {
     expect(screen.getByText("Nothing selected")).toBeInTheDocument()
   })
 
-  it("unwraps observed frame data and renders it in a polite live region", () => {
+  it("unwraps observed frame data and allows explicit opt-in to hover announcements", () => {
     render(
       <ObservationReadout
         as="output"
+        live="polite"
         observation={observation("hover", {
           datum: { data: { label: "Candidate cause" } },
           x: 20,
@@ -61,6 +62,27 @@ describe("ObservationReadout", () => {
     expect(readout.tagName).toBe("OUTPUT")
     expect(readout).toHaveAttribute("aria-live", "polite")
     expect(readout).toHaveAttribute("aria-atomic", "true")
+  })
+
+  it.each(["hover", "hover-end"] as const)("keeps default %s output visual-only, including output elements", (type) => {
+    render(<ObservationReadout as="output" observation={observation(type, { datum: { label: "Hovered mark" } })} fallback="No hover">
+      {(datum) => String(datum.label)}
+    </ObservationReadout>)
+    expect(screen.getByText(type === "hover" ? "Hovered mark" : "No hover")).toHaveAttribute("aria-live", "off")
+  })
+
+  it.each(["focus", "activate", "click"] as const)("announces intentional %s interactions by default", (type) => {
+    render(<ObservationReadout observation={observation(type, { datum: { label: "Selected mark" } })}>
+      {(datum) => String(datum.label)}
+    </ObservationReadout>)
+    expect(screen.getByText("Selected mark")).toHaveAttribute("aria-live", "polite")
+  })
+
+  it("preserves explicit announcement suppression for keyboard focus", () => {
+    render(<ObservationReadout live="off" observation={observation("focus", { datum: { label: "Quiet focus" } })}>
+      {(datum) => String(datum.label)}
+    </ObservationReadout>)
+    expect(screen.getByText("Quiet focus")).toHaveAttribute("aria-live", "off")
   })
 
   it("returns to fallback content on an end event", () => {

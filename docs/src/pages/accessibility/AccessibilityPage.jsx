@@ -474,13 +474,14 @@ const result = diagnoseConfig("LineChart", {
       <h3 id="tooltip-accessibility">Accessible Tooltips</h3>
 
       <p>
-        Semiotic's built-in aria-live region announces tooltip content
-        automatically. When writing custom tooltip functions, you don't need
-        to add your own aria attributes — the aria-live region handles it:
+        Semiotic's built-in live region announces data reached by keyboard
+        navigation. Pointer hover still shows the visual tooltip but does not
+        queue screen-reader announcements. Custom tooltips only need to render
+        the visual content:
       </p>
 
       <CodeBlock
-        code={`// The aria-live region announces data automatically
+        code={`// The live region announces keyboard-focused data
 // Custom tooltip only needs to handle the visual:
 <LineChart
   data={data}
@@ -494,6 +495,14 @@ const result = diagnoseConfig("LineChart", {
 />`}
         language="jsx"
       />
+
+      <p>
+        <code>ObservationReadout</code> follows the same default: hover and
+        hover-end update its visible content without announcements, while focus,
+        activation, click, and selection remain polite live updates. Set its
+        <code> live="polite"</code> prop explicitly to include hover, or
+        <code> live="off"</code> to silence all announcements.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Props Reference */}

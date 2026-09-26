@@ -44,6 +44,7 @@ const NAV_KEYS = new Set([
 ])
 
 interface PhysicsSemanticNavigationOptions {
+  margin?: { left: number; top: number }
   allSemanticItems: PhysicsSemanticItem[]
   bodySemanticItemLimit: number
   bodySemanticItems: StreamPhysicsFrameProps["bodySemanticItems"]
@@ -65,6 +66,7 @@ interface PhysicsSemanticNavigationOptions {
 }
 
 export interface PhysicsSemanticNavigationResult {
+  clearSemanticFocus: () => void
   resolveSemanticBody: (body: PhysicsBodyState) => PhysicsBodyState
   clearHover: () => void
   focusedBodyIdRef: MutableRefObject<string | null>
@@ -84,6 +86,7 @@ export interface PhysicsSemanticNavigationResult {
 
 /** Own the frame's body semantics, keyboard navigation, and activation state. */
 export function usePhysicsSemanticNavigation({
+  margin,
   allSemanticItems,
   bodySemanticItemLimit,
   bodySemanticItems,
@@ -208,6 +211,7 @@ export function usePhysicsSemanticNavigation({
   )
 
   const clearSemanticFocus = useCallback(() => {
+    if (semanticFocusIndexRef.current < 0 && focusedBodyIdRef.current === null) return
     semanticFocusIndexRef.current = -1
     focusedBodyIdRef.current = null
     setFocusedSemanticItem(null)
@@ -229,7 +233,8 @@ export function usePhysicsSemanticNavigation({
       const { x, y } = physicsCanvasCoordinates(
         event.currentTarget,
         event.clientX,
-        event.clientY
+        event.clientY,
+        margin
       )
       const hit = store ? store.hitTest(x, y, Math.max(16, hoverRadius)) : null
       const body = hit ? resolveSemanticBody(hit) : null
@@ -250,6 +255,7 @@ export function usePhysicsSemanticNavigation({
     [
       clearHover,
       clearSemanticFocus,
+      margin,
       emitObservation,
       hoverRadius,
       onBodyPointerDown,
@@ -394,6 +400,7 @@ export function usePhysicsSemanticNavigation({
   )
 
   return {
+    clearSemanticFocus,
     resolveSemanticBody,
     clearHover,
     focusedBodyIdRef,

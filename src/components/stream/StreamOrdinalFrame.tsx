@@ -984,11 +984,11 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           diagnostics={sceneRevisionDiagnosticsRef.current}
         />
       )}
-      {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
+      {accessibleTable && <AccessibleTablePortal accessibleTable={accessibleTable}><SkipToTableLink tableId={tableId} /><AccessibleDataTable sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} /></AccessibleTablePortal>}
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
+        <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}

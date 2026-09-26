@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
+import { ClipboardStatus, useClipboard } from "../../../src/components/useClipboard"
 import { toConfig, fromConfig, toURL, fromURL, copyConfig } from "semiotic"
 import PageLayout from "./PageLayout"
 import PropControls from "./PropControls"
@@ -58,7 +59,9 @@ export default function PlaygroundLayout({
   const [values, setValues] = useState(defaults)
   const [datasetIndex, setDatasetIndex] = useState(0)
   const [containerWidth, setContainerWidth] = useState(null)
-  const [copied, setCopied] = useState(null)
+  const [copyKind, setCopyKind] = useState(null)
+  const { status, copy } = useClipboard(2000)
+  const copied = status === "copied" ? copyKind : null
   const vizRef = useRef(null)
   // Skip the URL-write effect until the mount-time restore has run, so a
   // restored permalink isn't immediately overwritten by default state.
@@ -182,9 +185,10 @@ export default function PlaygroundLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values), datasetIndex])
 
-  const handleCopy = async (kind) => {
+  const handleCopy = (kind) => {
     if (typeof window === "undefined") return
-    try {
+    setCopyKind(kind)
+    void copy(async () => {
       if (kind === "link") {
         const sc = toURL(buildConfig(componentName, chartProps, { includeData: false }))
         const url = `${window.location.origin}${window.location.pathname}?${sc}&ds=${datasetIndex}`
@@ -192,11 +196,7 @@ export default function PlaygroundLayout({
       } else {
         await copyConfig(buildConfig(componentName, chartProps, { includeData: true }), "json")
       }
-      setCopied(kind)
-      setTimeout(() => setCopied(null), 2000)
-    } catch {
-      /* clipboard denied or non-serializable — no-op */
-    }
+    })
   }
 
   return (
@@ -255,11 +255,12 @@ export default function PlaygroundLayout({
       {shareable && (
         <div className="playground-share-toolbar" style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <button type="button" className="playground-share-button" onClick={() => handleCopy("link")}>
-            {copied === "link" ? "Link copied!" : "Copy link"}
+            {copied === "link" ? "Link copied!" : status === "failed" && copyKind === "link" ? "Copy failed" : "Copy link"}
           </button>
           <button type="button" className="playground-share-button" onClick={() => handleCopy("config")}>
-            {copied === "config" ? "Config copied!" : "Copy config (JSON)"}
+            {copied === "config" ? "Config copied!" : status === "failed" && copyKind === "config" ? "Copy failed" : "Copy config (JSON)"}
           </button>
+          <ClipboardStatus status={status} />
           <span className="playground-share-hint" style={{ alignSelf: "center", fontSize: "0.85em", color: "var(--text-secondary)" }}>
             The link restores this exact configuration; the config is a portable
             <code> ChartConfig</code> artifact.

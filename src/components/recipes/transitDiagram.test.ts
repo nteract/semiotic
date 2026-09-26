@@ -9,7 +9,7 @@ import type {
   RealtimeNode,
 } from "../stream/networkTypes"
 import { findNearestNetworkNode } from "../stream/NetworkCanvasHitTester"
-import { buildNetworkTableModel } from "../stream/accessibleDataTableModel"
+import { buildNetworkTableModel } from "../stream/networkAccessibleDataTableModel"
 import {
   computeTransitDiagramPositions,
   offsetTransitPath,

@@ -3,11 +3,11 @@ import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
   AccessibleTablePortal,
-  NetworkAccessibleDataTable,
   computeCanvasAriaLabel,
   computeNetworkAriaLabel,
   extractAllRows,
 } from "./AccessibleDataTable"
+import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Test helpers ────────────────────────────────────────────────────────

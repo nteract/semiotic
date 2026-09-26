@@ -2,6 +2,7 @@
 import * as React from "react"
 import type { IntentManifest } from "./intentManifest"
 import { summarizeIntentManifest } from "./intentManifest"
+import { ClipboardStatus, useClipboard } from "../useClipboard"
 
 export interface IntentMarkProps {
   manifest: IntentManifest
@@ -22,15 +23,8 @@ export function IntentMark({
   className,
   showSummary = true,
 }: IntentMarkProps) {
-  const [copied, setCopied] = React.useState(false)
+  const { status, copy } = useClipboard()
   const json = React.useMemo(() => JSON.stringify(manifest, null, 2), [manifest])
-
-  const copy = React.useCallback(async () => {
-    if (typeof navigator === "undefined" || !navigator.clipboard) return
-    await navigator.clipboard.writeText(json)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1200)
-  }, [json])
 
   return (
     <details
@@ -63,7 +57,7 @@ export function IntentMark({
         )}
         <button
           type="button"
-          onClick={copy}
+          onClick={() => void copy(json)}
           style={{
             border: "1px solid currentColor",
             borderRadius: 4,
@@ -75,8 +69,9 @@ export function IntentMark({
             cursor: "pointer",
           }}
         >
-          {copied ? "Copied" : "Copy manifest"}
+          {status === "copied" ? "Copied" : status === "failed" ? "Copy failed" : "Copy manifest"}
         </button>
+        <ClipboardStatus status={status} />
         <pre
           style={{
             maxHeight: 280,
