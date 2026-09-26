@@ -3,6 +3,9 @@ import { expect, test } from "@playwright/test"
 test("date marks and tooltips survive accessor rerenders and resizing", async ({ page }) => {
   const errors: string[] = []
   page.on("pageerror", error => errors.push(error.message))
+  page.on("console", message => {
+    if (message.type() === "error") errors.push(message.text())
+  })
   await page.goto("/xy-examples/?temporal-accessors")
   const frame = page.getByTestId("temporal-chart").locator(".stream-xy-frame")
   const tooltip = frame.locator(".stream-frame-tooltip")
@@ -31,5 +34,16 @@ test("date marks and tooltips survive accessor rerenders and resizing", async ({
   await checkHover(600)
   await page.getByRole("button", { name: "Narrow dates" }).click()
   await checkHover(360)
+  await page.getByRole("button", { name: "Collapse dates" }).click()
+  await expect(frame.locator("canvas").first()).toHaveAttribute("width", "30")
+  await expect(frame.locator("canvas").first()).toHaveAttribute("height", "20")
+  expect(await frame.evaluate(element => element.innerHTML)).not.toMatch(/NaN|Infinity/)
+  await page.getByRole("button", { name: "Restore dates" }).click()
+  await checkHover(600)
+  expect(await frame.locator("canvas").first().evaluate(canvas => {
+    const context = (canvas as HTMLCanvasElement).getContext("2d")!
+    const pixels = context.getImageData(38, 214, 5, 5).data
+    return pixels.some((value, index) => index % 4 === 3 && value > 0)
+  })).toBe(true)
   expect(errors).toEqual([])
 })

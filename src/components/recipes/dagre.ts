@@ -1,19 +1,15 @@
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
-import type {
-  NetworkRectNode,
-  NetworkCurvedEdge,
-  NetworkLineEdge,
-  NetworkLabel,
-  RealtimeNode,
-} from "../stream/networkTypes"
+import type { NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
-import { readField } from "./recipeUtils"
+import { positionedNetworkNodes } from "./positionedNetworkNodes"
 
 export interface DagreConfig {
   /** Default node width when nodes don't carry a `width` field. @default 100 */
   nodeWidth?: number
   /** Default node height when nodes don't carry a `height` field. @default 36 */
   nodeHeight?: number
+  /** Center and uniformly shrink the layout into the plot; "none" preserves authored pixels. @default "contain" */
+  fit?: "none" | "contain"
   /** Edge style — straight polyline through waypoints, or smoothed bezier. @default "polyline" */
   edgeStyle?: "polyline" | "smooth"
   /** Render text labels at node centers. @default true */
@@ -38,6 +34,7 @@ export interface DagreConfig {
  * @example
  * ```ts
  * import dagre from "dagre"
+ * import { NetworkCustomChart } from "semiotic/network"
  * import { dagreLayout } from "semiotic/recipes"
  *
  * const g = new dagre.graphlib.Graph()
@@ -56,73 +53,47 @@ export interface DagreConfig {
  *   return { source: e.v, target: e.w, points: ed.points }
  * })
  *
- * <StreamNetworkFrame
- *   chartType="force"
+ * <NetworkCustomChart
  *   nodes={nodes} edges={edges}
- *   customNetworkLayout={dagreLayout}
+ *   width={640} height={400}
+ *   title="Directed graph"
+ *   layout={dagreLayout}
  * />
  * ```
  */
 export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
-  const cfg = ctx.config
-  const defaultW = cfg.nodeWidth ?? 100
-  const defaultH = cfg.nodeHeight ?? 36
+  const cfg = ctx.config ?? {}
   const edgeStyle = cfg.edgeStyle ?? "polyline"
-  const showLabels = cfg.showLabels !== false
-  // Read labels from `node.data[labelAcc]` first (ingest-wrapper shape),
-  // falling back to `node[labelAcc]` and finally `node.id`.
-  const labelAcc = cfg.labelAccessor ?? "label"
-  const getLabel = typeof labelAcc === "function"
-    ? labelAcc
-    : (d: Datum) => String(readField(d, labelAcc, d.id ?? ""))
-
-  const positions = new Map<string, { x: number; y: number; w: number; h: number }>()
-  const sceneNodes: NetworkRectNode[] = []
-  const labels: NetworkLabel[] = []
-
-  // Network ingest wraps user data on `node.data`. Read positions from
-  // `node.data.{x,y,width,height}` first, fall back to the wrapper.
-  const readPos = (node: RealtimeNode) => {
-    const d = (node.data ?? {}) as Record<string, unknown>
-    const x = (typeof d.x === "number" ? d.x : node.x)
-    const y = (typeof d.y === "number" ? d.y : node.y)
-    const w = (typeof d.width === "number" ? d.width : (node as RealtimeNode & { width?: number }).width) ?? defaultW
-    const h = (typeof d.height === "number" ? d.height : (node as RealtimeNode & { height?: number }).height) ?? defaultH
-    return { x, y, w, h }
-  }
-
-  for (const node of ctx.nodes) {
-    const { x, y, w, h } = readPos(node)
-    if (x == null || y == null) continue
-    positions.set(node.id, { x, y, w, h })
-    sceneNodes.push({
-      type: "rect",
-      x: x - w / 2,
-      y: y - h / 2,
-      w,
-      h,
-      style: {
-        fill: cfg.nodeFill ?? ctx.resolveColor(node.id),
-        stroke: `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#888"})`,
-        strokeWidth: 1.5,
-      },
-      datum: node,
-      id: node.id,
-      label: String(getLabel(node)),
+  const waypoints = new Map(
+    ctx.edges.map((edge) => {
+      const raw = (edge.data ?? edge) as Datum
+      const points = Array.isArray(raw.points)
+        ? raw.points
+        : (edge as { points?: unknown }).points
+      return [
+        edge,
+        Array.isArray(points) &&
+        points.length >= 2 &&
+        points.every((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y))
+          ? (points as { x: number; y: number }[])
+          : []
+      ] as const
     })
-    if (showLabels) {
-      labels.push({
-        x,
-        y,
-        text: String(getLabel(node)),
-        anchor: "middle",
-        baseline: "middle",
-        fontSize: 11,
-      })
-    }
-  }
-
-  const stroke = cfg.edgeStroke ?? `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#666"})`
+  )
+  const { positions, sceneNodes, labels, project } = positionedNetworkNodes(
+    ctx,
+    {
+      ...cfg,
+      nodeWidth: cfg.nodeWidth ?? 100,
+      nodeHeight: cfg.nodeHeight ?? 36,
+      labelAccessor: cfg.labelAccessor ?? "label"
+    },
+    `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#888"})`,
+    [...waypoints.values()].flat()
+  )
+  const stroke =
+    cfg.edgeStroke ??
+    `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#666"})`
   const sceneEdges: (NetworkCurvedEdge | NetworkLineEdge)[] = []
   for (const edge of ctx.edges) {
     const sId = typeof edge.source === "string" ? edge.source : edge.source.id
@@ -131,21 +102,17 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
     const t = positions.get(tId)
     if (!s || !t) continue
 
-    // dagre populates an edge's `points: [{x, y}, ...]` waypoint array.
-    // Network ingest wraps user data on `edge.data` — read points from there
-    // first, fall back to the wrapper for callers that mutate it directly.
-    const edgeData = (edge.data ?? {}) as Record<string, unknown>
-    const points = (Array.isArray(edgeData.points)
-      ? edgeData.points
-      : (edge as { points?: { x: number; y: number }[] }).points
-    ) as { x: number; y: number }[] | undefined
+    const points = waypoints.get(edge)!.map(project)
 
     if (!points || points.length < 2) {
       sceneEdges.push({
         type: "line",
-        x1: s.x, y1: s.y, x2: t.x, y2: t.y,
+        x1: s.x,
+        y1: s.y,
+        x2: t.x,
+        y2: t.y,
         style: { stroke, strokeWidth: 1 },
-        datum: edge,
+        datum: edge.data ?? edge
       })
       continue
     }
@@ -164,7 +131,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
         type: "curved",
         pathD: d,
         style: { stroke, strokeWidth: 1, fill: "none" },
-        datum: edge,
+        datum: edge.data ?? edge
       })
     } else {
       // Polyline through waypoints.
@@ -173,7 +140,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
         type: "curved",
         pathD: d,
         style: { stroke, strokeWidth: 1, fill: "none" },
-        datum: edge,
+        datum: edge.data ?? edge
       })
     }
   }

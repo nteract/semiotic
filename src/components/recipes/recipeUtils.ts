@@ -1,4 +1,5 @@
 import { interpolateLab } from "d3-interpolate"
+import { clamp } from "../utils/clamp"
 import type { Datum } from "../charts/shared/datumTypes"
 
 /**
@@ -258,9 +259,7 @@ export function stableGlyphId(value: string): string {
 
 /** Clamp `value` into `[min, max]`. The one-liner every layout re-declares to
  *  keep a radius, opacity, or pixel position inside its valid range. */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
-}
+export { clamp }
 
 /** Coerce to a finite non-negative number. Shared by tally/token helpers so
  *  non-finite inputs fail closed instead of leaking NaN into geometry. */

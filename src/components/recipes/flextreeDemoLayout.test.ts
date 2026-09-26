@@ -98,18 +98,14 @@ describe("flextree docs demo layout", () => {
     const edges = store.sceneEdges.filter((e): e is NetworkCurvedEdge => e.type === "curved")
     expect(edges).toHaveLength(14)
 
-    // Edge from Tutorials (center y=135, h=70 → bottom y=170) to First
-    // Chart (center y=243, h=86 → top y=200). The path's M command should
-    // start at y=170, not y=135.
-    const tutToFirst = edges.find((e) => {
-      const m = /^M([\d.]+),([\d.]+)/.exec(e.pathD)
-      const c = /([\d.]+),([\d.]+)$/.exec(e.pathD)
-      return m && c && Math.abs(Number(m[1]) - 171) < 1 && Math.abs(Number(c[1]) - 164) < 1
-    })
+    const tutorials = store.sceneNodes.find(n => "id" in n && n.id === "tutorials") as NetworkRectNode
+    const firstChart = store.sceneNodes.find(n => "id" in n && n.id === "first-chart") as NetworkRectNode
+    const tutToFirst = edges.find(e => e.datum?.source === "tutorials" && e.datum?.target === "first-chart")!
     expect(tutToFirst).toBeDefined()
-    const start = /^M([\d.]+),([\d.]+)/.exec(tutToFirst!.pathD)!
-    expect(Number(start[2])).toBe(170) // bottom of Tutorials, not its center (135)
-    const end = /([\d.]+),([\d.]+)$/.exec(tutToFirst!.pathD)!
-    expect(Number(end[2])).toBe(200) // top of First Chart, not its center (243)
+    const coordinates = tutToFirst.pathD.match(/-?\d+(?:\.\d+)?/g)!.map(Number)
+    expect(coordinates[0]).toBeCloseTo(tutorials.x + tutorials.w / 2)
+    expect(coordinates[1]).toBeCloseTo(tutorials.y + tutorials.h)
+    expect(coordinates.at(-2)).toBeCloseTo(firstChart.x + firstChart.w / 2)
+    expect(coordinates.at(-1)).toBeCloseTo(firstChart.y)
   })
 })

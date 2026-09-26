@@ -321,8 +321,7 @@ export const pieChart: ChartConfig = {
       colorAccessor: effectiveColorBy,
       colorScheme,
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
-      // startAngle rotates the first wedge (mirrors PieChart.tsx). Dropped by
-      // the SSR path before this mapping, so SSR always started at 12 o'clock.
+      // startAngle rotates the first wedge, matching PieChart.
       ...(rest.startAngle != null && { startAngle: rest.startAngle }),
       ...common,
       pieceStyle: buildBarPieceStyle(
@@ -355,16 +354,13 @@ export const donutChart: ChartConfig = {
       oAccessor: rest.categoryAccessor || "category",
       rAccessor: rest.valueAccessor || "value",
       projection: "radial",
-      // Mirror DonutChart's primary-mode layout defaults. Without this the
-      // standalone SSR path uses staticOrdinal's generic 20/20/30/40 margin,
-      // making an otherwise identical donut visibly larger than its CSR HOC.
+      // Use DonutChart's primary-mode margins for the same outer radius.
       margin: common.margin ?? { top: 50, right: 40, bottom: 60, left: 70 },
       innerRadius: rest.innerRadius ?? 60,
       colorAccessor: effectiveColorBy,
       colorScheme,
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
-      // startAngle rotates the first wedge (mirrors DonutChart.tsx). Dropped by
-      // the SSR path before this mapping, so SSR always started at 12 o'clock.
+      // startAngle rotates the first wedge, matching DonutChart.
       ...(rest.startAngle != null && { startAngle: rest.startAngle }),
       ...common,
       // Bind fills to category values through the same ordinal color scale as
@@ -447,8 +443,7 @@ export const boxPlot: ChartConfig = {
     ...(rest.valueExtent && { rExtent: rest.valueExtent }),
     colorAccessor: colorBy,
     colorScheme,
-    // staticOrdinal can pass showOutliers into the pipeline; without this
-    // mapping showOutliers:false silently no-ops (default keeps outliers).
+    // Preserve explicit false; the pipeline shows outliers by default.
     ...(rest.showOutliers != null && { showOutliers: rest.showOutliers }),
     ...(rest.outlierRadius != null && { outlierRadius: rest.outlierRadius }),
     ...common,
@@ -499,9 +494,7 @@ export const swarmPlot: ChartConfig = {
     ...(rest.valueExtent && { rExtent: rest.valueExtent }),
     barPadding: rest.categoryPadding ?? 20,
     colorAccessor: colorBy,
-    // symbolBy → symbolAccessor is the HOC-level rename (mirrors SwarmPlot.tsx):
-    // the field whose values become glyph shapes. Without this the SSR path
-    // drops symbolBy and every point renders as a circle.
+    // SwarmPlot maps symbolBy to the pipeline's glyph-shape accessor.
     ...(rest.symbolBy && { symbolAccessor: rest.symbolBy }),
     ...(rest.symbolMap && { symbolMap: rest.symbolMap }),
     colorScheme,
@@ -605,14 +598,9 @@ export const swimlaneChart: ChartConfig = {
       subcategoryAccessor: rest.subcategoryAccessor,
       colorScheme,
       projection: rest.orientation === "vertical" ? "vertical" : "horizontal",
-      // trackFill paints the lane background behind each swimlane (mirrors
-      // SwimlaneChart.tsx). Dropped by the SSR path before this mapping.
+      // trackFill paints the lane background behind each swimlane.
       ...(rest.trackFill != null && { trackFill: rest.trackFill }),
-      // valueExtent → rExtent pins the value axis so a lane whose segments do
-      // not sum to the extent max (e.g. a ThresholdBar showing 40 of 100) fills
-      // the correct fraction instead of auto-scaling to the data max. The
-      // SwimlaneChart HOC maps this the same way; SSR dropped it (same class of
-      // bug as gradientFill/trackFill).
+      // valueExtent pins the axis: a lane showing 40 of 100 fills 40% of its track.
       ...(rest.valueExtent && { rExtent: rest.valueExtent }),
       // roundedTop rounds the outer ends of each lane (mirrors SwimlaneChart.tsx).
       ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
@@ -684,9 +672,7 @@ export const funnelChart: ChartConfig = {
       projection: isVertical ? "vertical" : "horizontal",
       connectorAccessor: rest.connectorAccessor,
       connectorStyle: rest.connectorStyle,
-      // connectorOpacity styles the horizontal funnel's between-step connectors
-      // (mirrors FunnelChart.tsx, which only forwards it for horizontal funnels;
-      // the vertical bar-funnel has no connectors). Dropped by SSR before this.
+      // Only horizontal funnels have between-step connectors.
       ...(!isVertical &&
         rest.connectorOpacity != null && {
           connectorOpacity: rest.connectorOpacity

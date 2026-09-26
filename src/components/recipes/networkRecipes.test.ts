@@ -64,7 +64,7 @@ describe("flextreeLayout", () => {
   })
 
   it("centers rects on each node's x/y", () => {
-    const result = flextreeLayout(makeCtx({ nodeWidth: 40, nodeHeight: 20 }, nodes, edges))
+    const result = flextreeLayout(makeCtx({ fit: "none", nodeWidth: 40, nodeHeight: 20 }, nodes, edges))
     const root = result.sceneNodes!.find((n) => n.type === "rect" && n.id === "root") as NetworkRectNode
     expect(root.x).toBe(200 - 20)
     expect(root.y).toBe(20 - 10)
@@ -88,6 +88,7 @@ describe("flextreeLayout", () => {
       sourceAccessor: "source",
       targetAccessor: "target",
       customNetworkLayout: flextreeLayout,
+      layoutConfig: { fit: "none" },
     })
     store.ingestBounded(
       [
@@ -118,7 +119,7 @@ describe("dagreLayout", () => {
     const edges: RealtimeEdge[] = [
       { source: "x", target: "y", points: [{ x: 50, y: 65 }, { x: 100, y: 130 }, { x: 200, y: 185 }] },
     ] as unknown as RealtimeEdge[]
-    const result = dagreLayout(makeCtx({}, nodes, edges))
+    const result = dagreLayout(makeCtx({ fit: "none" }, nodes, edges))
     expect(result.sceneEdges).toHaveLength(1)
     const e = result.sceneEdges![0] as NetworkCurvedEdge
     expect(e.type).toBe("curved")
@@ -132,7 +133,7 @@ describe("dagreLayout", () => {
       node({ id: "y", x: 200, y: 200 }),
     ]
     const edges: RealtimeEdge[] = [edge({ source: "x", target: "y" })]
-    const result = dagreLayout(makeCtx({}, nodes, edges))
+    const result = dagreLayout(makeCtx({ fit: "none" }, nodes, edges))
     expect(result.sceneEdges).toHaveLength(1)
     const e = result.sceneEdges![0] as NetworkLineEdge
     expect(e.type).toBe("line")
@@ -144,7 +145,7 @@ describe("dagreLayout", () => {
     const nodes: RealtimeNode[] = [
       { id: "x", x: 100, y: 50, width: 120, height: 40 },
     ] as unknown as RealtimeNode[]
-    const result = dagreLayout(makeCtx({}, nodes, []))
+    const result = dagreLayout(makeCtx({ fit: "none" }, nodes, []))
     const n = result.sceneNodes![0] as NetworkRectNode
     expect(n.w).toBe(120)
     expect(n.h).toBe(40)

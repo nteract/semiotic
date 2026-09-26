@@ -1,3 +1,4 @@
+import { clamp } from "../utils/clamp"
 import * as React from "react"
 import { geoBounds, geoContains } from "d3-geo"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -100,10 +101,6 @@ const featureBoundsCache = new WeakMap<
 >()
 const callbackIds = new WeakMap<object, number>()
 let nextCallbackId = 1
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
-}
 
 function finitePositive(value: number | undefined): number | undefined {
   if (!Number.isFinite(value) || Number(value) <= 0) return undefined

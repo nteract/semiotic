@@ -281,8 +281,8 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     ? {
         x: margin.left,
         y: margin.top,
-        width: input.width - margin.left - margin.right,
-        height: input.height - margin.top - margin.bottom
+        width: Math.max(1, input.width - margin.left - margin.right),
+        height: Math.max(1, input.height - margin.top - margin.bottom)
       }
     : undefined
   return {

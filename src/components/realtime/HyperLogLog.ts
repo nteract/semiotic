@@ -1,3 +1,5 @@
+import { fnv1a32 } from "../utils/hash"
+
 /**
  * HyperLogLog distinct-count sketch. Per-window memory is a fixed
  * register file (default p=10, 1024 registers), so a dashboard can
@@ -7,11 +9,7 @@
 const DEFAULT_P = 10
 
 function fnv1a(value: string): number {
-  let hash = 2166136261
-  for (let i = 0; i < value.length; i++) {
-    hash ^= value.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
+  let hash = fnv1a32(value)
   // Avalanche so nearby strings do not share high bits used for the register.
   hash ^= hash >>> 16
   hash = Math.imul(hash, 0x7feb352d)

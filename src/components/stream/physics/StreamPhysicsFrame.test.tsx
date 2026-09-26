@@ -21,12 +21,8 @@ import type {
   PhysicsCanvasPaintContext,
   StreamPhysicsFrameProps
 } from "./StreamPhysicsTypes"
-import { createPhysicsWorkerRuntime } from "./PhysicsWorkerRuntime"
-import type {
-  PhysicsWorkerRequest,
-  PhysicsWorkerResponse
-} from "./PhysicsWorkerProtocol"
 import { createFrameScheduler } from "../test-utils/frameScheduler"
+import { RuntimeWorker } from "../test-utils/physicsRuntimeWorker"
 
 const quietKernel = {
   gravity: { x: 0, y: 0 },
@@ -95,43 +91,6 @@ function circle(id: string, x = 30, y = 30): PhysicsQueuedSpawn {
     y,
     shape: { type: "circle", radius: 5 },
     mass: 1
-  }
-}
-
-class RuntimeWorker {
-  onerror: ((event: ErrorEvent) => void) | null = null
-  onmessage: ((event: MessageEvent<PhysicsWorkerResponse>) => void) | null =
-    null
-  runtime = createPhysicsWorkerRuntime()
-  terminated = false
-
-  postMessage(request: PhysicsWorkerRequest): void {
-    Promise.resolve().then(() => {
-      if (this.terminated) return
-      try {
-        this.onmessage?.({
-          data: {
-            ok: true,
-            payload: this.runtime.handle(request.command),
-            requestId: request.requestId
-          }
-        } as MessageEvent<PhysicsWorkerResponse>)
-      } catch (error) {
-        this.onmessage?.({
-          data: {
-            error: {
-              message: error instanceof Error ? error.message : String(error)
-            },
-            ok: false,
-            requestId: request.requestId
-          }
-        } as MessageEvent<PhysicsWorkerResponse>)
-      }
-    })
-  }
-
-  terminate(): void {
-    this.terminated = true
   }
 }
 

@@ -248,9 +248,7 @@ export const lineChart: ChartConfig = {
       lineStyle: series.lineStyle || baseLineStyle,
       ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
       ...(fillArea && rest.areaOpacity != null && { areaOpacity: rest.areaOpacity }),
-      // `band` ({y0Accessor,y1Accessor} or array) draws the shaded envelope
-      // under the line(s). Mirrors LineChart.tsx; SSR dropped it so the band
-      // never painted server-side.
+      // The band envelope paints beneath the lines, matching LineChart.
       ...(rest.band != null && { band: rest.band }),
       ...common,
       ...(margin !== undefined && { margin }),

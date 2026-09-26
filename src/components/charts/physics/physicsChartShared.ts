@@ -1,3 +1,4 @@
+export { mulberry32 as seededRandom } from "../../recipes/random"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type { Style } from "../../stream/types"
@@ -240,15 +241,4 @@ export function normalizedFiniteExtent(
 export function safeIdPart(value: unknown): string {
   const text = String(value ?? "unknown").trim()
   return text.replace(/[^A-Za-z0-9_-]+/g, "_") || "unknown"
-}
-
-export function seededRandom(seed: number): () => number {
-  let state = seed >>> 0
-  return () => {
-    state += 0x6d2b79f5
-    let t = state
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
 }

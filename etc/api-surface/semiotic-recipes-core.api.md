@@ -799,6 +799,7 @@ interface-member CustomTooltipEntryOptions::property::maxEntries = optional maxE
 interface-member CustomTooltipEntryOptions::property::valueFormat = optional valueFormat: ((value: unknown, key: string, datum: Record<string, unknown>) => string) | undefined
 interface-member DagreConfig::property::edgeStroke = optional edgeStroke: string | undefined
 interface-member DagreConfig::property::edgeStyle = optional edgeStyle: "polyline" | "smooth" | undefined
+interface-member DagreConfig::property::fit = optional fit: "contain" | "none" | undefined
 interface-member DagreConfig::property::labelAccessor = optional labelAccessor: ((d: Datum) => string) | string | undefined
 interface-member DagreConfig::property::nodeFill = optional nodeFill: string | undefined
 interface-member DagreConfig::property::nodeHeight = optional nodeHeight: number | undefined
@@ -829,6 +830,7 @@ interface-member FanOutBendOptions::property::count = optional count: number | u
 interface-member FanOutBendOptions::property::modulo = optional modulo: number | undefined
 interface-member FanOutBendOptions::property::spread = optional spread: number | undefined
 interface-member FlextreeConfig::property::edgeCurve = optional edgeCurve: "curved" | "line" | undefined
+interface-member FlextreeConfig::property::fit = optional fit: "contain" | "none" | undefined
 interface-member FlextreeConfig::property::labelAccessor = optional labelAccessor: ((d: Datum) => string) | string | undefined
 interface-member FlextreeConfig::property::nodeFill = optional nodeFill: string | undefined
 interface-member FlextreeConfig::property::nodeHeight = optional nodeHeight: number | undefined

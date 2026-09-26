@@ -1,3 +1,4 @@
+import { clamp } from "../utils/clamp"
 import type { Datum } from "../charts/shared/datumTypes"
 import { isNoteAnnotation } from "../charts/shared/annotationTypes"
 
@@ -73,10 +74,6 @@ function isNote(a: Datum): boolean {
  *  `defensive` (traveling caveat) notes. */
 function isFloor(a: Datum): boolean {
   return a?.emphasis === "primary" || a?.defensive === true
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 /**

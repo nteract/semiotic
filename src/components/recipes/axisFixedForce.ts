@@ -1,3 +1,4 @@
+import { hashUnit } from "../utils/hash"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkSceneNode, NetworkSceneEdge, NetworkLabel } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -142,16 +143,6 @@ interface PlotRect {
 }
 
 const DEFAULT_SIZE = { width: 60, height: 34 }
-
-/** Deterministic [0,1) hash of a string (FNV-1a) — stable initial spread + tie-break. */
-function hashUnit(value: string): number {
-  let hash = 2166136261
-  for (let i = 0; i < value.length; i++) {
-    hash ^= value.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) / 4294967295
-}
 
 function accessorFn(a: string | ((d: Datum) => unknown) | undefined, key: string): (d: Datum) => unknown {
   if (typeof a === "function") return a

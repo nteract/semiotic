@@ -1,3 +1,4 @@
+import { fnv1a32 } from "../utils/hash"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type {
   NetworkSceneNode,
@@ -266,12 +267,7 @@ interface Geom {
 
 /** FNV-1a → short base-36 hash. Keeps fingerprint strings compact. */
 function fnv1a(str: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(36)
+  return fnv1a32(str).toString(36)
 }
 
 /** Resolve an edge endpoint (id string or node reference) to an id. */

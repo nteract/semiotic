@@ -229,8 +229,8 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     hasTitle: hasVisibleTitle,
   })
 
-  const width = size[0] - margin.left - margin.right
-  const height = size[1] - margin.top - margin.bottom
+  const width = Math.max(1, size[0] - margin.left - margin.right)
+  const height = Math.max(1, size[1] - margin.top - margin.bottom)
 
   const projection = props.projection || "vertical"
   const isRadial = projection === "radial"

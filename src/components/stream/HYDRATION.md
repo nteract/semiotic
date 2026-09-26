@@ -1,99 +1,123 @@
-# Adding hydration support to a new Stream Frame
+# Stream Frame hydration
 
-Each Stream Frame (`StreamXYFrame`, `StreamOrdinalFrame`, `StreamNetworkFrame`, `StreamGeoFrame`) participates in React's hydration boundary the same way. If you're adding a fifth frame, follow this recipe — the four shipped frames are interchangeable proof that it works without modification.
+Five Stream Frames participate in React hydration: `StreamXYFrame`,
+`StreamOrdinalFrame`, `StreamNetworkFrame`, `StreamGeoFrame`, and
+`physics/StreamPhysicsFrame`. The chart HOCs use their frame's SVG branch on the
+server and on the first hydration render, then switch to canvas and interaction.
+Pure client mounts start with canvas.
 
-## Recipe (six steps, ~10 lines of frame code)
+Realtime charts use `StreamXYFrame` too. Supplying `data` renders a controlled
+snapshot through React SSR or `renderChart`; omitting `data` selects React push
+mode, whose rows arrive through a ref after mounting. `data={[]}` is an empty
+controlled snapshot. Static and serialized requests need real data and cannot
+consume a live ref.
 
-**1. Import the hooks.**
+## Adding a frame
 
-```ts
-import { useHydration, useWasHydratingFromSSR, useHydrationLifecycle } from "./useHydration"
-```
+1. Call `useHydration()` and `useWasHydratingFromSSR()` after `useFrame()`:
 
-**2. Call them at the top of the component body, after `useFrame`'s destructure.**
+   ```ts
+   const hydrated = useHydration()
+   const wasHydratingFromSSR = useWasHydratingFromSSR()
+   ```
 
-```ts
-const hydrated = useHydration()
-const wasHydratingFromSSR = useWasHydratingFromSSR()
-```
+2. Keep the SVG branch active for the server pass and initial hydration render:
 
-**3. Gate the SSR branch on both signals.**
+   ```ts
+   if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
+     // Ingest the initial data, compute the scene, and return its SVG layers.
+   }
+   ```
 
-```ts
-if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-  // Existing SSR-mode SVG render — call store.ingest / computeScene,
-  // serialize the scene through SceneToSVG, return the JSX with the
-  // <svg> tree.
-}
-```
+   `useWasHydratingFromSSR` captures React's server snapshot on first render.
+   Fresh client mounts skip this branch even while `hydrated` is false.
 
-The `wasHydratingFromSSR` half is the perf gate: pure CSR mounts skip the SVG branch entirely (no point producing SVG that gets immediately overwritten by canvas).
+3. Attach the same `responsiveRef` to the outer wrapper in both branches.
+   `useResponsiveSize` must observe the wrapper at the first commit. Keep its
+   accessible table target, summary, and title/description available during SSR
+   and hydration. Expanded table content may load on demand.
 
-**4. Attach `responsiveRef` on the SVG branch's outer div.**
+4. Connect the frame through `useFrameCanvasHost` in `useCanvasFrameHost.tsx`.
+   The host wires `useHydrationLifecycle`, scheduler cancellation, and canvas
+   setup. A custom host can call the lifecycle hook directly:
 
-The same `responsiveRef` from `useFrame` already wraps the canvas branch. Attaching it on the SVG branch too means the `ResizeObserver` in `useResponsiveSize` latches at first commit. Without this, responsive charts would fall back to `baseSize` until the canvas branch eventually mounts.
+   ```ts
+   useHydrationLifecycle({
+     hydrated,
+     wasHydratingFromSSR,
+     storeRef,
+     dirtyRef,
+     renderFnRef,
+     cancelRender,
+     cleanup: () => adapterRef.current?.clear(),
+   })
+   ```
 
-```tsx
-return (
-  <div ref={responsiveRef} className={`stream-foo-frame${className ? ` ${className}` : ""}`} role="img" ...>
-    {/* SVG content */}
-  </div>
-)
-```
+   After `hydrated` becomes true, the layout effect cancels any intro state
+   from SSR, invalidates the scene, cancels a queued paint, and paints
+   synchronously before the browser displays the canvas. A pure client mount
+   with an already-built scene can request a style repaint instead of rebuilding.
+   This effect runs when its hydration signals change, not on every commit.
+   The separate unmount cleanup releases XY/ordinal data adapters and
+   geographic tile caches. Physics owns worker/store cleanup in its simulation
+   lifecycle.
 
-**5. Use `useHydrationLifecycle` to wire the post-hydration paint.**
+5. If the store has intro transitions, implement idempotent
+   `cancelIntroAnimation()`. Clear transition maps and per-node intro geometry,
+   including XY `_introClipFraction` and network edge `_introFromZero` and
+   circular-route state. Physics uses a settled SVG snapshot and its own
+   simulation lifecycle; its store does not implement this optional method.
 
-```ts
-useHydrationLifecycle({
-  hydrated,
-  wasHydratingFromSSR,
-  storeRef,
-  dirtyRef,
-  renderFnRef,
-  cleanup: () => adapterRef.current?.clear(), // optional, frame-specific
-})
-```
+6. Register any new package entry in `scripts/build.mjs`. React component
+   entries use `clientOnly: true`; static renderer entries are server entries.
+   `assertDirectivePlacement` checks the output directives during the build.
 
-This single call replaces what was 12 lines of duplicated post-hydration effect across the four shipped frames. It does three things on every commit-after-hydration, inside an isomorphic layout effect (synchronous, before the browser paints):
+## SVG layers and the canvas handoff
 
-- If we just rehydrated from SSR, calls `storeRef.current?.cancelIntroAnimation?.()` — server already painted the chart in its final state, so re-animating from blank when canvas takes over is a visual regression.
-- Marks the scene dirty (`dirtyRef.current = true`) so the canvas paint pipeline rebuilds.
-- Paints the canvas synchronously via `renderFnRef.current()`. **Synchronous, not rAF-deferred** — an rAF callback wouldn't fire until the *next* frame, leaving frame N painted with the canvas in DOM but blank. Calling `renderFnRef.current()` directly from the layout effect makes frame N's paint already include the canvas content; no flash.
+XY, ordinal, network, and geographic React SSR branches layer the SVG scene
+beneath a separate SVG overlay for axes, labels, legends, and annotations.
+Physics serializes a settled scene with its chrome overlay. Keep layer order,
+plot translation, accessible naming, and responsive wrapper dimensions aligned
+with the live frame. `renderChart` builds a standalone SVG through the server
+renderer; that SVG is an export or manual placeholder, not the React frame tree
+to pass directly to `hydrateRoot`.
 
-The `cleanup` callback is your unmount hook — XY/Ordinal clear the streaming `DataSourceAdapter`, Geo clears the tile cache, Network has no extra cleanup. `useFrame` already handles rAF cancellation.
+Before hydration:
 
-**6. Implement `cancelIntroAnimation()` on the frame's pipeline store.**
+- Marks are SVG. Pointer hover, hit testing, dragging, and canvas keyboard
+  navigation become active after the client handoff; semantic summaries and
+  table controls are present in the initial tree.
+- Responsive frames use their supplied/default dimensions until the container
+  is measured. Plot dimensions retain a one-pixel minimum when margins exhaust
+  the available space, including in standalone SVG and render evidence.
+- Empty explicit time scales use a fixed epoch-day domain. Supplied domains
+  and observed timestamps determine nonempty scales; the wall clock does not
+  supply an empty snapshot's time range.
+- SVG and canvas rasterize edges and text differently. Browser fonts and
+  computed CSS can change measurements after load. Provide explicit theme,
+  font, and size inputs when those must agree across hosts.
+- Physics SVG is a settled snapshot; live physics can continue advancing.
+- The React XY SVG scene currently has no plot clip around its marks, while
+  standalone XY SVG and live canvas clip the data layer. Marks crossing an
+  authored extent can therefore differ before hydration. This is tracked in
+  [#1469](https://github.com/nteract/semiotic/issues/1469).
 
-The hook calls `storeRef.current?.cancelIntroAnimation?.()` — the `?.` means a store without this method silently no-ops, but every shipped store implements it. A new frame's store should too. Three things to clear:
+## Verification
 
-- `prevPositionMap` and any equivalent path / position maps used by the transition system.
-- `activeTransition` (or the equivalent — `NetworkPipelineStore` calls it `transition`).
-- **Per-node intro state.** Lines and areas store `_introClipFraction = 0` directly on scene nodes; that's invisible to `prevPositionMap` but the canvas renderer reads it and clips the path from the left. The cancel must walk the scene and reset the flag to `undefined`. Network nodes have similar per-node intro fields (`_prevX0`, `_prevY1`, `_introFromZero` on edges). See `PipelineStore.cancelIntroAnimation` and `NetworkPipelineStore.cancelIntroAnimation` for the full pattern.
+- Extend the appropriate `charts/<family>/hydration.test.tsx` matrix and frame
+  hydration tests. Assert real SVG marks before hydration, no recoverable React
+  errors, and painted canvas plus working interaction afterward. Physics has
+  focused hydration coverage in `physics/StreamPhysicsFrame.test.tsx` and its
+  theme/chrome suites.
+- Cover intro cancellation in the relevant pipeline-store tests, including
+  per-node state. Cover unmount cleanup in `useHydrationLifecycle.cleanup.test.tsx`.
+- Check controlled realtime snapshots in `server/realtimeSSR.test.ts` and the
+  temporal-accessor tests; cover push ingestion separately.
+- `integration-tests/ssr-parity.spec.ts` compares current SVG and canvas output
+  with a color-aware tolerance and reviews a side-by-side snapshot. Structural
+  cases use semantic assertions where a pixel comparison is inappropriate.
+- Run `npm run dist:prod` for directive checks and test the affected published
+  server/browser entries when changing shared scene or sizing behavior.
 
-Idempotent — a second call must be a no-op.
-
-## Build categorization
-
-When adding a new frame, also update `scripts/build.mjs`:
-
-- If your frame produces a new sub-path bundle (e.g. `semiotic/foo`), add it to the `bundles` array.
-- Mark the bundle `clientOnly: true` if it ships React components (i.e. always — Stream Frames are by definition client-side).
-- The post-build `assertDirectivePlacement` will then verify the bundle carries `"use client"` on output.
-
-## What's covered by tests automatically
-
-If you follow the recipe correctly, these gates engage without extra test wiring:
-
-- **`charts/<family>/hydration.test.tsx`** parametrized matrix — add a row in the `cases` array; the three assertions (no `<canvas>` in server output, no React mismatch warnings on hydrate, canvas live after hydration) run automatically.
-- **`PipelineStore.cancelIntro.test.ts`** — add a per-store cancellation test mirroring the shipped XY / Ordinal / Network ones. Asserts `activeTransition === null` *and* per-node intro state is cleared.
-- **Build-time `assertDirectivePlacement`** — runs on every `npm run dist`. Catches both directions: directive on serverOnly bundle, OR missing on clientOnly bundle.
-
-## What's deliberately not in scope
-
-- **Streaming charts opt out by design.** `RealtimeLineChart` etc. are canvas-only — server-rendering a live push-driven chart isn't a use case. They don't go through this recipe.
-- **Pixel-level SSR-vs-CSR comparison.** SVG and canvas pipelines have inherent anti-aliasing differences. The Playwright test in `integration-tests/ssr-parity.spec.ts` baselines each side independently — not against each other — and a maintainer reviews snapshot diffs.
-
-## See also
-
-- `src/components/stream/useHydration.ts` — the three hooks (`useHydration`, `useWasHydratingFromSSR`, `useHydrationLifecycle`) plus full prose on the detection mechanism.
-- `docs/src/pages/UsingSSRPage.js` — user-facing docs for the auto-hydration feature.
+See `useHydration.ts`, `useCanvasFrameHost.tsx`, and
+`docs/src/pages/UsingSSRPage.jsx` for the hooks, host lifecycle, and public guide.

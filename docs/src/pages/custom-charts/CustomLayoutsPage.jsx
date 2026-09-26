@@ -478,9 +478,10 @@ import { isometricLandmarkLayout } from "semiotic/recipes"
         <h2 id="waffle-chart">Waffle chart</h2>
         <p>
           A grid of cells where each cell represents one share of the total. Categories fill
-          row-major, allocated proportionally with the largest-remainder method. The whole layout is
-          ~40 lines and emits <code>RectSceneNode</code>s — every theme, hover, and selection
-          feature works without extra wiring.
+          row-major, allocated proportionally with the largest-remainder method. Categories that
+          receive no cells are disclosed with a shown/total count below the grid, including in
+          SVG exports. Rows and columns must be positive integers, with enough plot space for
+          the gutters; an invalid grid shows a notice instead of cells.
         </p>
         <p style={{ fontSize: 12, color: "var(--text-2)" }}>
           Recipe contract: <code>{waffleRecipeManifest.id}</code> · intent{" "}
@@ -667,6 +668,13 @@ import { waffleLayout } from "semiotic/recipes"
             margin={{ top: 20, right: 80, bottom: 30, left: 80 }}
           />
         </div>
+        <p>
+          Flextree and Dagre center and uniformly shrink the node bounds into the plot,
+          including negative coordinates. Labels and tooltips receive your original
+          data objects. Set <code>{'layoutConfig={{ fit: "none" }}'}</code> to preserve
+          authored pixel positions. Non-finite positions and nonpositive node sizes
+          are skipped. Dagre includes edge waypoints in the fitted bounds.
+        </p>
         <CodeBlock language="jsx">{`import flextree from "d3-flextree"
 import { NetworkCustomChart } from "semiotic/network"
 import { flextreeLayout } from "semiotic/recipes"
@@ -874,6 +882,8 @@ import { marimekkoLayout } from "semiotic/recipes"
           dark bar for the actual measured value, and a perpendicular tick at the target. Each row
           is independently scaled so metrics in different units (dollars, percentages, counts) sit
           side-by-side without any shared axis.
+          Rows without positive values are skipped without leaving gaps. When rows cannot fit,
+          a shown/total count below the chart discloses the omission, including in SVG exports.
         </p>
         <div
           style={{

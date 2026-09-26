@@ -13,10 +13,8 @@ import type { GradientLegendConfig } from "../types/legendTypes"
 /**
  * Build a geo symbol map's per-point base `pointStyle` (colorBy fill + sizeBy
  * radius), mirroring the client `ProportionalSymbolMap`/`DistanceCartogram`
- * exactly. The geo scene builder resolves point color/size only from a
- * `pointStyle` — the frame has no `colorBy` path server-side — so without this
- * SSR/`renderChart` symbol maps rendered every point in the default color/size
- * (a true CSR/SSR mismatch). Handles string AND function `colorBy`.
+ * exactly. The geo scene builder reads color and size from `pointStyle`.
+ * Handles string and function `colorBy` accessors.
  */
 function buildGeoPointBaseStyle(
   points: unknown,
@@ -53,21 +51,17 @@ function flattenFeature(f: Datum): Datum {
   return f && typeof f === "object" && (f as Datum).properties ? { ...(f as Datum).properties, ...f } : f
 }
 
-/**
- * Build the choropleth's per-feature base `areaStyle` — the sequential
- * value→color fill — mirroring the client `ChoroplethMap` exactly so
- * `renderChart`/SSR output matches the browser. Without this the server frame
- * had no `valueAccessor`→color path and every feature fell back to gray (a true
- * CSR/SSR mismatch). Returns `undefined` when areas aren't materialized (the
- * server can't resolve a `"world-110m"` string synchronously — that path
- * errors later in `renderGeoFrame`).
- */
 interface ChoroplethColorModel {
   domain: [number, number]
   colorScale: (value: number) => string
   valueAccessor: (feature: Datum) => number | undefined
 }
 
+/**
+ * Resolve the choropleth's sequential color model for area fills and legends.
+ * Unresolved reference-geography strings return undefined here and are
+ * rejected by renderGeoFrame; callers must supply materialized features.
+ */
 function buildChoroplethColorModel(
   areas: unknown,
   valueAccessor: string | ((d: Datum) => number | undefined) | undefined,

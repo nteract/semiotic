@@ -16,7 +16,7 @@ export default function UsingSSRPage() {
       <p>
         Semiotic works in server-side rendering environments like Next.js App
         Router, Remix, Astro, and any framework that uses React Server
-        Components. Non-streaming chart HOCs can be imported and rendered
+        Components. Chart HOCs with supplied data can be imported and rendered
         directly from a Server Component. Their package modules include{" "}
         <code>"use client"</code>, so Next.js recognizes the boundary without
         requiring a wrapper or turning the importing page into a Client
@@ -33,7 +33,7 @@ export default function UsingSSRPage() {
         ResponsiveFrames, SparkFrames, tooltips, interaction layers) ships with
         a <code>"use client"</code> directive at the top of its module. This
         directive defines the package boundary. Your Server Component may import
-        and render a non-streaming chart directly as long as the props crossing
+        and render a chart directly as long as the props crossing
         that boundary are serializable:
       </p>
 
@@ -180,7 +180,7 @@ import { StreamNetworkFrame } from "semiotic/network"`}
       <h2 id="auto-hydration">Isomorphic Auto-Hydration</h2>
 
       <p>
-        Every non-streaming chart HOC in Semiotic participates in React's
+        Charts backed by Semiotic's five Stream Frames participate in React's
         hydration boundary directly. The same chart component that
         renders interactively on the client also renders server-side as
         inline SVG when called from a React Server Component — no
@@ -225,15 +225,24 @@ import { StreamNetworkFrame } from "semiotic/network"`}
           <code>ProportionalSymbolMap</code>, <code>FlowMap</code>,{" "}
           <code>DistanceCartogram</code>.
         </li>
+        <li>
+          <strong>Physics:</strong> charts using <code>StreamPhysicsFrame</code>{" "}
+          render a settled SVG snapshot before the live simulation takes over.
+        </li>
+        <li>
+          <strong>Realtime:</strong> <code>RealtimeLineChart</code>,{" "}
+          <code>RealtimeHistogram</code>, <code>RealtimeSwarmChart</code>,{" "}
+          <code>RealtimeWaterfallChart</code>, and <code>RealtimeHeatmap</code>{" "}
+          render controlled snapshots when supplied with <code>data</code>.
+        </li>
       </ul>
 
       <p>
-        Streaming charts (<code>RealtimeLineChart</code>,{" "}
-        <code>RealtimeHistogram</code>, <code>RealtimeSwarmChart</code>,{" "}
-        <code>RealtimeWaterfallChart</code>, <code>RealtimeHeatmap</code>)
-        deliberately stay canvas-only — they're designed for live
-        push-driven data, not pre-rendered output. Render them as client
-        components.
+        Realtime snapshots also work with <code>renderChart</code> from{" "}
+        <code>semiotic/server</code>. React push mode is selected by omitting{" "}
+        <code>data</code> and using a ref in a client component. Rows pushed
+        after mounting are absent from the server snapshot. Passing{" "}
+        <code>{"data={[]}"}</code> selects an empty controlled snapshot.
       </p>
 
       <CodeBlock
@@ -261,15 +270,12 @@ export default async function DashboardPage() {
       />
 
       <p>
-        How it works: <code>StreamXYFrame</code> uses an internal{" "}
-        <code>useHydration()</code> hook that returns <code>false</code>{" "}
-        on the server and during the first client render after hydration,
-        then flips to <code>true</code> after the first commit. While
-        false, the frame's existing SSR-mode SVG branch fires; once true,
-        the frame upgrades to canvas + interactivity in the same DOM
-        subtree. React's reconciler handles the swap as a normal update.
-        Server output and first-client-render output are byte-identical,
-        so hydration succeeds without mismatch warnings.
+        The server and first hydration render use matching SVG layers for
+        the scene and chart overlays. After the first commit, canvas replaces
+        the scene layer and enables interaction; axes, legends, and annotations
+        remain in the overlay. Pure client mounts start with canvas. The
+        standalone SVG returned by <code>renderChart</code> is an export or
+        manual placeholder, not the React tree used for automatic hydration.
       </p>
 
       <p>
@@ -279,15 +285,15 @@ export default async function DashboardPage() {
       <ul>
         <li>
           <strong>SVG paint is slower than canvas past ~5k marks.</strong>{" "}
-          For dense scatter or streaming charts, the SVG-first approach
-          adds a measurable cost. Streaming and realtime charts opt out
-          of the SVG layer (they're canvas-only by design — see below).
+          Dense snapshots add SVG serialization and browser paint work.
+          Limit the supplied snapshot to the rows you need for initial display.
         </li>
         <li>
           <strong>First interaction waits on canvas mount.</strong> Hover
           and click handlers attach to the canvas, which exists only
-          after hydration completes. In practice that's a single rAF
-          frame from when the page becomes interactive.
+          after hydration completes. The handoff paints canvas synchronously
+          in a layout effect; summaries and table controls are present in
+          the initial markup.
         </li>
         <li>
           <strong>Theme CSS variables resolve via the canvas DOM context.</strong>{" "}
@@ -326,39 +332,30 @@ export default async function DashboardPage() {
         When a chart with <code>animate</code> enabled is hydrated from
         SSR, the intro animation is skipped — the server already
         painted the chart in its final state, and re-animating from
-        blank when the canvas takes over would look like a regression.
-        Pure client mounts (no SSR) keep their intro animation because
-        the SVG render is overwritten before the browser paints, so the
-        canvas's first paint is the user's first sight of the chart.
+        blank when the canvas takes over would replay the introduction.
+        Pure client mounts (no SSR) start with canvas and keep their intro animation.
         Subsequent data-change transitions animate normally in both
         modes.
       </p>
 
       {/* -------------------------------------------------------------- */}
-      <h2 id="server-placeholder-pattern">Manual Placeholder Pattern (for streaming charts)</h2>
+      <h2 id="server-placeholder-pattern">Manual Placeholder Pattern</h2>
 
       <p>
-        Streaming charts (<code>RealtimeLineChart</code> et al.) and any
-        chart you've deliberately wrapped in <code>{`{ ssr: false }`}</code>{" "}
-        don't participate in auto-hydration. For these, pair{" "}
+        For a chart loaded with <code>{`{ ssr: false }`}</code>, pair{" "}
         <code>next/dynamic</code> with <code>semiotic/server</code>'s{" "}
         <code>renderChart</code> as the placeholder. The server emits a
         static SVG that's part of the initial HTML; the client wrapper
         renders the same placeholder until it has mounted, then swaps in
-        the interactive chart in the same slot. This is also the
-        emergency fallback if you ever hit a hydration regression in an
-        auto-hydrating chart — wrap it manually until the regression is
-        fixed.
+        the interactive chart in the same slot. This is useful when the live
+        data source or chart configuration needs browser APIs.
       </p>
 
       <p>
-        This is the cheap, working SSR story today. It's deliberately not
-        rehydration — the placeholder SVG and the client canvas are
-        produced by separate code paths, so the client mount swaps the
-        DOM out rather than picking up where the server left off. That
-        means fast initial paint, indexable static SVG, and zero
-        hydration warnings, with the cost that the first interaction has
-        to wait on client mount + the chart's initial layout pass.
+        The placeholder SVG and client canvas use separate renderers. The
+        client mount replaces the placeholder after hydration. The SVG supplies
+        the initial display, while interaction waits for the chart to mount
+        and compute its layout.
       </p>
 
       <p>
@@ -463,11 +460,9 @@ export default async function DashboardPage() {
       </ul>
 
       <p>
-        This pattern is a one-piece fit: replace the server-rendered SVG
-        with future Semiotic isomorphic-rehydration support (when it
-        ships) by removing the <code>placeholderSvg</code>{" "}
-        prop and the <code>mounted</code> gate. No data shape or other
-        prop changes required.
+        When the chart can render from serializable props, you can use
+        automatic hydration by rendering it directly and removing the dynamic
+        import, <code>placeholderSvg</code> prop, and <code>mounted</code> gate.
       </p>
 
       {/* -------------------------------------------------------------- */}

@@ -73,10 +73,7 @@ export function viridisColor(i: number, n: number): string {
  * does before handing style functions to its frame.
  *
  * Every shape-drawing HOC applies `stroke`/`strokeWidth`/`opacity` last, so
- * they win over `frameProps.*Style` returns and the HOC's own base style. A
- * server config that builds its style function without this overlay silently
- * drops the whole channel — the static SVG comes back byte-identical to an
- * unstyled render while the canvas honors it.
+ * they win over `frameProps.*Style` returns and the HOC's own base style.
  *
  * Keys are omitted when unset so `mergeShapeStyle` can return its input
  * unchanged and callers keep the no-override fast path.

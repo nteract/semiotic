@@ -90,9 +90,9 @@ export interface ActiveCountOptions<T> {
   start?: Accessor<T>
   /** Interval end accessor. @default `"end"` */
   end?: Accessor<T>
-  /** `[min, max]` domain to sample across (inclusive of both ends). */
+  /** Finite `[min, max]` domain. Includes max when it falls on a sample. */
   domain: [number, number]
-  /** Sample spacing. @default 1 */
+  /** Finite positive sample spacing. Invalid domains/steps return []. @default 1 */
   step?: number
   /** Count an interval active at position `v` when `start <= v <= end`
    *  (`"closed"`, the default — natural for whole-unit intervals like years),
@@ -121,11 +121,22 @@ export function activeCountOverDomain<T = Datum>(
   const [min, max] = options.domain
   const step = options.step ?? 1
   const halfOpen = options.bounds === "half-open"
-  if (!(min <= max)) return []
+  if (
+    !Number.isFinite(min) || !Number.isFinite(max) || min > max ||
+    !Number.isFinite(step) || step <= 0
+  ) return []
+  const steps = (max - min) / step
+  // Reject unrepresentable spacing/counts, including finite-domain overflow.
+  if (
+    steps >= Number.MAX_SAFE_INTEGER ||
+    (min < max && (min + step <= min || max - step >= max))
+  ) return []
+  const tolerance = Math.min(0.25, 4 * Number.EPSILON * Math.max(1, steps))
+  const lastIndex = Math.floor(steps + tolerance)
 
   // A sweep avoids revisiting every interval at every sample. For short
   // domains, direct counting is cheaper than sorting the endpoints.
-  const sweep = (max - min) / step > Math.log2(items.length + 1)
+  const sweep = steps > Math.log2(items.length + 1)
   const starts: number[] = []
   const ends: number[] = []
   if (sweep) {
@@ -144,7 +155,12 @@ export function activeCountOverDomain<T = Datum>(
   let started = 0
   let ended = 0
   const out: ActiveCount[] = []
-  for (let v = min; v <= max; v += step) {
+  for (let i = 0; i <= lastIndex; i++) {
+    // Indexed sampling avoids cumulative drift. Snap an on-grid endpoint to
+    // max so closed/half-open comparisons use the caller's exact boundary.
+    const v = i > 0 && i === lastIndex && Math.abs(i - steps) <= tolerance
+      ? max
+      : min + i * step
     let count = 0
     if (sweep) {
       while (started < starts.length && starts[started] <= v) started++

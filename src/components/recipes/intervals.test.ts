@@ -33,32 +33,74 @@ describe("activeCountOverDomain", () => {
     }
   )
 
-  it.each(["closed", "half-open"] as const)(
-    "keeps floating-point sample positions and %s endpoint comparisons",
-    (bounds) => {
-      const intervals = [
-        { start: 0.3, end: 0.8 },
-        { start: 0, end: 0.3 },
-        { start: 0.8, end: 1 },
-        { start: 0.6, end: 0.6 }
-      ]
-      const expected = []
-      for (let value = 0; value <= 1; value += 0.1) {
-        expected.push({
-          value,
-          count: intervals.filter(
-            ({ start, end }) =>
-              start <= value &&
-              (bounds === "half-open" ? value < end : value <= end)
-          ).length
-        })
-      }
+  it("samples fractional domains without cumulative drift", () => {
+    const result = activeCountOverDomain([{ start: 0.25, end: 0.75 }], {
+      domain: [0, 1],
+      step: 0.1
+    })
+    expect(result).toHaveLength(11)
+    expect(result.map((d) => d.count)).toEqual([
+      0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0
+    ])
+    result.forEach((point, index) =>
+      expect(point.value).toBeCloseTo(index / 10, 15)
+    )
+    expect(result.at(-1)!.value).toBe(1)
+  })
+
+  it.each([0, -1, NaN, Infinity, -Infinity, Number.MIN_VALUE])(
+    "rejects unusable step %s without reading intervals",
+    (step) => {
+      const start = vi.fn(() => 0)
       expect(
-        activeCountOverDomain(intervals, { domain: [0, 1], step: 0.1, bounds })
-      ).toEqual(expected)
-      expect(expected.at(-1)!.value).toBe(0.9999999999999999)
+        activeCountOverDomain([{}], { domain: [0, 1], step, start })
+      ).toEqual([])
+      expect(start).not.toHaveBeenCalled()
     }
   )
+
+  it.each([
+    [0, Infinity],
+    [-Infinity, 0],
+    [-Number.MAX_VALUE, Number.MAX_VALUE],
+    [1e20, 1e20 + 1e6]
+  ])("rejects unrepresentable sampling for [%s, %s]", (min, max) => {
+    expect(activeCountOverDomain([], { domain: [min, max] })).toEqual([])
+  })
+
+  it.each(["closed", "half-open"] as const)(
+    "includes a fractional endpoint with %s semantics in direct and sweep counting",
+    (bounds) => {
+      for (const length of [1, 20]) {
+        const data = Array.from({ length }, () => ({ start: 0, end: 0.3 }))
+        const result = activeCountOverDomain(data, {
+          domain: [0, 0.3],
+          step: 0.1,
+          bounds
+        })
+        expect(result).toEqual([
+          { value: 0, count: length },
+          { value: 0.1, count: length },
+          { value: 0.2, count: length },
+          { value: 0.3, count: bounds === "closed" ? length : 0 }
+        ])
+      }
+    }
+  )
+
+  it("keeps the first sample at min even when the domain is much smaller than step", () => {
+    expect(
+      activeCountOverDomain([], { domain: [0, Number.EPSILON / 10] })
+    ).toEqual([{ value: 0, count: 0 }])
+  })
+
+  it("does not append an endpoint outside the sampling grid", () => {
+    expect(
+      activeCountOverDomain([], { domain: [0, 0.29], step: 0.1 }).map(
+        (d) => d.value
+      )
+    ).toEqual([0, 0.1, 0.2])
+  })
 
   it("resolves each endpoint once for a densely sampled domain", () => {
     const intervals = [
