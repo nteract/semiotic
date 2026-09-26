@@ -72,7 +72,7 @@ export function findNearestNetworkNode(
     if (node.type === "rect") {
       // For rects: prefer the smallest area (deepest cell)
       const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
-      if (area < bestRectArea) {
+      if (node._hitPath || area < bestRectArea) {
         bestNode = result
         bestRectArea = area
       }
@@ -113,8 +113,24 @@ function hitTestNode(
   switch (node.type) {
     case "circle":
       return hitTestCircle(node, px, py, maxDistance)
-    case "rect":
-      return hitTestRect(node, px, py)
+    case "rect": {
+      const hit = hitTestRect(node, px, py)
+      if (!hit || !node._hitPath) return hit
+      const region = node._hitPath
+      const [tx, ty, sx, sy] = region.transform
+      const path = getEdgePath2D(region), ctx = getHitContext()
+      if (!path || !ctx || sx === 0 || sy === 0) return null
+      const x = (px - tx) / sx, y = (py - ty) / sy
+      if (region.fill && ctx.isPointInPath(path, x, y)) return hit
+      if (region.strokeWidth > 0) {
+        const previousWidth = ctx.lineWidth
+        ctx.lineWidth = region.strokeWidth
+        const inStroke = ctx.isPointInStroke(path, x, y)
+        ctx.lineWidth = previousWidth
+        if (inStroke) return hit
+      }
+      return null
+    }
     case "arc":
       return hitTestArc(node, px, py)
     case "symbol":

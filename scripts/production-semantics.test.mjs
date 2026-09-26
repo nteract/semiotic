@@ -592,3 +592,69 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
     })
   }
 }
+
+for (const target of publicTargets("./experimental")) {
+  test(`experimental ${target.conditions} preserves SVG path bounds and hit regions (#1509)`, () => {
+    exercise(target, `
+      const items = [
+        { kind: "path", d: "M0 100 A50 50 0 01100 100Z", datum: { name: "arc" } },
+        { kind: "path", d: "m10 20h80v50h-80z", datum: { name: "bar" } }
+      ]
+      const cfg = api.unstable_fromGofishIR({ ir: "gofish-display-list", irVersion: 0, viewport: { w: 200, h: 200 }, items })
+      const scene = cfg.networkLayout({})
+      assert.equal(scene.sceneNodes.length, 2)
+      assert.deepEqual(scene.sceneNodes.map(({ x, y, w, h }) => [x, y, w, h]), [[0, 50, 100, 50], [10, 20, 80, 50]])
+      scene.sceneNodes.forEach((node, i) => {
+        assert.equal(node.datum, items[i].datum)
+        assert.equal(node._hitPath.pathD, items[i].d)
+        assert.deepEqual(node._hitPath.transform, [0, 0, 1, 1])
+      })
+    `)
+  })
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} renders precise GoFish geometry and unfolded bump ribbons (#1509)`, () => {
+      exercise(target, `
+        const experimental = createRequire(import.meta.url)("./dist/semiotic-experimental.min.js")
+        const cfg = experimental.unstable_fromGofishIR({
+          ir: "gofish-display-list", irVersion: 0, viewport: { w: 200, h: 200 },
+          items: [{ kind: "path", d: "M0 100 A50 50 0 0 1 100 100Z", datum: { id: "arc" } }]
+        })
+        let scene
+        const gofish = api.renderChartWithEvidence("NetworkCustomChart", {
+          nodes: cfg.nodes, edges: [], width: 200, height: 200, margin: 0,
+          layout: ctx => { scene = cfg.networkLayout(ctx); return scene }
+        })
+        assert.equal(gofish.evidence.markCount, 1)
+        assert.equal(gofish.evidence.empty, false)
+        assert.deepEqual(scene.sceneNodes.map(({ x, y, w, h }) => [x, y, w, h]), [[0, 50, 100, 50]])
+        assert.match(gofish.svg, /M0 100 A50 50 0 0 1 100 100Z/)
+        const data = Array.from({ length: 4 }, (_, period) => ["A", "B", "C"].map((team, i) => ({
+          team, period, value: period % 2 ? 30 + 30 * i : 90 - 30 * i
+        }))).flat()
+        for (const curve of ["smooth", "linear"]) {
+          const result = api.renderChartWithEvidence("BumpChart", {
+            data, width: 220, height: 420, margin: { left: 20, right: 20, top: 40, bottom: 20 },
+            xAccessor: "period", yAccessor: "value", lineBy: "team", ribbon: true, ribbonSizeRange: [36, 36],
+            curve, showAxes: false, showLabels: false, showPoints: false, showLegend: false, color: "#ff5500"
+          })
+          assert.equal(result.evidence.markCount, 3)
+          assert.equal(result.evidence.empty, false)
+          const paths = [...result.svg.matchAll(/<path[^>]*d="([^"]+)"[^>]*fill="#ff5500"/g)]
+          assert.equal(paths.length, 3)
+          for (const [, d] of paths) {
+            const values = d.match(/[-+]?[0-9]*[.]?[0-9]+(?:e[-+]?[0-9]+)?/gi).map(Number)
+            assert.equal(values.length, 148)
+            const top = values.filter((_, i) => i % 2 === 0).slice(0, 37)
+            const bottom = values.filter((_, i) => i % 2 === 0).slice(37).reverse()
+            for (const boundary of [top, bottom]) for (let i = 1; i < boundary.length; i++) {
+              assert.ok(boundary[i] > boundary[i - 1], "No reversed or retraced ribbon sections")
+            }
+          }
+        }
+      `)
+    })
+  }
+}

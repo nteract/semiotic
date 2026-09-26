@@ -138,7 +138,10 @@ export function findNearestNode(
     // geometry. Do not re-cap large bubbles/glyphs at maxDistance here; the
     // quadtree path intentionally honors the same visual radius.
     if (result) {
-      if (!best || result.distance < best.distance) {
+      if (!best || result.distance < best.distance || (
+        result.distance === 0 && best.distance === 0 &&
+        node.type === "area" && node._hitArea && best.node.type === "area" && best.node._hitArea
+      )) {
         best = result
       }
     }
@@ -363,6 +366,18 @@ function hitTestAreaPath(
       py > node.clipRect.y + node.clipRect.height)
   ) return null
 
+  if (node._hitArea) {
+    const top = interpolatePathAtX(getCurveSampledPath(node.topPath, node.curve), px, Infinity)
+    const bottom = interpolatePathAtX(getCurveSampledPath(node.bottomPath, node.curve), px, Infinity)
+    if (top !== null && bottom !== null && py >= Math.min(top, bottom) && py <= Math.max(top, bottom)) {
+      // Normal offsets give the two boundaries different x coordinates. Use
+      // their paired centers to retain the nearest sample's datum identity.
+      const idx = binarySearchPath(node.topPath, px, node.bottomPath)
+      const datum = Array.isArray(node.datum) ? node.datum[idx] ?? node.datum : node.datum
+      return { node, datum, x: px, y: py, distance: 0 }
+    }
+  }
+
   // Follow the rendered top edge, including curve interpolation, while
   // retaining the nearest raw sample for datum/tooltip identity.
   const hitPath = getCurveSampledPath(node.topPath, node.curve)
@@ -404,22 +419,23 @@ function hitTestAreaPath(
 /**
  * Binary search for the nearest point by x-coordinate in a sorted path.
  */
-function binarySearchPath(path: [number, number][], targetX: number): number {
+function binarySearchPath(path: [number, number][], targetX: number, paired?: [number, number][]): number {
   if (path.length === 0) return -1
 
+  const x = (i: number) => paired ? (path[i][0] + paired[i][0]) / 2 : path[i][0]
   let lo = 0
   let hi = path.length - 1
 
   while (lo < hi) {
     const mid = (lo + hi) >> 1
-    if (path[mid][0] < targetX) lo = mid + 1
+    if (x(mid) < targetX) lo = mid + 1
     else hi = mid
   }
 
   // Check if lo-1 is closer
   if (lo > 0) {
-    const dLo = Math.abs(path[lo][0] - targetX)
-    const dPrev = Math.abs(path[lo - 1][0] - targetX)
+    const dLo = Math.abs(x(lo) - targetX)
+    const dPrev = Math.abs(x(lo - 1) - targetX)
     if (dPrev <= dLo) return lo - 1
   }
 

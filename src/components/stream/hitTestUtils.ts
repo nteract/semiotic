@@ -9,6 +9,15 @@ export interface RectHitResult {
   cy: number
 }
 
+/** Exact pointer geometry for an SVG display-list path. */
+export interface PathHitRegion {
+  pathD: string
+  /** Local-to-plot translation and scale: tx, ty, sx, sy. */
+  transform: [number, number, number, number]
+  fill: boolean
+  strokeWidth: number
+}
+
 /** Distance to a segment, including a segment collapsed to a single point. */
 export function pointToSegmentDistance(
   px: number, py: number,

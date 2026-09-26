@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkCustomLayout, NetworkLayoutResult } from "../stream/networkCustomLayout"
 import type { NetworkSceneNode } from "../stream/networkTypes"
+import { svgPathBounds } from "../geometry/svgPathBounds"
 import type { Style } from "../stream/types"
 
 /**
@@ -27,7 +28,8 @@ import type { Style } from "../stream/types"
  *   warped `path`s, `image`s, and Porter-Duff `composite`/`mask` graphs — stay
  *   pixel-faithful.
  * - **`role: "node"`** — data-bearing marks. Rendered into the same SVG layer
- *   *and* given a transparent hit-rect scene node carrying the item's `datum`,
+ *   *and* given a transparent scene node carrying the item's `datum`. Paths use
+ *   analytic bounds for focus/navigation and their exact shape for pointer hits,
  *   so Semiotic stays authoritative for hit-testing, tooltips, `onObservation`,
  *   cross-chart selection, keyboard a11y, and SSR mark-count evidence.
  *
@@ -213,33 +215,6 @@ interface Box {
   h: number
 }
 
-/** Extract the bounding numbers of an SVG path `d` by pairing coordinates. The
- *  display-list petals/wedges are M/L/Q/Z paths, so even-indexed numbers are x
- *  and odd-indexed are y — an over-estimate at worst (control points), which is
- *  fine for a transparent hit target. */
-function pathBox(d: string): Box | null {
-  const nums = d.match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi)
-  if (!nums || nums.length < 2) return null
-  let minX = Infinity
-  let minY = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  for (let i = 0; i + 1 < nums.length; i += 2) {
-    const x = parseFloat(nums[i])
-    const y = parseFloat(nums[i + 1])
-    if (Number.isFinite(x)) {
-      minX = Math.min(minX, x)
-      maxX = Math.max(maxX, x)
-    }
-    if (Number.isFinite(y)) {
-      minY = Math.min(minY, y)
-      maxY = Math.max(maxY, y)
-    }
-  }
-  if (!Number.isFinite(minX) || !Number.isFinite(minY)) return null
-  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
-}
-
 /** A coarse text bbox from anchor + font size (text is usually overlay chrome;
  *  a rough box is enough should a `role:"node"` label ever need a hit target). */
 function textBox(item: GofishTextItem): Box {
@@ -259,7 +234,7 @@ function boxOf(item: GofishDisplayItem): Box | null {
     case "ellipse":
       return { x: item.cx - item.rx, y: item.cy - item.ry, w: item.rx * 2, h: item.ry * 2 }
     case "path":
-      return pathBox(item.d)
+      return svgPathBounds(item.d)
     case "text":
       return textBox(item)
     case "composite":
@@ -280,7 +255,9 @@ interface Transform {
 const IDENTITY: Transform = { tx: 0, ty: 0, sx: 1, sy: 1 }
 
 function applyTransform(box: Box, t: Transform): Box {
-  return { x: box.x * t.sx + t.tx, y: box.y * t.sy + t.ty, w: box.w * t.sx, h: box.h * t.sy }
+  const x1 = box.x * t.sx + t.tx, x2 = (box.x + box.w) * t.sx + t.tx
+  const y1 = box.y * t.sy + t.ty, y2 = (box.y + box.h) * t.sy + t.ty
+  return { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) }
 }
 
 function composeTransform(parent: Transform, g: GofishGroupItem["transform"]): Transform {
@@ -503,7 +480,12 @@ function collectHitNodes(
     if (role !== "node" || !datum || item.kind === "text") continue
     const localBox = boxOf(item)
     if (!localBox) continue
-    const box = applyTransform(localBox, transform)
+    const strokeWidth = item.style?.stroke && item.style.stroke !== "none"
+      ? Math.max(0, item.style.strokeWidth ?? 1) : 0
+    const box = applyTransform(item.kind === "path" ? {
+      x: localBox.x - strokeWidth / 2, y: localBox.y - strokeWidth / 2,
+      w: localBox.w + strokeWidth, h: localBox.h + strokeWidth
+    } : localBox, transform)
     if (!(box.w > 0) || !(box.h > 0)) continue
     const hitStyle: Style = { fill: "rgba(0,0,0,0)", stroke: "none" }
     out.push({
@@ -513,6 +495,14 @@ function collectHitNodes(
       w: box.w,
       h: box.h,
       style: hitStyle,
+      ...(item.kind === "path" ? {
+        _hitPath: {
+          pathD: item.d,
+          transform: [transform.tx, transform.ty, transform.sx, transform.sy] as [number, number, number, number],
+          fill: item.style?.fill !== "none",
+          strokeWidth
+        }
+      } : {}),
       datum,
       id: item.id ?? `gofish-node-${counter.n}`,
     })

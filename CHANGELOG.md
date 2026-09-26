@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- GoFish paths use SVG command-aware bounds, including curve/arc extrema,
+  relative coordinates, and reflected group transforms. Pointer hits follow
+  the painted path and overlap order while keyboard navigation retains the
+  enclosing bounds. Bump ribbons repair folded boundaries on steep smooth and
+  linear rank changes, preserve sample/datum alignment and column widths, and
+  expose the hovered ribbon's data throughout its filled area. The audit covers
+  real flower petals, camera movement, resize/data updates, tooltip placement
+  and dismissal in Chromium/WebKit, and ESM/CommonJS browser/Node/edge static
+  rendering. (#1509)
 - Lineage domains use actual layer/row extents, including negative layers and
   uncentered or sparse rows. Backedges are inferred when no override is supplied;
   cycles and self-loops stay inside the plot and carry direction arrows. Dagre

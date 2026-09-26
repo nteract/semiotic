@@ -165,8 +165,10 @@ export default function GoFishLayoutsPage() {
               <code>role: {"\"node\""}</code> → scene node.
             </strong>{" "}
             Each data-bearing mark renders into that same SVG layer <em>and</em> gets a transparent
-            hit-rect scene node carrying its <code>datum</code>, so Semiotic stays authoritative for
-            hover, tooltips, <code>onObservation</code>, cross-chart selection, keyboard a11y, and
+            scene node carrying its <code>datum</code>. Paths use analytic SVG bounds for keyboard
+            navigation and focus, with their exact painted region for pointer hits, including
+            relative commands, elliptical arcs, and transformed groups. Overlapping paths follow
+            paint order. Semiotic stays authoritative for hover, tooltips, <code>onObservation</code>, cross-chart selection, keyboard a11y, and
             SSR mark-count evidence. Decoration without a <code>datum</code> (legend swatches, axis
             ticks) stays overlay-only.
           </li>
