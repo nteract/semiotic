@@ -68,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the wall clock. The related-surface audit covers all five frame families,
   bounded and pushed XY data, controlled realtime snapshots, ESM/CommonJS server
   entries (browser, Node, and edge), and browser resize/hover recovery. (#1532)
+  Follow-up: align the time-scale integration test with the fixed UTC epoch-day
+  contract, asserting Date endpoints and exact timestamps instead of a recent year.
 - Hydration guides describe all five frame families, controlled realtime SSR,
   push-mode data requirements, SVG layering, and current pre-hydration differences.
   Shared-hook and server-renderer comments describe current behavior instead of
