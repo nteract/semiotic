@@ -91,8 +91,101 @@ for (const entry of [
   }
 }
 
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} retains geographic cells and lazy region attributes`, () => {
+      exercise(
+        target,
+        `
+      const points = [
+        { id: "city", name: "Corner City", kind: "city", lon: 0.5, lat: 0.5 },
+        { id: "monument", name: "Middle Monument", kind: "monument", lon: 0, lat: 0 }
+      ]
+      const config = { center: { lon: 0, lat: 0 }, gridSize: 3 }
+      const tiles = api.selectIsometricLandmarks(points, config)
+      assert.equal(tiles[2].landmark.id, "city")
+      assert.equal(tiles[4].landmark.id, "monument")
+      assert.deepEqual(api.selectIsometricLandmarks([...points].reverse(), config), tiles)
+      let calls = 0
+      const attributes = context => {
+        calls++
+        return { bodyId: context.body.id, primitive: "spoofed" }
+      }
+      for (const [factory, primitive] of [
+        ["membraneRegion", "membrane"], ["chargeGateRegion", "chargeGate"],
+        ["routeSurfaceRegion", "routeSurface"], ["pressureFieldRegion", "pressureField"],
+        ["capacitatedRegion", "capacitatedSensor"], ["portalRegion", "portal"],
+        ["absorbRegion", "absorb"], ["forceFieldRegion", "forceField"]
+      ]) {
+        const options = { id: "gate", x: 50, y: 50, width: 80, height: 80, cost: 1, capacity: 2 }
+        const before = calls
+        const region = api[factory]({ ...options, attributes })
+        assert.equal(calls, before)
+        assert.equal(typeof region.attributes, "function")
+        const resolved = region.attributes({ body: { id: "parcel" }, region, regionState: {} })
+        assert.equal(resolved.primitive, primitive)
+        assert.equal(resolved.bodyId, "parcel")
+        assert.equal(calls, before + 1)
+        assert.equal(api[factory]({ ...options, attributes: { primitive: "spoofed" } }).attributes.primitive, primitive)
+      }
+    `
+      )
+    })
+  }
+}
+
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} preserves recipe geometry and static callback boundaries`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        const points = [
+          { id: "city", name: "Corner City", kind: "city", lon: 0.5, lat: 0.5 },
+          { id: "monument", name: "Middle Monument", kind: "monument", lon: 0, lat: 0 }
+        ]
+        let nodes
+        const { svg, evidence } = api.renderChartWithEvidence("GeoCustomChart", {
+          points, width: 500, height: 280, margin: 20,
+          layoutConfig: { center: { lon: 0, lat: 0 }, gridSize: 3 },
+          layout: context => {
+            const result = recipes.isometricLandmarkLayout(context)
+            nodes = result.nodes
+            return result
+          }
+        })
+        const city = nodes.find(node => node.datum.id === "city")
+        const monument = nodes.find(node => node.datum.id === "monument")
+        assert.equal(city.datum.cellId, "tile-0-2")
+        assert.equal(monument.datum.cellId, "tile-1-1")
+        assert.equal(city.centroid[0] - monument.centroid[0], 80)
+        assert.equal(city.centroid[1], monument.centroid[1])
+        assert.equal(evidence.markCount, 9)
+        assert.equal(evidence.empty, false)
+        assert.ok(svg.includes(city.pathData))
+        assert.ok(svg.includes(monument.pathData))
+        assert.ok(svg.includes(">CORNER CITY</text>"))
+        assert.doesNotMatch(svg, /NaN|Infinity/)
+
+        // Static physics snapshots paint region/body geometry without running
+        // live region-entry callbacks. Keep this boundary explicit.
+        let calls = 0
+        const region = recipes.chargeGateRegion({
+          id: "gate", x: 100, y: 100, width: 80, height: 80,
+          attributes: () => { calls++; return { parcel: "static" } }
+        })
+        const snapshot = api.renderChartWithEvidence("PhysicsCustomChart", {
+          data: [{ id: "parcel" }], width: 300, height: 240,
+          layout: () => ({
+            bodies: [{ id: "parcel", x: 100, y: 100, shape: { type: "circle", radius: 5 } }],
+            regionEffects: [region],
+            config: { kernel: { gravity: { x: 0, y: 0 } }, settleStepLimit: 2 }
+          })
+        })
+        assert.equal(snapshot.evidence.markCount, 1)
+        assert.ok(snapshot.svg.includes('<circle'))
+        assert.equal(calls, 0)
+      `)
+    })
     test(`${entry} ${target.conditions} keeps small plots finite and empty time snapshots deterministic`, () => {
       exercise(target, `
         for (const [component, props] of [

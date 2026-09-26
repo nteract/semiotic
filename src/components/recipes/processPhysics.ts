@@ -532,13 +532,27 @@ export interface ProcessRegionBaseOptions {
   semanticItem?: false | Partial<PhysicsSemanticItem>
   metadata?: unknown
   bodyStyle?: Style
+  /** Object or per-body callback; the factory always retains its primitive identity. */
   attributes?: StreamPhysicsRegionEffect["attributes"]
   onEnter?: StreamPhysicsRegionEffect["onEnter"]
   onExit?: StreamPhysicsRegionEffect["onExit"]
 }
 
+function primitiveAttributes(
+  primitive: string,
+  attributes: StreamPhysicsRegionEffect["attributes"],
+  defaults?: Record<string, unknown>
+): NonNullable<StreamPhysicsRegionEffect["attributes"]> {
+  return typeof attributes === "function"
+    ? (context) => ({ ...defaults, ...attributes(context), primitive })
+    : { ...defaults, ...attributes, primitive }
+}
+
 function regionBase(
-  options: ProcessRegionBaseOptions
+  options: ProcessRegionBaseOptions,
+  kind?: StreamPhysicsRegionKind,
+  primitive?: string,
+  defaults?: Record<string, unknown>
 ): Pick<
   StreamPhysicsRegionEffect,
   | "id"
@@ -562,7 +576,7 @@ function regionBase(
     id: options.id,
     label: options.label,
     description: options.description,
-    kind: options.kind,
+    kind: options.kind ?? kind,
     shape: aabbFromCenter(
       options.x,
       options.y,
@@ -577,7 +591,9 @@ function regionBase(
     semanticItem: options.semanticItem,
     metadata: options.metadata,
     bodyStyle: options.bodyStyle,
-    attributes: options.attributes,
+    attributes: primitive
+      ? primitiveAttributes(primitive, options.attributes, defaults)
+      : options.attributes,
     onEnter: options.onEnter,
     onExit: options.onExit
   }
@@ -649,17 +665,7 @@ export function membraneRegion(
   const energyScale = options.energyScale ?? 1
   const cost = clamp(options.cost, 0, 2)
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "membrane",
-      attributes: {
-        primitive: "membrane",
-        membraneCost: cost,
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "membrane", "membrane", { membraneCost: cost }),
     damping: cost * dampingScale,
     energyDelta: -cost * energyScale
   }
@@ -674,16 +680,7 @@ export function chargeGateRegion(
   }
 ): StreamPhysicsRegionEffect {
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "charge-gate",
-      attributes: {
-        primitive: "chargeGate",
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "charge-gate", "chargeGate"),
     charge: options.charge ?? true,
     energyDelta: options.energyDelta,
     impulseOnEnter: options.impulseOnEnter
@@ -702,16 +699,7 @@ export function routeSurfaceRegion(
       ? { x: options.force, y: 0 }
       : (options.force ?? { x: 12, y: 0 })
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "force-field",
-      attributes: {
-        primitive: "routeSurface",
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "force-field", "routeSurface"),
     force,
     damping: options.damping ?? 0.015
   }
@@ -738,17 +726,7 @@ export function pressureFieldRegion(
   const dampingPerUnit = options.dampingPerUnit ?? 0.12
   const energyPerUnit = options.energyPerUnit ?? 0
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "membrane",
-      attributes: {
-        primitive: "pressureField",
-        pressure: load,
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "membrane", "pressureField", { pressure: load }),
     damping: baseDamping + load * dampingPerUnit,
     energyDelta: energyPerUnit ? -load * energyPerUnit : undefined,
     force: options.force
@@ -774,17 +752,9 @@ export function capacitatedRegion(
       ? { x: options.force, y: 0 }
       : options.force
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "force-field",
-      attributes: {
-        primitive: "capacitatedSensor",
-        capacity: options.capacity,
-        unitsPerSecond: options.unitsPerSecond ?? options.capacity,
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
+    ...regionBase(options, "force-field", "capacitatedSensor", {
+      capacity: options.capacity,
+      unitsPerSecond: options.unitsPerSecond ?? options.capacity
     }),
     force,
     damping: options.damping,
@@ -802,16 +772,8 @@ export function portalRegion(
   }
 ): StreamPhysicsRegionEffect {
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "force-field",
-      attributes: {
-        primitive: "portal",
-        targetStage: options.targetStage,
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
+    ...regionBase(options, "force-field", "portal", {
+      targetStage: options.targetStage
     }),
     force: options.force,
     impulseOnEnter: options.impulseOnEnter,
@@ -832,16 +794,7 @@ export function absorbRegion(
       ? { x: options.force, y: 0 }
       : (options.force ?? { x: 24, y: 0 })
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "sink",
-      attributes: {
-        primitive: "absorb",
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "sink", "absorb"),
     force,
     damping: options.damping ?? 0.02,
     charge: options.charge ?? "absorbed"
@@ -857,16 +810,7 @@ export function forceFieldRegion(
   }
 ): StreamPhysicsRegionEffect {
   return {
-    ...regionBase({
-      ...options,
-      kind: options.kind ?? "force-field",
-      attributes: {
-        primitive: "forceField",
-        ...(typeof options.attributes === "object" && options.attributes
-          ? options.attributes
-          : {})
-      }
-    }),
+    ...regionBase(options, "force-field", "forceField"),
     force: options.force,
     damping: options.damping,
     energyDelta: options.energyDelta

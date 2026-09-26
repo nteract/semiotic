@@ -1,4 +1,9 @@
 import * as React from "react"
+import {
+  DEFAULT_TERRAIN,
+  normalizeGridSize,
+  selectIsometricLandmarks
+} from "./isometricLandmarkSelection"
 import type { Datum } from "../charts/shared/datumTypes"
 import type {
   GeoCustomLayout,
@@ -6,6 +11,8 @@ import type {
 } from "../stream/geoCustomLayout"
 import type { GeoAreaSceneNode } from "../stream/geoTypes"
 import { useCustomLayoutSelection } from "../stream/customLayoutSelection"
+
+export { selectIsometricLandmarks } from "./isometricLandmarkSelection"
 
 export type LandmarkKind =
   | "city"
@@ -41,7 +48,7 @@ export interface IsometricTerrainCell {
 export interface IsometricLandmarkConfig {
   /** Geographic center represented by the middle grid cell. */
   center: { lon: number; lat: number }
-  /** Datum id forced into the middle cell. */
+  /** In-range datum id explicitly moved into the middle cell. Otherwise landmarks stay in their geographic cells. */
   centerId?: string
   /** Odd number of rows/columns. @default 5 */
   gridSize?: number
@@ -108,7 +115,6 @@ export const DEFAULT_ISOMETRIC_SPRITE_SIZES = {
   city: 64,
 } as const
 
-const DEFAULT_TERRAIN = ["#739b58", "#83a964", "#668d52", "#8baa68"]
 const DEFAULT_CLASSIFIED_TERRAIN: Record<IsometricTerrainKind, string> = {
   land: "#78985c",
   ocean: "#4d8192",
@@ -133,17 +139,6 @@ const TERRAIN_LABELS: Record<IsometricTerrainKind, string> = {
   bare: "Bare ground",
   snow: "Snow cover",
 }
-const VALID_KINDS = new Set<LandmarkKind>([
-  "city",
-  "culture",
-  "monument",
-  "faith",
-  "nature",
-  "knowledge",
-  "defense",
-  "arena",
-  "transport",
-])
 const VALID_TERRAIN_KINDS = new Set<IsometricTerrainKind>([
   "land",
   "ocean",
@@ -203,190 +198,6 @@ function defaultTerrainFill(kind: IsometricTerrainKind): string {
 
 function terrainLabel(kind: IsometricTerrainKind): string {
   return ownNonEmptyString(TERRAIN_LABELS, kind) ?? TERRAIN_LABELS.land
-}
-
-function spriteHref(
-  sprites: unknown,
-  kind: unknown
-): string | undefined {
-  if (!VALID_KINDS.has(kind as LandmarkKind)) return undefined
-  return ownNonEmptyString(sprites, kind as LandmarkKind)
-}
-
-function accessor<T>(
-  value: string | ((d: Datum) => T) | undefined,
-  fallback: string
-): (d: Datum) => T {
-  if (typeof value === "function") return value
-  const key = value ?? fallback
-  return (d: Datum) => d[key] as T
-}
-
-function localOffsetKm(
-  lon: number,
-  lat: number,
-  center: { lon: number; lat: number }
-): [number, number] {
-  const meanLatitude = ((lat + center.lat) / 2) * (Math.PI / 180)
-  const x = (lon - center.lon) * 111.32 * Math.cos(meanLatitude)
-  const y = (lat - center.lat) * 110.574
-  return [x, y]
-}
-
-function normalizeGridSize(value: number | undefined): number {
-  const rounded = Math.max(3, Math.round(value ?? 5))
-  return rounded % 2 === 0 ? rounded + 1 : rounded
-}
-
-function normalizeKind(value: unknown): LandmarkKind {
-  return VALID_KINDS.has(value as LandmarkKind)
-    ? value as LandmarkKind
-    : "monument"
-}
-
-/**
- * Quantize geographic landmarks into an odd square grid and choose one
- * representative per cell. Selection balances proximity to the cell center
- * with category reuse so a dense class does not consume the whole board.
- */
-export function selectIsometricLandmarks(
-  points: Datum[],
-  config: IsometricLandmarkConfig
-): IsometricLandmarkTile[] {
-  const gridSize = normalizeGridSize(config.gridSize)
-  const radius = Math.max(1, config.gridRadiusKm ?? 75)
-  const cellSpan = (radius * 2) / gridSize
-  const middle = Math.floor(gridSize / 2)
-  const getId = accessor<string>(config.idAccessor, "id")
-  const getName = accessor<string>(config.nameAccessor, "name")
-  const getLon = accessor<number>(config.longitudeAccessor, "lon")
-  const getLat = accessor<number>(config.latitudeAccessor, "lat")
-  const getKind = accessor<LandmarkKind>(config.kindAccessor, "kind")
-  const getPriority = config.candidatePriorityAccessor
-    ? accessor<number>(config.candidatePriorityAccessor, "priority")
-    : () => 0
-
-  type Candidate = NonNullable<IsometricLandmarkTile["landmark"]> & {
-    row: number
-    column: number
-    cellDistanceSq: number
-    candidatePriority: number
-  }
-  const candidatesByCell = new Map<string, Candidate[]>()
-  let centerCandidate: Candidate | null = null
-
-  for (const point of points) {
-    const lon = Number(getLon(point))
-    const lat = Number(getLat(point))
-    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue
-    const id = String(getId(point) ?? `${lon},${lat}`)
-    const name = String(getName(point) ?? id)
-    const kind = normalizeKind(getKind(point))
-    const [xKm, yKm] = localOffsetKm(lon, lat, config.center)
-    if (Math.abs(xKm) > radius || Math.abs(yKm) > radius) continue
-
-    const column = Math.min(
-      gridSize - 1,
-      Math.max(0, Math.floor((xKm + radius) / cellSpan))
-    )
-    const row = Math.min(
-      gridSize - 1,
-      Math.max(0, Math.floor((radius - yKm) / cellSpan))
-    )
-    const cellCenterX = -radius + (column + 0.5) * cellSpan
-    const cellCenterY = radius - (row + 0.5) * cellSpan
-    const candidate: Candidate = {
-      ...point,
-      id,
-      name,
-      kind,
-      lon,
-      lat,
-      distanceKm: Math.sqrt(xKm * xKm + yKm * yKm),
-      row,
-      column,
-      cellDistanceSq:
-        (xKm - cellCenterX) ** 2 + (yKm - cellCenterY) ** 2,
-      candidatePriority: Number(getPriority(point)) || 0,
-    }
-
-    const isConfiguredCenter = config.centerId != null && id === config.centerId
-    if (
-      isConfiguredCenter ||
-      (!centerCandidate && kind === "city") ||
-      (!centerCandidate && row === middle && column === middle)
-    ) {
-      centerCandidate = candidate
-    }
-
-    const key = `${row}:${column}`
-    const candidates = candidatesByCell.get(key) ?? []
-    candidates.push(candidate)
-    candidatesByCell.set(key, candidates)
-  }
-
-  const kindUsage = new Map<LandmarkKind, number>()
-  if (centerCandidate) kindUsage.set("city", 1)
-  const tiles: IsometricLandmarkTile[] = []
-
-  for (let row = 0; row < gridSize; row++) {
-    for (let column = 0; column < gridSize; column++) {
-      const id = `tile-${row}-${column}`
-      const centerXKm = -radius + (column + 0.5) * cellSpan
-      const centerYKm = radius - (row + 0.5) * cellSpan
-      let landmark: IsometricLandmarkTile["landmark"]
-      let landmarks: IsometricLandmarkTile["landmarks"]
-
-      if (row === middle && column === middle && centerCandidate) {
-        landmark = centerCandidate
-        const otherCandidates = (candidatesByCell.get(`${row}:${column}`) ?? [])
-          .filter((candidate) => candidate.id !== centerCandidate?.id)
-          .sort((a, b) =>
-            a.candidatePriority - b.candidatePriority
-            || a.cellDistanceSq - b.cellDistanceSq
-            || a.name.localeCompare(b.name)
-          )
-        landmarks = [centerCandidate, ...otherCandidates]
-      } else {
-        const options = candidatesByCell.get(`${row}:${column}`) ?? []
-        const withoutCenter = options.filter((candidate) => candidate.id !== centerCandidate?.id)
-        withoutCenter.sort((a, b) => {
-          const priorityDifference =
-            a.candidatePriority - b.candidatePriority
-          if (priorityDifference !== 0) return priorityDifference
-
-          const aReuse = kindUsage.get(a.kind) ?? 0
-          const bReuse = kindUsage.get(b.kind) ?? 0
-          const diversityWeight = cellSpan * cellSpan * 0.35
-          const aScore =
-            a.cellDistanceSq +
-            aReuse * diversityWeight
-          const bScore =
-            b.cellDistanceSq +
-            bReuse * diversityWeight
-          return aScore - bScore || a.name.localeCompare(b.name)
-        })
-        landmark = withoutCenter[0] ?? null
-        landmarks = withoutCenter
-      }
-
-      if (landmark) {
-        kindUsage.set(landmark.kind, (kindUsage.get(landmark.kind) ?? 0) + 1)
-      }
-      tiles.push({
-        id,
-        row,
-        column,
-        centerXKm,
-        centerYKm,
-        terrainIndex: Math.abs((row * 17 + column * 31) % DEFAULT_TERRAIN.length),
-        landmark,
-        landmarks,
-      })
-    }
-  }
-
-  return tiles
 }
 
 function diamondPath(cx: number, cy: number, width: number, height: number): string {
@@ -539,7 +350,7 @@ function IsometricLandmarkOverlay({
         const opacity =
           selection.isActive && !selection.predicate(landmark) ? 0.28 : 1
         return (
-          <g key={landmark.id} opacity={opacity}>
+          <g key={tile.id} opacity={opacity}>
             <ellipse
               cx={tile.x}
               cy={tile.y + tileHeight * 0.15}
@@ -550,7 +361,7 @@ function IsometricLandmarkOverlay({
             />
             <PixelSprite
               kind={landmark.kind}
-              href={spriteHref(sprites, landmark.kind)}
+              href={ownNonEmptyString(sprites, landmark.kind)}
               x={tile.x - size / 2}
               y={bottom - size}
               size={size}

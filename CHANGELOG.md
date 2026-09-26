@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Process region factories preserve per-body attribute callbacks and protect
+  their `primitive` identity while retaining authored overrides of other defaults.
+  Worker observations now reach region callbacks without duplicating events from
+  imperative steps. The audit covers all eight factories, public ESM/CommonJS
+  exports, initial and pushed bodies, and sync/worker canvas hover through resize
+  and dismissal.
+  Static physics SVG retains geometry without running live region callbacks.
+  (#1510)
+- Isometric landmark selection keeps landmarks in their geographic cells unless
+  an explicit `centerId` moves one. Middle-cell preference and name/id tie-breaking
+  are deterministic; diversity scoring counts the actual center kind once. The
+  audit covers bounded/pushed maps, input reordering, empty and overridden centers,
+  canvas hover/resize, SVG overlays, and browser/Node/edge server exports. (#1506)
 - Small charts retain a finite, positive plot size after margins, preventing
   negative SVG dimensions and degenerate Sankey geometry. Empty time scales use
   a fixed epoch-day domain so SVG, render evidence, and hydration are independent
