@@ -112,6 +112,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overrides and announcements for deliberate interactions. The related-surface
   audit also fixes resized aggregate-bar focus identity and physics hover/click
   coordinates and tooltip placement with nonzero margins. (#1544)
+  Follow-up: align radial browser tests with silent pointer hover, retaining
+  tooltip values/placement/dismissal, exact keyboard values, modality switching,
+  resize, and accessible table checks in Chromium and WebKit.
 - Boba layouts validate cup and pearl dimensions, bound pearl/ice allocation,
   and keep excessive fill heights finite. Captions and hover data disclose drawn
   counts without changing the underlying quantities. Shared layout, public

@@ -1,13 +1,16 @@
 import { expect, test } from "@playwright/test"
 
 for (const chart of ["PieChart", "DonutChart", "GaugeChart"]) {
-  test(`${chart} canvas exposes values during pointer and keyboard interaction`, async ({
+  test(`${chart} keeps pointer tooltips visual and announces keyboard values`, async ({
     page
   }) => {
     await page.goto(`/accessibility-examples/?radial=${chart}`)
     const frame = page.locator(".stream-ordinal-frame")
     const live = frame.locator('[aria-live="polite"]')
     const tooltip = frame.locator(".stream-ordinal-tooltip")
+    const value = chart === "GaugeChart" ? "65" : "30"
+    // Keyboard targets are ordered spatially; B is the left-hand slice.
+    const firstValue = chart === "GaugeChart" ? "65" : "70"
 
     const checkHover = async () => {
       const bounds = (await frame.boundingBox())!
@@ -18,15 +21,27 @@ for (const chart of ["PieChart", "DonutChart", "GaugeChart"]) {
           y: 150
         }
       })
-      await expect(live).toContainText(
-        chart === "GaugeChart" ? "value: 65" : "value: 30"
-      )
-      await expect(tooltip).toContainText(chart === "GaugeChart" ? "65" : "30")
+      await expect(tooltip).toContainText(value)
+      await expect(live).toBeEmpty()
       const tip = (await tooltip.boundingBox())!
       expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
       expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
       expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
       expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+      await frame.focus()
+      await page.keyboard.press("Home")
+      await expect(live).toContainText(`value: ${firstValue}`)
+      await page.keyboard.press("End")
+      await expect(live).toContainText(`value: ${value}`)
+      // Returning to pointer input must silence the keyboard announcement.
+      await frame.hover({
+        position: {
+          x: bounds.width / 2 + Math.min(bounds.width, 300) / 2 - 16,
+          y: 150
+        }
+      })
+      await expect(tooltip).toContainText(value)
+      await expect(live).toBeEmpty()
       await page.mouse.move(0, 0)
       await expect(live).toBeEmpty()
       await expect(tooltip).toHaveCount(0)
@@ -34,13 +49,12 @@ for (const chart of ["PieChart", "DonutChart", "GaugeChart"]) {
 
     await checkHover()
     await page.getByRole("button", { name: "Narrow chart" }).click()
+    await expect(frame).toHaveCSS("width", "280px")
     await checkHover()
     await frame.focus()
     await page.keyboard.press("Home")
     await expect(live).toContainText("category:")
-    await expect(live).toContainText(
-      chart === "GaugeChart" ? "value: 65" : "value:"
-    )
+    await expect(live).toContainText(`value: ${firstValue}`)
     await page.keyboard.press("Escape")
     await expect(live).toBeEmpty()
 
