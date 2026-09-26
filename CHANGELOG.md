@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Boba layouts validate cup and pearl dimensions, bound pearl/ice allocation,
+  and keep excessive fill heights finite. Captions and hover data disclose drawn
+  counts without changing the underlying quantities. Shared layout, public
+  recipe, React push/bounded, and static SVG paths are covered. (#1392)
+- `bin` validates counts/domains, excludes nonfinite and nonnumeric values, and
+  assigns decimal boundaries consistently. Public data transforms return numeric
+  `x0`/`x1` bounds with distinct labels for small and negative intervals. (#1495)
 - Embedded artifact packets escape XML terminators in titles and claims,
   preserving valid SVG and exact JSON round-trips across SVG root forms and
   adjacent sidecar formats. (#1494)

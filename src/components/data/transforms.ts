@@ -7,8 +7,13 @@ import { getMinMax } from "../charts/shared/minMax"
 
 /**
  * Bin continuous data into histogram-ready format.
- * Returns array of { category, value } objects suitable for BarChart.
+ * Returns { category, value, x0, x1 } rows suitable for BarChart.
  * Values outside a custom domain are excluded; both endpoints are included.
+ * Interior bins include x0 and exclude x1; the last bin includes x1.
+ * Counts must be integers from 1 through 100,000. Domains must be finite and
+ * ascending, with enough precision to represent every requested bin boundary.
+ * Accepts finite numbers, nonblank numeric strings, and valid Dates (as epoch
+ * milliseconds); missing, nonnumeric, and nonfinite observations are ignored.
  */
 export function bin<T extends Datum>(
   data: T[],
@@ -17,10 +22,36 @@ export function bin<T extends Datum>(
     bins?: number
     domain?: [number, number]
   }
-): { category: string; value: number }[] {
+): { category: string; value: number; x0: number; x1: number }[] {
   const { field, bins = 10 } = options
-
-  const values = data.map((d) => Number(d[field])).filter((v) => !isNaN(v))
+  if (!Number.isInteger(bins) || bins < 1 || bins > 100_000) {
+    throw new RangeError("bins must be an integer between 1 and 100000")
+  }
+  if (
+    options.domain !== undefined &&
+    (!Array.isArray(options.domain) ||
+      options.domain.length !== 2 ||
+      !Number.isFinite(options.domain[0]) ||
+      !Number.isFinite(options.domain[1]) ||
+      options.domain[0] > options.domain[1])
+  ) {
+    throw new RangeError(
+      "bin domain must contain two finite, ascending numbers"
+    )
+  }
+  const values: number[] = []
+  for (const row of data) {
+    const raw = row?.[field]
+    const value =
+      raw instanceof Date
+        ? raw.getTime()
+        : typeof raw === "number"
+          ? raw
+          : typeof raw === "string" && raw.trim() !== ""
+            ? Number(raw)
+            : NaN
+    if (Number.isFinite(value)) values.push(value)
+  }
 
   if (values.length === 0) return []
 
@@ -29,29 +60,78 @@ export function bin<T extends Datum>(
   const max = options.domain ? options.domain[1] : dataMax
 
   if (min === max) {
-    const count = values.reduce((total, value) => total + (value === min ? 1 : 0), 0)
-    return [{ category: `${min}-${max}`, value: count }]
+    const count = values.reduce(
+      (total, value) => total + (value === min ? 1 : 0),
+      0
+    )
+    return [{ category: formatRange(min, max), value: count, x0: min, x1: max }]
   }
 
-  const binWidth = (max - min) / bins
+  // One shared edge array defines both membership and the returned bounds.
+  const edges = binEdges(min, max, bins)
+  for (let i = 1; i < edges.length; i++) {
+    if (!Number.isFinite(edges[i]) || edges[i] <= edges[i - 1]) {
+      throw new RangeError(
+        "bin domain is too narrow for the requested number of bins"
+      )
+    }
+  }
   const counts = new Array(bins).fill(0)
 
   for (const v of values) {
     if (v < min || v > max) continue
-    let idx = Math.floor((v - min) / binWidth)
-    if (idx === bins) idx = bins - 1
-    if (idx >= 0 && idx < bins) {
-      counts[idx]++
+    let lo = 0
+    let hi = bins
+    while (lo + 1 < hi) {
+      const mid = Math.floor((lo + hi) / 2)
+      if (v < edges[mid]) hi = mid
+      else lo = mid
     }
+    counts[lo]++
   }
 
   return counts.map((count, i) => {
-    const lo = min + i * binWidth
-    const hi = lo + binWidth
+    const lo = edges[i]
+    const hi = edges[i + 1]
     return {
-      category: `${formatNum(lo)}-${formatNum(hi)}`,
-      value: count
+      category: formatRange(lo, hi),
+      value: count,
+      x0: lo,
+      x1: hi
     }
+  })
+}
+
+function binEdges(min: number, max: number, bins: number): number[] {
+  // Interpolate short decimal endpoints as integers first, then parse the
+  // decimal result once. This keeps 0.3 an exact boundary in [0.1, 0.9],
+  // without a tolerance that would incorrectly admit values just below it.
+  const parts = [min, max].map((value) => {
+    const [coefficient, power] = value.toExponential().split("e")
+    return {
+      integer: Number(coefficient.replace(".", "")),
+      exponent: Number(power) - (coefficient.split(".")[1]?.length ?? 0)
+    }
+  })
+  const exponent = Math.min(
+    ...parts.filter((p) => p.integer !== 0).map((p) => p.exponent)
+  )
+  const [a, b] = parts.map((p) =>
+    p.integer === 0 ? 0 : p.integer * 10 ** (p.exponent - exponent)
+  )
+  const decimalSafe =
+    Number.isSafeInteger(a) &&
+    Number.isSafeInteger(b) &&
+    Math.max(Math.abs(a), Math.abs(b)) * bins <= Number.MAX_SAFE_INTEGER / 2
+  return Array.from({ length: bins + 1 }, (_, i) => {
+    if (i === 0) return min
+    if (i === bins) return max
+    if (decimalSafe)
+      return Number(`${(a * (bins - i) + b * i) / bins}e${exponent}`)
+    // Full-precision or widely separated endpoints cannot be rescaled safely.
+    // Weighted interpolation also avoids overflowing max - min across zero.
+    const t = i / bins
+    return min * (1 - t) + max * t
   })
 }
 
@@ -193,8 +273,7 @@ export function pivot<T extends Datum>(
   return result
 }
 
-/** Round to avoid long floating-point strings in bin labels. */
-function formatNum(n: number): string {
-  const rounded = Math.round(n * 1000) / 1000
-  return String(rounded)
+/** Preserve distinct floating-point boundaries and separate negative signs. */
+function formatRange(lo: number, hi: number): string {
+  return `${lo}${lo < 0 || hi < 0 ? " – " : "-"}${hi}`
 }
