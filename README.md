@@ -423,9 +423,9 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/utils` | **100 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **93 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **7 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **112 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **105 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/react` | **8 KB** | Glyph and React layout-selection helpers |
+| `semiotic/recipes` | **108 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **106 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/react` | **2 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **11 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **11 KB** | Theme presets and token helpers |
 | `semiotic/themes/react` | **7 KB** | ThemeProvider/useTheme and hooks |
@@ -439,7 +439,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/controls` | **11 KB** | DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic/text` | **2 KB** | Optional Pretext annotation hook — peer package excluded |
-| `semiotic` | **384 KB** | Full chart API and shared utilities |
+| `semiotic` | **383 KB** | Full chart API and shared utilities |
 
 <!-- semiotic-bundle-sizes:end -->
 
