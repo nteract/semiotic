@@ -1,21 +1,8 @@
 "use client"
 import { useState, useEffect } from "react"
 
-/** Safari 14 fallback for MediaQueryList listener registration */
-export function addMqlListener(mql: MediaQueryList, handler: (e: MediaQueryListEvent) => void): () => void {
-  if (typeof mql.addEventListener === "function") {
-    mql.addEventListener("change", handler)
-    return () => mql.removeEventListener("change", handler)
-  }
-  // Safari 14 and older: legacy API
-  type LegacyMediaQueryList = MediaQueryList & {
-    addListener: (listener: (event: MediaQueryListEvent) => void) => void
-    removeListener: (listener: (event: MediaQueryListEvent) => void) => void
-  }
-  const legacyMql = mql as LegacyMediaQueryList
-  legacyMql.addListener(handler)
-  return () => legacyMql.removeListener(handler)
-}
+import { addMqlListener } from "./mediaQuery"
+export { addMqlListener } from "./mediaQuery"
 
 /** SSR-safe matchMedia check */
 function queryMatches(query: string): boolean {

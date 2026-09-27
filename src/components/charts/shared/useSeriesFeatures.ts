@@ -1,37 +1,21 @@
-/**
- * useSeriesFeatures — shared `forecast` / `anomaly` orchestration
- * for series-shaped XY HOCs.
- *
- * The math lives in `statisticalOverlays.ts`
- * (`buildForecast`, `buildAnomalyAnnotations`, etc.) — this hook
- * owns the React-side plumbing every consuming HOC repeats verbatim:
- *
- *   1. **Synthetic-key bake** — function accessors get baked under
- *      `__semiotic_resolvedX` / `__semiotic_resolvedY` so the overlay
- *      pipeline (which expects string keys) can read values.
- *   2. **Lazy module load** — `statisticalOverlaysLazy` defers the
- *      LOESS/regression weight so charts without forecast/anomaly
- *      don't pay the bundle cost.
- *   3. **State management** — `processedData` (forecast adds tagged
- *      future points) and `annotations` (envelope, anomaly band,
- *      anomaly dots) live in component state; the effect re-runs
- *      when configs change but data-only churn keeps prior results
- *      visible (no flicker for streaming forecast sparklines).
- *   4. **Stale-clear on config removal** — switching `forecast` off
- *      mid-stream clears the overlay cleanly.
- *
- * LineChart was the original consumer. AreaChart, Scatterplot,
- * ConnectedScatterplot, and any future series chart that wants the
- * same analytical-overlay surface can opt in by calling this hook
- * and merging the returned annotations / effective data into their
- * own streamProps.
- */
+/** Shared lazy forecast/anomaly processing, keyed to the current input rows. */
 "use client"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Datum, DatumValue } from "./datumTypes"
 import type { Accessor } from "./types"
-import type { ForecastConfig, AnomalyConfig, ForecastResult } from "./statisticalOverlays"
-import { buildForecastLazy, buildAnomalyAnnotationsLazy } from "./statisticalOverlaysLazy"
+import type {
+  ForecastConfig,
+  AnomalyConfig,
+  ForecastResult
+} from "./statisticalOverlays"
+import {
+  buildForecastLazy,
+  buildAnomalyAnnotationsLazy
+} from "./statisticalOverlaysLazy"
+
+import { useStableShallow } from "../../stream/useStableShallow"
+
+const EMPTY_ANNOTATIONS: Datum[] = []
 
 const RESOLVED_X_KEY = "__semiotic_resolvedX"
 const RESOLVED_Y_KEY = "__semiotic_resolvedY"
@@ -91,13 +75,19 @@ export interface SeriesFeaturesResult {
  * // forward effectiveData + mergedAnnotations to the frame
  * ```
  */
-export function useSeriesFeatures(options: SeriesFeaturesOptions): SeriesFeaturesResult {
-  const { data, xAccessor, yAccessor, forecast, anomaly, groupBy } = options
+export function useSeriesFeatures(
+  options: SeriesFeaturesOptions
+): SeriesFeaturesResult {
+  const { data, xAccessor, yAccessor, groupBy } = options
+  const forecast = useStableShallow(options.forecast)
+  const anomaly = useStableShallow(options.anomaly)
 
   // 1 — bake synthetic keys for function accessors. The overlay
   // pipeline (and the annotation renderer) needs string-keyed data.
-  const xAccessorKey = typeof xAccessor === "string" ? xAccessor : RESOLVED_X_KEY
-  const yAccessorKey = typeof yAccessor === "string" ? yAccessor : RESOLVED_Y_KEY
+  const xAccessorKey =
+    typeof xAccessor === "string" ? xAccessor : RESOLVED_X_KEY
+  const yAccessorKey =
+    typeof yAccessor === "string" ? yAccessor : RESOLVED_Y_KEY
 
   const overlayData = useMemo(() => {
     if (!forecast && !anomaly) return data
@@ -106,88 +96,85 @@ export function useSeriesFeatures(options: SeriesFeaturesOptions): SeriesFeature
     if (!needsX && !needsY) return data
     return data.map((d) => {
       const copy = { ...d }
-      if (needsX) copy[RESOLVED_X_KEY] = (xAccessor as (datum: Datum) => DatumValue)(d)
-      if (needsY) copy[RESOLVED_Y_KEY] = (yAccessor as (datum: Datum) => DatumValue)(d)
+      if (needsX)
+        copy[RESOLVED_X_KEY] = (xAccessor as (datum: Datum) => DatumValue)(d)
+      if (needsY)
+        copy[RESOLVED_Y_KEY] = (yAccessor as (datum: Datum) => DatumValue)(d)
       return copy
     })
   }, [data, forecast, anomaly, xAccessor, yAccessor])
 
-  // 2 — state for processed result + annotations. Held outside the
-  // overlayData memo so streaming data churn doesn't blow away the
-  // last successful forecast result mid-loading.
-  const [statisticalResult, setStatisticalResult] = useState<ForecastResult | null>(null)
-  const [statisticalAnnotations, setStatisticalAnnotations] = useState<Datum[]>([])
-
-  // 3 — track config identity. Clear results only when the
-  // forecast/anomaly CONFIG object changes — data-only updates
-  // (streaming sparklines re-pushing every 150ms) should not
-  // flicker the overlay.
-  const prevForecastRef = useRef(forecast)
-  const prevAnomalyRef = useRef(anomaly)
+  const request = useMemo(
+    () => ({
+      overlayData,
+      forecast,
+      anomaly,
+      xAccessorKey,
+      yAccessorKey,
+      groupBy
+    }),
+    [overlayData, forecast, anomaly, xAccessorKey, yAccessorKey, groupBy]
+  )
+  const [completed, setCompleted] = useState<{
+    request: typeof request
+    result: ForecastResult
+    hasForecast: boolean
+  } | null>(null)
 
   useEffect(() => {
     if (!forecast && !anomaly) {
-      if (prevForecastRef.current || prevAnomalyRef.current) {
-        setStatisticalResult(null)
-        setStatisticalAnnotations([])
-        prevForecastRef.current = forecast
-        prevAnomalyRef.current = anomaly
-      }
+      setCompleted(null)
       return
     }
     let cancelled = false
-    const configChanged = forecast !== prevForecastRef.current || anomaly !== prevAnomalyRef.current
-    prevForecastRef.current = forecast
-    prevAnomalyRef.current = anomaly
-    if (configChanged) {
-      setStatisticalResult(null)
-      setStatisticalAnnotations([])
+    const work = forecast
+      ? buildForecastLazy(
+          overlayData,
+          xAccessorKey,
+          yAccessorKey,
+          groupBy ? { ...forecast, _groupBy: groupBy } : forecast,
+          anomaly
+        )
+      : buildAnomalyAnnotationsLazy(anomaly!).then((annotations) => ({
+          processedData: overlayData,
+          annotations
+        }))
+    work
+      .then((result) => {
+        if (!cancelled)
+          setCompleted({ request, result, hasForecast: !!forecast })
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        if (process.env.NODE_ENV !== "production") {
+          console.warn(
+            "[Semiotic] Unable to compute statistical overlays:",
+            error
+          )
+        }
+        setCompleted(null)
+      })
+    return () => {
+      cancelled = true
     }
-    if (forecast) {
-      // Inject `_groupBy` (string-form only) so group-aware boundary
-      // duplication tags adjacent training/observed/forecast segments
-      // per-group instead of mixing them across metric series.
-      const enrichedForecast = groupBy && typeof groupBy === "string" && typeof forecast === "object"
-        ? { ...forecast, _groupBy: groupBy }
-        : forecast
-      buildForecastLazy(overlayData, xAccessorKey, yAccessorKey, enrichedForecast, anomaly)
-        .then((result) => {
-          if (!cancelled) {
-            setStatisticalResult(result)
-            setStatisticalAnnotations(result.annotations)
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setStatisticalResult(null)
-            setStatisticalAnnotations([])
-          }
-        })
-    } else if (anomaly) {
-      buildAnomalyAnnotationsLazy(anomaly)
-        .then((result) => {
-          if (!cancelled) {
-            setStatisticalResult(null)
-            setStatisticalAnnotations(result)
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setStatisticalAnnotations([])
-          }
-        })
-    }
-    return () => { cancelled = true }
-  }, [overlayData, forecast, anomaly, xAccessorKey, yAccessorKey, groupBy])
-
-  const effectiveData = statisticalResult ? statisticalResult.processedData : data
-  const hasForecast = !!statisticalResult
-
-  return {
-    effectiveData,
-    statisticalAnnotations,
-    hasForecast,
+  }, [
+    request,
+    overlayData,
+    forecast,
+    anomaly,
     xAccessorKey,
     yAccessorKey,
+    groupBy
+  ])
+
+  // Never forward rows or annotations computed for a different request. Equal
+  // inline configs retain the same request and therefore the completed overlay.
+  const current = completed?.request === request ? completed : null
+  return {
+    effectiveData: current?.result.processedData ?? data,
+    statisticalAnnotations: current?.result.annotations ?? EMPTY_ANNOTATIONS,
+    hasForecast: current?.hasForecast ?? false,
+    xAccessorKey,
+    yAccessorKey
   }
 }

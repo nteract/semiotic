@@ -71,14 +71,8 @@ describe("trend annotation — ordinal frame", () => {
     })
   })
 
-  // Horizontal projection: values on x-pixel-axis (linear),
-  // categories on y-pixel-axis (band scale). At the AnnotationContext
-  // level, xAccessor/yAccessor still map to oAccessor (category) /
-  // rAccessor (value) respectively — projection only changes pixel
-  // projection through scales.x / scales.y, NOT which data field is
-  // categorical vs numeric. This mirrors how StreamOrdinalFrame
-  // forwards accessors to OrdinalSVGOverlay (both projections pass
-  // xAccessor=oAccessor, yAccessor=rAccessor).
+  // AnnotationContext accessors follow screen axes in both live and static
+  // ordinal frames: horizontal x reads values, while y reads categories.
   describe("horizontal projection", () => {
     const ctx: AnnotationContext = {
       data: [
@@ -86,17 +80,14 @@ describe("trend annotation — ordinal frame", () => {
         { cat: "Mid", value: 20 },
         { cat: "High", value: 30 },
       ],
-      xAccessor: "cat",
-      yAccessor: "value",
+      xAccessor: "value",
+      yAccessor: "cat",
       frameType: "ordinal",
       projection: "horizontal",
       width: 400,
       height: 300,
       scales: {
-        // In horizontal projection scales.x is the linear value scale
-        // and scales.y is the band-centered category scale. The
-        // accessors above are still category/value — only the pixel
-        // axis flips.
+        // Scales follow the same axes: x is linear, y centers categories.
         x: makeLinearScale([0, 30], [0, 400]),
         y: makeBandScale({ Low: 100, Mid: 150, High: 200 }),
       },
@@ -209,14 +200,19 @@ describe("trend annotation — ordinal frame", () => {
       },
     }
 
-    it("renders the dependency-compatible rounded quadratic points", () => {
+    it("renders mathematically correct quadratic points", () => {
       const result = xyRules(
         { type: "trend", method: "polynomial", order: 2 },
         0,
         ctx
       )
       const html = renderToStaticMarkup(result as React.ReactElement)
-      expect(html).toContain('points="0,4 1,9 2,18 3,31 4,48"')
+      const points = html.match(/points="([^"]+)"/)![1].split(" ").map((p) => p.split(",").map(Number))
+      expect(points).toHaveLength(5)
+      points.forEach(([x, y], i) => {
+        expect(x).toBe(i)
+        expect(y).toBeCloseTo(2 * i * i + 3 * i + 4, 10)
+      })
     })
 
     it("preserves polynomial equation ordering in forecast annotations", () => {
@@ -226,9 +222,12 @@ describe("trend annotation — ordinal frame", () => {
         ctx
       )
       const html = renderToStaticMarkup(result as React.ReactElement)
-      // The historical result shape stores [x², x, constant]. The forecast
-      // consumer reads that array in index order, so retain the same output.
-      expect(html).toContain('points="4,78 5,117 6,164"')
+      const points = html.match(/points="([^"]+)"/)![1].split(" ").map((p) => p.split(",").map(Number))
+      expect(points).toHaveLength(3)
+      points.forEach(([x, y], i) => {
+        expect(x).toBe(i + 4)
+        expect(y).toBeCloseTo([48, 69, 94][i], 10)
+      })
     })
   })
 

@@ -1113,6 +1113,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       // Sankey/treemap/partition set x0/x1/y0/y1 — derive x/y from those.
       // Force/chord set x/y directly — derive x0/x1 from x/y.
       const hasBox =
+        this.config.chartType === "treemap" || this.config.chartType === "partition" ||
         node.x0 !== 0 || node.x1 !== 0 || node.y0 !== 0 || node.y1 !== 0
       if (hasBox) {
         node.width = node.x1 - node.x0

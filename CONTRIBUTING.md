@@ -321,6 +321,20 @@ shared runtime path, preserve correctness coverage, and rerun the same-hardware 
 Do not remove benchmark cases or raise thresholds to conceal the regression. Refresh the local
 baseline only after reviewing the measured behavior change.
 
+The gate requires both relative and absolute growth:
+
+- A single benchmark fails at **≥100% slower and ≥10 ms added**.
+- A systemic regression fails at **five or more warnings**, each **≥25% slower
+  and ≥5 ms added**.
+- Increases of ≥25% that add less than 5 ms remain visible as warnings but do not
+  count toward the systemic quota. Relative reporting skips cases only when both means are
+  below 1 ms; a large regression from a sub-millisecond baseline still fails.
+
+These absolute allowances are review budgets, not evidence of runner noise.
+For example, 2 ms → 5 ms remains informational despite its 150% increase;
+20 ms → 30 ms counts toward systemic failure, and 10 ms → 20 ms fails alone.
+The same policy applies to PR, previous-release, and committed-baseline comparisons.
+
 ## Before Opening a PR
 
 Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.

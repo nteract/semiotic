@@ -67,7 +67,7 @@ describe("CirclePack", () => {
 
     expect(lastNetworkFrameProps.chartType).toBe("circlepack")
     expect(lastNetworkFrameProps.childrenAccessor).toBe("children")
-    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
   it("sets hierarchySum from valueAccessor as a direct prop", () => {
@@ -77,7 +77,7 @@ describe("CirclePack", () => {
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.hierarchySum({ value: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
   it("defaults to square dimensions", () => {

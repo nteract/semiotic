@@ -7,13 +7,11 @@ import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep,
 import type { CurveFactory } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
 import type { CurveType } from "../../stream/types"
-import { loess } from "./loess"
+import { forecastModel } from "./forecastModel"
+import { trendGeometry } from "./statisticalAnnotationGeometry"
 import {
-  linearRegression,
-  polynomialRegression,
-  fitLinearForForecast,
-  forecastIntervalStats,
-  confidenceZScore,
+  regressionPoints,
+  regressionNumber,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import type { Datum } from "./datumTypes"
@@ -272,138 +270,11 @@ export function createDefaultAnnotationRules(
       // (with linear interpolation between band centers for
       // fractional LOESS indices).
       case "trend": {
-        const data = context.data || []
-        if (data.length < 2) return null
-        const xAcc = context.xAccessor || "x"
-        const yAcc = context.yAccessor || "y"
-
-        const isOrdinal = context.frameType === "ordinal"
-        const isHoriz = context.projection === "horizontal"
-
-        // In ordinal frames, the annotation context's
-        // xAccessor/yAccessor always map to oAccessor/rAccessor
-        // (category/value) regardless of projection — see
-        // StreamOrdinalFrame.tsx where OrdinalSVGOverlay receives
-        // `xAccessor=oAccessor, yAccessor=rAccessor` for both
-        // horizontal and vertical projections. Projection only
-        // changes pixel projection (via scales.x / scales.y), not
-        // which data field is categorical vs numeric.
-        const categoricalAccessor = isOrdinal ? xAcc : null
-        const valueAccessor = isOrdinal ? yAcc : null
-
-        // Build regression input + record category order so we can
-        // map regression x-output back to the band scale at render
-        // time.
-        let points: [number, number][]
-        const categoryNames: string[] = []
-        const indexByCategory = new Map<string, number>()
-
-        if (isOrdinal && categoricalAccessor && valueAccessor) {
-          // Walk data to assign each unique category an index in
-          // first-seen order. Regression uses the index as a stand-in
-          // for the discrete band position.
-          for (const d of data) {
-            const cat = d[categoricalAccessor]
-            if (cat == null) continue
-            const key = String(cat)
-            if (!indexByCategory.has(key)) {
-              indexByCategory.set(key, categoryNames.length)
-              categoryNames.push(key)
-            }
-          }
-          points = data
-            .map((d) => {
-              const cat = d[categoricalAccessor]
-              const v = d[valueAccessor]
-              if (cat == null || v == null) return null
-              const idx = indexByCategory.get(String(cat))
-              return idx != null ? ([idx, +v] as [number, number]) : null
-            })
-            .filter((p): p is [number, number] => p !== null)
-        } else {
-          // XY path — direct accessor read.
-          points = data
-            .map((d) => [d[xAcc], d[yAcc]] as [number, number])
-            .filter((p) => p[0] != null && p[1] != null)
-        }
-        if (points.length < 2) return null
-
-        // Resolve the pair of axis scales we'll project trend points
-        // through. For XY both are linear and read directly. For
-        // ordinal, the categorical scale takes a category-name
-        // string → pixel; we wrap it in an interpolator that accepts
-        // fractional indices (for LOESS, which produces one trend
-        // point per input index).
-        const scaleX = context.scales?.x ?? context.scales?.time
-        const scaleY = context.scales?.y ?? context.scales?.value
-        if (!scaleX || !scaleY) return null
-
-        const interpolateBandScale = (bandScale: (k: string) => number) => (idx: number) => {
-          const i0 = Math.max(0, Math.floor(idx))
-          const i1 = Math.min(categoryNames.length - 1, i0 + 1)
-          const t = idx - i0
-          const p0 = bandScale(categoryNames[i0])
-          const p1 = bandScale(categoryNames[i1])
-          return p0 + (p1 - p0) * t
-        }
-
-        // Build (xPixel, yPixel) projector for regression output.
-        // The cast through `unknown` is intentional: ordinal frames
-        // place a `(category-name) => pixel` function in `scales.x`
-        // (or `scales.y` when projection="horizontal"), but the
-        // shared type narrows to `ScaleLinear<number, number>`. At
-        // this branch we know the runtime shape from
-        // `frameType === "ordinal"` + projection.
-        //
-        // For ordinal regression, points are always
-        // `[categoryIndex, value]` regardless of projection. The
-        // projection-aware mapping back to pixels is
-        // - vertical: xPixel from band-scale on x, yPixel from
-        //   linear value scale on y
-        // - horizontal: xPixel from linear value scale on x (using
-        //   `value`), yPixel from band-scale on y (using
-        //   `categoryIndex`).
-        const sxAny = scaleX as (key: string | number | Date) => number
-        const syAny = scaleY as (key: string | number | Date) => number
-        let project: (regressionX: number, regressionY: number) => [number, number]
-        if (isOrdinal) {
-          if (isHoriz) {
-            // regressionX = categoryIndex → through band-scale (y axis)
-            // regressionY = value → through linear scale (x axis)
-            const yProject = interpolateBandScale(syAny)
-            project = (catIdx, value) => [sxAny(value), yProject(catIdx)]
-          } else {
-            // regressionX = categoryIndex → through band-scale (x axis)
-            // regressionY = value → through linear scale (y axis)
-            const xProject = interpolateBandScale(sxAny)
-            project = (catIdx, value) => [xProject(catIdx), syAny(value)]
-          }
-        } else {
-          project = (x, y) => [sxAny(x), syAny(y)]
-        }
-
-        const method = ann.method || "linear"
-        let trendPoints: [number, number][]
-
-        if (method === "loess") {
-          trendPoints = loess(points, ann.bandwidth ?? 0.3)
-        } else {
-          const result =
-            method === "polynomial"
-              ? polynomialRegression(points, ann.order || 2)
-              : linearRegression(points)
-          trendPoints = result.points
-        }
-
-        const linePoints = trendPoints
-          .map(([x, y]) => {
-            const [px, py] = project(x, y)
-            return `${px},${py}`
-          })
-          .join(" ")
+        const trendPoints = trendGeometry(ann, context)
+        if (trendPoints.length < 2) return null
+        const linePoints = trendPoints.map(([x, y]) => `${x},${y}`).join(" ")
         const color = ann.color || "#6366f1"
-        const last = trendPoints[trendPoints.length - 1]
-        const [labelPx, labelPy] = project(last[0], last[1])
+        const [labelPx, labelPy] = trendPoints[trendPoints.length - 1]
         return (
           <g key={`ann-${index}`}>
             <polyline
@@ -563,7 +434,7 @@ export function createDefaultAnnotationRules(
 
       // ── Anomaly Band (mean ± N×stddev with outlier dots) ──────────────
       case "anomaly-band": {
-        const data = context.data || []
+        const data = (context.data || []).filter((d) => !ann.filter || ann.filter(d))
         if (data.length < 2) return null
         const yAcc = context.yAccessor || "y"
         const scaleX = context.scales?.x ?? context.scales?.time
@@ -571,8 +442,8 @@ export function createDefaultAnnotationRules(
         if (!scaleX || !scaleY) return null
 
         const yValues = data
-          .map((d) => d[yAcc] as number)
-          .filter((v) => v != null && isFinite(v))
+          .map((d) => regressionNumber(d[yAcc]))
+          .filter((v): v is number => v !== null)
         if (yValues.length < 2) return null
 
         const mean = yValues.reduce((s, v) => s + v, 0) / yValues.length
@@ -595,7 +466,7 @@ export function createDefaultAnnotationRules(
 
         // Find outlier points
         const outliers = data.filter((d) => {
-          const v = d[yAcc] as number
+          const v = regressionNumber(d[yAcc])
           return v != null && Math.abs(v - mean) > threshold * stddev
         })
 
@@ -646,79 +517,29 @@ export function createDefaultAnnotationRules(
       // ── Forecast (extrapolated trend with confidence envelope) ────────
       case "forecast": {
         const data = context.data || []
-        if (data.length < 3) return null
         const xAcc = context.xAccessor || "x"
         const yAcc = context.yAccessor || "y"
         const scaleX = context.scales?.x ?? context.scales?.time
         const scaleY = context.scales?.y ?? context.scales?.value
         if (!scaleX || !scaleY) return null
 
-        const points: [number, number][] = data
-          .map((d) => [d[xAcc], d[yAcc]] as [number, number])
-          .filter((p) => p[0] != null && p[1] != null && isFinite(p[0]) && isFinite(p[1]))
-          .sort((a, b) => a[0] - b[0])
-        if (points.length < 3) return null
-
-        const forecastMethod = ann.method || "linear"
-        let predict: (x: number) => number
-
-        if (forecastMethod === "polynomial") {
-          const result = polynomialRegression(points, ann.order || 2)
-          const coeffs: number[] = result.equation
-          predict = (x: number) =>
-            coeffs.reduce(
-              (sum: number, c: number, i: number) => sum + c * Math.pow(x, i),
-              0
-            )
-        } else {
-          const fit = fitLinearForForecast(points)
-          if (!fit) return null
-          predict = fit
-        }
-
-        const n = points.length
-        const { se, meanX, ssX } = forecastIntervalStats(points, predict)
-        const confidence = ann.confidence ?? 0.95
-        const z = confidenceZScore(confidence)
-
+        const points = regressionPoints(data.map((d) => [d[xAcc], d[yAcc]]))
+        const model = forecastModel(points, ann)
+        if (!model) return null
+        const { predict } = model
         // Generate forecast x-values
-        const steps = ann.steps ?? 5
-        const xMin = points[0][0]
-        const xMax = points[n - 1][0]
-        const step = (xMax - xMin) / Math.max(n - 1, 1)
-
-        const forecastXs: number[] = []
-        for (let i = 1; i <= steps; i++) {
-          forecastXs.push(xMax + i * step)
-        }
-
-        // Compute upper/lower bounds for forecast region
-        const envelopePoints: { x: number; yCenter: number; yUpper: number; yLower: number }[] = []
-        for (const x of forecastXs) {
-          const yCenter = predict(x)
-          const predInterval = se * Math.sqrt(1 + 1 / n + (ssX > 0 ? (x - meanX) ** 2 / ssX : 0)) * z
-          envelopePoints.push({
-            x,
-            yCenter,
-            yUpper: yCenter + predInterval,
-            yLower: yCenter - predInterval
-          })
-        }
-
-        // Build SVG path for confidence polygon
-        const upperPath = envelopePoints
-          .map((p) => `${scaleX(p.x)},${scaleY(p.yUpper)}`)
-          .join(" L")
-        const lowerPath = envelopePoints
-          .slice()
-          .reverse()
-          .map((p) => `${scaleX(p.x)},${scaleY(p.yLower)}`)
-          .join(" L")
-        const envelopePath = `M${upperPath} L${lowerPath} Z`
+        const xMax = points[points.length - 1][0]
+        const envelopePoints = model.forecast(ann.steps ?? 5)
+        if (!envelopePoints.length) return null
+        const envelopePath = d3Area<(typeof envelopePoints)[number]>()
+          .x((point) => scaleX(point.x))
+          .y0((point) => scaleY(point.lower))
+          .y1((point) => scaleY(point.upper))(envelopePoints)
+        if (!envelopePath) return null
 
         // Center forecast line
         const centerLine = envelopePoints
-          .map((p) => `${scaleX(p.x)},${scaleY(p.yCenter)}`)
+          .map((p) => `${scaleX(p.x)},${scaleY(p.y)}`)
           .join(" ")
 
         // Connect forecast to last data point
@@ -745,7 +566,7 @@ export function createDefaultAnnotationRules(
             {ann.label && envelopePoints.length > 0 && (
               <text
                 x={scaleX(envelopePoints[envelopePoints.length - 1].x) + 4}
-                y={scaleY(envelopePoints[envelopePoints.length - 1].yCenter) - 4}
+                y={scaleY(envelopePoints[envelopePoints.length - 1].y) - 4}
                 fill={strokeColor}
                 fontSize={11}
               >

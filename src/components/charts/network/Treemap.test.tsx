@@ -67,7 +67,7 @@ describe("Treemap", () => {
 
     expect(lastNetworkFrameProps.chartType).toBe("treemap")
     expect(lastNetworkFrameProps.childrenAccessor).toBe("children")
-    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
   it("sets hierarchySum from valueAccessor as a direct prop", () => {
@@ -77,7 +77,7 @@ describe("Treemap", () => {
       </TooltipProvider>
     )
 
-    expect(lastNetworkFrameProps.hierarchySum({ value: 42 })).toBe(42)
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
   it("defaults to square dimensions", () => {
@@ -207,6 +207,19 @@ describe("Treemap", () => {
     const rootStyle = lastNetworkFrameProps.nodeStyle({ depth: 0, data })
     expect(rootStyle.fill).toBe("transparent")
     expect(rootStyle.pointerEvents).toBe("none")
+  })
+
+  it("reads the current palette when the frame invokes its retained style callback", () => {
+    const palette = ["#112233"]
+    render(
+      <TooltipProvider>
+        <Treemap data={sampleData} colorScheme={palette} />
+      </TooltipProvider>
+    )
+    const node = { depth: 1, data: sampleData.children[0] }
+    expect(lastNetworkFrameProps.nodeStyle(node).fill).toBe("#112233")
+    palette[0] = "#445566"
+    expect(lastNetworkFrameProps.nodeStyle(node).fill).toBe("#445566")
   })
 
   it("uses the theme cell-border CSS variable as the default tile stroke", () => {

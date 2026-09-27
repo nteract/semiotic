@@ -404,26 +404,31 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     resolvedSelection: setup.resolvedSelection,
   })
 
-  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
-  // cascade from the HOC so the tooltip values read the same way as the axis.
-  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
-    ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
-    ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
-
   // ── Statistical features (forecast + anomaly overlays) ────────────────
   // Shared hook with LineChart/AreaChart — produces post-forecast
   // data (tagged future points) + envelope/anomaly annotations.
   const {
     effectiveData: featureEffectiveData,
     statisticalAnnotations,
+    hasForecast,
+    xAccessorKey,
+    yAccessorKey,
   } = useSeriesFeatures({
     data: safeData as Datum[],
     xAccessor, yAccessor,
     forecast, anomaly,
   })
+  const seriesXAccessor = hasForecast ? xAccessorKey : xAccessor
+  const seriesYAccessor = hasForecast ? yAccessorKey : yAccessor
+
+  // Default tooltip showing all configured fields. `xFormat`/`yFormat`
+  // cascade from the HOC so the tooltip values read the same way as the axis.
+  const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
+    { label: xLabel || accessorName(xAccessor), accessor: seriesXAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: seriesYAccessor, role: "y", format: yFormat },
+    ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
+    ...(sizeBy ? [{ label: accessorName(sizeBy), accessor: sizeBy, role: "size" as const }] : []),
+  ]), [xAccessor, yAccessor, seriesXAccessor, seriesYAccessor, xLabel, yLabel, colorBy, sizeBy, xFormat, yFormat])
 
   // Splice the `regression` sugar + statistical overlays into the
   // annotations array. Order: trend regression first (paints under),
@@ -465,8 +470,8 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
     // post-forecast tagged points flow into the frame; otherwise
     // the hook returns safeData unchanged (same reference).
     ...(data != null && { data: featureEffectiveData }),
-    xAccessor,
-    yAccessor,
+    xAccessor: seriesXAccessor,
+    yAccessor: seriesYAccessor,
     xScaleType,
     yScaleType,
     colorAccessor: colorBy || undefined,

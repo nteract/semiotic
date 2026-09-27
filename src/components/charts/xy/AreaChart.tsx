@@ -21,6 +21,7 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { accessorName } from "../shared/tooltipUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 import {
@@ -478,12 +479,17 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const {
     effectiveData: featureEffectiveData,
     statisticalAnnotations,
+    hasForecast,
+    xAccessorKey,
+    yAccessorKey,
   } = useSeriesFeatures({
     data: safeData as Datum[],
     xAccessor, yAccessor,
     forecast, anomaly,
     groupBy: areaBy,
   })
+  const seriesXAccessor = hasForecast ? xAccessorKey : xAccessor
+  const seriesYAccessor = hasForecast ? yAccessorKey : yAccessor
 
   // ── Area-series construction (data shaping, line/point style, tooltip) ─
   // Use featureEffectiveData when forecast is active so post-forecast
@@ -503,7 +509,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
     areaOpacity, showLine, lineWidth, showPoints, pointRadius,
-    xAccessor, yAccessor, xLabel, yLabel, xFormat, yFormat,
+    xAccessor: seriesXAccessor, yAccessor: seriesYAccessor,
+    xLabel: xLabel || accessorName(xAccessor), yLabel: yLabel || accessorName(yAccessor), xFormat, yFormat,
     groupField: areaBy || colorBy,
     band,
     styleRules,
@@ -524,8 +531,8 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   const streamProps: StreamXYFrameProps = {
     chartType: "area",
     ...(data != null && { data: flattenedData }),
-    xAccessor,
-    yAccessor,
+    xAccessor: seriesXAccessor,
+    yAccessor: seriesYAccessor,
     groupAccessor: areaBy || undefined,
     ...(y0Accessor && { y0Accessor }),
     ...(band && { band: band as StreamXYFrameProps["band"] }),

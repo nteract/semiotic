@@ -40,7 +40,8 @@ export function findHitPointInQuadtree<T>(
   maxPointRadius: number,
   getX: (n: T) => number,
   getY: (n: T) => number,
-  getR: (n: T) => number
+  getR: (n: T) => number,
+  preferTie?: (candidate: T, current: T) => boolean
 ): QuadtreeHit<T> | null
 export function findHitPointInQuadtree<T>(
   qt: Quadtree<T>,
@@ -50,7 +51,8 @@ export function findHitPointInQuadtree<T>(
   maxPointRadius: number,
   getX: (n: T) => number = (n) => (n as { x: number }).x,
   getY: (n: T) => number = (n) => (n as { y: number }).y,
-  getR: (n: T) => number = (n) => (n as { r: number }).r
+  getR: (n: T) => number = (n) => (n as { r: number }).r,
+  preferTie?: (candidate: T, current: T) => boolean
 ): QuadtreeHit<T> | null {
   const searchRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
   const xMin = px - searchRadius
@@ -77,7 +79,7 @@ export function findHitPointInQuadtree<T>(
         const dy = getY(point) - py
         const dist = Math.sqrt(dx * dx + dy * dy)
         const hitR = getHitRadius(getR(point), maxDistance)
-        if (dist <= hitR && dist < bestDist) {
+        if (dist <= hitR && (dist < bestDist || (dist === bestDist && best !== null && preferTie?.(point, best)))) {
           best = point
           bestDist = dist
         }

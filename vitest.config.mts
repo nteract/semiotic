@@ -5,8 +5,9 @@ import { semioticSourceAliases } from './vite.shared.mjs'
 
 const repoRoot = dirname(fileURLToPath(import.meta.url))
 const isCoverageShard = process.env.SEMIOTIC_COVERAGE_SHARD === 'true'
+const confinementTests = ['src/components/stream/physics/PhysicsConfinement.test.ts']
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: {
     // Exercise the package's public import paths against current source rather
     // than an optional, ignored, and potentially stale local dist build.
@@ -16,6 +17,29 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
+    // V8 coverage makes the 1,000-body simulations CPU intensive. Give them
+    // an exclusive worker group so other files cannot consume their timeout.
+    // Both projects still contribute to the same coverage map and shards.
+    // Benchmarks retain their existing single-project configuration.
+    projects: mode === 'benchmark' ? undefined : [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          exclude: confinementTests,
+          sequence: { groupOrder: 0 }
+        }
+      },
+      {
+        extends: true,
+        test: {
+          name: 'physics-confinement',
+          include: confinementTests,
+          fileParallelism: false,
+          sequence: { groupOrder: 1 }
+        }
+      }
+    ],
     exclude: [
       'node_modules',
       'dist',
@@ -75,4 +99,4 @@ export default defineConfig({
       exclude: ['node_modules', 'dist']
     }
   }
-})
+}))

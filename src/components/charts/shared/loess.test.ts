@@ -7,6 +7,13 @@ function variance(values: number[]): number {
 }
 
 describe("loess", () => {
+  it("omits non-finite observations and rejects invalid bandwidths", () => {
+    expect(loess([[0, 2], [NaN, 7], [1, Infinity], [2, 6]], 1)).toEqual([[0, 2], [2, 6]])
+    for (const bandwidth of [NaN, Infinity, -1, 2]) {
+      expect(loess([[0, 2], [1, 4]], bandwidth)).toEqual([])
+    }
+  })
+
   it("returns a copy for 0 points", () => {
     const input: [number, number][] = []
     const result = loess(input)

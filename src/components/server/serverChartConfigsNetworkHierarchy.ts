@@ -6,13 +6,12 @@ import {
   getColor,
   resolveCategoricalPalette
 } from "../charts/shared/colorUtils"
-import { resolveDefaultFill } from "../charts/shared/hooks"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import {
   type ChartConfig,
   primitiveStyleOverrides
 } from "./serverChartConfigShared"
-import { composeHierarchyNodeStyle } from "./serverChartConfigNetworkStyles"
+import { composeHierarchyNodeStyle, createHierarchyNodeFill, hierarchyFrameProps } from "./serverChartConfigNetworkStyles"
 import { resolveTheme } from "./themeResolver"
 import {
   composeStyleRules,
@@ -24,60 +23,10 @@ export const circlePack: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    // Mirror Treemap: hierarchy scene builder never applies colorBy itself;
-    // HOC builds fill in nodeStyle over flattened nodes. SSR must match or
-    // every circle is monochrome and labels never emit.
-    const themeCategorical = resolveTheme(
-      common.theme as Parameters<typeof resolveTheme>[0]
-    ).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
-    const allNodes = flattenHierarchy(
-      (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[])
-    )
-    const colorByFn =
-      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
-    const scaleSource: Datum[] = colorByFn
-      ? allNodes.map((n) => ({ __ssrCirclePackColorBy: colorByFn(n) }))
-      : allNodes
-    const scaleColorKey = colorByFn
-      ? "__ssrCirclePackColorBy"
-      : typeof colorBy === "string"
-        ? colorBy
-        : undefined
-    const colorScale =
-      colorBy && scaleColorKey
-        ? createColorScale(
-            scaleSource,
-            scaleColorKey,
-            (colorScheme ?? common.colorScheme ?? themeCategorical) as
-              string | string[] | Record<string, string>
-          )
-        : undefined
+    const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
-      const raw = (d?.data as Datum) || d
-      const fill = rest.colorByDepth
-        ? DEPTH_PALETTE_COLORS[
-            Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length
-          ]
-        : colorBy
-          ? colorByFn
-            ? getColor(
-                { __ssrCirclePackColorBy: colorByFn(raw) },
-                "__ssrCirclePackColorBy",
-                colorScale ?? undefined
-              )
-            : getColor(raw, colorBy as string, colorScale ?? undefined)
-          : resolveDefaultFill(
-              undefined,
-              themeCategorical,
-              colorScheme as
-                string | string[] | Record<string, string> | undefined,
-              undefined,
-              categoryIndexMap
-            )
       return {
-        fill,
+        fill: fill(d),
         fillOpacity: rest.circleOpacity ?? 0.7,
         // CirclePack's client style deliberately uses currentColor for the
         // subtle dark outline; hierarchy's generic fallback uses the theme
@@ -89,40 +38,18 @@ export const circlePack: ChartConfig = {
     }
     const effectiveShowLabels = (rest.showLabels ?? common.showLabels) as
       boolean | undefined
-    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
-      | ((d: Datum) => Record<string, unknown> | undefined | null)
-      | Record<string, unknown>
-      | undefined
-    const ruledNodeStyle = composeStyleRules(
-      baseNodeStyle,
-      rest.styleRules as StyleRule[] | undefined,
-      makeNodeRuleContext(
-        colorBy as string | ((d: Datum) => unknown) | undefined,
-        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
-      ),
-      (d) => (d?.data as Datum) || d,
-    )
     return {
       chartType: "circlepack",
-      data,
-      childrenAccessor: rest.childrenAccessor,
-      hierarchySum: rest.valueAccessor,
-      colorBy,
-      colorByDepth: rest.colorByDepth,
-      showLabels: rest.showLabels,
       nodeLabel: effectiveShowLabels
         ? rest.nodeLabel || rest.nodeIdAccessor
         : undefined,
       ...(rest.padding != null && { padding: rest.padding }),
-      colorScheme,
-      ...common,
-      showLegend:
-        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
-        Boolean(colorBy && !rest.colorByDepth),
+      ...hierarchyFrameProps(data, colorBy, colorScheme, common, rest),
       nodeStyle: composeHierarchyNodeStyle(
-        ruledNodeStyle,
-        userNodeStyle,
-        primitiveStyleOverrides(rest)
+        baseNodeStyle,
+        colorBy,
+        common,
+        rest
       )
     }
   }

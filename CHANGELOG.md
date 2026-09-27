@@ -14,6 +14,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hierarchy layouts retain repeated names and accessor IDs without overwriting
+  nodes or colliding with authored suffixes. Identities survive value sorting
+  and resize. Treemap, CirclePack, and TreeDiagram share nonnegative value
+  summation across React and server rendering; missing and zero values no longer
+  acquire phantom area, and all-zero packs remain finite. Server configurations
+  retain hierarchy IDs and every TreeDiagram layout. The related audit covers
+  default/custom children accessors with named, array, and mapped palettes,
+  OrbitDiagram collisions, labels with custom children accessors, zero-area
+  frame geometry, coincident parent/leaf hover through both hit-test paths,
+  accessible rows, bounded data replacement,
+  Chromium/WebKit interaction, and ESM/CommonJS browser/Node/edge exports.
+  Treemap visual baselines now reflect the corrected sums instead of assigning
+  phantom value to unvalued parents. Related hierarchy visuals, hover after
+  resize, tooltip dismissal, and keyboard navigation are verified across
+  Chromium, Firefox, and WebKit on macOS and Linux.
+  Hierarchies use bounded root objects, not edge push mode. (#1322)
+- XY resizes rebuild active transition targets and pixel-dependent bar,
+  waterfall, candlestick, and range geometry. Symbols move with their axes;
+  hidden or invalid plot sizes preserve retained data until layout recovers.
+  Settled resizes preserve resolved log/time scales, reversed streaming
+  direction, and inverted Y. Canvas backing-store changes always repaint,
+  and viewport/pointer density-cap changes invalidate all frame families
+  without allocating media queries on each paint. The related audit covers
+  bounded/pushed data, intro and interrupted path/point transitions, fixed
+  gaps and mark sizes, custom-layout exclusions, and both resize directions.
+  Verification includes real mark pixels, tooltip content/placement/dismissal
+  in Chromium/WebKit and ESM/CommonJS browser/Node/edge static geometry.
+  (#1319)
+- Ordinal canvases share rounded backing-store sizing and effective transforms
+  with the other frame families, preventing repeated clears and reallocations
+  at fractional device-pixel ratios. Regression coverage checks consecutive
+  paints at odd CSS dimensions. (#1426, R0121)
+- Ordinal value domains use the same per-category net aggregates as bar and
+  funnel marks. Normalized stacks retain negative segments, repeated funnel
+  rows fit the plot, and timeline domains retain both endpoints after eviction,
+  removal, or updates. Dynamic columns preserve zero widths, reject invalid
+  weights, fit their gaps inside the plot, and align browser ticks to actual
+  column centers. Grouped bars retain individual observations while omitting
+  non-finite measures. The related audit covers both projections, bounded/pushed
+  data, callback accessors, Date endpoints, signed/empty/non-finite inputs,
+  real hover through resize and replacement in Chromium/WebKit, and matching
+  HOC and ESM/CommonJS server/Node/edge geometry. (#1310)
+- Aggregation preserves typed grouping keys and all Vega-Lite series dimensions,
+  excludes missing and invalid numeric measures, and returns `null` for groups
+  without numeric observations. `rollup` accepts multiple grouping fields and
+  an explicit `outputField`; importers choose collision-free output accessors.
+  Vega-Lite and Flint share the same aggregation engine, including count, mean,
+  sum, min, and max. Unsupported aggregates warn and remain in Flint metadata;
+  strict Vega-Lite imports refuse them. The related audit covers numeric/Date
+  keys, prototype-shaped fields, empty/malformed inputs, 200,000-row aggregation,
+  heatmap/pie/bubble measures, and direct bin missing-value handling. Verification
+  includes bounded/pushed chart hover through resize and data replacement in
+  Chromium/WebKit, and ESM/CommonJS data, root, AI, experimental, and server
+  entries. (#1382)
+- Vega-Lite histogram imports and round trips retain repeated source observations
+  and category grouping. Binned counts produce the original distribution;
+  unsupported binned aggregates are refused in strict mode and reported as losses
+  in lossy mode. Coverage verifies source rows, rendered bin proportions, and
+  actual count tooltips across browser and server rendering. (#1385)
+
+- Statistical trends and forecasts retain full precision for timestamp, Date,
+  and small-value data. Polynomial forecasts evaluate the fitted coefficients
+  correctly, and ordinal trends follow displayed category order and centers
+  in both orientations. Live and static ordinal contexts use screen-axis
+  accessors consistently, including callbacks. Equivalent
+  inline configs retain overlays; data replacement/removal takes effect
+  immediately, and failed lazy computations warn in development. Auto forecasts
+  honor LOESS bandwidth and fit separate series with separate envelopes. The
+  related audit covers callback accessors across all four XY wrappers, centered
+  LOESS math, polynomial interval variance, and matching browser/server rules.
+  Regression checks include direct horizontal rule fixtures, bounded/pushed
+  trends, real forecast-point hover through resize and replacement, and
+  production ESM/CommonJS server exports.
+  Auto-forecast props require bounded data; push mode supports statistical
+  annotations over retained frame data. (#1363)
+
 - Axis-fixed force omits missing, blank, nonnumeric, and non-finite fixed values
   with their incident edges; invalid domains, plots, and box sizes produce no
   invalid geometry. Covers both axes, field/callback accessors, direct positions,
@@ -283,6 +359,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contact solving prevents dense piles from freezing with visibly overlapping
   bodies, and settling detection accounts for corrected movement. UnitPile walls
   preserve the advertised clear packing width. (#1300)
+- Run the 1,000-body confinement regressions in an exclusive Vitest worker group
+  to avoid coverage-time CPU contention with the rest of the suite. Both Galton
+  and UnitPile retain their full simulations, assertions, coverage, and 60-second
+  timeouts. (#1300)
 - Physics settling reduces collision-candidate work for small bodies and reuses
   conservative nearby-wall lists across solver passes. Observation paths avoid
   unused body-state copies. Dense and paced 1,000-body regressions retain their

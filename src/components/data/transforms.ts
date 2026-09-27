@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { aggregateRows } from "./aggregateRows"
 /**
  * Data transform helpers for common data shapes.
  * Import from "semiotic/data"
@@ -123,61 +124,28 @@ function binEdges(min: number, max: number, bins: number): number[] {
 }
 
 /**
- * Group and aggregate data.
- * Returns array of { [groupBy]: string, value: number } objects.
+ * Group and aggregate data, preserving dimension types and first-seen order.
+ * Accepts one field or a tuple of fields (an empty tuple aggregates all rows).
+ * Dates group by epoch time; other object keys group by identity.
+ * Numeric aggregates accept finite numbers and decimal numeric strings, ignore
+ * missing/invalid values, and return null for groups with no valid measures.
+ * Count includes every row. The default outputField is "value"; choose another
+ * name if "value" is a group field. Colliding output fields and malformed rows
+ * throw instead of silently losing data.
  */
 export function rollup<T extends Datum>(
   data: T[],
   options: {
-    groupBy: string
+    groupBy: string | string[]
     value: string
     agg?: "sum" | "mean" | "count" | "min" | "max"
+    outputField?: string
   }
 ): Datum[] {
-  const { groupBy: groupField, value: valueField, agg = "sum" } = options
-
-  // Retain only the aggregate and count instead of every group's values.
-  const groups = new Map<string, { total: number; count: number }>()
-  const initial = agg === "min" ? Infinity : agg === "max" ? -Infinity : 0
-
-  for (const d of data) {
-    const key = String(d[groupField])
-    let group = groups.get(key)
-    if (!group) {
-      group = { total: initial, count: 0 }
-      groups.set(key, group)
-    }
-    const value = Number(d[valueField])
-    group.count++
-    switch (agg) {
-      case "count":
-        break
-      case "min":
-        if (value < group.total) group.total = value
-        break
-      case "max":
-        if (value > group.total) group.total = value
-        break
-      default:
-        group.total += value
-        break
-    }
-  }
-
-  const result: Datum[] = []
-
-  for (const [key, group] of groups) {
-    const aggregated =
-      agg === "count"
-        ? group.count
-        : agg === "mean"
-          ? group.total / group.count
-          : group.total
-
-    result.push({ [groupField]: key, value: aggregated })
-  }
-
-  return result
+  const { groupBy, value, agg = "sum", outputField = "value" } = options
+  return aggregateRows(data, Array.isArray(groupBy) ? groupBy : [groupBy], [
+    { field: value, operation: agg, outputField }
+  ])
 }
 
 /**

@@ -2,7 +2,7 @@ import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProp
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { act, render } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import { LineChart } from "./LineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
@@ -42,6 +42,30 @@ describe("LineChart", () => {
 
     const frame = container.querySelector(".stream-xy-frame")
     expect(frame).toBeFalsy()
+  })
+
+  it("renders forecast rows resolved from callback accessors without validating synthetic keys against caller data", async () => {
+    const rows = Array.from({ length: 5 }, (_, t) => ({ t, value: 10 + 5 * t }))
+    const { container } = render(<LineChart data={rows} xAccessor={(d) => d.t} yAccessor={(d) => d.value} forecast={{ trainEnd: 3, steps: 2 }} />)
+    await waitFor(() => expect(lastXYFrameProps.xAccessor).toBe("__semiotic_resolvedX"))
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    const future = (lastXYFrameProps.data as Datum[]).filter((d) => d.__forecastUpper != null)
+    expect(future).toHaveLength(2)
+    expect(future.map((d) => [d.__semiotic_resolvedX, d.__semiotic_resolvedY])).toEqual([[5, 35], [6, 40]])
+  })
+
+  it("includes noisy auto-forecast intervals in the default y domain", async () => {
+    const rows = [10, 25, 12, 29, 20].map((y, x) => ({ x, y }))
+    render(<LineChart data={rows} forecast={{ trainEnd: 4, steps: 2 }} />)
+    await waitFor(() => expect((lastXYFrameProps.data as Datum[]).some((d) => d.__forecastUpper != null)).toBe(true))
+    const future = (lastXYFrameProps.data as Datum[]).filter((d) => d.__forecastUpper != null)
+    const [min, max] = lastXYFrameProps.yExtent as [number, number]
+    expect(min).toBeLessThan(Math.min(...rows.map((d) => d.y)))
+    expect(max).toBeGreaterThan(Math.max(...rows.map((d) => d.y)))
+    for (const point of future) {
+      expect(min).toBeLessThanOrEqual(point.__forecastLower)
+      expect(max).toBeGreaterThanOrEqual(point.__forecastUpper)
+    }
   })
 
   // ── Mock-based behavioral assertions ──────────────────────────────────

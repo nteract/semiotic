@@ -1,4 +1,6 @@
 import { pie as d3Pie } from "d3-shape"
+import { flattenHierarchy } from "../../charts/shared/networkUtils"
+import { resolveChildrenAccessor, uniqueHierarchyIds } from "./hierarchyUtils"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
@@ -58,12 +60,6 @@ function resolveMode(mode: string | number[] | undefined): number[] {
   }
 }
 
-function resolveChildrenAccessor(acc: string | ((d: Datum) => Datum[]) | undefined): (d: Datum) => Datum[] | null {
-  if (typeof acc === "function") return acc
-  const field = acc || "children"
-  return (d: Datum) => (d[field] as Datum[] | undefined) || null
-}
-
 function resolveNodeIdAccessor(acc: string | ((d: Datum) => string) | undefined): (d: Datum) => string {
   if (typeof acc === "function") return acc
   const field = acc || "name"
@@ -106,7 +102,7 @@ function buildOrbitLayout(
   nodes: RealtimeNode[],
   edges: RealtimeEdge[]
 ): void {
-  const childrenFn = resolveChildrenAccessor(config.childrenAccessor)
+  const childrenFn = resolveChildrenAccessor(config.childrenAccessor || "children")!
   const nodeIdFn = resolveNodeIdAccessor(config.nodeIDAccessor)
   const ringCapacities = resolveMode(config.orbitMode)
   const orbitSizeOpt = config.orbitSize ?? 2.95
@@ -120,20 +116,18 @@ function buildOrbitLayout(
   nodes.length = 0
   edges.length = 0
 
-  // Track seen IDs to disambiguate duplicates (common in hierarchical data)
-  const seenIds = new Map<string, number>()
-  function uniqueId(rawId: string): string {
-    const count = seenIds.get(rawId) ?? 0
-    seenIds.set(rawId, count + 1)
-    return count === 0 ? rawId : `${rawId}__${count}`
-  }
+  // Reserve authored suffix-shaped IDs before assigning occurrence suffixes.
+  const ids = uniqueHierarchyIds(
+    flattenHierarchy(root, childrenFn).map((datum) => String(nodeIdFn(datum)))
+  )
+  let idIndex = 0
 
   const cx = size[0] / 2
   const cy = size[1] / 2
   const maxRing = Math.min(size[0], size[1]) / 2 * 0.85
 
   // Create root node
-  const rootId = uniqueId(nodeIdFn(root))
+  const rootId = ids[idIndex++]
   const rootNode: RealtimeNode = {
     id: rootId,
     x: cx, y: cy,
@@ -189,7 +183,7 @@ function buildOrbitLayout(
       for (let j = 0; j < ringSlice.length; j++) {
         const angle = (arcs[j].startAngle + arcs[j].endAngle) / 2
         const kidDatum = ringSlice[j]
-        const kidId = uniqueId(nodeIdFn(kidDatum))
+        const kidId = ids[idIndex++]
 
         const x = parentX + r * Math.sin(angle)
         const y = parentY + r * Math.cos(angle) * ecc

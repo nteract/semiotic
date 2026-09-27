@@ -24,6 +24,16 @@ export interface NetworkHitResult {
   distance: number
 }
 
+/** A coincident hierarchy leaf must remain reachable over its enclosing parent. */
+function preferDeeperNode(
+  candidate: NetworkCircleNode | NetworkRectNode,
+  current?: NetworkSceneNode | NetworkSceneEdge
+): boolean {
+  return (candidate.depth ?? -1) > (
+    (current as { depth?: number } | undefined)?.depth ?? -1
+  )
+}
+
 /**
  * Hit test against network scene nodes and edges.
  *
@@ -59,7 +69,8 @@ export function findNearestNetworkNode(
   if (nodeQuadtree) {
     const hit = findHitPointInQuadtree(
       nodeQuadtree, px, py, maxDistance, maxNodeRadius,
-      (n) => n.cx, (n) => n.cy, (n) => n.r
+      (n) => n.cx, (n) => n.cy, (n) => n.r,
+      preferDeeperNode
     )
     if (hit) {
       bestNode = { mark: hit.node, type: "node", datum: hit.node.datum, x: hit.node.cx, y: hit.node.cy, distance: hit.distance }
@@ -79,11 +90,15 @@ export function findNearestNetworkNode(
     } else if (node.type === "rect") {
       // For rects: prefer the smallest area (deepest cell)
       const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
-      if (area < bestRectArea) {
+      if (area < bestRectArea || (area === bestRectArea && preferDeeperNode(node, bestNode?.mark))) {
         bestNode = result
         bestRectArea = area
       }
-    } else if (result.distance < bestDist) {
+    } else if (result.distance < bestDist || (
+      result.distance === bestDist && node.type === "circle" &&
+      bestNode?.mark?.type === "circle" &&
+      preferDeeperNode(node, bestNode.mark)
+    )) {
       bestNode = result
       bestDist = result.distance
     }

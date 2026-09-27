@@ -1,4 +1,5 @@
 import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
+import type { Datum } from "../shared/datumTypes"
 import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { vi } from "vitest"
 import React from "react"
@@ -253,7 +254,7 @@ describe("TreeDiagram", () => {
         <TreeDiagram data={sampleHierarchy} layout="treemap" />
       </TooltipProvider>
     )
-    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
   it("sets hierarchySum for circlepack layout", () => {
@@ -262,16 +263,16 @@ describe("TreeDiagram", () => {
         <TreeDiagram data={sampleHierarchy} layout="circlepack" />
       </TooltipProvider>
     )
-    expect(typeof lastNetworkFrameProps.hierarchySum).toBe("function")
+    expect(lastNetworkFrameProps.hierarchySum).toBe("value")
   })
 
-  it("does not set hierarchySum for tree layout", () => {
+  it("resolves the authored value accessor for tree layout sorting and totals", () => {
     render(
       <TooltipProvider>
-        <TreeDiagram data={sampleHierarchy} layout="tree" />
+        <TreeDiagram<Datum> data={sampleHierarchy} layout="tree" valueAccessor="amount" />
       </TooltipProvider>
     )
-    expect(lastNetworkFrameProps.hierarchySum).toBeUndefined()
+    expect(lastNetworkFrameProps.hierarchySum).toBe("amount")
   })
 
   it("uses custom childrenAccessor", () => {

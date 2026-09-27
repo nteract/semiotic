@@ -1,6 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { createColorScale, getColor, getSize } from "../charts/shared/colorUtils"
-import { DEFAULT_COLOR } from "../charts/shared/hooks"
+import { createColorScale, getColor, getSize, DEFAULT_COLOR } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
 import { GEO_BACKGROUND_AREA_STYLE } from "../charts/shared/geoStyleDefaults"
 import { type ChartConfig } from "./serverChartConfigShared"

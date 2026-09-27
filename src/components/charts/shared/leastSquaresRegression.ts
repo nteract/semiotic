@@ -2,199 +2,165 @@ export type RegressionPoint = [number, number]
 
 export interface LeastSquaresResult {
   points: RegressionPoint[]
-  /**
-   * Linear: `[slope, intercept]`. Polynomial: highest power first, matching
-   * the historical `regression` package result consumed by annotations.
-   */
-  equation: number[]
+  parameterCount: number
+  /** Evaluate in the centered fitting coordinates to avoid cancellation. */
+  predict: (x: number) => number
+  /** Variance multiplier for the fitted mean. */
+  leverage: (x: number) => number
 }
 
-const PRECISION = 2
-
-function round(number: number): number {
-  const factor = 10 ** PRECISION
-  return Math.round(number * factor) / factor
+/** Accept numeric fields and Dates, excluding missing and non-finite values. */
+export function regressionNumber(value: unknown): number | null {
+  if (value instanceof Date) value = value.getTime()
+  if (typeof value === "string" && value.trim() !== "") value = Number(value)
+  return typeof value === "number" && Number.isFinite(value) ? value : null
 }
 
-/**
- * Solve the normal-equation matrix using the same column-oriented Gaussian
- * elimination order as the former dependency. Keeping the operation order is
- * important because coefficients are rounded before predictions are made.
- */
-function gaussianElimination(input: number[][], order: number): number[] {
-  const matrix = input
-  const n = input.length - 1
-  const coefficients = [order]
-
-  for (let i = 0; i < n; i++) {
-    let maxrow = i
-    for (let j = i + 1; j < n; j++) {
-      if (Math.abs(matrix[i][j]) > Math.abs(matrix[i][maxrow])) {
-        maxrow = j
-      }
-    }
-
-    for (let k = i; k < n + 1; k++) {
-      const tmp = matrix[k][i]
-      matrix[k][i] = matrix[k][maxrow]
-      matrix[k][maxrow] = tmp
-    }
-
-    for (let j = i + 1; j < n; j++) {
-      for (let k = n; k >= i; k--) {
-        matrix[k][j] -= (matrix[k][i] * matrix[i][j]) / matrix[i][i]
-      }
-    }
+export function regressionPoints(
+  data: ReadonlyArray<readonly [unknown, unknown]>
+): RegressionPoint[] {
+  const points: RegressionPoint[] = []
+  for (const [rawX, rawY] of data) {
+    const x = regressionNumber(rawX)
+    const y = regressionNumber(rawY)
+    if (x !== null && y !== null) points.push([x, y])
   }
-
-  for (let j = n - 1; j >= 0; j--) {
-    let total = 0
-    for (let k = j + 1; k < n; k++) {
-      total += matrix[k][j] * coefficients[k]
-    }
-    coefficients[j] = (matrix[n][j] - total) / matrix[j][j]
-  }
-
-  return coefficients
+  return points.sort((a, b) => a[0] - b[0])
 }
 
-/** Fit a two-parameter least-squares line with two-decimal output rounding. */
-export function linearRegression(
-  data: ReadonlyArray<readonly [number, number | null]>
-): LeastSquaresResult {
-  const sum = [0, 0, 0, 0]
-  let len = 0
-
-  for (const [x, y] of data) {
-    if (y !== null) {
-      len++
-      sum[0] += x
-      sum[1] += y
-      sum[2] += x * x
-      sum[3] += x * y
-    }
-  }
-
-  const run = len * sum[2] - sum[0] * sum[0]
-  const rise = len * sum[3] - sum[0] * sum[1]
-  const gradient = run === 0 ? 0 : round(rise / run)
-  const intercept = round(sum[1] / len - (gradient * sum[0]) / len)
-  const points: RegressionPoint[] = data.map(([x]) => [
-    round(x),
-    round(gradient * x + intercept)
-  ])
-
+function emptyFit(): LeastSquaresResult {
   return {
-    points,
-    equation: [gradient, intercept]
+    points: [],
+    parameterCount: 0,
+    predict: () => NaN,
+    leverage: () => NaN
+  }
+}
+
+/** Fit in centered coordinates; retain full precision through prediction. */
+export function linearRegression(
+  data: ReadonlyArray<readonly [unknown, unknown]>
+): LeastSquaresResult {
+  const points = regressionPoints(data)
+  if (!points.length) return emptyFit()
+  const origin = points[0][0]
+  const meanX = points.reduce(
+    (sum, [x]) => sum + (x - origin) / points.length,
+    0
+  )
+  const meanY = points.reduce((sum, [, y]) => sum + y / points.length, 0)
+  let xx = 0
+  let xy = 0
+  for (const [x, y] of points) {
+    const dx = x - origin - meanX
+    xx += dx * dx
+    xy += dx * (y - meanY)
+  }
+  const slope = xx === 0 ? 0 : xy / xx
+  const predict = (x: number) => meanY + slope * (x - origin - meanX)
+  return {
+    points: points.map(([x]) => [x, predict(x)]),
+    parameterCount: 2,
+    leverage: (x) =>
+      1 / points.length + (xx > 0 ? (x - origin - meanX) ** 2 / xx : 0),
+    predict
   }
 }
 
 /**
- * Fit an order-N polynomial using normal equations. Coefficients and predicted
- * points use the former dependency's two-decimal rounding and equation order.
+ * Fit a normalized Vandermonde matrix with reorthogonalized QR. Normalizing
+ * x keeps epoch timestamps and small coordinates well scaled; QR avoids
+ * squaring the condition number as normal equations do.
+ * Singular or underdetermined fits produce no geometry.
  */
 export function polynomialRegression(
-  data: ReadonlyArray<readonly [number, number | null]>,
+  data: ReadonlyArray<readonly [unknown, unknown]>,
   order = 2
 ): LeastSquaresResult {
-  const lhs: number[] = []
-  const rhs: number[][] = []
-  const k = order + 1
-
-  for (let i = 0; i < k; i++) {
-    let a = 0
-    for (const [x, y] of data) {
-      if (y !== null) a += (x ** i) * y
-    }
-    lhs.push(a)
-
-    const row: number[] = []
-    for (let j = 0; j < k; j++) {
-      let b = 0
-      for (const [x, y] of data) {
-        if (y !== null) b += x ** (i + j)
+  const points = regressionPoints(data)
+  if (!Number.isInteger(order) || order < 0 || order >= points.length)
+    return emptyFit()
+  const origin = points[0][0] / 2 + points[points.length - 1][0] / 2
+  const scale =
+    Math.max(
+      Math.abs(points[0][0] - origin),
+      Math.abs(points[points.length - 1][0] - origin)
+    ) || 1
+  const xs = points.map(([x]) => (x - origin) / scale)
+  const q: number[][] = []
+  const r = Array.from({ length: order + 1 }, () =>
+    Array<number>(order + 1).fill(0)
+  )
+  for (let j = 0; j <= order; j++) {
+    const column = xs.map((x) => x ** j)
+    for (let pass = 0; pass < 2; pass++) {
+      for (let k = 0; k < j; k++) {
+        const dot = column.reduce((sum, v, i) => sum + v * q[k][i], 0)
+        r[k][j] += dot
+        for (let i = 0; i < column.length; i++) column[i] -= dot * q[k][i]
       }
-      row.push(b)
     }
-    rhs.push(row)
+    const norm = Math.sqrt(column.reduce((sum, v) => sum + v * v, 0))
+    if (!Number.isFinite(norm) || norm <= Number.EPSILON * points.length)
+      return emptyFit()
+    r[j][j] = norm
+    q.push(column.map((v) => v / norm))
   }
-  rhs.push(lhs)
-
-  // Ascending power order is used for prediction; the public equation shape
-  // is reversed below to retain the dependency's historical contract.
-  const coefficients = gaussianElimination(rhs, k).map(round)
-  const points: RegressionPoint[] = data.map(([x]) => [
-    round(x),
-    round(
-      coefficients.reduce(
-        (sum, coefficient, power) => sum + coefficient * (x ** power),
-        0
-      )
-    )
-  ])
-
+  const coefficients = q.map((column) =>
+    column.reduce((sum, v, i) => sum + v * points[i][1], 0)
+  )
+  for (let j = order; j >= 0; j--) {
+    for (let k = j + 1; k <= order; k++)
+      coefficients[j] -= r[j][k] * coefficients[k]
+    coefficients[j] /= r[j][j]
+  }
+  const predict = (x: number) => {
+    const t = (x - origin) / scale
+    let value = 0
+    for (let j = order; j >= 0; j--) value = value * t + coefficients[j]
+    return value
+  }
+  const leverage = (x: number) => {
+    const t = (x - origin) / scale
+    // Solve R-transpose * v = [1, t, t², ...]; ||v||² is the leverage.
+    const v: number[] = []
+    for (let j = 0; j <= order; j++) {
+      let value = t ** j
+      for (let k = 0; k < j; k++) value -= r[k][j] * v[k]
+      v.push(value / r[j][j])
+    }
+    return v.reduce((sum, value) => sum + value * value, 0)
+  }
   return {
-    points,
-    equation: [...coefficients].reverse()
+    points: points.map(([x]) => [x, predict(x)]),
+    parameterCount: order + 1,
+    predict,
+    leverage
   }
 }
 
-/**
- * Full-precision (unrounded) linear fit for forecast prediction-interval
- * math — unlike {@link linearRegression}, which rounds gradient/intercept to
- * two decimals for display. That rounding is fine for a trend-line
- * annotation but would leak into the residual/standard-error/interval math
- * a forecast band computes from `predict`. Returns null when x has zero
- * variance (singular normal equations) rather than falling back to a
- * zero-gradient line, so callers can skip rendering instead of drawing a
- * misleading flat forecast. Shared by the `forecast` annotation rule
- * (`annotationRules.tsx`) and the LineChart forecast-segment overlay
- * (`statisticalOverlays.ts`).
- */
-export function fitLinearForForecast(
-  points: ReadonlyArray<readonly [number, number]>
-): ((x: number) => number) | null {
-  const n = points.length
-  let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0
-  for (const [x, y] of points) {
-    sumX += x; sumY += y; sumXX += x * x; sumXY += x * y
-  }
-  const det = n * sumXX - sumX * sumX
-  if (Math.abs(det) < 1e-12) return null
-  const slope = (n * sumXY - sumX * sumY) / det
-  const intercept = (sumY - slope * sumX) / n
-  return (x: number) => intercept + slope * x
-}
-
-/**
- * Residual standard error plus the mean/sum-of-squared-deviations of x that
- * a forecast prediction-interval formula needs, given training points and an
- * already-fitted `predict` (linear or polynomial — this part doesn't care
- * which). Shared by the same two forecast call sites as
- * {@link fitLinearForForecast}.
- */
+/** Residual standard error using the fitted model's parameter count. */
 export function forecastIntervalStats(
   points: ReadonlyArray<readonly [number, number]>,
-  predict: (x: number) => number
-): { se: number; meanX: number; ssX: number } {
+  predict: (x: number) => number,
+  parameterCount = 2
+): { se: number } {
   const n = points.length
-  const residuals = points.map(([x, y]) => y - predict(x))
-  const sse = residuals.reduce((s, r) => s + r * r, 0)
-  const se = Math.sqrt(sse / Math.max(n - 2, 1))
-  const meanX = points.reduce((s, p) => s + p[0], 0) / n
-  const ssX = points.reduce((s, p) => s + (p[0] - meanX) ** 2, 0)
-  return { se, meanX, ssX }
+  const sse = points.reduce((sum, [x, y]) => sum + (y - predict(x)) ** 2, 0)
+  const se = Math.sqrt(sse / Math.max(n - parameterCount, 1))
+  return { se }
 }
 
 /**
  * Approximate z-score for the common one/two-sided confidence levels a
- * forecast/envelope prediction interval rounds to. Shared by the same two
- * forecast call sites as {@link fitLinearForForecast}.
+ * forecast/envelope prediction interval rounds to.
  */
 export function confidenceZScore(confidence: number): number {
-  return confidence >= 0.99 ? 2.576
-    : confidence >= 0.95 ? 1.96
-    : confidence >= 0.9 ? 1.645
-    : 1.0
+  return confidence >= 0.99
+    ? 2.576
+    : confidence >= 0.95
+      ? 1.96
+      : confidence >= 0.9
+        ? 1.645
+        : 1.0
 }

@@ -1,3 +1,6 @@
+import { scaleLinear } from "d3-scale"
+import { regressionPoints } from "./leastSquaresRegression"
+
 /**
  * LOESS (Locally Weighted Scatterplot Smoothing) regression.
  *
@@ -14,17 +17,15 @@ export function loess(
   points: [number, number][],
   bandwidth: number = 0.3
 ): [number, number][] {
-  const n = points.length
-  if (n < 2) return points.slice()
-
-  // Sort by x
-  const sorted = points.slice().sort((a, b) => a[0] - b[0])
+  if (!Number.isFinite(bandwidth) || bandwidth < 0 || bandwidth > 1) return []
+  const sorted = regressionPoints(points)
+  const n = sorted.length
+  if (n < 2) return sorted
   const xs = sorted.map((p) => p[0])
   const ys = sorted.map((p) => p[1])
 
   // Number of neighbors to include
   const span = Math.min(n, Math.max(2, Math.ceil(bandwidth * n)))
-  const canSlide = Number.isFinite(span) && xs.every(Number.isFinite)
   let left = 0
   let right = span - 1
 
@@ -35,34 +36,27 @@ export function loess(
 
     let start = 0
     let end = n - 1
-    let maxDist: number
-    if (canSlide) {
-      // The nearest span is contiguous in sorted x order. Its endpoints only
-      // move right as x0 increases, eliminating a distance sort at every point.
-      // Advance on ties too, so a run of duplicate x values cannot block it.
-      while (
-        right < n - 1 &&
-        Math.abs(xs[right + 1] - x0) <= Math.abs(xs[left] - x0)
-      ) {
-        left++
-        right++
-      }
-      const radius = Math.max(Math.abs(xs[left] - x0), Math.abs(xs[right] - x0))
-      maxDist = radius || 1
-      // Points outside a positive-radius span have zero tricube weight.
-      // A zero radius historically falls back to 1, so include all points
-      // in that case (including duplicates and nearby fractional x values).
-      if (radius > 0) {
-        start = left
-        end = right
-      }
-    } else {
-      // Preserve the existing distance-order behavior for non-finite inputs.
-      const distances = xs.map((x) => Math.abs(x - x0)).sort((a, b) => a - b)
-      maxDist = distances[span - 1] || 1
+    // The nearest span is contiguous in sorted x order. Its endpoints only
+    // move right as x0 increases, eliminating a distance sort at every point.
+    // Advance on ties too, so a run of duplicate x values cannot block it.
+    while (
+      right < n - 1 &&
+      Math.abs(xs[right + 1] - x0) <= Math.abs(xs[left] - x0)
+    ) {
+      left++
+      right++
+    }
+    const radius = Math.max(Math.abs(xs[left] - x0), Math.abs(xs[right] - x0))
+    const maxDist = radius || 1
+    // Points outside a positive-radius span have zero tricube weight.
+    // A zero radius historically falls back to 1, so include all points
+    // in that case (including duplicates and nearby fractional x values).
+    if (radius > 0) {
+      start = left
+      end = right
     }
 
-    // Weighted least squares: y = a + b*x
+    // Center local x at the prediction point to retain timestamp precision.
     let sumW = 0
     let sumWX = 0
     let sumWY = 0
@@ -74,10 +68,11 @@ export function loess(
       const w = u < 1 ? Math.pow(1 - Math.pow(u, 3), 3) : 0
       if (w === 0) continue
       sumW += w
-      sumWX += w * xs[j]
+      const dx = (xs[j] - x0) / maxDist
+      sumWX += w * dx
       sumWY += w * ys[j]
-      sumWXX += w * xs[j] * xs[j]
-      sumWXY += w * xs[j] * ys[j]
+      sumWXX += w * dx * dx
+      sumWXY += w * dx * ys[j]
     }
 
     if (sumW === 0) {
@@ -92,9 +87,27 @@ export function loess(
     } else {
       const b = (sumW * sumWXY - sumWX * sumWY) / det
       const a = (sumWY - b * sumWX) / sumW
-      result.push([x0, a + b * x0])
+      result.push([x0, a])
     }
   }
 
   return result
+}
+
+/**
+ * Forecast by continuing the final distinct pair of LOESS-smoothed points.
+ * Within the training domain, interpolate the smoothed points for residuals.
+ * This is endpoint extrapolation, not a global linear fit.
+ */
+export function fitLoessForForecast(
+  points: [number, number][],
+  bandwidth = 0.3
+): ((x: number) => number) | null {
+  const smoothed = new Map(loess(points, bandwidth))
+  if (smoothed.size < 2) return null
+  // A piecewise linear scale interpolates training points and extrapolates
+  // from the final segment, sharing the scale implementation used by charts.
+  return scaleLinear<number, number>()
+    .domain([...smoothed.keys()])
+    .range([...smoothed.values()])
 }

@@ -1750,7 +1750,7 @@ interface-member FieldTypeChange::property::to = required to: FieldKind
 interface-member FocusObservation::property::datum = required datum: Datum
 interface-member FocusObservation::property::inputType = required inputType: "keyboard" | "navigation-tree" | "pointer"
 interface-member FocusObservation::property::type = required type: "focus"
-interface-member ForecastConfig::property::_groupBy = optional _groupBy: string | undefined
+interface-member ForecastConfig::property::_groupBy = optional _groupBy: ((d: Datum) => unknown) | string | undefined
 interface-member ForecastConfig::property::anomalyColor = optional anomalyColor: ((datum: Datum) => string) | string | undefined
 interface-member ForecastConfig::property::anomalyRadius = optional anomalyRadius: ((datum: Datum) => number) | number | undefined
 interface-member ForecastConfig::property::anomalyStyle = optional anomalyStyle: ((datum: Datum) => Datum) | Datum | undefined

@@ -407,11 +407,27 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
 
   const resolvedOrderLabel = orderLabel || (typeof orderAccessor === "string" ? orderAccessor : "Order")
 
+  // ── Statistical features (forecast + anomaly overlays) ────────────────
+  // Shared hook with LineChart/AreaChart/Scatterplot.
+  const {
+    effectiveData: featureEffectiveData,
+    statisticalAnnotations,
+    hasForecast,
+    xAccessorKey,
+    yAccessorKey,
+  } = useSeriesFeatures({
+    data: safeData as Datum[],
+    xAccessor, yAccessor,
+    forecast, anomaly,
+  })
+  const seriesXAccessor = hasForecast ? xAccessorKey : xAccessor
+  const seriesYAccessor = hasForecast ? yAccessorKey : yAccessor
+
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
+    { label: xLabel || accessorName(xAccessor), accessor: seriesXAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(yAccessor), accessor: seriesYAccessor, role: "y", format: yFormat },
     ...(orderAccessor ? [{ label: resolvedOrderLabel, accessor: orderAccessor, role: "group" as const }] : []),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, orderAccessor, resolvedOrderLabel, xFormat, yFormat])
+  ]), [xAccessor, yAccessor, seriesXAccessor, seriesYAccessor, xLabel, yLabel, orderAccessor, resolvedOrderLabel, xFormat, yFormat])
 
   // ── Validate ──────────────────────────────────────────────────────────
 
@@ -419,17 +435,6 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     componentName: "ConnectedScatterplot",
     data,
     accessors: { xAccessor, yAccessor },
-  })
-
-  // ── Statistical features (forecast + anomaly overlays) ────────────────
-  // Shared hook with LineChart/AreaChart/Scatterplot.
-  const {
-    effectiveData: featureEffectiveData,
-    statisticalAnnotations,
-  } = useSeriesFeatures({
-    data: safeData as Datum[],
-    xAccessor, yAccessor,
-    forecast, anomaly,
   })
 
   // Loading / empty state — returned only after every hook above has run, so
@@ -458,8 +463,8 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
     // `featureEffectiveData` equals `safeData` reference when no
     // forecast/anomaly is active.
     ...(data != null && { data: featureEffectiveData }),
-    xAccessor,
-    yAccessor,
+    xAccessor: seriesXAccessor,
+    yAccessor: seriesYAccessor,
     pointStyle,
     size: [width, height],
     responsiveWidth: props.responsiveWidth,

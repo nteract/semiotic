@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { describe, expect, it } from "vitest"
 import { PhysicsKernelWorld, type PhysicsBodyShape, type PhysicsBodyState } from "./PhysicsKernel"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"

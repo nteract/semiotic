@@ -9,14 +9,14 @@
     "packageName": "semiotic",
     "packageVersion": "3.10.4",
     "channel": "source",
-    "sourceRevision": "sha256:bae0864be8223986b48b1b7006b19085573a2e3fa1e5891a4c37524eeedaef73",
+    "sourceRevision": "sha256:e26e926cff04ad0249ab2817482ebed8c9cfa9e027b280546dad90b60931f7c2",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:1da54b52ad0d70cb642992a50b9811a4f996ccd065ef1821c5a1f0c8b74e5366",
-      "fileCount": 1235
+      "digest": "sha256:0e9dc1c8193295a9f83a6b083ca0b5fd9cfc1c0b0a4c92722ba1455066f4faba",
+      "fileCount": 1244
     },
     "taskSources": {
-      "digest": "sha256:85707b7b09661485b713a3a1027358d55e4d91381264b5bd00f8f2052c9c11de",
+      "digest": "sha256:93a15991fe7c5fd40155a484ed5c9230b0939db2ec66ca0fc40437f7bbd34ec1",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
@@ -166,8 +166,54 @@
     "claimId": "task.correct-published-chart",
     "statement": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
     "owner": "Semiotic repository maintainers",
-    "status": "stale",
-    "observed": null,
+    "status": "supported-in-scope",
+    "observed": {
+      "verifiedAt": "2026-09-27T19:42:10.369Z",
+      "environment": {
+        "node": "v22.22.1",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "browser": "Playwright Chromium"
+      },
+      "runs": [
+        {
+          "kind": "unit",
+          "targets": [
+            "docs/src/pages/tasks/examples/category-comparison.test.ts",
+            "docs/src/pages/tasks/examples/live-chart.test.tsx",
+            "docs/src/pages/tasks/examples/source-correction.test.ts"
+          ],
+          "name": "Task source units",
+          "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
+          "exitCode": 0,
+          "passed": 14,
+          "skipped": 0,
+          "passedByFile": {
+            "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
+            "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
+            "docs/src/pages/tasks/examples/source-correction.test.ts": 5
+          }
+        },
+        {
+          "kind": "browser",
+          "targets": [
+            "integration-tests/docs-examples-task-live.spec.ts",
+            "integration-tests/docs-examples-tasks.spec.ts"
+          ],
+          "name": "Task browser behavior",
+          "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
+          "exitCode": 0,
+          "passed": 6,
+          "skipped": 0,
+          "passedByFile": {
+            "integration-tests/docs-examples-task-live.spec.ts": 2,
+            "integration-tests/docs-examples-tasks.spec.ts": 4
+          }
+        }
+      ],
+      "record": "ai/tasks/verification.json",
+      "authorship": "Agent-observed execution of repository tests; independent review is not recorded."
+    },
     "validity": "Only the content digests and environment recorded here; not a release range or an adoption result.",
     "invalidation": "Changes to runtime source, schemas, manifests, task examples, tests, verification tooling or this task definition invalidate the recorded result.",
     "commands": [

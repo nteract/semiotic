@@ -5,7 +5,7 @@
 Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.
 
 Source package: semiotic@3.10.4. Channel: source.
-Source revision: sha256:bc0b77e845d42bfaba111ed04f6e2270cbda04f4ff0dab5392fb37cdfc93d83d. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:2bffffdfe29b5e851fbdd8ce496577ec8262bbfea808eabb9ccd16b5b333ee66. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
@@ -110,7 +110,7 @@ export function checkCategoryComparison() {
 
 ## Check the result
 
-Evidence state: stale. Only the content digests and environment recorded here; not a release range or an adoption result.
+Evidence state: supported-in-scope. Only the content digests and environment recorded here; not a release range or an adoption result.
 
 - North 12, South 30, West 18; total 60, with South largest.
 - Three SVG bars retain 12:30:18 proportions and insertion order in both orientations.
@@ -124,7 +124,7 @@ npx vitest run docs/src/pages/tasks/examples/category-comparison.test.ts
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts
 ```
 
-No current execution result is recorded for these source contents.
+Recorded execution: 2026-09-27T19:42:10.369Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 

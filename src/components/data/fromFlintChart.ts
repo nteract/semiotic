@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { coerceTemporalStringRows } from "../charts/shared/temporalStrings"
 import type { ChartConfig } from "../export/chartConfig"
+import { aggregateRows as aggregateData, normalizeAggregate, unusedAggregateField } from "./aggregateRows"
 
 /**
  * Flint Chart -> Semiotic translator.
@@ -17,7 +18,7 @@ import type { ChartConfig } from "../export/chartConfig"
  */
 
 export type FlintEncodingType = "quantitative" | "nominal" | "ordinal" | "temporal"
-export type FlintAggregate = "count" | "sum" | "average" | "mean"
+export type FlintAggregate = "count" | "sum" | "average" | "mean" | "min" | "max"
 
 export interface FlintSemanticAnnotation {
   semanticType?: string
@@ -320,12 +321,6 @@ function resolveCategoryMeasure(encodings: NormalizedEncodings): {
   return { category: xField, value: yField, valueEncoding: y }
 }
 
-function normalizeAggregate(aggregate: FlintAggregate | undefined): "count" | "sum" | "mean" | undefined {
-  if (aggregate === "count" || aggregate === "sum" || aggregate === "mean") return aggregate
-  if (aggregate === "average") return "mean"
-  return undefined
-}
-
 function aggregateRows(
   data: Datum[] | undefined,
   groupFields: Array<string | undefined>,
@@ -344,38 +339,12 @@ function aggregateRows(
     return { data, valueAccessor: valueField }
   }
 
-  const groups = new Map<string, { keys: Datum; values: number[]; count: number }>()
   const cleanGroupFields = groupFields.filter((d): d is string => !!d)
-
-  for (const row of data) {
-    const keys: Datum = {}
-    for (const key of cleanGroupFields) keys[key] = row[key]
-    const groupKey = JSON.stringify(keys)
-    let bucket = groups.get(groupKey)
-    if (!bucket) {
-      bucket = { keys, values: [], count: 0 }
-      groups.set(groupKey, bucket)
-    }
-    bucket.count += 1
-    if (valueField) {
-      const numeric = Number(row[valueField])
-      if (Number.isFinite(numeric)) bucket.values.push(numeric)
-    }
+  const outputField = unusedAggregateField(new Set(cleanGroupFields))
+  return {
+    data: aggregateData(data, cleanGroupFields, [{ field: valueField, operation: agg, outputField }]),
+    valueAccessor: outputField
   }
-
-  const aggregated: Datum[] = []
-  for (const bucket of groups.values()) {
-    let value = bucket.count
-    if (agg === "sum") value = bucket.values.reduce((a, b) => a + b, 0)
-    else if (agg === "mean") {
-      value = bucket.values.length > 0
-        ? bucket.values.reduce((a, b) => a + b, 0) / bucket.values.length
-        : 0
-    }
-    aggregated.push({ ...bucket.keys, value })
-  }
-
-  return { data: aggregated, valueAccessor: "value" }
 }
 
 function setData(props: Datum, data: Datum[] | undefined): void {
@@ -420,6 +389,10 @@ function warnOnUnmappedEncodings(
   const unmapped: Record<string, FlintRawEncodingValue> = {}
   for (const [channel, value] of Object.entries(raw)) {
     const normalized = ownValue(FLINT_CHANNEL_ALIASES, channel) || channel
+    if (isObject(value) && value.aggregate !== undefined && !normalizeAggregate(value.aggregate)) {
+      warnings.push(`Unsupported aggregate "${value.aggregate}" on "${channel}"; preserved in flint.unmappedEncodings.`)
+      unmapped[channel] = value
+    }
     if (!consumed.has(normalized) || Array.isArray(value)) {
       unmapped[channel] = value
     }
@@ -525,7 +498,7 @@ function buildXY(
   const shape = field(encodings, "shape")
   const aggregate = aggregateRows(
     data,
-    [x, color || detail],
+    [x, color, detail, size, shape],
     y,
     encodings.y?.aggregate,
     warnings,
@@ -609,10 +582,11 @@ function buildHeatmap(
   const x = field(encodings, "x")
   const y = field(encodings, "y")
   const value = field(encodings, "color")
-  setData(props, data)
+  const aggregate = aggregateRows(data, [x, y], value, encodings.color?.aggregate, warnings)
+  setData(props, aggregate.data)
   if (x) props.xAccessor = x
   if (y) props.yAccessor = y
-  if (value) props.valueAccessor = value
+  if (aggregate.valueAccessor) props.valueAccessor = aggregate.valueAccessor
   const showTextLabels = booleanProp(chartProperties?.showTextLabels)
   if (showTextLabels !== undefined) props.showValues = showTextLabels
   applyLabels(props, { x, y }, displayNames, "xy")

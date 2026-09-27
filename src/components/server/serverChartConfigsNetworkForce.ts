@@ -1,6 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { getColor } from "../charts/shared/colorUtils"
-import { resolveDefaultFill } from "../charts/shared/hooks"
+import { getColor, resolveDefaultFill } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import type { ChartConfig } from "./serverChartConfigShared"

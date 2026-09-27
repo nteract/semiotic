@@ -1,3 +1,5 @@
+import { addMqlListener } from "./mediaQuery"
+
 /**
  * Shared canvas setup utilities used by all Stream Frames.
  *
@@ -23,7 +25,7 @@ export function syncCanvasSize(
   canvas: HTMLCanvasElement,
   size: [number, number],
   dpr: number
-): { effectiveDprX: number; effectiveDprY: number } {
+): { effectiveDprX: number; effectiveDprY: number; resized: boolean } {
   const newWidth = Math.round(size[0] * dpr)
   const newHeight = Math.round(size[1] * dpr)
   const effectiveDprX = size[0] === 0 ? dpr : newWidth / size[0]
@@ -36,10 +38,11 @@ export function syncCanvasSize(
 
   // Setting either dimension clears the backing store, even when assigning
   // the current value, so only write when the physical dimensions changed.
+  const resized = canvas.width !== newWidth || canvas.height !== newHeight
   if (canvas.width !== newWidth) canvas.width = newWidth
   if (canvas.height !== newHeight) canvas.height = newHeight
 
-  return { effectiveDprX, effectiveDprY }
+  return { effectiveDprX, effectiveDprY, resized }
 }
 
 const MOBILE_CANVAS_DPR_CAP = 2
@@ -47,12 +50,23 @@ const DESKTOP_CANVAS_DPR_CAP = 3
 const MAX_CANVAS_BACKING_PIXELS = 8_388_608
 const MAX_CANVAS_BACKING_DIMENSION = 16_384
 
+let pointerQuery: MediaQueryList | undefined
+let pointerQueryOwner: typeof window.matchMedia | undefined
+
+function getPointerQuery(): MediaQueryList | undefined {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined
+  // MediaQueryList.matches stays live. Reuse the query across frames/charts,
+  // but allow an embedding host to replace its matchMedia implementation.
+  if (pointerQueryOwner !== window.matchMedia) {
+    pointerQueryOwner = window.matchMedia
+    pointerQuery = window.matchMedia("(pointer: coarse)")
+  }
+  return pointerQuery
+}
+
 function isMobileCanvasEnvironment(): boolean {
   if (typeof window === "undefined") return false
-  const coarsePointer =
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(pointer: coarse)").matches
-  return coarsePointer ||
+  return getPointerQuery()?.matches === true ||
     Math.min(window.innerWidth || Infinity, window.innerHeight || Infinity) < 768
 }
 
@@ -115,50 +129,38 @@ export function getDevicePixelRatio(
  * Subscribe to browser pixel-density changes (page zoom, display migration,
  * or OS display-scale changes). A normal ResizeObserver is insufficient:
  * browsers can update `devicePixelRatio` without changing an element's CSS
- * dimensions.
+ * dimensions. Viewport and pointer changes can also change the default cap
+ * without changing either the chart size or the physical display density.
  *
  * The media query is re-created after every change because it watches the
  * *current* resolution. Once that query stops matching, the next query must
  * be armed for the browser's new DPR.
  */
 export function subscribeToDevicePixelRatioChange(listener: () => void): () => void {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+  if (typeof window === "undefined") {
     return () => undefined
   }
 
-  let mediaQuery: MediaQueryList | null = null
+  let removeListener = () => {}
   let disposed = false
-
-  const removeListener = () => {
-    if (!mediaQuery) return
-    if (typeof mediaQuery.removeEventListener === "function") {
-      mediaQuery.removeEventListener("change", handleChange)
-    } else if (typeof mediaQuery.removeListener === "function") {
-      mediaQuery.removeListener(handleChange)
-    }
-  }
+  let lastEffectiveDpr = 0
 
   const armListener = () => {
+    if (typeof window.matchMedia !== "function") return
     const resolutionQuery = `(resolution: ${window.devicePixelRatio || 1}dppx)`
-    mediaQuery = window.matchMedia(resolutionQuery)
+    const mediaQuery = window.matchMedia(resolutionQuery)
     // Some test/legacy shims return one unrelated MediaQueryList for every
     // query. Treat unsupported resolution queries as unavailable rather than
     // reacting to an unrelated preference change.
-    if (!mediaQuery.media.includes("resolution")) {
-      mediaQuery = null
-      return
-    }
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", handleChange)
-    } else if (typeof mediaQuery.addListener === "function") {
-      mediaQuery.addListener(handleChange)
+    if (mediaQuery.media.includes("resolution")) {
+      removeListener = addMqlListener(mediaQuery, handleChange)
     }
   }
 
   function handleChange() {
     if (disposed) return
     removeListener()
-    mediaQuery = null
+    lastEffectiveDpr = getDevicePixelRatio()
     listener()
     // Re-arm after the current MediaQueryList dispatch completes. A few
     // polyfills iterate a live Set of listeners; remove+add during that same
@@ -169,9 +171,22 @@ export function subscribeToDevicePixelRatioChange(listener: () => void): () => v
   }
 
   armListener()
+  lastEffectiveDpr = getDevicePixelRatio()
+  const pointer = getPointerQuery()
+  const handleEnvironmentChange = () => {
+    if (disposed) return
+    const effectiveDpr = getDevicePixelRatio()
+    if (effectiveDpr === lastEffectiveDpr) return
+    lastEffectiveDpr = effectiveDpr
+    listener()
+  }
+  window.addEventListener("resize", handleEnvironmentChange)
+  const removePointerListener = addMqlListener(pointer, handleEnvironmentChange)
+
   return () => {
     disposed = true
+    window.removeEventListener("resize", handleEnvironmentChange)
+    removePointerListener()
     removeListener()
-    mediaQuery = null
   }
 }

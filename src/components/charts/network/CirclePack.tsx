@@ -6,15 +6,14 @@ import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugi
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
+import { createHierarchyStyle } from "../shared/hierarchyStyle"
+import { useChartMode } from "../shared/hooks"
 import {
   flattenHierarchy,
-  resolveHierarchySum,
   wrapNetworkNodeStyleWithSelection,
 } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
@@ -179,26 +178,22 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     loading,
     loadingContent,
   })
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   const baseNodeStyleFn = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {
+    return createHierarchyStyle(
+      {
         stroke: "currentColor",
         strokeWidth: 1,
         strokeOpacity: 0.3,
         fillOpacity: circleOpacity
-      }
-      if (colorByDepth) {
-        baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
-      } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), setup.colorScale)
-      } else {
-        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
-      }
-      return baseStyle
-    }
-  }, [colorBy, colorByDepth, setup.colorScale, circleOpacity, setup.themeCategorical, colorScheme, categoryIndexMap])
+      },
+      colorBy as string | ((d: Datum) => string) | undefined,
+      colorByDepth,
+      setup.colorScale,
+      setup.themeCategorical,
+      colorScheme
+    )
+  }, [colorBy, colorByDepth, setup.colorScale, circleOpacity, setup.themeCategorical, colorScheme])
 
   const nodeRuleContext = useMemo(
     () => makeNodeRuleContext(
@@ -230,10 +225,6 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
     [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
-  const hierarchySumFn = useMemo(() => {
-    return resolveHierarchySum(valueAccessor)
-  }, [valueAccessor])
-
   // Validate
   const error = validateObjectData({ componentName: "CirclePack", data })
   if (error) return <ChartError componentName="CirclePack" message={error} width={width} height={height} />
@@ -254,7 +245,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
-      hierarchySum={hierarchySumFn}
+      hierarchySum={valueAccessor}
       padding={paddingProp}
       nodeStyle={nodeStyle}
       colorBy={colorBy}

@@ -98,7 +98,7 @@ describe("useCanvasFrameHost", () => {
         media: query,
         onchange: null,
         addEventListener: (type: string, listener: () => void) => {
-          if (type === "change") resolutionChange = listener
+          if (type === "change" && query.includes("resolution")) resolutionChange = listener
         },
         removeEventListener: vi.fn(),
         addListener: vi.fn(),

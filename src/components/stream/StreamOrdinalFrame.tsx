@@ -59,7 +59,7 @@ import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import { rehitOrdinalFrameCursor } from "./ordinalFrameCursorInteraction"
 
 // Canvas setup / hover
-import { getDevicePixelRatio, subscribeToCanvasFontInvalidation } from "./canvasSetup"
+import { syncCanvasSize, getDevicePixelRatio, subscribeToCanvasFontInvalidation } from "./canvasSetup"
 import type { HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { resolveFrameGraphics } from "./frameGraphics"
@@ -694,19 +694,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
       }
 
-      // DPR setup — only resize the canvas buffer when dimensions actually change.
-      // Setting canvas.width/height (even to the same value) implicitly clears the
-      // buffer and forces GPU reallocation on HiDPI displays.
       const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
-      const newWidth = size[0] * dpr
-      const newHeight = size[1] * dpr
-      if (canvas.width !== newWidth || canvas.height !== newHeight) {
-        canvas.width = newWidth
-        canvas.height = newHeight
-        canvas.style.width = `${size[0]}px`
-        canvas.style.height = `${size[1]}px`
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const { effectiveDprX, effectiveDprY } = syncCanvasSize(canvas, size, dpr)
+      ctx.setTransform(effectiveDprX, 0, 0, effectiveDprY, 0, 0)
 
       // Clear
       ctx.clearRect(0, 0, size[0], size[1])
@@ -916,6 +906,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
             totalHeight={size[1]}
             margin={margin}
             scales={scales}
+            columns={store?.columns}
             showAxes={showAxes}
             showCategoryTicks={showCategoryTicks}
             oLabel={oLabel}
@@ -1037,6 +1028,7 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
           totalHeight={size[1]}
           margin={margin}
           scales={currentScales}
+          columns={storeRef.current?.columns}
           showAxes={showAxes}
           showCategoryTicks={showCategoryTicks}
           oLabel={oLabel}

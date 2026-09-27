@@ -6,16 +6,15 @@ import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugi
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
-import { getColor, DEPTH_PALETTE_COLORS } from "../shared/colorUtils"
+import { createHierarchyStyle } from "../shared/hierarchyStyle"
+import { useChartMode } from "../shared/hooks"
 import {
   flattenHierarchy,
-  resolveHierarchySum,
   wrapNetworkEdgeStyleWithSelection,
   wrapNetworkNodeStyleWithSelection,
 } from "../shared/networkUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
@@ -34,6 +33,8 @@ registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
 registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
 registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
 registerLayoutPlugin("partition", hierarchyLayoutPlugin)
+
+const defaultEdgeStyle = () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
 
 /**
  * TreeDiagram component props
@@ -188,22 +189,18 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     loading,
     loadingContent,
   })
-  const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
 
   // d is a RealtimeNode — user data on d.data, depth on d.depth
   const baseNodeStyleFn = useMemo(() => {
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = { stroke: "black", strokeWidth: 1 }
-      if (colorByDepth) {
-        baseStyle.fill = DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
-      } else if (colorBy) {
-        baseStyle.fill = getColor(d.data || d, colorBy as string | ((d: Datum) => string), setup.colorScale)
-      } else {
-        baseStyle.fill = resolveDefaultFill(undefined, setup.themeCategorical, colorScheme, undefined, categoryIndexMap)
-      }
-      return baseStyle
-    }
-  }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme, categoryIndexMap])
+    return createHierarchyStyle(
+      { stroke: "black", strokeWidth: 1 },
+      colorBy as string | ((d: Datum) => string) | undefined,
+      colorByDepth,
+      setup.colorScale,
+      setup.themeCategorical,
+      colorScheme
+    )
+  }, [colorBy, colorByDepth, setup.colorScale, setup.themeCategorical, colorScheme])
 
   const nodeRuleContext = useMemo(
     () => makeNodeRuleContext(
@@ -235,13 +232,9 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     [nodeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
 
-  const baseEdgeStyleFn = useMemo(() => {
-    return () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
-  }, [])
-
   const edgeStyleFn = useMemo(
-    () => mergeShapeStyle(baseEdgeStyleFn, { stroke, strokeWidth, opacity }),
-    [baseEdgeStyleFn, stroke, strokeWidth, opacity]
+    () => mergeShapeStyle(defaultEdgeStyle, { stroke, strokeWidth, opacity }),
+    [stroke, strokeWidth, opacity]
   )
   const selectedEdgeStyleFn = useMemo(
     () => wrapNetworkEdgeStyleWithSelection(
@@ -251,13 +244,6 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
     ),
     [edgeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
-
-  const hierarchySumFn = useMemo(() => {
-    if (layout === "treemap" || layout === "circlepack" || layout === "partition") {
-      return resolveHierarchySum(valueAccessor)
-    }
-    return undefined
-  }, [layout, valueAccessor])
 
   // Validate
   const error = validateObjectData({ componentName: "TreeDiagram", data })
@@ -278,7 +264,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       {...setup.legendBehaviorProps}
       nodeIDAccessor={nodeIdAccessor}
       childrenAccessor={childrenAccessor}
-      hierarchySum={hierarchySumFn}
+      hierarchySum={valueAccessor}
       treeOrientation={orientation}
       edgeType={edgeStyle}
       nodeStyle={selectedNodeStyleFn}
