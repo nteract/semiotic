@@ -382,6 +382,40 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       "M50,80 L100,82 L150,75 L200,78 L250,80 " +
       "L250,120 L200,118 L150,125 L100,122 L50,120 Z"
 
+    it("hits transformed path regions in paint order without claiming their empty bounding-box corners", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const node: NetworkRectNode = {
+          type: "rect", x: 100, y: 20, w: 100, h: 50,
+          style: { fill: "transparent" }, datum: { id: "triangle" },
+          _hitPath: { pathD: "M0,0 L50,0 L0,50 Z", transform: [200, 20, -2, 1], fill: true, strokeWidth: 0 }
+        }
+        const top = { ...node, datum: { id: "top" } }
+        expect(hitTest([node], [], 180, 30)?.datum?.id).toBe("triangle")
+        expect(hitTest([node], [], 120, 60)).toBeNull()
+        expect(hitTest([node, top], [], 180, 30)?.datum?.id).toBe("top")
+        const rect: NetworkRectNode = { type: "rect", x: 90, y: 10, w: 130, h: 80,
+          style: { fill: "red" }, datum: { id: "rect" } }
+        const circle: NetworkCircleNode = { type: "circle", cx: 185, cy: 30, r: 20,
+          style: { fill: "blue" }, datum: { id: "circle" } }
+        const qt = d3Quadtree<NetworkCircleNode>().x((n) => n.cx).y((n) => n.cy).add(circle)
+        for (const tree of [undefined, qt]) {
+          expect(hitTest([node, rect], [], 180, 30, 30, tree)?.datum?.id).toBe("rect")
+          expect(hitTest([rect, node], [], 180, 30, 30, tree)?.datum?.id).toBe("triangle")
+          expect(hitTest([node, circle], [], 180, 30, 30, tree)?.datum?.id).toBe("circle")
+          expect(hitTest([circle, node], [], 180, 30, 30, tree)?.datum?.id).toBe("triangle")
+          expect(hitTest([node, rect, { ...rect, w: 200, datum: { id: "larger" } }], [], 180, 30)?.datum?.id).toBe("larger")
+        }
+        // Stroke-only paths must not capture their unpainted interior.
+        node._hitPath!.fill = false
+        node._hitPath!.strokeWidth = 2
+        expect(hitTest([node], [], 180, 30)).toBeNull()
+        expect(hitTest([node], [], 180, 20.5)?.datum?.id).toBe("triangle")
+      } finally { restore() }
+    })
+
     it.each(["bezier", "ribbon", "curved"] as const)("does not fill the hit area of an unfilled %s path", async (type) => {
       const restore = installGeometryFakes()
       try {

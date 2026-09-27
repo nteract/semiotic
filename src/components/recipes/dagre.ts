@@ -1,3 +1,5 @@
+import { createElement } from "react"
+import { edgeArrow, rectBoundary } from "./directedEdge"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -94,6 +96,19 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
   const stroke =
     cfg.edgeStroke ??
     `var(--semiotic-border, ${ctx.theme.semantic.border ?? "#666"})`
+  // Preserve the complete label on the scene node for tooltips/accessibility.
+  for (let i = 0; i < labels.length; i++) {
+    const label = labels[i]
+    const box = positions.get(sceneNodes[i].id!)
+    if (!box) continue
+    const limit = Math.max(
+      1,
+      Math.floor(box.w / ((label.fontSize ?? 11) * 0.6) - 2)
+    )
+    if (label.text.length > limit)
+      label.text = label.text.slice(0, limit - 1) + "…"
+  }
+  const arrows: ReturnType<typeof edgeArrow>[] = []
   const sceneEdges: (NetworkCurvedEdge | NetworkLineEdge)[] = []
   for (const edge of ctx.edges) {
     const sId = typeof edge.source === "string" ? edge.source : edge.source.id
@@ -104,18 +119,45 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
 
     const points = waypoints.get(edge)!.map(project)
 
-    if (!points || points.length < 2) {
+    if (points.length < 2) {
+      const start = rectBoundary(s, t)
+      const end = rectBoundary(t, s)
+      arrows.push(
+        edgeArrow(
+          arrows.length,
+          end,
+          start,
+          stroke,
+          Math.min(7, t.w / 4, t.h / 3)
+        )
+      )
       sceneEdges.push({
         type: "line",
-        x1: s.x,
-        y1: s.y,
-        x2: t.x,
-        y2: t.y,
+        x1: start.x,
+        y1: start.y,
+        x2: end.x,
+        y2: end.y,
         style: { stroke, strokeWidth: 1 },
         datum: edge.data ?? edge
       })
       continue
     }
+
+    const last = points[points.length - 1]
+    const previous = points
+      .slice(0, -1)
+      .reverse()
+      .find((p) => p.x !== last.x || p.y !== last.y)
+    if (previous)
+      arrows.push(
+        edgeArrow(
+          arrows.length,
+          last,
+          previous,
+          stroke,
+          Math.min(7, t.w / 4, t.h / 3)
+        )
+      )
 
     if (edgeStyle === "smooth" && points.length >= 3) {
       // Quadratic-curve smoothing through waypoints.
@@ -145,5 +187,10 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
     }
   }
 
-  return { sceneNodes, sceneEdges, labels }
+  return {
+    sceneNodes,
+    sceneEdges,
+    labels,
+    overlays: arrows.length ? createElement("g", null, arrows) : null
+  }
 }

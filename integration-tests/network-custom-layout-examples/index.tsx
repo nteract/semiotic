@@ -1,3 +1,4 @@
+import { PerformanceFixture } from "./performanceFixture"
 import * as React from "react"
 import { createRoot } from "react-dom/client"
 import {
@@ -100,7 +101,7 @@ function App() {
 }
 
 createRoot(document.getElementById("root")!).render(
-  new URLSearchParams(location.search).has("zoom") ? <NetworkZoomDemo /> : new URLSearchParams(location.search).has("zoom-test") ? <ZoomFixture /> : new URLSearchParams(location.search).has("viewport") ? (
+  new URLSearchParams(location.search).has("performance") ? <PerformanceFixture /> : new URLSearchParams(location.search).has("zoom") ? <NetworkZoomDemo /> : new URLSearchParams(location.search).has("zoom-test") ? <ZoomFixture /> : new URLSearchParams(location.search).has("viewport") ? (
     <ViewportFixture />
   ) : (
     <App />

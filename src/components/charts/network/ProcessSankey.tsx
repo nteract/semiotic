@@ -195,7 +195,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     })
 
   // Normalize to algorithm-internal shape.
-  const { nodes, edges, domain, rawNodeById, rawEdgeById } = useMemo(() => {
+  const { nodes, edges, domain, rawNodeById } = useMemo(() => {
     const ns: NormalizedNode[] = (rawNodes ?? []).map((n) => {
       const id = getNodeId(n)
       const labelValue = nodeLabel ? readChartAccessor(nodeLabel, n) : id
@@ -251,14 +251,11 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     ]
     const nodeMap = new Map<string, Datum>()
     for (const n of ns) if (n.__raw != null) nodeMap.set(n.id, n.__raw)
-    const edgeMap = new Map<string, Datum>()
-    for (const e of es) if (e.__raw != null) edgeMap.set(e.id, e.__raw)
     return {
       nodes: ns,
       edges: es,
       domain: dom,
-      rawNodeById: nodeMap,
-      rawEdgeById: edgeMap
+      rawNodeById: nodeMap
     }
   }, [
     rawNodes,
@@ -471,19 +468,9 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
     groupPadding
   ])
 
-  const colorById = useMemo(() => {
-    return Object.fromEntries(
-      nodes.map((node, index) => [node.id, colorOf(node.id, index)])
-    )
-  }, [nodes, colorOf])
-
   const sceneResult = useProcessSankeyScenes(sceneInput, {
     execution: layoutExecution,
-    workerThreshold: layoutWorkerThreshold,
-    colorById,
-    fallbackPalette: setup.effectivePalette,
-    rawNodeById,
-    rawEdgeById
+    workerThreshold: layoutWorkerThreshold
   })
 
   const { issues, warnings, layout, xScale } = sceneResult

@@ -137,8 +137,10 @@ describe("dagreLayout", () => {
     expect(result.sceneEdges).toHaveLength(1)
     const e = result.sceneEdges![0] as NetworkLineEdge
     expect(e.type).toBe("line")
-    expect(e.x1).toBe(50)
-    expect(e.x2).toBe(200)
+    expect(e.x1).toBe(68)
+    expect(e.y1).toBe(68)
+    expect(e.x2).toBe(182)
+    expect(e.y2).toBe(182)
   })
 
   it("renders rect nodes sized from each node's width/height", () => {

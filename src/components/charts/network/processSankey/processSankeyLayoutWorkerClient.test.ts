@@ -166,7 +166,7 @@ describe("ProcessSankey layout worker client", () => {
     expect(worker.terminated).toBe(false)
   })
 
-  it("rejects with AbortError when cancelled without terminating the session", async () => {
+  it("terminates superseded CPU work when its only request is cancelled", async () => {
     Object.defineProperty(globalThis, "Worker", {
       configurable: true,
       value: MockWorker,
@@ -191,7 +191,7 @@ describe("ProcessSankey layout worker client", () => {
     )
     controller.abort()
     await expect(promise).rejects.toMatchObject({ name: "AbortError" })
-    expect(MockWorker.instances[0].terminated).toBe(false)
+    expect(MockWorker.instances[0].terminated).toBe(true)
   })
 
   it("reattaches raw datums and rebuilds the time scale after a worker response", () => {

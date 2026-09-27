@@ -222,6 +222,7 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
       type: "area",
       topPath: geometry.topPath,
       bottomPath: geometry.bottomPath,
+      _hitArea: true,
       style: areaStyle,
       datum: geometry.datumIndices.map((itemIndex) => rows[itemIndex]),
       accessibleDatum: rows.map((row) => row.__bumpRaw),

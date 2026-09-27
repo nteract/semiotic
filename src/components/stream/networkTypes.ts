@@ -13,6 +13,7 @@ import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
 import type { NetworkViewportProps } from "./networkViewportTypes"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
+import type { PathHitRegion } from "./hitTestUtils"
 
 /** Style-callback result, including `cursor` on legacy datum-shaped returns. */
 export type NetworkMarkStyle = Style | (Datum & Pick<Style, "cursor">)
@@ -274,6 +275,8 @@ export interface NetworkRectNode {
   _pulseIntensity?: number
   _pulseColor?: string
   _pulseGlowRadius?: number
+  /** @internal Exact pointer region for display-list paths; the rect remains the focus/navigation bounds. */
+  _hitPath?: PathHitRegion
 }
 
 /** Arc node — used by chord */

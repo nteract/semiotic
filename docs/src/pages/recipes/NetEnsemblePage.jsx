@@ -79,6 +79,21 @@ export default function NetEnsemblePage() {
         reconcile?
       </p>
 
+      <p>
+        Cyclic inputs are analyzed by first collapsing each strongly connected group
+        into one component. A single terminal group means the graph converges;
+        two terminal groups mean it branches. Layering uses this condensed graph
+        and supports deep chains without recursive traversal.
+      </p>
+
+      <p>
+        Topology analysis and geometry are cached independently of current labels,
+        colors, and selection. If minimum-size cells and headers cannot fit, the
+        layout uses a compact census grid that keeps every component inside the plot.
+        Collapsed glyphs retain their IDs through resizing and match selections
+        against their member records.
+      </p>
+
       <h2 id="count-the-sinks">The one-line test: count the sinks</h2>
       <p>
         Here&rsquo;s the useful part. A finite directed set always has a single <em>greatest</em> element —
@@ -155,7 +170,8 @@ export default function NetEnsemblePage() {
       <h2 id="headless">The headless census API</h2>
       <p>
         The diagnostics are a pure function you can call without rendering anything —{" "}
-        <code>analyzeNetEnsemble(nodes, edges)</code>. It returns every component with its sink/source counts,
+        <code>analyzeNetEnsemble(nodes, edges)</code>. It returns every component with its sink/source counts
+        (terminal/initial strongly connected groups for cyclic inputs),
         its <code>directed</code> flag (the net test), and its motif fingerprint, plus the motif census and
         the converge/branch totals. Use it to drive a summary readout (as the stat tiles above do), gate a
         data-quality check (&ldquo;why does this pipeline have three sinks?&rdquo;), or feed the numbers into a

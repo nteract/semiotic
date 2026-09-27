@@ -42,7 +42,7 @@ export function postorder(
 
 /** SCC membership organizes feedback; it does not imply node-level dominance. */
 export function stronglyConnectedComponents(
-  source: NetworkAtlasSource
+  source: { nodes: ReadonlyArray<{ id: string }>; edges: ReadonlyArray<{ source: string; target: string }> }
 ): string[][] {
   const ids = source.nodes.map((node) => node.id).sort()
   const index = new Map(ids.map((id, i) => [id, i]))

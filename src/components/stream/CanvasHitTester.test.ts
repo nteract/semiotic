@@ -131,6 +131,21 @@ describe("CanvasHitTester — findNearestNode", () => {
     expect(findNearestNode([area], 50, 95, 30)).toBeNull()
   })
 
+  it("hits the filled body of bump ribbons and resolves shared regions in paint order", () => {
+    const area: AreaSceneNode = {
+      type: "area", _hitArea: true,
+      topPath: [[10, 50], [80, 50], [110, 50]],
+      bottomPath: [[10, 100], [40, 100], [110, 100]],
+      style: { fill: "navy" }, datum: [{ id: "first" }, { id: "middle" }, { id: "last" }]
+    }
+    const hit = findNearestNode([area], 70, 95, 1)
+    expect(hit?.datum).toEqual({ id: "middle" })
+    expect(hit).toMatchObject({ x: 70, y: 95, distance: 0 })
+    expect(findNearestNode([area], 70, 110, 1)).toBeNull()
+    const above = { ...area, datum: [{ id: "above" }, { id: "above" }, { id: "above" }] }
+    expect(findNearestNode([area, above], 70, 95, 1)?.datum).toEqual({ id: "above" })
+  })
+
   it("follows the rendered area top-path segment between sparse samples", () => {
     const area: AreaSceneNode = {
       type: "area",

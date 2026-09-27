@@ -209,7 +209,9 @@ export default function BumpChartPage() {
         that projection makes a wide band appear pinched. BumpChart samples the centerline and
         offsets each boundary along its local perpendicular, following the approach of{" "}
         <a href="https://github.com/emeeks/d3.svg.ribbon">d3.svg.ribbon</a>. The requested width is
-        preserved even through large jumps, and the fixed sample count gives the frame transition
+        preserved at ranking columns. Where a wide offset would fold over itself on a steep curve
+        or sharp linear join, the boundary is repaired to keep it ordered along x. Width between
+        columns can change locally at these joins. The fixed sample count gives the frame transition
         engine stable vertices to interpolate.
       </p>
 

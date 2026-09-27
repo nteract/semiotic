@@ -1,4 +1,4 @@
-# Vendoring d3-sankey-circular
+# Vendored Sankey layout
 
 This is a vendored (bundled-as-source) replacement for [d3-sankey-circular](https://github.com/tomshanley/d3-sankey-circular). It exposes the same API, so it's a drop-in swap anywhere `d3-sankey-circular` is used.
 
@@ -6,17 +6,17 @@ This is a vendored (bundled-as-source) replacement for [d3-sankey-circular](http
 
 - You control the source directly — no waiting on upstream fixes
 - One runtime dependency (`d3-array`) instead of three
-- No build step required — it's plain ES modules
+- The repository build compiles the JavaScript engine and TypeScript helpers
 
 ## Directory structure
 
-Copy the `src/` directory into your project under a path like `src/vendor/d3-sankey-circular/`:
+Copy the `src/` directory into your project under a path like `src/vendor/sankey-plus/`:
 
 ```
 your-library/
   src/
     vendor/
-      d3-sankey-circular/
+      sankey-plus/
         index.js
         align.js
         circularPath.js
@@ -24,8 +24,8 @@ your-library/
         nodeAttributes.js
         linkAttributes.js
         find.js
-        networks/
-          elementaryCircuits.js
+        feedbackOrder.ts
+        columnOccupancy.ts
     ...your code...
 ```
 
@@ -48,7 +48,7 @@ Wherever your library currently imports from `d3-sankey-circular`:
 import { sankeyCircular, sankeyJustify } from 'd3-sankey-circular';
 
 // After
-import { sankeyCircular, sankeyJustify } from './vendor/d3-sankey-circular/index.js';
+import { sankeyCircular, sankeyJustify } from './vendor/sankey-plus/index.js';
 ```
 
 Or if you prefer, set up a path alias in your bundler:
@@ -57,14 +57,14 @@ Or if you prefer, set up a path alias in your bundler:
 // webpack
 resolve: {
   alias: {
-    'd3-sankey-circular': path.resolve(__dirname, 'src/vendor/d3-sankey-circular/index.js')
+    'd3-sankey-circular': path.resolve(__dirname, 'src/vendor/sankey-plus/index.js')
   }
 }
 
 // vite
 resolve: {
   alias: {
-    'd3-sankey-circular': './src/vendor/d3-sankey-circular/index.js'
+    'd3-sankey-circular': './src/vendor/sankey-plus/index.js'
   }
 }
 ```
@@ -78,7 +78,7 @@ The API matches d3-sankey-circular exactly.
 ### Setup
 
 ```js
-import { sankeyCircular, sankeyJustify } from './vendor/d3-sankey-circular/index.js';
+import { sankeyCircular, sankeyJustify } from './vendor/sankey-plus/index.js';
 
 const sankey = sankeyCircular()
   .nodeWidth(24)
@@ -136,7 +136,7 @@ import {
   sankeyRight,
   sankeyCenter,
   sankeyJustify
-} from './vendor/d3-sankey-circular/index.js';
+} from './vendor/sankey-plus/index.js';
 ```
 
 ### Node properties after layout
@@ -184,7 +184,8 @@ svg.selectAll('.link')
 ## What changed from the original d3-sankey-circular
 
 - Removed `d3-shape` and `d3-scale` dependencies (path math and scaling inlined)
-- Better circular link detection via Johnson's elementary circuits algorithm
+- Weighted feedback ordering replaces circuit enumeration in O((V + E) log(V + E)) time
+- Iterative topological layering and indexed circular-arc placement avoid repeated graph scans
 - Two-pass layout for improved node positioning
 - Fixed several bugs in size calculation and node breadth assignment
-- No build step — source ES modules only
+- TypeScript ordering helpers compile with the repository build

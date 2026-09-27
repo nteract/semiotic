@@ -1,4 +1,3 @@
-import { getNodeID } from "./nodeAttributes.js";
 import { linkPerpendicularYToLinkSource, linkPerpendicularYToLinkTarget } from "./linkAttributes.js";
 
 
@@ -77,9 +76,7 @@ export function sortSourceLinks(inputGraph, id) {
       node.y = node.y - (node.y + (node.y1 - node.y0) - graph.y1);
     }
 
-    var nodesSourceLinks = graph.links.filter(function(l) {
-      return getNodeID(l.source, id) == getNodeID(node, id);
-    });
+    var nodesSourceLinks = node.sourceLinks.slice().sort(function(a, b) { return a.index - b.index; });
 
     var nodeSourceLinksLength = nodesSourceLinks.length;
 
@@ -157,18 +154,15 @@ export function sortSourceLinks(inputGraph, id) {
       ySourceOffset = ySourceOffset + link.width;
     });
 
-    // correct any circular bottom links so they are at the bottom of the node
-    nodesSourceLinks.forEach(function(link, i) {
+    // A suffix sum keeps bottom-band placement linear in node degree.
+    var offsetFromBottom = 0;
+    for (var i = nodesSourceLinks.length - 1; i >= 0; i--) {
+      var link = nodesSourceLinks[i];
       if (link.circularLinkType == 'bottom') {
-        var j = i + 1;
-        var offsetFromBottom = 0;
-        // sum the widths of any links that are below this link
-        for (j; j < nodeSourceLinksLength; j++) {
-          offsetFromBottom = offsetFromBottom + nodesSourceLinks[j].width;
-        }
         link.y0 = node.y1 - offsetFromBottom - link.width / 2;
       }
-    });
+      offsetFromBottom += link.width;
+    }
   });
 
   return graph;
@@ -180,9 +174,7 @@ export function sortTargetLinks(inputGraph, id) {
   let graph = inputGraph;
 
   graph.nodes.forEach(function(node) {
-    var nodesTargetLinks = graph.links.filter(function(l) {
-      return getNodeID(l.target, id) == getNodeID(node, id);
-    });
+    var nodesTargetLinks = node.targetLinks.slice().sort(function(a, b) { return a.index - b.index; });
 
     var nodesTargetLinksLength = nodesTargetLinks.length;
 
@@ -258,18 +250,15 @@ export function sortTargetLinks(inputGraph, id) {
       yTargetOffset = yTargetOffset + link.width;
     });
 
-    // correct any circular bottom links so they are at the bottom of the node
-    nodesTargetLinks.forEach(function(link, i) {
+    // A suffix sum keeps bottom-band placement linear in node degree.
+    var offsetFromBottom = 0;
+    for (var i = nodesTargetLinks.length - 1; i >= 0; i--) {
+      var link = nodesTargetLinks[i];
       if (link.circularLinkType == 'bottom') {
-        var j = i + 1;
-        var offsetFromBottom = 0;
-        // sum the widths of any links that are below this link
-        for (j; j < nodesTargetLinksLength; j++) {
-          offsetFromBottom = offsetFromBottom + nodesTargetLinks[j].width;
-        }
         link.y1 = node.y1 - offsetFromBottom - link.width / 2;
       }
-    });
+      offsetFromBottom += link.width;
+    }
   });
 
   return graph;

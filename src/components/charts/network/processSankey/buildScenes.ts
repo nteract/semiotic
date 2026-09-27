@@ -134,16 +134,34 @@ export interface BuildScenesResult {
   xScale: ReturnType<typeof scaleTime>
 }
 
+export type PreparedProcessSankeyLayout = Pick<BuildScenesResult, "layout" | "issues" | "warnings">
+
+/** Expensive analysis, independent of colors, labels, opacity, and timeline pixels. */
+export function prepareProcessSankeyLayout(input: BuildScenesInput): PreparedProcessSankeyLayout {
+  const { nodes, edges, domain, usageMode = "static" } = input
+  const allIssues = validateProcessSankey(nodes, edges, domain, { usageMode })
+  const { fatal: issues, warnings } = partitionProcessSankeyIssues(allIssues)
+  const layoutEdges = applyProcessSankeyValidationPolicy(edges, allIssues, usageMode)
+  const layout = issues.length ? null : computeProcessSankeyLayout(nodes, layoutEdges, {
+    plotH: input.orientation === "vertical" ? input.plotW : input.plotH,
+    ...input.layoutOpts, ribbonLane: input.ribbonLane, domain,
+  })
+  return { layout, issues, warnings }
+}
+
 /**
  * Run the full ProcessSankey layout pipeline. Returns the algorithm
  * output, the bands/ribbons specs ready for `customNetworkLayout`, and
  * the validation issues (caller decides whether to render an error
  * gate or fall through). Pure: no DOM, no React, no rAF.
  */
-export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesResult {
+export function buildProcessSankeyScenes(
+  input: BuildScenesInput,
+  prepared: PreparedProcessSankeyLayout = prepareProcessSankeyLayout(input),
+): BuildScenesResult {
   const {
     nodes, edges, domain, plotW, plotH, ribbonLane, ribbonMinRun = 0,
-    edgeOpacity, colorOf, layoutOpts,
+    edgeOpacity, colorOf,
     orientation = "horizontal",
     showLabels = true,
     labelPriorityAccessor,
@@ -157,12 +175,11 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
   const timelineExtent = orientation === "vertical" ? plotH : plotW
   const laneExtent = orientation === "vertical" ? plotW : plotH
 
-  const allIssues = validateProcessSankey(nodes, edges, domain, { usageMode })
-  const { fatal, warnings } = partitionProcessSankeyIssues(allIssues)
-  const layoutEdges = applyProcessSankeyValidationPolicy(edges, allIssues, usageMode)
+  const { layout, issues: fatal, warnings } = prepared
+  const layoutEdges = applyProcessSankeyValidationPolicy(edges, [...fatal, ...warnings], usageMode)
   const xScale = scaleTime().domain(domain).range([0, timelineExtent])
 
-  if (fatal.length > 0) {
+  if (!layout) {
     return {
       layout: null,
       layoutConfig: { bands: [], ribbons: [], showLabels: showLabels !== false },
@@ -172,9 +189,6 @@ export function buildProcessSankeyScenes(input: BuildScenesInput): BuildScenesRe
     }
   }
 
-  const layout = computeProcessSankeyLayout(nodes, layoutEdges, {
-    plotH: laneExtent, ...layoutOpts, ribbonLane, domain,
-  })
   const { centerlines, nodeData, valueScale: S } = layout
   const ruleContext = makeNodeRuleContext(colorBy, valueAccessor)
 

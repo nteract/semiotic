@@ -9,8 +9,10 @@ with better cycle detection (Johnson's algorithm), hierarchical arc radius
 stacking, two-pass layout with collision resolution, and dynamic extent
 adjustment. The original work was released under the MIT license.
 
-Vendored into Semiotic with Tom's algorithms preserved. Converted from
-JavaScript to TypeScript for strict mode compatibility.
+Vendored into Semiotic as JavaScript with TypeScript declarations and typed
+ordering helpers. Semiotic replaces elementary-circuit enumeration with a
+weighted feedback-order heuristic, uses iterative DAG layering, and indexes
+circular arc placement. The original layout and routing remain the foundation.
 
 ## Key improvements over d3-sankey-circular
 
@@ -25,5 +27,9 @@ JavaScript to TypeScript for strict mode compatibility.
   false link overlaps.
 - **Configurable parameters**: `verticalMargin`, `circularGap`, `baseRadius`
   are tunable instead of hardcoded.
-- **Built-in cycle detection**: Johnson's algorithm via Tarjan SCC, no
-  external dependency on `elementary-circuits-directed-graph`.
+- **Bounded cycle handling**: Weighted feedback ordering takes
+  O((V + E) log(V + E)) time and O(V + E) space, favoring large forward flows and
+  breaking ties by node ID. It is a heuristic, not an exact minimum feedback
+  arc set. Self-links remain circular, and parallel flows contribute separately.
+- **Indexed routing**: DAG layers use a topological pass, endpoint arc radii
+  share column groups, and circular bands use interval occupancy queries.

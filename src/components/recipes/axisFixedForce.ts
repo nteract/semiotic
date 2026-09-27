@@ -1,3 +1,4 @@
+import { createRectCollision } from "./rectCollision"
 import { hashUnit } from "../utils/hash"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkSceneNode, NetworkSceneEdge, NetworkLabel } from "../stream/networkTypes"
@@ -50,39 +51,24 @@ export interface RectCollideOptions {
  * box-aware separation every text-heavy network needs (labels are rectangles,
  * not points). Pure / deterministic (symmetric ties broken by id order).
  */
-export function rectCollide(boxes: readonly CollisionBox[], opts?: RectCollideOptions): Map<string, number> {
-  const axis = opts?.axis ?? "x"
-  const padding = opts?.padding ?? 0
-  const strength = opts?.strength ?? 0.5
-  const cross = axis === "x" ? "y" : "x"
-  const freeSize = axis === "x" ? "width" : "height"
-  const crossSize = axis === "x" ? "height" : "width"
-
+export function rectCollide(
+  boxes: readonly CollisionBox[],
+  opts?: RectCollideOptions
+): Map<string, number> {
+  const displacement = createRectCollision(
+    boxes,
+    opts?.axis ?? "x",
+    opts?.padding ?? 0,
+    opts?.strength ?? 0.5
+  )()
   const forces = new Map<string, number>()
-  for (const b of boxes) forces.set(b.id, 0)
-
-  for (let i = 0; i < boxes.length; i++) {
-    for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i]
-      const b = boxes[j]
-      const crossGap = Math.abs(a[cross] - b[cross])
-      const crossLimit = (a[crossSize] + b[crossSize]) / 2 + padding
-      if (crossGap > crossLimit) continue
-      const minGap = (a[freeSize] + b[freeSize]) / 2 + padding
-      // Break exact ties deterministically by id so the pass is stable.
-      const delta = b[axis] - a[axis] || (a.id < b.id ? -0.5 : 0.5)
-      const overlap = minGap - Math.abs(delta)
-      if (overlap <= 0) continue
-      const push = overlap * strength * Math.sign(delta)
-      forces.set(a.id, (forces.get(a.id) ?? 0) - push)
-      forces.set(b.id, (forces.get(b.id) ?? 0) + push)
-    }
-  }
+  boxes.forEach((box, index) => forces.set(box.id, (forces.get(box.id) ?? 0) + displacement[index]))
   return forces
 }
 
 export interface AxisFixedForceConfig {
-  /** Field (or fn) giving the fixed-axis data value, e.g. a year. */
+  /** Field (or fn) giving the fixed-axis data value, e.g. a year.
+   * Missing, blank, or non-finite values omit the node and its incident edges. */
   fixedAccessor: string | ((d: Datum) => number)
   /** `[min, max]` of the fixed value, mapped to the pinned pixel axis. */
   fixedDomain: [number, number]
@@ -144,8 +130,12 @@ interface PlotRect {
 
 const DEFAULT_SIZE = { width: 60, height: 34 }
 
-function accessorFn(a: string | ((d: Datum) => unknown) | undefined, key: string): (d: Datum) => unknown {
-  if (typeof a === "function") return a
+function accessorFn(
+  a: string | ((d: Datum) => unknown) | undefined,
+  key: string,
+  wrapped = false
+): (d: Datum) => unknown {
+  if (typeof a === "function") return wrapped ? (datum) => a(unwrapDatum<Datum>(datum) ?? datum) : a
   const field = a ?? key
   return (d: Datum) => readField(d, field, undefined)
 }
@@ -160,11 +150,21 @@ export function axisFixedForcePositions(
   plot: PlotRect,
   config: AxisFixedForceConfig,
 ): AxisFixedForceResult {
+  return positionAxisFixedForce(nodes, edges, plot, config, false)
+}
+
+function positionAxisFixedForce(
+  nodes: readonly Datum[],
+  edges: readonly Datum[],
+  plot: PlotRect,
+  config: AxisFixedForceConfig,
+  wrapped: boolean,
+): AxisFixedForceResult {
   const fixedAxis = config.fixedAxis ?? "y"
-  const getFixed = (d: Datum) => Number(accessorFn(config.fixedAccessor, "fixed")(d))
-  const getId = (d: Datum) => String(accessorFn(config.idAccessor, "id")(d))
-  const getSource = (e: Datum) => String(accessorFn(config.sourceAccessor, "source")(e))
-  const getTarget = (e: Datum) => String(accessorFn(config.targetAccessor, "target")(e))
+  const getFixed = accessorFn(config.fixedAccessor, "fixed", wrapped)
+  const getId = (d: Datum) => String(accessorFn(config.idAccessor, "id", wrapped)(d))
+  const getSource = (e: Datum) => String(accessorFn(config.sourceAccessor, "source", wrapped)(e))
+  const getTarget = (e: Datum) => String(accessorFn(config.targetAccessor, "target", wrapped)(e))
   const sizeOf = config.size ?? (() => DEFAULT_SIZE)
 
   const iterations = config.iterations ?? 180
@@ -179,6 +179,8 @@ export function axisFixedForcePositions(
 
   // Pixel ranges for the two axes.
   const [f0, f1] = config.fixedDomain
+  if (![f0, f1, plot.x, plot.y, plot.width, plot.height].every(Number.isFinite) ||
+      plot.width <= 0 || plot.height <= 0) return { positioned: [], byId: new Map() }
   const fixedSpan = f1 - f0 || 1
   const fixedStart = (fixedAxis === "y" ? plot.y : plot.x) + fixedPadding
   const fixedEnd = (fixedAxis === "y" ? plot.y + plot.height : plot.x + plot.width) - fixedPadding
@@ -199,57 +201,61 @@ export function axisFixedForcePositions(
     anchor: number
   }
 
-  const particles: Particle[] = nodes.map((node) => {
-    const data = unwrapDatum<Datum>(node) ?? (node as Datum)
+  const particles: Particle[] = nodes.flatMap((node) => {
+    const value = getFixed(node)
+    if (typeof value !== "number" && (typeof value !== "string" || !value.trim())) return []
+    const fixedValue = Number(value)
+    const fixed = fixedScale(fixedValue)
+    if (!Number.isFinite(fixedValue) || !Number.isFinite(fixed)) return []
+    const data = unwrapDatum<Datum>(node) ?? node
     const id = getId(node)
     const { width, height } = sizeOf(data)
-    const fixedValue = getFixed(node)
+    if (![width, height].every((size) => Number.isFinite(size) && size > 0)) return []
     const free = freeStart + hashUnit(id) * freeSpan
-    return { data, id, width, height, fixedValue, fixed: fixedScale(fixedValue), free, anchor: free }
+    return [{ data, id, width, height, fixedValue, fixed, free, anchor: free }]
   })
-  const byId = new Map(particles.map((p) => [p.id, p]))
-
   const freeSizeOf = (p: Particle) => (fixedAxis === "y" ? p.width : p.height)
-
+  const indexById = new Map(particles.map((p, i) => [p.id, i]))
+  const links: Array<[number, number]> = []
+  for (const edge of edges) {
+    const source = indexById.get(getSource(edge))
+    const target = indexById.get(getTarget(edge))
+    if (source !== undefined && target !== undefined)
+      links.push([source, target])
+  }
+  const boxes: CollisionBox[] = particles.map((p) => ({
+    id: p.id,
+    x: fixedAxis === "y" ? p.free : p.fixed,
+    y: fixedAxis === "y" ? p.fixed : p.free,
+    width: p.width,
+    height: p.height
+  }))
+  const freeAxis = fixedAxis === "y" ? "x" : "y"
+  const collide = createRectCollision(
+    boxes,
+    freeAxis,
+    collisionPadding,
+    collisionStrength,
+    true
+  )
+  const forces = new Float64Array(particles.length)
   for (let iter = 0; iter < iterations; iter++) {
-    const forces = new Map<string, number>()
-    for (const p of particles) forces.set(p.id, 0)
-
-    // Edge attraction along the free axis.
-    for (const edge of edges) {
-      const s = byId.get(getSource(edge))
-      const t = byId.get(getTarget(edge))
-      if (!s || !t) continue
-      const pull = (t.free - s.free) * attraction
-      forces.set(s.id, (forces.get(s.id) ?? 0) + pull)
-      forces.set(t.id, (forces.get(t.id) ?? 0) - pull)
+    forces.fill(0)
+    for (const [source, target] of links) {
+      const pull =
+        (particles[target].free - particles[source].free) * attraction
+      forces[source] += pull
+      forces[target] -= pull
     }
-
-    // Anchor spring toward the initial spread (keeps the graph from collapsing).
-    for (const p of particles) {
-      forces.set(p.id, (forces.get(p.id) ?? 0) + (p.anchor - p.free) * anchorStrength)
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i]
+      forces[i] += (p.anchor - p.free) * anchorStrength
+      boxes[i][freeAxis] = p.free
     }
-
-    // Rectangular collision along the free axis.
-    const boxes: CollisionBox[] = particles.map((p) => ({
-      id: p.id,
-      x: fixedAxis === "y" ? p.free : p.fixed,
-      y: fixedAxis === "y" ? p.fixed : p.free,
-      width: p.width,
-      height: p.height,
-    }))
-    const collide = rectCollide(boxes, {
-      axis: fixedAxis === "y" ? "x" : "y",
-      padding: collisionPadding,
-      strength: collisionStrength,
-    })
-    for (const p of particles) {
-      forces.set(p.id, (forces.get(p.id) ?? 0) + (collide.get(p.id) ?? 0))
-    }
-
-    // Integrate + clamp inside the free range.
-    for (const p of particles) {
-      p.free += (forces.get(p.id) ?? 0) * damping
+    const collision = collide()
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i]
+      p.free += (forces[i] + collision[i]) * damping
       const half = freeSizeOf(p) / 2
       p.free = Math.max(freeStart + half, Math.min(freeEnd - half, p.free))
     }
@@ -289,11 +295,12 @@ export const axisFixedForceLayout: NetworkCustomLayout<AxisFixedForceConfig> = (
     return { sceneNodes: [] }
   }
   const fixedAxis = ctx.config.fixedAxis ?? "y"
-  const { positioned, byId } = axisFixedForcePositions(
+  const { positioned, byId } = positionAxisFixedForce(
     ctx.nodes as unknown as Datum[],
     ctx.edges as unknown as Datum[],
     plot,
     ctx.config,
+    true,
   )
 
   const sceneNodes: NetworkSceneNode[] = positioned.map((p) => ({
@@ -309,10 +316,10 @@ export const axisFixedForceLayout: NetworkCustomLayout<AxisFixedForceConfig> = (
   }))
 
   const sceneEdges: NetworkSceneEdge[] = []
-  const getSource = (e: Datum) =>
-    String(typeof ctx.config.sourceAccessor === "function" ? ctx.config.sourceAccessor(e) : readField(e, (ctx.config.sourceAccessor as string) ?? "source", undefined))
-  const getTarget = (e: Datum) =>
-    String(typeof ctx.config.targetAccessor === "function" ? ctx.config.targetAccessor(e) : readField(e, (ctx.config.targetAccessor as string) ?? "target", undefined))
+  const sourceAccessor = accessorFn(ctx.config.sourceAccessor, "source", true)
+  const targetAccessor = accessorFn(ctx.config.targetAccessor, "target", true)
+  const getSource = (edge: Datum) => String(sourceAccessor(edge))
+  const getTarget = (edge: Datum) => String(targetAccessor(edge))
   ;(ctx.edges as unknown as Datum[]).forEach((edge, index) => {
     const s = byId.get(getSource(edge))
     const t = byId.get(getTarget(edge))

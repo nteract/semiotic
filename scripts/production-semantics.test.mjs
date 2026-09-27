@@ -178,6 +178,25 @@ for (const entry of ["./recipes", "./recipes/core"]) {
 
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} preserves dense cyclic Sankey flows (#1334)`, () => {
+      exercise(target, `
+        const nodes = Array.from({ length: 12 }, (_, i) => ({ id: "N" + i }))
+        const edges = nodes.flatMap(({ id: source }) => nodes.filter(({ id }) => id !== source)
+          .map(({ id: target }) => ({ source, target, value: 1 })))
+        for (const orientation of ["horizontal", "vertical"]) {
+          const { svg, evidence } = api.renderChartWithEvidence("SankeyDiagram", {
+            nodes, edges, orientation, width: 600, height: 400, showLabels: false
+          })
+          assert.equal(evidence.nodeCount, 12)
+          assert.equal(evidence.edgeCount, 132)
+          assert.equal(evidence.empty, false)
+          assert.doesNotMatch(svg, /NaN|Infinity/)
+          const paths = [...svg.matchAll(/<path\\b[^>]* d="([^"]+)"/g)]
+          assert.equal(paths.length, 132)
+          assert.equal(paths.filter(([, d]) => d.includes("A")).length, 66)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} exports recipe omissions and small-lane geometry (#1505)`, () => {
       exercise(target, `
         const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
@@ -523,3 +542,138 @@ test("recipe selection hook shares the network provider context without loading 
   const source = readFileSync(resolve(root, "dist/semiotic-recipes-react.module.min.js"), "utf8")
   assert.doesNotMatch(source, /semiotic-client-shared/)
 })
+
+for (const entry of ["./recipes", "./recipes/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} fits and directs lineage cycles (#1508)`, () => {
+      exercise(target, `
+        const { renderToStaticMarkup } = await import("react-dom/server")
+        const nodes = [{ id: "a", x: -1, y: 0 }, { id: "b", x: 0, y: 1 }, { id: "c", x: 1, y: 2 }]
+        const edges = [{ source: "a", target: "b" }, { source: "c", target: "a" }, { source: "c", target: "c" }]
+        const plot = { x: 10, y: 20, width: 500, height: 300 }
+        const ctx = {
+          nodes: nodes.map(data => ({ ...data, data })), edges: edges.map(data => ({ ...data, data })),
+          dimensions: { plot }, theme: { semantic: {} }, resolveColor: () => "blue", config: {}
+        }
+        const fit = api.createLineageDagFit(nodes, plot)
+        const scene = api.lineageDagLayout(ctx)
+        scene.sceneNodes.forEach((node, i) => {
+          assert.equal(node.datum, nodes[i])
+          assert.equal(node.x, fit.nodeBounds(nodes[i]).x)
+          assert.equal(node.y, fit.nodeBounds(nodes[i]).y)
+          assert.ok(node.x >= 10 && node.x + node.w <= 510)
+          assert.ok(node.y >= 20 && node.y + node.h <= 320)
+          const logical = fit.invert(node.x + node.w / 2, node.y + node.h / 2)
+          assert.equal(logical.layer, nodes[i].x)
+          assert.equal(logical.row, nodes[i].y)
+        })
+        assert.equal(scene.sceneEdges.length, 3)
+        assert.equal(scene.sceneEdges[1].style.strokeDasharray, "5 4")
+        assert.equal(scene.sceneEdges[2].style.strokeDasharray, "5 4")
+        assert.equal((renderToStaticMarkup(scene.overlays).match(/recipe-edge-arrow/g) || []).length, 3)
+        const dagre = api.dagreLayout({ ...ctx, nodes: [
+          { id: "a", data: { x: 100, y: 100, width: 100, height: 40 } },
+          { id: "b", data: { x: 300, y: 300, width: 100, height: 40 } }
+        ], edges: [ctx.edges[0]], config: { fit: "none" } })
+        assert.equal(dagre.sceneEdges[0].x1, 120)
+        assert.equal(dagre.sceneEdges[0].x2, 280)
+        assert.match(renderToStaticMarkup(dagre.overlays), /recipe-edge-arrow/)
+      `)
+    })
+  }
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} retains directed recipe marks and dash styles in static evidence (#1508)`, () => {
+      exercise(target, `
+        const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")
+        for (const layout of [recipes.lineageDagLayout, recipes.dagreLayout]) {
+          let scene
+          const nodes = [{ id: "a", x: -1, y: 0, label: "Source" }, { id: "b", x: 1, y: 2, label: "Sink" }]
+          const result = api.renderChartWithEvidence("NetworkCustomChart", {
+            nodes, edges: [{ source: "a", target: "b" }, { source: "b", target: "a" }],
+            width: 500, height: 300, margin: 20, title: "Directed lineage",
+            layout: ctx => { scene = layout(ctx); return scene }
+          })
+          assert.equal(scene.sceneNodes.length, 2)
+          assert.equal(scene.sceneEdges.length, 2)
+          assert.equal(scene.sceneNodes[0].datum.label, "Source")
+          assert.equal(result.evidence.empty, false)
+          assert.equal((result.svg.match(/recipe-edge-arrow/g) || []).length, 2)
+          assert.doesNotMatch(result.svg, /NaN|Infinity/)
+          if (layout === recipes.lineageDagLayout) {
+            assert.match(result.svg, /stroke-dasharray="5 4"/)
+            assert.match(result.svg, /stroke-linecap="round"/)
+          }
+        }
+      `)
+    })
+  }
+}
+
+for (const target of publicTargets("./experimental")) {
+  test(`experimental ${target.conditions} preserves SVG path bounds and hit regions (#1509)`, () => {
+    exercise(target, `
+      const items = [
+        { kind: "path", d: "M0 100 A50 50 0 01100 100Z", datum: { name: "arc" } },
+        { kind: "path", d: "m10 20h80v50h-80z", datum: { name: "bar" } }
+      ]
+      const cfg = api.unstable_fromGofishIR({ ir: "gofish-display-list", irVersion: 0, viewport: { w: 200, h: 200 }, items })
+      const scene = cfg.networkLayout({})
+      assert.equal(scene.sceneNodes.length, 2)
+      assert.deepEqual(scene.sceneNodes.map(({ x, y, w, h }) => [x, y, w, h]), [[0, 50, 100, 50], [10, 20, 80, 50]])
+      scene.sceneNodes.forEach((node, i) => {
+        assert.equal(node.datum, items[i].datum)
+        assert.equal(node._hitPath.pathD, items[i].d)
+        assert.deepEqual(node._hitPath.transform, [0, 0, 1, 1])
+      })
+    `)
+  })
+}
+
+for (const entry of ["./server", "./server/node", "./server/edge"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} renders precise GoFish geometry and unfolded bump ribbons (#1509)`, () => {
+      exercise(target, `
+        const experimental = createRequire(import.meta.url)("./dist/semiotic-experimental.min.js")
+        const cfg = experimental.unstable_fromGofishIR({
+          ir: "gofish-display-list", irVersion: 0, viewport: { w: 200, h: 200 },
+          items: [{ kind: "path", d: "M0 100 A50 50 0 0 1 100 100Z", datum: { id: "arc" } }]
+        })
+        let scene
+        const gofish = api.renderChartWithEvidence("NetworkCustomChart", {
+          nodes: cfg.nodes, edges: [], width: 200, height: 200, margin: 0,
+          layout: ctx => { scene = cfg.networkLayout(ctx); return scene }
+        })
+        assert.equal(gofish.evidence.markCount, 1)
+        assert.equal(gofish.evidence.empty, false)
+        assert.deepEqual(scene.sceneNodes.map(({ x, y, w, h }) => [x, y, w, h]), [[0, 50, 100, 50]])
+        assert.match(gofish.svg, /M0 100 A50 50 0 0 1 100 100Z/)
+        const data = Array.from({ length: 4 }, (_, period) => ["A", "B", "C"].map((team, i) => ({
+          team, period, value: period % 2 ? 30 + 30 * i : 90 - 30 * i
+        }))).flat()
+        for (const curve of ["smooth", "linear"]) {
+          const result = api.renderChartWithEvidence("BumpChart", {
+            data, width: 220, height: 420, margin: { left: 20, right: 20, top: 40, bottom: 20 },
+            xAccessor: "period", yAccessor: "value", lineBy: "team", ribbon: true, ribbonSizeRange: [36, 36],
+            curve, showAxes: false, showLabels: false, showPoints: false, showLegend: false, color: "#ff5500"
+          })
+          assert.equal(result.evidence.markCount, 3)
+          assert.equal(result.evidence.empty, false)
+          const paths = [...result.svg.matchAll(/<path[^>]*d="([^"]+)"[^>]*fill="#ff5500"/g)]
+          assert.equal(paths.length, 3)
+          for (const [, d] of paths) {
+            const values = d.match(/[-+]?[0-9]*[.]?[0-9]+(?:e[-+]?[0-9]+)?/gi).map(Number)
+            assert.equal(values.length, 148)
+            const top = values.filter((_, i) => i % 2 === 0).slice(0, 37)
+            const bottom = values.filter((_, i) => i % 2 === 0).slice(37).reverse()
+            for (const boundary of [top, bottom]) for (let i = 1; i < boundary.length; i++) {
+              assert.ok(boundary[i] > boundary[i - 1], "No reversed or retraced ribbon sections")
+            }
+          }
+        }
+      `)
+    })
+  }
+}

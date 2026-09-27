@@ -744,9 +744,14 @@ const edges = g.edges().map(e => {
           canvas <code>rect</code> owns the hit area while the icon, label, and chips ride the
           layout's <code>overlays</code> (which is <code>pointer-events: none</code>, so it never
           steals a hover). It collapses through full → compact → icon → dot as the graph gets
-          denser, renders <code>isBackEdge</code> cycles as distinct dashed loops, and dims to a
+          denser, renders cycles as dashed loops with arrowheads inside the plot, and dims to a
           host-supplied reachable set. Because it only <em>reads</em> pre-computed layer/row
-          coordinates, output is deterministic. Set <code>hullGroupAccessor</code> to enclose nodes
+          coordinates, output is deterministic. Domains fit actual extents, including negative layers
+          and uncentered rows. Backedges are inferred when the source layer is at or beyond the
+          target layer; an explicit <code>isBackEdge</code> boolean overrides that inference.
+          Optional <code>layerCount</code> and <code>maxLayerSize</code> reserve zero-based layers
+          and centered rows, expanding to include data outside those ranges.
+          Set <code>hullGroupAccessor</code> to enclose nodes
           that share a group value in padded, rounded convex hulls. Those hulls use the layout's
           fitted pixel geometry and render in the background layer in both the browser and static
           SVG output. See the full interactive build — main view, synced minimap, and a snapshot

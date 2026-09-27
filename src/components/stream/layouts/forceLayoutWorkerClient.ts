@@ -80,10 +80,14 @@ export class ForceLayoutWorkerSession {
             error: moduleWorkerErrorFromPayload(error),
           }
         }
+        if (!response?.positions || typeof response.positions !== "object" || Array.isArray(response.positions) ||
+            !Object.values(response.positions).every((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y))) {
+          throw new Error("Malformed force worker response")
+        }
         return {
           requestId,
           ok: true as const,
-          payload: { positions: response.positions ?? {} },
+          payload: { positions: response.positions },
         }
       },
     })
@@ -92,6 +96,8 @@ export class ForceLayoutWorkerSession {
   get isDead(): boolean {
     return this.session.isDead
   }
+
+  get failure(): Error | null { return this.session.failure }
 
   request(
     request: ForceWorkerRequest,
@@ -105,7 +111,7 @@ export class ForceLayoutWorkerSession {
   }
 }
 
-const sharedForceLayoutSession = createSharedWorkerSessionHolder(
+const sharedForceLayoutSession = /*#__PURE__*/ createSharedWorkerSessionHolder(
   () => new ForceLayoutWorkerSession(),
 )
 
@@ -118,7 +124,7 @@ export function _resetSharedForceLayoutSessionForTest(): void {
  * Run a force layout on a reused worker session.
  * Prefer this over constructing a new Worker per layout.
  */
-export function runForceLayoutWorker(
+export async function runForceLayoutWorker(
   request: ForceWorkerRequest,
   signal?: AbortSignal,
 ): Promise<ForceWorkerResponse> {

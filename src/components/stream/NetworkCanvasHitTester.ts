@@ -45,6 +45,11 @@ export function findNearestNetworkNode(
   let bestNode: NetworkHitResult | null = null
   let bestDist = Infinity
   let bestRectArea = Infinity
+  // Exact paths belong to a display list: all marks in that list compete in
+  // paint order, including ordinary rects/circles painted over a path. Scenes
+  // without paths retain nearest-circle and smallest-treemap-cell semantics.
+  const paintOrder = sceneNodes.some((node) => node.type === "rect" && node._hitPath)
+  if (paintOrder) nodeQuadtree = null
 
   // Fast path: when a circle-node quadtree is available (large force/orbit
   // graphs) query it instead of scanning every circle. It returns the nearest
@@ -69,7 +74,9 @@ export function findNearestNetworkNode(
     if (!result) continue
     result.mark = node
 
-    if (node.type === "rect") {
+    if (paintOrder) {
+      bestNode = result
+    } else if (node.type === "rect") {
       // For rects: prefer the smallest area (deepest cell)
       const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
       if (area < bestRectArea) {
@@ -113,8 +120,24 @@ function hitTestNode(
   switch (node.type) {
     case "circle":
       return hitTestCircle(node, px, py, maxDistance)
-    case "rect":
-      return hitTestRect(node, px, py)
+    case "rect": {
+      const hit = hitTestRect(node, px, py)
+      if (!hit || !node._hitPath) return hit
+      const region = node._hitPath
+      const [tx, ty, sx, sy] = region.transform
+      const path = getEdgePath2D(region), ctx = getHitContext()
+      if (!path || !ctx || sx === 0 || sy === 0) return null
+      const x = (px - tx) / sx, y = (py - ty) / sy
+      if (region.fill && ctx.isPointInPath(path, x, y)) return hit
+      if (region.strokeWidth > 0) {
+        const previousWidth = ctx.lineWidth
+        ctx.lineWidth = region.strokeWidth
+        const inStroke = ctx.isPointInStroke(path, x, y)
+        ctx.lineWidth = previousWidth
+        if (inStroke) return hit
+      }
+      return null
+    }
     case "arc":
       return hitTestArc(node, px, py)
     case "symbol":

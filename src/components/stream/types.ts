@@ -185,6 +185,8 @@ export interface AreaSceneNode {
   type: "area"
   topPath: [number, number][]
   bottomPath: [number, number][]
+  /** @internal Bump ribbons own their filled region; ordinary areas retain top-edge interaction. */
+  _hitArea?: boolean
   /** Raw y-values corresponding to each top-path point (for threshold coloring) */
   rawValues?: number[]
   /** Threshold-based colors for the area's top-edge stroke */

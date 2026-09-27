@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import Bounds from "./Bounds"
 import PositionedNetworks from "./PositionedNetworks"
+import Lineage from "./Lineage"
+import PathGeometry from "./PathGeometry"
 import { GeoCustomChart } from "../../dist/geo.module.min.js"
 import { StreamPhysicsFrame } from "../../dist/physics.module.min.js"
 import {
@@ -152,6 +154,8 @@ function App() {
 }
 
 createRoot(document.getElementById("root")).render(
+  new URLSearchParams(location.search).get("case") === "paths" ? <PathGeometry /> :
+  new URLSearchParams(location.search).get("case") === "lineage" ? <Lineage /> :
   new URLSearchParams(location.search).get("case") === "positioned" ? <PositionedNetworks /> :
   new URLSearchParams(location.search).get("case") === "bounds" ? <Bounds /> : <App />
 )

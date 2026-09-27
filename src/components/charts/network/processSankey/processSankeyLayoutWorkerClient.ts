@@ -10,8 +10,14 @@ import type { ProcessSankeyLayout } from "./algorithm"
 import type { ProcessSankeyLayoutConfig } from "./streamingLayout"
 import { scaleTime } from "d3-scale"
 import type { Datum } from "../../shared/datumTypes"
+import { validateProcessSankeyWorkerResponse } from "./workerResponse"
 
-export type ProcessSankeyLayoutExecution = "auto" | "worker" | "sync"
+import { canUseProcessSankeyWorker, processSankeyWorkerAvailability } from "./workerPolicy"
+export {
+  canUseProcessSankeyWorker, estimateProcessSankeyLayoutCost,
+  shouldUseProcessSankeyWorker, DEFAULT_PROCESS_SANKEY_WORKER_THRESHOLD,
+  type ProcessSankeyLayoutExecution,
+} from "./workerPolicy"
 
 /**
  * Serializable worker request — no functions or React nodes.
@@ -51,45 +57,6 @@ interface WireResponse {
   domain?: [number, number]
   timelineExtent?: number
   error?: { message: string; name?: string; stack?: string }
-}
-
-/**
- * Default cost threshold for `execution: "auto"`.
- * Dense rivers (≈100 nodes × packing×ordering) sit well above this;
- * small docs demos stay on the main thread.
- */
-export const DEFAULT_PROCESS_SANKEY_WORKER_THRESHOLD = 50_000
-
-export function estimateProcessSankeyLayoutCost(
-  nodeCount: number,
-  edgeCount: number,
-  packing: "off" | "reuse" = "reuse",
-  laneOrder: string = "crossing-min",
-): number {
-  const packingFactor = packing === "reuse" ? 80 : 1
-  const orderFactor = laneOrder && laneOrder !== "insertion" ? 40 : 1
-  return (
-    nodeCount * nodeCount * packingFactor +
-    edgeCount * edgeCount * orderFactor +
-    (nodeCount + edgeCount) * 10
-  )
-}
-
-export function shouldUseProcessSankeyWorker(
-  execution: ProcessSankeyLayoutExecution,
-  nodeCount: number,
-  edgeCount: number,
-  packing: "off" | "reuse" = "reuse",
-  laneOrder: string = "crossing-min",
-  threshold = DEFAULT_PROCESS_SANKEY_WORKER_THRESHOLD,
-): boolean {
-  if (execution === "sync") return false
-  if (execution === "worker") return true
-  return estimateProcessSankeyLayoutCost(nodeCount, edgeCount, packing, laneOrder) >= threshold
-}
-
-export function canUseProcessSankeyWorker(): boolean {
-  return typeof window !== "undefined" && typeof Worker !== "undefined"
 }
 
 export function createProcessSankeyLayoutWorker(): Worker {
@@ -133,6 +100,7 @@ export class ProcessSankeyLayoutWorkerSession {
   constructor(worker: Worker = createProcessSankeyLayoutWorker()) {
     this.session = new ModuleWorkerSession({
       name: "ProcessSankey layout",
+      terminateOnAbort: true,
       createWorker: () => worker,
       parseMessage: (data) => {
         const response = data as WireResponse
@@ -144,20 +112,17 @@ export class ProcessSankeyLayoutWorkerSession {
             error: moduleWorkerErrorFromPayload(error),
           }
         }
+        validateProcessSankeyWorkerResponse(data)
         return {
           requestId,
           ok: true as const,
           payload: {
             layout: reviveLayout(response.layout),
-            layoutConfig: response.layoutConfig ?? {
-              bands: [],
-              ribbons: [],
-              showLabels: true,
-            },
-            issues: response.issues ?? [],
-            warnings: response.warnings ?? [],
-            domain: response.domain ?? [0, 1],
-            timelineExtent: response.timelineExtent ?? 0,
+            layoutConfig: response.layoutConfig!,
+            issues: response.issues!,
+            warnings: response.warnings!,
+            domain: response.domain!,
+            timelineExtent: response.timelineExtent!,
           },
         }
       },
@@ -167,6 +132,8 @@ export class ProcessSankeyLayoutWorkerSession {
   get isDead(): boolean {
     return this.session.isDead
   }
+
+  get failure(): Error | null { return this.session.failure }
 
   request(
     request: ProcessSankeyWorkerRequest,
@@ -180,23 +147,31 @@ export class ProcessSankeyLayoutWorkerSession {
   }
 }
 
-const sharedProcessSankeySession = createSharedWorkerSessionHolder(
+const sharedProcessSankeySession = /*#__PURE__*/ createSharedWorkerSessionHolder(
   () => new ProcessSankeyLayoutWorkerSession(),
 )
 
-/** Test helper: drop the shared session so the next call creates a fresh Worker. */
-export function _resetSharedProcessSankeyLayoutSessionForTest(): void {
+/** Explicitly retry after worker deployment/policy changes; also drops live work. */
+export function resetProcessSankeyLayoutWorker(): void {
   sharedProcessSankeySession.resetForTest()
+  processSankeyWorkerAvailability.failed = false
 }
 
-export function runProcessSankeyLayoutWorker(
+export const _resetSharedProcessSankeyLayoutSessionForTest = resetProcessSankeyLayoutWorker
+
+export async function runProcessSankeyLayoutWorker(
   request: ProcessSankeyWorkerRequest,
   signal?: AbortSignal,
 ): Promise<ProcessSankeyWorkerResponse> {
   if (!canUseProcessSankeyWorker()) {
     return Promise.reject(new Error("Web Workers are unavailable"))
   }
-  return sharedProcessSankeySession.get().request(request, signal)
+  try {
+    return await sharedProcessSankeySession.get().request(request, signal)
+  } catch (error) {
+    if (!sharedProcessSankeySession.available) processSankeyWorkerAvailability.failed = true
+    throw error
+  }
 }
 
 /**

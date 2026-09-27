@@ -148,6 +148,8 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
           stroke={e.style.stroke || "#999"}
           strokeWidth={e.style.strokeWidth ?? 1}
+          strokeDasharray={e.style.strokeDasharray}
+          strokeLinecap={e.style.strokeLinecap}
           opacity={e.style.opacity}
         />
       )
@@ -165,6 +167,8 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
             strokeWidth={e.style.strokeWidth}
+            strokeDasharray={e.style.strokeDasharray}
+            strokeLinecap={e.style.strokeLinecap}
             opacity={e.style.opacity}
           />
         </React.Fragment>
@@ -183,6 +187,8 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
             strokeWidth={e.style.strokeWidth}
+            strokeDasharray={e.style.strokeDasharray}
+            strokeLinecap={e.style.strokeLinecap}
             opacity={e.style.opacity}
           />
         </React.Fragment>
@@ -197,6 +203,8 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           fill={svgFill(e.style.fill, "none")}
           stroke={e.style.stroke || "#999"}
           strokeWidth={e.style.strokeWidth ?? 1}
+          strokeDasharray={e.style.strokeDasharray}
+          strokeLinecap={e.style.strokeLinecap}
           opacity={e.style.opacity}
         />
       )

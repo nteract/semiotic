@@ -47,7 +47,8 @@ export function ProcessTimeFixture() {
                   : `number ${value}`
             : undefined
         }
-        layoutExecution="sync"
+        layoutExecution={params.get("execution") === "worker" ? "worker" : "sync"}
+        edgeOpacity={() => 0.65}
       />
     </>
   )

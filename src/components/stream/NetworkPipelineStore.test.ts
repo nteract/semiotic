@@ -17,6 +17,34 @@ function makeConfig(overrides: Partial<NetworkPipelineConfig> = {}): NetworkPipe
 }
 
 describe("NetworkPipelineStore", () => {
+  it("indexes cascaded removals and refreshes the index after new topology", () => {
+    const store = new NetworkPipelineStore(makeConfig())
+    const nodes = Array.from({ length: 1000 }, (_, i) => ({ id: `n${i}` }))
+    const edges = nodes.slice(1).map((node, i) => ({ source: nodes[i].id, target: node.id, value: 1 }))
+    store.ingestBounded(nodes, edges, [600, 400], { deferLayout: true })
+    let reads = 0
+    for (const edge of store.edges.values()) {
+      const source = edge.source
+      Object.defineProperty(edge, "source", { get: () => { reads++; return source } })
+    }
+    for (let i = 0; i < 100; i++) expect(store.removeNode(`n${i}`)).toBe(true)
+    expect(reads).toBeLessThan(5000)
+    expect(store.nodes.size).toBe(900)
+    expect(store.edges.size).toBe(899)
+    store.ingestEdge({ source: "n100", target: "new", value: 2 })
+    expect(store.removeNode("n100")).toBe(true)
+    expect([...store.edges.values()].some((edge) => edge.source === "n100" || edge.target === "n100")).toBe(false)
+    store.clear()
+    store.ingestBounded([{ id: "a" }, { id: "b" }], [
+      { source: "a", target: "b", value: 1 },
+      { source: "a", target: "b", value: 2 },
+      { source: "a", target: "a", value: 3 },
+    ], [600, 400], { deferLayout: true })
+    store.removeNode("a")
+    expect(store.edges.size).toBe(0)
+    expect([...store.nodes.keys()]).toEqual(["b"])
+  })
+
   // ── Configuration and initialization ─────────────────────────────────
 
   describe("configuration and initialization", () => {

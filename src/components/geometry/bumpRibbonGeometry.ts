@@ -108,6 +108,38 @@ function sampleInterval(
   return out
 }
 
+/** Remove x reversals from an offset boundary, retaining its sample slots.
+ * A folded run becomes a straight vertical join rather than a retraced loop.
+ * Column endpoints (and their magnitude encoding) are left in place. */
+function unfold(path: [number, number][], start: number) {
+  const end = path.length - 1
+  const direction = Math.sign(path[end][0] - path[start][0]) || 1
+  const lastX = direction * path[end][0]
+  let previousX = direction * path[start][0]
+  for (let i = start + 1; i < end; i++) {
+    const x = Math.max(previousX, Math.min(lastX, direction * path[i][0]))
+    path[i][0] = direction * x
+    previousX = x
+  }
+  for (let i = start; i < end; i++) {
+    let j = i
+    while (j < end && path[j + 1][0] === path[i][0]) j++
+    for (let k = i + 1; k < j; k++) {
+      path[k][1] = path[i][1] + (path[j][1] - path[i][1]) * (k - i) / (j - i)
+    }
+    i = j
+  }
+  // Adjacent intervals can otherwise retrace the same vertical column join.
+  // Give repaired vertices a subpixel x separation, keeping both endpoints.
+  const step = (lastX - direction * path[start][0]) * 1e-6 / (end - start)
+  previousX = direction * path[start][0]
+  for (let i = start + 1; i < end; i++) {
+    const x = Math.max(previousX + step, Math.min(direction * path[i][0], lastX - (end - i) * step))
+    path[i][0] = direction * x
+    previousX = x
+  }
+}
+
 /**
  * Build paired boundary paths around a bump-chart centerline.
  *
@@ -130,6 +162,7 @@ export function buildBumpRibbonGeometry(
   const samplesPerSegment = Math.max(2, Math.floor(options.samplesPerSegment ?? 12))
 
   for (let interval = 0; interval < points.length - 1; interval++) {
+    const start = Math.max(0, topPath.length - 1)
     const samples = sampleInterval(
       points[interval],
       points[interval + 1],
@@ -155,6 +188,11 @@ export function buildBumpRibbonGeometry(
       ])
       datumIndices.push(sample.datumIndex)
     }
+    // Normal offsets can fold where their radius exceeds local curvature.
+    // Removing x reversals also repairs sharp linear joins, without changing
+    // sample count or datum alignment.
+    unfold(topPath, start)
+    unfold(bottomPath, start)
   }
 
   return { topPath, bottomPath, datumIndices }

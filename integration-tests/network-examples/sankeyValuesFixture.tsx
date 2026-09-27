@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { SankeyDiagram } from "../../dist/network.module.min.js"
+import type { RealtimeFrameHandle } from "../../src/components/realtime/types"
 
 declare global {
   interface Window {
@@ -12,13 +13,25 @@ const edges = [
   { source: "B", target: "D", value: 50 },
   { source: "C", target: "A", value: 25 }
 ]
+const denseIds = Array.from({ length: 12 }, (_, i) => `N${i}`)
+const denseEdges = denseIds.flatMap((source) =>
+  denseIds
+    .filter((target) => target !== source)
+    .map((target) => ({ source, target, value: 1 }))
+)
 window.sankeyTargets = {}
 
 export function SankeyValuesFixture() {
   const [small, setSmall] = useState(false)
   const [moved, setMoved] = useState(false)
+  const ref = useRef<RealtimeFrameHandle>(null)
   const params = new URLSearchParams(location.search)
   const vertical = params.has("vertical")
+  const pushed = params.has("push")
+  const data = params.has("dense") ? denseEdges : edges
+  useEffect(() => {
+    if (pushed) ref.current?.pushMany(data)
+  }, [data, pushed])
   const capture = (key: string, x: number, y: number) => {
     window.sankeyTargets[key] = vertical ? { x: y, y: x } : { x, y }
   }
@@ -27,7 +40,8 @@ export function SankeyValuesFixture() {
       <button onClick={() => setSmall(true)}>Resize Sankey</button>
       <button onClick={() => setMoved(true)}>Zoom and pan Sankey</button>
       <SankeyDiagram
-        edges={edges}
+        ref={ref}
+        edges={pushed ? undefined : data}
         width={small ? 400 : 600}
         height={400}
         orientation={vertical ? "vertical" : "horizontal"}

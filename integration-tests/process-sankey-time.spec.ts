@@ -35,11 +35,14 @@ async function hoverMark(page: Page, kind: "band" | "ribbon") {
 }
 
 for (const time of ["numeric", "dates"]) {
-    test(`canvas ProcessSankey ${time} ticks and hovered times survive resize`, async ({
+  for (const execution of ["sync", "worker"]) {
+    test(`canvas ProcessSankey ${execution} ${time} ticks and hovered times survive resize`, async ({
       page
     }) => {
+      let workers = 0
+      page.on("worker", () => workers++)
       await page.goto(
-        `/process-sankey-examples/?time=${time}`
+        `/process-sankey-examples/?time=${time}&execution=${execution}`
       )
       const frame = page.locator(".stream-network-frame")
       const tooltip = frame.locator(".stream-network-tooltip")
@@ -73,6 +76,7 @@ for (const time of ["numeric", "dates"]) {
         await expect(tooltip).toHaveCount(0)
       }
       await check()
+      expect(workers).toBe(execution === "worker" ? 1 : 0)
       await page.getByRole("button", { name: "Resize process" }).click()
       await check()
       await page.getByRole("button", { name: "Use time formatter" }).click()
@@ -80,5 +84,7 @@ for (const time of ["numeric", "dates"]) {
       await expect(tooltip).toContainText(
         time === "numeric" ? "number 14" : "date 2026-01-01T14:00:00.000Z"
       )
+      expect(workers).toBe(execution === "worker" ? 1 : 0)
     })
+  }
 }

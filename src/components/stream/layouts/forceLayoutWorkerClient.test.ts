@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest"
+import { waitFor } from "@testing-library/react"
+import { forceLayoutAsync } from "../../recipes/forceLayoutAsync"
+import { forceLayout } from "../../recipes/forceLayout"
 import {
   createFrameForceWorkerRequest,
   _resetSharedForceLayoutSessionForTest,
@@ -41,6 +44,23 @@ afterEach(() => {
 })
 
 describe("force layout worker client", () => {
+  it("loads the async recipe transport on demand and falls back after a cached failure", async () => {
+    Object.defineProperty(globalThis, "Worker", { configurable: true, value: MockWorker })
+    const nodes = [{ id: "a" }]
+    const first = forceLayoutAsync(nodes, [], { execution: "worker", iterations: 1 })
+    await waitFor(() => expect(MockWorker.instances).toHaveLength(1))
+    const worker = MockWorker.instances[0]
+    worker.onmessage?.({ data: { requestId: 1, positions: { a: { x: 2, y: 3 } } } } as MessageEvent)
+    await expect(first).resolves.toEqual({ a: { x: 2, y: 3 } })
+    const next = forceLayoutAsync(nodes, [], { execution: "worker", iterations: 1 })
+    await waitFor(() => expect(worker.messages).toHaveLength(2))
+    worker.onerror?.({ message: "load failed" } as ErrorEvent)
+    const expected = forceLayout(nodes, [], { iterations: 1 })
+    await expect(next).resolves.toEqual(expected)
+    await expect(forceLayoutAsync(nodes, [], { execution: "worker", iterations: 1 })).resolves.toEqual(expected)
+    expect(MockWorker.instances).toHaveLength(1)
+  })
+
   it("uses estimated work for automatic execution", () => {
     expect(shouldUseForceWorker("sync", 1000, 1000, 300)).toBe(false)
     expect(shouldUseForceWorker("worker", 1, 0, 1)).toBe(true)
@@ -194,4 +214,27 @@ describe("force layout worker client", () => {
     await expect(promise).rejects.toThrow(/terminated/i)
     expect(worker.terminated).toBe(true)
   })
+})
+
+it.each(["constructor", "load", "malformed"])("caches force worker %s failures until explicit reset", async (failure) => {
+  let attempts = 0
+  Object.defineProperty(globalThis, "Worker", { configurable: true, value: class extends MockWorker {
+    constructor() { super(); attempts++; if (failure === "constructor") throw new Error("blocked") }
+  } })
+  const request: ForceWorkerRequest = { kind: "normalized", nodes: [{ id: "a" }], edges: [], options: {} }
+  const first = runForceLayoutWorker(request)
+  const rejected = expect(first).rejects.toThrow()
+  if (failure === "load") MockWorker.instances[0].onerror?.({ message: "load failed" } as ErrorEvent)
+  if (failure === "malformed") MockWorker.instances[0].onmessage?.({ data: {} } as MessageEvent)
+  await rejected
+  await expect(runForceLayoutWorker(request)).rejects.toThrow()
+  expect(attempts).toBe(1)
+  _resetSharedForceLayoutSessionForTest()
+  const next = runForceLayoutWorker(request)
+  if (failure === "constructor") await expect(next).rejects.toThrow("blocked")
+  else {
+    MockWorker.instances.at(-1)!.onmessage?.({ data: { requestId: 1, positions: { a: { x: 1, y: 2 } } } } as MessageEvent)
+    await expect(next).resolves.toEqual({ positions: { a: { x: 1, y: 2 } } })
+  }
+  expect(attempts).toBe(2)
 })

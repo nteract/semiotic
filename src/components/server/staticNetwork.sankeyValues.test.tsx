@@ -89,3 +89,32 @@ it("reports original Sankey totals in default tooltips and accessible tables", (
     model.nodeRows.find((row) => row.id === "B")?.semantic.values.value
   ).toBe(100)
 })
+
+it.each(["horizontal", "vertical"] as const)(
+  "renders dense cycles with matching geometry and evidence across %s APIs",
+  (orientation) => {
+    const nodes = Array.from({ length: 12 }, (_, i) => ({ id: `N${i}` }))
+    const edges = nodes.flatMap(({ id: source }) => nodes.filter(({ id }) => id !== source)
+      .map(({ id: target }) => ({ source, target, value: 1 })))
+    const props = {
+      nodes, edges, orientation, margin, showLabels: false,
+      nodeWidth: 10, nodePaddingRatio: 0.05, nodeAlign: "justify" as const
+    }
+    const store = new NetworkPipelineStore({ chartType: "sankey", ...props })
+    store.ingestBounded(nodes, edges, size)
+    store.buildScene(size)
+    const expected = store.sceneEdges.map((edge) => edge.type === "bezier" ? edge.pathD : "").sort()
+    const result = renderChartWithEvidence("SankeyDiagram", { ...props, width: 600, height: 400 })
+    expect(result.evidence.edgeCount).toBe(132)
+    expect(result.evidence.nodeCount).toBe(12)
+    for (const svg of [
+      result.svg,
+      renderNetworkToStaticSVG({ ...props, chartType: "sankey", size }),
+      renderToStaticMarkup(<SankeyDiagram {...props} width={600} height={400} />),
+      renderToStaticMarkup(<StreamNetworkFrame {...props} chartType="sankey" size={size} />)
+    ]) {
+      expect(paths(svg)).toEqual(expected)
+      expect(svg).not.toMatch(/NaN|Infinity/)
+    }
+  }
+)

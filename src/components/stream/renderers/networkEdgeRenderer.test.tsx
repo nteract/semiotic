@@ -81,3 +81,18 @@ it("paints tapered curved paths at explicit full opacity without an outline", ()
   expect(alphaAtFill).toBe(1)
   expect(ctx.stroke).not.toHaveBeenCalled()
 })
+
+it.each(["curved", "line", "bezier", "ribbon"] as const)("paints %s edges with the same dash and cap as SVG", type => {
+  const ctx = context()
+  const mark = edge(type)
+  mark.style.strokeDasharray = "5 4"
+  mark.style.strokeLinecap = "round"
+  let capAtStroke: string | undefined
+  vi.mocked(ctx.stroke).mockImplementation(() => { capAtStroke = ctx.lineCap })
+  networkEdgeRenderer(ctx, [mark])
+  expect(ctx.setLineDash).toHaveBeenCalledWith([5, 4])
+  expect(capAtStroke).toBe("round")
+  const svg = renderToStaticMarkup(<svg>{networkSceneEdgeToSVG(mark, 0)}</svg>)
+  expect(svg).toContain('stroke-dasharray="5 4"')
+  expect(svg).toContain('stroke-linecap="round"')
+})

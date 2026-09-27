@@ -1,3 +1,4 @@
+import { ensembleCondensation } from "./netEnsembleCondensation"
 import { fnv1a32 } from "../utils/hash"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type {
@@ -80,7 +81,7 @@ export interface NetEnsembleConfig {
   minCellForFull?: number
   /** Largest cell edge (px). @default 120 */
   maxCellSize?: number
-  /** Smallest cell edge (px) before the layout stops shrinking to fit. @default 12 */
+  /** Smallest banded cell edge (px); overflow falls back to a fitted census grid. @default 12 */
   minCellSize?: number
   /** Weisfeiler–Leman refinement rounds for the motif fingerprint. More rounds
    *  distinguish subtler structural differences. @default 3 */
@@ -113,6 +114,8 @@ export interface NetEnsemblePlacedNode {
 }
 
 export interface NetEnsemblePlacedEdge {
+  source?: string
+  target?: string
   x1: number
   y1: number
   x2: number
@@ -120,6 +123,8 @@ export interface NetEnsemblePlacedEdge {
 }
 
 interface ComponentInfo {
+  layer: Map<string, number>
+  layerCount: number
   ids: string[]
   nodeCount: number
   edgeCount: number
@@ -139,13 +144,14 @@ export interface NetEnsembleComponent {
   ids: string[]
   nodeCount: number
   edgeCount: number
-  /** Sinks (out-degree 0) and sources (in-degree 0) within the component. */
+  /** Terminal and initial strongly connected components (ordinary sinks and sources for a DAG). */
   sinkCount: number
   sourceCount: number
   /**
    * True iff the component is a **directed set** (a net with a single limit):
    * for a weakly-connected DAG this holds exactly when there is one sink, so
-   * every pair of nodes shares a common descendant. Multiple sinks ⟹ some pair
+   * every pair of nodes shares a common descendant. Cycles are condensed first.
+   * Multiple terminal components ⟹ some pair
    * has no common upper bound and the component fails directedness.
    */
   directed: boolean
@@ -195,11 +201,10 @@ export function analyzeNetEnsemble(
     seenId.add(n.id)
     ids.push(n.id)
   }
-  const { outAdj, inAdj, undirected } = buildAdjacencies(ids, edges)
-  const infos = analyzeComponents(ids, outAdj, inAdj, undirected, rounds)
+  const { components: infos } = cachedAnalysis(ids, edges, rounds)
 
   const components: NetEnsembleComponent[] = infos.map((info) => ({
-    ids: info.ids,
+    ids: [...info.ids],
     nodeCount: info.nodeCount,
     edgeCount: info.edgeCount,
     sinkCount: info.sinkCount,
@@ -323,40 +328,6 @@ function motifFingerprint(
 }
 
 /**
- * Layer a component so flow converges toward its sinks at the bottom. `height(v)`
- * = longest path from `v` to any sink; layering places a node at `maxHeight −
- * height`, so every sink lands on the bottom row (the shared limit line) and
- * sources sit at the top. Cycle-guarded (a back edge contributes height 0) so a
- * non-DAG input degrades gracefully instead of looping.
- */
-function layerComponent(
-  ids: readonly string[],
-  outAdj: Map<string, Set<string>>
-): { layer: Map<string, number>; layerCount: number } {
-  const member = new Set(ids)
-  const height = new Map<string, number>()
-  const active = new Set<string>()
-  const visit = (v: string): number => {
-    const cached = height.get(v)
-    if (cached !== undefined) return cached
-    if (active.has(v)) return 0 // cycle break
-    active.add(v)
-    let h = 0
-    for (const s of outAdj.get(v) ?? []) {
-      if (member.has(s)) h = Math.max(h, 1 + visit(s))
-    }
-    active.delete(v)
-    height.set(v, h)
-    return h
-  }
-  let maxH = 0
-  for (const id of ids) maxH = Math.max(maxH, visit(id))
-  const layer = new Map<string, number>()
-  for (const id of ids) layer.set(id, maxH - height.get(id)!)
-  return { layer, layerCount: maxH + 1 }
-}
-
-/**
  * Position a component's nodes inside a box, converging toward the bottom row.
  * Layers run top→bottom; within a layer, nodes are ordered by the mean x of
  * their already-placed predecessors (a one-pass barycenter sweep) to reduce
@@ -364,14 +335,12 @@ function layerComponent(
  */
 function placeComponent(
   info: ComponentInfo,
-  nodeDatum: Map<string, Datum>,
-  nodeCategory: Map<string, string>,
   outAdj: Map<string, Set<string>>,
   inAdj: Map<string, Set<string>>,
   box: { x: number; y: number; width: number; height: number },
   maxRadius: number
 ): { nodes: NetEnsemblePlacedNode[]; edges: NetEnsemblePlacedEdge[] } {
-  const { layer, layerCount } = layerComponent(info.ids, outAdj)
+  const { layer, layerCount } = info
   const buckets: string[][] = Array.from({ length: layerCount }, () => [])
   for (const id of info.ids) buckets[layer.get(id)!].push(id)
 
@@ -426,8 +395,8 @@ function placeComponent(
       cx: p.x,
       cy: p.y,
       r,
-      datum: nodeDatum.get(id) ?? datumFromFields({ id }),
-      category: nodeCategory.get(id) ?? ""
+      datum: datumFromFields({ id }),
+      category: ""
     }
   })
 
@@ -437,7 +406,14 @@ function placeComponent(
     for (const v of outAdj.get(u) ?? []) {
       if (!member.has(v)) continue
       const pv = pos.get(v)!
-      edges.push({ x1: pu.x, y1: pu.y, x2: pv.x, y2: pv.y })
+      edges.push({
+        source: u,
+        target: v,
+        x1: pu.x,
+        y1: pu.y,
+        x2: pv.x,
+        y2: pv.y
+      })
     }
   }
   return { nodes, edges }
@@ -514,20 +490,13 @@ function analyzeComponents(
         }
       }
     }
-    const member = new Set(compIds)
-    let sinkCount = 0
-    let sourceCount = 0
+    compIds.sort()
+    const condensation = ensembleCondensation(compIds, outAdj)
+    const { sinkCount, sourceCount } = condensation
     let compEdges = 0
-    for (const id of compIds) {
-      let outDeg = 0
-      let inDeg = 0
-      for (const s of outAdj.get(id) ?? []) if (member.has(s)) outDeg += 1
-      for (const p of inAdj.get(id) ?? []) if (member.has(p)) inDeg += 1
-      compEdges += outDeg
-      if (outDeg === 0) sinkCount += 1
-      if (inDeg === 0) sourceCount += 1
-    }
+    for (const id of compIds) compEdges += outAdj.get(id)!.size
     components.push({
+      ...condensation,
       ids: compIds,
       nodeCount: compIds.length,
       edgeCount: compEdges,
@@ -540,6 +509,55 @@ function analyzeComponents(
   return components
 }
 
+const ANALYSIS_CACHE = new LayoutCache<{
+  outAdj: Map<string, Set<string>>
+  inAdj: Map<string, Set<string>>
+  components: ComponentInfo[]
+  key: string
+}>(8)
+
+function cachedAnalysis(
+  ids: string[],
+  edges: ReadonlyArray<{ source: string; target: string }>,
+  rounds: number
+) {
+  const orderedIds = [...ids].sort()
+  const orderedEdges = edges
+    .map((edge) => [edge.source, edge.target] as const)
+    .sort((a, b) =>
+      a[0] < b[0]
+        ? -1
+        : a[0] > b[0]
+          ? 1
+          : a[1] < b[1]
+            ? -1
+            : a[1] > b[1]
+              ? 1
+              : 0
+    )
+  // An exact, escaped topology key prevents hash and delimiter collisions.
+  // No caller-owned records are retained in either cache.
+  const key = JSON.stringify([rounds, orderedIds, orderedEdges])
+  return ANALYSIS_CACHE.getOrCompute(key, () => {
+    const { outAdj, inAdj, undirected } = buildAdjacencies(
+      orderedIds,
+      orderedEdges.map(([source, target]) => ({ source, target }))
+    )
+    return {
+      key,
+      outAdj,
+      inAdj,
+      components: analyzeComponents(
+        orderedIds,
+        outAdj,
+        inAdj,
+        undirected,
+        rounds
+      )
+    }
+  })
+}
+
 // Module-scope geometry cache — signed by content, never array identity.
 const GEOM_CACHE = new LayoutCache<Geom>(8)
 
@@ -548,7 +566,8 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
 ) => {
   const cfg = ctx.config || {}
   const plot = ctx.dimensions.plot
-  if (!ctx.nodes.length) return { sceneNodes: [] }
+  if (!ctx.nodes.length || plot.width <= 0 || plot.height <= 0)
+    return { sceneNodes: [] }
 
   const sourceAcc = cfg.sourceAccessor ?? "source"
   const targetAcc = cfg.targetAccessor ?? "target"
@@ -588,8 +607,12 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
     resolvedEdges.push({ source: s, target: t })
   }
 
-  const { outAdj, inAdj, undirected } = buildAdjacencies(ids, resolvedEdges)
-  const components = analyzeComponents(ids, outAdj, inAdj, undirected, rounds)
+  const {
+    outAdj,
+    inAdj,
+    components,
+    key: topologyKey
+  } = cachedAnalysis(ids, resolvedEdges, rounds)
 
   // ── Group into motif bands + order ────────────────────────────────────────
   const bandsMap = new Map<string, ComponentInfo[]>()
@@ -614,18 +637,11 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
   })
 
   // ── Fit a global cell size, then arrange (cached geometry) ────────────────
-  const fingerprint = fnv1a(
-    ids.join(",") +
-      "|" +
-      [...outAdj.entries()]
-        .map(([k, v]) => k + ">" + [...v].sort().join("."))
-        .join(";")
-  )
   const sig = signatureKey([
-    Math.round(plot.x),
-    Math.round(plot.y),
-    Math.round(plot.width),
-    Math.round(plot.height),
+    plot.x,
+    plot.y,
+    plot.width,
+    plot.height,
     cellGap,
     bandGap,
     headerHeight,
@@ -637,7 +653,7 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
     sort,
     nodeRadius,
     bandGroups.map(([k, v]) => k + ":" + v.length).join(","),
-    fingerprint
+    topologyKey
   ])
 
   const geom = GEOM_CACHE.getOrCompute(sig, () =>
@@ -650,8 +666,6 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
       maxCellSize,
       minCellSize,
       nodeRadius,
-      nodeDatum,
-      nodeCategory,
       outAdj,
       inAdj
     })
@@ -690,15 +704,26 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
           y1: e.y1,
           x2: e.x2,
           y2: e.y2,
-          style: { stroke: edgeColor, strokeWidth: 1, opacity: 0.5 },
+          style: {
+            stroke: edgeColor,
+            strokeWidth: 1,
+            opacity:
+              0.5 *
+              Math.max(
+                dimFor(nodeDatum.get(e.source!)!, dimOpts),
+                dimFor(nodeDatum.get(e.target!)!, dimOpts)
+              )
+          },
           datum: null
         }
         sceneEdges.push(line)
       }
       for (const n of cell.nodes) {
+        const datum = nodeDatum.get(n.id)!
+        const category = nodeCategory.get(n.id)!
         const fill =
-          colorMode === "category" && n.category
-            ? ctx.resolveColor(n.category)
+          colorMode === "category" && category
+            ? ctx.resolveColor(category)
             : baseFill
         const symbol: NetworkSymbolNode = {
           type: "symbol",
@@ -706,17 +731,17 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
           cy: n.cy,
           size: Math.PI * n.r * n.r,
           symbolType: "circle",
-          style: { fill, opacity: dimFor(n.datum, dimOpts) },
-          datum: n.datum,
+          style: { fill, opacity: dimFor(datum, dimOpts) },
+          datum,
           id: n.id,
-          label: String(readField(n.datum, labelAcc, n.id))
+          label: String(readField(datum, labelAcc, n.id))
         }
         sceneNodes.push(symbol)
       }
     } else {
       // Collapsed: the whole component is one hit-testable glyph.
       const compDatum = datumFromFields({
-        id: `motif-${info.motif}-${cell.cx.toFixed(0)}-${cell.cy.toFixed(0)}`,
+        id: `component-${JSON.stringify(info.ids)}`,
         motif: info.motif,
         shape: describeMotif(info),
         nodes: info.nodeCount,
@@ -733,7 +758,11 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
         symbolType: info.directed ? "circle" : "diamond",
         style: {
           fill: baseFill,
-          opacity: dimFor(compDatum, dimOpts),
+          opacity: info.ids.some(
+            (id) => dimFor(nodeDatum.get(id)!, dimOpts) === 1
+          )
+            ? 1
+            : 0.14,
           stroke: edgeColor,
           strokeWidth: 0.75
         },
@@ -773,8 +802,6 @@ interface BuildOpts {
   maxCellSize: number
   minCellSize: number
   nodeRadius: number
-  nodeDatum: Map<string, Datum>
-  nodeCategory: Map<string, string>
   outAdj: Map<string, Set<string>>
   inAdj: Map<string, Set<string>>
 }
@@ -784,11 +811,15 @@ function buildGeometry(
   o: BuildOpts
 ): Geom {
   const { plot } = o
-  const availW = Math.max(40, plot.width)
+  const availW = plot.width
 
   // Pick the largest cell size at which the whole ensemble fits the plot height.
-  const chooseCell = (): { cell: number; cols: number } => {
-    for (let cell = o.maxCellSize; cell >= o.minCellSize; cell -= 2) {
+  const chooseCell = (): { cell: number; cols: number } | null => {
+    for (
+      let cell = Math.min(o.maxCellSize, availW);
+      cell >= Math.max(1, o.minCellSize);
+      cell -= 2
+    ) {
       const cols = Math.max(
         1,
         Math.floor((availW + o.cellGap) / (cell + o.cellGap))
@@ -800,13 +831,34 @@ function buildGeometry(
       }
       if (h <= plot.height) return { cell, cols }
     }
+    return null
+  }
+  const fitted = chooseCell()
+  if (!fitted) {
+    // Headers and minimum-size cells cannot fit: retain every component as a
+    // glyph in a compact census grid, with no out-of-plot marks or hidden data.
+    const components = bandGroups.flatMap(([, group]) => group)
     const cols = Math.max(
       1,
-      Math.floor((availW + o.cellGap) / (o.minCellSize + o.cellGap))
+      Math.ceil(Math.sqrt((components.length * plot.width) / plot.height))
     )
-    return { cell: o.minCellSize, cols }
+    const rows = Math.ceil(components.length / cols)
+    const width = plot.width / cols,
+      height = plot.height / rows
+    return {
+      bands: [],
+      cells: components.map((component, i) => ({
+        component,
+        lod: "glyph",
+        cx: plot.x + ((i % cols) + 0.5) * width,
+        cy: plot.y + (Math.floor(i / cols) + 0.5) * height,
+        glyphR: Math.min(width, height) * (component.directed ? 0.36 : 0.28),
+        nodes: [],
+        edges: []
+      }))
+    }
   }
-  const { cell, cols } = chooseCell()
+  const { cell, cols } = fitted
 
   const cells: Cell[] = []
   const bands: BandInfo[] = []
@@ -827,8 +879,6 @@ function buildGeometry(
       if (full) {
         const placed = placeComponent(
           info,
-          o.nodeDatum,
-          o.nodeCategory,
           o.outAdj,
           o.inAdj,
           box,
@@ -888,13 +938,5 @@ function placeExemplar(
   box: { x: number; y: number; width: number; height: number }
 ): { nodes: NetEnsemblePlacedNode[]; edges: NetEnsemblePlacedEdge[] } | null {
   if (!info) return null
-  return placeComponent(
-    info,
-    o.nodeDatum,
-    o.nodeCategory,
-    o.outAdj,
-    o.inAdj,
-    box,
-    3
-  )
+  return placeComponent(info, o.outAdj, o.inAdj, box, 3)
 }

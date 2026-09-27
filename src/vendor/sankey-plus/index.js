@@ -1,7 +1,6 @@
 import { find } from "./find.js";
-import { findCircuits } from "./networks/elementaryCircuits.js";
+import { feedbackOrder } from "./feedbackOrder";
 import {
-  getNodeID,
   value,
   numberOfNonSelfLinkingCycles,
   linkTargetCenter,
@@ -71,56 +70,24 @@ function computeNodeLinks(graph, id) {
   });
 }
 
-function identifyCircles(graph, sortNodes) {
+function identifyCircles(graph, sortNodes, id) {
   var circularLinkID = 0;
-
-  if (sortNodes == null) {
-    var adjList = [];
-    for (var i = 0; i < graph.links.length; i++) {
-      var link = graph.links[i];
-      var source = link.source.index;
-      var target = link.target.index;
-      if (!adjList[source]) adjList[source] = [];
-      if (!adjList[target]) adjList[target] = [];
-      if (adjList[source].indexOf(target) === -1) adjList[source].push(target);
-    }
-
-    var cycles = findCircuits(adjList);
-    cycles.sort(function (a, b) {
-      return a.length - b.length;
-    });
-
-    var circularLinks = {};
-    for (i = 0; i < cycles.length; i++) {
-      var cycle = cycles[i];
-      var last = cycle.slice(-2);
-      if (!circularLinks[last[0]]) circularLinks[last[0]] = {};
-      circularLinks[last[0]][last[1]] = true;
-    }
-
-    graph.links.forEach(function (link) {
-      var target = link.target.index;
-      var source = link.source.index;
-      if (
-        target === source ||
-        (circularLinks[source] && circularLinks[source][target])
-      ) {
-        link.circular = true;
-        link.circularLinkID = circularLinkID++;
-      } else {
-        link.circular = false;
-      }
-    });
-  } else {
-    graph.links.forEach(function (link) {
-      if (sortNodes(link.source) < sortNodes(link.target)) {
-        link.circular = false;
-      } else {
-        link.circular = true;
-        link.circularLinkID = circularLinkID++;
-      }
-    });
-  }
+  var order = sortNodes == null ? feedbackOrder(graph.nodes, graph.links, id) : null;
+  graph.nodes.forEach(function (node) {
+    delete node.circularLinkType;
+  });
+  graph.links.forEach(function (link) {
+    // Clear geometry from earlier layouts when a flow becomes forward again.
+    delete link.circularLinkID;
+    delete link.circularLinkType;
+    delete link.circularPathData;
+    delete link._circularWidth;
+    delete link._circularStub;
+    link.circular = order
+      ? order[link.source.index] >= order[link.target.index]
+      : !(sortNodes(link.source) < sortNodes(link.target));
+    if (link.circular) link.circularLinkID = circularLinkID++;
+  });
 }
 
 function selectCircularLinkTypes(graph, id) {
@@ -144,14 +111,8 @@ function selectCircularLinkTypes(graph, id) {
         numberOfBottoms++;
       }
 
-      graph.nodes.forEach(function (node) {
-        if (
-          getNodeID(node, id) == getNodeID(link.source, id) ||
-          getNodeID(node, id) == getNodeID(link.target, id)
-        ) {
-          node.circularLinkType = link.circularLinkType;
-        }
-      });
+      link.source.circularLinkType = link.circularLinkType;
+      link.target.circularLinkType = link.circularLinkType;
     }
   });
 
@@ -190,9 +151,7 @@ function computeNodeValues(graph) {
 }
 
 function computeNodeDepths(graph, sortNodes, align) {
-  var nodes, next, x;
-
-  if (sortNodes != null) {
+  if (sortNodes != null && graph.nodes.length) {
     graph.nodes.sort(function (a, b) {
       return sortNodes(a) < sortNodes(b) ? -1 : 1;
     });
@@ -210,39 +169,34 @@ function computeNodeDepths(graph, sortNodes, align) {
     });
   }
 
-  for (
-    nodes = graph.nodes, next = [], x = 0;
-    nodes.length;
-    ++x, nodes = next, next = []
-  ) {
-    nodes.forEach(function (node) {
-      node.depth = x;
-      node.sourceLinks.forEach(function (link) {
-        if (next.indexOf(link.target) < 0 && !link.circular) {
-          next.push(link.target);
-        }
-      });
-    });
-  }
-
-  for (
-    nodes = graph.nodes, next = [], x = 0;
-    nodes.length;
-    ++x, nodes = next, next = []
-  ) {
-    nodes.forEach(function (node) {
-      node.height = x;
-      node.targetLinks.forEach(function (link) {
-        if (next.indexOf(link.source) < 0 && !link.circular) {
-          next.push(link.source);
-        }
-      });
-    });
-  }
-
+  // Longest paths in the remaining DAG, visiting each node/link once.
+  var indegree = new Int32Array(graph.nodes.length);
+  var queue = [];
+  var levels = 1;
   graph.nodes.forEach(function (node) {
-    node.column =
-      sortNodes == null ? align(node, x) : node.column;
+    node.depth = node.height = 0;
+    node.targetLinks.forEach(function (link) {
+      if (!link.circular) indegree[node.index]++;
+    });
+    if (indegree[node.index] === 0) queue.push(node);
+  });
+  for (var i = 0; i < queue.length; i++) {
+    var node = queue[i];
+    levels = Math.max(levels, node.depth + 1);
+    node.sourceLinks.forEach(function (link) {
+      if (link.circular) return;
+      link.target.depth = Math.max(link.target.depth, node.depth + 1);
+      if (--indegree[link.target.index] === 0) queue.push(link.target);
+    });
+  }
+  for (var i = queue.length - 1; i >= 0; i--) {
+    var node = queue[i];
+    node.sourceLinks.forEach(function (link) {
+      if (!link.circular) node.height = Math.max(node.height, link.target.height + 1);
+    });
+  }
+  graph.nodes.forEach(function (node) {
+    node.column = sortNodes == null ? align(node, levels) : node.column;
   });
 }
 
@@ -678,7 +632,7 @@ export function sankeyCircular() {
     graph.py = 0;
 
     computeNodeLinks(graph, id);
-    identifyCircles(graph, nodeSort);
+    identifyCircles(graph, nodeSort, id);
     selectCircularLinkTypes(graph, id);
     computeNodeValues(graph);
     computeNodeDepths(graph, nodeSort, align);

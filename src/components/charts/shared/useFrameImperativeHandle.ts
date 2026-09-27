@@ -45,12 +45,14 @@ interface NetworkFrameLike {
   push(edge: unknown): void
   pushMany(edges: unknown[]): void
   removeNode(id: string): boolean
+  removeNodes?(ids: string[]): Datum[]
   // `null`, not `undefined`, to match `StreamNetworkFrameHandle.updateNode`.
   // `prev ? […] : []` below treats both as falsy, so the consumer-facing
   // semantics are unchanged regardless — typing it correctly here just
   // lets a future maintainer plug another network frame into this helper
   // without wondering whether the contract is `null` or `undefined`.
   updateNode(id: string, updater: (d: Datum) => Datum): Datum | null
+  updateNodes?(ids: string[], updater: (d: Datum) => Datum): Datum[]
   clear(): void
   getTopology(): { nodes: Array<{ id: string; data?: Datum | null }> } | null
   getCustomLayout?(): unknown | null
@@ -187,6 +189,7 @@ function makeVariantDefaults(
       pushMany: (points) => r.current?.pushMany(points),
       remove: (id) => {
         const ids = Array.isArray(id) ? id : [id]
+        if (r.current?.removeNodes) return r.current.removeNodes(ids)
         const nodes = r.current?.getTopology()?.nodes ?? []
         const results: Datum[] = []
         for (const nodeId of ids) {
@@ -198,6 +201,7 @@ function makeVariantDefaults(
       },
       update: (id, updater) => {
         const ids = Array.isArray(id) ? id : [id]
+        if (r.current?.updateNodes) return r.current.updateNodes(ids, updater)
         return ids.flatMap((nodeId) => {
           const prev = r.current?.updateNode(nodeId, updater)
           return prev ? [{ ...prev, id: nodeId }] : []

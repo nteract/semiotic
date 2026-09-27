@@ -13,7 +13,15 @@ export function DependencyMatrix({
   nodeIds: string[]
   onSelectEdges?: (ids: string[]) => void
 }) {
-  const cells = dependencyMatrix(forest, nodeIds)
+  const cells = new Map<
+    string,
+    Map<string, ReturnType<typeof dependencyMatrix>[number]>
+  >()
+  for (const cell of dependencyMatrix(forest, nodeIds)) {
+    let row = cells.get(cell.source)
+    if (!row) cells.set(cell.source, (row = new Map()))
+    row.set(cell.target, cell)
+  }
   return (
     <div style={{ overflowX: "auto" }}>
       <table
@@ -43,9 +51,7 @@ export function DependencyMatrix({
             <tr key={source}>
               <th scope="row">{source}</th>
               {nodeIds.map((target) => {
-                const cell = cells.find(
-                  (item) => item.source === source && item.target === target
-                )
+                const cell = cells.get(source)?.get(target)
                 return (
                   <td
                     key={target}

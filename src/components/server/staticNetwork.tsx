@@ -68,7 +68,7 @@ function realtimeNode([id, data]: [string, Datum]): RealtimeNode {
     // Preserve pre-set positions from source data (for pinned layouts).
     x: data.x ?? 0, y: data.y ?? 0,
     x0: 0, x1: 0, y0: 0, y1: 0,
-    width: 0, height: 0, value: 0, data
+    width: 0, height: 0, value: 0, data, createdByFrame: true
   }
 }
 
