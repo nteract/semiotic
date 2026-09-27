@@ -90,7 +90,15 @@ export class ModuleWorkerSession<TRequest, TResponse> {
     this.options = options
     this.worker = options.createWorker()
     this.worker.onmessage = (event: MessageEvent<unknown>) => {
-      const parsed = this.options.parseMessage(event.data)
+      if (this.dead) return
+      let parsed: ParsedModuleWorkerMessage<TResponse>
+      try {
+        parsed = this.options.parseMessage(event.data)
+      } catch (error) {
+        this.rejectAll(error instanceof Error ? error : new Error(String(error)))
+        this.terminate()
+        return
+      }
       const requestId = parsed.requestId
       const pending =
         requestId != null
@@ -115,6 +123,10 @@ export class ModuleWorkerSession<TRequest, TResponse> {
         return
       }
       pending.resolve(parsed.payload)
+    }
+    this.worker.onmessageerror = () => {
+      this.rejectAll(new Error(`${this.options.name} worker response could not be deserialized`))
+      this.terminate()
     }
     this.worker.onerror = (event: ErrorEvent) => {
       this.rejectAll(

@@ -42,6 +42,40 @@ describe("StreamNetworkFrame worker force layout", () => {
     vi.restoreAllMocks()
   })
 
+  it("supersedes worker geometry after pushes, batch removal, updates, and clear without a synchronous solve", async () => {
+    const solve = vi.spyOn(NetworkPipelineStore.prototype, "runLayout")
+    const pending: Array<{ signal: AbortSignal; resolve: (value: { positions: Record<string, { x: number; y: number }> }) => void }> = []
+    runWorker.mockImplementation((_request, signal) => new Promise((resolve) => pending.push({ signal, resolve })))
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const view = render(<StreamNetworkFrame ref={ref} chartType="force" layoutExecution="worker"
+      nodes={[{ id: "a" }, { id: "b" }]} edges={[{ source: "a", target: "b" }]} animate={false} />)
+    await waitFor(() => expect(pending).toHaveLength(1))
+    act(() => {
+      ref.current!.push({ source: "b", target: "c", value: 1 })
+      expect(ref.current!.getTopology().nodes.map((node) => node.id)).toEqual(["a", "b", "c"])
+    })
+    await waitFor(() => expect(pending).toHaveLength(2))
+    expect(pending[0].signal.aborted).toBe(true)
+    expect(solve).not.toHaveBeenCalled()
+    await act(async () => pending[0].resolve({ positions: { a: { x: 1, y: 1 }, b: { x: 2, y: 2 } } }))
+    expect(solve).not.toHaveBeenCalled()
+    await act(async () => pending[1].resolve({ positions: { a: { x: 100, y: 100 }, b: { x: 200, y: 100 }, c: { x: 300, y: 100 } } }))
+    expect(solve).toHaveBeenCalledTimes(1) // finalizer only
+    solve.mockClear()
+    act(() => { expect(ref.current!.removeNodes!(["a", "b"])).toHaveLength(2) })
+    await waitFor(() => expect(pending).toHaveLength(3))
+    expect(solve).not.toHaveBeenCalled()
+    act(() => { ref.current!.updateNodes!(["c"], (datum) => ({ ...datum, label: "current" })) })
+    await waitFor(() => expect(pending).toHaveLength(4))
+    expect(pending[2].signal.aborted).toBe(true)
+    act(() => ref.current!.clear())
+    expect(pending[3].signal.aborted).toBe(true)
+    await act(async () => pending[3].resolve({ positions: { c: { x: 99, y: 99 } } }))
+    expect(ref.current!.getTopology().nodes).toEqual([])
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+    expect(solve).not.toHaveBeenCalled()
+  })
+
   it("resizes through the worker without also solving synchronously", async () => {
     const solve = vi.spyOn(NetworkPipelineStore.prototype, "runLayout")
     const build = vi.spyOn(NetworkPipelineStore.prototype, "buildScene")

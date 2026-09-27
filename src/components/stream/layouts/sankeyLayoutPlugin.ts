@@ -51,7 +51,8 @@ interface SankeyComputedEdge {
 }
 
 /**
- * Sankey layout plugin — uses d3-sankey-circular for layout computation.
+ * Sankey layout plugin — uses the vendored sankey-plus layout with bounded,
+ * weighted feedback ordering for cyclic flows.
  *
  * Produces rect scene nodes for Sankey node bars and bezier band scene edges
  * for the flow links. Supports both horizontal and vertical orientation.

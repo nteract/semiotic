@@ -1,6 +1,7 @@
+import * as dependency from "./dependencyForest"
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { auditAccessibility } from "../../charts/shared/auditAccessibility"
 import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
@@ -186,6 +187,23 @@ describe("Dependency X-Ray scenes", () => {
         (finding) => finding.critical && finding.status === "fail"
       )
     ).toEqual([])
+  })
+
+  it("indexes matrix cells once while preserving self-loops, parallel edges, and endpoint identities", () => {
+    const forest = supplierStory(true).projection
+    const ids = Array.from({ length: 40 }, (_, i) => `node,${i}>`)
+    let reads = 0
+    const cells = ids.flatMap((source) => ids.map((target) => ({
+      get source() { reads++; return source }, target, edgeIds: [`${source}->${target}`, "parallel"],
+    })))
+    const aggregate = vi.spyOn(dependency, "dependencyMatrix").mockReturnValue(cells)
+    try {
+      const markup = renderToStaticMarkup(<DependencyMatrix forest={forest} nodeIds={ids} />)
+      expect(markup.match(/<button/g)).toHaveLength(1600)
+      expect(markup).toContain("parallel")
+      expect(markup).toContain('node,0&gt; to node,0&gt;')
+      expect(reads).toBeLessThan(5000)
+    } finally { aggregate.mockRestore() }
   })
 
   it("exports an accessible matrix with canonical endpoint and edge identity", () => {

@@ -158,6 +158,35 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
   // ── Config ────────────────────────────────────────────────────────────
 
+  // Built only when needed; subsequent removals touch incident edges only.
+  private incidentEdges: Map<string, Set<string>> | null = null
+
+  private edgeIncidence(): Map<string, Set<string>> {
+    if (this.incidentEdges) return this.incidentEdges
+    const index = new Map<string, Set<string>>()
+    for (const [key, edge] of this.edges) {
+      const source = typeof edge.source === "string" ? edge.source : edge.source.id
+      const target = typeof edge.target === "string" ? edge.target : edge.target.id
+      for (const id of [source, target]) {
+        if (!index.has(id)) index.set(id, new Set())
+        index.get(id)!.add(key)
+      }
+    }
+    this.incidentEdges = index
+    return index
+  }
+
+  private deleteIndexedEdge(key: string): void {
+    const edge = this.edges.get(key)
+    if (!edge) return
+    const source = typeof edge.source === "string" ? edge.source : edge.source.id
+    const target = typeof edge.target === "string" ? edge.target : edge.target.id
+    this.incidentEdges?.get(source)?.delete(key)
+    this.incidentEdges?.get(target)?.delete(key)
+    this.edges.delete(key)
+    this.edgeTimestamps.delete(key)
+  }
+
   private config: NetworkPipelineConfig
   private tensionConfig: TensionConfig
   protected updateResults = new NetworkPipelineUpdateResults()
@@ -304,6 +333,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
 
     this.nodes.clear()
+    this.incidentEdges = null
     this.edges.clear()
     this._decaySortedNodes = null; this._networkDecayCache = null
 
@@ -345,6 +375,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this._boundedEdgeSnapshot = snapshotEdgePositions(this.edges.values())
 
     this.nodes.clear()
+    this.incidentEdges = null
     this.edges.clear()
     this._decaySortedNodes = null; this._networkDecayCache = null
 
@@ -475,6 +506,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
       this.tension += this.tensionConfig.weightChange
       valueChanged = true
     } else {
+      this.incidentEdges = null
       this.edges.set(key, {
         ...resolved,
         y0: 0,
@@ -556,6 +588,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     // store's Maps so buildScene and getLayoutData work correctly.
     if (plugin.hierarchical && nodesArr.length > 0) {
       this.nodes.clear()
+      this.incidentEdges = null
       this.edges.clear()
       this._decaySortedNodes = null; this._networkDecayCache = null
       for (const node of nodesArr) {
@@ -1309,15 +1342,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
     this.nodes.delete(id)
     this.nodeTimestamps.delete(id)
-    // Cascade: remove edges connected to this node
-    for (const [edgeKey, edge] of this.edges) {
-      const src = typeof edge.source === "string" ? edge.source : edge.source.id
-      const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
-      if (src === id || tgt === id) {
-        this.edges.delete(edgeKey)
-        this.edgeTimestamps.delete(edgeKey)
-      }
-    }
+    for (const key of this.edgeIncidence().get(id) ?? []) this.deleteIndexedEdge(key)
+    this.incidentEdges?.delete(id)
     this.layoutVersion++
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", 1)
@@ -1367,8 +1393,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
 
     for (const key of toDelete) {
-      this.edges.delete(key)
-      this.edgeTimestamps.delete(key)
+      this.deleteIndexedEdge(key)
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
@@ -1383,6 +1408,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
   clear(): void {
     this._customLayoutCache.clear()
     this.nodes.clear()
+    this.incidentEdges = null
     this.edges.clear()
     this._decaySortedNodes = null; this._networkDecayCache = null
     this._decayAgeMap = null

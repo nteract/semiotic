@@ -14,6 +14,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- ProcessSankey crossing optimization uses a temporal range index and exact local
+  swap deltas instead of graph-sized crossing-pair tables. Layout analysis is
+  reused across styling, labels, equivalent inline props, and timeline resizing;
+  synchronous mounting computes once, and worker geometry receives current host
+  styling. Pending work preserves the latest scene, superseded worker work is
+  cancelled, and malformed worker responses reject pending requests. Coverage
+  includes exact crossing comparisons, public chart refs, static rendering, and
+  sync/worker hover after resizing in Chromium and WebKit. (#1333, #1325)
+- Network chart array removals and updates commit one layout. Incident-edge
+  indexing avoids repeated graph scans, and force workers use current topology
+  after push/remove/update operations; stale results cannot overwrite newer
+  mutations or repopulate a cleared chart. Verified through ForceDirectedGraph
+  and SankeyDiagram refs, retained frame data, and worker supersession. (#1328)
+- Net Ensemble analyzes and layers strongly connected components iteratively,
+  handles deep chains, and counts terminal components correctly for cyclic
+  graphs. Topology analysis is cached before layout; current records, labels,
+  category colors, selection, and edge dimming stay current. Census glyph IDs
+  survive resizing, selection matches member records, and an overflow census
+  grid keeps every component within the plot. Coverage includes a 20,000-node
+  chain, cyclic terminal groups, cache refreshes, and circle/diamond census
+  bounds. (#1398, #1502)
+- Axis-fixed force collision passes use spatial sweeps with linear working
+  storage and reusable fixed-axis ordering, forces, boxes, and resolved links.
+  Raw-datum callback accessors agree between positioning and edge rendering.
+  Transit traversal sorts component seeds once, uses indexed queues, and caches
+  barycenters per sweep. Dependency matrices index cells by endpoint pair,
+  preserving parallel edges, self-loops, and accessible labels. Recipe coverage
+  includes raw/wrapped callback parity, static SVG evidence, and Chromium/WebKit
+  hover after data changes, resize, and zoom/pan. (#1400, #1512)
+- Cyclic Sankey layouts use bounded, flow-weighted feedback ordering instead of
+  enumerating every circuit. Node and edge permutations, including fractional
+  flows, retain the same feedback choices; parallel flows and self-links remain
+  intact. Iterative layering, indexed arc placement, and shared endpoint lists
+  remove repeated graph scans, and relayout clears obsolete circular geometry.
+  The faulty Johnson implementation and duplicate SCC code were removed. The
+  audit covers dense reciprocal graphs, a 20,000-node chain, bounded/pushed
+  updates, transition geometry, both orientations, Chromium/WebKit hover through
+  resize and zoom/pan, and ESM/CommonJS browser/Node/edge static exports. (#1334)
 - GoFish paths use SVG command-aware bounds, including curve/arc extrema,
   relative coordinates, and reflected group transforms. Pointer hits follow
   the painted path and overlap order while keyboard navigation retains the

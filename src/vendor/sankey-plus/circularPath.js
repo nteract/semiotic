@@ -1,6 +1,7 @@
 import { min } from "d3-array";
 
-import { selfLinking, onlyCircularLink } from "./linkAttributes.js";
+import { selfLinking } from "./linkAttributes.js";
+import { ColumnOccupancy } from "./columnOccupancy";
 
 import {
   sortLinkSourceYAscending,
@@ -50,18 +51,41 @@ export function addCircularPathData(
     }
   });
 
-  // calc vertical offsets per top/bottom links
-  var topLinks = graph.links.filter(function (l) {
-    return l.circularLinkType == "top";
+  var circular = graph.links.filter(function (link) { return link.circular; });
+  var sourceCounts = new Map();
+  var targetCounts = new Map();
+  circular.forEach(function (link) {
+    sourceCounts.set(link.source, (sourceCounts.get(link.source) || 0) + 1);
+    targetCounts.set(link.target, (targetCounts.get(link.target) || 0) + 1);
   });
-
-  calcVerticalBuffer(topLinks, id, circularLinkGap);
-
-  var bottomLinks = graph.links.filter(function (l) {
-    return l.circularLinkType == "bottom";
+  var isolatedSelfLinks = new Set(circular.filter(function (link) {
+    return selfLinking(link, id) && sourceCounts.get(link.source) === 1 && targetCounts.get(link.target) === 1;
+  }));
+  ["top", "bottom"].forEach(function (type) {
+    var links = circular.filter(function (link) { return link.circularLinkType === type; });
+    calcVerticalBuffer(links.slice(), isolatedSelfLinks, circularLinkGap);
+    // Group and sort once per endpoint column, then accumulate radii once.
+    ["source", "target"].forEach(function (endpoint) {
+      var columns = new Map();
+      links.forEach(function (link) {
+        var column = link[endpoint].column;
+        if (!columns.has(column)) columns.set(column, []);
+        columns.get(column).push(link);
+      });
+      columns.forEach(function (group) {
+        group.sort(endpoint === "source"
+          ? (type === "bottom" ? sortLinkSourceYDescending : sortLinkSourceYAscending)
+          : (type === "bottom" ? sortLinkTargetYDescending : sortLinkTargetYAscending));
+        var offset = 0;
+        var side = endpoint === "source" ? "right" : "left";
+        group.forEach(function (link, i) {
+          link.circularPathData[side + "SmallArcRadius"] = baseRadius + link._circularWidth / 2 + offset;
+          link.circularPathData[side + "LargeArcRadius"] = baseRadius + link._circularWidth / 2 + i * circularLinkGap + offset;
+          offset += link._circularWidth;
+        });
+      });
+    });
   });
-
-  calcVerticalBuffer(bottomLinks, id, circularLinkGap);
 
   // add the base data for each link
   graph.links.forEach(function (link) {
@@ -77,7 +101,7 @@ export function addCircularPathData(
       link.circularPathData.targetY = link.y1;
 
       // for self linking paths, and that the only circular link in/out of that node
-      if (selfLinking(link, id) && onlyCircularLink(link)) {
+      if (isolatedSelfLinks.has(link)) {
         link.circularPathData.rightSmallArcRadius = baseRadius + link._circularWidth / 2;
         link.circularPathData.rightLargeArcRadius = baseRadius + link._circularWidth / 2;
         link.circularPathData.leftSmallArcRadius = baseRadius + link._circularWidth / 2;
@@ -108,59 +132,6 @@ export function addCircularPathData(
             link.circularPathData.leftLargeArcRadius;
         }
       } else {
-        // else calculate normally
-        // add right extent coordinates, based on links with same source column and circularLink type
-        var thisColumn = link.source.column;
-        var thisCircularLinkType = link.circularLinkType;
-        var sameColumnLinks = graph.links.filter(function (l) {
-          return (
-            l.source.column == thisColumn &&
-            l.circularLinkType == thisCircularLinkType
-          );
-        });
-
-        if (link.circularLinkType == "bottom") {
-          sameColumnLinks.sort(sortLinkSourceYDescending);
-        } else {
-          sameColumnLinks.sort(sortLinkSourceYAscending);
-        }
-
-        var radiusOffset = 0;
-        sameColumnLinks.forEach(function (l, i) {
-          if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.rightSmallArcRadius =
-              baseRadius + link._circularWidth / 2 + radiusOffset;
-            link.circularPathData.rightLargeArcRadius =
-              baseRadius + link._circularWidth / 2 + i * circularLinkGap + radiusOffset;
-          }
-          radiusOffset = radiusOffset + (l._circularWidth || l.width);
-        });
-
-        // add left extent coordinates, based on links with same target column and circularLink type
-        thisColumn = link.target.column;
-        sameColumnLinks = graph.links.filter(function (l) {
-          return (
-            l.target.column == thisColumn &&
-            l.circularLinkType == thisCircularLinkType
-          );
-        });
-        if (link.circularLinkType == "bottom") {
-          sameColumnLinks.sort(sortLinkTargetYDescending);
-        } else {
-          sameColumnLinks.sort(sortLinkTargetYAscending);
-        }
-
-        radiusOffset = 0;
-        sameColumnLinks.forEach(function (l, i) {
-          if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.leftSmallArcRadius =
-              baseRadius + link._circularWidth / 2 + radiusOffset;
-            link.circularPathData.leftLargeArcRadius =
-              baseRadius + link._circularWidth / 2 + i * circularLinkGap + radiusOffset;
-          }
-          radiusOffset = radiusOffset + (l._circularWidth || l.width);
-        });
-
         // bottom links
         if (link.circularLinkType == "bottom") {
           link.circularPathData.verticalFullExtent =
@@ -212,57 +183,25 @@ export function addCircularPathData(
 }
 
 // creates vertical buffer values per set of top/bottom links
-function calcVerticalBuffer(links, id, circularLinkGap) {
+function calcVerticalBuffer(links, isolatedSelfLinks, circularLinkGap) {
+  if (links.length === 0) return;
   links.sort(sortLinkColumnAscending);
-
-  // Only non-stub links contribute to buffer stacking
-  var fullLinks = links.filter(function (l) { return !l._circularStub; });
-
-  links.forEach(function (link, i) {
-    var buffer = 0;
-
-    if (link._circularStub) {
-      // Stub links don't need vertical buffer — they render as short fading rectangles
-      link.circularPathData.verticalBuffer = 0;
-      return;
-    }
-
-    if (selfLinking(link, id) && onlyCircularLink(link)) {
-      link.circularPathData.verticalBuffer = buffer + link._circularWidth / 2;
-    } else {
-      // Only stack against other non-stub links
-      for (var j = 0; j < fullLinks.length; j++) {
-        var other = fullLinks[j];
-        if (other === link) continue;
-        if (!other.circularPathData || other.circularPathData.verticalBuffer === undefined) continue;
-        if (circularLinksCross(link, other)) {
-          var bufferOverThisLink =
-            other.circularPathData.verticalBuffer +
-            (other._circularWidth || other.width) / 2 +
-            circularLinkGap;
-          buffer = bufferOverThisLink > buffer ? bufferOverThisLink : buffer;
-        }
-      }
-
-      link.circularPathData.verticalBuffer = buffer + link._circularWidth / 2;
-    }
+  var columns = Array.from(new Set(links.flatMap(function (link) {
+    return [link.source.column, link.target.column];
+  }))).sort(function (a, b) { return a - b; });
+  var index = new Map(columns.map(function (column, i) { return [column, i]; }));
+  var occupancy = new ColumnOccupancy(columns.length);
+  links.forEach(function (link) {
+    var source = index.get(link.source.column);
+    var target = index.get(link.target.column);
+    var lo = Math.min(source, target);
+    var hi = Math.max(source, target);
+    var buffer = isolatedSelfLinks.has(link) ? 0 : occupancy.query(lo, hi);
+    link.circularPathData.verticalBuffer = buffer + link._circularWidth / 2;
+    occupancy.reserve(lo, hi, buffer + link._circularWidth + circularLinkGap);
   });
-
-  return links;
 }
 
-// Check if two circular links potentially overlap
-function circularLinksCross(link1, link2) {
-  if (link1.source.column < link2.target.column) {
-    return false;
-  } else if (link1.target.column > link2.source.column) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-// create a d path using the addCircularPathData
 // create a d path using the addCircularPathData
 function createCircularPathString(link) {
   var pathString = "";

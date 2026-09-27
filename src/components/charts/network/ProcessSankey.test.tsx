@@ -1,3 +1,4 @@
+import * as sceneBuilder from "./processSankey/buildScenes"
 import type { CapturedNetworkFrameProps } from "../../../test-utils/capturedFrameProps"
 import type { StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import { describe, it, expect, vi, beforeEach } from "vitest"
@@ -60,6 +61,19 @@ function maximumPathY(pathD: string): number {
 describe("ProcessSankey HOC", () => {
   beforeEach(() => {
     lastFrameProps = null
+  })
+
+  it("does not repeat layout for parent rerenders with inline domain and style callbacks", () => {
+    const prepare = vi.spyOn(sceneBuilder, "prepareProcessSankeyLayout")
+    try {
+      const chart = (opacity: number) => <ProcessSankey nodes={sampleNodes} edges={sampleEdges}
+        domain={[...DOMAIN]} edgeOpacity={() => opacity} layoutExecution="sync" />
+      const view = render(chart(0.3))
+      expect(prepare).toHaveBeenCalledTimes(1)
+      for (let i = 0; i < 5; i++) view.rerender(chart(0.8))
+      expect(prepare).toHaveBeenCalledTimes(1)
+      expect(lastFrameProps!.layoutConfig.ribbons[0].opacity).toBe(0.8)
+    } finally { prepare.mockRestore() }
   })
 
   it("forwards bands + ribbons through layoutConfig to the frame", () => {

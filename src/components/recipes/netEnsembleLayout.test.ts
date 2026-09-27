@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest"
+import * as hashing from "../utils/hash"
+import { describe, it, expect, vi } from "vitest"
 import { netEnsembleLayout, analyzeNetEnsemble } from "./netEnsembleLayout"
 import type { NetEnsembleConfig } from "./netEnsembleLayout"
 import type { NetworkLayoutContext, NetworkLayoutSelection } from "../stream/networkCustomLayout"
@@ -167,5 +168,92 @@ describe("netEnsembleLayout — scene output", () => {
   it("returns an empty scene for no nodes", () => {
     const res = netEnsembleLayout(makeCtx({}, [], []))
     expect(res.sceneNodes).toEqual([])
+  })
+})
+
+
+describe("net ensemble topology reuse and bounded geometry", () => {
+  it("recognizes terminal cycles as limits and two terminal cycles as branching", () => {
+    const nodes = ["a", "b", "c", "d", "e"].map((id) => ({ id }))
+    const edges = [
+      { source: "a", target: "b" }, { source: "b", target: "c" },
+      { source: "c", target: "b" }, { source: "a", target: "d" },
+      { source: "d", target: "e" }, { source: "e", target: "d" },
+    ]
+    const two = analyzeNetEnsemble(nodes, edges).components[0]
+    expect(two).toMatchObject({ directed: false, sinkCount: 2, sourceCount: 1 })
+    const joined = analyzeNetEnsemble(nodes, [...edges, { source: "c", target: "d" }]).components[0]
+    expect(joined).toMatchObject({ directed: true, sinkCount: 1 })
+    const reversed = analyzeNetEnsemble([...nodes].reverse(), [...edges].reverse()).components[0]
+    expect(reversed).toEqual(two)
+  })
+
+  it("lays out a 20,000-node chain without recursive traversal", () => {
+    const nodes = Array.from({ length: 20000 }, (_, i) => ({ id: `deep-${i}` }))
+    const edges = nodes.slice(1).map((node, i) => ({ source: nodes[i].id, target: node.id }))
+    const scene = netEnsembleLayout(makeCtx({}, nodesFrom(nodes), edgesFrom(edges)))
+    const marks = scene.sceneNodes as NetworkSymbolNode[]
+    expect(marks).toHaveLength(nodes.length)
+    const byId = new Map(marks.map((mark) => [mark.id, mark]))
+    expect(byId.get("deep-0")!.cy).toBeLessThan(byId.get("deep-19999")!.cy)
+    expect(marks.every((mark) => Number.isFinite(mark.cx) && Number.isFinite(mark.cy))).toBe(true)
+  })
+
+  it("reuses analysis while refreshing raw data, labels, category colors, and edge dimming", () => {
+    const edges = edgesFrom(chain("cache-"))
+    const first = nodesFrom(chainNodes("cache-").map((node) => ({ ...node, label: "old", category: "old" })))
+    netEnsembleLayout(makeCtx({ colorMode: "category" }, first, edges))
+    const next = nodesFrom(chainNodes("cache-").map((node) => ({ ...node, label: "new", category: "new" })))
+    const ctx = makeCtx({ colorMode: "category" }, next, edges, { isActive: true, predicate: () => false })
+    const hash = vi.spyOn(hashing, "fnv1a32")
+    let scene: ReturnType<typeof netEnsembleLayout>
+    try {
+      scene = netEnsembleLayout(ctx)
+      expect(hash).not.toHaveBeenCalled()
+    } finally { hash.mockRestore() }
+    const marks = scene!.sceneNodes as NetworkSymbolNode[]
+    expect(marks.map((mark) => mark.label)).toEqual(["new", "new", "new"])
+    expect(marks[0].datum).toBe(next[0].data)
+    expect(marks[0].style.fill).toBe(ctx.resolveColor("new"))
+    expect(marks.every((mark) => mark.style.opacity === 0.14)).toBe(true)
+    expect(scene!.sceneEdges!.every((edge) => edge.style.opacity === 0.07)).toBe(true)
+  })
+
+  it("fits branching diamond glyphs within a small census plot", () => {
+    const nodes = nodesFrom(Array.from({ length: 120 }, (_, i) => cherryNodes(`branch-${i}`)).flat())
+    const edges = edgesFrom(Array.from({ length: 120 }, (_, i) => cherry(`branch-${i}`)).flat())
+    const ctx = makeCtx({}, nodes, edges)
+    ctx.dimensions.plot = { x: 5, y: 9, width: 100, height: 30 }
+    const marks = netEnsembleLayout(ctx).sceneNodes as NetworkSymbolNode[]
+    expect(marks).toHaveLength(120)
+    for (const mark of marks) {
+      expect(mark.symbolType).toBe("diamond")
+      // d3's diamond area is 2 * halfWidth * halfHeight, with h/w = sqrt(3).
+      const halfHeight = Math.sqrt(mark.size * Math.sqrt(3) / 2)
+      const halfWidth = halfHeight / Math.sqrt(3)
+      expect(mark.cx - halfWidth).toBeGreaterThanOrEqual(5)
+      expect(mark.cx + halfWidth).toBeLessThanOrEqual(105)
+      expect(mark.cy - halfHeight).toBeGreaterThanOrEqual(9)
+      expect(mark.cy + halfHeight).toBeLessThanOrEqual(39)
+    }
+  })
+
+  it("keeps all census glyphs inside the plot, with stable IDs and member-based selection", () => {
+    const nodes = nodesFrom(Array.from({ length: 3000 }, (_, i) => ({ id: `isolate-${i}`, category: i === 42 ? "selected" : "other" })))
+    const ctx = makeCtx({}, nodes, [], { isActive: true, predicate: (datum) => datum.category === "selected" })
+    ctx.dimensions.plot = { x: 7, y: 11, width: 300, height: 200 }
+    const first = netEnsembleLayout(ctx).sceneNodes as NetworkSymbolNode[]
+    expect(first).toHaveLength(nodes.length)
+    expect(first.filter((mark) => mark.style.opacity === 1)).toHaveLength(1)
+    for (const mark of first) {
+      const r = Math.sqrt(mark.size / Math.PI)
+      expect(mark.cx - r).toBeGreaterThanOrEqual(7)
+      expect(mark.cx + r).toBeLessThanOrEqual(307)
+      expect(mark.cy - r).toBeGreaterThanOrEqual(11)
+      expect(mark.cy + r).toBeLessThanOrEqual(211)
+    }
+    ctx.dimensions.plot.width = 450
+    const resized = netEnsembleLayout(ctx).sceneNodes as NetworkSymbolNode[]
+    expect(resized.map((mark) => mark.id)).toEqual(first.map((mark) => mark.id))
   })
 })

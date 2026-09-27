@@ -48,6 +48,19 @@ describe("ModuleWorkerSession", () => {
     vi.restoreAllMocks()
   })
 
+  it.each(["parse", "messageerror"])("rejects every pending request and retires a worker after %s failure", async (failure) => {
+    const worker = createFakeWorker()
+    const session = new ModuleWorkerSession({ name: "Test", createWorker: () => worker,
+      parseMessage: () => { throw new Error("malformed response") } })
+    const first = session.request({}), second = session.request({})
+    const rejected = Promise.all([expect(first).rejects.toThrow(), expect(second).rejects.toThrow()])
+    if (failure === "parse") worker.triggerMessage({})
+    else worker.onmessageerror?.call(worker, new MessageEvent("messageerror"))
+    await rejected
+    expect(session.isDead).toBe(true)
+    expect(worker.terminate).toHaveBeenCalledOnce()
+  })
+
   it("assigns request ids and resolves matching responses", async () => {
     const worker = createFakeWorker()
     const session = new ModuleWorkerSession<{ n: number }, { doubled: number }>({

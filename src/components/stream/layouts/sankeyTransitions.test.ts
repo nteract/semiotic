@@ -186,7 +186,7 @@ describe.each(["horizontal", "vertical"] as const)(
       })
       const edges = [
         { source: "A", target: "B", value: 100 },
-        { source: "B", target: "C", value: 100 },
+        { source: "B", target: "C", value: 40 },
         { source: "C", target: "A", value: 0 }
       ]
       store.ingestBounded(nodes, edges, size)
@@ -196,7 +196,8 @@ describe.each(["horizontal", "vertical"] as const)(
         [...nodes].reverse(),
         edges.map((edge) => ({
           ...edge,
-          value: edge.source === "C" ? 1 : edge.value
+          // The new dominant return flow makes B → C the lightest cycle edge.
+          value: edge.source === "C" ? 200 : edge.value
         })),
         size
       )

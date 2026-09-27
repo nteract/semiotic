@@ -15,6 +15,56 @@ function layout(
 
 describe("Sankey flow magnitudes", () => {
   it.each(["horizontal", "vertical"] as const)(
+    "keeps dense cyclic flows and bounded/pushed geometry consistent in %s layout",
+    (orientation) => {
+      const ids = Array.from({ length: 12 }, (_, i) => `N${i}`)
+      const edges = ids.flatMap((source) => ids.filter((target) => target !== source)
+        .map((target) => ({ source, target, value: 1 })))
+      const bounded = layout(edges, { orientation })
+      const pushed = new NetworkPipelineStore({ chartType: "sankey", orientation })
+      for (const edge of edges) pushed.ingestEdge(edge)
+      pushed.runLayout(size)
+      pushed.buildScene(size)
+      const paths = (store: NetworkPipelineStore) => store.sceneEdges.map((edge) =>
+        edge.type === "bezier" ? edge.pathD : "")
+      expect(bounded.sceneEdges).toHaveLength(132)
+      expect(pushed.sceneNodes).toHaveLength(12)
+      expect(paths(pushed)).toEqual(paths(bounded))
+      for (const path of paths(pushed)) expect(path).not.toMatch(/NaN|Infinity/)
+      for (const node of pushed.sceneNodes) {
+        if (node.type !== "rect") throw new Error("Expected Sankey node")
+        expect(node.x).toBeGreaterThanOrEqual(-1e-8)
+        expect(node.y).toBeGreaterThanOrEqual(-1e-8)
+        expect(node.x + node.w).toBeLessThanOrEqual(size[0] + 1e-8)
+        expect(node.y + node.h).toBeLessThanOrEqual(size[1] + 1e-8)
+      }
+    }
+  )
+
+  it("reselects circular edges after streaming values change", () => {
+    const store = new NetworkPipelineStore({ chartType: "sankey" })
+    for (const edge of [
+      { source: "Visit", target: "Signup", value: 1000 },
+      { source: "Signup", target: "Buy", value: 400 },
+      { source: "Buy", target: "Visit", value: 5 }
+    ]) store.ingestEdge(edge)
+    store.runLayout(size)
+    store.buildScene(size)
+    const circular = () => [...store.edges.values()].filter((edge) => edge.circular)
+    expect(circular().map((edge) => edge.value)).toEqual([5])
+    store.ingestEdge({ source: "Buy", target: "Visit", value: 2000 })
+    store.runLayout(size)
+    const transition = store.transition!
+    store.advanceTransition(transition.startTime + transition.duration)
+    store.buildScene(size)
+    expect(circular().map((edge) => edge.value)).toEqual([400])
+    const forward = [...store.edges.values()].find((edge) => edge.value === 2005)!
+    expect(forward.circular).toBe(false)
+    expect(forward.circularPathData).toBeUndefined()
+    expect(store.sceneEdges).toHaveLength(3)
+  })
+
+  it.each(["horizontal", "vertical"] as const)(
     "conserves a 100 = 50 + 50 split in %s layout",
     (orientation) => {
       const store = layout(

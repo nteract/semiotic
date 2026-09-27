@@ -660,22 +660,59 @@ const StreamNetworkFrame = memo(forwardRef<
   const runLayout = useCallback(() => {
     const store = storeRef.current
     if (!store) return
-
-    store.runLayout([adjustedWidth, adjustedHeight])
-    rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-
-    setLayoutVersion(store.layoutVersion)
-
-    if (onTopologyChange) {
-      const { nodes, edges } = store.getLayoutData()
-      onTopologyChange(nodes, edges)
+    const requestId = ++layoutRequestRef.current
+    layoutAbortRef.current?.abort()
+    layoutAbortRef.current = null
+    const size: [number, number] = [adjustedWidth, adjustedHeight]
+    const finish = (state: "ready" | "error", repaint = false) => {
+      rebuildSceneNow(store, size)
+      setLayoutVersion(store.layoutVersion)
+      setLayoutPending(false)
+      onLayoutStateChangeRef.current?.(state)
+      if (onTopologyChange) {
+        const { nodes, edges } = store.getLayoutData()
+        onTopologyChange(nodes, edges)
+      }
+      if (repaint) scheduleRender()
     }
-  }, [
-    adjustedWidth,
-    adjustedHeight,
-    rebuildSceneNow,
-    onTopologyChange
-  ])
+    if (chartType === "force" && !customNetworkLayout && !randomProp && canUseForceWorker() &&
+        shouldUseForceWorker(layoutExecution, store.nodes.size, store.edges.size, iterations)) {
+      const controller = new AbortController()
+      layoutAbortRef.current = controller
+      const data = store.getLayoutData()
+      const request = createFrameForceWorkerRequest(data.nodes, data.edges, pipelineConfigRef.current, size, store._lastPositionSnapshot)
+      setLayoutPending(true)
+      onLayoutStateChangeRef.current?.("pending")
+      import("./layouts/forceLayoutWorkerClient")
+        .then(({ runForceLayoutWorker }) => runForceLayoutWorker(request, controller.signal))
+        .then(({ positions }) => {
+          if (controller.signal.aborted || requestId !== layoutRequestRef.current) return
+          layoutAbortRef.current = null
+          store.applyForceLayoutPositions(positions, size)
+          finish("ready", true)
+        })
+        .catch((error: Error) => {
+          if (controller.signal.aborted || requestId !== layoutRequestRef.current || error.name === "AbortError") return
+          layoutAbortRef.current = null
+          store.runLayout(size)
+          finish("error", true)
+        })
+      return controller
+    }
+    store.runLayout(size)
+    finish("ready")
+  }, [adjustedWidth, adjustedHeight, rebuildSceneNow, onTopologyChange, scheduleRender,
+    chartType, customNetworkLayout, randomProp, layoutExecution, iterations])
+
+  // Controlled ingestion uses current callbacks without making callback identity
+  // an input to topology replacement.
+  const runLayoutRef = useRef(runLayout)
+  runLayoutRef.current = runLayout
+
+  useEffect(() => () => {
+    ++layoutRequestRef.current
+    layoutAbortRef.current?.abort()
+  }, [])
 
   // ── Push API ─────────────────────────────────────────────────────────
 
@@ -730,6 +767,12 @@ const StreamNetworkFrame = memo(forwardRef<
       const store = storeRef.current
       if (!store) return
       if (store.ingestEdge(edge)) pendingLayoutRef.current = true
+      if (layoutAbortRef.current) {
+        ++layoutRequestRef.current
+        layoutAbortRef.current.abort()
+        layoutAbortRef.current = null
+        pendingLayoutRef.current = true
+      }
       if (!frameRuntime.isActive) {
         flushPendingLayout()
         return
@@ -760,6 +803,11 @@ const StreamNetworkFrame = memo(forwardRef<
     // A clear is a barrier, not a commit: the scheduled frame must not rebuild
     // geometry for topology that was explicitly discarded.
     pendingLayoutRef.current = false
+    ++layoutRequestRef.current
+    layoutAbortRef.current?.abort()
+    layoutAbortRef.current = null
+    setLayoutPending(false)
+    onLayoutStateChangeRef.current?.("ready")
     storeRef.current?.clear()
     emitLegendCategories()
     nodeColorMap.current.clear()
@@ -780,9 +828,49 @@ const StreamNetworkFrame = memo(forwardRef<
   const forceRelayout = useCallback(() => {
     const store = storeRef.current
     if (!store) return
-    store.tension += 999
     commitLayout(true)
     scheduleRender()
+  }, [commitLayout, scheduleRender])
+
+  const removeNodes = useCallback((ids: string[]): Datum[] => {
+    const store = storeRef.current
+    if (!store) return []
+    const removed: Datum[] = []
+    for (const id of ids) {
+      const node = store.nodes.get(id)
+      if (!node) continue
+      removed.push({ ...(node.data ?? {}), id })
+      store.removeNode(id)
+      nodeColorMap.current.delete(id)
+    }
+    if (removed.length && hoverRef.current) {
+      const ids = new Set(removed.map((datum) => datum.id))
+      const hover = hoverRef.current
+      const data = hover.data
+      const endpoint = (value: unknown): unknown => value && typeof value === "object" ? (value as { id?: unknown }).id : value
+      const invalid = hover.nodeOrEdge === "node"
+        ? ids.has(typeof nodeIDAccessor === "function" ? nodeIDAccessor(data ?? {}) : data?.[nodeIDAccessor])
+        : ids.has(endpoint(data?.source)) || ids.has(endpoint(data?.target))
+      if (invalid) {
+        hoverRef.current = null
+        setHoverData(null)
+      }
+    }
+    if (commitLayout(removed.length > 0)) scheduleRender()
+    return removed
+  }, [commitLayout, scheduleRender, nodeIDAccessor])
+  const updateNodes = useCallback((ids: string[], updater: (data: Datum) => Datum): Datum[] => {
+    const previous: Datum[] = []
+    try {
+      for (const id of ids) {
+        const data = storeRef.current?.updateNode(id, updater)
+        if (data != null) previous.push({ ...data, id })
+      }
+    } finally {
+      // Preserve successful earlier mutations if an author updater throws.
+      if (commitLayout(previous.length > 0)) scheduleRender()
+    }
+    return previous
   }, [commitLayout, scheduleRender])
 
   useImperativeHandle(
@@ -790,30 +878,9 @@ const StreamNetworkFrame = memo(forwardRef<
     () => ({
       push: pushEdge,
       pushMany: pushManyEdges,
-      removeNode: (id: string) => {
-        const removed = storeRef.current?.removeNode(id) ?? false
-        if (removed) {
-          // Clear hover if the removed node was being hovered
-          const hoveredId = hoverRef.current?.data
-            ? typeof nodeIDAccessor === "function"
-              ? nodeIDAccessor(hoverRef.current.data)
-              : hoverRef.current.data[nodeIDAccessor]
-            : undefined
-          if (
-            hoverRef.current &&
-            hoverRef.current.nodeOrEdge === "node" &&
-            hoveredId === id
-          ) {
-            hoverRef.current = null
-            setHoverData(null)
-          }
-          nodeColorMap.current.delete(id)
-        }
-        if (commitLayout(removed)) {
-          scheduleRender()
-        }
-        return removed
-      },
+      removeNode: (id: string) => removeNodes([id]).length > 0,
+      removeNodes,
+      updateNodes,
       removeEdge: (sourceIdOrEdgeId: string, targetId?: string) => {
         const removed =
           storeRef.current?.removeEdge(sourceIdOrEdgeId, targetId) ?? false
@@ -909,7 +976,7 @@ const StreamNetworkFrame = memo(forwardRef<
         return storeRef.current?.tension ?? 0
       }
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, nodeIDAccessor, scheduleRender, edgeIdAccessor]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
@@ -931,7 +998,7 @@ const StreamNetworkFrame = memo(forwardRef<
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
-    const requestId = ++layoutRequestRef.current
+    ++layoutRequestRef.current
     layoutAbortRef.current?.abort()
     layoutAbortRef.current = null
 
@@ -973,10 +1040,9 @@ const StreamNetworkFrame = memo(forwardRef<
         // Push-mode graphs have no controlled arrays to re-ingest, but force
         // parameter changes still need to re-solve their retained topology.
         if (chartType === "force" && nodesProp == null && edgesProp == null && store.nodes.size > 0) {
-          store.runLayout([adjustedWidth, adjustedHeight])
-          rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-          setLayoutVersion(store.layoutVersion)
-          scheduleRender()
+          pendingLayoutRef.current = false
+          const controller = runLayoutRef.current()
+          return () => controller?.abort()
         }
         // Nothing to lay out — the frame is no longer busy, so a consumer
         // watching a previously-pending worker layout gets released.
@@ -1019,49 +1085,9 @@ const StreamNetworkFrame = memo(forwardRef<
       }
 
       if (useWorker) {
-        const controller = new AbortController()
-        layoutAbortRef.current = controller
-        const previousPositions = store._lastPositionSnapshot
-
         store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true })
-        const layoutData = store.getLayoutData()
-        const request = createFrameForceWorkerRequest(
-          layoutData.nodes,
-          layoutData.edges,
-          pipelineConfigRef.current,
-          size,
-          previousPositions
-        )
-
-        setLayoutPending(true)
-        onLayoutStateChangeRef.current?.("pending")
-        import("./layouts/forceLayoutWorkerClient")
-          .then(({ runForceLayoutWorker }) => runForceLayoutWorker(request, controller.signal))
-          .then(({ positions }) => {
-            if (requestId !== layoutRequestRef.current) return
-            layoutAbortRef.current = null
-            store.applyForceLayoutPositions(positions, size)
-            rebuildSceneNow(store, size)
-            setLayoutPending(false)
-            onLayoutStateChangeRef.current?.("ready")
-            setLayoutVersion(store.layoutVersion)
-            scheduleRender()
-          })
-          .catch((error: Error) => {
-            if (error.name === "AbortError") return
-            if (requestId !== layoutRequestRef.current) return
-            layoutAbortRef.current = null
-            // Worker construction/runtime failures retain correctness through
-            // the established synchronous plugin path.
-            store.runLayout(size)
-            rebuildSceneNow(store, size)
-            setLayoutPending(false)
-            onLayoutStateChangeRef.current?.("error")
-            setLayoutVersion(store.layoutVersion)
-            scheduleRender()
-          })
-
-        return () => controller.abort()
+        const controller = runLayoutRef.current()
+        return () => controller?.abort()
       }
 
       store.ingestBounded(rawNodes, rawEdges, size)

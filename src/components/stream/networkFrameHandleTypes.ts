@@ -10,19 +10,24 @@ import type { NetworkLayoutResult } from "./networkCustomLayout"
 /** Imperative API exposed by `StreamNetworkFrame` refs. */
 export interface StreamNetworkFrameHandle {
   /** Ingest one edge immediately and coalesce its expensive layout with other
-   * pushes at the next animation frame. Geometry getters commit first.
+   * pushes at the next animation frame. Geometry getters commit first; worker
+   * execution keeps the previous geometry until the latest request completes.
    * Source, target and value use the configured accessors. Repeated pairs
    * accumulate values and merge raw fields, with the latest field winning. */
   push(edge: EdgePush): void
-  /** Ingest and lay out an explicit edge batch synchronously, absorbing any
-   * layout pending from prior single-edge pushes. */
+  /** Ingest an explicit edge batch immediately and commit one layout, absorbing
+   * prior single-edge pushes. Worker execution completes geometry asynchronously. */
   pushMany(edges: EdgePush[]): void
   /** Remove a node by ID. Also removes connected edges. */
   removeNode(id: string): boolean
+  /** Remove nodes and their incident edges with one layout; returns removed records. */
+  removeNodes?(ids: string[]): Datum[]
   /** Remove edges by source+target, or by edge ID when edgeIdAccessor is configured. */
   removeEdge(sourceIdOrEdgeId: string, targetId?: string): boolean
   /** Update a node's data by ID. Returns previous data. */
   updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
+  /** Update a node batch with one layout; returns previous records with their IDs. */
+  updateNodes?(ids: string[], updater: (data: Datum) => Datum): Datum[]
   /** Update all edges between source+target. Returns array of previous data.
    * Accumulated values are retained unless the updater changes the value accessor result. */
   updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]

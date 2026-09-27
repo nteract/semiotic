@@ -335,6 +335,65 @@ describe("allocateCells", () => {
 })
 
 describe("rectCollide", () => {
+  it.each(["x", "y"] as const)(
+    "matches direct pair forces for unequal boxes on %s",
+    (axis) => {
+      const boxes = Array.from({ length: 60 }, (_, i) => ({
+        id: `box-${i}`,
+        x: (i * 17) % 101,
+        y: (i * 31) % 157,
+        width: 10 + (i % 7) * 13,
+        height: 5 + (i % 5) * 11
+      }))
+      const expected = new Map(boxes.map((box) => [box.id, 0]))
+      const cross = axis === "x" ? "y" : "x"
+      const size = axis === "x" ? "width" : "height"
+      const crossSize = axis === "x" ? "height" : "width"
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i],
+            b = boxes[j]
+          if (
+            Math.abs(a[cross] - b[cross]) >
+            (a[crossSize] + b[crossSize]) / 2 + 3
+          )
+            continue
+          const delta = b[axis] - a[axis] || (a.id < b.id ? -0.5 : 0.5)
+          const overlap = (a[size] + b[size]) / 2 + 3 - Math.abs(delta)
+          if (overlap <= 0) continue
+          const push = overlap * 0.4 * Math.sign(delta)
+          expected.set(a.id, expected.get(a.id)! - push)
+          expected.set(b.id, expected.get(b.id)! + push)
+        }
+      }
+      for (const [id, force] of rectCollide(boxes, {
+        axis,
+        padding: 3,
+        strength: 0.4
+      })) {
+        expect(force).toBeCloseTo(expected.get(id)!, 10)
+      }
+    }
+  )
+
+  it("prunes separated boxes even when every box shares the other axis", () => {
+    let reads = 0
+    const boxes = Array.from({ length: 2000 }, (_, i) => ({
+      id: String(i),
+      get x() {
+        reads++
+        return i * 100
+      },
+      y: 0,
+      width: 10,
+      height: 10
+    }))
+    expect([...rectCollide(boxes).values()].every((value) => value === 0)).toBe(
+      true
+    )
+    expect(reads).toBeLessThan(20000)
+  })
+
   it("pushes overlapping boxes apart along the free axis", () => {
     const f = rectCollide(
       [

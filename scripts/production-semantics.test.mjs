@@ -178,6 +178,25 @@ for (const entry of ["./recipes", "./recipes/core"]) {
 
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} preserves dense cyclic Sankey flows (#1334)`, () => {
+      exercise(target, `
+        const nodes = Array.from({ length: 12 }, (_, i) => ({ id: "N" + i }))
+        const edges = nodes.flatMap(({ id: source }) => nodes.filter(({ id }) => id !== source)
+          .map(({ id: target }) => ({ source, target, value: 1 })))
+        for (const orientation of ["horizontal", "vertical"]) {
+          const { svg, evidence } = api.renderChartWithEvidence("SankeyDiagram", {
+            nodes, edges, orientation, width: 600, height: 400, showLabels: false
+          })
+          assert.equal(evidence.nodeCount, 12)
+          assert.equal(evidence.edgeCount, 132)
+          assert.equal(evidence.empty, false)
+          assert.doesNotMatch(svg, /NaN|Infinity/)
+          const paths = [...svg.matchAll(/<path\\b[^>]* d="([^"]+)"/g)]
+          assert.equal(paths.length, 132)
+          assert.equal(paths.filter(([, d]) => d.includes("A")).length, 66)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} exports recipe omissions and small-lane geometry (#1505)`, () => {
       exercise(target, `
         const recipes = createRequire(import.meta.url)("./dist/semiotic-recipes.min.js")

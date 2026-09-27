@@ -1,5 +1,5 @@
+import { ProcessSankeyCrossings } from "./crossings"
 import {
-  countPairwiseCrossings,
   orderByBarycenter,
   orderExactSmall,
   refineByAdjacentSwaps,
@@ -48,18 +48,11 @@ export type {
 
 export { bondProcessSankeySlotGroups }
 
-function isCrossingCandidate(a: ProcessSankeyEdge, b: ProcessSankeyEdge): boolean {
-  if (a.source === b.source || a.target === b.target ||
-      a.source === b.target || a.target === b.source) return false
-  return Math.max(a.startTime, b.startTime) < Math.min(a.endTime, b.endTime)
-}
-
 export function countCrossings(slotByNode: SlotByNode, edges: readonly ProcessSankeyEdge[]): number {
-  return countPairwiseCrossings(
-    edges,
-    (edge) => [slotByNode[edge.source], slotByNode[edge.target]],
-    isCrossingCandidate,
-  )
+  const lanes = [...new Set(Object.values(slotByNode))].sort((a, b) => a - b)
+  const ranks = new Map(lanes.map((lane, i) => [lane, i]))
+  const nodeSlots = new Map(Object.entries(slotByNode).map(([id, lane]) => [id, ranks.get(lane)!]))
+  return new ProcessSankeyCrossings(edges, nodeSlots, lanes.length).count(lanes.map((_, i) => i))
 }
 
 export function totalEdgeLength(slotByNode: SlotByNode, edges: readonly ProcessSankeyEdge[]): number {
@@ -71,19 +64,6 @@ export function totalEdgeLength(slotByNode: SlotByNode, edges: readonly ProcessS
     total += Math.abs(source - target) * (edge.value > 0 ? edge.value : 1)
   }
   return total
-}
-
-interface CrossingPair {
-  index: number
-  first: ProcessSankeyEdge
-  second: ProcessSankeyEdge
-  involvedSlots: Set<ProcessSankeySlot>
-}
-
-function crossingForPair(pair: CrossingPair, positions: Map<ProcessSankeySlot, number>, edgeSlots: Map<ProcessSankeyEdge, readonly [ProcessSankeySlot, ProcessSankeySlot]>): number {
-  const [as, at] = edgeSlots.get(pair.first)!
-  const [bs, bt] = edgeSlots.get(pair.second)!
-  return ((positions.get(as)! - positions.get(bs)!) * (positions.get(at)! - positions.get(bt)!) < 0) ? 1 : 0
 }
 
 const BRUTE_FORCE_MAX = 8
@@ -104,6 +84,43 @@ const BRUTE_FORCE_WORK_MAX = permutationCount(BRUTE_FORCE_MAX) * (
   LEGACY_BRUTE_FORCE_EDGE_MAX * (LEGACY_BRUTE_FORCE_EDGE_MAX - 1) / 2
 )
 const ORDERING_EVALUATION_BUDGET = 3000
+
+
+/** Place ranked slots or bonded units alternately around the center. */
+function insideOut<T>(ranked: readonly T[]): T[] {
+  const arranged = new Array<T>(ranked.length)
+  const middle = Math.floor((ranked.length - 1) / 2)
+  let above = middle - 1, below = middle + 1
+  if (ranked.length > 0) arranged[middle] = ranked[0]
+  for (let i = 1; i < ranked.length; i++) {
+    if (i % 2 === 1 && below < ranked.length) arranged[below++] = ranked[i]
+    else if (above >= 0) arranged[above--] = ranked[i]
+    else arranged[below++] = ranked[i]
+  }
+  return arranged
+}
+
+/** Retain the best ordering while considering each ranked item at the center. */
+function refineCenter<T>(order: T[], ranked: readonly T[], cost: (order: T[]) => number): T[] {
+  let current = cost(order), bestCost = current
+  let best = [...order]
+  const middle = Math.floor((order.length - 1) / 2)
+  for (const item of ranked) {
+    const index = order.indexOf(item)
+    if (index === middle) continue
+    order.splice(index, 1)
+    order.splice(middle, 0, item)
+    const next = cost(order)
+    if (next <= current) {
+      current = next
+      if (next < bestCost) { best = [...order]; bestCost = next }
+    } else {
+      order.splice(middle, 1)
+      order.splice(index, 0, item)
+    }
+  }
+  return best
+}
 
 /**
  * Optimize one already-packed ProcessSankey slot list. Crossing changes for
@@ -133,25 +150,6 @@ export function orderProcessSankeySlots(
     edgeSlots.set(edge, [source, target])
     if (source !== target) relations.push({ source, target, weight: edge.value })
   }
-  const crossingPairs: CrossingPair[] = []
-  for (let i = 0; i < edges.length; i++) {
-    if (!edgeSlots.has(edges[i])) continue
-    for (let j = i + 1; j < edges.length; j++) {
-      if (!edgeSlots.has(edges[j]) || !isCrossingCandidate(edges[i], edges[j])) continue
-      const involvedSlots = new Set<ProcessSankeySlot>([
-        ...edgeSlots.get(edges[i])!, ...edgeSlots.get(edges[j])!,
-      ])
-      crossingPairs.push({ index: crossingPairs.length, first: edges[i], second: edges[j], involvedSlots })
-    }
-  }
-  const crossingPairsBySlot = new Map<ProcessSankeySlot, CrossingPair[]>()
-  for (const slot of slots) crossingPairsBySlot.set(slot, [])
-  for (const pair of crossingPairs) {
-    for (const slot of pair.involvedSlots) crossingPairsBySlot.get(slot)?.push(pair)
-  }
-  const affectedMarks = new Uint32Array(crossingPairs.length)
-  let affectedGeneration = 0
-
   const totalWeight = edges.reduce((sum, edge) => sum + (edge.value > 0 ? edge.value : 1), 0)
   const averageGap = options.plotH / Math.max(1, slots.length)
   const totalPeak = slots.reduce((sum, slot) => sum + slot.peak.topPeak + slot.peak.botPeak, 0)
@@ -186,23 +184,18 @@ export function orderProcessSankeySlots(
     return value
   }
   const stableSlotIndex = new Map(slots.map((slot, index) => [slot, index]))
-  const edgeRoutes = edges.flatMap((edge) => {
-    const route = edgeSlots.get(edge)
-    if (!route) return []
-    return [{
-      source: stableSlotIndex.get(route[0])!,
-      target: stableSlotIndex.get(route[1])!,
-      weight: edge.value > 0 ? edge.value : 1,
-    }]
-  })
-  const routeByEdge = new Map<ProcessSankeyEdge, { source: number; target: number }>()
-  for (const edge of edges) {
-    const route = edgeSlots.get(edge)
-    if (route) routeByEdge.set(edge, {
-      source: stableSlotIndex.get(route[0])!,
-      target: stableSlotIndex.get(route[1])!,
-    })
+  const crossingIndex = new ProcessSankeyCrossings(edges,
+    new Map([...slotForNode].map(([id, slot]) => [id, stableSlotIndex.get(slot)!])), slots.length)
+  const positionsFor = (order: readonly ProcessSankeySlot[]): Int32Array => {
+    const positions = new Int32Array(slots.length)
+    for (let i = 0; i < order.length; i++) positions[stableSlotIndex.get(order[i])!] = i
+    return positions
   }
+  const routeByEdge = new Map([...edgeSlots].map(([edge, [source, target]]) => [edge, {
+    source: stableSlotIndex.get(source)!, target: stableSlotIndex.get(target)!,
+    weight: edge.value > 0 ? edge.value : 1,
+  }]))
+  const edgeRoutes = [...routeByEdge.values()]
 
   const outgoingPartners = new Map<string, Set<string>>()
   const incomingPartners = new Map<string, Set<string>>()
@@ -230,11 +223,7 @@ export function orderProcessSankeySlots(
     if (!isExclusiveHandoff(edge)) return []
     const route = routeByEdge.get(edge)
     if (!route || route.source === route.target) return []
-    return [{
-      source: route.source,
-      target: route.target,
-      weight: edge.value > 0 ? edge.value : 1,
-    }]
+    return [route]
   })
   const exclusiveSpanCostFromPositions = (positions: ArrayLike<number>): number => {
     let total = 0
@@ -245,27 +234,14 @@ export function orderProcessSankeySlots(
     }
     return total * exclusiveSpanUnit
   }
-  const exclusiveSpanCostForOrder = (order: readonly ProcessSankeySlot[]): number => {
-    const positions = new Int16Array(slots.length)
-    for (let i = 0; i < order.length; i++) {
-      positions[stableSlotIndex.get(order[i])!] = i
-    }
-    return exclusiveSpanCostFromPositions(positions)
-  }
-  const crossingRoutes = crossingPairs.map((pair) => {
-    const first = routeByEdge.get(pair.first)!
-    const second = routeByEdge.get(pair.second)!
-    return [first.source, first.target, second.source, second.target] as const
-  })
-  const fastPositions = new Int16Array(slots.length)
+  const exclusiveSpanCostForOrder = (order: readonly ProcessSankeySlot[]): number =>
+    exclusiveSpanCostFromPositions(positionsFor(order))
+  const fastPositions = new Int32Array(slots.length)
   const fastCenters = new Float64Array(slots.length)
   const fastPrefix = new Float64Array(slots.length + 1)
   const evaluateFastProxyCost = (order: readonly ProcessSankeySlot[]): number => {
     for (let i = 0; i < order.length; i++) fastPositions[stableSlotIndex.get(order[i])!] = i
-    let crossings = 0
-    for (const [as, at, bs, bt] of crossingRoutes) {
-      if ((fastPositions[as] - fastPositions[bs]) * (fastPositions[at] - fastPositions[bt]) < 0) crossings++
-    }
+    const crossings = crossingIndex.count(fastPositions)
     if (order.length > 0) {
       const first = stableSlotIndex.get(order[0])!
       fastCenters[first] = options.padding + order[0].peak.topPeak * options.valueScale
@@ -345,76 +321,49 @@ export function orderProcessSankeySlots(
       geometry,
       weightedLength: totalEdgeLength(map, edges),
       pixelLength: totalPixelEdgeLength(geometry.centerlines, edges),
-      transitOcclusion: transitDensityCost(order, map),
     }
   }
-  const finishMetrics = (
-    crossings: number,
-    secondary: ReturnType<typeof secondaryMetrics>,
+  const evaluate = (
     order: readonly ProcessSankeySlot[],
-  ): ProcessSankeyOrderMetrics => ({
-    crossings,
-    weightedLength: secondary.weightedLength,
-    pixelLength: secondary.pixelLength,
-    transitOcclusion: secondary.transitOcclusion,
-    cost: crossings * crossingPenalty + secondary.pixelLength +
-      secondary.transitOcclusion * averageGap +
-      exclusiveSpanCostForOrder(order) +
-      secondary.weightedLength * 1e-6,
-  })
-  const evaluate = (order: readonly ProcessSankeySlot[], knownCrossings?: number): ProcessSankeyOrderMetrics => {
+    knownCrossings?: number,
+    transitMode?: "score" | "quality",
+  ): ProcessSankeyOrderMetrics => {
     let crossings = knownCrossings
     if (crossings == null) {
-      const positions = new Map(order.map((slot, index) => [slot, index]))
-      crossings = crossingPairs.reduce((sum, pair) => sum + crossingForPair(pair, positions, edgeSlots), 0)
+      crossings = crossingIndex.count(positionsFor(order))
       evaluations.fullCrossing++
     }
-    return finishMetrics(crossings, secondaryMetrics(order), order)
+    const { map, geometry, weightedLength, pixelLength } = secondaryMetrics(order)
+    const transitOcclusion = transitMode ? measureTransitOcclusion(
+      edges, nodeData, order, map, geometry.centerlines, _laneLifetime,
+      { valueScale: options.valueScale, ribbonLane: options.ribbonLane, domain: options.domain, mode: transitMode },
+    ) : transitDensityCost(order, map)
+    return {
+      crossings, weightedLength, pixelLength, transitOcclusion,
+      cost: crossings * crossingPenalty + pixelLength + transitOcclusion * averageGap +
+        exclusiveSpanCostForOrder(order) + weightedLength * 1e-6,
+    }
   }
   const evaluateExactTransit = (
     order: readonly ProcessSankeySlot[],
     knownCrossings?: number,
-    /**
-     * `"score"` samples only the authored start/end of each ribbon (hot-loop).
-     * `"quality"` also samples intermediate mass events (final authority).
-     */
+    // Score uses ribbon endpoints in the hot loop; quality includes mass events.
     transitMode: "score" | "quality" = "quality",
-  ): ProcessSankeyOrderMetrics => {
-    let crossings = knownCrossings
-    if (crossings == null) {
-      const positions = new Map(order.map((slot, index) => [slot, index]))
-      crossings = crossingPairs.reduce((sum, pair) => sum + crossingForPair(pair, positions, edgeSlots), 0)
-      evaluations.fullCrossing++
-    }
-    const secondary = secondaryMetrics(order)
-    return finishMetrics(crossings, {
-      ...secondary,
-      transitOcclusion: measureTransitOcclusion(
-        edges, nodeData, order, secondary.map, secondary.geometry.centerlines, _laneLifetime,
-        {
-          valueScale: options.valueScale,
-          ribbonLane: options.ribbonLane,
-          domain: options.domain,
-          mode: transitMode,
-        },
-      ),
-    }, order)
-  }
+  ): ProcessSankeyOrderMetrics => evaluate(order, knownCrossings, transitMode)
 
   let order = [...initialOrder]
   const compareSlots = (a: ProcessSankeySlot, b: ProcessSankeySlot) =>
     compareProcessSankeyIds(stableId.get(a)!, stableId.get(b)!)
   const multiSlotBonded = hasMultiSlotBond(order)
 
-  const scalableReadabilityOrder = (input: readonly ProcessSankeySlot[]): ProcessSankeySlot[] => {
-    const candidate = orderByBarycenter(input, relations, (next) => evaluate(next).cost, {
-      passes: 6,
-      compare: compareSlots,
-      maxEvaluations: ORDERING_EVALUATION_BUDGET,
-    })
-    let current = evaluate(candidate)
-    let budget = ORDERING_EVALUATION_BUDGET
-    for (let pass = 0; pass < 6 && budget > 0; pass++) {
+  const transposeSlots = (
+    candidate: ProcessSankeySlot[],
+    score: (order: readonly ProcessSankeySlot[], crossings?: number) => ProcessSankeyOrderMetrics,
+    passes: number,
+    budget = ORDERING_EVALUATION_BUDGET,
+  ): ProcessSankeySlot[] => {
+    let current = score(candidate)
+    for (let pass = 0; pass < passes && budget > 0; pass++) {
       let improved = false
       const swapIndexes = Array.from({ length: candidate.length - 1 }, (_, i) => i)
       if (pass % 2 === 1) swapIndexes.reverse()
@@ -422,24 +371,10 @@ export function orderProcessSankeySlots(
         if (budget-- <= 0) break
         const first = candidate[i]
         const second = candidate[i + 1]
-        const positionsBefore = new Map(candidate.map((slot, index) => [slot, index]))
-        let affectedBefore = 0
-        const affected: CrossingPair[] = []
-        affectedGeneration++
-        for (const pair of [...(crossingPairsBySlot.get(first) ?? []), ...(crossingPairsBySlot.get(second) ?? [])]) {
-          if (affectedMarks[pair.index] === affectedGeneration) continue
-          affectedMarks[pair.index] = affectedGeneration
-          affected.push(pair)
-          affectedBefore += crossingForPair(pair, positionsBefore, edgeSlots)
-        }
+        const change = crossingIndex.swapDelta(stableSlotIndex.get(first)!, stableSlotIndex.get(second)!, positionsFor(candidate))
         ;[candidate[i], candidate[i + 1]] = [second, first]
-        const positionsAfter = new Map(positionsBefore)
-        positionsAfter.set(first, i + 1)
-        positionsAfter.set(second, i)
-        let affectedAfter = 0
-        for (const pair of affected) affectedAfter += crossingForPair(pair, positionsAfter, edgeSlots)
-        evaluations.localCrossing += affected.length
-        const next = evaluate(candidate, current.crossings - affectedBefore + affectedAfter)
+        evaluations.localCrossing += change.evaluations
+        const next = score(candidate, current.crossings + change.delta)
         if (next.cost < current.cost) {
           current = next
           improved = true
@@ -452,11 +387,20 @@ export function orderProcessSankeySlots(
     return candidate
   }
 
+  const scalableReadabilityOrder = (input: readonly ProcessSankeySlot[]): ProcessSankeySlot[] => {
+    const candidate = orderByBarycenter(input, relations, (next) => evaluate(next).cost, {
+      passes: 6,
+      compare: compareSlots,
+      maxEvaluations: ORDERING_EVALUATION_BUDGET,
+    })
+    return transposeSlots(candidate, evaluate, 6)
+  }
+
   const readabilityOrder = (input: readonly ProcessSankeySlot[]): ProcessSankeySlot[] => {
     const scalableCandidate = scalableReadabilityOrder(input)
     const exactWork = input.length <= BRUTE_FORCE_MAX
       ? permutationCount(input.length) * (
-        input.length + edgeRoutes.length + crossingRoutes.length
+        input.length + edgeRoutes.length + crossingIndex.work
       )
       : Infinity
     if (exactWork > BRUTE_FORCE_WORK_MAX) return scalableCandidate
@@ -519,7 +463,7 @@ export function orderProcessSankeySlots(
     // a handful of units (e.g. a 3-slot feeder block + a few shared rows).
     const exactWork = units.length <= BRUTE_FORCE_MAX
       ? permutationCount(units.length) * (
-        units.length + edgeRoutes.length + crossingRoutes.length
+        units.length + edgeRoutes.length + crossingIndex.work
       )
       : Infinity
     if (exactWork <= BRUTE_FORCE_WORK_MAX) {
@@ -548,6 +492,13 @@ export function orderProcessSankeySlots(
     return flattenBondedUnits(units)
   }
 
+  const unitSize = (unit: BondedSlotUnit) =>
+    unit.slots.reduce((sum, slot) => sum + slot.peak.topPeak + slot.peak.botPeak, 0)
+  const compareUnitSize = (a: BondedSlotUnit, b: BondedSlotUnit) =>
+    unitSize(b) - unitSize(a) || compareProcessSankeyIds(a.stableId, b.stableId)
+  const compareSlotSize = (a: ProcessSankeySlot, b: ProcessSankeySlot) =>
+    (b.peak.topPeak + b.peak.botPeak) - (a.peak.topPeak + a.peak.botPeak) || compareSlots(a, b)
+
   const geometryRefineOnly = options.mode === "geometry-refine"
 
   // Geometry-refine skips barycenter / exact permutation / inside-out and only
@@ -558,37 +509,11 @@ export function orderProcessSankeySlots(
   } else if (!geometryRefineOnly && options.laneOrder === "inside-out") {
     if (multiSlotBonded) {
       const units = bondedSlotUnits(order)
-      const unitSize = (unit: BondedSlotUnit) =>
-        unit.slots.reduce((sum, slot) => sum + slot.peak.topPeak + slot.peak.botPeak, 0)
-      const ranked = [...units].sort((a, b) =>
-        unitSize(b) - unitSize(a) || compareProcessSankeyIds(a.stableId, b.stableId),
-      )
-      const arranged = new Array<BondedSlotUnit>(ranked.length)
-      let above = Math.floor((ranked.length - 1) / 2) - 1
-      let below = Math.floor((ranked.length - 1) / 2) + 1
-      if (ranked.length > 0) arranged[Math.floor((ranked.length - 1) / 2)] = ranked[0]
-      for (let i = 1; i < ranked.length; i++) {
-        if (i % 2 === 1 && below < ranked.length) arranged[below++] = ranked[i]
-        else if (above >= 0) arranged[above--] = ranked[i]
-        else arranged[below++] = ranked[i]
-      }
-      order = flattenBondedUnits(arranged)
+      const ranked = [...units].sort(compareUnitSize)
+      order = flattenBondedUnits(insideOut(ranked))
     } else {
-      const ranked = [...order].sort((a, b) => {
-        const sizeA = a.peak.topPeak + a.peak.botPeak
-        const sizeB = b.peak.topPeak + b.peak.botPeak
-        return sizeB - sizeA || compareSlots(a, b)
-      })
-      const arranged = new Array<ProcessSankeySlot>(ranked.length)
-      let above = Math.floor((ranked.length - 1) / 2) - 1
-      let below = Math.floor((ranked.length - 1) / 2) + 1
-      if (ranked.length > 0) arranged[Math.floor((ranked.length - 1) / 2)] = ranked[0]
-      for (let i = 1; i < ranked.length; i++) {
-        if (i % 2 === 1 && below < ranked.length) arranged[below++] = ranked[i]
-        else if (above >= 0) arranged[above--] = ranked[i]
-        else arranged[below++] = ranked[i]
-      }
-      order = arranged
+      const ranked = [...order].sort(compareSlotSize)
+      order = insideOut(ranked)
     }
   }
 
@@ -599,54 +524,12 @@ export function orderProcessSankeySlots(
     // Multi-slot bonds move as whole units so center bias cannot split a block.
     if (multiSlotBonded) {
       const units = bondedSlotUnits(order)
-      let current = evaluate(flattenBondedUnits(units))
-      let best = flattenBondedUnits(units)
-      let bestMetrics = current
-      const middle = Math.floor((units.length - 1) / 2)
-      const unitSize = (unit: BondedSlotUnit) =>
-        unit.slots.reduce((sum, slot) => sum + slot.peak.topPeak + slot.peak.botPeak, 0)
-      const ranked = [...units].sort((a, b) =>
-        unitSize(b) - unitSize(a) || compareProcessSankeyIds(a.stableId, b.stableId),
-      )
-      for (const unit of ranked) {
-        const currentIndex = units.indexOf(unit)
-        if (currentIndex === middle) continue
-        units.splice(currentIndex, 1)
-        units.splice(middle, 0, unit)
-        const flat = flattenBondedUnits(units)
-        const next = evaluate(flat)
-        if (next.cost <= current.cost) {
-          current = next
-          if (next.cost < bestMetrics.cost) { best = flat; bestMetrics = next }
-        } else {
-          units.splice(middle, 1)
-          units.splice(currentIndex, 0, unit)
-        }
-      }
-      order = best
+      const ranked = [...units].sort(compareUnitSize)
+      order = flattenBondedUnits(refineCenter(units, ranked,
+        (candidate) => evaluate(flattenBondedUnits(candidate)).cost))
     } else {
-      let current = evaluate(order)
-      let best = [...order]
-      let bestMetrics = current
-      const middle = Math.floor((order.length - 1) / 2)
-      const ranked = [...order].sort((a, b) =>
-        (b.peak.topPeak + b.peak.botPeak) - (a.peak.topPeak + a.peak.botPeak) || compareSlots(a, b),
-      )
-      for (const slot of ranked) {
-        const currentIndex = order.indexOf(slot)
-        if (currentIndex === middle) continue
-        order.splice(currentIndex, 1)
-        order.splice(middle, 0, slot)
-        const next = evaluate(order)
-        if (next.cost <= current.cost) {
-          current = next
-          if (next.cost < bestMetrics.cost) { best = [...order]; bestMetrics = next }
-        } else {
-          order.splice(middle, 1)
-          order.splice(currentIndex, 0, slot)
-        }
-      }
-      order = best
+      const ranked = [...order].sort(compareSlotSize)
+      order = refineCenter(order, ranked, (candidate) => evaluate(candidate).cost)
     }
   }
 
@@ -662,57 +545,14 @@ export function orderProcessSankeySlots(
     // re-introduce foreign rows inside a block. Sole search step for
     // mode="geometry-refine" (post-scale M3).
     if (multiSlotBonded) {
-      let units = bondedSlotUnits(order)
-      let current = evaluateExactTransit(flattenBondedUnits(units), undefined, "score")
-      for (let pass = 0; pass < 6 && units.length > 1; pass++) {
-        let improved = false
-        for (let i = 0; i < units.length - 1; i++) {
-          ;[units[i], units[i + 1]] = [units[i + 1], units[i]]
-          const candidate = flattenBondedUnits(units)
-          const next = evaluateExactTransit(candidate, undefined, "score")
-          if (next.cost < current.cost) {
-            order = candidate
-            current = next
-            improved = true
-          } else {
-            ;[units[i], units[i + 1]] = [units[i + 1], units[i]]
-          }
-        }
-        if (!improved) break
-      }
+      let units = refineByAdjacentSwaps(bondedSlotUnits(order), (candidate) =>
+        evaluateExactTransit(flattenBondedUnits(candidate), undefined, "score").cost,
+      { passes: 6 })
       // Final within-block alignment after unit positions settle.
-      units = orderWithinBondedUnits(bondedSlotUnits(order), relations, compareSlots)
+      units = orderWithinBondedUnits(units, relations, compareSlots)
       order = flattenBondedUnits(units)
     } else {
-      let current = evaluateExactTransit(order, undefined, "score")
-      for (let i = 0; i < order.length - 1; i++) {
-        const first = order[i]
-        const second = order[i + 1]
-        const positionsBefore = new Map(order.map((slot, index) => [slot, index]))
-        let affectedBefore = 0
-        const affected: CrossingPair[] = []
-        affectedGeneration++
-        for (const pair of [...(crossingPairsBySlot.get(first) ?? []), ...(crossingPairsBySlot.get(second) ?? [])]) {
-          if (affectedMarks[pair.index] === affectedGeneration) continue
-          affectedMarks[pair.index] = affectedGeneration
-          affected.push(pair)
-          affectedBefore += crossingForPair(pair, positionsBefore, edgeSlots)
-        }
-        ;[order[i], order[i + 1]] = [second, first]
-        const positionsAfter = new Map(positionsBefore)
-        positionsAfter.set(first, i + 1)
-        positionsAfter.set(second, i)
-        let affectedAfter = 0
-        for (const pair of affected) affectedAfter += crossingForPair(pair, positionsAfter, edgeSlots)
-        evaluations.localCrossing += affected.length
-        const next = evaluateExactTransit(
-          order,
-          current.crossings - affectedBefore + affectedAfter,
-          "score",
-        )
-        if (next.cost < current.cost) current = next
-        else [order[i], order[i + 1]] = [first, second]
-      }
+      transposeSlots(order, (candidate, crossings) => evaluateExactTransit(candidate, crossings, "score"), 1, Infinity)
     }
   }
 

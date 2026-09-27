@@ -74,13 +74,14 @@ function adjacencyFor(
 function connectedComponents(adjacency: Map<string, Set<string>>): string[][] {
   const remaining = new Set(adjacency.keys())
   const components: string[][] = []
-  while (remaining.size > 0) {
-    const seed = stableIds(remaining)[0]
+  // Sort seeds once, including when every station is disconnected.
+  for (const seed of stableIds(remaining)) {
+    if (!remaining.has(seed)) continue
     const queue = [seed]
     const component: string[] = []
     remaining.delete(seed)
-    while (queue.length > 0) {
-      const id = queue.shift() as string
+    for (let head = 0; head < queue.length; head++) {
+      const id = queue[head]
       component.push(id)
       for (const neighbor of stableIds(adjacency.get(id) ?? [])) {
         if (!remaining.has(neighbor)) continue
@@ -100,8 +101,8 @@ function distancesFrom(
 ): Map<string, number> {
   const distances = new Map([[start, 0]])
   const queue = [start]
-  while (queue.length > 0) {
-    const id = queue.shift() as string
+  for (let head = 0; head < queue.length; head++) {
+    const id = queue[head]
     const depth = distances.get(id) as number
     for (const neighbor of stableIds(adjacency.get(id) ?? [])) {
       if (!component.has(neighbor) || distances.has(neighbor)) continue
@@ -118,9 +119,18 @@ function farthest(
   adjacency: Map<string, Set<string>>,
 ): string {
   const distances = distancesFrom(start, component, adjacency)
-  return [...distances.entries()].sort(
-    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-  )[0][0]
+  let result = start
+  let maximum = -1
+  for (const [id, depth] of distances) {
+    if (
+      depth > maximum ||
+      (depth === maximum && id.localeCompare(result) < 0)
+    ) {
+      result = id
+      maximum = depth
+    }
+  }
+  return result
 }
 
 function orderedLevels(
@@ -136,7 +146,8 @@ function orderedLevels(
       ? preferredRoot
       : farthest(farthest(seed, component, adjacency), component, adjacency)
   const depths = distancesFrom(root, component, adjacency)
-  const maxDepth = Math.max(0, ...depths.values())
+  let maxDepth = 0
+  for (const depth of depths.values()) maxDepth = Math.max(maxDepth, depth)
   const levels = Array.from({ length: maxDepth + 1 }, () => [] as string[])
   for (const id of componentIds) levels[depths.get(id) ?? 0].push(id)
   levels.forEach((level) => level.sort((a, b) => a.localeCompare(b)))
@@ -151,8 +162,9 @@ function orderedLevels(
         ? Number.POSITIVE_INFINITY
         : indexes.reduce((sum, index) => sum + index, 0) / indexes.length
     }
+    const centers = new Map(levels[levelIndex].map((id) => [id, barycenter(id)]))
     levels[levelIndex].sort(
-      (a, b) => barycenter(a) - barycenter(b) || a.localeCompare(b),
+      (a, b) => centers.get(a)! - centers.get(b)! || a.localeCompare(b),
     )
   }
 
@@ -249,12 +261,16 @@ export function computeTransitDiagramPositions(
     }
   }
 
-  const xs = authored.map((node) => node.authoredX as number)
-  const ys = authored.map((node) => node.authoredY as number)
-  const minX = Math.min(...xs)
-  const maxX = Math.max(...xs)
-  const minY = Math.min(...ys)
-  const maxY = Math.max(...ys)
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity
+  for (const node of authored) {
+    minX = Math.min(minX, node.authoredX as number)
+    maxX = Math.max(maxX, node.authoredX as number)
+    minY = Math.min(minY, node.authoredY as number)
+    maxY = Math.max(maxY, node.authoredY as number)
+  }
   const innerWidth = Math.max(1, plot.width - padding * 2)
   const innerHeight = Math.max(1, plot.height - padding * 2)
   const projectAuthoredPoint = (point: TransitDiagramPoint): TransitDiagramPoint => ({

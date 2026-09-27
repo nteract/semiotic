@@ -1,6 +1,6 @@
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type {
   NetworkArcNode,
   NetworkCircleNode,
@@ -52,6 +52,38 @@ function wrappedEdge(data: Record<string, unknown>): RealtimeEdge {
 }
 
 describe("computeTransitDiagramPositions", () => {
+  it("lays out many disconnected stations without repeatedly sorting the remaining graph", () => {
+    const nodes = Array.from({ length: 2000 }, (_, i) => ({
+      id: `station-${i}`,
+      data: { i }
+    }))
+    const comparisons = vi.spyOn(String.prototype, "localeCompare")
+    let result: ReturnType<typeof computeTransitDiagramPositions>
+    let count: number
+    try {
+      result = computeTransitDiagramPositions(nodes, [], plot, {
+        layoutMode: "automatic"
+      })
+      count = comparisons.mock.calls.length
+    } finally {
+      comparisons.mockRestore()
+    }
+    expect(count!).toBeLessThan(100000)
+    expect(result!.positions.size).toBe(nodes.length)
+    for (const position of result!.positions.values()) {
+      expect(position.x).toBe(plot.width / 2)
+      expect(position.y).toBeGreaterThanOrEqual(0)
+      expect(position.y).toBeLessThanOrEqual(plot.height)
+    }
+    const reversed = computeTransitDiagramPositions(
+      [...nodes].reverse(),
+      [],
+      plot,
+      { layoutMode: "automatic" }
+    )
+    expect([...reversed.positions]).toEqual([...result!.positions])
+  })
+
   it("fits complete authored coordinates into the plot", () => {
     const result = computeTransitDiagramPositions(
       [

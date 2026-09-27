@@ -133,6 +133,7 @@ export class ProcessSankeyLayoutWorkerSession {
   constructor(worker: Worker = createProcessSankeyLayoutWorker()) {
     this.session = new ModuleWorkerSession({
       name: "ProcessSankey layout",
+      terminateOnAbort: true,
       createWorker: () => worker,
       parseMessage: (data) => {
         const response = data as WireResponse

@@ -2359,8 +2359,10 @@ interface-member StreamNetworkFrameHandle::method::pushMany = required pushMany(
 interface-member StreamNetworkFrameHandle::method::relayout = required relayout(): void
 interface-member StreamNetworkFrameHandle::method::removeEdge = required removeEdge(sourceIdOrEdgeId: string, targetId?: string | undefined): boolean
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
+interface-member StreamNetworkFrameHandle::method::removeNodes = optional removeNodes(ids: string[]): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
+interface-member StreamNetworkFrameHandle::method::updateNodes = optional updateNodes(ids: string[], updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamNetworkFrameProps::property::animate = optional animate: AnimateProp | undefined
 interface-member StreamNetworkFrameProps::property::background = optional background: string | undefined

@@ -2,200 +2,95 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { scaleTime } from "d3-scale"
 import {
-  buildProcessSankeyScenes,
-  type BuildScenesInput,
-  type BuildScenesResult,
+  buildProcessSankeyScenes, prepareProcessSankeyLayout,
+  type BuildScenesInput, type BuildScenesResult, type PreparedProcessSankeyLayout,
 } from "./buildScenes"
-import { buildProcessSankeyScenesAsync } from "./processSankeyLayoutAsync"
 import {
-  canUseProcessSankeyWorker,
-  processSankeyNeedsMainThread,
-  shouldUseProcessSankeyWorker,
+  canUseProcessSankeyWorker, shouldUseProcessSankeyWorker, runProcessSankeyLayoutWorker,
   type ProcessSankeyLayoutExecution,
 } from "./processSankeyLayoutWorkerClient"
 import { useWasHydratingFromSSR } from "../../../stream/useHydration"
-import type { Datum } from "../../shared/datumTypes"
 
 export type ProcessSankeyLayoutStatus = "pending" | "ready" | "error"
-
 export interface UseProcessSankeyScenesResult extends BuildScenesResult {
   status: ProcessSankeyLayoutStatus
   error: Error | null
 }
-
 export interface UseProcessSankeyScenesOptions {
   execution?: ProcessSankeyLayoutExecution
   workerThreshold?: number
-  colorById: Record<string, string>
-  fallbackPalette?: string[]
-  rawNodeById?: ReadonlyMap<string, Datum>
-  rawEdgeById?: ReadonlyMap<string, Datum>
-}
 
-const emptyResult = (domain: [number, number], timelineExtent: number): BuildScenesResult => ({
-  layout: null,
-  layoutConfig: { bands: [], ribbons: [], showLabels: true },
-  issues: [],
-  warnings: [],
-  xScale: scaleTime().domain(domain).range([0, timelineExtent]),
+}
+const emptyResult = (domain: [number, number], extent: number): BuildScenesResult => ({
+  layout: null, layoutConfig: { bands: [], ribbons: [], showLabels: true },
+  issues: [], warnings: [], xScale: scaleTime().domain(domain).range([0, extent]),
 })
 
-function wantsWorker(
-  input: BuildScenesInput,
-  execution: ProcessSankeyLayoutExecution,
-  workerThreshold?: number,
-): boolean {
-  if (typeof window === "undefined") return false
-  if (!canUseProcessSankeyWorker()) return false
-  if (processSankeyNeedsMainThread(input)) return false
-  return shouldUseProcessSankeyWorker(
-    execution,
-    input.nodes.length,
-    input.edges.length,
-    input.layoutOpts.packing ?? "reuse",
-    input.layoutOpts.laneOrder ?? "crossing-min",
-    workerThreshold,
-  )
+/** Only derived analysis values cross the geometry cache/worker boundary. */
+function geometryInput(input: BuildScenesInput | null) {
+  return input ? {
+    nodes: input.nodes.map(({ id, group, xExtent }) => ({ id, group, xExtent })),
+    edges: input.edges.map(({ id, source, target, value, startTime, endTime, systemInTime, systemOutTime }) =>
+      ({ id, source, target, value, startTime, endTime, systemInTime, systemOutTime })),
+    domain: input.domain, plotW: 1,
+    plotH: input.orientation === "vertical" ? input.plotW : input.plotH,
+    ribbonLane: input.ribbonLane, usageMode: input.usageMode, layoutOpts: input.layoutOpts,
+    colorOf: () => "#475569", edgeOpacity: 0.35, showLabels: false,
+  } : null
 }
 
-/**
- * React lifecycle wrapper for ProcessSankey scene construction.
- *
- * - **Sync path** (SSR, cheap graphs, `execution: "sync"`, predicate styleRules):
- *   `buildProcessSankeyScenes` runs during render via `useMemo` so prop updates
- *   paint immediately — no one-frame lag on the previous scene.
- * - **Worker path** (costly client layouts): previous ready scene stays painted
- *   while status is `"pending"`; settles to worker (or sync-fallback) result.
- */
-export function useProcessSankeyScenes(
-  input: BuildScenesInput | null,
-  options: UseProcessSankeyScenesOptions,
-): UseProcessSankeyScenesResult {
-  const wasHydratingFromSSR = useWasHydratingFromSSR()
-  const {
-    execution = "auto",
-    workerThreshold,
-    colorById,
-    fallbackPalette,
-    rawNodeById,
-    rawEdgeById,
-  } = options
-
-  const colorByIdKey = useMemo(
-    () =>
-      Object.keys(colorById)
-        .sort()
-        .map((id) => `${id}:${colorById[id]}`)
-        .join("|"),
-    [colorById],
-  )
-
-  const stableKey = useMemo(() => {
-    if (!input) return "null"
-    return [
-      input.nodes,
-      input.edges,
-      input.plotW,
-      input.plotH,
-      input.orientation ?? "horizontal",
-      input.ribbonLane,
-      String(input.ribbonMinRun ?? 0),
-      input.edgeOpacity,
-      String(input.showLabels ?? true),
-      input.layoutOpts.pairing ?? "temporal",
-      input.layoutOpts.packing ?? "reuse",
-      input.layoutOpts.laneOrder ?? "crossing-min",
-      input.layoutOpts.lifetimeMode ?? "half",
-      input.layoutOpts.maxValueScale ?? "",
-      input.layoutOpts.lanePlacement ?? "stack",
-      input.layoutOpts.nodeSizing ?? "temporal",
-      input.layoutOpts.groupPadding ?? 0,
-      input.domain[0],
-      input.domain[1],
-      input.styleRules,
-      colorByIdKey,
-    ]
-  }, [input, colorByIdKey])
-
-  // Worker only on client after the SSR-hydration-safe first paint.
-  const useWorkerPath =
-    !!input &&
-    !wasHydratingFromSSR &&
-    wantsWorker(input, execution, workerThreshold)
-
-  // Sync path — always ready for this key when not using the worker.
-  const syncScenes = useMemo((): BuildScenesResult | null => {
-    if (!input) {
-      return emptyResult([0, 1], 1)
-    }
-    if (useWorkerPath) return null
-    return buildProcessSankeyScenes(input)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- stableKey encodes input
-  }, [stableKey, useWorkerPath, input])
-
-  const skipHydrationWorker = useRef(wasHydratingFromSSR)
-  const [asyncResult, setAsyncResult] = useState<UseProcessSankeyScenesResult>(() => {
-    if (!input) {
-      return { ...emptyResult([0, 1], 1), status: "ready", error: null }
-    }
-    // First hydration: seed with sync so markup matches SSR.
-    if (wasHydratingFromSSR) {
-      return { ...buildProcessSankeyScenes(input), status: "ready", error: null }
-    }
-    if (!useWorkerPath) {
-      return { ...buildProcessSankeyScenes(input), status: "ready", error: null }
-    }
-    return {
-      ...emptyResult(
-        input.domain,
-        input.orientation === "vertical" ? input.plotH : input.plotW,
-      ),
-      status: "pending",
-      error: null,
-    }
-  })
-
+/** Reuse analysis across presentation changes; keep the latest committed scene while workers run. */
+export function useProcessSankeyScenes(input: BuildScenesInput | null, options: UseProcessSankeyScenesOptions): UseProcessSankeyScenesResult {
+  const { execution = "auto", workerThreshold } = options
+  const geometry = geometryInput(input)
+  const key = JSON.stringify(geometry, (_key, value: unknown) =>
+    typeof value === "number" && !Number.isFinite(value) ? String(value) : value)
+  const wasHydrating = useWasHydratingFromSSR()
+  const hydrationKey = useRef(wasHydrating ? key : null)
+  // Serialization includes all analysis inputs. Presentation uses current input below.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const layoutInput = useMemo(() => geometry, [key])
+  const useWorker = !!layoutInput && hydrationKey.current !== key &&
+    typeof window !== "undefined" && canUseProcessSankeyWorker() &&
+    shouldUseProcessSankeyWorker(execution, layoutInput.nodes.length, layoutInput.edges.length,
+      layoutInput.layoutOpts.packing ?? "reuse", layoutInput.layoutOpts.laneOrder ?? "crossing-min", workerThreshold)
+  const sync = useMemo(() => layoutInput && !useWorker ? prepareProcessSankeyLayout(layoutInput) : null,
+    [layoutInput, useWorker])
+  const [asyncResult, setAsyncResult] = useState<{
+    key: string; prepared: PreparedProcessSankeyLayout | null; error: Error | null
+  } | null>(null)
+  const committed = useRef<{ key: string; prepared: PreparedProcessSankeyLayout; scene: BuildScenesResult } | null>(null)
+  const matched = asyncResult?.key === key ? asyncResult : null
+  const prepared = sync ?? matched?.prepared ?? (committed.current?.key === key ? committed.current.prepared : null)
+  const scene = useMemo(() => input && prepared ? buildProcessSankeyScenes(input, prepared) : null, [input, prepared])
   useEffect(() => {
-    if (skipHydrationWorker.current) {
-      skipHydrationWorker.current = false
-      return
-    }
-    if (!input || !useWorkerPath) return
-
+    if (scene && prepared) committed.current = { key, prepared, scene }
+    if (!input) committed.current = null
+  }, [key, scene, prepared, input])
+  useEffect(() => {
+    if (!layoutInput || !useWorker || committed.current?.key === key) return
     const controller = new AbortController()
-    setAsyncResult((current) => ({
-      ...current,
-      status: "pending",
-      error: null,
-    }))
-
-    buildProcessSankeyScenesAsync(input, {
-      execution,
-      workerThreshold,
-      signal: controller.signal,
-      colorById,
-      fallbackPalette,
-      rawNodeById,
-      rawEdgeById,
-    })
-      .then((scenes) => {
-        setAsyncResult({ ...scenes, status: "ready", error: null })
+    // The geometry input already excludes raw records and presentation callbacks.
+    // Only the host-side color resolver needs to be omitted at this boundary.
+    const wire = { ...layoutInput, colorOf: undefined }
+    runProcessSankeyLayoutWorker({ input: wire, colorById: {}, fallbackPalette: ["#475569"] }, controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setAsyncResult({ key, prepared: { layout: result.layout, issues: result.issues, warnings: result.warnings }, error: null })
       })
       .catch((error: Error) => {
-        if (error.name === "AbortError") return
-        setAsyncResult((current) => ({
-          ...current,
-          status: "error",
-          error,
-        }))
+        if (controller.signal.aborted || error.name === "AbortError") return
+        try {
+          setAsyncResult({ key, prepared: prepareProcessSankeyLayout(layoutInput), error: null })
+        } catch (fallbackError) {
+          setAsyncResult({ key, prepared: null, error: fallbackError as Error })
+        }
       })
-
     return () => controller.abort()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stableKey, useWorkerPath, execution, workerThreshold, fallbackPalette, rawNodeById, rawEdgeById])
-
-  if (syncScenes) {
-    return { ...syncScenes, status: "ready", error: null }
+  }, [key, layoutInput, useWorker, execution, workerThreshold])
+  if (!input) return { ...emptyResult([0, 1], 1), status: "ready", error: null }
+  return {
+    ...(scene ?? committed.current?.scene ?? emptyResult(input.domain, input.orientation === "vertical" ? input.plotH : input.plotW)),
+    status: prepared ? "ready" : matched?.error ? "error" : "pending",
+    error: matched?.error ?? null,
   }
-  return asyncResult
 }
