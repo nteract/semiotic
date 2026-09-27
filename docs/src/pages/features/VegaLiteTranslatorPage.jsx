@@ -444,6 +444,31 @@ const { componentName, props } = fromConfig(config)`} />
 
       {/* ── Limitations ────────────────────────────────────────────────── */}
       <section>
+        <h2>Aggregation</h2>
+        <p>
+          Encoding aggregates support sum, mean (or average), count, min, and
+          max. All nonaggregated encoding fields remain grouping dimensions,
+          including color and size. Numeric and Date group keys retain their
+          types. Numeric aggregates ignore missing, blank, nonnumeric, and
+          nonfinite measures; an all-missing group has a null result. Count
+          includes every source row. Output accessors use an unused field name
+          so a category or series named <code>value</code> is preserved.
+        </p>
+        <p>
+          Histograms receive the original observations, including repeated
+          values. Combining binning with an aggregate other than count, or
+          requesting an unsupported aggregate such as median, produces a warning.
+          The experimental <code>unstable_fromVegaLiteResult</code> API refuses
+          these requests in strict mode and reports the loss in lossy mode.
+        </p>
+        <p>
+          For direct aggregation, <code>rollup</code> from <code>semiotic/data</code>{" "}
+          accepts a field or an array of fields as <code>groupBy</code>. Its
+          output field defaults to <code>value</code>; set <code>outputField</code>{" "}
+          when that name is already a grouping field. A collision throws an error.
+        </p>
+      </section>
+      <section>
         <h2>Limitations</h2>
         <ul>
           <li>

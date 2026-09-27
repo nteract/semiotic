@@ -139,7 +139,7 @@ describe("rollup", () => {
     expect(rollup([], { groupBy: "region", value: "sales", agg })).toEqual([])
   })
 
-  it("preserves first-seen group order and numeric coercion", () => {
+  it("preserves first-seen group order and types without coercing missing measures", () => {
     const rows = [
       { group: 2, amount: "3" },
       { group: "1", amount: null },
@@ -147,14 +147,15 @@ describe("rollup", () => {
       { group: "__proto__", amount: "7" }
     ]
     expect(rollup(rows, { groupBy: "group", value: "amount" })).toEqual([
-      { group: "2", value: 4 }, { group: "1", value: 0 }, { group: "__proto__", value: 7 }
+      { group: 2, value: 3 }, { group: "1", value: null },
+      { group: "2", value: null }, { group: "__proto__", value: 7 }
     ])
   })
 
   it.each([
-    ["sum", NaN, NaN], ["mean", NaN, NaN], ["count", 3, 1],
-    ["min", 2, Infinity], ["max", 4, -Infinity]
-  ] as const)("preserves invalid-value behavior for %s", (agg, mixed, invalid) => {
+    ["sum", 6, null], ["mean", 3, null], ["count", 3, 1],
+    ["min", 2, null], ["max", 4, null]
+  ] as const)("skips invalid measures and discloses empty groups for %s", (agg, mixed, invalid) => {
     const rows = [
       { group: "mixed", amount: 2 }, { group: "mixed", amount: "invalid" },
       { group: "mixed", amount: 4 }, { group: "invalid", amount: undefined }

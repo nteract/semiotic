@@ -14,6 +14,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Aggregation preserves typed grouping keys and all Vega-Lite series dimensions,
+  excludes missing and invalid numeric measures, and returns `null` for groups
+  without numeric observations. `rollup` accepts multiple grouping fields and
+  an explicit `outputField`; importers choose collision-free output accessors.
+  Vega-Lite and Flint share the same aggregation engine, including count, mean,
+  sum, min, and max. Unsupported aggregates warn and remain in Flint metadata;
+  strict Vega-Lite imports refuse them. The related audit covers numeric/Date
+  keys, prototype-shaped fields, empty/malformed inputs, 200,000-row aggregation,
+  heatmap/pie/bubble measures, and direct bin missing-value handling. Verification
+  includes bounded/pushed chart hover through resize and data replacement in
+  Chromium/WebKit, and ESM/CommonJS data, root, AI, experimental, and server
+  entries. (#1382)
+- Vega-Lite histogram imports and round trips retain repeated source observations
+  and category grouping. Binned counts produce the original distribution;
+  unsupported binned aggregates are refused in strict mode and reported as losses
+  in lossy mode. Coverage verifies source rows, rendered bin proportions, and
+  actual count tooltips across browser and server rendering. (#1385)
+
 - Statistical trends and forecasts retain full precision for timestamp, Date,
   and small-value data. Polynomial forecasts evaluate the fitted coefficients
   correctly, and ordinal trends follow displayed category order. Equivalent

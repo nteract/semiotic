@@ -60,6 +60,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         main: resolve(integrationRoot, "index.html"),
+        aggregationRegressions: resolve(integrationRoot, "aggregation-regressions/index.html"),
         accessibility: resolve(integrationRoot, "accessibility-examples/index.html"),
         accessibilityRegressions: resolve(integrationRoot, "accessibility-regression-examples/index.html"),
         backgroundGraphics: resolve(integrationRoot, "background-graphics-examples/index.html"),

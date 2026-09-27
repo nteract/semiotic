@@ -10,7 +10,7 @@ function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function groupBy<T extends Datum>(data: T[], options: {key: string; fields?: string[];}): {id: string; coordinates: Datum[];}[]
 function mergeData<T extends Datum>(features: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[], data: T[], options: {featureKey: string; dataKey: string;}): import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[]
 function pivot<T extends Datum>(data: T[], options: {columns: string[]; nameField?: string; valueField?: string;}): Datum[]
-function rollup<T extends Datum>(data: T[], options: {groupBy: string; value: string; agg?: "count" | "max" | "mean" | "min" | "sum";}): Datum[]
+function rollup<T extends Datum>(data: T[], options: {groupBy: string | string[]; value: string; agg?: "count" | "max" | "mean" | "min" | "sum"; outputField?: string;}): Datum[]
 interface ArrowColumnLike
 interface ArrowFieldLike
 interface ArrowSchemaLike

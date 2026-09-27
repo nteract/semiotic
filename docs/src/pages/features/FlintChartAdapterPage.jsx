@@ -331,6 +331,14 @@ export default function FlintChartAdapterPage() {
       )}
 
       <h2>Usage</h2>
+      <p>
+        Aggregates support count, sum, mean (or average), min, and max. Numeric
+        aggregates ignore missing, blank, nonnumeric, and nonfinite measures;
+        groups with no numeric observations retain a null result. Count includes
+        every row. Group keys keep their types, and generated value accessors
+        avoid overwriting category or series fields. Unsupported aggregates
+        produce a warning and remain in <code>flint.unmappedEncodings</code>.
+      </p>
       <CodeBlock language="ts">
         {`import { unstable_fromFlintChart } from "semiotic/experimental"
 

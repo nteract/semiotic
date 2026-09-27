@@ -7,7 +7,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  * with basic encodings. No layers, facets, selections, or complex transforms.
  */
 import type { ChartConfig } from "../export/chartConfig"
-import { rollup } from "./transforms"
+import { aggregateVegaLite, vegaLiteAggregationDiagnostics } from "./vegaLiteAggregation"
 import type {
   PortabilityDiagnostic,
   PortabilityImportResult,
@@ -170,6 +170,7 @@ function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
     })
   }
 
+  diagnostics.push(...vegaLiteAggregationDiagnostics(normalized))
   return diagnostics
 }
 
@@ -205,17 +206,6 @@ const CURVE_MAP: Record<string, string> = {
   "catmull-rom": "catmullRom",
 }
 
-/** Map Vega-Lite aggregate names to rollup agg names */
-const AGG_MAP: Record<string, "sum" | "mean" | "count" | "min" | "max"> = {
-  sum: "sum",
-  mean: "mean",
-  average: "mean",
-  count: "count",
-  min: "min",
-  max: "max",
-  median: "mean", // approximate
-}
-
 // ── Main ─────────────────────────────────────────────────────────────────
 
 export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[] } {
@@ -225,7 +215,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   spec = unwrapIDIDEnrichedVegaLiteSpec(spec)
   const warnings: string[] = []
   const { type: markType, markProps } = normalizeMark(spec.mark)
-  const enc = spec.encoding || {}
+  const { data, encoding: enc } = aggregateVegaLite(spec, warnings)
   const x = enc.x
   const y = enc.y
   const color = enc.color
@@ -234,10 +224,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   const opacity = enc.opacity
 
   // Data handling
-  let data: Datum[] | undefined
-  if (spec.data?.values) {
-    data = spec.data.values
-  } else if (spec.data?.url) {
+  if (!data && spec.data?.url) {
     warnings.push("data.url is not supported — only inline data.values can be translated. Provide data manually.")
   }
 
@@ -285,39 +272,6 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
     props.pointOpacity = opacity.value
   }
 
-  // Pre-aggregate data if needed
-  const xAgg = x?.aggregate
-  const yAgg = y?.aggregate
-  if (data && (xAgg || yAgg)) {
-    const aggField = yAgg ? y! : x!
-    const groupField = yAgg ? x : y
-    const aggName = AGG_MAP[aggField.aggregate!]
-
-    if (aggName && groupField?.field && aggField.field) {
-      data = rollup(data, {
-        groupBy: groupField.field,
-        value: aggField.field,
-        agg: aggName,
-      })
-      // rollup outputs { [groupBy]: key, value: aggregated }
-      // Update the accessor for the aggregated field
-      if (yAgg) {
-        // y was aggregated, its accessor is now "value"
-        // We'll set this below per component type
-      }
-    } else if (aggName === "count" || aggField.aggregate === "count") {
-      // count aggregate — group by the other field
-      if (groupField?.field && data) {
-        const counts = new Map<string, number>()
-        for (const d of data) {
-          const key = String(d[groupField.field])
-          counts.set(key, (counts.get(key) || 0) + 1)
-        }
-        data = Array.from(counts, ([k, v]) => ({ [groupField.field as string]: k, value: v }))
-      }
-    }
-  }
-
   // Handle bin → Histogram
   if (x?.bin || y?.bin) {
     const component = "Histogram"
@@ -325,13 +279,12 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
     // For histogram, the binned field becomes the value, category is the grouping
     if (x?.bin) {
       props.valueAccessor = x.field
-      if (y?.field) props.categoryAccessor = y.field
       if (x.axis?.title) props.valueLabel = x.axis.title
     } else if (y?.bin) {
       props.valueAccessor = y.field
-      if (x?.field) props.categoryAccessor = x.field
       if (y.axis?.title) props.valueLabel = y.axis.title
     }
+    if (color?.field) props.categoryAccessor = color.field
     const binConfig = x?.bin || y?.bin
     const maxbins = typeof binConfig === "object"
       ? binConfig.maxbins
@@ -345,12 +298,12 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
 
   switch (markType) {
     case "bar": {
-      component = resolveBarComponent(x, y, color, props, data, xAgg, yAgg)
+      component = resolveBarComponent(x, y, color, props, data)
       break
     }
     case "line": {
       component = "LineChart"
-      setXYAccessors(x, y, props, xAgg, yAgg)
+      setXYAccessors(x, y, props)
       if (color?.field) {
         props.lineBy = color.field
       }
@@ -371,7 +324,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       } else {
         component = "AreaChart"
       }
-      setXYAccessors(x, y, props, xAgg, yAgg)
+      setXYAccessors(x, y, props)
       if (markProps.interpolate) {
         const curve = CURVE_MAP[markProps.interpolate]
         if (curve) props.curve = curve
@@ -394,7 +347,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       } else {
         component = "Scatterplot"
       }
-      setXYAccessors(x, y, props, xAgg, yAgg)
+      setXYAccessors(x, y, props)
       if (data) props.data = data
       break
     }
@@ -424,7 +377,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       if (theta?.field) {
         props.valueAccessor = theta.field
       } else if (y?.field) {
-        props.valueAccessor = yAgg ? "value" : y.field
+        props.valueAccessor = y.field
       }
       if (color?.field) {
         props.categoryAccessor = color.field
@@ -440,19 +393,19 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       component = "DotPlot"
       if (isCategory(x?.type)) {
         props.categoryAccessor = x!.field
-        if (y?.field) props.valueAccessor = yAgg ? "value" : y.field
+        if (y?.field) props.valueAccessor = y.field
         if (x?.axis?.title) props.categoryLabel = x.axis.title
         if (y?.axis?.title) props.valueLabel = y.axis.title
       } else if (isCategory(y?.type)) {
         props.categoryAccessor = y!.field
-        if (x?.field) props.valueAccessor = xAgg ? "value" : x.field
+        if (x?.field) props.valueAccessor = x.field
         props.orientation = "horizontal"
         if (y?.axis?.title) props.categoryLabel = y.axis.title
         if (x?.axis?.title) props.valueLabel = x.axis.title
       } else {
         // Default: x is category
         if (x?.field) props.categoryAccessor = x.field
-        if (y?.field) props.valueAccessor = yAgg ? "value" : y.field
+        if (y?.field) props.valueAccessor = y.field
       }
       if (data) props.data = data
       break
@@ -465,7 +418,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
     default: {
       warnings.push(`Unsupported mark type "${markType}". Defaulting to Scatterplot.`)
       component = "Scatterplot"
-      setXYAccessors(x, y, props, xAgg, yAgg)
+      setXYAccessors(x, y, props)
       if (data) props.data = data
       break
     }
@@ -543,8 +496,6 @@ function resolveBarComponent(
   color: VegaLiteEncoding | undefined,
   props: Datum,
   data: Datum[] | undefined,
-  xAgg?: string,
-  yAgg?: string,
 ): string {
   let component: string
   const isStacked = color?.field && (
@@ -564,20 +515,20 @@ function resolveBarComponent(
   if (isCategory(x?.type) && isQuantitative(y?.type)) {
     // Vertical bars: x = category, y = value
     props.categoryAccessor = x!.field
-    props.valueAccessor = yAgg ? "value" : y!.field
+    props.valueAccessor = y!.field
     if (x?.axis?.title) props.categoryLabel = x.axis.title
     if (y?.axis?.title) props.valueLabel = y.axis.title
   } else if (isQuantitative(x?.type) && isCategory(y?.type)) {
     // Horizontal bars: y = category, x = value
     props.categoryAccessor = y!.field
-    props.valueAccessor = xAgg ? "value" : x!.field
+    props.valueAccessor = x!.field
     props.orientation = "horizontal"
     if (y?.axis?.title) props.categoryLabel = y.axis.title
     if (x?.axis?.title) props.valueLabel = x.axis.title
   } else {
     // Fallback: guess from field names
     if (x?.field) props.categoryAccessor = x.field
-    if (y?.field) props.valueAccessor = yAgg ? "value" : y.field
+    if (y?.field) props.valueAccessor = y.field
     if (x?.axis?.title) props.categoryLabel = x.axis.title
     if (y?.axis?.title) props.valueLabel = y.axis.title
   }
@@ -591,11 +542,9 @@ function setXYAccessors(
   x: VegaLiteEncoding | undefined,
   y: VegaLiteEncoding | undefined,
   props: Datum,
-  xAgg?: string,
-  yAgg?: string,
 ): void {
-  if (x?.field) props.xAccessor = xAgg ? "value" : x.field
-  if (y?.field) props.yAccessor = yAgg ? "value" : y.field
+  if (x?.field) props.xAccessor = x.field
+  if (y?.field) props.yAccessor = y.field
   if (x?.axis?.title) props.xLabel = x.axis.title
   if (y?.axis?.title) props.yLabel = y.axis.title
 }
