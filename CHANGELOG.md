@@ -355,6 +355,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contact solving prevents dense piles from freezing with visibly overlapping
   bodies, and settling detection accounts for corrected movement. UnitPile walls
   preserve the advertised clear packing width. (#1300)
+- Run the 1,000-body confinement regressions in an exclusive Vitest worker group
+  to avoid coverage-time CPU contention with the rest of the suite. Both Galton
+  and UnitPile retain their full simulations, assertions, coverage, and 60-second
+  timeouts. (#1300)
 - Physics settling reduces collision-candidate work for small bodies and reuses
   conservative nearby-wall lists across solver passes. Observation paths avoid
   unused body-state copies. Dense and paced 1,000-body regressions retain their
