@@ -396,6 +396,18 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
         expect(hitTest([node], [], 180, 30)?.datum?.id).toBe("triangle")
         expect(hitTest([node], [], 120, 60)).toBeNull()
         expect(hitTest([node, top], [], 180, 30)?.datum?.id).toBe("top")
+        const rect: NetworkRectNode = { type: "rect", x: 90, y: 10, w: 130, h: 80,
+          style: { fill: "red" }, datum: { id: "rect" } }
+        const circle: NetworkCircleNode = { type: "circle", cx: 185, cy: 30, r: 20,
+          style: { fill: "blue" }, datum: { id: "circle" } }
+        const qt = d3Quadtree<NetworkCircleNode>().x((n) => n.cx).y((n) => n.cy).add(circle)
+        for (const tree of [undefined, qt]) {
+          expect(hitTest([node, rect], [], 180, 30, 30, tree)?.datum?.id).toBe("rect")
+          expect(hitTest([rect, node], [], 180, 30, 30, tree)?.datum?.id).toBe("triangle")
+          expect(hitTest([node, circle], [], 180, 30, 30, tree)?.datum?.id).toBe("circle")
+          expect(hitTest([circle, node], [], 180, 30, 30, tree)?.datum?.id).toBe("triangle")
+          expect(hitTest([node, rect, { ...rect, w: 200, datum: { id: "larger" } }], [], 180, 30)?.datum?.id).toBe("larger")
+        }
         // Stroke-only paths must not capture their unpainted interior.
         node._hitPath!.fill = false
         node._hitPath!.strokeWidth = 2

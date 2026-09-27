@@ -31,6 +31,13 @@ for (const kind of ["ensemble", "force", "transit"]) {
     await page.goto(`/network-custom-layout-examples/?performance=${kind}`)
     const frame = page.locator(".stream-network-frame")
     await expect.poll(() => page.evaluate(() => !!window.networkPerformanceHandle?.getCustomLayout?.())).toBe(true)
+    if (kind === "force") {
+      const counts = await page.evaluate(() => {
+        const scene = window.networkPerformanceHandle!.getCustomLayout!() as { sceneNodes: unknown[]; sceneEdges: unknown[] }
+        return [scene.sceneNodes.length, scene.sceneEdges.length]
+      })
+      expect(counts).toEqual([3, 2])
+    }
     for (const step of ["original", "current", "zoomed"]) {
       if (step === "current") {
         await page.getByRole("button", { name: "Update and resize" }).click()

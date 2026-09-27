@@ -47,3 +47,28 @@ describe("network recipe static rendering", () => {
     expect(result.svg).toContain("Network")
   })
 })
+
+describe("axis-fixed force invalid values (#1400)", () => {
+  it.each(["x", "y"] as const)("omits invalid %s values and incident edges in pure, frame, and static layouts", (fixedAxis) => {
+    const invalid = [undefined, null, "", " ", "bad", NaN, Infinity, -Infinity]
+    const input = [...nodes, ...invalid.map((year, i) => ({ id: `invalid-${i}`, year }))]
+    const links = [...edges, ...invalid.map((_, i) => ({ source: "a", target: `invalid-${i}` }))]
+    const plot = { x: 0, y: 0, width: 600, height: 400 }
+    for (const fixedAccessor of ["year", (datum: Datum) => datum.year as number]) {
+      const options = { ...config, fixedAxis, fixedAccessor }
+      const positioned = axisFixedForcePositions(input, links, plot, options)
+      expect(positioned.positioned.map((node) => node.id)).toEqual(["a", "b", "c"])
+      expect(positioned.positioned).toEqual(axisFixedForcePositions(nodes, edges, plot, options).positioned)
+      expect(positioned.positioned.every((node) => Number.isFinite(node.x) && Number.isFinite(node.y))).toBe(true)
+      const result = renderChartWithEvidence("NetworkCustomChart", {
+        nodes: input, edges: links, width: 600, height: 400,
+        layout: (ctx: Parameters<NetworkCustomLayout>[0]) => axisFixedForceLayout({ ...ctx, config: options }),
+      })
+      expect(result.svg).not.toMatch(/NaN|Infinity/)
+      expect(result.evidence.markCount).toBe(5)
+    }
+    expect(axisFixedForcePositions(input.slice(3), links, plot, config).positioned).toEqual([])
+    expect(axisFixedForcePositions(nodes, edges, plot, { ...config, fixedDomain: [NaN, 2] }).positioned).toEqual([])
+    expect(axisFixedForcePositions(nodes, edges, plot, { ...config, size: () => ({ width: NaN, height: 10 }) }).positioned).toEqual([])
+  })
+})

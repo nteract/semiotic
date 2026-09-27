@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Axis-fixed force omits missing, blank, nonnumeric, and non-finite fixed values
+  with their incident edges; invalid domains, plots, and box sizes produce no
+  invalid geometry. Covers both axes, field/callback accessors, direct positions,
+  static SVG, and interactive marks. (#1400)
+- ProcessSankey and force workers retain startup/transport failure state until
+  explicit reset, avoiding repeated creation attempts. ProcessSankey subsequent
+  layouts choose synchronous execution immediately. Success payloads are checked
+  before scene construction; malformed responses reject pending consumers and
+  trigger fallback. Normal cancellation remains retryable, and chart/recipe
+  worker transport loads on demand. (#1333)
+- Mixed GoFish paths, rectangles, and other node marks now resolve pointer hits
+  in display-list paint order, including larger rectangles painted over paths.
+  Ordinary treemaps retain smallest-cell selection; coverage includes quadtree
+  parity, camera changes, resize, reversed paint order, and tooltip dismissal.
+  (#1509)
 - ProcessSankey crossing optimization uses a temporal range index and exact local
   swap deltas instead of graph-sized crossing-pair tables. Layout analysis is
   reused across styling, labels, equivalent inline props, and timeline resizing;

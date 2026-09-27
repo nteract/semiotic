@@ -246,3 +246,29 @@ test("steep bump ribbons retain ordered boundaries and raw hover after resize an
     await expect(tip).toBeHidden()
   }
 })
+
+test("GoFish mixed paths and rectangles follow paint order after camera, resize, and data updates", async ({ page }) => {
+  await page.goto("/recipe-regressions/?case=paths&example=mixed")
+  const chart = page.getByTestId("paths")
+  const cover = chart.locator('svg rect[fill="red"]')
+  await expect(cover).toHaveCount(1)
+  for (const action of [null, "Zoom and pan", "Resize charts", "Reverse paint order"]) {
+    if (action) await page.getByRole("button", { name: action, exact: true }).click()
+    await waitForRafs(page)
+    const point = await cover.evaluate((node) => {
+      const point = new DOMPoint(80, 80).matrixTransform((node as SVGGraphicsElement).getScreenCTM()!)
+      return { x: point.x, y: point.y }
+    })
+    await page.mouse.move(point.x, point.y)
+    const tooltip = chart.locator(".stream-network-tooltip")
+    await expect(tooltip).toHaveText(JSON.stringify({ name: action === "Reverse paint order" ? "Triangle" : "Rectangle" }))
+    const bounds = (await chart.locator("canvas").first().boundingBox())!
+    const tip = (await tooltip.boundingBox())!
+    expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+    expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+    expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+    expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toBeHidden()
+  }
+})

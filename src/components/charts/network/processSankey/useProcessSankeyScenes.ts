@@ -6,9 +6,9 @@ import {
   type BuildScenesInput, type BuildScenesResult, type PreparedProcessSankeyLayout,
 } from "./buildScenes"
 import {
-  canUseProcessSankeyWorker, shouldUseProcessSankeyWorker, runProcessSankeyLayoutWorker,
+  canUseProcessSankeyWorker, shouldUseProcessSankeyWorker, processSankeyWorkerAvailability,
   type ProcessSankeyLayoutExecution,
-} from "./processSankeyLayoutWorkerClient"
+} from "./workerPolicy"
 import { useWasHydratingFromSSR } from "../../../stream/useHydration"
 
 export type ProcessSankeyLayoutStatus = "pending" | "ready" | "error"
@@ -54,13 +54,13 @@ export function useProcessSankeyScenes(input: BuildScenesInput | null, options: 
     typeof window !== "undefined" && canUseProcessSankeyWorker() &&
     shouldUseProcessSankeyWorker(execution, layoutInput.nodes.length, layoutInput.edges.length,
       layoutInput.layoutOpts.packing ?? "reuse", layoutInput.layoutOpts.laneOrder ?? "crossing-min", workerThreshold)
-  const sync = useMemo(() => layoutInput && !useWorker ? prepareProcessSankeyLayout(layoutInput) : null,
-    [layoutInput, useWorker])
   const [asyncResult, setAsyncResult] = useState<{
     key: string; prepared: PreparedProcessSankeyLayout | null; error: Error | null
   } | null>(null)
   const committed = useRef<{ key: string; prepared: PreparedProcessSankeyLayout; scene: BuildScenesResult } | null>(null)
   const matched = asyncResult?.key === key ? asyncResult : null
+  const sync = useMemo(() => layoutInput && !useWorker ? matched?.prepared ?? prepareProcessSankeyLayout(layoutInput) : null,
+    [layoutInput, useWorker, matched?.prepared])
   const prepared = sync ?? matched?.prepared ?? (committed.current?.key === key ? committed.current.prepared : null)
   const scene = useMemo(() => input && prepared ? buildProcessSankeyScenes(input, prepared) : null, [input, prepared])
   useEffect(() => {
@@ -73,9 +73,14 @@ export function useProcessSankeyScenes(input: BuildScenesInput | null, options: 
     // The geometry input already excludes raw records and presentation callbacks.
     // Only the host-side color resolver needs to be omitted at this boundary.
     const wire = { ...layoutInput, colorOf: undefined }
-    runProcessSankeyLayoutWorker({ input: wire, colorById: {}, fallbackPalette: ["#475569"] }, controller.signal)
+    import("./workerRunner")
+      .catch((error) => { processSankeyWorkerAvailability.failed = true; throw error })
+      .then(({ runProcessSankeyLayoutWorker }) => {
+        if (controller.signal.aborted) return null
+        return runProcessSankeyLayoutWorker({ input: wire, colorById: {}, fallbackPalette: ["#475569"] }, controller.signal)
+      })
       .then((result) => {
-        if (!controller.signal.aborted) setAsyncResult({ key, prepared: { layout: result.layout, issues: result.issues, warnings: result.warnings }, error: null })
+        if (result && !controller.signal.aborted) setAsyncResult({ key, prepared: { layout: result.layout, issues: result.issues, warnings: result.warnings }, error: null })
       })
       .catch((error: Error) => {
         if (controller.signal.aborted || error.name === "AbortError") return

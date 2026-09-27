@@ -5,11 +5,10 @@ import {
 import type { GraphEdge, GraphNode, Point } from "./networkAnalysis"
 import {
   canUseForceWorker,
-  runForceLayoutWorker,
   shouldUseForceWorker,
-  type ForceLayoutExecution,
-  type NormalizedForceWorkerRequest
-} from "../stream/layouts/forceLayoutWorkerClient"
+  type ForceLayoutExecution
+} from "../stream/layouts/forceLayoutWorkerPolicy"
+import type { NormalizedForceWorkerRequest } from "../stream/layouts/forceLayoutWorkerClient"
 
 export interface ForceLayoutAsyncOptions extends ForceLayoutOptions {
   /** Choose worker execution, synchronous execution, or an automatic cost threshold. */
@@ -22,7 +21,7 @@ export interface ForceLayoutAsyncOptions extends ForceLayoutOptions {
 
 /**
  * Asynchronous counterpart to {@link forceLayout}. Large layouts run in a
- * short-lived module worker; small, server-side, or unsupported environments
+ * reused module worker; small, server-side, or unsupported environments
  * fall back to the same deterministic synchronous implementation.
  */
 export async function forceLayoutAsync(
@@ -68,6 +67,7 @@ export async function forceLayoutAsync(
   }
 
   try {
+    const { runForceLayoutWorker } = await import("../stream/layouts/forceLayoutWorkerClient")
     const response = await runForceLayoutWorker(request, signal)
     return response.positions
   } catch (error) {
@@ -75,4 +75,3 @@ export async function forceLayoutAsync(
     return forceLayout(nodes, edges, { ...layoutOptions, nodeRadius })
   }
 }
-

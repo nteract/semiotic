@@ -1,7 +1,8 @@
-import { act, renderHook } from "@testing-library/react"
+import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import * as scenes from "./buildScenes"
 import * as worker from "./processSankeyLayoutWorkerClient"
+import * as policy from "./workerPolicy"
 import { useProcessSankeyScenes } from "./useProcessSankeyScenes"
 import type { BuildScenesInput } from "./buildScenes"
 
@@ -36,17 +37,16 @@ describe("ProcessSankey analysis lifecycle", () => {
   })
 
   it("falls back to current geometry if a worker fails", async () => {
-    vi.spyOn(worker, "canUseProcessSankeyWorker").mockReturnValue(true)
+    vi.spyOn(policy, "canUseProcessSankeyWorker").mockReturnValue(true)
     vi.spyOn(worker, "runProcessSankeyLayoutWorker").mockRejectedValue(new Error("worker failed"))
     const view = renderHook(() => useProcessSankeyScenes(input(7), { execution: "worker" }))
-    await act(async () => {})
-    expect(view.result.current.status).toBe("ready")
+    await waitFor(() => expect(view.result.current.status).toBe("ready"))
     expect(view.result.current.layoutConfig.ribbons[0].rawDatum).toMatchObject({ value: 7 })
     expect(view.result.current.error).toBeNull()
   })
 
   it("keeps the latest sync scene pending, aborts superseded work, and styles worker geometry on the host", async () => {
-    vi.spyOn(worker, "canUseProcessSankeyWorker").mockReturnValue(true)
+    vi.spyOn(policy, "canUseProcessSankeyWorker").mockReturnValue(true)
     const requests: Array<{ input: BuildScenesInput; signal: AbortSignal; resolve: (result: worker.ProcessSankeyWorkerResponse) => void }> = []
     vi.spyOn(worker, "runProcessSankeyLayoutWorker").mockImplementation((request, signal) =>
       new Promise((resolve) => requests.push({ input: { ...request.input, colorOf: () => "red" }, signal: signal!, resolve })))
@@ -60,13 +60,13 @@ describe("ProcessSankey analysis lifecycle", () => {
     view.rerender({ data: { ...input(3), edgeOpacity: () => 0.9 }, execution: "worker" })
     expect(view.result.current.status).toBe("pending")
     expect(view.result.current.layout).toBe(latest)
-    expect(requests).toHaveLength(1)
+    await waitFor(() => expect(requests).toHaveLength(1))
     expect(typeof requests[0].input.edgeOpacity).toBe("number")
     view.rerender({ data: { ...input(4), edgeOpacity: () => 0.7 }, execution: "worker" })
     expect(requests[0].signal.aborted).toBe(true)
-    expect(requests).toHaveLength(2)
+    await waitFor(() => expect(requests).toHaveLength(2))
     view.rerender({ data: { ...input(4), edgeOpacity: () => 0.6, colorOf: () => "green" }, execution: "worker" })
-    expect(requests).toHaveLength(2)
+    await waitFor(() => expect(requests).toHaveLength(2))
     await act(async () => respond(0))
     expect(view.result.current.status).toBe("pending")
     expect(view.result.current.layout).toBe(latest)

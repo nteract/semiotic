@@ -67,7 +67,8 @@ export function rectCollide(
 }
 
 export interface AxisFixedForceConfig {
-  /** Field (or fn) giving the fixed-axis data value, e.g. a year. */
+  /** Field (or fn) giving the fixed-axis data value, e.g. a year.
+   * Missing, blank, or non-finite values omit the node and its incident edges. */
   fixedAccessor: string | ((d: Datum) => number)
   /** `[min, max]` of the fixed value, mapped to the pinned pixel axis. */
   fixedDomain: [number, number]
@@ -160,7 +161,7 @@ function positionAxisFixedForce(
   wrapped: boolean,
 ): AxisFixedForceResult {
   const fixedAxis = config.fixedAxis ?? "y"
-  const getFixed = (d: Datum) => Number(accessorFn(config.fixedAccessor, "fixed", wrapped)(d))
+  const getFixed = accessorFn(config.fixedAccessor, "fixed", wrapped)
   const getId = (d: Datum) => String(accessorFn(config.idAccessor, "id", wrapped)(d))
   const getSource = (e: Datum) => String(accessorFn(config.sourceAccessor, "source", wrapped)(e))
   const getTarget = (e: Datum) => String(accessorFn(config.targetAccessor, "target", wrapped)(e))
@@ -178,6 +179,8 @@ function positionAxisFixedForce(
 
   // Pixel ranges for the two axes.
   const [f0, f1] = config.fixedDomain
+  if (![f0, f1, plot.x, plot.y, plot.width, plot.height].every(Number.isFinite) ||
+      plot.width <= 0 || plot.height <= 0) return { positioned: [], byId: new Map() }
   const fixedSpan = f1 - f0 || 1
   const fixedStart = (fixedAxis === "y" ? plot.y : plot.x) + fixedPadding
   const fixedEnd = (fixedAxis === "y" ? plot.y + plot.height : plot.x + plot.width) - fixedPadding
@@ -198,13 +201,18 @@ function positionAxisFixedForce(
     anchor: number
   }
 
-  const particles: Particle[] = nodes.map((node) => {
+  const particles: Particle[] = nodes.flatMap((node) => {
+    const value = getFixed(node)
+    if (typeof value !== "number" && (typeof value !== "string" || !value.trim())) return []
+    const fixedValue = Number(value)
+    const fixed = fixedScale(fixedValue)
+    if (!Number.isFinite(fixedValue) || !Number.isFinite(fixed)) return []
     const data = unwrapDatum<Datum>(node) ?? node
     const id = getId(node)
     const { width, height } = sizeOf(data)
-    const fixedValue = getFixed(node)
+    if (![width, height].every((size) => Number.isFinite(size) && size > 0)) return []
     const free = freeStart + hashUnit(id) * freeSpan
-    return { data, id, width, height, fixedValue, fixed: fixedScale(fixedValue), free, anchor: free }
+    return [{ data, id, width, height, fixedValue, fixed, free, anchor: free }]
   })
   const freeSizeOf = (p: Particle) => (fixedAxis === "y" ? p.width : p.height)
   const indexById = new Map(particles.map((p, i) => [p.id, i]))

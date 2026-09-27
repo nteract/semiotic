@@ -45,6 +45,11 @@ export function findNearestNetworkNode(
   let bestNode: NetworkHitResult | null = null
   let bestDist = Infinity
   let bestRectArea = Infinity
+  // Exact paths belong to a display list: all marks in that list compete in
+  // paint order, including ordinary rects/circles painted over a path. Scenes
+  // without paths retain nearest-circle and smallest-treemap-cell semantics.
+  const paintOrder = sceneNodes.some((node) => node.type === "rect" && node._hitPath)
+  if (paintOrder) nodeQuadtree = null
 
   // Fast path: when a circle-node quadtree is available (large force/orbit
   // graphs) query it instead of scanning every circle. It returns the nearest
@@ -69,10 +74,12 @@ export function findNearestNetworkNode(
     if (!result) continue
     result.mark = node
 
-    if (node.type === "rect") {
+    if (paintOrder) {
+      bestNode = result
+    } else if (node.type === "rect") {
       // For rects: prefer the smallest area (deepest cell)
       const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
-      if (node._hitPath || area < bestRectArea) {
+      if (area < bestRectArea) {
         bestNode = result
         bestRectArea = area
       }

@@ -24,10 +24,12 @@ const rows = Array.from({ length: 4 }, (_, period) =>
 export default function PathGeometry() {
   const [width, setWidth] = useState(540)
   const [updated, setUpdated] = useState(false)
+  const [reversed, setReversed] = useState(false)
   const network = useRef(null),
     bump = useRef(null)
   const flower =
     new URLSearchParams(location.search).get("example") === "flower"
+  const mixed = new URLSearchParams(location.search).get("example") === "mixed"
   const cfg = useMemo(() => {
     const source = flower
       ? unstable_gofishIRExamples.find((e) => e.key === "flower").doc
@@ -35,7 +37,10 @@ export default function PathGeometry() {
           ir: "gofish-display-list",
           irVersion: 0,
           viewport: { w: 500, h: 300 },
-          items: paths.map(({ d, name }, i) => ({
+          items: mixed ? [
+            { kind: "path", id: "triangle", d: "M40 40 L140 40 L40 140Z", datum: { name: "Triangle" }, style: { fill: "blue" } },
+            { kind: "rect", id: "cover", x: 20, y: 20, w: 200, h: 160, datum: { name: "Rectangle" }, style: { fill: "red" } },
+          ] : paths.map(({ d, name }, i) => ({
             kind: "path",
             d,
             datum: { name },
@@ -60,11 +65,11 @@ export default function PathGeometry() {
                   ? { ...item, datum: { name: `Petal ${i}` } }
                   : item
               )
-            : source.items
+            : reversed ? [...source.items].reverse() : source.items
         }
       ]
     })
-  }, [flower, width])
+  }, [flower, mixed, reversed, width])
   useEffect(() => {
     window.pathGeometry = {
       network: () => network.current.getCustomLayout(),
@@ -74,6 +79,7 @@ export default function PathGeometry() {
   return (
     <main>
       <button onClick={() => setWidth(420)}>Resize charts</button>
+      {mixed && <button onClick={() => setReversed((value) => !value)}>Reverse paint order</button>}
       <button
         onClick={() => network.current.zoomTo({ k: 1.2, x: -20, y: 0 }, 0)}
       >

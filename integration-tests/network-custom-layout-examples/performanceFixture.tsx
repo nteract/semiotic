@@ -25,7 +25,8 @@ export function PerformanceFixture() {
     <button onClick={() => { setUpdated(true); setWidth(460) }}>Update and resize</button>
     <button onClick={() => window.networkPerformanceHandle?.zoomTo({ x: 12, y: 8, k: 1.15 }, 0)}>Zoom and pan</button>
     <ZoomableNetworkCustomChart ref={(handle) => { window.networkPerformanceHandle = handle }}
-      nodes={nodes} edges={edges} layout={layouts[kind]} width={width} height={400}
+      nodes={kind === "force" ? [...nodes, { id: "invalid", year: NaN, label: "Invalid" }] : nodes}
+      edges={kind === "force" ? [...edges, { source: "a", target: "invalid", label: "Invalid edge" }] : edges} layout={layouts[kind]} width={width} height={400}
       margin={{ left: 20, right: 20, top: 40, bottom: 20 }} animate={false}
       tooltip={(datum) => <span>{String(datum.label ?? datum.id)}</span>}
       title={`${kind} layout`} accessibleTable={false} />

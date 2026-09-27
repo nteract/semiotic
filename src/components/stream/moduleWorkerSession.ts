@@ -66,10 +66,15 @@ function errorFromPayload(payload: ModuleWorkerErrorPayload): Error {
 export function parseModuleWorkerErrorField(
   data: unknown,
 ): { requestId?: number; error?: ModuleWorkerErrorPayload } {
-  if (!data || typeof data !== "object") return {}
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Malformed worker response")
   const record = data as {
     requestId?: number
     error?: ModuleWorkerErrorPayload
+  }
+  if ((record.requestId !== undefined && (!Number.isInteger(record.requestId) || record.requestId < 1)) ||
+      (record.error !== undefined && (!record.error || typeof record.error.message !== "string" ||
+        [record.error.name, record.error.stack].some((value) => value !== undefined && typeof value !== "string")))) {
+    throw new Error("Malformed worker response")
   }
   return {
     requestId: record.requestId,
@@ -84,6 +89,8 @@ export class ModuleWorkerSession<TRequest, TResponse> {
   private pending = new Map<number, Pending<TResponse>>()
   private worker: Worker
   private dead = false
+  /** Fatal transport/protocol failure; ordinary cancellation is not a failure. */
+  failure: Error | null = null
   private readonly options: ModuleWorkerSessionOptions<TRequest, TResponse>
 
   constructor(options: ModuleWorkerSessionOptions<TRequest, TResponse>) {
@@ -95,8 +102,7 @@ export class ModuleWorkerSession<TRequest, TResponse> {
       try {
         parsed = this.options.parseMessage(event.data)
       } catch (error) {
-        this.rejectAll(error instanceof Error ? error : new Error(String(error)))
-        this.terminate()
+        this.fail(error instanceof Error ? error : new Error(String(error)))
         return
       }
       const requestId = parsed.requestId
@@ -125,19 +131,24 @@ export class ModuleWorkerSession<TRequest, TResponse> {
       pending.resolve(parsed.payload)
     }
     this.worker.onmessageerror = () => {
-      this.rejectAll(new Error(`${this.options.name} worker response could not be deserialized`))
-      this.terminate()
+      this.fail(new Error(`${this.options.name} worker response could not be deserialized`))
     }
     this.worker.onerror = (event: ErrorEvent) => {
-      this.rejectAll(
+      this.fail(
         new Error(event.message || `${this.options.name} worker failed`),
       )
-      this.terminate()
     }
   }
 
   get isDead(): boolean {
     return this.dead
+  }
+
+  private fail(error: Error): void {
+    if (this.dead) return
+    this.failure = error
+    this.rejectAll(error)
+    this.terminate()
   }
 
   request(request: TRequest, signal?: AbortSignal): Promise<TResponse> {
@@ -205,18 +216,29 @@ export class ModuleWorkerSession<TRequest, TResponse> {
  * Lazy singleton holder for a session class that exposes `isDead` + `terminate`.
  */
 export function createSharedWorkerSessionHolder<
-  TSession extends { isDead: boolean; terminate(): void },
+  TSession extends { isDead: boolean; failure?: Error | null; terminate(): void },
 >(create: () => TSession): {
   get: () => TSession
+  readonly available: boolean
   resetForTest: () => void
 } {
   let session: TSession | null = null
+  let creationFailure: unknown = null
   return {
+    get available() { return !creationFailure && !session?.failure },
     get: () => {
-      if (!session || session.isDead) session = create()
+      if (creationFailure || session?.failure) throw creationFailure || session?.failure
+      if (!session || session.isDead) {
+        try { session = create() }
+        catch (error) {
+          creationFailure = error instanceof Error ? error : new Error(String(error))
+          throw creationFailure
+        }
+      }
       return session
     },
     resetForTest: () => {
+      creationFailure = null
       if (session) {
         try {
           session.terminate()
