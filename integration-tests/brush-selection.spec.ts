@@ -71,6 +71,18 @@ async function proveLinkedHoverTargetsChanged(
   sourceId: string,
   targetIds: string[]
 ) {
+  // A tall cohort must fit before hovering. Element screenshots scroll their
+  // target into view and may capture beyond the viewport, dismissing a live
+  // pointer hover between the pixel-change assertions and the snapshot.
+  const viewport = page.viewportSize()!
+  const bounds = await testCase.boundingBox()
+  if (!bounds) throw new Error("linked-hover cohort bounding box unavailable")
+  const height = Math.ceil(bounds.height) + 40
+  if (height > viewport.height) {
+    await page.setViewportSize({ width: viewport.width, height })
+  }
+  await testCase.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }))
+  await expect(testCase).toBeInViewport({ ratio: 1 })
   await waitForLinkedHoverTargetsStable(page, testCase, targetIds)
   const before = new Map<string, string[]>()
   for (const targetId of targetIds) {
@@ -95,6 +107,24 @@ async function proveLinkedHoverTargetsChanged(
       `${targetId} must redraw when its linked-hover selection becomes active`
     ).not.toEqual(before.get(targetId))
   }
+}
+
+async function expectLinkedHoverScreenshot(
+  testCase: Locator,
+  sourceId: string,
+  name: string,
+  maxDiffPixels: number
+) {
+  const tooltip = testCase.locator(`[data-linked-hover-chart="${sourceId}"] .stream-frame-tooltip`)
+  await expect(tooltip).toBeVisible()
+  const content = await tooltip.innerText()
+  expect(content.trim()).not.toBe("")
+  await expect(testCase).toHaveScreenshot(name, { maxDiffPixels })
+  // A stable image alone cannot prove the pointer remained over the source.
+  await expect(tooltip).toBeVisible()
+  await expect(tooltip).toHaveText(content, { useInnerText: true })
+  await testCase.page().mouse.move(0, 0)
+  await expect(tooltip).toBeHidden()
 }
 
 test.describe("Brush & Selection - Coordinated hover", () => {
@@ -451,9 +481,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       "Heatmap",
       "QuadrantChart",
     ])
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "cohort-source",
       "linked-hover-deterministic-xy-cohort-state.png",
-      { maxDiffPixels: 600 }
+      600
     )
 
     await page.mouse.move(0, 0)
@@ -465,9 +495,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       testCase.locator('[data-linked-hover-chart="multi-axis-source"]'),
       { left: 24, right: 24, top: 24, bottom: 24 }
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "multi-axis-source",
       "linked-hover-deterministic-xy-multi-axis-state.png",
-      { maxDiffPixels: 600 }
+      600
     )
 
     await page.mouse.move(0, 0)
@@ -479,9 +509,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       testCase.locator('[data-linked-hover-chart="difference-source"]'),
       { left: 24, right: 24, top: 24, bottom: 24 }
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "difference-source",
       "linked-hover-deterministic-xy-difference-state.png",
-      { maxDiffPixels: 600 }
+      600
     )
   })
 
@@ -508,9 +538,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
         "Treemap",
       ]
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "network-cohort-source",
       "linked-hover-deterministic-network-cohort-state.png",
-      { maxDiffPixels: 700 }
+      700
     )
   })
 
@@ -526,9 +556,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       "FlowMap",
       "ProportionalSymbolMap",
     ])
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "geo-cohort-source",
       "linked-hover-deterministic-geo-cohort-state.png",
-      { maxDiffPixels: 600 }
+      600
     )
   })
 
@@ -546,9 +576,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
       "static-ordinal-source",
       ["LikertChart", "SwimlaneChart"]
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "static-ordinal-source",
       "linked-hover-deterministic-static-ordinal-state.png",
-      { maxDiffPixels: 500 }
+      500
     )
   })
 
@@ -576,9 +606,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
         "TemporalHistogram",
       ]
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "realtime-cohort-source",
       "linked-hover-deterministic-realtime-cohort-state.png",
-      { maxDiffPixels: 700 }
+      700
     )
   })
 
@@ -606,9 +636,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
         "UnitPileChart",
       ]
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "physics-settled-source",
       "linked-hover-deterministic-settled-physics-state.png",
-      { maxDiffPixels: 800 }
+      800
     )
   })
 
@@ -636,9 +666,9 @@ test.describe("Brush & Selection - Visual snapshots", () => {
         "ProcessFlowChart",
       ]
     )
-    await expect(testCase).toHaveScreenshot(
+    await expectLinkedHoverScreenshot(testCase, "physics-authored-source",
       "linked-hover-deterministic-authored-physics-state.png",
-      { maxDiffPixels: 900 }
+      900
     )
   })
 })
