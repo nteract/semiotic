@@ -209,14 +209,19 @@ describe("trend annotation — ordinal frame", () => {
       },
     }
 
-    it("renders the dependency-compatible rounded quadratic points", () => {
+    it("renders mathematically correct quadratic points", () => {
       const result = xyRules(
         { type: "trend", method: "polynomial", order: 2 },
         0,
         ctx
       )
       const html = renderToStaticMarkup(result as React.ReactElement)
-      expect(html).toContain('points="0,4 1,9 2,18 3,31 4,48"')
+      const points = html.match(/points="([^"]+)"/)![1].split(" ").map((p) => p.split(",").map(Number))
+      expect(points).toHaveLength(5)
+      points.forEach(([x, y], i) => {
+        expect(x).toBe(i)
+        expect(y).toBeCloseTo(2 * i * i + 3 * i + 4, 10)
+      })
     })
 
     it("preserves polynomial equation ordering in forecast annotations", () => {
@@ -226,9 +231,12 @@ describe("trend annotation — ordinal frame", () => {
         ctx
       )
       const html = renderToStaticMarkup(result as React.ReactElement)
-      // The historical result shape stores [x², x, constant]. The forecast
-      // consumer reads that array in index order, so retain the same output.
-      expect(html).toContain('points="4,78 5,117 6,164"')
+      const points = html.match(/points="([^"]+)"/)![1].split(" ").map((p) => p.split(",").map(Number))
+      expect(points).toHaveLength(3)
+      points.forEach(([x, y], i) => {
+        expect(x).toBe(i + 4)
+        expect(y).toBeCloseTo([48, 69, 94][i], 10)
+      })
     })
   })
 

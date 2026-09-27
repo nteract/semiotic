@@ -28,6 +28,7 @@ import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlay
 import { normalizeColorGradient, type ColorGradientInput } from "../shared/gradient"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import { forecastYExtent } from "../shared/forecastExtent"
 import { useXYBrush } from "../shared/useXYBrush"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
@@ -414,8 +415,8 @@ export const LineChart = forwardRef(
     xFormat,
     yFormat,
     axisExtent,
-    xAccessor = "x",
-    yAccessor = "y",
+    xAccessor: inputXAccessor = "x",
+    yAccessor: inputYAccessor = "y",
     lineBy,
     lineDataAccessor = "coordinates",
     colorBy,
@@ -484,8 +485,8 @@ export const LineChart = forwardRef(
   const warningData = Array.isArray(safeData[0]?.[lineDataAccessor])
     ? safeData[0][lineDataAccessor] as Datum[]
     : safeData
-  warnMissingField("LineChart", warningData, "xAccessor", xAccessor)
-  warnMissingField("LineChart", warningData, "yAccessor", yAccessor)
+  warnMissingField("LineChart", warningData, "xAccessor", inputXAccessor)
+  warnMissingField("LineChart", warningData, "yAccessor", inputYAccessor)
 
   // ── Statistical overlay processing ────────────────────────────────────
   // Lifted to `useSeriesFeatures` — owns the function-accessor bake,
@@ -495,18 +496,19 @@ export const LineChart = forwardRef(
   const {
     effectiveData,
     statisticalAnnotations,
+    hasForecast,
+    xAccessorKey,
+    yAccessorKey,
   } = useSeriesFeatures({
     data: safeData as Datum[],
-    xAccessor,
-    yAccessor,
+    xAccessor: inputXAccessor,
+    yAccessor: inputYAccessor,
     forecast,
     anomaly,
-    // LineChart's group-aware boundary duplication: when the user
-    // supplies `lineBy` as a string, the overlay pipeline tags
-    // training/observed/forecast transitions per-group so multi-
-    // metric data doesn't create stray boundary lines across groups.
     groupBy: lineBy,
   })
+  const xAccessor = hasForecast ? xAccessorKey : inputXAccessor
+  const yAccessor = hasForecast ? yAccessorKey : inputYAccessor
 
   // When both lineBy and forecast are present, we need a compound group that
   // splits lines by BOTH the user's grouping field AND the forecast segment.
@@ -536,43 +538,10 @@ export const LineChart = forwardRef(
   // ── Envelope-aware y extent ──────────────────────────────────────────
   // When forecast/anomaly has upper/lower bounds, the default y extent only
   // sees the value field.  Expand to include the envelope so it doesn't clip.
-  const envelopeYExtent = useMemo(() => {
-    if (!forecast) return undefined
-    const upperAcc = (forecast as ForecastConfig).upperBounds
-    const lowerAcc = (forecast as ForecastConfig).lowerBounds
-    if (!upperAcc && !lowerAcc) return undefined
-
-    const getUpper = typeof upperAcc === "function" ? upperAcc
-      : typeof upperAcc === "string" ? (d: Datum) => d[upperAcc] as number
-      : null
-    const getLower = typeof lowerAcc === "function" ? lowerAcc
-      : typeof lowerAcc === "string" ? (d: Datum) => d[lowerAcc] as number
-      : null
-
-    let min = Infinity
-    let max = -Infinity
-    // `effectiveData` is the post-forecast set when active, else
-    // the raw safeData — same conditional as before via the hook.
-    const dataToScan = effectiveData
-    for (const d of dataToScan as Datum[]) {
-      // Include the y value itself
-      const yVal = typeof yAccessor === "function" ? (yAccessor as (d: Datum) => number)(d) : +(d[yAccessor as string])
-      if (isFinite(yVal)) {
-        if (yVal < min) min = yVal
-        if (yVal > max) max = yVal
-      }
-      if (getUpper) {
-        const u = getUpper(d)
-        if (u != null && isFinite(u)) { if (u > max) max = u; if (u < min) min = u }
-      }
-      if (getLower) {
-        const l = getLower(d)
-        if (l != null && isFinite(l)) { if (l < min) min = l; if (l > max) max = l }
-      }
-    }
-    if (!isFinite(min) || !isFinite(max)) return undefined
-    return [min, max] as [number, number]
-  }, [forecast, effectiveData, yAccessor])
+  const envelopeYExtent = useMemo(
+    () => forecastYExtent(effectiveData, yAccessor, forecast),
+    [forecast, effectiveData, yAccessor]
+  )
 
   // ── Gap handling helper ──────────────────────────────────────────────
   const isGap = useCallback((d: Datum) => {
@@ -927,8 +896,8 @@ export const LineChart = forwardRef(
   // cascade from the HOC so the tooltip values read the same way as the axis.
   const groupField = lineBy || colorBy
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
-    { label: xLabel || accessorName(xAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(yAccessor), accessor: yAccessor, role: "y", format: yFormat },
+    { label: xLabel || accessorName(inputXAccessor), accessor: xAccessor, role: "x", format: xFormat },
+    { label: yLabel || accessorName(inputYAccessor), accessor: yAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
     // Band rows — surfaced automatically when `band` is configured so a
     // consumer that hasn't supplied a custom tooltip still sees the
@@ -937,7 +906,7 @@ export const LineChart = forwardRef(
     // them via function accessors here. Multi-band shows one row pair
     // per configured band, labeled with the accessor name when string.
     ...bandTooltipFields(band, yFormat),
-  ]), [xAccessor, yAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
+  ]), [xAccessor, yAccessor, inputXAccessor, inputYAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
 
   // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates
@@ -949,8 +918,8 @@ export const LineChart = forwardRef(
     componentName: "LineChart",
     data: validationData,
     accessors: {
-      xAccessor,
-      yAccessor,
+      xAccessor: inputXAccessor,
+      yAccessor: inputYAccessor,
     },
   })
 

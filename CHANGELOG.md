@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Statistical trends and forecasts retain full precision for timestamp, Date,
+  and small-value data. Polynomial forecasts evaluate the fitted coefficients
+  correctly, and ordinal trends follow displayed category order. Equivalent
+  inline configs retain overlays; data replacement/removal takes effect
+  immediately, and failed lazy computations warn in development. Auto forecasts
+  honor LOESS bandwidth and fit separate series with separate envelopes. The
+  related audit covers callback accessors across all four XY wrappers, centered
+  LOESS math, polynomial interval variance, and matching browser/server rules.
+  Regression checks include bounded/pushed trends, real forecast-point hover
+  through resize and replacement, and production ESM/CommonJS server exports.
+  Auto-forecast props require bounded data; push mode supports statistical
+  annotations over retained frame data. (#1363)
+
 - Axis-fixed force omits missing, blank, nonnumeric, and non-finite fixed values
   with their incident edges; invalid domains, plots, and box sizes produce no
   invalid geometry. Covers both axes, field/callback accessors, direct positions,

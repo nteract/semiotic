@@ -20,13 +20,11 @@ import type { CurveType } from "../stream/types"
 import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
 import { annotationActivationProps } from "../charts/shared/annotationActivation"
 import type { Datum } from "../charts/shared/datumTypes"
-import { loess } from "../charts/shared/loess"
+import { forecastModel } from "../charts/shared/forecastModel"
+import { trendGeometry } from "../charts/shared/statisticalAnnotationGeometry"
 import {
-  confidenceZScore,
-  fitLinearForForecast,
-  forecastIntervalStats,
-  linearRegression,
-  polynomialRegression,
+  regressionPoints,
+  regressionNumber,
 } from "../charts/shared/leastSquaresRegression"
 import { getMinMax } from "../charts/shared/minMax"
 import {
@@ -205,85 +203,11 @@ export function renderStaticAnnotationFallback(
     }
 
     case "trend": {
-      const data = context.data || []
-      if (data.length < 2) return null
-      const xAccessor = context.xAccessor || "x"
-      const yAccessor = context.yAccessor || "y"
-      const isOrdinal = context.frameType === "ordinal"
-      const isHorizontal = context.projection === "horizontal"
-      const categoricalAccessor = isOrdinal ? xAccessor : null
-      const valueAccessor = isOrdinal ? yAccessor : null
-
-      let points: [number, number][]
-      const categoryNames: string[] = []
-      const indexByCategory = new Map<string, number>()
-      if (isOrdinal && categoricalAccessor && valueAccessor) {
-        for (const datum of data) {
-          const category = datum[categoricalAccessor]
-          if (category == null) continue
-          const key = String(category)
-          if (!indexByCategory.has(key)) {
-            indexByCategory.set(key, categoryNames.length)
-            categoryNames.push(key)
-          }
-        }
-        points = data
-          .map((datum) => {
-            const category = datum[categoricalAccessor]
-            const value = datum[valueAccessor]
-            if (category == null || value == null) return null
-            const categoryIndex = indexByCategory.get(String(category))
-            return categoryIndex != null ? ([categoryIndex, +value] as [number, number]) : null
-          })
-          .filter((point): point is [number, number] => point !== null)
-      } else {
-        points = data
-          .map((datum) => [datum[xAccessor], datum[yAccessor]] as [number, number])
-          .filter((point) => point[0] != null && point[1] != null)
-      }
-      if (points.length < 2) return null
-
-      const scaleX = context.scales?.x ?? context.scales?.time
-      const scaleY = context.scales?.y ?? context.scales?.value
-      if (!scaleX || !scaleY) return null
-      const interpolateBandScale = (bandScale: (key: string) => number) => (index: number) => {
-        const lowerIndex = Math.max(0, Math.floor(index))
-        const upperIndex = Math.min(categoryNames.length - 1, lowerIndex + 1)
-        const fraction = index - lowerIndex
-        const lower = bandScale(categoryNames[lowerIndex])
-        const upper = bandScale(categoryNames[upperIndex])
-        return lower + (upper - lower) * fraction
-      }
-      const sx = scaleX as (key: string | number | Date) => number
-      const sy = scaleY as (key: string | number | Date) => number
-      let project: (x: number, y: number) => [number, number]
-      if (isOrdinal) {
-        if (isHorizontal) {
-          const projectCategory = interpolateBandScale(sy)
-          project = (categoryIndex, value) => [sx(value), projectCategory(categoryIndex)]
-        } else {
-          const projectCategory = interpolateBandScale(sx)
-          project = (categoryIndex, value) => [projectCategory(categoryIndex), sy(value)]
-        }
-      } else {
-        project = (x, y) => [sx(x), sy(y)]
-      }
-
-      const method = ann.method || "linear"
-      const trendPoints = method === "loess"
-        ? loess(points, ann.bandwidth ?? 0.3)
-        : (method === "polynomial"
-          ? polynomialRegression(points, ann.order || 2)
-          : linearRegression(points)).points
-      const linePoints = trendPoints
-        .map(([x, y]) => {
-          const [pixelX, pixelY] = project(x, y)
-          return `${pixelX},${pixelY}`
-        })
-        .join(" ")
+      const trendPoints = trendGeometry(ann, context)
+      if (trendPoints.length < 2) return null
+      const linePoints = trendPoints.map(([x, y]) => `${x},${y}`).join(" ")
       const color = ann.color || "#6366f1"
-      const last = trendPoints[trendPoints.length - 1]
-      const [labelX, labelY] = project(last[0], last[1])
+      const [labelX, labelY] = trendPoints[trendPoints.length - 1]
       return (
         <g key={`ann-${index}`}>
           <polyline
@@ -346,15 +270,15 @@ export function renderStaticAnnotationFallback(
     }
 
     case "anomaly-band": {
-      const data = context.data || []
+      const data = (context.data || []).filter((d) => !ann.filter || ann.filter(d))
       if (data.length < 2) return null
       const yAccessor = context.yAccessor || "y"
       const scaleX = context.scales?.x ?? context.scales?.time
       const scaleY = context.scales?.y ?? context.scales?.value
       if (!scaleX || !scaleY) return null
       const values = data
-        .map((datum) => datum[yAccessor] as number)
-        .filter((value) => value != null && isFinite(value))
+        .map((datum) => regressionNumber(datum[yAccessor]))
+        .filter((value): value is number => value !== null)
       if (values.length < 2) return null
       const mean = values.reduce((sum, value) => sum + value, 0) / values.length
       const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
@@ -368,7 +292,7 @@ export function renderStaticAnnotationFallback(
       const anomalyColor = ann.anomalyColor || "#ef4444"
       const radius = ann.anomalyRadius ?? 6
       const outliers = data.filter((datum) => {
-        const value = datum[yAccessor] as number
+        const value = regressionNumber(datum[yAccessor])
         return value != null && Math.abs(value - mean) > threshold * standardDeviation
       })
       return (
@@ -417,60 +341,33 @@ export function renderStaticAnnotationFallback(
 
     case "forecast": {
       const data = context.data || []
-      if (data.length < 3) return null
       const xAccessor = context.xAccessor || "x"
       const yAccessor = context.yAccessor || "y"
       const scaleX = context.scales?.x ?? context.scales?.time
       const scaleY = context.scales?.y ?? context.scales?.value
       if (!scaleX || !scaleY) return null
-      const points = data
-        .map((datum) => [datum[xAccessor], datum[yAccessor]] as [number, number])
-        .filter((point) => point[0] != null && point[1] != null && isFinite(point[0]) && isFinite(point[1]))
-        .sort((left, right) => left[0] - right[0])
-      if (points.length < 3) return null
-      let predict: (x: number) => number
-      if (ann.method === "polynomial") {
-        const coefficients: number[] = polynomialRegression(points, ann.order || 2).equation
-        predict = (x) => coefficients.reduce((sum, coefficient, degree) => (
-          sum + coefficient * Math.pow(x, degree)
-        ), 0)
-      } else {
-        const fit = fitLinearForForecast(points)
-        if (!fit) return null
-        predict = fit
-      }
-      const { se, meanX, ssX } = forecastIntervalStats(points, predict)
-      const count = points.length
-      const confidence = ann.confidence ?? 0.95
-      const zScore = confidenceZScore(confidence)
-      const minX = points[0][0]
-      const maxX = points[count - 1][0]
-      const step = (maxX - minX) / Math.max(count - 1, 1)
-      const envelopePoints = Array.from({ length: ann.steps ?? 5 }, (_, offset) => {
-        const x = maxX + (offset + 1) * step
-        const center = predict(x)
-        const interval = se * Math.sqrt(
-          1 + 1 / count + (ssX > 0 ? (x - meanX) ** 2 / ssX : 0),
-        ) * zScore
-        return { x, center, upper: center + interval, lower: center - interval }
-      })
-      const upperPath = envelopePoints
-        .map((point) => `${scaleX(point.x)},${scaleY(point.upper)}`)
-        .join(" L")
-      const lowerPath = envelopePoints
-        .slice()
-        .reverse()
-        .map((point) => `${scaleX(point.x)},${scaleY(point.lower)}`)
-        .join(" L")
+      const points = regressionPoints(data.map((d) => [d[xAccessor], d[yAccessor]]))
+      const model = forecastModel(points, ann)
+      if (!model) return null
+      const { predict } = model
+      const maxX = points[points.length - 1][0]
+      const envelopePoints = model.forecast(ann.steps ?? 5)
+      if (!envelopePoints.length) return null
+      const envelopePath = d3Area<(typeof envelopePoints)[number]>()
+        .x((point) => scaleX(point.x))
+        .y0((point) => scaleY(point.lower))
+        .y1((point) => scaleY(point.upper))(envelopePoints)
+      if (!envelopePath) return null
+
       const centerLine = envelopePoints
-        .map((point) => `${scaleX(point.x)},${scaleY(point.center)}`)
+        .map((point) => `${scaleX(point.x)},${scaleY(point.y)}`)
         .join(" ")
       const fill = ann.fill || "#6366f1"
       const stroke = ann.strokeColor || "#6366f1"
       const last = envelopePoints[envelopePoints.length - 1]
       return (
         <g key={`ann-${index}`}>
-          <path d={`M${upperPath} L${lowerPath} Z`} fill={fill} fillOpacity={ann.fillOpacity ?? 0.15} stroke="none" />
+          <path d={envelopePath} fill={fill} fillOpacity={ann.fillOpacity ?? 0.15} stroke="none" />
           <polyline
             points={`${scaleX(maxX)},${scaleY(predict(maxX))} ${centerLine}`}
             fill="none"
@@ -479,7 +376,7 @@ export function renderStaticAnnotationFallback(
             strokeDasharray={ann.strokeDasharray ?? "6,3"}
           />
           {ann.label && last && (
-            <text x={scaleX(last.x) + 4} y={scaleY(last.center) - 4} fill={stroke} fontSize={11}>
+            <text x={scaleX(last.x) + 4} y={scaleY(last.y) - 4} fill={stroke} fontSize={11}>
               {ann.label}
             </text>
           )}

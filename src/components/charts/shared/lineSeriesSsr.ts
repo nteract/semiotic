@@ -22,6 +22,7 @@ import {
 } from "./statisticalOverlays"
 import { createColorScale, DEFAULT_COLOR } from "./colorUtils"
 import { filterSparseArray } from "./sparseArray"
+import { forecastYExtent } from "./forecastExtent"
 
 const RESOLVED_X_KEY = "__semiotic_resolvedX"
 const RESOLVED_Y_KEY = "__semiotic_resolvedY"
@@ -159,51 +160,6 @@ function applyGapStrategy(
   return { rows: out, groupKey: gapGroupKey }
 }
 
-function expandEnvelopeYExtent(
-  rows: Datum[],
-  yKey: string,
-  forecast: ForecastConfig,
-): [number, number] | undefined {
-  const upperAcc = forecast.upperBounds
-  const lowerAcc = forecast.lowerBounds
-  if (!upperAcc && !lowerAcc) return undefined
-  const getUpper = typeof upperAcc === "function"
-    ? upperAcc
-    : typeof upperAcc === "string"
-      ? (d: Datum) => d[upperAcc] as number
-      : null
-  const getLower = typeof lowerAcc === "function"
-    ? lowerAcc
-    : typeof lowerAcc === "string"
-      ? (d: Datum) => d[lowerAcc] as number
-      : null
-  let min = Infinity
-  let max = -Infinity
-  for (const d of rows) {
-    const yVal = Number(d[yKey])
-    if (Number.isFinite(yVal)) {
-      if (yVal < min) min = yVal
-      if (yVal > max) max = yVal
-    }
-    if (getUpper) {
-      const u = getUpper(d)
-      if (u != null && Number.isFinite(u)) {
-        if (u > max) max = u
-        if (u < min) min = u
-      }
-    }
-    if (getLower) {
-      const l = getLower(d)
-      if (l != null && Number.isFinite(l)) {
-        if (l < min) min = l
-        if (l > max) max = l
-      }
-    }
-  }
-  if (!Number.isFinite(min) || !Number.isFinite(max)) return undefined
-  return [min, max]
-}
-
 function buildDirectLabelAnnotations(
   rows: Datum[],
   directLabel: boolean | { position?: "start" | "end"; fontSize?: number },
@@ -264,18 +220,18 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
   // ── Forecast / anomaly ─────────────────────────────────────────────
   if (input.forecast) {
     const enriched: ForecastConfig =
-      lineBy && typeof lineBy === "string" && typeof input.forecast === "object"
+      lineBy && (typeof lineBy === "string" || typeof lineBy === "function")
         ? { ...input.forecast, _groupBy: lineBy }
         : input.forecast
     const result = buildForecast(rows, xKey, yKey, enriched, input.anomaly)
     rows = result.processedData
     annotations.push(...result.annotations)
-    yExtent = expandEnvelopeYExtent(rows, yKey, input.forecast)
+    yExtent = forecastYExtent(rows, yKey, input.forecast)
 
-    if (lineBy && typeof lineBy === "string") {
+    if (lineBy && (typeof lineBy === "string" || typeof lineBy === "function")) {
       rows = rows.map((d) => ({
         ...d,
-        [COMPOUND_GROUP]: `${d[lineBy]}__${d[SEGMENT_FIELD] || "observed"}`,
+        [COMPOUND_GROUP]: `${typeof lineBy === "function" ? lineBy(d) : d[lineBy]}__${d[SEGMENT_FIELD] || "observed"}`,
       }))
       groupAccessor = COMPOUND_GROUP
     } else {

@@ -15,7 +15,8 @@ import { getMax, getMinMax } from "./minMax"
  */
 
 import { darkenColor, lightenColor } from "./colorManipulation"
-import { fitLinearForForecast, forecastIntervalStats, confidenceZScore } from "./leastSquaresRegression"
+import { forecastModel } from "./forecastModel"
+import { regressionNumber, regressionPoints } from "./leastSquaresRegression"
 
 // ── Config types ───────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ export interface ForecastConfig {
   trainEnd?: number
   /** Number of forecast steps beyond last data point. Default: 10 */
   steps?: number
-  /** Regression method. Default: "linear" */
+  /** Regression method. LOESS extrapolates the final smoothed segment. Default: "linear" */
   method?: "linear" | "loess"
   /** LOESS bandwidth (only for method="loess"). Default: 0.3 */
   bandwidth?: number
@@ -128,13 +129,13 @@ export interface ForecastConfig {
    */
   anomalyStyle?: Datum | ((datum: Datum) => Datum)
   /**
-   * Internal: field name used to group data into separate lines (e.g. "metricLabel").
+   * Internal: field or accessor used to group data into separate lines (e.g. "metricLabel").
    * When set, boundary point duplication only bridges within the same group,
    * preventing cross-metric stray lines. Set automatically by LineChart when
    * both lineBy and forecast are active.
    * @internal
    */
-  _groupBy?: string
+  _groupBy?: string | ((d: Datum) => unknown)
   /** Label for the forecast/envelope region */
   label?: string
 }
@@ -267,50 +268,14 @@ function buildPrecomputed(
     return { ...d, [SEGMENT_FIELD]: segment }
   })
 
-  // Duplicate boundary points so adjacent segments share an endpoint (no gap).
-  // When _groupBy is set (multi-metric data), we must group by metric first
-  // because the flat data is interleaved by timestamp (A_t1, B_t1, A_t2, B_t2...),
-  // so adjacent-pair scanning would never find within-group segment transitions.
-  const groupByField = config._groupBy
+  // Adjacent segments share endpoints. buildForecast partitions series first.
   const processedData: Datum[] = []
-
-  if (groupByField) {
-    // Group-aware boundary duplication: collect points per group, find
-    // segment transitions within each group, then append bridge points
-    // after the tagged data. Ordering within groups is handled by the
-    // downstream pipeline which sorts by x-accessor per group.
-    const groups = new Map<string, Datum[]>()
-    for (const d of tagged) {
-      const key = d[groupByField] ?? "__default"
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push(d)
-    }
-
-    // For each group, find segment boundaries and collect bridge points.
-    const bridgePoints: Datum[] = []
-    for (const [, groupPoints] of groups) {
-      for (let j = 0; j < groupPoints.length - 1; j++) {
-        if (groupPoints[j][SEGMENT_FIELD] !== groupPoints[j + 1][SEGMENT_FIELD]) {
-          // Copy the NEXT point tagged with the CURRENT segment so the previous
-          // segment extends forward to the boundary rather than the next segment
-          // reaching backward (which would start forecast styling one point early).
-          bridgePoints.push({ ...groupPoints[j + 1], [SEGMENT_FIELD]: groupPoints[j][SEGMENT_FIELD] })
-          // Also copy the CURRENT point tagged with the NEXT segment so the next
-          // segment extends backward to the boundary (no gap on the other side).
-          bridgePoints.push({ ...groupPoints[j], [SEGMENT_FIELD]: groupPoints[j + 1][SEGMENT_FIELD] })
-        }
-      }
-    }
-    processedData.push(...tagged, ...bridgePoints)
-  } else {
-    // Single-group: scan adjacent pairs directly
-    for (let i = 0; i < tagged.length; i++) {
-      processedData.push(tagged[i])
-      if (i < tagged.length - 1 && tagged[i][SEGMENT_FIELD] !== tagged[i + 1][SEGMENT_FIELD]) {
-        // Bridge in both directions so neither segment has a gap
-        processedData.push({ ...tagged[i + 1], [SEGMENT_FIELD]: tagged[i][SEGMENT_FIELD] })
-        processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
-      }
+  for (let i = 0; i < tagged.length; i++) {
+    processedData.push(tagged[i])
+    if (i < tagged.length - 1 && tagged[i][SEGMENT_FIELD] !== tagged[i + 1][SEGMENT_FIELD]) {
+      // Bridge in both directions so neither segment has a gap
+      processedData.push({ ...tagged[i + 1], [SEGMENT_FIELD]: tagged[i][SEGMENT_FIELD] })
+      processedData.push({ ...tagged[i], [SEGMENT_FIELD]: tagged[i + 1][SEGMENT_FIELD] })
     }
   }
 
@@ -402,19 +367,8 @@ function buildPrecomputed(
     annotations.push(highlightAnn)
   }
 
-  // Anomaly band (IQR-based) if anomaly config provided alongside pre-computed
-  if (anomalyConfig) {
-    annotations.push({
-      type: "anomaly-band",
-      threshold: anomalyConfig.threshold ?? 2,
-      showBand: anomalyConfig.showBand !== false,
-      fill: anomalyConfig.bandColor || "#6366f1",
-      fillOpacity: anomalyConfig.bandOpacity ?? 0.1,
-      anomalyColor: anomalyConfig.anomalyColor || "#ef4444",
-      anomalyRadius: anomalyConfig.anomalyRadius ?? 6,
-      label: anomalyConfig.label,
-    })
-  }
+  // Mean ± threshold × population standard deviation over the rendered data.
+  if (anomalyConfig) annotations.push(...buildAnomalyAnnotations(anomalyConfig))
 
   return { processedData, annotations }
 }
@@ -431,13 +385,12 @@ function buildAutoForecast(
   const {
     trainEnd,
     steps = 10,
-    confidence = 0.95,
     color = "#6366f1",
     bandOpacity = 0.15,
     label,
   } = config
 
-  if (trainEnd == null) {
+  if (regressionNumber(trainEnd) === null) {
     return { processedData: data as Datum[], annotations: [] }
   }
 
@@ -445,9 +398,9 @@ function buildAutoForecast(
   const training: Datum[] = []
   const observed: Datum[] = []
 
-  for (const d of data) {
-    const xVal = d[xAccessor] as number
-    if (xVal <= trainEnd) {
+  for (const d of [...data].sort((a, b) => (regressionNumber(a[xAccessor]) ?? Infinity) - (regressionNumber(b[xAccessor]) ?? Infinity))) {
+    const xVal = regressionNumber(d[xAccessor])
+    if (xVal !== null && xVal <= trainEnd!) {
       training.push({ ...d, [SEGMENT_FIELD]: "training" as SegmentType })
     } else {
       observed.push({ ...d, [SEGMENT_FIELD]: "observed" as SegmentType })
@@ -455,35 +408,27 @@ function buildAutoForecast(
   }
 
   // Build regression from training data
-  const points: [number, number][] = training
-    .map((d) => [d[xAccessor], d[yAccessor]] as [number, number])
-    .filter((p) => p[0] != null && p[1] != null && isFinite(p[0]) && isFinite(p[1]))
-    .sort((a, b) => a[0] - b[0])
+  const points = regressionPoints(training.map((d) => [d[xAccessor], d[yAccessor]]))
 
   const annotations: Datum[] = []
   const forecastPoints: Datum[] = []
 
-  if (points.length >= 3) {
-    const n = points.length
-    const predict = fitLinearForForecast(points)
-    if (predict) {
-      const { se, meanX, ssX } = forecastIntervalStats(points, predict)
-      const z = confidenceZScore(confidence)
+  if (points.length >= 3 && Number.isInteger(steps) && steps > 0) {
+    const model = forecastModel(points, config)
+    if (model) {
 
-      const allX = data.map((d) => d[xAccessor] as number).filter((v) => v != null && isFinite(v))
+      const allX = data.map((d) => regressionNumber(d[xAccessor])).filter((v): v is number => v !== null)
       const xMax = getMax(allX)
-      const step = points.length > 1 ? (points[n - 1][0] - points[0][0]) / (n - 1) : 1
 
-      for (let i = 1; i <= steps; i++) {
-        const fx = xMax + i * step
-        const fy = predict(fx)
-        const interval = se * Math.sqrt(1 + 1 / n + (ssX > 0 ? (fx - meanX) ** 2 / ssX : 0)) * z
+      const dateX = data.some((d) => d[xAccessor] instanceof Date)
+      for (const { x: fx, y: fy, upper, lower } of model.forecast(steps, xMax)) {
         forecastPoints.push({
-          [xAccessor]: fx,
+          ...(observed[observed.length - 1] ?? training[training.length - 1]),
+          [xAccessor]: dateX ? new Date(fx) : fx,
           [yAccessor]: fy,
           [SEGMENT_FIELD]: "forecast" as SegmentType,
-          __forecastUpper: fy + interval,
-          __forecastLower: fy - interval,
+          __forecastUpper: upper,
+          __forecastLower: lower,
         })
       }
 
@@ -517,19 +462,8 @@ function buildAutoForecast(
     label: "Train / Forecast",
   })
 
-  // Anomaly band (computed from training data only via IQR)
-  if (anomalyConfig) {
-    annotations.push({
-      type: "anomaly-band",
-      threshold: anomalyConfig.threshold ?? 2,
-      showBand: anomalyConfig.showBand !== false,
-      fill: anomalyConfig.bandColor || "#6366f1",
-      fillOpacity: anomalyConfig.bandOpacity ?? 0.1,
-      anomalyColor: anomalyConfig.anomalyColor || "#ef4444",
-      anomalyRadius: anomalyConfig.anomalyRadius ?? 6,
-      label: anomalyConfig.label,
-    })
-  }
+  // Mean ± threshold × population standard deviation over the rendered data.
+  if (anomalyConfig) annotations.push(...buildAnomalyAnnotations(anomalyConfig))
 
   // Duplicate boundary points so adjacent segments share an endpoint (no gap)
   const processedData: Datum[] = []
@@ -573,6 +507,35 @@ export function buildForecast(
   forecastConfig: ForecastConfig,
   anomalyConfig?: AnomalyConfig
 ): ForecastResult {
+  const groupBy = forecastConfig._groupBy
+  if (groupBy && data.length) {
+    const readGroup = typeof groupBy === "function" ? groupBy : (d: Datum) => d[groupBy]
+    const groups = new Map<unknown, Datum[]>()
+    for (const row of data) {
+      const key = readGroup(row)
+      const group = groups.get(key)
+      if (group) group.push(row)
+      else groups.set(key, [row])
+    }
+    const processedData: Datum[] = []
+    const annotations: Datum[] = []
+    for (const [key, rows] of groups) {
+      const result = buildForecast(rows, xAccessor, yAccessor, { ...forecastConfig, _groupBy: undefined }, anomalyConfig)
+      for (const row of result.processedData) processedData.push(row)
+      for (const ann of result.annotations) {
+        if (ann.type === "x-threshold") {
+          if (!annotations.some((existing) => existing.type === "x-threshold")) annotations.push(ann)
+        } else {
+          const priorFilter = ann.filter as ((d: Datum) => boolean) | undefined
+          annotations.push({ ...ann, filter: (d: Datum) => {
+            const value = readGroup(d)
+            return (value === key || Object.is(value, key)) && (!priorFilter || priorFilter(d))
+          } })
+        }
+      }
+    }
+    return { processedData, annotations }
+  }
   if (isPrecomputedMode(forecastConfig)) {
     return buildPrecomputed(data, xAccessor, yAccessor, forecastConfig, anomalyConfig)
   }
