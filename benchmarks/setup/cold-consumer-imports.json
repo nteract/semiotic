@@ -45,9 +45,9 @@
       "importPath": "semiotic/atlas",
       "symbol": "MotifBraidChart",
       "platform": "browser",
-      "rawBytes": 514035,
-      "gzipBytes": 170710,
-      "packedPackageInputFiles": 43
+      "rawBytes": 517112,
+      "gzipBytes": 171618,
+      "packedPackageInputFiles": 44
     },
     {
       "exportKey": "./atlas/core",
@@ -63,17 +63,17 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 453356,
-      "gzipBytes": 151357,
-      "packedPackageInputFiles": 78
+      "rawBytes": 453887,
+      "gzipBytes": 151541,
+      "packedPackageInputFiles": 79
     },
     {
       "exportKey": "./xy",
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 453029,
-      "gzipBytes": 151767,
+      "rawBytes": 453560,
+      "gzipBytes": 151926,
       "packedPackageInputFiles": 60
     },
     {
@@ -81,8 +81,8 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 453029,
-      "gzipBytes": 151648,
+      "rawBytes": 453560,
+      "gzipBytes": 151807,
       "packedPackageInputFiles": 53
     },
     {
@@ -90,8 +90,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 450939,
-      "gzipBytes": 139817,
+      "rawBytes": 451066,
+      "gzipBytes": 139850,
       "packedPackageInputFiles": 36
     },
     {
@@ -99,27 +99,27 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 502208,
-      "gzipBytes": 166020,
-      "packedPackageInputFiles": 38
+      "rawBytes": 505288,
+      "gzipBytes": 166966,
+      "packedPackageInputFiles": 39
     },
     {
       "exportKey": "./network/zoom",
       "importPath": "semiotic/network/zoom",
       "symbol": "ZoomableNetworkCustomChart",
       "platform": "browser",
-      "rawBytes": 514508,
-      "gzipBytes": 170555,
-      "packedPackageInputFiles": 40
+      "rawBytes": 517581,
+      "gzipBytes": 171517,
+      "packedPackageInputFiles": 41
     },
     {
       "exportKey": "./realtime",
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 465485,
-      "gzipBytes": 154256,
-      "packedPackageInputFiles": 61
+      "rawBytes": 465889,
+      "gzipBytes": 154385,
+      "packedPackageInputFiles": 60
     },
     {
       "exportKey": "./realtime/core",
@@ -128,7 +128,7 @@
       "platform": "browser",
       "rawBytes": 2166,
       "gzipBytes": 757,
-      "packedPackageInputFiles": 59
+      "packedPackageInputFiles": 58
     },
     {
       "exportKey": "./realtime/react",
@@ -145,7 +145,7 @@
       "symbol": "GaltonBoardChart",
       "platform": "browser",
       "rawBytes": 466524,
-      "gzipBytes": 156604,
+      "gzipBytes": 156599,
       "packedPackageInputFiles": 18
     },
     {
@@ -171,8 +171,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 898786,
-      "gzipBytes": 286378,
+      "rawBytes": 899499,
+      "gzipBytes": 286547,
       "packedPackageInputFiles": 4
     },
     {
@@ -180,8 +180,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 460271,
-      "gzipBytes": 146096,
+      "rawBytes": 459647,
+      "gzipBytes": 145918,
       "packedPackageInputFiles": 1
     },
     {
@@ -189,8 +189,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 900784,
-      "gzipBytes": 287225,
+      "rawBytes": 901497,
+      "gzipBytes": 287454,
       "packedPackageInputFiles": 4
     },
     {
@@ -198,9 +198,9 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 829191,
-      "gzipBytes": 266365,
-      "packedPackageInputFiles": 79
+      "rawBytes": 830212,
+      "gzipBytes": 266706,
+      "packedPackageInputFiles": 80
     },
     {
       "exportKey": "./ai/core",
@@ -261,8 +261,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 360257,
-      "gzipBytes": 121605,
+      "rawBytes": 360384,
+      "gzipBytes": 121635,
       "packedPackageInputFiles": 28
     },
     {
@@ -342,18 +342,18 @@
       "importPath": "semiotic/recipes",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 5549,
-      "gzipBytes": 2403,
-      "packedPackageInputFiles": 16
+      "rawBytes": 5643,
+      "gzipBytes": 2416,
+      "packedPackageInputFiles": 20
     },
     {
       "exportKey": "./recipes/core",
       "importPath": "semiotic/recipes/core",
       "symbol": "waffleLayout",
       "platform": "browser",
-      "rawBytes": 5549,
-      "gzipBytes": 2403,
-      "packedPackageInputFiles": 10
+      "rawBytes": 5643,
+      "gzipBytes": 2416,
+      "packedPackageInputFiles": 14
     },
     {
       "exportKey": "./recipes/react",
