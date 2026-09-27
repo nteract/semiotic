@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-browser-baseline",
-  "capturedAt": "2026-09-22T18:31:49.824Z",
+  "capturedAt": "2026-09-27T22:22:51.297Z",
   "source": {
-    "gitCommit": "76e6d3796",
+    "gitCommit": "e42a54e92",
     "artifact": "checkout dist artifacts served by a local production-mode Vite integration fixture",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 31
+      "changedPathCount": 40
     }
   },
   "referenceEnvironment": {
@@ -197,190 +197,190 @@
     "timings": {
       "hydration": {
         "samplesMs": [
+          7.7,
+          5.4,
+          5.3,
+          5.4,
           5.4,
           5.2,
-          5.1,
-          5,
-          5.2,
-          5.1,
-          5.2
+          5.3
         ],
-        "minMs": 5,
-        "p50Ms": 5.2,
-        "p95Ms": 5.34,
-        "p99Ms": 5.388,
-        "maxMs": 5.4,
-        "meanMs": 5.171
+        "minMs": 5.2,
+        "p50Ms": 5.4,
+        "p95Ms": 7.01,
+        "p99Ms": 7.562,
+        "maxMs": 7.7,
+        "meanMs": 5.671
       },
       "initialCanvasPaint": {
         "samplesMs": [
-          27.9,
-          25.7,
-          25.6,
-          25.1,
-          25.2,
-          25.2,
-          25.6
+          36.7,
+          26.5,
+          26.8,
+          26.8,
+          26.5,
+          27,
+          27.1
         ],
-        "minMs": 25.1,
-        "p50Ms": 25.6,
-        "p95Ms": 27.24,
-        "p99Ms": 27.768,
-        "maxMs": 27.9,
-        "meanMs": 25.757
+        "minMs": 26.5,
+        "p50Ms": 26.8,
+        "p95Ms": 33.82,
+        "p99Ms": 36.124,
+        "maxMs": 36.7,
+        "meanMs": 28.2
       },
       "updateCanvasPaint": {
         "samplesMs": [
-          15.1,
-          14.8,
+          17.8,
+          9.8,
           11.2,
-          9.4,
-          11.5,
-          15.9,
-          16.2
+          15.7,
+          13.2,
+          13.2,
+          13.2
         ],
-        "minMs": 9.4,
-        "p50Ms": 14.8,
-        "p95Ms": 16.11,
-        "p99Ms": 16.182,
-        "maxMs": 16.2,
+        "minMs": 9.8,
+        "p50Ms": 13.2,
+        "p95Ms": 17.17,
+        "p99Ms": 17.674,
+        "maxMs": 17.8,
         "meanMs": 13.443
       },
       "scatter10kPaint": {
         "samplesMs": [
-          18.7,
-          17.8,
-          18.6,
-          17.9,
-          19.1,
-          18.4,
-          18.5
+          19.9,
+          20,
+          21,
+          19.6,
+          20.8,
+          19.8,
+          20.4
         ],
-        "minMs": 17.8,
-        "p50Ms": 18.5,
-        "p95Ms": 18.98,
-        "p99Ms": 19.076,
-        "maxMs": 19.1,
-        "meanMs": 18.429
+        "minMs": 19.6,
+        "p50Ms": 20,
+        "p95Ms": 20.94,
+        "p99Ms": 20.988,
+        "maxMs": 21,
+        "meanMs": 20.214
       },
       "scatter10kHover": {
         "samplesMs": [
-          30.1,
-          29.8,
-          28.2,
-          32.2,
-          32.5,
-          32.2,
-          32.7
+          39.7,
+          38.2,
+          38.4,
+          77.6,
+          37.9,
+          38.2,
+          38
         ],
-        "minMs": 28.2,
-        "p50Ms": 32.2,
-        "p95Ms": 32.64,
-        "p99Ms": 32.688,
-        "maxMs": 32.7,
-        "meanMs": 31.1
+        "minMs": 37.9,
+        "p50Ms": 38.2,
+        "p95Ms": 66.23,
+        "p99Ms": 75.326,
+        "maxMs": 77.6,
+        "meanMs": 44
       },
       "scatter50kUnbatchedPaint": {
         "samplesMs": [
-          14.3,
-          14.4,
-          13.3,
-          13.3,
-          13.6,
-          13.3,
-          14.3
-        ],
-        "minMs": 13.3,
-        "p50Ms": 13.6,
-        "p95Ms": 14.37,
-        "p99Ms": 14.394,
-        "maxMs": 14.4,
-        "meanMs": 13.786
-      },
-      "scatter50kBatchedPaint": {
-        "samplesMs": [
-          14.7,
-          15.5,
-          14.2,
-          14.3,
-          14.2,
-          14,
+          14.9,
+          14.5,
+          14.8,
+          14.6,
+          14.5,
+          14.5,
           14
         ],
         "minMs": 14,
-        "p50Ms": 14.2,
-        "p95Ms": 15.26,
-        "p99Ms": 15.452,
-        "maxMs": 15.5,
-        "meanMs": 14.414
+        "p50Ms": 14.5,
+        "p95Ms": 14.87,
+        "p99Ms": 14.894,
+        "maxMs": 14.9,
+        "meanMs": 14.543
+      },
+      "scatter50kBatchedPaint": {
+        "samplesMs": [
+          15.6,
+          16.1,
+          14.7,
+          15.9,
+          15,
+          15.4,
+          15.4
+        ],
+        "minMs": 14.7,
+        "p50Ms": 15.4,
+        "p95Ms": 16.04,
+        "p99Ms": 16.088,
+        "maxMs": 16.1,
+        "meanMs": 15.443
       },
       "scatter50kHover": {
         "samplesMs": [
-          34.3,
-          32.5,
-          29.6,
-          30.1,
-          35.3,
-          30.9,
-          30.2
+          49.8,
+          39.3,
+          40.8,
+          101.7,
+          40.5,
+          40.5,
+          40.4
         ],
-        "minMs": 29.6,
-        "p50Ms": 30.9,
-        "p95Ms": 35,
-        "p99Ms": 35.24,
-        "maxMs": 35.3,
-        "meanMs": 31.843
+        "minMs": 39.3,
+        "p50Ms": 40.5,
+        "p95Ms": 86.13,
+        "p99Ms": 98.586,
+        "maxMs": 101.7,
+        "meanMs": 50.429
       },
       "heatmap50kExplicitPaint": {
         "samplesMs": [
-          24.5,
-          24.2,
-          23.5,
-          23.1,
-          22.8,
-          22.7,
-          23.7
+          24.7,
+          26.9,
+          26,
+          26,
+          26.9,
+          26.9,
+          26.8
         ],
-        "minMs": 22.7,
-        "p50Ms": 23.5,
-        "p95Ms": 24.41,
-        "p99Ms": 24.482,
-        "maxMs": 24.5,
-        "meanMs": 23.5
+        "minMs": 24.7,
+        "p50Ms": 26.8,
+        "p95Ms": 26.9,
+        "p99Ms": 26.9,
+        "maxMs": 26.9,
+        "meanMs": 26.314
       },
       "heatmap50kAutoPaint": {
         "samplesMs": [
-          6.6,
-          8,
-          7.5,
-          6.7,
           6.5,
-          7.3,
-          6.7
+          6.6,
+          6.5,
+          6.7,
+          6.8,
+          6.4,
+          6.5
         ],
-        "minMs": 6.5,
-        "p50Ms": 6.7,
-        "p95Ms": 7.85,
-        "p99Ms": 7.97,
-        "maxMs": 8,
-        "meanMs": 7.043
+        "minMs": 6.4,
+        "p50Ms": 6.5,
+        "p95Ms": 6.77,
+        "p99Ms": 6.794,
+        "maxMs": 6.8,
+        "meanMs": 6.571
       },
       "forceWorkerRoundTrip": {
         "samplesMs": [
-          20.3,
-          18.4,
-          13.7,
-          15.6,
-          16.1,
-          17.8,
-          16.2
+          21.5,
+          14.1,
+          13.9,
+          14.5,
+          15.3,
+          14.3,
+          14.2
         ],
-        "minMs": 13.7,
-        "p50Ms": 16.2,
-        "p95Ms": 19.73,
-        "p99Ms": 20.186,
-        "maxMs": 20.3,
-        "meanMs": 16.871
+        "minMs": 13.9,
+        "p50Ms": 14.3,
+        "p95Ms": 19.64,
+        "p99Ms": 21.128,
+        "maxMs": 21.5,
+        "meanMs": 15.4
       }
     }
   }

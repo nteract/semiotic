@@ -67,6 +67,11 @@ identity, not quantitative measures or unique-value categories.
   `update`.
 - Realtime HOCs require a valid time field (default `time`) for windowing; set
   `timeAccessor` when the field has another name.
+- Hierarchy charts take bounded root objects; replace the tree through `data`
+  rather than using edge push mode. Leave parent values unset when leaves
+  supply the measure, and use unique IDs for records that can be reordered.
+- Automatic `forecast` props require bounded data. Statistical annotations can
+  compute over a push frame's retained data.
 - Stream Frames are low-level escape hatches. Network-frame callbacks receive
   `RealtimeNode`/`RealtimeEdge` wrappers rather than raw rows.
 

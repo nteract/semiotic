@@ -26,19 +26,25 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.10.4
+## What's New in 3.11.0
 
-3.10.4 improves consumer bundler compatibility, optional physics engine loading,
-and AI chart-data validation.
+3.11.0 improves chart correctness as data changes, layouts resize, and charts
+move between interactive views and static exports.
 
-- Worker bundles and dynamic imports preserve the hints consumer bundlers need.
-- Matter and Rapier optional peers use bundler-resolvable imports, and Rapier
-  initialization waits for its WASM runtime.
-- AI validation distinguishes omitted push-mode data from invalid static data;
-  generated schemas retain nested constraints.
-- A new compatibility gate checks packed installs in webpack, Rspack, and Vite.
+- Aggregation, histogram imports, hierarchy values, and statistical overlays
+  preserve the quantities and grouping in the source data.
+- Resizing keeps marks, axes, tooltips, and keyboard focus aligned; accessible
+  tables retain focus and live regions announce deliberate keyboard interaction.
+- Sankey, ProcessSankey, force, and other network layouts handle cycles, worker
+  failures, and live mutations more reliably with less repeated work.
+- Physics settling preserves arrivals and confinement; MCP uploads have bounded
+  admission and deadlines.
+- Tooltip wrappers can use the exported `hasTooltipContent` helper, and `rollup`
+  supports multiple grouping fields and a named output field.
 
-See [the changelog](CHANGELOG.md#3104---2026-09-22) for details.
+See [the changelog](CHANGELOG.md#3110---2026-09-27) and the
+[release post](https://semiotic.nteract.io/blog/release-3-11-0) for details and
+upgrade notes.
 
 ## Why Semiotic
 
@@ -69,7 +75,7 @@ reports model- and task-specific results; it does not guarantee first-try correc
 
 Every chart includes a built-in error boundary, dev-mode validation
 warnings with typo suggestions, and accessibility features (canvas
-`aria-label`, keyboard-navigable legends, `aria-live` tooltips, SVG
+`aria-label`, keyboard-navigable legends, keyboard live-region announcements, SVG
 `<title>`/`<desc>`) so AI-generated code fails gracefully with
 actionable diagnostics instead of a blank screen.
 

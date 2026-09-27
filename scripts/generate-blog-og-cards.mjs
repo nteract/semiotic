@@ -345,11 +345,7 @@ function buildCardSVG({ entry, chartSVG }) {
 
     <!-- Byline row -->
     <text x="${leftX}" y="${H - 56}" fill="${FG_DIM}"
-      font-family="-apple-system, system-ui, sans-serif" font-size="18" font-weight="500">
-      ${escapeXml(entry.author)}
-    </text>
-    <text x="${leftX + 12 + 8 * (entry.author?.length ?? 0)}" y="${H - 56}" fill="${FG_DIM}"
-      font-family="-apple-system, system-ui, sans-serif" font-size="18" opacity="0.7"> · ${escapeXml(dateLabel)}</text>
+      font-family="-apple-system, system-ui, sans-serif" font-size="18" font-weight="500"><tspan>${escapeXml(entry.author)}</tspan><tspan dx="12" font-weight="400" opacity="0.7">· ${escapeXml(dateLabel)}</tspan></text>
 
     <!-- Tag row (monospace) -->
     <text x="${leftX}" y="${H - 28}" fill="${FG_DIM}"

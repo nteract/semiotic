@@ -38,6 +38,7 @@
  *   - xy | network | geo | ordinal | realtime | hierarchy   chart-family tags
  */
 
+import Release3110 from "./entries/release-3-11-0.jsx"
 import Release3100 from "./entries/release-3-10-0.jsx"
 import Release390 from "./entries/release-3-9-0.jsx"
 import ProcessSankeyVsClassicSankey from "./entries/process-sankey-vs-classic-sankey.jsx"
@@ -85,6 +86,7 @@ import AnInteroperabilityLayer from "./entries/an-interoperability-layer.jsx"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  Release3110,
   Release3100,
   Release390,
   PhysicsThatSettlesIntoCharts,
