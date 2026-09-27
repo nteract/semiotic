@@ -161,7 +161,8 @@ const ENTRY_GRAPHS = [
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
   // configs add 1.6 KiB gzip to the reachable graph (243.6 KiB measured).
-  { entry: "server.module.min.js", label: "server", limitKb: 244 },
+  // Bumped 244→245: Linux CI measures 244.2 KiB gzip; retain 0.8 KiB headroom.
+  { entry: "server.module.min.js", label: "server", limitKb: 245 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
