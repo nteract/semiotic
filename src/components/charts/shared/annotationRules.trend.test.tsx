@@ -71,14 +71,8 @@ describe("trend annotation — ordinal frame", () => {
     })
   })
 
-  // Horizontal projection: values on x-pixel-axis (linear),
-  // categories on y-pixel-axis (band scale). At the AnnotationContext
-  // level, xAccessor/yAccessor still map to oAccessor (category) /
-  // rAccessor (value) respectively — projection only changes pixel
-  // projection through scales.x / scales.y, NOT which data field is
-  // categorical vs numeric. This mirrors how StreamOrdinalFrame
-  // forwards accessors to OrdinalSVGOverlay (both projections pass
-  // xAccessor=oAccessor, yAccessor=rAccessor).
+  // AnnotationContext accessors follow screen axes in both live and static
+  // ordinal frames: horizontal x reads values, while y reads categories.
   describe("horizontal projection", () => {
     const ctx: AnnotationContext = {
       data: [
@@ -86,17 +80,14 @@ describe("trend annotation — ordinal frame", () => {
         { cat: "Mid", value: 20 },
         { cat: "High", value: 30 },
       ],
-      xAccessor: "cat",
-      yAccessor: "value",
+      xAccessor: "value",
+      yAccessor: "cat",
       frameType: "ordinal",
       projection: "horizontal",
       width: 400,
       height: 300,
       scales: {
-        // In horizontal projection scales.x is the linear value scale
-        // and scales.y is the band-centered category scale. The
-        // accessors above are still category/value — only the pixel
-        // axis flips.
+        // Scales follow the same axes: x is linear, y centers categories.
         x: makeLinearScale([0, 30], [0, 400]),
         y: makeBandScale({ Low: 100, Mid: 150, High: 200 }),
       },
