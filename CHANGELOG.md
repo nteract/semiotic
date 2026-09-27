@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   frame geometry, coincident parent/leaf hover through both hit-test paths,
   accessible rows, bounded data replacement,
   Chromium/WebKit interaction, and ESM/CommonJS browser/Node/edge exports.
+  Treemap visual baselines now reflect the corrected sums instead of assigning
+  phantom value to unvalued parents. Related hierarchy visuals, hover after
+  resize, tooltip dismissal, and keyboard navigation are verified across
+  Chromium, Firefox, and WebKit on macOS and Linux.
   Hierarchies use bounded root objects, not edge push mode. (#1322)
 - XY resizes rebuild active transition targets and pixel-dependent bar,
   waterfall, candlestick, and range geometry. Symbols move with their axes;
