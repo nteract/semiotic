@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 280,
+    "kb": 282,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 137,
+    "kb": 138,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
@@ -54,12 +54,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network",
-    "kb": 157,
+    "kb": 158,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 162,
+    "kb": 164,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -69,12 +69,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 172,
+    "kb": 173,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 171,
+    "kb": 172,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -94,17 +94,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 253,
+    "kb": 254,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 100,
+    "kb": 101,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 93,
+    "kb": 94,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -114,12 +114,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 108,
+    "kb": 111,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 106,
+    "kb": 109,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -144,7 +144,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/data",
-    "kb": 4,
+    "kb": 5,
     "blurb": "bin, rollup, groupBy, pivot, fromVegaLite"
   },
   {
@@ -169,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 606,
+    "kb": 609,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -194,7 +194,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 383,
+    "kb": 387,
     "blurb": "Full chart API and shared utilities"
   }
 ])
