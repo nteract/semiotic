@@ -92,8 +92,11 @@ test("mirrored histograms share a zero baseline and resize natively", async ({
   await expect(
     page.getByTestId("responsive-height").locator('[data-orient="left"]')
   ).toHaveCount(0)
+  // Linux WebKit can differ by two rasterized histogram-edge pixels after
+  // resize. Allow a few pixels; baseline alignment and dimensions stay exact.
   await expect(page.getByTestId("responsive-example")).toHaveScreenshot(
-    "responsive-mirrored-histograms.png"
+    "responsive-mirrored-histograms.png",
+    { maxDiffPixels: 5 }
   )
   await expect(page.getByTestId("responsive-height")).toHaveScreenshot(
     "responsive-height-hidden-value-axis.png"
