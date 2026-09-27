@@ -7,389 +7,192 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-09-27
+
 ### Added
 
 - Exported `hasTooltipContent` beside the tooltip chrome helpers across public
-  chart entry points, so renderer wrappers can apply the same empty-content rules.
+  chart entry points, so wrappers can apply the same empty-content rules.
+- `rollup` accepts multiple grouping fields and an explicit `outputField`.
 
 ### Fixed
 
-- Hierarchy layouts retain repeated names and accessor IDs without overwriting
-  nodes or colliding with authored suffixes. Identities survive value sorting
-  and resize. Treemap, CirclePack, and TreeDiagram share nonnegative value
-  summation across React and server rendering; missing and zero values no longer
-  acquire phantom area, and all-zero packs remain finite. Server configurations
-  retain hierarchy IDs and every TreeDiagram layout. The related audit covers
-  default/custom children accessors with named, array, and mapped palettes,
-  OrbitDiagram collisions, labels with custom children accessors, zero-area
-  frame geometry, coincident parent/leaf hover through both hit-test paths,
-  accessible rows, bounded data replacement,
-  Chromium/WebKit interaction, and ESM/CommonJS browser/Node/edge exports.
-  Treemap visual baselines now reflect the corrected sums instead of assigning
-  phantom value to unvalued parents. Related hierarchy visuals, hover after
-  resize, tooltip dismissal, and keyboard navigation are verified across
-  Chromium, Firefox, and WebKit on macOS and Linux.
-  Hierarchies use bounded root objects, not edge push mode. (#1322)
-- XY resizes rebuild active transition targets and pixel-dependent bar,
-  waterfall, candlestick, and range geometry. Symbols move with their axes;
-  hidden or invalid plot sizes preserve retained data until layout recovers.
-  Settled resizes preserve resolved log/time scales, reversed streaming
-  direction, and inverted Y. Canvas backing-store changes always repaint,
-  and viewport/pointer density-cap changes invalidate all frame families
-  without allocating media queries on each paint. The related audit covers
-  bounded/pushed data, intro and interrupted path/point transitions, fixed
-  gaps and mark sizes, custom-layout exclusions, and both resize directions.
-  Verification includes real mark pixels, tooltip content/placement/dismissal
-  in Chromium/WebKit and ESM/CommonJS browser/Node/edge static geometry.
-  (#1319)
-- Ordinal canvases share rounded backing-store sizing and effective transforms
-  with the other frame families, preventing repeated clears and reallocations
-  at fractional device-pixel ratios. Regression coverage checks consecutive
-  paints at odd CSS dimensions. (#1426, R0121)
-- Ordinal value domains use the same per-category net aggregates as bar and
-  funnel marks. Normalized stacks retain negative segments, repeated funnel
-  rows fit the plot, and timeline domains retain both endpoints after eviction,
-  removal, or updates. Dynamic columns preserve zero widths, reject invalid
-  weights, fit their gaps inside the plot, and align browser ticks to actual
-  column centers. Grouped bars retain individual observations while omitting
-  non-finite measures. The related audit covers both projections, bounded/pushed
-  data, callback accessors, Date endpoints, signed/empty/non-finite inputs,
-  real hover through resize and replacement in Chromium/WebKit, and matching
-  HOC and ESM/CommonJS server/Node/edge geometry. (#1310)
-- Aggregation preserves typed grouping keys and all Vega-Lite series dimensions,
-  excludes missing and invalid numeric measures, and returns `null` for groups
-  without numeric observations. `rollup` accepts multiple grouping fields and
-  an explicit `outputField`; importers choose collision-free output accessors.
-  Vega-Lite and Flint share the same aggregation engine, including count, mean,
-  sum, min, and max. Unsupported aggregates warn and remain in Flint metadata;
-  strict Vega-Lite imports refuse them. The related audit covers numeric/Date
-  keys, prototype-shaped fields, empty/malformed inputs, 200,000-row aggregation,
-  heatmap/pie/bubble measures, and direct bin missing-value handling. Verification
-  includes bounded/pushed chart hover through resize and data replacement in
-  Chromium/WebKit, and ESM/CommonJS data, root, AI, experimental, and server
-  entries. (#1382)
-- Vega-Lite histogram imports and round trips retain repeated source observations
-  and category grouping. Binned counts produce the original distribution;
-  unsupported binned aggregates are refused in strict mode and reported as losses
-  in lossy mode. Coverage verifies source rows, rendered bin proportions, and
-  actual count tooltips across browser and server rendering. (#1385)
+#### Data, scales, and statistical overlays
 
-- Statistical trends and forecasts retain full precision for timestamp, Date,
-  and small-value data. Polynomial forecasts evaluate the fitted coefficients
-  correctly, and ordinal trends follow displayed category order and centers
-  in both orientations. Live and static ordinal contexts use screen-axis
-  accessors consistently, including callbacks. Equivalent
-  inline configs retain overlays; data replacement/removal takes effect
-  immediately, and failed lazy computations warn in development. Auto forecasts
-  honor LOESS bandwidth and fit separate series with separate envelopes. The
-  related audit covers callback accessors across all four XY wrappers, centered
-  LOESS math, polynomial interval variance, and matching browser/server rules.
-  Regression checks include direct horizontal rule fixtures, bounded/pushed
-  trends, real forecast-point hover through resize and replacement, and
-  production ESM/CommonJS server exports.
-  Auto-forecast props require bounded data; push mode supports statistical
-  annotations over retained frame data. (#1363)
-
-- Axis-fixed force omits missing, blank, nonnumeric, and non-finite fixed values
-  with their incident edges; invalid domains, plots, and box sizes produce no
-  invalid geometry. Covers both axes, field/callback accessors, direct positions,
-  static SVG, and interactive marks. (#1400)
-- ProcessSankey and force workers retain startup/transport failure state until
-  explicit reset, avoiding repeated creation attempts. ProcessSankey subsequent
-  layouts choose synchronous execution immediately. Success payloads are checked
-  before scene construction; malformed responses reject pending consumers and
-  trigger fallback. Normal cancellation remains retryable, and chart/recipe
-  worker transport loads on demand. (#1333)
-- Mixed GoFish paths, rectangles, and other node marks now resolve pointer hits
-  in display-list paint order, including larger rectangles painted over paths.
-  Ordinary treemaps retain smallest-cell selection; coverage includes quadtree
-  parity, camera changes, resize, reversed paint order, and tooltip dismissal.
-  (#1509)
-- ProcessSankey crossing optimization uses a temporal range index and exact local
-  swap deltas instead of graph-sized crossing-pair tables. Layout analysis is
-  reused across styling, labels, equivalent inline props, and timeline resizing;
-  synchronous mounting computes once, and worker geometry receives current host
-  styling. Pending work preserves the latest scene, superseded worker work is
-  cancelled, and malformed worker responses reject pending requests. Coverage
-  includes exact crossing comparisons, public chart refs, static rendering, and
-  sync/worker hover after resizing in Chromium and WebKit. (#1333, #1325)
-- Network chart array removals and updates commit one layout. Incident-edge
-  indexing avoids repeated graph scans, and force workers use current topology
-  after push/remove/update operations; stale results cannot overwrite newer
-  mutations or repopulate a cleared chart. Verified through ForceDirectedGraph
-  and SankeyDiagram refs, retained frame data, and worker supersession. (#1328)
-- Net Ensemble analyzes and layers strongly connected components iteratively,
-  handles deep chains, and counts terminal components correctly for cyclic
-  graphs. Topology analysis is cached before layout; current records, labels,
-  category colors, selection, and edge dimming stay current. Census glyph IDs
-  survive resizing, selection matches member records, and an overflow census
-  grid keeps every component within the plot. Coverage includes a 20,000-node
-  chain, cyclic terminal groups, cache refreshes, and circle/diamond census
-  bounds. (#1398, #1502)
-- Axis-fixed force collision passes use spatial sweeps with linear working
-  storage and reusable fixed-axis ordering, forces, boxes, and resolved links.
-  Raw-datum callback accessors agree between positioning and edge rendering.
-  Transit traversal sorts component seeds once, uses indexed queues, and caches
-  barycenters per sweep. Dependency matrices index cells by endpoint pair,
-  preserving parallel edges, self-loops, and accessible labels. Recipe coverage
-  includes raw/wrapped callback parity, static SVG evidence, and Chromium/WebKit
-  hover after data changes, resize, and zoom/pan. (#1400, #1512)
-- Cyclic Sankey layouts use bounded, flow-weighted feedback ordering instead of
-  enumerating every circuit. Node and edge permutations, including fractional
-  flows, retain the same feedback choices; parallel flows and self-links remain
-  intact. Iterative layering, indexed arc placement, and shared endpoint lists
-  remove repeated graph scans, and relayout clears obsolete circular geometry.
-  The faulty Johnson implementation and duplicate SCC code were removed. The
-  audit covers dense reciprocal graphs, a 20,000-node chain, bounded/pushed
-  updates, transition geometry, both orientations, Chromium/WebKit hover through
-  resize and zoom/pan, and ESM/CommonJS browser/Node/edge static exports. (#1334)
-- GoFish paths use SVG command-aware bounds, including curve/arc extrema,
-  relative coordinates, and reflected group transforms. Pointer hits follow
-  the painted path and overlap order while keyboard navigation retains the
-  enclosing bounds. Bump ribbons repair folded boundaries on steep smooth and
-  linear rank changes, preserve sample/datum alignment and column widths, and
-  expose the hovered ribbon's data throughout its filled area. The audit covers
-  real flower petals, camera movement, resize/data updates, tooltip placement
-  and dismissal in Chromium/WebKit, and ESM/CommonJS browser/Node/edge static
-  rendering. (#1509)
-- Lineage domains use actual layer/row extents, including negative layers and
-  uncentered or sparse rows. Backedges are inferred when no override is supplied;
-  cycles and self-loops stay inside the plot and carry direction arrows. Dagre
-  adds arrows for routed and fallback edges, clips fallback endpoints to node
-  borders, and truncates visible labels while retaining full semantic labels.
-  The audit fixes dash/cap rendering across canvas and SVG edge types, preserves
-  raw lineage callback data, and covers minimap inversion, all LODs, bounded/pushed
-  hover through resize and dismissal, and ESM/CommonJS browser/Node/edge static
-  exports. Stale lineage documentation references were removed. (#1508)
-- Static network wrappers identify their zero dimension placeholders so Dagre and
-  Flextree use default sizes when dimensions are omitted, matching the browser;
-  authored zero sizes remain invalid. Verified through static scene tests and
-  production server exports. (#1503, #1508)
-- Composed Dagre/Flextree layouts retain dimensions and routed waypoints stored
-  on frame wrappers when the raw datum omits them. Raw geometry takes precedence;
-  frame-created zero dimension placeholders use defaults while authored invalid
-  sizes remain rejected. The audit covers fitted/authored coordinates, both edge
-  styles, bounded/pushed hover through resize and dismissal, and ESM/CommonJS
-  browser/Node/edge rendering. (#1503, #1508)
-- Invalid waffle grids retain their accessible notice with zero input rows;
-  valid empty waffle and bullet charts still suppress omission notices. The
-  audit covers invalid dimensions/gutters, bounded charts with `emptyContent={false}`,
-  empty push-mode charts, and public recipe and server SVG exports. (#1505)
-- Flextree labels and node/edge tooltips receive original data objects, including
-  objects with their own `data` field. Negative coordinates and variable node
-  sizes fit inside the plot by default; `fit: "none"` retains authored pixels.
-  The audit covers both orientations, bounded and pushed canvas hover, resize
-  and dismissal, nonzero plot origins, invalid geometry, and ESM/CommonJS
-  browser/Node/edge static exports. Examples use `NetworkCustomChart`. (#1503)
-- The related Dagre audit fixes the same raw-datum and plot-fitting defects,
-  including waypoint bounds and invalid coordinates. (#1508, R0878)
-- Consolidated identical UTF-16 FNV-1a, Mulberry32, clamp, and prototype-safe
-  dictionary helpers across recipes, physics, category colors, hatch fills,
-  rough rendering, and static rendering. Golden vectors and family regressions
-  preserve their outputs; distinct packing PRNG/clamp behavior and HyperLogLog's
-  avalanche remain intact. The recipes selection hook now shares the chart
-  context without loading unrelated theme utilities, reducing the recipes entry
-  graph to 99.1 KiB within its unchanged 104 KiB budget. This addresses helper
-  duplication in R0877/R0887; other #1542 cases remain open.
-- Interval sampling rejects invalid steps and non-finite or unrepresentable
-  domains, and includes fractional on-grid endpoints without cumulative drift.
-  Timeline lanes keep positive bar heights inside short lanes and use distinct
-  fractional ticks. Bullet charts compact skipped rows and disclose truncation;
-  waffle charts disclose categories receiving no cells and invalid grids. The
-  audit covers direct/sweep counting, tiny and crowded plots, zero values,
-  category-order ties, bounded/pushed canvas hover through resize and dismissal,
-  accessible SVG notices, and ESM/CommonJS browser/Node/edge exports. (#1505)
-- Process region factories preserve per-body attribute callbacks and protect
-  their `primitive` identity while retaining authored overrides of other defaults.
-  Worker observations now reach region callbacks without duplicating events from
-  imperative steps. The audit covers all eight factories, public ESM/CommonJS
-  exports, initial and pushed bodies, and sync/worker canvas hover through resize
-  and dismissal.
-  Static physics SVG retains geometry without running live region callbacks.
-  (#1510)
-- Isometric landmark selection keeps landmarks in their geographic cells unless
-  an explicit `centerId` moves one. Middle-cell preference and name/id tie-breaking
-  are deterministic; diversity scoring counts the actual center kind once. The
-  audit covers bounded/pushed maps, input reordering, empty and overridden centers,
-  canvas hover/resize, SVG overlays, and browser/Node/edge server exports. (#1506)
-- Small charts retain a finite, positive plot size after margins, preventing
-  negative SVG dimensions and degenerate Sankey geometry. Empty time scales use
-  a fixed epoch-day domain so SVG, render evidence, and hydration are independent
-  of the wall clock. The related-surface audit covers all five frame families,
-  bounded and pushed XY data, controlled realtime snapshots, ESM/CommonJS server
-  entries (browser, Node, and edge), and browser resize/hover recovery. (#1532)
-  Follow-up: align the time-scale integration test with the fixed UTC epoch-day
-  contract, asserting Date endpoints and exact timestamps instead of a recent year.
-- Hydration guides describe all five frame families, controlled realtime SSR,
-  push-mode data requirements, SVG layering, and current pre-hydration differences.
-  Shared-hook and server-renderer comments describe current behavior instead of
-  past incidents. The audit includes the public SSR guide, frame/store lifecycle
-  code, and static renderer mappings. (#1531)
-- Reduced the server entry graph below its existing 244 KiB gzip budget by
-  sharing geographic scene/chrome rendering and removing redundant legend
-  rendering and unused vertical item-layout allocations. Empty-scene overlays,
-  annotation evidence, cartogram chrome, and all four legend positions retain
-  their contracts; source and published server entry points are covered.
+- Aggregation preserves typed grouping keys and Vega-Lite series dimensions,
+  excludes missing/invalid numeric measures, and returns `null` when a group has
+  no numeric observations. Vega-Lite and Flint share count/mean/sum/min/max
+  semantics and choose collision-free output accessors; unsupported aggregates
+  are reported, and strict Vega-Lite imports refuse them. Histogram imports and
+  round trips retain source observations, grouping, and bin counts. (#1382, #1385)
+- `bin` validates counts and domains, excludes nonfinite/nonnumeric values, and
+  assigns decimal boundaries consistently. Results include numeric `x0`/`x1`
+  bounds and distinct labels for small and negative intervals. (#1495)
 - Dataset summaries infer types from the whole column and disclose missing and
-  excluded values. Summary statistics and numeric health profiles share decimal
-  parsing without coercing booleans, Dates, padded identifiers, or base-prefixed
-  literals into numbers. ISO date extents use UTC consistently. The related-surface
-  audit covers chart profiling, interrogation hooks, MCP responses, and built
-  CommonJS/ESM AI entry points, including date-ordering recommendations. (#1496)
-- Annotation freshness uses the maximum finite timestamp across unsorted data
-  extents, supports week and fractional fixed-length TTLs, and rejects invalid,
-  nonpositive, and unsupported calendar durations explicitly. Quality-check
-  labels and coordinates agree in UTC while preserving epoch-millisecond inputs;
-  invalid timestamps are reported as unplaced. Lifecycle filtering, serialized
-  annotations, and built exports are covered across host locales/timezones. (#1483)
-- Accessible data tables retain focus while revealing rows, announce paging
-  progress, and restore the opener on close without stealing focus on blur.
-  Scene, network-node/edge, and physics tables share the corrected interaction;
-  expanded semantic models are cached across unchanged revisions. Portal and
-  toolbar openers are covered. Follow-up: keep skip-link targets, summary
-  controls, and close/focus handling eager through SSR and hydration; defer only
-  expanded scene/network rows and statistics. The related-surface audit covers
-  XY, ordinal, network, geographic, and physics SSR, inline/disabled/portaled
-  tables, delayed content, and browser paging, hover, resize, and dismissal.
-  Client entry graphs and the combined-import bundle stay within their existing
-  budgets. (#1521)
-- IntentMark, chart-toolbar, and documentation copy actions report clipboard
-  failures and announce success/failure. Shared feedback cleans up timers,
-  ignores stale completions, and checks legacy copy fallback results. (#1534)
-- Chart live regions announce keyboard focus without announcing pointer hover
-  across XY, ordinal, network, geographic, and physics frames. ObservationReadout
-  keeps hover visual-only by default while preserving explicit live-region
-  overrides and announcements for deliberate interactions. The related-surface
-  audit also fixes resized aggregate-bar focus identity and physics hover/click
-  coordinates and tooltip placement with nonzero margins. (#1544)
-  Follow-up: align radial browser tests with silent pointer hover, retaining
-  tooltip values/placement/dismissal, exact keyboard values, modality switching,
-  resize, and accessible table checks in Chromium and WebKit.
-- Boba layouts validate cup and pearl dimensions, bound pearl/ice allocation,
-  and keep excessive fill heights finite. Captions and hover data disclose drawn
-  counts without changing the underlying quantities. Shared layout, public
-  recipe, React push/bounded, and static SVG paths are covered. (#1392)
-- `bin` validates counts/domains, excludes nonfinite and nonnumeric values, and
-  assigns decimal boundaries consistently. Public data transforms return numeric
-  `x0`/`x1` bounds with distinct labels for small and negative intervals.
-  Follow-up: combine extent collection and bin counting to reduce the packed
-  standalone import from 1,844 to 1,584 bytes raw (1,002 to 902 bytes gzip).
-  Regenerated cold-consumer measurements intentionally retain validation and
-  exact decimal membership, which the earlier 658/442-byte baseline did not
-  provide; tolerance rules and bundle budgets are unchanged. The measurement
-  refresh also records the accessible-content chunk split and existing stale
-  module counts. Public transform tests and built CommonJS/ESM checks cover the
-  retained semantics. (#1495)
-- Embedded artifact packets escape XML terminators in titles and claims,
-  preserving valid SVG and exact JSON round-trips across SVG root forms and
-  adjacent sidecar formats. (#1494)
-- Portable capability binding retains host variants when omitted, honors
-  explicitly empty policy, and snapshots portable metadata so source edits
-  cannot silently change bound recommendations. (#1539)
+  excluded values. Numeric profiles parse decimals without coercing booleans,
+  Dates, padded identifiers, or base-prefixed literals; ISO date extents use UTC.
+  (#1496)
+- Ordinal domains match the per-category net aggregates drawn by bars and funnels.
+  Normalized stacks retain negative segments; timelines retain both endpoints
+  after eviction or mutation. Dynamic columns preserve zero widths, reject invalid
+  weights, fit gaps inside the plot, and align ticks to column centers. Grouped
+  bars retain individual observations and omit nonfinite measures. (#1310)
+- XY and realtime time accessors resolve numbers, Dates, and strings consistently
+  across bounded data, pushes, configuration changes, and static rendering.
+  Date-only strings and inferred calendar ticks use UTC; changing scale type
+  refreshes axes even when domain endpoints are unchanged. Realtime callback
+  types accept all three input forms. (#1295)
+- Trends and forecasts retain precision for timestamps and small values.
+  Polynomial forecasts evaluate fitted coefficients correctly; ordinal trends
+  follow displayed category order and centers in both orientations. Equivalent
+  configs retain overlays, while data changes refresh them. Auto forecasts honor
+  LOESS bandwidth and fit separate series/envelopes. Auto-forecast props require
+  bounded data; push-mode statistical annotations use retained frame data. (#1363)
 - Crossfilter intersects every other chart's active filter. Interval selections
-  exclude missing and coercible nonnumeric values, and point selections match
-  valid Dates by timestamp while preserving value types. Shared hooks, aggregate
-  provenance, bounded and pushed charts, and static rendering use the corrected
-  predicates. Follow-up: remove the redundant canvas-visibility assertion while
-  retaining pixel-alpha, hover, resize, and dismissal checks; the test-quality
-  baseline is unchanged. (#1360)
-- Atlas required-path queries detect cyclic, missing, inherited, or malformed
-  dominator links and report unknown ancestry without partial claims. Reverse
-  ancestry traversal also rejects invalid chains instead of hanging dependency
-  rendering. (#1540)
-- Axis label assessments refresh when web fonts finish loading, clear when
-  disabled, and release font listeners on disable or unmount. (#1541)
-- FlowCircuit charts normalize fractional flows, queue gauges, and history
-  values to their actual maxima. Sub-second histories use the full time range;
-  zero-valued and single-sample tapes remain finite in React and static SVG.
-  (#1543)
-- `markTooltipChrome` accepts tooltip renderers and preserves ownership through
-  normalization and both BumpChart adapters. Wrapped styled tooltips avoid a
-  second surface, plain content keeps the default surface, and empty callback
-  results—including booleans, whitespace, arrays, and fragments—are suppressed.
-- XY and realtime charts resolve temporal string and function accessors
-  consistently across bounded data, pushes, configuration changes, and static
-  rendering. Date-only strings and automatically inferred calendar ticks use
-  UTC. Axes refresh when the scale type changes even if domain endpoints stay
-  unchanged. Public realtime time-accessor types accept number, Date, and string
-  callbacks across all chart variants and entry points. (#1295)
+  exclude missing/coercible nonnumeric values; point selections match Dates by
+  timestamp while preserving other value types. (#1360)
+- Annotation freshness uses the latest finite timestamp in unsorted data, accepts
+  week/fractional fixed-length TTLs, and rejects invalid or unsupported calendar
+  durations. Quality-check labels and coordinates agree in UTC; invalid times are
+  reported as unplaced. (#1483)
+
+#### Layout, resizing, and interaction
+
+- Resizing rebuilds XY transition targets and pixel-dependent bar, waterfall,
+  candlestick, and range geometry. Retained data survives temporarily invalid
+  sizes; log/time scales, reversed streaming, and inverted Y stay resolved.
+  Canvas backing-store and density-cap changes repaint all frame families, and
+  ordinal canvases avoid repeated reallocations at fractional pixel ratios.
+  Small plots remain positive; empty time scales use a deterministic epoch-day
+  domain across SVG, evidence, and hydration. (#1319, #1426, #1532)
+- TreeDiagram, Treemap, CirclePack, and OrbitDiagram retain repeated names/IDs
+  without collisions through value sorting and resize. TreeDiagram, Treemap,
+  and CirclePack sum finite nonnegative own/descendant values; missing and zero
+  values no longer gain phantom area, and all-zero packs remain finite. Custom
+  children accessors, palettes, labels, and server layout/ID settings agree.
+  Hierarchies take bounded root objects, not edge push mode. (#1322)
+- GoFish path bounds account for SVG curves, arcs, relative coordinates, and
+  transforms. Mixed marks resolve pointer hits in paint order while ordinary
+  treemaps retain smallest-cell selection. Bump ribbons repair folded boundaries
+  and expose the correct datum throughout their filled area. (#1509)
+- Dagre and Flextree fit negative coordinates, variable sizes, and routed
+  waypoints inside the plot; `fit: "none"` preserves authored pixels. Composed
+  layouts retain wrapper geometry when absent from raw data. Omitted dimensions
+  use browser/server defaults, while authored invalid sizes remain rejected.
+  Labels and tooltips receive original data, including records with a `data`
+  field. Dagre edges retain arrows, clipped endpoints, and full semantic labels.
+  (#1503, #1508)
+- Lineage domains use actual layer/row extents, including negative and sparse
+  positions. Inferred backedges, cycles, and self-loops stay within the plot and
+  retain direction arrows; edge dashes/caps agree across canvas and SVG. (#1508)
+- Interval sampling validates steps/domains and retains fractional endpoints
+  without drift. Timeline bars fit short lanes; bullet charts compact skipped
+  rows and disclose truncation; waffle charts disclose omitted categories and
+  invalid grids, including empty inputs. Boba layouts validate dimensions, bound
+  allocations, and disclose drawn counts without changing source quantities.
+  (#1505, #1392)
+- Isometric landmarks stay in their geographic cells unless `centerId` moves one;
+  center selection and diversity scoring are deterministic. FlowCircuit scales
+  fractional flows, gauges, and sub-second history to their actual ranges, with
+  finite geometry for zero/single-sample tapes. (#1506, #1543)
+- Axis label assessments refresh after web fonts load and release listeners when
+  disabled or unmounted. (#1541)
+
+#### Networks and workers
+
+- Sankey widths use original linear values and omit nonpositive flows. Circular
+  routes remain complete through transitions and hydration; vertical layouts fit
+  the correct extent. Cyclic layouts use bounded, flow-weighted feedback ordering
+  with stable choices under input permutation, retaining parallel flows and
+  self-links while avoiding circuit enumeration and repeated graph scans.
+  (#1298, #1334, #1335)
+- ProcessSankey crossing optimization uses a temporal index and local swap deltas.
+  Styling, equivalent props, and resizing reuse layout analysis; pending workers
+  retain the latest scene, and superseded work is cancelled. ProcessSankey and
+  force workers retain transport/startup failures until reset, validate response
+  geometry, and fall back to synchronous layout. Normal cancellation is retryable.
+  Worker transport loads on demand. (#1325, #1333)
+- ProcessSankey distinguishes numeric strings from dates, parses ISO times in UTC,
+  generates automatic ticks, and passes numbers or Dates to `timeFormat` according
+  to the domain. Tooltips retain time of day and labels; static margins match the
+  browser. Reversed/malformed domains produce diagnostics. (#1331, part of #1330)
+- Network ingestion preserves custom accessors and raw edge payloads, normalizes
+  IDs/values, and infers missing endpoints alongside supplied nodes. Metadata-only
+  updates preserve accumulated values; array mutations commit one layout. Worker
+  results cannot overwrite newer topology or repopulate cleared charts. Edge
+  removal dismisses tooltips, and keyboard focus follows layout changes.
+  (#1324, #1328)
+- Chord layouts honor value accessors, aggregate parallel/reverse contributors
+  into one ribbon with their tooltip/table data, clear stale zero geometry, and
+  bound padding. Custom callbacks keep their representative datum. Force layouts
+  share weighting and warm starts across sync/worker execution and refresh
+  collisions after size changes; static labels honor visibility defaults.
+  (#1296, #1297)
+- Net Ensemble uses iterative component analysis for deep/cyclic graphs, counts
+  terminal components correctly, and caches topology while refreshing records,
+  colors, and selection. Census glyph IDs survive resizing and overflow grids
+  keep components in bounds. Axis-fixed force uses spatial collision sweeps,
+  rejects invalid fixed values with incident edges, and preserves raw callback
+  data. Transit traversal and dependency matrices avoid repeated scans while
+  retaining parallel edges, self-loops, and accessible labels.
+  (#1398, #1502, #1400, #1512)
+- Atlas required-path and reverse-ancestry queries reject cyclic, missing,
+  inherited, or malformed dominator chains instead of hanging or making partial
+  ancestry claims. (#1540)
+
+#### Accessibility and tooltips
+
 - Keyboard navigation reaches distribution marks, candlesticks, funnels, and
-  geographic lines with the same data as pointer hover. Focus geometry follows
-  resized scenes without replaying hover callbacks. (#1294)
-- Pie, donut, gauge, and other scene-backed accessible summaries expose original
-  categories, values, and distribution statistics. Gauge tooltips include the
-  current reading; decorative geometry no longer inflates data counts. Accessible
-  tables retain rows for grouped data, distributions, symbols, glyphs, and
-  connections. Collapsed tables count rows without materializing datum fields;
-  chord table counts include every contributing edge.
-  (#1301, #1302)
-- Eleven XY and radar chart wrappers retain authored descriptions, summaries,
-  and accessible-table settings, including disabled and portaled tables. (#1353)
-- Chord layouts honor resolved value accessors, aggregate parallel and reverse
-  contributors into one ribbon, retain their tooltip/table data, clear stale
-  zero-valued geometry, and bound padding for large category counts. Custom
-  tooltip and style callbacks retain the existing representative datum. (#1296)
-- Force layouts share edge-weight and warm-start behavior between synchronous
-  and worker execution, and recompute collision geometry when node sizes change.
-  Static ForceDirectedGraph labels honor the same visibility defaults. (#1297)
-- Sankey widths use original linear values, omit nonpositive flows, and retain
-  complete circular routes. Vertical layouts fit the correct plot extent.
-  Circular transitions interpolate route geometry with width, including parallel
-  edges. Cancelling an intro animation during hydration restores the final
-  geometry. (#1298, #1335)
-- Network ingestion preserves custom accessors and raw edge payloads through
-  push and update APIs, normalizes IDs and values consistently, and gives inferred
-  nodes their own identity. Browser and static rendering infer missing endpoints
-  beside supplied nodes. Materialized scenes refresh after ingestion; edge-ID
-  removal dismisses active tooltips; keyboard focus follows layout changes and
-  removals. Metadata-only edge updates preserve accumulated pushed values,
-  including custom accessors and in-place updates. (#1324)
-- ProcessSankey distinguishes numeric strings from dates, parses ISO times
-  consistently in UTC, generates automatic ticks, and passes the appropriate
-  number or Date to `timeFormat`. Tooltips retain time of day and node labels.
-  Static rendering uses the same axis-dependent margin defaults. Domain docs
-  and diagnostics accept the same Date, ISO-string, and numeric inputs; reversed
-  or malformed domains produce an error. (#1331; part of #1330)
-- Default physics settling drains scheduled arrivals before spending its settling
-  budget, preserving pacing in reduced-motion and static rendering. Explicit
-  step limits remain total limits. Sparse arrivals skip idle intervals once
-  bodies are quiescent, including bodies that never formally sleep. (#1299)
-- Physics contacts preserve the entry side of thin walls, floors, and fast
-  circle collisions, keeping bodies in their assigned histogram bins. Grounded
-  contact solving prevents dense piles from freezing with visibly overlapping
-  bodies, and settling detection accounts for corrected movement. UnitPile walls
-  preserve the advertised clear packing width. (#1300)
-- Run the 1,000-body confinement regressions in an exclusive Vitest worker group
-  to avoid coverage-time CPU contention with the rest of the suite. Both Galton
-  and UnitPile retain their full simulations, assertions, coverage, and 60-second
-  timeouts. (#1300)
-- Physics settling reduces collision-candidate work for small bodies and reuses
-  conservative nearby-wall lists across solver passes. Observation paths avoid
-  unused body-state copies. Dense and paced 1,000-body regressions retain their
-  original limits, with exact simulation-state and event-order coverage.
-- Dense UnitPile settling avoids repeated gravity and support calculations
-  while retaining arrival timing, confinement, and the original event sequence.
-- Paced physics settling uses numeric spatial-grid keys and skips empty collider
-  and sensor scans, reducing work as sleeping bodies accumulate. Collision order,
-  sensor transitions, arrival timing, and existing timeout limits are preserved.
+  geographic lines with pointer-equivalent data; focus geometry follows resize.
+  Scene-backed summaries/tables retain original categories, values, grouped rows,
+  statistics, and contributing edges without counting decoration as data. Eleven
+  XY/radar wrappers preserve authored descriptions, summaries, and table settings.
+  (#1294, #1301, #1302, #1353)
+- Accessible tables retain focus through paging, announce progress, and restore
+  their opener on close. Skip links and summary controls remain available through
+  SSR/hydration; expanded rows and statistics are deferred and cached. Live regions
+  announce keyboard focus without announcing pointer hover, including the default
+  ObservationReadout. Physics hover coordinates/tooltips respect margins.
+  (#1521, #1544)
+- `markTooltipChrome` accepts renderer callbacks and preserves ownership through
+  normalization and BumpChart adapters, preventing duplicate tooltip surfaces.
+  Empty results (including booleans, whitespace, arrays, and fragments) suppress
+  tooltips. Gauge tooltips include the current reading.
+- IntentMark, chart-toolbar, and docs copy actions announce success/failure,
+  report clipboard errors, and ignore stale completions. (#1534)
+
+#### Physics, exports, and AI transport
+
+- Default physics settling drains scheduled arrivals before using its settling
+  budget; explicit step limits remain total limits. Sparse arrivals skip idle
+  periods, and dense/paced simulations reduce collision and observation work while
+  preserving arrival timing and event order. Contacts keep fast bodies on the
+  correct side of thin barriers, dense piles resolve overlaps, and UnitPile walls
+  retain their advertised packing width. (#1299, #1300)
+- Process region factories preserve per-body attribute callbacks, protect their
+  primitive identity, and deliver worker observations without duplicating step
+  events. Static SVG preserves geometry without running live callbacks. (#1510)
+- Embedded artifact packets escape XML terminators while preserving valid SVG
+  and exact JSON round trips. Portable capability bindings retain omitted host
+  variants, honor explicitly empty policy, and snapshot metadata. (#1494, #1539)
 - Production minification preserves NaN comparisons, getter side effects, and
-  coercion order across library formats. Shipped ESM, CommonJS, Node, and edge
-  artifacts have semantic regression coverage. (Part of #1305)
-- ProcessSankey recommendation metadata uses shared time helpers without
-  retaining network renderers in a bundled `suggestCharts` import. Refreshed
-  packed-consumer measurements for the corrected graph and earlier bug fixes.
-- MCP HTTP uploads have bounded body and header deadlines. Partial uploads no
-  longer occupy tool-execution slots, and oversized or timed-out uploads receive
-  an error before their connection closes. A separate upload-admission pool caps
-  simultaneous body readers and releases capacity before execution; excess
-  uploads are rejected without queuing. Requests rejected before body parsing
-  also close unread bodies after sending their error response. (#1375)
+  coercion order in ESM, CommonJS, Node, and edge artifacts. (Part of #1305)
+- MCP HTTP uploads have bounded body/header deadlines and a separate admission
+  pool. Partial uploads no longer occupy execution slots; excess, oversized, and
+  timed-out uploads receive errors, and rejected unread bodies close. (#1375)
 
 ### Changed
 
-- Browser CI exercises production bundles. Added focused interaction, worker,
-  accessibility, static-rendering, and transport regressions without increasing
-  test-quality, file-size, or bundle-size limits.
+- Shared geographic/legend rendering and low-level helpers reduce duplication
+  and entry-graph cost within existing bundle budgets. ProcessSankey suggestion
+  metadata no longer retains network renderers. Refreshed packed-consumer figures.
+- Hydration guidance covers all five frame families, controlled realtime SSR,
+  push-mode snapshots, SVG layering, and pre-hydration differences.
+- Browser CI exercises production bundles. Related-surface regressions cover
+  bounded/pushed data, real hover through resize/zoom/pan and dismissal, keyboard
+  and table access, workers, and browser/Node/edge ESM/CommonJS static rendering.
+  Physics confinement tests run in an exclusive worker group to avoid CPU
+  contention. Existing test-quality, file-size, and bundle budgets are unchanged.
 
 ## [3.10.4] - 2026-09-22
 

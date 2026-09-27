@@ -20,6 +20,15 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-11-0",
+    title: "Semiotic 3.11.0",
+    subtitle: "Correct quantities, resilient layouts, and consistent interaction as charts change and travel.",
+    author: "The Semiotic Team",
+    date: "2026-09-27",
+    tags: ["release"],
+    excerpt: "3.11.0 improves aggregation, hierarchy values, statistical overlays, and resizing across live and exported charts. Network layouts do less repeated work, accessible interaction keeps its context, and tooltip and AI tooling contracts are clearer.",
+  },
+  {
     slug: "release-3-10-0",
     title: "Semiotic 3.10.0",
     subtitle: "The rules, labels, and interactions you author follow the chart from the browser to a shared report.",
