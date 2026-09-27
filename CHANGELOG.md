@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hierarchy layouts retain repeated names and accessor IDs without overwriting
+  nodes or colliding with authored suffixes. Identities survive value sorting
+  and resize. Treemap, CirclePack, and TreeDiagram share nonnegative value
+  summation across React and server rendering; missing and zero values no longer
+  acquire phantom area, and all-zero packs remain finite. Server configurations
+  retain hierarchy IDs and every TreeDiagram layout. The related audit covers
+  OrbitDiagram collisions, labels with custom children accessors, zero-area
+  frame geometry, coincident parent/leaf hover through both hit-test paths,
+  accessible rows, bounded data replacement,
+  Chromium/WebKit interaction, and ESM/CommonJS browser/Node/edge exports.
+  Hierarchies use bounded root objects, not edge push mode. (#1322)
 - XY resizes rebuild active transition targets and pixel-dependent bar,
   waterfall, candlestick, and range geometry. Symbols move with their axes;
   hidden or invalid plot sizes preserve retained data until layout recovers.

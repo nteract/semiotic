@@ -73,6 +73,7 @@ export default defineConfig(({ mode }) => ({
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),
         geo: resolve(integrationRoot, "geo-examples/index.html"),
         histogramThemeStroke: resolve(integrationRoot, "histogram-theme-stroke-examples/index.html"),
+        hierarchyRegressions: resolve(integrationRoot, "hierarchy-regressions/index.html"),
         hocLegend: resolve(integrationRoot, "hoc-legend-examples/index.html"),
         machineBaseline: resolve(integrationRoot, "machine-baseline-examples/index.html"),
         mobileVisualization: resolve(integrationRoot, "mobile-visualization-examples/index.html"),

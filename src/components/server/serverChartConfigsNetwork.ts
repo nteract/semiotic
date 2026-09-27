@@ -7,14 +7,12 @@ import { emitProcessSankeyScenes } from "../charts/network/processSankey/streami
 import { formatProcessSankeyIssue } from "../charts/network/processSankey/algorithm"
 import {
   createEdgeStyleFn,
-  inferNodesFromEdges,
-  flattenHierarchy
+  inferNodesFromEdges
 } from "../charts/network/../shared/networkUtils"
 import {
   createColorScale,
   getColor,
-  resolveCategoricalPalette,
-  DEPTH_PALETTE_COLORS
+  resolveCategoricalPalette
 } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
 import { resolveDefaultFill } from "../charts/shared/hooks"
@@ -25,13 +23,10 @@ import {
 } from "./serverChartConfigShared"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import {
-  composeStyleRules,
-  makeNodeRuleContext,
   styleRulesToNodeStyle,
-  type StyleRule,
 } from "../charts/shared/styleRules"
 import { resolveTheme } from "./themeResolver"
-import { composeHierarchyNodeStyle } from "./serverChartConfigNetworkStyles"
+import { composeHierarchyNodeStyle, createHierarchyNodeFill, hierarchyFrameProps } from "./serverChartConfigNetworkStyles"
 import * as React from "react"
 
 // ── Network Charts ─────────────────────────────────────────────────────
@@ -507,56 +502,10 @@ export const treeDiagram: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const themeCategorical = resolveTheme(
-      common.theme as Parameters<typeof resolveTheme>[0]
-    ).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
-    // Flatten the hierarchy so categorical colorBy on leaves gets a full domain.
-    const allNodes = flattenHierarchy(
-      (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[])
-    )
-    const colorByFn =
-      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
-    const scaleSource: Datum[] = colorByFn
-      ? allNodes.map((n) => ({ __ssrTreeColorBy: colorByFn(n) }))
-      : allNodes
-    const scaleColorKey = colorByFn
-      ? "__ssrTreeColorBy"
-      : typeof colorBy === "string"
-        ? colorBy
-        : undefined
-    const colorScale =
-      colorBy && scaleColorKey
-        ? createColorScale(
-            scaleSource,
-            scaleColorKey,
-            (colorScheme ?? common.colorScheme ?? themeCategorical) as
-              string | string[] | Record<string, string>
-          )
-        : undefined
+    const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
-      const raw = (d?.data as Datum) || d
       return {
-        fill: rest.colorByDepth
-          ? DEPTH_PALETTE_COLORS[
-              Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length
-            ]
-          : colorBy
-            ? colorByFn
-              ? getColor(
-                  { __ssrTreeColorBy: colorByFn(raw) },
-                  "__ssrTreeColorBy",
-                  colorScale ?? undefined
-                )
-              : getColor(raw, colorBy as string, colorScale ?? undefined)
-            : resolveDefaultFill(
-                undefined,
-                themeCategorical,
-                colorScheme,
-                undefined,
-                categoryIndexMap
-              ),
+        fill: fill(d),
         // `stroke`/`strokeWidth`/`opacity` are not COMMON_FRAME_PROP_KEYS, so
         // reading them off `common` always fell through to the defaults.
         stroke: (rest.stroke as string | undefined) ?? "black",
@@ -567,39 +516,18 @@ export const treeDiagram: ChartConfig = {
     // HOC defaults showLabels true and supplies nodeLabel || nodeIdAccessor;
     // hierarchy scene builders skip labels when nodeLabel is unset.
     const effectiveShowLabels = rest.showLabels !== false
-    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
-      | ((d: Datum) => Record<string, unknown> | undefined | null)
-      | Record<string, unknown>
-      | undefined
-    const ruledNodeStyle = composeStyleRules(
-      baseNodeStyle,
-      rest.styleRules as StyleRule[] | undefined,
-      makeNodeRuleContext(
-        colorBy as string | ((d: Datum) => unknown) | undefined,
-        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
-      ),
-      (d) => (d?.data as Datum) || d,
-    )
     return {
-      chartType: rest.layout === "cluster" ? "cluster" : "tree",
-      data,
-      childrenAccessor: rest.childrenAccessor,
-      colorBy,
-      colorByDepth: rest.colorByDepth,
+      chartType: rest.layout ?? "tree",
       orientation: rest.orientation,
-      showLabels: rest.showLabels,
       nodeLabel: effectiveShowLabels
         ? rest.nodeLabel || rest.nodeIdAccessor
         : undefined,
-      colorScheme,
-      ...common,
-      showLegend:
-        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
-        Boolean(colorBy && !rest.colorByDepth),
+      ...hierarchyFrameProps(data, colorBy, colorScheme, common, rest),
       nodeStyle: composeHierarchyNodeStyle(
-        ruledNodeStyle,
-        userNodeStyle,
-        primitiveStyleOverrides(rest)
+        baseNodeStyle,
+        colorBy,
+        common,
+        rest
       )
     }
   }
@@ -609,63 +537,10 @@ export const treemap: ChartConfig = {
   frameType: "network",
   layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    // The network hierarchy scene builder resolves fill from the nodeStyle
-    // (or a single default fill) — it never applies `colorBy` itself. The
-    // Treemap HOC therefore builds fill inside its own nodeStyle via a color
-    // scale over the flattened hierarchy; SSR must do the same or every tile
-    // collapses to one color. Build the same scale off the leaves so a
-    // categorical `colorBy` (e.g. sku) paints distinct tiles.
-    const themeCategorical = resolveTheme(
-      common.theme as Parameters<typeof resolveTheme>[0]
-    ).colors.categorical
-    const categoryIndexMap = new Map<string, number>()
-    const allNodes = flattenHierarchy(
-      (data ?? null) as Datum | null,
-      rest.childrenAccessor as string | ((d: Datum) => Datum[])
-    )
-    const colorByFn =
-      typeof colorBy === "function" ? (colorBy as (d: Datum) => string) : null
-    const scaleSource: Datum[] = colorByFn
-      ? allNodes.map((n) => ({ __ssrTreemapColorBy: colorByFn(n) }))
-      : allNodes
-    const scaleColorKey = colorByFn
-      ? "__ssrTreemapColorBy"
-      : typeof colorBy === "string"
-        ? colorBy
-        : undefined
-    const colorScale =
-      colorBy && scaleColorKey
-        ? createColorScale(
-            scaleSource,
-            scaleColorKey,
-            (colorScheme ?? common.colorScheme ?? themeCategorical) as
-              string | string[] | Record<string, string>
-          )
-        : undefined
+    const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
-      const raw = (d?.data as Datum) || d
-      const fill = rest.colorByDepth
-        ? DEPTH_PALETTE_COLORS[
-            Number(d?.depth || 0) % DEPTH_PALETTE_COLORS.length
-          ]
-        : colorBy
-          ? colorByFn
-            ? getColor(
-                { __ssrTreemapColorBy: colorByFn(raw) },
-                "__ssrTreemapColorBy",
-                colorScale ?? undefined
-              )
-            : getColor(raw, colorBy as string, colorScale ?? undefined)
-          : resolveDefaultFill(
-              undefined,
-              themeCategorical,
-              colorScheme as
-                string | string[] | Record<string, string> | undefined,
-              undefined,
-              categoryIndexMap
-            )
       return {
-        fill,
+        fill: fill(d),
         // Preserve Treemap's HOC-level border token. The surrounding page/theme
         // resolves this CSS variable identically for the static SVG and canvas.
         stroke: "var(--semiotic-cell-border, var(--semiotic-border, #fff))",
@@ -689,42 +564,20 @@ export const treemap: ChartConfig = {
     // Compose like Treemap.tsx: base colorBy/colorByDepth fill + user overlay
     // (hide-root transparent fill, custom borders). Replace-not-compose made
     // any custom nodeStyle drop color encoding → monochrome "flat" tiles.
-    const userNodeStyle = (common.nodeStyle || rest.nodeStyle) as
-      | ((d: Datum) => Record<string, unknown> | undefined | null)
-      | Record<string, unknown>
-      | undefined
-    const ruledNodeStyle = composeStyleRules(
-      baseNodeStyle,
-      rest.styleRules as StyleRule[] | undefined,
-      makeNodeRuleContext(
-        colorBy as string | ((d: Datum) => unknown) | undefined,
-        rest.valueAccessor as string | ((d: Datum) => unknown) | undefined,
-      ),
-      (d) => (d?.data as Datum) || d,
-    )
     return {
       chartType: "treemap",
-      data,
-      childrenAccessor: rest.childrenAccessor,
-      hierarchySum: rest.valueAccessor,
-      colorBy,
-      colorByDepth: rest.colorByDepth,
-      showLabels: rest.showLabels,
       labelMode,
       nodeLabel: effectiveShowLabels
         ? rest.nodeLabel || rest.nodeIdAccessor
         : undefined,
       ...(rest.padding != null && { padding: rest.padding }),
       ...(resolvedPaddingTop != null && { paddingTop: resolvedPaddingTop }),
-      colorScheme,
-      ...common,
-      showLegend:
-        (common.showLegend ?? Boolean(colorBy && !rest.colorByDepth)) &&
-        Boolean(colorBy && !rest.colorByDepth),
+      ...hierarchyFrameProps(data, colorBy, colorScheme, common, rest),
       nodeStyle: composeHierarchyNodeStyle(
-        ruledNodeStyle,
-        userNodeStyle,
-        primitiveStyleOverrides(rest)
+        baseNodeStyle,
+        colorBy,
+        common,
+        rest
       )
     }
   }

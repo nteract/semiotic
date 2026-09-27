@@ -84,6 +84,8 @@ ProcessSankey time values (`domain`, edge times, node lifetimes, and axis tick d
 **TreeDiagram** — `data` (root), `layout`, `orientation`, `childrenAccessor`, `colorBy`, `colorByDepth`
 **Treemap** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`, `showLabels`
 **CirclePack** — `data` (root), `childrenAccessor`, `valueAccessor`, `colorBy`, `colorByDepth`
+**Hierarchy data:** TreeDiagram, Treemap, CirclePack, and OrbitDiagram retain repeated names/IDs using occurrence suffixes assigned in source order, reserving authored IDs before generating suffixes. Resize and value sorting preserve those identities; supply unique `nodeIdAccessor` values when structurally reordering repeated records. TreeDiagram/Treemap/CirclePack sum each node's own finite nonnegative `valueAccessor` value plus descendants; missing, zero, negative, and non-finite contributions are zero. Leave parent values unset when leaves provide the measure. Zero-valued leaves have no area in treemap, circlepack, and partition layouts; all-zero circle packs have no painted circles. Hierarchy layouts take bounded root objects and do not support edge push mode.
+
 **OrbitDiagram** — `data` (root), `childrenAccessor`, `orbitMode`, `speed`, `animated` (true), `colorBy`
 
 ## Geo Charts (`semiotic/geo`)

@@ -15166,6 +15166,7 @@
             },
             "valueAccessor": {
               "type": "string",
+              "description": "Own finite nonnegative value, added to descendants; missing or invalid values contribute zero.",
               "default": "value",
               "x-semiotic-runtime-types": [
                 "string",
@@ -15174,6 +15175,7 @@
             },
             "nodeIdAccessor": {
               "type": "string",
+              "description": "Node ID; repeats get collision-free suffixes before value sorting. Use unique IDs for structural reordering.",
               "default": "name",
               "x-semiotic-runtime-types": [
                 "string",
@@ -15693,6 +15695,7 @@
             },
             "valueAccessor": {
               "type": "string",
+              "description": "Own finite nonnegative value, added to descendants; missing or invalid values contribute zero.",
               "default": "value",
               "x-semiotic-runtime-types": [
                 "string",
@@ -15701,6 +15704,7 @@
             },
             "nodeIdAccessor": {
               "type": "string",
+              "description": "Node ID; repeats get collision-free suffixes before value sorting. Use unique IDs for structural reordering.",
               "default": "name",
               "x-semiotic-runtime-types": [
                 "string",
@@ -16222,6 +16226,7 @@
             },
             "valueAccessor": {
               "type": "string",
+              "description": "Own finite nonnegative value, added to descendants; missing or invalid values contribute zero.",
               "default": "value",
               "x-semiotic-runtime-types": [
                 "string",
@@ -16230,6 +16235,7 @@
             },
             "nodeIdAccessor": {
               "type": "string",
+              "description": "Node ID; repeats get collision-free suffixes before value sorting. Use unique IDs for structural reordering.",
               "default": "name",
               "x-semiotic-runtime-types": [
                 "string",
@@ -16744,7 +16750,7 @@
             },
             "nodeIdAccessor": {
               "type": "string",
-              "description": "Key to identify each node",
+              "description": "Node ID; repeats get collision-free suffixes in source order. Use unique IDs for structural reordering.",
               "default": "name",
               "x-semiotic-runtime-types": [
                 "string",

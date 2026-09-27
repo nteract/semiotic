@@ -5,7 +5,7 @@ export async function expectTooltipWithinPlot(
   chart: Locator,
   margin: { left: number; right: number; top: number; bottom: number }
 ): Promise<void> {
-  const tooltip = chart.locator(".stream-frame-tooltip, .stream-ordinal-tooltip")
+  const tooltip = chart.locator(".stream-frame-tooltip, .stream-ordinal-tooltip, .stream-network-tooltip")
   await expect(tooltip).toBeVisible()
   await expect.poll(async () => {
     const plot = await chart.locator("canvas").first().boundingBox()

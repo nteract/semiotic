@@ -24,7 +24,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
-import { DEPTH_PALETTE, contrastTextColor, resolveLabelFn, resolveDefaultNodeSize } from "./hierarchyUtils"
+import { DEPTH_PALETTE, contrastTextColor, resolveLabelFn } from "./hierarchyUtils"
 import { wrapWithDataHint } from "../devDataAccessWarning"
 
 /**
@@ -46,6 +46,29 @@ function resolveDefaultFill(config: NetworkPipelineConfig): string {
   if (config.themeSemantic?.primary) return config.themeSemantic.primary
   if (config.themeCategorical && config.themeCategorical.length > 0) return config.themeCategorical[0]
   return "#4d430c"
+}
+
+/** Resolve the same fill for marks and their contrasting labels. */
+function hierarchyFill(node: RealtimeNode, config: NetworkPipelineConfig, fill: Style["fill"]) {
+  if (config.colorByDepth && node.depth !== undefined) {
+    const palette = resolveDepthPalette(config)
+    return palette[node.depth % palette.length]
+  }
+  return fill || resolveDefaultFill(config)
+}
+
+function hierarchyStyle(node: RealtimeNode, config: NetworkPipelineConfig, userStyle: Style): Style {
+  return {
+    fill: hierarchyFill(node, config, userStyle.fill),
+    stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
+    strokeWidth: userStyle.strokeWidth ?? 1,
+    opacity: userStyle.opacity,
+    cursor: userStyle.cursor
+  }
+}
+
+function isHierarchyLeaf(node: RealtimeNode): boolean {
+  return !(node.__hierarchyNode as { children?: unknown[] } | undefined)?.children?.length
 }
 
 // ── Tree/Cluster scene ────────────────────────────────────────────────
@@ -70,7 +93,8 @@ export function buildTreeScene(
   const isRadial = orientation === "radial"
   const cx = size[0] / 2
   const cy = size[1] / 2
-  const defaultNodeSize = resolveDefaultNodeSize(config.nodeSize)
+  const { nodeSize } = config
+  const defaultNodeSize = typeof nodeSize === "number" ? nodeSize : 5
 
   // Build circle nodes
   for (const node of nodes) {
@@ -83,21 +107,7 @@ export function buildTreeScene(
     }
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || resolveDefaultFill(config)
-
-    if (config.colorByDepth && node.depth !== undefined) {
-      const palette = resolveDepthPalette(config)
-      fill = palette[node.depth % palette.length]
-    }
-
-    const style: Style = {
-      fill,
-      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
-      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
-      strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity,
-      cursor: userStyle.cursor
-    }
+    const style = hierarchyStyle(node, config, userStyle)
 
     sceneNodes.push({
       type: "circle",
@@ -185,7 +195,7 @@ export function buildTreeScene(
           anchor = "middle"
         }
       } else if (orientation === "horizontal") {
-        const isLeaf = !node.data?.children || node.data.children.length === 0
+        const isLeaf = isHierarchyLeaf(node)
         if (isLeaf) {
           x = nx + defaultNodeSize + 6
           anchor = "start"
@@ -219,7 +229,6 @@ export function buildTreeScene(
 export function buildRectScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
-  size: [number, number],
   nodeStyleFn: (d: RealtimeNode) => Style
 ): {
   sceneNodes: NetworkSceneNode[]
@@ -235,23 +244,9 @@ export function buildRectScene(
     if (w <= 0 || h <= 0) continue
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || resolveDefaultFill(config)
-
-    if (config.colorByDepth && node.depth !== undefined) {
-      const palette = resolveDepthPalette(config)
-      fill = palette[node.depth % palette.length]
-    }
-
-    const style: Style = {
-      fill,
-      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
-      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
-      strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity,
-      fillOpacity: userStyle.fillOpacity,
-      strokeOpacity: userStyle.strokeOpacity,
-      cursor: userStyle.cursor
-    }
+    const style = hierarchyStyle(node, config, userStyle)
+    style.fillOpacity = userStyle.fillOpacity
+    style.strokeOpacity = userStyle.strokeOpacity
 
     sceneNodes.push({
       type: "rect",
@@ -278,7 +273,7 @@ export function buildRectScene(
       const h = node.y1 - node.y0
       if (w <= 0 || h <= 0) continue
 
-      const isLeaf = !(node.data?.children && node.data.children.length > 0)
+      const isLeaf = isHierarchyLeaf(node)
 
       if (!isPartition) {
         if (labelMode === "leaf" && !isLeaf) continue
@@ -293,11 +288,7 @@ export function buildRectScene(
       if (w < minWidth || h < minHeight) continue
 
       const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-      let fill = userStyle.fill || resolveDefaultFill(config)
-      if (config.colorByDepth && node.depth !== undefined) {
-        const palette = resolveDepthPalette(config)
-        fill = palette[node.depth % palette.length]
-      }
+      const fill = hierarchyFill(node, config, userStyle.fill)
       // contrastTextColor works on hex/rgb strings; fall back to the theme
       // text color on CanvasPattern fills where no luminance can be computed.
       const textColor = typeof fill === "string"
@@ -337,7 +328,6 @@ export function buildRectScene(
 export function buildCircleScene(
   nodes: RealtimeNode[],
   config: NetworkPipelineConfig,
-  size: [number, number],
   nodeStyleFn: (d: RealtimeNode) => Style
 ): {
   sceneNodes: NetworkSceneNode[]
@@ -353,21 +343,8 @@ export function buildCircleScene(
     if (r <= 0) continue
 
     const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-    let fill = userStyle.fill || resolveDefaultFill(config)
-
-    if (config.colorByDepth && node.depth !== undefined) {
-      const palette = resolveDepthPalette(config)
-      fill = palette[node.depth % palette.length]
-    }
-
-    const style: Style = {
-      fill,
-      // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
-      stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
-      strokeWidth: userStyle.strokeWidth ?? 1,
-      opacity: userStyle.opacity ?? circleOpacity,
-      cursor: userStyle.cursor
-    }
+    const style = hierarchyStyle(node, config, userStyle)
+    style.opacity ??= circleOpacity
 
     sceneNodes.push({
       type: "circle",
@@ -394,14 +371,10 @@ export function buildCircleScene(
 
       if (r < 15) continue
 
-      const isLeaf = !(node.data?.children && node.data.children.length > 0)
+      const isLeaf = isHierarchyLeaf(node)
 
       const userStyle = nodeStyleFn(wrapWithDataHint(node, "nodeStyle"))
-      let fill = userStyle.fill || resolveDefaultFill(config)
-      if (config.colorByDepth && node.depth !== undefined) {
-        const palette = resolveDepthPalette(config)
-        fill = palette[node.depth % palette.length]
-      }
+      const fill = hierarchyFill(node, config, userStyle.fill)
 
       if (isLeaf) {
         // contrastTextColor works on hex/rgb strings; fall back to the theme
@@ -452,15 +425,13 @@ export function generateTreeEdgePath(
   ty: number,
   orientation: string
 ): string {
+  const midX = (sx + tx) / 2
+  const midY = (sy + ty) / 2
   if (orientation === "horizontal") {
-    const midX = (sx + tx) / 2
     return `M ${sx},${sy} C ${midX},${sy} ${midX},${ty} ${tx},${ty}`
   } else if (orientation === "radial") {
-    const midX = (sx + tx) / 2
-    const midY = (sy + ty) / 2
     return `M ${sx},${sy} Q ${midX},${sy} ${midX},${midY} T ${tx},${ty}`
   } else {
-    const midY = (sy + ty) / 2
     return `M ${sx},${sy} C ${sx},${midY} ${tx},${midY} ${tx},${ty}`
   }
 }

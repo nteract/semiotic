@@ -21,7 +21,7 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
-import { resolveChildrenAccessor, resolveNodeId } from "./hierarchyUtils"
+import { resolveChildrenAccessor, resolveNodeId, resolveHierarchySum, uniqueHierarchyIds } from "./hierarchyUtils"
 import {
   buildTreeScene,
   buildRectScene,
@@ -67,36 +67,30 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
 
     const layoutType = config.chartType as HierarchyLayoutType
     const childrenAccessor = resolveChildrenAccessor(config.childrenAccessor)
-    const rawSum = config.hierarchySum
-    const hierarchySum = typeof rawSum === "function"
-      ? rawSum
-      : typeof rawSum === "string"
-        ? (d: Datum) => Number(d[rawSum]) || 0
-        : (d: Datum) => Number(d.value) || 0
-
     // Build d3 hierarchy from the root data
     const root = d3Hierarchy<Datum>(hierarchyRoot, childrenAccessor)
-    root.sum(hierarchySum)
-    root.sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
+    // Resolve IDs before sorting so measure changes preserve node identity.
+    const sourceNodes: HierarchyNode<Datum>[] = []
+    root.eachBefore((node) => sourceNodes.push(node))
+    const ids = uniqueHierarchyIds(sourceNodes.map((node, i) => resolveNodeId(node, config, i)))
+    // sum assigns a numeric value to every node, including missing measures.
+    root.sum(resolveHierarchySum(config.hierarchySum))
+      .sort((a, b) => b.value! - a.value!)
 
     const [width, height] = size
 
     // Run the appropriate layout algorithm
     switch (layoutType) {
       case "tree":
+      case "cluster":
         computeTreeLayout(root, config, width, height)
         break
-      case "cluster":
-        computeClusterLayout(root, config, width, height)
-        break
       case "treemap":
-        computeTreemapLayout(root, config, width, height)
+      case "partition":
+        computeRectLayout(root, config, width, height)
         break
       case "circlepack":
         computeCirclepackLayout(root, config, width, height)
-        break
-      case "partition":
-        computePartitionLayout(root, config, width, height)
         break
     }
 
@@ -107,14 +101,10 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
     nodes.length = 0
     edges.length = 0
 
-    const nodeMap = new Map<HierarchyNode<Datum>, RealtimeNode>()
-
-    for (let i = 0; i < descendants.length; i++) {
-      const d = descendants[i]
-      const id = resolveNodeId(d, config, i)
-
+    // One map preserves source-order identity and resolves parent/child endpoints.
+    const nodeMap = new Map(sourceNodes.map((d, i) => {
       const node: RealtimeNode = {
-        id,
+        id: ids[i],
         x: 0,
         y: 0,
         x0: 0,
@@ -123,11 +113,17 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
         y1: 0,
         width: 0,
         height: 0,
-        value: d.value ?? 0,
+        value: d.value!,
         depth: d.depth,
         data: d.data,
         createdByFrame: true
       }
+
+      return [d, node] as const
+    }))
+
+    for (const d of descendants) {
+      const node = nodeMap.get(d)!
 
       // Set positions based on layout type. After `layout(root)`
       // runs, the descendants carry the layout-specific extension
@@ -145,33 +141,30 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
         setCirclePositions(node, d as HierarchyCircularNode<Datum>)
       }
 
-      // Store the d3 hierarchy node reference for edge building.
+      // Retain the d3 parent chain for default tooltip breadcrumbs.
       // `__hierarchyNode` is typed `unknown` on RealtimeNode because
       // the layout-specific shape (rectangular / circular / point)
       // varies; downstream readers narrow as needed.
       node.__hierarchyNode = d
 
       nodes.push(node)
-      nodeMap.set(d, node)
     }
 
     // Build parent-child edges (for tree/cluster; treemap/circlepack/partition have no edges)
     if (layoutType === "tree" || layoutType === "cluster") {
       for (const d of descendants) {
         if (d.parent) {
-          const sourceNode = nodeMap.get(d.parent)
-          const targetNode = nodeMap.get(d)
-          if (sourceNode && targetNode) {
-            edges.push({
-              source: sourceNode,
-              target: targetNode,
-              value: 1,
-              y0: 0,
-              y1: 0,
-              sankeyWidth: 0,
-              data: { depth: d.depth }
-            })
-          }
+          const sourceNode = nodeMap.get(d.parent)!
+          const targetNode = nodeMap.get(d)!
+          edges.push({
+            source: sourceNode,
+            target: targetNode,
+            value: 1,
+            y0: 0,
+            y1: 0,
+            sankeyWidth: 0,
+            data: { depth: d.depth }
+          })
         }
       }
     }
@@ -197,9 +190,9 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
         return buildTreeScene(nodes, edges, config, size, nodeStyleFn, edgeStyleFn)
       case "treemap":
       case "partition":
-        return buildRectScene(nodes, config, size, nodeStyleFn)
+        return buildRectScene(nodes, config, nodeStyleFn)
       case "circlepack":
-        return buildCircleScene(nodes, config, size, nodeStyleFn)
+        return buildCircleScene(nodes, config, nodeStyleFn)
       default:
         return { sceneNodes: [], sceneEdges: [], labels: [] }
     }
@@ -215,7 +208,7 @@ function computeTreeLayout(
   height: number
 ): void {
   const orientation = config.treeOrientation || "vertical"
-  const layout = d3Tree<Datum>()
+  const layout = config.chartType === "cluster" ? d3Cluster<Datum>() : d3Tree<Datum>()
 
   if (orientation === "horizontal") {
     layout.size([height, width])
@@ -230,43 +223,20 @@ function computeTreeLayout(
   layout(root)
 }
 
-function computeClusterLayout(
+function computeRectLayout(
   root: HierarchyNode<Datum>,
   config: NetworkPipelineConfig,
   width: number,
   height: number
 ): void {
-  const orientation = config.treeOrientation || "vertical"
-  const layout = d3Cluster<Datum>()
+  const isTreemap = config.chartType === "treemap"
+  const layout = isTreemap
+    ? d3Treemap<Datum>().tile(treemapBinary)
+    : d3Partition<Datum>()
+  layout.size([width, height]).padding(config.padding ?? (isTreemap ? 4 : 1))
 
-  if (orientation === "horizontal") {
-    layout.size([height, width])
-  } else if (orientation === "radial") {
-    const radius = Math.min(width, height) / 2
-    layout.size([2 * Math.PI, radius * 0.8])
-  } else {
-    layout.size([width, height])
-  }
-
-  layout(root)
-}
-
-function computeTreemapLayout(
-  root: HierarchyNode<Datum>,
-  config: NetworkPipelineConfig,
-  width: number,
-  height: number
-): void {
-  const padding = config.padding ?? 4
-  const paddingTop = config.paddingTop ?? 0
-
-  const layout = d3Treemap<Datum>()
-    .size([width, height])
-    .tile(treemapBinary)
-    .padding(padding)
-
-  if (paddingTop > 0) {
-    layout.paddingTop(paddingTop)
+  if ("paddingTop" in layout && config.paddingTop! > 0) {
+    layout.paddingTop(config.paddingTop!)
   }
 
   layout(root)
@@ -284,19 +254,11 @@ function computeCirclepackLayout(
     .size([width, height])
     .padding(padding)
 
-  layout(root)
-}
-
-function computePartitionLayout(
-  root: HierarchyNode<Datum>,
-  config: NetworkPipelineConfig,
-  width: number,
-  height: number
-): void {
-  const layout = d3Partition<Datum>()
-    .size([width, height])
-    .padding(config.padding ?? 1)
-
+  // d3's automatic radius normalization divides by zero if all leaves are zero,
+  // including hierarchies whose only positive contributions belong to parents.
+  if (!root.leaves().some((leaf) => leaf.value)) {
+    layout.radius(() => 0).padding(0)
+  }
   layout(root)
 }
 
@@ -328,13 +290,7 @@ function setTreePositions(
   }
 
   // Set bounding box around the point (used by hit testing and transitions)
-  const r = 5
-  node.x0 = node.x - r
-  node.x1 = node.x + r
-  node.y0 = node.y - r
-  node.y1 = node.y + r
-  node.width = r * 2
-  node.height = r * 2
+  setPointBounds(node, 5)
 }
 
 function setRectPositions(
@@ -342,13 +298,15 @@ function setRectPositions(
   d: HierarchyRectangularNode<Datum>
 ): void {
   node.x0 = d.x0
-  node.x1 = d.x1
   node.y0 = d.y0
-  node.y1 = d.y1
-  node.x = (d.x0 + d.x1) / 2
-  node.y = (d.y0 + d.y1) / 2
-  node.width = d.x1 - d.x0
-  node.height = d.y1 - d.y0
+  // A zero-valued subtree can receive a full rectangle from d3's degenerate
+  // binary split. Retain its topology record without inventing visible area.
+  node.x1 = node.value ? d.x1 : d.x0
+  node.y1 = node.value ? d.y1 : d.y0
+  node.x = (node.x0 + node.x1) / 2
+  node.y = (node.y0 + node.y1) / 2
+  node.width = node.x1 - node.x0
+  node.height = node.y1 - node.y0
 }
 
 function setCirclePositions(
@@ -359,14 +317,18 @@ function setCirclePositions(
   node.x = d.x
   node.y = d.y
   // Set bounding box to enclosing square of the circle
-  node.x0 = d.x - r
-  node.x1 = d.x + r
-  node.y0 = d.y - r
-  node.y1 = d.y + r
-  node.width = r * 2
-  node.height = r * 2
+  setPointBounds(node, r)
   // Store radius on the node for buildScene
   node.__radius = r
+}
+
+function setPointBounds(node: RealtimeNode, r: number): void {
+  node.x0 = node.x - r
+  node.x1 = node.x + r
+  node.y0 = node.y - r
+  node.y1 = node.y + r
+  node.width = r * 2
+  node.height = r * 2
 }
 
 registerLayoutPlugin("tree", hierarchyLayoutPlugin)

@@ -24,7 +24,7 @@ export function parseColor(color: string): [number, number, number] {
     let hex = color.slice(1)
     if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
     if (hex.length === 6) {
-      return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
+      return [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16)) as [number, number, number]
     }
   }
   const m = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
@@ -56,15 +56,14 @@ export function resolveNodeId(
   index: number
 ): string {
   const accessor = config.nodeIDAccessor
-  if (typeof accessor === "function") {
-    return String(accessor(d.data))
-  }
-  if (typeof accessor === "string" && d.data[accessor] !== undefined) {
-    return String(d.data[accessor])
-  }
-  if (d.data.name !== undefined) return String(d.data.name)
-  if (d.data.id !== undefined) return String(d.data.id)
-  return `node-${index}`
+  const data = d.data
+  return String(
+    typeof accessor === "function" ? accessor(data)
+      : typeof accessor === "string" && data[accessor] !== undefined ? data[accessor]
+        : data.name !== undefined ? data.name
+          : data.id !== undefined ? data.id
+            : `node-${index}`
+  )
 }
 
 export function resolveLabelFn(
@@ -84,9 +83,37 @@ export function resolveLabelFn(
   return (d: Datum) => d.data?.[nodeLabel] || d[nodeLabel] || d.id
 }
 
-export function resolveDefaultNodeSize(
-  nodeSize: number | string | ((d: Datum) => number) | undefined
-): number {
-  if (typeof nodeSize === "number") return nodeSize
-  return 5
+/** Each node contributes its own nonnegative value; parents also sum descendants. */
+export function resolveHierarchySum(
+  accessor: string | ((d: Datum) => number) = "value"
+): (d: Datum) => number {
+  const read =
+    typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
+  return (d) => {
+    const raw = read(d)
+    const value = typeof raw === "string" ? Number(raw) : raw
+    return Number.isFinite(value) && value > 0 ? value : 0
+  }
+}
+
+/**
+ * Preserve authored IDs and suffix repeated occurrences in source traversal order.
+ * Reserve every authored ID first so generated suffixes cannot steal a later ID.
+ * Call before value sorting: resizing or editing measures must not swap identity.
+ */
+export function uniqueHierarchyIds(rawIds: readonly string[]): string[] {
+  // Zero reserves an authored ID that has not been visited yet. Positive
+  // entries reserve assigned IDs and track the next suffix for repeated ones.
+  const nextSuffix = new Map(rawIds.map((id) => [id, 0]))
+  return rawIds.map((rawId) => {
+    let suffix = nextSuffix.get(rawId)!
+    let id = rawId
+    // Zero denotes the first occurrence, which keeps its authored ID.
+    while (suffix > 0 && nextSuffix.has(id)) {
+      id = `${rawId}__${suffix++}`
+    }
+    nextSuffix.set(rawId, suffix || 1)
+    nextSuffix.set(id, 1)
+    return id
+  })
 }

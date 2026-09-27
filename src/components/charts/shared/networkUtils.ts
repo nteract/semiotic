@@ -172,17 +172,6 @@ export function inferNodesFromEdges(
 }
 
 /**
- * Convert a valueAccessor prop into a hierarchy sum function.
- * Used by TreeDiagram, Treemap, and CirclePack for d3-hierarchy's `.sum()`.
- */
-export function resolveHierarchySum(
-  valueAccessor: string | ((d: Datum) => number)
-): (d: Datum) => number {
-  if (typeof valueAccessor === "function") return valueAccessor
-  return (d: Datum) => d[valueAccessor] || 1
-}
-
-/**
  * Create an edge style function for Sankey/Chord edge coloring.
  * Handles edgeColorBy = "source" | "target" | "gradient" | function.
  */
