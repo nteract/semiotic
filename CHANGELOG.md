@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- XY resizes rebuild active transition targets and pixel-dependent bar,
+  waterfall, candlestick, and range geometry. Symbols move with their axes;
+  hidden or invalid plot sizes preserve retained data until layout recovers.
+  Settled resizes preserve resolved log/time scales, reversed streaming
+  direction, and inverted Y. Canvas backing-store changes always repaint,
+  and viewport/pointer density-cap changes invalidate all frame families
+  without allocating media queries on each paint. The related audit covers
+  bounded/pushed data, intro and interrupted path/point transitions, fixed
+  gaps and mark sizes, custom-layout exclusions, and both resize directions.
+  Verification includes real mark pixels, tooltip content/placement/dismissal
+  in Chromium/WebKit and ESM/CommonJS browser/Node/edge static geometry.
+  (#1319)
+- Ordinal canvases share rounded backing-store sizing and effective transforms
+  with the other frame families, preventing repeated clears and reallocations
+  at fractional device-pixel ratios. Regression coverage checks consecutive
+  paints at odd CSS dimensions. (#1426, R0121)
 - Ordinal value domains use the same per-category net aggregates as bar and
   funnel marks. Normalized stacks retain negative segments, repeated funnel
   rows fit the plot, and timeline domains retain both endpoints after eviction,

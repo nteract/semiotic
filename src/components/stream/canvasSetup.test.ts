@@ -3,6 +3,7 @@ import {
   getDevicePixelRatio,
   subscribeToCanvasFontInvalidation,
   subscribeToDevicePixelRatioChange,
+  syncCanvasSize,
 } from "./canvasSetup"
 
 afterEach(() => {
@@ -11,6 +12,55 @@ afterEach(() => {
 })
 
 describe("canvas device pixel ratio", () => {
+  it("reports backing-store invalidation and retains fractional-DPR sizing", () => {
+    const canvas = document.createElement("canvas")
+    const width = vi.spyOn(canvas, "width", "set")
+    const height = vi.spyOn(canvas, "height", "set")
+    const first = syncCanvasSize(canvas, [301, 201], 1.5)
+    expect(first).toEqual({ resized: true, effectiveDprX: 452 / 301, effectiveDprY: 302 / 201 })
+    expect(syncCanvasSize(canvas, [301, 201], 1.5).resized).toBe(false)
+    expect(width).toHaveBeenCalledTimes(1)
+    expect(height).toHaveBeenCalledTimes(1)
+    expect(syncCanvasSize(canvas, [301, 201], 2).resized).toBe(true)
+    expect(canvas.width).toBe(602)
+    expect(canvas.height).toBe(402)
+  })
+
+  it("reuses pointer queries and invalidates on viewport-cap and pointer changes", () => {
+    Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 4 })
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1200 })
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 900 })
+    const pointer = new EventTarget() as MediaQueryList
+    Object.defineProperty(pointer, "matches", { configurable: true, writable: true, value: false })
+    Object.defineProperty(pointer, "media", { value: "(pointer: coarse)" })
+    const matchMedia = vi.fn((query: string) => query === pointer.media ? pointer : {
+      media: query, addEventListener: vi.fn(), removeEventListener: vi.fn()
+    })
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: matchMedia })
+    const listener = vi.fn()
+    const unsubscribe = subscribeToDevicePixelRatioChange(listener)
+    for (let i = 0; i < 10; i++) expect(getDevicePixelRatio()).toBe(3)
+    expect(matchMedia.mock.calls.filter(([q]) => q === pointer.media)).toHaveLength(1)
+    window.innerWidth = 700
+    window.dispatchEvent(new Event("resize"))
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(getDevicePixelRatio()).toBe(2)
+    window.innerWidth = 710
+    window.dispatchEvent(new Event("resize"))
+    expect(listener).toHaveBeenCalledTimes(1)
+    window.innerWidth = 1200
+    window.dispatchEvent(new Event("resize"))
+    expect(listener).toHaveBeenCalledTimes(2)
+    Object.defineProperty(pointer, "matches", { value: true })
+    pointer.dispatchEvent(new Event("change"))
+    expect(listener).toHaveBeenCalledTimes(3)
+    expect(getDevicePixelRatio()).toBe(2)
+    unsubscribe()
+    Object.defineProperty(pointer, "matches", { value: false })
+    pointer.dispatchEvent(new Event("change"))
+    window.dispatchEvent(new Event("resize"))
+    expect(listener).toHaveBeenCalledTimes(3)
+  })
   it("notifies canvas subscribers when web fonts finish loading and cleans up", () => {
     const listeners = new Set<EventListenerOrEventListenerObject>()
     const fontSet = {
@@ -149,9 +199,10 @@ describe("canvas device pixel ratio", () => {
 
     expect(listener).toHaveBeenCalledTimes(1)
     expect(queries[0].removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
-    expect(queries[1].query).toBe("(resolution: 4dppx)")
+    const rearmed = queries.find(q => q.query === "(resolution: 4dppx)")!
+    expect(rearmed).toBeDefined()
 
     unsubscribe()
-    expect(queries[1].removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
+    expect(rearmed.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function))
   })
 })

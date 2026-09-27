@@ -70,8 +70,7 @@ import {
   resolveStackedAreaYDomain,
   resolveWaterfallXDomain,
   resolveWaterfallYDomain,
-  type StackExtentCache,
-  makePipelineScale
+  type StackExtentCache
 } from "./pipelineDomainResolution"
 import {
   groupPipelineData,
@@ -97,6 +96,7 @@ import { attachUpdateResultStore, type UpdateResultStore } from "./pipelineUpdat
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 import { snapXYIntroTargets } from "./pipelineIntroCancellation"
+import { remapXYScene } from "./pipelineSceneResize"
 
 export type { PipelineConfig } from "./pipelineConfig"
 export type {
@@ -508,29 +508,35 @@ export class PipelineStore implements UpdateResultStore {
     const previousScales = this.scales
     const previousLastLayout = this.lastLayout
 
-    // Fast path: if only layout dimensions changed (no data or config change),
-    // remap existing scene node coordinates instead of rebuilding from scratch.
-    //
-    // Excluded for custom layouts: a custom layout positions both scene nodes
-    // AND overlays with arbitrary geometry (fixed pixel offsets, non-linear
-    // padding floors, glyph chrome), so a *proportional* coordinate remap is
-    // not equivalent to re-running the layout — and crucially `remapScene`
-    // never regenerates `customLayoutOverlays`, so the overlay glyphs would
-    // stay at the previous dimensions while the canvas scene nodes move,
-    // drifting the two apart on a responsive resize (the classic "flowers
-    // offset from their stems until any other change forces a rebuild" bug).
-    // Re-running the layout on a dimension change is the correct behavior for
-    // these and the per-resize cost is acceptable.
+    // Hidden/collapsed plots have no usable coordinate space. Retain data and
+    // the last valid scene, then rebuild when positive dimensions return.
+    if (!(layout.width > 0 && layout.height > 0 &&
+      Number.isFinite(layout.width) && Number.isFinite(layout.height))) {
+      this.needsFullRebuild = true
+      return
+    }
+
+    // Proportional remapping is safe only for settled, scale-driven geometry.
+    // Transitions retain old pixel targets; custom layouts and bar/candlestick
+    // builders also have overlays, fixed gaps, or size-dependent clamps.
     if (
       !this.needsFullRebuild &&
       !config.customLayout &&
+      !this.activeTransition &&
+      config.chartType !== "bar" &&
+      config.chartType !== "waterfall" &&
+      config.chartType !== "candlestick" &&
       this.lastLayout &&
+      this.lastLayout.width > 0 && this.lastLayout.height > 0 &&
       this.scene.length > 0 &&
       this.scales &&
       (this.config.scalePadding ?? 0) <= 0 &&  // positive scalePadding requires full rebuild (proportional remap distorts constant pixel inset)
       (this.lastLayout.width !== layout.width || this.lastLayout.height !== layout.height)
     ) {
-      this.remapScene(layout)
+      this.scales = remapXYScene(this.scene, this.scales, this.lastLayout, layout)
+      this.lastLayout = { width: layout.width, height: layout.height }
+      this.spatialIndex.rebuild(config.chartType, this.scene)
+      this.version++
       return
     }
 
@@ -690,91 +696,6 @@ export class PipelineStore implements UpdateResultStore {
 
   /** Largest visual point radius in the current scene. */
   get maxPointRadius(): number { return this.spatialIndex.maxPointRadius }
-
-  /**
-   * Remap existing scene node coordinates for a new layout size.
-   * Proportionally scales all pixel coordinates without rebuilding from data.
-   */
-  private remapScene(layout: StreamLayout): void {
-    const oldW = this.lastLayout!.width
-    const oldH = this.lastLayout!.height
-    const wRatio = layout.width / oldW
-    const hRatio = layout.height / oldH
-
-    for (const node of this.scene) {
-      switch (node.type) {
-        case "line":
-          for (const p of node.path) { p[0] *= wRatio; p[1] *= hRatio }
-          break
-        case "area":
-          for (const p of node.topPath) { p[0] *= wRatio; p[1] *= hRatio }
-          for (const p of node.bottomPath) { p[0] *= wRatio; p[1] *= hRatio }
-          // Remap user-supplied clipRect (horizon recipe) so responsive
-          // resizes don't leave the clip in stale coordinates.
-          if (node.clipRect) {
-            node.clipRect = {
-              x: node.clipRect.x * wRatio,
-              y: node.clipRect.y * hRatio,
-              width: node.clipRect.width * wRatio,
-              height: node.clipRect.height * hRatio,
-            }
-          }
-          if (node.strokeColorBands) {
-            node.strokeColorBands = node.strokeColorBands.map((band) => ({
-              ...band,
-              y: band.y * hRatio,
-              height: band.height * hRatio,
-            }))
-          }
-          break
-        case "point":
-          node.x *= wRatio; node.y *= hRatio
-          break
-        case "glyph":
-          // Position tracks the resize; drawn size stays author-set (like
-          // a point's radius).
-          node.x *= wRatio; node.y *= hRatio
-          break
-        case "rect":
-          node.x *= wRatio; node.y *= hRatio
-          node.w *= wRatio; node.h *= hRatio
-          break
-        case "heatcell":
-          node.x *= wRatio; node.y *= hRatio
-          node.w *= wRatio; node.h *= hRatio
-          break
-        case "candlestick":
-          node.x *= wRatio
-          node.openY *= hRatio; node.closeY *= hRatio
-          node.highY *= hRatio; node.lowY *= hRatio
-          break
-      }
-    }
-
-    // Rebuild scales with new pixel ranges (same data domain), preserving scale type
-    const xDomain = this.scales!.x.domain() as [number, number]
-    const yDomain = this.scales!.y.domain() as [number, number]
-    const oldXRange = this.scales!.x.range() as [number, number]
-    const oldYRange = this.scales!.y.range() as [number, number]
-    const remapScale = makePipelineScale
-    // Rebuild ranges preserving original direction (e.g. arrowOfTime="left" has reversed x range)
-    const rsp = Math.max(0, Math.min(this.config.scalePadding || 0, Math.min(layout.width, layout.height) / 2 - 1))
-    const xFlipped = oldXRange[0] > oldXRange[1]
-    const yFlipped = oldYRange[0] < oldYRange[1]  // standard Y is [height, 0] (flipped = [0, height])
-    this.scales = {
-      x: remapScale(this.config.xScaleType ?? (this.xIsDate ? "utc" : undefined), xDomain,
-        xFlipped ? [layout.width - rsp, rsp] : [rsp, layout.width - rsp]),
-      y: remapScale(this.config.yScaleType, yDomain,
-        yFlipped ? [rsp, layout.height - rsp] : [layout.height - rsp, rsp])
-    }
-
-    this.lastLayout = { width: layout.width, height: layout.height }
-
-    // Rebuild quadtree with remapped coordinates
-    this.spatialIndex.rebuild(this.config.chartType, this.scene)
-
-    this.version++
-  }
 
   private buildSceneNodes(layout: StreamLayout, data: Datum[]): SceneNode[] {
     const { config, scales } = this

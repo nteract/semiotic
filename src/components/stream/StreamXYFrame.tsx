@@ -908,7 +908,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       // both stacked layers aligned on the initial synchronous mount paint,
       // responsive resizes, and DPR changes even when hover is disabled or no
       // pointer has entered the chart yet.
-      syncCanvasSize(canvas, size, dpr)
+      const { resized: backingStoreChanged } = syncCanvasSize(canvas, size, dpr)
       syncCanvasSize(interactionCanvas, size, dpr)
 
       const theme = themeColorCacheRef.current.resolve(canvas)
@@ -923,7 +923,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       const currentlyStale = staleness && resolvedStaleness.isStale
 
       // ── Data canvas: repaint when data/props changed, restyle/pulse, or resolution-only ─
-      if (needsDataRepaint || stylePaintPending || pulseRefresh.changed || needsResolutionRepaint) {
+      if (needsDataRepaint || stylePaintPending || pulseRefresh.changed || needsResolutionRepaint || backingStoreChanged) {
         const ctx = prepareCanvas(canvas, size, margin, dpr)
         if (ctx) {
           ctx.clearRect(-margin.left, -margin.top, size[0], size[1])
