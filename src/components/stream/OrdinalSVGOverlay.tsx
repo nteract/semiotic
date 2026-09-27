@@ -3,7 +3,7 @@ import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useId } from "react"
-import type { OrdinalScales } from "./ordinalTypes"
+import type { OrdinalColumn, OrdinalScales } from "./ordinalTypes"
 import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -35,6 +35,7 @@ interface OrdinalSVGOverlayProps {
   totalHeight: number
   margin: { top: number; right: number; bottom: number; left: number }
   scales: OrdinalScales | null
+  columns?: Record<string, OrdinalColumn>
 
   // Axes
   showAxes?: boolean
@@ -220,6 +221,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     totalHeight,
     margin,
     scales,
+    columns,
     showAxes,
     showCategoryTicks: showCategoryTicksProp,
     oLabel,
@@ -279,24 +281,18 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       ? leftSideLegendGutter
       : margin.left
 
-  // Category labels (band scale). When many categories crowd the axis —
-  // the classic temporal-histogram / many-bin case — drawing every label
-  // produces an unreadable overlapping smear. Thin to evenly-spaced labels
-  // (every Nth) so the remaining set never collides. The thinning is a
-  // no-op when labels already fit (step === 1), so charts with few
-  // categories render byte-identically.
+  // Use actual column centers and retain labels that fit beside the previous
+  // visible label, including uneven bands and zero-width columns.
   const categoryTicks = useMemo(() => {
     if (!showAxes || !showCategoryTicks || !scales || isRadial) return []
     const band = scales.o.bandwidth()
     const all = scales.o.domain().map((cat, index) => ({
       value: cat,
-      pixel: (scales.o(cat) ?? 0) + band / 2,
+      pixel: columns?.[cat]?.middle ?? (scales.o(cat) ?? 0) + band / 2,
       label: oFormat ? oFormat(cat, index) : cat
     }))
     if (all.length <= 2) return all
 
-    // Uniform spacing between adjacent category centers (band scale).
-    const spacing = Math.abs(all[1].pixel - all[0].pixel) || band
     // Estimate each label independently, then compare adjacent label
     // footprints. Using the longest label for *both* sides of every gap
     // over-thins ordinary mixed-length category sets (for example,
@@ -316,21 +312,17 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       }
       return 60
     }
-    const footprints = all.map(t => footprint(t.label))
     const minimumGap = isHorizontal ? 0 : 6
-    const adjacentLabelsFit = footprints.every((current, index) =>
-      index === 0 || (footprints[index - 1] + current) / 2 + minimumGap <= spacing
-    )
-    if (adjacentLabelsFit) return all
-
-    // Once a real collision is detected, preserve the prior conservative
-    // every-N thinning policy. The largest selected label can then be next
-    // to another largest label, so its complete footprint is required.
-    const needed = Math.max(...footprints) + minimumGap
-    const step = Math.max(1, Math.ceil(needed / spacing))
-    if (step === 1) return all
-    return all.filter((_, i) => i % step === 0)
-  }, [showAxes, showCategoryTicks, scales, oFormat, isRadial, isHorizontal])
+    let lastPixel = -Infinity
+    let lastFootprint = 0
+    return all.filter(tick => {
+      const current = footprint(tick.label)
+      if (tick.pixel - lastPixel < (lastFootprint + current) / 2 + minimumGap) return false
+      lastPixel = tick.pixel
+      lastFootprint = current
+      return true
+    })
+  }, [showAxes, showCategoryTicks, scales, columns, oFormat, isRadial, isHorizontal])
 
   // Value ticks (linear scale) — custom rTickValues override d3 ticks
   const rTickValues = props.rTickValues

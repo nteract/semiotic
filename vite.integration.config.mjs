@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => ({
         network: resolve(integrationRoot, "network-examples/index.html"),
         networkCustomLayout: resolve(integrationRoot, "network-custom-layout-examples/index.html"),
         ordinal: resolve(integrationRoot, "ordinal-examples/index.html"),
+        ordinalDomains: resolve(integrationRoot, "ordinal-domain-regressions/index.html"),
         primitiveProps: resolve(integrationRoot, "primitive-props-examples/index.html"),
         primitiveThemeMatrix: resolve(integrationRoot, "primitive-theme-matrix-examples/index.html"),
         processSankey: resolve(integrationRoot, "process-sankey-examples/index.html"),

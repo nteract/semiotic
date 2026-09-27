@@ -340,7 +340,12 @@ export class OrdinalPipelineStore implements UpdateResultStore {
 
     // Recalculate dirty extents
     if (this.rExtent.dirty) {
-      this.rExtent.recalculate(buffer, this.getR)
+      if (config.chartType === "timeline") {
+        this.rExtent.clear()
+        buffer.forEach(d => this.pushValueExtent(d))
+      } else {
+        this.rExtent.recalculate(buffer, this.getR)
+      }
     }
 
     const data = this.getBufferArray()

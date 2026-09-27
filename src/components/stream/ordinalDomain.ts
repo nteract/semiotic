@@ -3,6 +3,7 @@
  */
 
 import type { ScaleBand } from "d3-scale"
+import { aggregateOrdinalGroups } from "./ordinalAggregation"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { OrdinalColumn, OrdinalLayout, OrdinalPipelineConfig } from "./ordinalTypes"
 
@@ -52,39 +53,31 @@ export function computeOrdinalValueDomain(input: OrdinalValueDomainInput): [numb
   let min = 0
   let max = 0
 
-  if (chartType === "bar" && getStack && normalize) {
-    // Normalized stacked bars: values are divided by column total → domain is [0, 1]
-    min = 0
-    max = 1
-  } else if (chartType === "bar" && getStack) {
-    // Stacked bars: compute per-category stacked sums
-    const posSums = new Map<string, number>()
-    const negSums = new Map<string, number>()
-
+  if (chartType === "bar" || chartType === "bar-funnel") {
+    // Use the same per-category/per-stack net totals as the scene. Funnel
+    // groups sit side by side; bar groups stack separately on each side of zero.
+    const categories = new Map<string, Datum[]>()
     for (const d of data) {
       const cat = getO(d)
-      const val = getR(d)
-      if (val >= 0) {
-        posSums.set(cat, (posSums.get(cat) || 0) + val)
-      } else {
-        negSums.set(cat, (negSums.get(cat) || 0) + val)
+      if (!categories.has(cat)) categories.set(cat, [])
+      categories.get(cat)!.push(d)
+    }
+    for (const pieces of categories.values()) {
+      const groups = aggregateOrdinalGroups(pieces, getR, getStack, chartType === "bar" && normalize)
+      let positive = 0
+      let negative = 0
+      for (const { value } of groups.values()) {
+        if (chartType === "bar-funnel") {
+          positive = Math.max(positive, value)
+          negative = Math.min(negative, value)
+        } else if (value >= 0) {
+          positive += value
+        } else {
+          negative += value
+        }
       }
-    }
-
-    for (const s of posSums.values()) if (s > max) max = s
-    for (const s of negSums.values()) if (s < min) min = s
-  } else if (chartType === "bar") {
-    // Non-stacked bars: pieces within each category are summed,
-    // so the domain must cover the per-category total
-    const catSums = new Map<string, number>()
-    for (const d of data) {
-      const cat = getO(d)
-      const val = getR(d)
-      catSums.set(cat, (catSums.get(cat) || 0) + val)
-    }
-    for (const s of catSums.values()) {
-      if (s > max) max = s
-      if (s < min) min = s
+      max = Math.max(max, positive)
+      min = Math.min(min, negative)
     }
   } else if (chartType === "swimlane") {
     // Swimlane: items stack sequentially per lane — domain covers max lane sum
@@ -97,10 +90,11 @@ export function computeOrdinalValueDomain(input: OrdinalValueDomainInput): [numb
     for (const s of laneSums.values()) {
       if (s > max) max = s
     }
-  } else if (chartType === "clusterbar" || chartType === "bar-funnel") {
-    // Cluster bars / bar-funnel: individual values (side-by-side grouping)
+  } else if (chartType === "clusterbar") {
+    // Cluster bars render individual values side by side.
     for (const d of data) {
       const val = getR(d)
+      if (!Number.isFinite(val)) continue
       if (val > max) max = val
       if (val < min) min = val
     }
@@ -200,25 +194,32 @@ export function buildOrdinalColumns(
   let dynamicWidths: Map<string, number> | null = null
   if (dcw && projection !== "radial") {
     dynamicWidths = new Map()
-    let totalWidth = 0
+    let maxWeight = 0
     for (const cat of oExtent) {
       const pieceData = grouped.get(cat) || []
       let colValue: number
       if (typeof dcw === "string") {
-        colValue = pieceData.reduce((s, d) => s + (Number(d[dcw]) || 0), 0)
+        colValue = pieceData.reduce((s, d) => {
+          const value = Number(d[dcw])
+          return s + (Number.isFinite(value) ? value : 0)
+        }, 0)
       } else {
         colValue = dcw(pieceData)
       }
-      dynamicWidths.set(cat, colValue)
-      totalWidth += colValue
+      const weight = Number.isFinite(colValue) ? Math.max(0, colValue) : 0
+      dynamicWidths.set(cat, weight)
+      maxWeight = Math.max(maxWeight, weight)
     }
     // Normalize to available space
     const availableSpace = projection === "horizontal" ? layout.height : layout.width
-    const paddingTotal = oScale.padding() * oScale.step() * oExtent.length
-    const usableSpace = availableSpace - paddingTotal
-    if (totalWidth > 0) {
+    const paddingTotal = oScale.padding() * oScale.step() * Math.max(0, oExtent.length - 1)
+    const usableSpace = Math.max(0, availableSpace - paddingTotal)
+    if (maxWeight > 0) {
+      // Scaling before summation avoids overflow for large finite weights.
+      let totalWidth = 0
+      for (const value of dynamicWidths.values()) totalWidth += value / maxWeight
       for (const [cat, val] of dynamicWidths) {
-        dynamicWidths.set(cat, (val / totalWidth) * usableSpace)
+        dynamicWidths.set(cat, (val / maxWeight / totalWidth) * usableSpace)
       }
     }
   }
@@ -235,7 +236,7 @@ export function buildOrdinalColumns(
     let bandwidth: number
     if (dynamicWidths) {
       bandStart = cumulativeX
-      bandwidth = dynamicWidths.get(cat) || oScale.bandwidth()
+      bandwidth = dynamicWidths.get(cat) ?? oScale.bandwidth()
       cumulativeX += bandwidth + oScale.padding() * oScale.step()
     } else {
       bandStart = oScale(cat) ?? 0

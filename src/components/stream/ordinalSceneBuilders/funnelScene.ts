@@ -1,5 +1,6 @@
 import { scaleLinear } from "d3-scale"
 import { buildRectNode } from "../SceneGraph"
+import { aggregateOrdinalColumns } from "../ordinalAggregation"
 import type { OrdinalSceneNode, OrdinalLayout, TrapezoidSceneNode } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -38,43 +39,11 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
   const orderedColumns = domain.map(name => columns[name]).filter(Boolean)
   if (orderedColumns.length === 0) return nodes
 
-  // Discover category keys (from stackBy/groupBy accessor)
-  const categoryKeys: string[] = []
-  const categorySet = new Set<string>()
-  for (const col of orderedColumns) {
-    for (const d of col.pieceData) {
-      const key = getStack ? getStack(d) : "_default"
-      if (!categorySet.has(key)) {
-        categorySet.add(key)
-        categoryKeys.push(key)
-      }
-    }
-  }
+  const { steps, keys: categoryKeys } = aggregateOrdinalColumns(orderedColumns, getR, getStack)
   const hasMultipleCategories = categoryKeys.length > 1 && categoryKeys[0] !== "_default"
-
-  // Compute per-step, per-category aggregated values
-  interface StepData {
-    col: typeof orderedColumns[0]
-    groups: Map<string, { total: number; pieces: Datum[] }>
-    stepTotal: number
-  }
-  const steps: StepData[] = []
   let globalMax = 0
-
-  for (const col of orderedColumns) {
-    const groups = new Map<string, { total: number; pieces: Datum[] }>()
-    let stepTotal = 0
-    for (const d of col.pieceData) {
-      const key = getStack ? getStack(d) : "_default"
-      if (!groups.has(key)) groups.set(key, { total: 0, pieces: [] })
-      const g = groups.get(key)!
-      const v = getR(d)
-      g.total += v
-      g.pieces.push(d)
-      stepTotal += v
-    }
-    steps.push({ col, groups, stepTotal })
-    if (!hasMultipleCategories) {
+  if (!hasMultipleCategories) {
+    for (const { stepTotal } of steps) {
       if (stepTotal > globalMax) globalMax = stepTotal
     }
   }
@@ -99,12 +68,6 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
 
   if (globalMax === 0) return nodes
 
-  // Per-category first-step totals (for percent calculation)
-  const catFirstTotals = new Map<string, number>()
-  for (const key of categoryKeys) {
-    const firstGroup = steps[0].groups.get(key)
-    catFirstTotals.set(key, firstGroup?.total ?? 0)
-  }
   const firstStepTotal = steps[0].stepTotal
 
   // Width scale — single-category bars span up to ~90% of full width (centered),
@@ -190,7 +153,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
         else leftOffset -= barW
 
         const style = resolvePieceStyle(group.pieces[0], catKey)
-        const catFirstTotal = catFirstTotals.get(catKey) ?? group.total
+        const catFirstTotal = steps[0].groups.get(catKey)?.total ?? 0
         const pct = catFirstTotal > 0 ? (group.total / catFirstTotal * 100) : 0
 
         const labelData: Datum = {

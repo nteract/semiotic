@@ -1,4 +1,5 @@
 import { buildRectNode } from "../SceneGraph"
+import { aggregateOrdinalColumns } from "../ordinalAggregation"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -39,53 +40,8 @@ export function buildBarFunnelScene(
   const orderedColumns = domain.map((name) => columns[name]).filter(Boolean)
   if (orderedColumns.length === 0) return nodes
 
-  // Discover category keys
-  const categoryKeys: string[] = []
-  const categorySet = new Set<string>()
-  for (const col of orderedColumns) {
-    for (const d of col.pieceData) {
-      const key = getStack ? getStack(d) : "_default"
-      if (!categorySet.has(key)) {
-        categorySet.add(key)
-        categoryKeys.push(key)
-      }
-    }
-  }
+  const { steps, keys: categoryKeys } = aggregateOrdinalColumns(orderedColumns, getR, getStack)
   const hasCategories = categoryKeys.length > 1 && categoryKeys[0] !== "_default"
-
-  // Compute per-step, per-category totals
-  interface StepGroup {
-    total: number
-    pieces: Datum[]
-  }
-  interface StepData {
-    col: (typeof orderedColumns)[0]
-    groups: Map<string, StepGroup>
-    stepTotal: number
-  }
-  const steps: StepData[] = []
-
-  for (const col of orderedColumns) {
-    const groups = new Map<string, StepGroup>()
-    let stepTotal = 0
-    for (const d of col.pieceData) {
-      const key = getStack ? getStack(d) : "_default"
-      if (!groups.has(key)) groups.set(key, { total: 0, pieces: [] })
-      const g = groups.get(key)!
-      const v = getR(d)
-      g.total += v
-      g.pieces.push(d)
-      stepTotal += v
-    }
-    steps.push({ col, groups, stepTotal })
-  }
-
-  // Per-category first-step totals (= 100%)
-  const catFirstTotals = new Map<string, number>()
-  for (const key of categoryKeys) {
-    const firstGroup = steps[0]?.groups.get(key)
-    catFirstTotals.set(key, firstGroup?.total ?? 0)
-  }
 
   // Use the pipeline's rScale (vertical: domain [0, max] → range [height, 0])
   const rScale = scales.r
@@ -109,7 +65,7 @@ export function buildBarFunnelScene(
       if (!group) continue
 
       const val = group.total
-      const catFirstTotal = catFirstTotals.get(catKey) ?? val
+      const catFirstTotal = steps[0].groups.get(catKey)?.total ?? 0
       const pct = catFirstTotal > 0 ? (val / catFirstTotal) * 100 : 0
 
       // Dropoff = previous step's value for this category minus this step's value
@@ -148,9 +104,9 @@ export function buildBarFunnelScene(
       nodes.push(
         buildRectNode(
           barX,
-          retainedTop,
+          Math.min(retainedTop, retainedBottom),
           barWidth,
-          retainedH,
+          Math.abs(retainedH),
           retainedStyle,
           retainedDatum,
           hasCategories ? catKey : col.name

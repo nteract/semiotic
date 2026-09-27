@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Ordinal value domains use the same per-category net aggregates as bar and
+  funnel marks. Normalized stacks retain negative segments, repeated funnel
+  rows fit the plot, and timeline domains retain both endpoints after eviction,
+  removal, or updates. Dynamic columns preserve zero widths, reject invalid
+  weights, fit their gaps inside the plot, and align browser ticks to actual
+  column centers. Grouped bars retain individual observations while omitting
+  non-finite measures. The related audit covers both projections, bounded/pushed
+  data, callback accessors, Date endpoints, signed/empty/non-finite inputs,
+  real hover through resize and replacement in Chromium/WebKit, and matching
+  HOC and ESM/CommonJS server/Node/edge geometry. (#1310)
 - Aggregation preserves typed grouping keys and all Vega-Lite series dimensions,
   excludes missing and invalid numeric measures, and returns `null` for groups
   without numeric observations. `rollup` accepts multiple grouping fields and
