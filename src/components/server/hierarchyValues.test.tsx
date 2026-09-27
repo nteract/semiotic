@@ -2,11 +2,16 @@
 import { describe, expect, it } from "vitest"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { CirclePack, TreeDiagram, Treemap } from "semiotic/network"
+import {
+  CirclePack,
+  OrbitDiagram,
+  TreeDiagram,
+  Treemap
+} from "semiotic/network"
 import { renderChartWithEvidence } from "semiotic/server"
 import type { Datum } from "../charts/shared/datumTypes"
 
-const components = { Treemap, CirclePack, TreeDiagram }
+const components = { Treemap, CirclePack, TreeDiagram, OrbitDiagram }
 const cases = [
   ["Treemap", "treemap"],
   ["CirclePack", "circlepack"],
@@ -59,32 +64,79 @@ function geometry(svg: string) {
 }
 
 describe("hierarchy values and public renderer parity (#1322)", () => {
-  it.each(["Treemap", "CirclePack", "TreeDiagram"] as const)(
-    "%s preserves category fills with string and callback accessors",
-    (component) => {
-      for (const colorBy of ["group", (d: Datum) => d.group]) {
-        const props = {
-          data: {
-            name: "root",
-            group: "root",
-            children: [
-              { name: "a", group: "a", value: 4 },
-              { name: "b", group: "b", value: 2 }
-            ]
-          },
-          colorBy,
-          colorScheme: { root: "#555555", a: "#135790", b: "#246801" },
-          showLabels: false,
-          showLegend: false
-        }
-        for (const svg of [
-          renderChartWithEvidence(component, props).svg,
-          renderToStaticMarkup(
-            React.createElement(components[component], props)
-          )
+  it.each([false, true])(
+    "preserves Orbit root and depth colors (depth=%s)",
+    (colorByDepth) => {
+      const props = {
+        data: { name: "root", children: [{ name: "a" }, { name: "b" }] },
+        colorScheme: ["#123456"],
+        colorByDepth,
+        showLegend: false,
+        showLabels: false,
+        animated: false
+      }
+      for (const svg of [
+        renderChartWithEvidence("OrbitDiagram", props).svg,
+        renderToStaticMarkup(<OrbitDiagram {...props} />)
+      ]) {
+        expect(svg.match(/fill="#123456"/g)).toHaveLength(colorByDepth ? 1 : 3)
+        if (colorByDepth) expect(svg.match(/fill="#b5d4ea"/g)).toHaveLength(2)
+      }
+    }
+  )
+  it.each([...cases, ["OrbitDiagram", "orbit"]] as const)(
+    "%s %s preserves category fills with string and callback accessors",
+    (component, layout) => {
+      for (const [colorScheme, childColors] of [
+        [
+          { root: "#555555", a: "#135790", b: "#246801" },
+          ["#135790", "#246801"]
+        ],
+        [
+          ["#555555", "#135790", "#246801"],
+          ["#135790", "#246801"]
+        ],
+        ["category10", ["#ff7f0e", "#2ca02c"]]
+      ] satisfies [string | string[] | Record<string, string>, string[]][]) {
+        for (const childrenAccessor of [
+          undefined,
+          "items",
+          (d: Datum) => d.items
         ]) {
-          expect(svg.match(/fill="#135790"/g)).toHaveLength(1)
-          expect(svg.match(/fill="#246801"/g)).toHaveLength(1)
+          for (const colorBy of ["group", (d: Datum) => d.group]) {
+            const props = {
+              layout,
+              data: {
+                name: "root",
+                group: "root",
+                [childrenAccessor === undefined ? "children" : "items"]: [
+                  { name: "a", group: "a", value: 4 },
+                  { name: "b", group: "b", value: 2 }
+                ]
+              },
+              colorBy,
+              childrenAccessor,
+              colorScheme,
+              showLabels: false,
+              showLegend: false
+            }
+            for (const svg of [
+              renderChartWithEvidence(component, props).svg,
+              renderToStaticMarkup(
+                component === "OrbitDiagram" ? (
+                  <OrbitDiagram {...props} />
+                ) : (
+                  React.createElement(components[component], props)
+                )
+              )
+            ]) {
+              for (const color of childColors) {
+                expect(
+                  svg.match(new RegExp(`fill="${color}"`, "g"))
+                ).toHaveLength(1)
+              }
+            }
+          }
         }
       }
     }

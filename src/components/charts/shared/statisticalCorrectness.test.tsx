@@ -114,6 +114,8 @@ for (const [name, render] of [
           ...context,
           frameType: "ordinal",
           projection,
+          xAccessor: projection === "horizontal" ? "y" : "x",
+          yAccessor: projection === "horizontal" ? "x" : "y",
           data: [
             { x: "A", y: 20 },
             { x: "B", y: 10 },

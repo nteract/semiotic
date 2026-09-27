@@ -6,6 +6,10 @@ import { ticksForMode } from "../charts/shared/axisExtent"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
+import {
+  buildEnrichAnnotationData,
+  resolveAnnotationAccessor
+} from "../stream/annotationAccessorResolver"
 import type {
   OrdinalSceneNode,
   OrdinalPipelineConfig,
@@ -433,12 +437,21 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
 
   // Annotations — same custom-rule path as XY so ordinal custom overlays
   // survive renderChart.
+  const oAccessor = props.categoryAccessor ?? props.oAccessor ?? "category"
+  const rAccessor = props.valueAccessor ?? props.rAccessor ?? "value"
+  const horizontal = projection === "horizontal"
+  const xResolved = resolveAnnotationAccessor(
+    horizontal ? rAccessor : oAccessor, undefined, "__semiotic_resolvedO", ""
+  )
+  const yResolved = resolveAnnotationAccessor(
+    horizontal ? oAccessor : rAccessor, undefined, "__semiotic_resolvedR", ""
+  )
   let annotationRender: StaticAnnotationRenderResult | undefined
   const annotationNodes = props.annotations ? renderStaticAnnotations({
     annotations: props.annotations,
     autoPlaceAnnotations: props.autoPlaceAnnotations,
     svgAnnotationRules: props.svgAnnotationRules,
-    annotationData: data,
+    annotationData: buildEnrichAnnotationData(xResolved, yResolved, props.annotations.length > 0)(data),
     scales: {
       o: store.scales.o,
       r: store.scales.r,
@@ -447,8 +460,8 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     layout: { width, height },
     theme,
     projection: projection as "vertical" | "horizontal" | "radial",
-    xAccessor: typeof props.oAccessor === "string" ? props.oAccessor : undefined,
-    yAccessor: typeof props.rAccessor === "string" ? props.rAccessor : undefined,
+    xAccessor: xResolved.key,
+    yAccessor: yResolved.key,
     idPrefix: idPfx,
     onRender: result => { annotationRender = result },
   }) : null

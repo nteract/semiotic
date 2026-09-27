@@ -11,19 +11,19 @@ export function createHierarchyStyle(
   themeCategorical: string[] | undefined,
   colorScheme: Parameters<typeof resolveDefaultFill>[2]
 ): (d: Datum) => Record<string, string | number> {
-  const defaultFill = resolveDefaultFill(
-    undefined,
-    themeCategorical,
-    colorScheme,
-    undefined,
-    new Map()
-  )
+  const categoryIndexMap = new Map<string, number>()
   return (d) => ({
     ...baseStyle,
     fill: colorByDepth
       ? DEPTH_PALETTE_COLORS[(d.depth || 0) % DEPTH_PALETTE_COLORS.length]
       : colorBy
         ? getColor(d.data || d, colorBy, colorScale)
-        : defaultFill
+        : resolveDefaultFill(
+            undefined,
+            themeCategorical,
+            colorScheme,
+            undefined,
+            categoryIndexMap
+          )
   })
 }

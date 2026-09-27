@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   summation across React and server rendering; missing and zero values no longer
   acquire phantom area, and all-zero packs remain finite. Server configurations
   retain hierarchy IDs and every TreeDiagram layout. The related audit covers
+  default/custom children accessors with named, array, and mapped palettes,
   OrbitDiagram collisions, labels with custom children accessors, zero-area
   frame geometry, coincident parent/leaf hover through both hit-test paths,
   accessible rows, bounded data replacement,
@@ -71,7 +72,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Statistical trends and forecasts retain full precision for timestamp, Date,
   and small-value data. Polynomial forecasts evaluate the fitted coefficients
-  correctly, and ordinal trends follow displayed category order. Equivalent
+  correctly, and ordinal trends follow displayed category order and centers
+  in both orientations. Live and static ordinal contexts use screen-axis
+  accessors consistently, including callbacks. Equivalent
   inline configs retain overlays; data replacement/removal takes effect
   immediately, and failed lazy computations warn in development. Auto forecasts
   honor LOESS bandwidth and fit separate series with separate envelopes. The

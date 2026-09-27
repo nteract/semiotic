@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import { LineChart } from "../../dist/xy.module.min.js"
+import { BarChart } from "../../dist/ordinal.module.min.js"
+import type { RealtimeFrameHandle } from "../../src/components/realtime/types"
 import type { StreamXYFrameHandle } from "../../src/components/stream/types"
 import type { Datum } from "../../src/components/charts/shared/datumTypes"
 
@@ -99,4 +101,62 @@ function App() {
     </main>
   )
 }
-createRoot(document.getElementById("root")!).render(<App />)
+function OrdinalTrends() {
+  const query = new URLSearchParams(location.search)
+  const push = query.get("input") === "push"
+  const callback = query.get("accessors") === "callback"
+  const horizontal = query.get("orientation") === "horizontal"
+  const [width, setWidth] = useState(500)
+  const [offset, setOffset] = useState(0)
+  const ref = useRef<RealtimeFrameHandle>(null)
+  const data = React.useMemo(
+    () => [
+      { region: "A", amount: 20 + offset },
+      { region: "B", amount: 10 + offset },
+      { region: "C", amount: 30 + offset }
+    ],
+    [offset]
+  )
+  useEffect(() => {
+    if (push) {
+      ref.current?.clear()
+      ref.current?.pushMany(data)
+    }
+  }, [push, data])
+  return (
+    <main>
+      <button onClick={() => setWidth(380)}>Resize charts</button>
+      <button onClick={() => setOffset(10)}>Replace data</button>
+      <section data-testid="ordinal-trend">
+        <BarChart
+          ref={ref}
+          data={push ? undefined : data}
+          categoryAccessor={callback ? (d: Datum) => d.region : "region"}
+          valueAccessor={callback ? value : "amount"}
+          orientation={horizontal ? "horizontal" : "vertical"}
+          sort="desc"
+          valueExtent={[0, 100]}
+          regression={{ color: "#d000a0" }}
+          width={width}
+          height={260}
+          margin={margin}
+          barPadding={0}
+          title="Ordinal trend"
+          description="A trend through ordered category centers."
+          tooltip={(d: Datum) => (
+            <div>
+              {String(d.region)}: {String(d.amount)}
+            </div>
+          )}
+        />
+      </section>
+    </main>
+  )
+}
+createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).get("family") === "ordinal" ? (
+    <OrdinalTrends />
+  ) : (
+    <App />
+  )
+)

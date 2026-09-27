@@ -253,8 +253,9 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
       : geoProject || config.scales.x || config.scales.y
         ? "xy"
         : "network")
+  const horizontal = config.projection === "horizontal"
   const projection: AnnotationContext["projection"] = config.projection
-    ? (config.projection === "horizontal" ? "horizontal" : "vertical")
+    ? (horizontal ? "horizontal" : "vertical")
     : undefined
 
   // Scales bag matches the client SVG overlay contract so custom
@@ -264,32 +265,18 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   // The live ordinal overlay exposes the value and category scales through
   // x/y according to projection. Preserve that shape here so shared rules
   // such as trend and highlight do not silently lose their axes in SSR.
-  const contextScales = config.projection === "vertical"
-    ? {
-        x: config.scales.o ?? scaleX,
-        y: config.scales.r ?? scaleY,
-        time: config.scales.o ?? scaleX,
-        value: config.scales.r ?? scaleY,
-        o: config.scales.o,
-      }
-    : config.projection === "horizontal"
-      ? {
-          x: config.scales.r ?? scaleX,
-          y: config.scales.o ?? scaleY,
-          time: config.scales.r ?? scaleX,
-          value: config.scales.o ?? scaleY,
-          o: config.scales.o,
-        }
-      : {
-          x: scaleX,
-          y: scaleY,
-          time: scaleX,
-          value: scaleY,
-          o: config.scales.o,
-        }
+  const ordinal = config.projection === "vertical" || horizontal
+  const o = config.scales.o
+  const oCentered = o
+    ? (value: string) => (o(value) ?? 0) + (o.bandwidth?.() ?? 0) / 2
+    : undefined
   const annotationContext: AnnotationContext = {
     scales: {
-      ...contextScales,
+      x: (ordinal ? horizontal ? config.scales.r : oCentered : undefined) ?? scaleX,
+      y: (ordinal ? horizontal ? oCentered : config.scales.r : undefined) ?? scaleY,
+      time: ordinal ? config.scales.r : scaleX,
+      value: ordinal ? config.scales.r : scaleY,
+      o,
       ...(geoProject ? { geoProjection: geoProject } : {}),
     } as AnnotationContext["scales"],
     width: config.layout.width,

@@ -6,10 +6,10 @@ import {
 import { flattenHierarchy } from "../charts/shared/networkUtils"
 import {
   createColorScale,
+  resolveDefaultFill,
   getColor,
   DEPTH_PALETTE_COLORS
 } from "../charts/shared/colorUtils"
-import { resolveDefaultFill } from "../charts/shared/hooks"
 import { resolveTheme } from "./themeResolver"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import {
@@ -48,7 +48,7 @@ export const createHierarchyNodeFill: (
   const categoryIndexMap = new Map<string, number>()
   const nodes = flattenHierarchy(
     (data ?? null) as Datum | null,
-    rest.childrenAccessor
+    rest.childrenAccessor ?? "children"
   )
   const colorByFn = typeof colorBy === "function" ? colorBy : null
   const key = colorByFn

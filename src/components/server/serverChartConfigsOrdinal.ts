@@ -6,11 +6,11 @@ import {
 } from "../charts/shared/styleRules"
 import {
   createColorScale,
+  resolveDefaultFill,
   getColor,
   getSize
 } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
-import { resolveDefaultFill } from "../charts/shared/hooks"
 import { resolveTheme } from "./themeResolver"
 import {
   type ChartConfig,

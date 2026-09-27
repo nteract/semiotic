@@ -17,10 +17,12 @@ export function trendGeometry(
   const scaleY = context.scales?.y ?? context.scales?.value
   if (!scaleX || !scaleY) return []
   const data = context.data || []
-  const xKey = context.xAccessor || "x"
-  const yKey = context.yAccessor || "y"
+  let xKey = context.xAccessor || "x"
+  let yKey = context.yAccessor || "y"
   const horizontal = context.projection === "horizontal"
   const ordinal = context.frameType === "ordinal"
+  // Fit ordinal (category, value) pairs; context keys describe screen axes.
+  if (ordinal && horizontal) [xKey, yKey] = [yKey, xKey]
   const sx = scaleX as (key: string | number | Date) => number
   const sy = scaleY as (key: string | number | Date) => number
   const band = horizontal ? sy : sx

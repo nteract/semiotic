@@ -11,11 +11,11 @@ import {
 } from "../charts/network/../shared/networkUtils"
 import {
   createColorScale,
+  resolveDefaultFill,
   getColor,
   resolveCategoricalPalette
 } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
-import { resolveDefaultFill } from "../charts/shared/hooks"
 import { composeLegendConfigs } from "../types/legendTypes"
 import {
   type ChartConfig,

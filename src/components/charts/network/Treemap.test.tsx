@@ -209,6 +209,19 @@ describe("Treemap", () => {
     expect(rootStyle.pointerEvents).toBe("none")
   })
 
+  it("reads the current palette when the frame invokes its retained style callback", () => {
+    const palette = ["#112233"]
+    render(
+      <TooltipProvider>
+        <Treemap data={sampleData} colorScheme={palette} />
+      </TooltipProvider>
+    )
+    const node = { depth: 1, data: sampleData.children[0] }
+    expect(lastNetworkFrameProps.nodeStyle(node).fill).toBe("#112233")
+    palette[0] = "#445566"
+    expect(lastNetworkFrameProps.nodeStyle(node).fill).toBe("#445566")
+  })
+
   it("uses the theme cell-border CSS variable as the default tile stroke", () => {
     render(
       <TooltipProvider>

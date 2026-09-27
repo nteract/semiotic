@@ -69,6 +69,42 @@ function verify({ renderChartWithEvidence }) {
   assert.equal(grouped.evidence.unrenderedAnnotationCount, 0)
   assert.equal(grouped.svg.match(/Independent envelope/g)?.length, 2)
   assert.doesNotMatch(grouped.svg, /NaN|Infinity/)
+  for (const orientation of ["vertical", "horizontal"]) {
+    for (const callback of [false, true]) {
+      for (const method of ["linear", "polynomial", "loess"]) {
+        const result = renderChartWithEvidence("BarChart", {
+          data: [
+            { region: "A", amount: 20 },
+            { region: "B", amount: 10 },
+            { region: "C", amount: 30 }
+          ],
+          categoryAccessor: callback ? (d) => d.region : "region",
+          valueAccessor: callback ? (d) => d.amount : "amount",
+          orientation,
+          sort: "desc",
+          valueExtent: [0, 40],
+          regression: { method, bandwidth: 1 },
+          width: 400,
+          height: 240,
+          margin: { left: 0, right: 0, top: 0, bottom: 0 },
+          showAxes: false,
+          showLegend: false,
+          barPadding: 0
+        })
+        assert.equal(result.evidence.markCount, 3)
+        assert.equal(result.evidence.unrenderedAnnotationCount, 0)
+        assert.doesNotMatch(result.svg, /NaN|Infinity/)
+        const points = result.svg.match(/<polyline[^>]*points="([^"]+)"/)[1]
+          .split(" ").map((point) => point.split(",").map(Number))
+        assert.equal(points.length, 3)
+        for (const [i, [x, y]] of points.entries()) {
+          const amount = 30 - 10 * i
+          close(x, orientation === "horizontal" ? 400 * amount / 40 : 400 * (i + 0.5) / 3)
+          close(y, orientation === "horizontal" ? 240 * (i + 0.5) / 3 : 240 * (1 - amount / 40))
+        }
+      }
+    }
+  }
 }
 
 for (const entry of entries) {

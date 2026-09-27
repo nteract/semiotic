@@ -2,11 +2,9 @@ import { useMemo, useCallback, useState, useId, useEffect, useRef } from "react"
 import { useChartCategoryColors } from "../../CategoryColors"
 import {
   createColorScale,
-  COLOR_SCHEMES,
-  DEFAULT_COLOR,
   resolveExplicitColor
 } from "./colorUtils"
-export { DEFAULT_COLOR } from "./colorUtils"
+export { DEFAULT_COLOR, resolveDefaultFill } from "./colorUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
@@ -88,60 +86,6 @@ export function useThemeSequential(): string | undefined {
 export function useThemeDiverging(): string | undefined {
   const theme = useTheme()
   return theme?.colors?.diverging || undefined
-}
-
-/**
- * Resolve the effective color for a data element when no colorBy is specified.
- * Priority: color prop > theme categorical > colorScheme > DEFAULT_COLOR.
- * When a palette is available, cycles through colors by category name.
- */
-export function resolveDefaultFill(
-  color: string | undefined,
-  themeCategorical: string[] | undefined,
-  colorScheme: string | string[] | Record<string, string> | undefined,
-  category: string | undefined,
-  categoryIndexMap: Map<string, number>
-): string {
-  // Uniform color prop takes highest priority
-  if (color) return color
-
-  // An explicit { category: color } map wins for a mapped category.
-  if (
-    colorScheme &&
-    typeof colorScheme === "object" &&
-    !Array.isArray(colorScheme)
-  ) {
-    const mapped = resolveExplicitColor(
-      colorScheme as Record<string, unknown>,
-      category
-    )
-    if (mapped) return mapped
-  }
-
-  // Priority: color > explicit colorScheme array > theme categorical > named colorScheme > DEFAULT_COLOR
-  // An explicit array colorScheme is a user override that takes precedence over the theme default.
-  // A named string colorScheme (like "category10") defers to the theme since it's often a prop default.
-  let palette: string[] | undefined
-  if (Array.isArray(colorScheme)) {
-    palette = colorScheme
-  } else if (themeCategorical && themeCategorical.length > 0) {
-    palette = themeCategorical
-  } else if (typeof colorScheme === "string") {
-    const resolved = COLOR_SCHEMES[colorScheme as keyof typeof COLOR_SCHEMES]
-    if (Array.isArray(resolved)) palette = resolved as string[]
-  }
-
-  if (!palette || palette.length === 0) return DEFAULT_COLOR
-
-  // Cycle through palette by category
-  if (category != null) {
-    if (!categoryIndexMap.has(category)) {
-      categoryIndexMap.set(category, categoryIndexMap.size)
-    }
-    return palette[categoryIndexMap.get(category)! % palette.length]
-  }
-
-  return palette[0]
 }
 
 /**

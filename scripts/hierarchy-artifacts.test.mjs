@@ -48,6 +48,29 @@ function verify(server, charts, React, renderToStaticMarkup) {
     ["TreeDiagram", ["tree", "cluster", "treemap", "circlepack", "partition"]]
   ]) {
     for (const layout of layouts) {
+      for (const [colorScheme, expected] of [
+        [["#555555", "#135790", "#246801"], ["#135790", "#246801"]],
+        ["category10", ["#ff7f0e", "#2ca02c"]]
+      ]) {
+        const props = {
+          layout,
+          data: {
+            name: "root", group: "root", children: [
+              { name: "a", group: "a", value: 4 },
+              { name: "b", group: "b", value: 2 }
+            ]
+          },
+          colorBy: "group",
+          colorScheme,
+          showLabels: false,
+          showLegend: false
+        }
+        const rendered = server.renderChartWithEvidence(component, props)
+        assert.ok(rendered.evidence.markCount >= 2)
+        for (const svg of [rendered.svg, renderToStaticMarkup(React.createElement(charts[component], props))]) {
+          for (const color of expected) assert.equal(svg.match(new RegExp(`fill="${color}"`, "g"))?.length, 1)
+        }
+      }
       for (const callback of [false, true]) {
         const props = {
           data,
