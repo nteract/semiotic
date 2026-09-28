@@ -174,4 +174,33 @@ describe("Wave 1 renderChart registry", () => {
     expect(ys.length).toBeGreaterThanOrEqual(3)
     expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(40)
   })
+
+  it.each(["primary", "context", "sparkline", "mobile"] as const)(
+    "uses responsive %s mode for DistanceCartogram layout and chrome",
+    (mode) => {
+      const props = {
+        points: cartogramPoints,
+        center: "London",
+        costAccessor: "flightHours",
+        showRings: [2],
+        costLabel: "hours",
+        width: 400,
+        height: 300,
+      }
+      const direct = renderChartWithEvidence("DistanceCartogram", { ...props, mode })
+      const responsive = renderChartWithEvidence("DistanceCartogram", {
+        ...props,
+        mode: mode === "sparkline" ? "primary" : "sparkline",
+        responsiveRules: [{ when: { maxWidth: 500 }, transform: { mode } }],
+      })
+      expect(responsive.svg).toBe(direct.svg)
+      expect(responsive.evidence.empty).toBe(false)
+      expect(responsive.evidence.markCount).toBeGreaterThanOrEqual(cartogramPoints.length)
+      const doc = new DOMParser().parseFromString(responsive.svg, "image/svg+xml")
+      const radii = [...doc.querySelectorAll("circle")].map((circle) => Number(circle.getAttribute("r")))
+      expect(radii).toContain(mode === "sparkline" ? 1.5 : 5)
+      const labels = [...doc.querySelectorAll("text")].map((node) => node.textContent)
+      expect(labels.includes("2 hours")).toBe(mode === "primary" || mode === "mobile")
+    }
+  )
 })

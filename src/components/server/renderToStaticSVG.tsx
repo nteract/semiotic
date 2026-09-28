@@ -503,6 +503,8 @@ function renderChartInternal(
     annotations,
     size,
     margin: effectiveMargin,
+    // Chart-owned content may distinguish context from sparkline after rules.
+    __resolvedMode: resolvedMode.mode,
     __compactMode: resolvedMode.compactMode,
     // Sides the caller pinned; chart-owned chrome (direct and endpoint labels)
     // may only grow the others, as in the React charts.

@@ -29,7 +29,8 @@ export const gaugeChart: ChartConfig = {
     const { startAngleDeg } = sweepToAngles(sweep)
     // Compactness and scale-label defaults follow the resolved mode (including
     // responsive rules), as in the React chart.
-    const compact = common.__compactMode === true
+    const mode = common.__resolvedMode ?? rest.mode
+    const compact = mode === "context" || mode === "sparkline"
     const showScaleLabels = rest.showScaleLabels ?? !compact
 
     const thresholds = rest.thresholds
@@ -147,7 +148,7 @@ export const gaugeChart: ChartConfig = {
           computedInnerRadius > 20 ? computedInnerRadius - 8 : radius - 1,
         showNeedle,
         needleColor: rest.needleColor,
-        ...(rest.mode === "context" &&
+        ...(mode === "context" &&
           suppliedCenterContent == null && {
             contextValue: formattedValue,
             contextValueY: frameCenterY - computedInnerRadius * 0.2,

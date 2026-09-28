@@ -44,11 +44,39 @@ it("takes gauge compactness and scale labels from the resolved mode on both path
   const server = renderChart("GaugeChart", props)
   const browser = renderToString(<GaugeChart {...props} />)
   for (const svg of [server, browser]) {
+    expect(svg.match(/>50<\/text>/g)).toHaveLength(1)
     expect(svg).not.toContain(">0 – 100</text>")
     expect(svg).not.toContain(">Low<")
   }
   expect(renderChart("GaugeChart", { ...props, showScaleLabels: true })).toContain(">Low<")
 })
+
+it.each(["primary", "context", "sparkline", "mobile"] as const)(
+  "renders gauge content using responsive %s mode instead of the requested context mode",
+  (mode) => {
+    const props = {
+      value: 64,
+      valueFormat: (value: number) => `${value}%`,
+      mode: "context" as const,
+      width: 300,
+      height: 250,
+      responsiveRules: [{ when: { maxWidth: 400 }, transform: { mode } }],
+    }
+    for (const svg of [renderChart("GaugeChart", props), renderToString(<GaugeChart {...props} />)]) {
+      expect(svg.match(/>64%<\/text>/g) ?? []).toHaveLength(mode === "sparkline" ? 0 : 1)
+      const doc = new DOMParser().parseFromString(svg, "text/html")
+      const text = [...doc.querySelectorAll("text")].map((node) => node.textContent)
+      expect(text.includes("0 – 100")).toBe(mode === "primary" || mode === "mobile")
+    }
+    for (const svg of [
+      renderChart("GaugeChart", { ...props, centerContent: "Custom" }),
+      renderToString(<GaugeChart {...props} centerContent="Custom" />),
+    ]) {
+      expect(svg.match(/>Custom<\/text>/g)).toHaveLength(1)
+      expect(svg).not.toContain(">64%</text>")
+    }
+  }
+)
 
 it("supports x and y threshold circle end caps at the plot edges", () => {
   const svg = renderChart("LineChart", {

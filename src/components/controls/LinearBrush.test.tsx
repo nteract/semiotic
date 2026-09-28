@@ -30,6 +30,7 @@ describe("LinearBrush structure", () => {
     const sliders = within(root).getAllByRole("slider")
     expect(sliders.map((s) => s.getAttribute("aria-label"))).toEqual(["Range start", "Range (move both ends)", "Range end"])
     expect(sliders.map((s) => s.getAttribute("aria-valuetext"))).toEqual(["20%", "20% to 60%", "60%"])
+    expect(sliders.map((s) => s.getAttribute("aria-valuenow"))).toEqual(["20", "20", "60"])
     expect(sliders.map((s) => [s.getAttribute("aria-valuemin"), s.getAttribute("aria-valuemax")])).toEqual([
       ["0", "55"], ["0", "100"], ["25", "100"],
     ])
@@ -57,6 +58,17 @@ describe("LinearBrush structure", () => {
 })
 
 describe("LinearBrush keyboard", () => {
+  it.each(["x", "y"] as const)("updates numeric and formatted slider values on the %s axis", (orientation) => {
+    const { root, slider } = renderBrush({ defaultValue: [20, 60], orientation, formatValue: (v) => `${v}%` })
+    const key = orientation === "x" ? "ArrowRight" : "ArrowUp"
+    fireEvent.keyDown(slider("Range start"), { key })
+    fireEvent.keyDown(slider("Range end"), { key })
+    fireEvent.keyDown(slider("Range (move both ends)"), { key })
+    const sliders = within(root).getAllByRole("slider")
+    expect(sliders.map((s) => s.getAttribute("aria-valuenow"))).toEqual(["30", "30", "70"])
+    expect(sliders.map((s) => s.getAttribute("aria-valuetext"))).toEqual(["30%", "30% to 70%", "70%"])
+  })
+
   it("steps the range and fires onChange and onChangeEnd", () => {
     const onChange = vi.fn()
     const onChangeEnd = vi.fn()
