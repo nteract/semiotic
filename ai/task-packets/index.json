@@ -8,33 +8,33 @@
       "title": "Compare category totals you can check",
       "summary": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
       "route": "/tasks/compare-category-totals",
-      "packageVersion": "3.11.0",
-      "sourceRevision": "sha256:2a85951bfa60b8af1687d42b9068f0c8b914548c08d8c351ecbaadf7f905a748",
+      "packageVersion": "3.11.1",
+      "sourceRevision": "sha256:c9ce0a3bf25f27180d42f5d4cabc4a1052d5bc88e17f8743cc5b9266b5d9dd63",
       "markdown": "/tasks/compare-category-totals.md",
       "json": "/tasks/compare-category-totals.json",
-      "evidenceStatus": "stale"
+      "evidenceStatus": "supported-in-scope"
     },
     {
       "id": "update-live-chart",
       "title": "Update a live chart by record ID",
       "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
       "route": "/tasks/update-live-chart",
-      "packageVersion": "3.11.0",
-      "sourceRevision": "sha256:48de415b13dad04f3e64582d1f27074de0a409b6bf8aab41cc7a57588c2a5d41",
+      "packageVersion": "3.11.1",
+      "sourceRevision": "sha256:aac2a341193d626b1476273815f360012c2f45b949c8fce339fd5ec15f4558fa",
       "markdown": "/tasks/update-live-chart.md",
       "json": "/tasks/update-live-chart.json",
-      "evidenceStatus": "stale"
+      "evidenceStatus": "supported-in-scope"
     },
     {
       "id": "correct-published-chart",
       "title": "Correct a chart after its source changes",
       "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
       "route": "/tasks/correct-published-chart",
-      "packageVersion": "3.11.0",
-      "sourceRevision": "sha256:4ce7c5f57f3fe82e6474ce8988a3a61f19f8fffbd11db36b6a423ffdc4657ba5",
+      "packageVersion": "3.11.1",
+      "sourceRevision": "sha256:2dea0a422ff247ba54699613000c59f94146e6d10c493291cbae281b528dd90f",
       "markdown": "/tasks/correct-published-chart.md",
       "json": "/tasks/correct-published-chart.json",
-      "evidenceStatus": "stale"
+      "evidenceStatus": "supported-in-scope"
     }
   ]
 }
