@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import React from "react"
 import { renderToString } from "react-dom/server"
 import { renderChart } from "./renderToStaticSVG"
-import { LineChart } from "../charts/xy/LineChart"
+import { LineChart, type LineChartProps } from "../charts/xy/LineChart"
 
 const data = [
   { x: 0, y: 10 },
@@ -22,7 +22,7 @@ describe("layer: \"under\" bands", () => {
       { type: "y-threshold", value: 30, label: "Replacement", lifecycle: { supersedes: "old" } },
       { ...annotations[0], fill: "#abcdef", label: "Visible" },
     ]
-    const props = { data, xAccessor: "x", yAccessor: "y", width: 400, height: 240, annotations: lifecycleBands }
+    const props = { data, xAccessor: "x", yAccessor: "y", width: 400, height: 240, annotations: lifecycleBands } satisfies LineChartProps<(typeof data)[number]>
     const svg = mode === "static" ? renderChart("LineChart", props) : renderToString(<LineChart {...props} />)
     expect(svg).not.toContain('fill="#123456"')
     expect(svg).not.toContain('fill="#654321"')
