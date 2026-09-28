@@ -937,14 +937,13 @@ describe("StreamXYFrame", () => {
           onBrush={onBrush}
         />
       )
-      // Brush overlay is dynamically imported (keeps d3-brush off the cold path).
+      // Wait for both the lazy import and D3's effect to create and style the selection.
       await waitFor(() => {
-        expect(container.querySelector(".brush-g")).toBeTruthy()
+        const selection = container.querySelector(".brush-g .selection")
+        expect(selection).toHaveAttribute("fill", BRUSH_ACCENT)
+        expect(selection).toHaveAttribute("stroke", BRUSH_ACCENT)
+        expect(selection).toHaveAttribute("fill-opacity", "0.15")
       })
-      const selection = container.querySelector(".brush-g .selection")!
-      expect(selection.getAttribute("fill")).toBe(BRUSH_ACCENT)
-      expect(selection.getAttribute("stroke")).toBe(BRUSH_ACCENT)
-      expect(selection.getAttribute("fill-opacity")).toBe("0.15")
     })
 
     it("does not render brush overlay when brush prop is absent", () => {
