@@ -99,6 +99,7 @@ function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed
 function getSourceRows<TDatum extends Datum = Datum>(value: unknown): readonly TDatum[] | undefined
 function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
 function hasTooltipContent(node: React.ReactNode): boolean
+function histogramBinSelectionDatum(timeField: string): (datum: Datum) => Datum
 function markTooltipChrome<T>(component: T): T
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function parseWindowDuration(spec: number | string): null | number

@@ -1,6 +1,5 @@
 import type { MarginType } from "../../types/marginType"
 import type { CategoricalLegendConfig } from "../../types/legendTypes"
-import { estimateLabel } from "../../text/labelMeasurement"
 import { resolveSideLegendMargin } from "../../legendLayout"
 
 /**
@@ -16,6 +15,42 @@ const LABEL_PAD = 4
 /** The rotated rank-axis title occupies this band at the left edge. */
 const TITLE_BAND = 24
 const TICK_GAP = 6
+
+/**
+ * Glyph advance widths (em) by class, at or just above a bold sans-serif
+ * (Arial/Helvetica Bold, and SF's wider digits), which covers the 650-weight
+ * highlighted labels. Wide scripts (CJK, fullwidth forms, emoji) take a full
+ * em plus.
+ */
+const WIDE_SCRIPT_EM = 1.1
+const GLYPH_CLASS_EM: ReadonlyArray<readonly [RegExp, number]> = [
+  [/[mwMW@%…]/, 0.95],
+  [/[ijlI'.,|\s]/, 0.28],
+  [/[frt():;/[\]{}*`!\\-]/, 0.39],
+]
+const CAPITAL_EM = 0.75
+const DEFAULT_EM = 0.62
+/** Room for UI faces a little wider than Arial (SF, Inter, Segoe). */
+const FACE_ALLOWANCE = 1.05
+
+/**
+ * Estimated rendered width of a BumpChart label, the same on the browser and
+ * server paths. Per-glyph classes track the drawn text closely instead of a
+ * flat per-character width: in Chromium, 12px "clickstream-enrichment"
+ * renders 135px and estimates 153px (a flat 0.65em estimated 172px, which
+ * truncated names that fit). Much wider faces, such as Verdana, can exceed
+ * the estimate; pin the labeled margin for those.
+ */
+export function estimateBumpLabelWidth(text: string, fontSize: number): number {
+  let em = 0
+  for (const glyph of text) {
+    em += (glyph.codePointAt(0) ?? 0) >= 0x2e80
+      ? WIDE_SCRIPT_EM
+      : GLYPH_CLASS_EM.find(([pattern]) => pattern.test(glyph))?.[1]
+        ?? (glyph.toLowerCase() !== glyph ? CAPITAL_EM : DEFAULT_EM)
+  }
+  return em * fontSize * FACE_ALLOWANCE
+}
 
 export interface BumpLabelLayoutInput {
   /** Series names, which the labels show. */
@@ -61,13 +96,12 @@ export function resolveBumpLabelLayout(input: BumpLabelLayoutInput): BumpLabelLa
   const mode = input.showLabels === true ? "end" : input.showLabels
   const hasEnd = mode === "end" || mode === "both" || mode === "auto"
   const hasStart = mode === "start" || mode === "both"
-  const font = { family: "sans-serif", version: 0, size: fontSize, weight: 450 }
   const labelWidth = input.labels.reduce(
-    (max, label) => Math.max(max, estimateLabel(label, font).width),
+    (max, label) => Math.max(max, estimateBumpLabelWidth(label, fontSize)),
     0
   )
   const cap = Math.round(input.width * (input.maxSideFraction ?? 0.38))
-  const tickWidth = estimateLabel(String(Math.max(1, input.rankCount)), font).width
+  const tickWidth = estimateBumpLabelWidth(String(Math.max(1, input.rankCount)), fontSize)
   const startLabelOffset = input.showAxes ? LABEL_GAP + tickWidth + TICK_GAP : LABEL_GAP
   const titleBand = input.showAxes && input.yLabel ? TITLE_BAND : 0
   const chrome = { start: startLabelOffset + LABEL_PAD + titleBand, end: LABEL_GAP + LABEL_PAD }
@@ -77,7 +111,7 @@ export function resolveBumpLabelLayout(input: BumpLabelLayoutInput): BumpLabelLa
         { sideGutter: 0 }
       )
     : 0
-  const minText = estimateLabel("MMM", font).width
+  const minText = estimateBumpLabelWidth("MMM", fontSize)
   const roomFor = (side: "left" | "right", sideChrome: number) => Math.min(
     sideChrome + labelWidth,
     input.legendSide === side ? Math.max(sideChrome + minText, cap - legendNeed) : cap
@@ -129,10 +163,9 @@ export function truncateBumpLabel(
   budget: number,
   fontSize: number
 ): { text: string; truncated: boolean } {
-  const font = { family: "sans-serif", version: 0, size: fontSize, weight: 450 }
-  if (estimateLabel(text, font).width <= budget) return { text, truncated: false }
+  if (estimateBumpLabelWidth(text, fontSize) <= budget) return { text, truncated: false }
   const glyphs = Array.from(text)
   let keep = glyphs.length - 1
-  while (keep > 0 && estimateLabel(`${glyphs.slice(0, keep).join("")}…`, font).width > budget) keep--
+  while (keep > 0 && estimateBumpLabelWidth(`${glyphs.slice(0, keep).join("")}…`, fontSize) > budget) keep--
   return { text: `${glyphs.slice(0, keep).join("").trimEnd()}…`, truncated: true }
 }

@@ -17667,7 +17667,7 @@
             },
             "axes": {
               "type": "array",
-              "description": "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis."
+              "description": "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them."
             },
             "styleRules": {
               "type": "array",
@@ -25599,7 +25599,7 @@
             },
             "axes": {
               "type": "array",
-              "description": "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis."
+              "description": "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them."
             },
             "styleRules": {
               "type": "array",

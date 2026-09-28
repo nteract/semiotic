@@ -64,6 +64,7 @@ function capacitatedRegion(options: ProcessRegionBaseOptions & {capacity: number
 function chargeGateRegion(options: ProcessRegionBaseOptions & {charge?: StreamPhysicsRegionEffect["charge"]; energyDelta?: number; impulseOnEnter?: StreamPhysicsRegionVector;}): StreamPhysicsRegionEffect
 function circularLayout(ids: readonly string[], options?: CircularLayoutOptions | undefined): Record<string, Point>
 function clamp(value: number, min: number, max: number): number
+function classifyReserve(value: number, levels?: ReserveLevels | undefined): ReserveClass | null
 function closeness(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function clustering(nodes: readonly GraphNode[], edges: readonly GraphEdge[]): Record<string, number>
 function collidersFromScales<TBand = number | string>(options: PhysicsScaleColliderOptions<TBand>): PhysicsColliderSpec[]
@@ -111,7 +112,7 @@ function geographicGridLayout(ctx: GeoLayoutContext<import("../semiotic-geo").Ge
 function glyphExtent(def: GlyphDef, size: number): number
 function glyphFractionClipRect(def: GlyphDef, fraction: number, fractionStart?: number | undefined, direction?: "horizontal" | "vertical" | undefined): null | {x: number; y: number; width: number; height: number;}
 function glyphPlacement(def: GlyphDef, size: number): GlyphPlacement
-function gridEventAnnotations(events: readonly GridEventWindow[], options?: undefined | {now?: number; author?: string; source?: string;}): Record<string, unknown>[]
+function gridEventAnnotations(events: readonly GridEventWindow[], options?: undefined | {now?: number; author?: string; source?: string; confidence?: number;}): Record<string, unknown>[]
 function gridifyGeographicPoints<T>(input: GeographicGridInput<T>[], options?: GridifyGeographicPointsOptions | undefined): GridifiedGeographicPoint<T>[]
 function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]>
 function groupCompletionRows(groups: readonly BodyGroupSpec<import("../stream/networkColorAccessors").Datum>[], absorbedBodyIds: ReadonlySet<string> | readonly string[]): {id: string; label: string; mode: "allMembersAbsorbed" | "anyAbsorbed" | "threshold"; complete: boolean; absorbed: number; total: number; absorbedValue: number; totalValue: number; threshold?: number; missing: string[];}[]
@@ -192,7 +193,8 @@ function readField(d: unknown, key: string, fallback: unknown): unknown
 function rectCollide(boxes: readonly CollisionBox[], opts?: RectCollideOptions | undefined): Map<string, number>
 function refineByAdjacentSwaps<T>(input: readonly T[], cost: (order: readonly T[]) => number, options?: GuardedOrderOptions<T> | undefined): T[]
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
-function reserveAnnotationBands(levels?: ReserveLevels | undefined): {type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary";}[]
+function reserveAnnotationBands(levels?: ReserveLevels | undefined, options?: undefined | {extent?: readonly [number, number];}): {type: "band"; y0: number; y1: number; label: string; color: string; fillOpacity: number; emphasis: "secondary";}[]
+function reserveClasses(levels?: ReserveLevels | undefined): ReserveClass[]
 function reserveMarginPct(input: {demand: number; capacityOrNetGen: number; interchange?: number;}): number
 function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[]
 function ringArcPath(startAngle: number, endAngle: number, innerRadius: number, outerRadius: number, opts?: PolarOptions | undefined): string
@@ -222,7 +224,7 @@ function summarizeOperatingPoint(hours: readonly GridHour[], now?: number | unde
 function symbolExtent(symbolType: string | undefined, size: number, customPath?: string | undefined): number
 function symbolPathString(symbolType: string | undefined, size: number, customPath?: string | undefined): string
 function symbolRadius(size: number): number
-function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: undefined | {field?: string; tightHatch?: HatchFill; tightFill?: string; watchFill?: string; comfortableFill?: string;}): StyleRule[]
+function thresholdBandsForReserve(levels?: ReserveLevels | undefined, options?: undefined | {field?: string; tightHatch?: HatchFill; tightFill?: string; watchFill?: string; moderateFill?: string; comfortableFill?: string;}): StyleRule[]
 function tightestHours(reserves: readonly ReserveSnapshot[], n?: number | undefined): ReserveSnapshot[]
 function tokenLayer<D = unknown>({ input, encoding, options, }: TokenLayerConfig<D>): TokenLayerResult<D>
 function tokenTaskIntentToCapabilityIntents(intent: TokenTaskIntent): TokenCapabilityIntent[]
@@ -233,7 +235,7 @@ function unwrapDatum<T = Datum>(value: unknown): T | null
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
 function waffleLayout(ctx: LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
-function wordTrailsLayout(ctx: OrdinalLayoutContext<import("../semiotic-recipes-core").WordTrailsConfig>): import("../semiotic-ordinal").OrdinalLayoutResult
+function wordTrailsLayout(ctx: OrdinalLayoutContext<WordTrailsConfig>): WordTrailsLayoutResult
 function wordTrailsProgressiveReveal(options: WordTrailsProgressiveRevealOptions): Pick<WordTrailsConfig, "weightOpacity" | "wordOpacity">
 function wrapValue(value: number, period: number, min?: number | undefined): number
 function xyToAngle(x: number, y: number, opts?: PolarOptions | undefined): number
@@ -469,6 +471,7 @@ interface VisualToken<D = unknown>
 interface WaffleConfig
 interface WeightedOrderRelation<T>
 interface WordTrailsConfig
+interface WordTrailsLayoutResult extends OrdinalLayoutResult
 interface WordTrailsProgressiveRevealOptions
 interface WordTrailsWordInfo
 interface-member ActiveCount::property::count = required count: number
@@ -2083,6 +2086,8 @@ interface-member WordTrailsConfig::property::weightAccessor = required weightAcc
 interface-member WordTrailsConfig::property::weightOpacity = optional weightOpacity: boolean | undefined
 interface-member WordTrailsConfig::property::wordColor = optional wordColor: ((info: WordTrailsWordInfo) => string | null | undefined) | undefined
 interface-member WordTrailsConfig::property::wordOpacity = optional wordOpacity: ((info: WordTrailsWordInfo) => number) | undefined
+interface-member WordTrailsLayoutResult::property::sizeFloored = required sizeFloored: WordTrailsWordInfo[]
+interface-member WordTrailsLayoutResult::property::unplaced = required unplaced: WordTrailsWordInfo[]
 interface-member WordTrailsProgressiveRevealOptions::property::combineWeightOpacity = optional combineWeightOpacity: boolean | undefined
 interface-member WordTrailsProgressiveRevealOptions::property::currentOpacity = optional currentOpacity: number | undefined
 interface-member WordTrailsProgressiveRevealOptions::property::currentSegment = required currentSegment: number
@@ -2128,7 +2133,7 @@ type GeographicDotGridAccessor = ((datum: GeographicDotGridDatum, index: number)
 type GeographicDotGridShape = "circle" | "hexagon" | "square"
 type GeographicGridShape = "circle" | "hexagon" | "square"
 type GeographicGridSource = "areas" | "auto" | "points"
-type GridEventWindow = {id: string; /** Inclusive start epoch ms. */ start: number; /** Inclusive end epoch ms. */ end: number; label: string; /** Optional longer note for callouts. */ note?: string; /** "heat-wave" | "outage" | "demand-spike" | open string. */ kind?: string; /** ISO 8601 duration or ms; default "P7D". */ ttlHint?: number | string; y?: number; /** Data y for y-threshold style notes. */ value?: number;}
+type GridEventWindow = {id: string; /** Inclusive start epoch ms. */ start: number; /** Inclusive end epoch ms. */ end: number; label: string; /** Optional longer note for callouts. */ note?: string; /** "heat-wave" | "outage" | "demand-spike" | open string. */ kind?: string; /** ISO 8601 duration or ms; default "P14D". */ ttlHint?: number | string; y?: number; /** Data y for y-threshold style notes. */ value?: number;}
 type GridFuelKey = (typeof GRID_FUEL_KEYS)[number]
 type GridHour = {t: number; ba: string; demandMw: number; forecastMw?: number; netGenMw: number; interchangeMw?: number; fuels: Partial<Record<GridFuelKey, number>>;}
 type HighlightMatch = ReadonlyArray<{field: string; value: unknown;}> | {field: string; value: unknown;}
@@ -2164,8 +2169,10 @@ type ProcessVolumePoint = [x: number, y: number]
 type ProcessVolumePolygonRole = "center" | "incoming" | "outgoing" | "volume"
 type ProcessVolumeShape = "bowtie" | "funnel" | "lane"
 type RegionCountMap = Record<string, RegionCountBucket>
-type ReserveLevels = {/** Margin below this % is "tight" / danger. Default 5. */ tight?: number; /** Margin below this % is "watch" / warning. Default 12. */ watch?: number; /** Margin at or above this % is comfortable / success. Default 20. */ comfortable?: number;}
-type ReserveSnapshot = {t: number; ba: string; /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */ reserveMarginPct: number; netLoadMw: number; demandMw: number; netGenMw: number;}
+type ReserveClass = {id: ReserveClassId; /** Display label, e.g. `"Watch (5% to < 12%)"`. */ label: string; /** Short name: `"Tight"`, `"Watch"`, `"Moderate"`, `"Comfortable"`. */ name: string; /** Inclusive lower bound in %; omitted for the lowest class. */ min?: number; /** Exclusive upper bound in %; omitted for the highest class. */ max?: number; /** Semantic theme color for the class. */ color: string;}
+type ReserveClassId = "comfortable" | "moderate" | "tight" | "watch"
+type ReserveLevels = {/** Margin below this % is "tight" / danger. Default 5. */ tight?: number; /** Margin below this % (and at or above `tight`) is "watch" / warning. Default 12. */ watch?: number; /** * Margin at or above this % is comfortable / success. Default 20. Between * `watch` and `comfortable` is "moderate" / info. */ comfortable?: number;}
+type ReserveSnapshot = {t: number; ba: string; /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */ reserveMarginPct: number; /** * Net load: demand minus variable renewables (wind + solar), the load the * dispatchable fleet has to serve. Equals demand when the hour reports no * wind or solar. */ netLoadMw: number; demandMw: number; netGenMw: number;}
 type RingArcOptions = PolarOptions
 type ServiceLevelCaseState = "protected" | "resolved" | "resolved-unhappy" | "unhappy" | "waiting"
 type SignedReadout = {motif: string; leftPartition: string; rightPartition: string; leftCount: number; rightCount: number; deltaCount: number; deltaBps: number; denominator: number;}

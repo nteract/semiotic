@@ -56,7 +56,7 @@ function ChartContainer(props: React.RefAttributes<import("semiotic-internal/sem
 function ChartGrid({ children, columns, minCellWidth, gap, tabletColumns, mobileColumns, mobileBreakpoint, tabletBreakpoint, chartDefaults, className, style, }: ChartGridProps): React.JSX.Element
 function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>): React.JSX.Element
-function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, onObservation, controlType, controlId, chartId, chartType, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
 function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
@@ -855,13 +855,18 @@ interface-member CirclePackProps::property::styleRules = optional styleRules: St
 interface-member CirclePackProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member CirclePackProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TNode, number> | undefined
 interface-member CircularBrushProps::property::arcFill = optional arcFill: string | undefined
+interface-member CircularBrushProps::property::chartId = optional chartId: string | undefined
+interface-member CircularBrushProps::property::chartType = optional chartType: string | undefined
 interface-member CircularBrushProps::property::className = optional className: string | undefined
+interface-member CircularBrushProps::property::controlId = optional controlId: string | undefined
+interface-member CircularBrushProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
 interface-member CircularBrushProps::property::formatValue = optional formatValue: ((value: number) => string) | undefined
 interface-member CircularBrushProps::property::height = optional height: number | undefined
 interface-member CircularBrushProps::property::innerRadius = optional innerRadius: number | undefined
 interface-member CircularBrushProps::property::label = optional label: string | undefined
 interface-member CircularBrushProps::property::largeStep = optional largeStep: number | undefined
 interface-member CircularBrushProps::property::onChange = required onChange: (((current: CircularBrushValue) => CircularBrushValue) | next: CircularBrushValue) => void
+interface-member CircularBrushProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
 interface-member CircularBrushProps::property::period = optional period: number | undefined
 interface-member CircularBrushProps::property::radius = optional radius: number | undefined
 interface-member CircularBrushProps::property::step = optional step: number | undefined

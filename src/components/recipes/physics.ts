@@ -110,12 +110,12 @@ function finiteNumber(value: unknown): number | null {
   return Number.isFinite(number) ? number : null
 }
 
-function readMaybeAccessor<T>(
+function readMaybeAccessor<T, F extends number | undefined = number>(
   value: number | ((item: T, index: number) => number) | undefined,
   item: T,
   index: number,
-  fallback: number
-): number {
+  fallback: F
+): number | F {
   const next = typeof value === "function" ? value(item, index) : value
   return Number.isFinite(next) ? Number(next) : fallback
 }
@@ -359,7 +359,7 @@ export function spawnFromTokens<D = unknown>(
       vx: readMaybeAccessor(vx, token, index, 0),
       vy: readMaybeAccessor(vy, token, index, 0),
       mass: readMaybeAccessor(mass, token, index, 1),
-      spawnAt: readMaybeAccessor(spawnAt, token, index, undefined as unknown as number),
+      spawnAt: readMaybeAccessor(spawnAt, token, index, undefined),
       shape: resolvedShape,
       datum: datum ? datum(token, index) : token.datum ?? token
     }

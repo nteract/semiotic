@@ -1482,6 +1482,27 @@ function makeSsrParityCases(React, recipes = {}) {
       visibleLegendLabel: "Errors",
     },
     {
+      // `layer: "under"` bands fill beneath the bars (labels stay on top), so
+      // the bars inside a range keep their color on both backends.
+      id: "temporal-histogram-under-bands",
+      component: "TemporalHistogram",
+      props: {
+        data: temporalHistogramData,
+        binSize: 1000,
+        timeAccessor: "time",
+        valueAccessor: "value",
+        categoryAccessor: "kind",
+        colors: { Errors: "#d62728", Warnings: "#f59e0b" },
+        annotations: [
+          { type: "band", y0: 6, y1: 11, fill: "#2563eb", color: "#1d4ed8", fillOpacity: 0.35, layer: "under", label: "Normal" },
+          { type: "x-band", x0: 1000, x1: 2000, fill: "#16a34a", color: "#15803d", fillOpacity: 0.35, layer: "under", label: "Deploy" },
+        ],
+        width: 420,
+        height: 240,
+      },
+      visibleLegendLabel: "Errors",
+    },
+    {
       id: "xy-custom-waffle",
       component: "XYCustomChart",
       props: {

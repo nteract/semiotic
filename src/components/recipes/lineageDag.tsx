@@ -117,8 +117,8 @@ export interface LineageDagConfig {
   /**
    * Render the per-node icon. Receives the resolved semantic/partition, the
    * pixel size to draw within, and a color hint. Return any SVG node. When
-   * omitted a labelled fallback chip is drawn. The demo passes a KStreams
-   * icon set here — keeping the recipe domain-agnostic.
+   * omitted a labelled fallback chip is drawn. Domain icon sets (for example
+   * Kafka Streams processors) plug in here, keeping the recipe domain-agnostic.
    */
   renderIcon?: (info: {
     semantic: string
@@ -573,8 +573,7 @@ function renderGlyph(
 
 /**
  * Minimal fallback icon when the caller supplies no `renderIcon`: a rounded
- * square in the partition color with a 1–2 letter semantic code. The demo
- * overrides this with a proper KStreams icon set.
+ * square in the partition color with a 1–2 letter semantic code.
  */
 function defaultIcon(semantic: string, partition: string, size: number): ReactNode {
   const code = partition.startsWith("topic")

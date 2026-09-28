@@ -152,17 +152,28 @@ export function createTooltip(
  * ```
  */
 export function formatLargeNumber(value: number, decimals: number = 1): string {
-  if (value >= 1e9) {
-    return (value / 1e9).toFixed(decimals) + "B"
+  // Negatives take the same suffix as their magnitude (-1.5M, not
+  // -1500000.0), and a value that rounds up to 1000 of one unit moves to
+  // the next (999,950 → "1.0M", not "1000.0K").
+  const sign = value < 0 ? "-" : ""
+  const abs = Math.abs(value)
+  for (let i = COMPACT_UNITS.length - 1; i >= 0; i--) {
+    const [scale, suffix] = COMPACT_UNITS[i]
+    if (abs < scale) continue
+    const fixed = (abs / scale).toFixed(decimals)
+    if (Number(fixed) >= 1000 && i < COMPACT_UNITS.length - 1) {
+      const [nextScale, nextSuffix] = COMPACT_UNITS[i + 1]
+      return sign + (abs / nextScale).toFixed(decimals) + nextSuffix
+    }
+    return sign + fixed + suffix
   }
-  if (value >= 1e6) {
-    return (value / 1e6).toFixed(decimals) + "M"
-  }
-  if (value >= 1e3) {
-    return (value / 1e3).toFixed(decimals) + "K"
-  }
+  const fixed = abs.toFixed(decimals)
+  if (Number(fixed) >= 1000) return sign + (abs / 1e3).toFixed(decimals) + "K"
   return value.toFixed(decimals)
 }
+
+/** Compact suffixes shared by {@link formatLargeNumber} and {@link smartTickFormat}. */
+const COMPACT_UNITS: ReadonlyArray<readonly [number, string]> = [[1e3, "K"], [1e6, "M"], [1e9, "B"]]
 
 /**
  * Smart default tick format for axis labels.
@@ -185,10 +196,20 @@ export function smartTickFormat(value: string | number | Date | null | undefined
   const cleaned = parseFloat(value.toPrecision(12))
   const abs = Math.abs(cleaned)
 
-  // Large numbers: compact suffixes
-  if (abs >= 1e9) return `${parseFloat((cleaned / 1e9).toPrecision(3))}B`
-  if (abs >= 1e6) return `${parseFloat((cleaned / 1e6).toPrecision(3))}M`
-  if (abs >= 1e4) return `${parseFloat((cleaned / 1e3).toPrecision(3))}K`
+  // Large numbers: compact suffixes at 3 significant digits. A mantissa that
+  // rounds up to 1000 moves to the next unit (999,950 → "1M", not "1000K").
+  if (abs >= 1e4) {
+    for (let i = COMPACT_UNITS.length - 1; i >= 0; i--) {
+      const [scale, suffix] = COMPACT_UNITS[i]
+      if (abs < scale) continue
+      const mantissa = parseFloat((cleaned / scale).toPrecision(3))
+      if (Math.abs(mantissa) >= 1000 && i < COMPACT_UNITS.length - 1) {
+        const [nextScale, nextSuffix] = COMPACT_UNITS[i + 1]
+        return `${parseFloat((cleaned / nextScale).toPrecision(3))}${nextSuffix}`
+      }
+      return `${mantissa}${suffix}`
+    }
+  }
 
   // Integers: no decimals needed
   if (Number.isInteger(cleaned)) return String(cleaned)

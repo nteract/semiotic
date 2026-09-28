@@ -6,6 +6,8 @@ import { createDefaultAnnotationRules } from "./annotationRules"
 import type { AnnotationContext } from "../../realtime/types"
 
 const rules = createDefaultAnnotationRules("xy")
+// The XY overlay: StreamXYFrame paints under-layer band fills itself.
+const xyOverlayRules = createDefaultAnnotationRules("xy", {}, true)
 const context: AnnotationContext = {
   frameType: "xy",
   width: 400,
@@ -173,5 +175,29 @@ describe("top annotation label clearance", () => {
     // A threshold on the top plot edge labels below its rule rather than
     // escaping upward into title chrome.
     expect(topYThreshold).toContain('y="16"')
+  })
+})
+
+describe("under-layer bands", () => {
+  it("keep only their label in the overlay, since the fill draws beneath the marks", () => {
+    for (const ann of [
+      { type: "band", y0: 20, y1: 60, layer: "under", label: "Target", fill: "#22c55e" },
+      { type: "x-band", x0: 20, x1: 60, layer: "under", label: "Deploy", fill: "#22c55e" },
+    ]) {
+      const svg = renderToStaticMarkup(xyOverlayRules(ann, 0, context) as React.ReactElement)
+      expect(svg).not.toContain("<rect")
+      expect(svg).toContain(ann.label)
+    }
+  })
+
+  it("keep their fill in frames that don't paint under-layer bands", () => {
+    // Ordinal, geo, network, and physics overlays share these rules without
+    // an under-layer pass; dropping the fill there would erase the band.
+    for (const frameRules of [rules, createDefaultAnnotationRules("ordinal")]) {
+      const svg = renderToStaticMarkup(
+        frameRules({ type: "band", y0: 20, y1: 60, layer: "under", fill: "#22c55e" }, 0, context) as React.ReactElement,
+      )
+      expect(svg).toContain('<rect x="0" y="80" width="400" height="80"')
+    }
   })
 })

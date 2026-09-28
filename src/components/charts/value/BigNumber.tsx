@@ -24,7 +24,8 @@ import { useWasHydratingFromSSR } from "../../stream/useHydration"
 import {
   buildFormatter,
   decorate,
-  formatSignedDelta
+  formatSignedDelta,
+  isFormattedZero
 } from "./formatting"
 import { useTargetPresentation } from "./targetPresentation"
 import { colorForLevel, resolveThreshold } from "./thresholdSparkline"
@@ -596,8 +597,15 @@ const BigNumberInner = (
       : comparisonValue != null && Number.isFinite(effectiveValue)
         ? (effectiveValue as number) - comparisonValue
         : null
+  // A delta that formats as zero reads, and is colored, as no change; the
+  // raw delta still reaches slots and callbacks.
+  const shownDelta =
+    computedDelta != null && Number.isFinite(computedDelta) &&
+      isFormattedZero(computedDelta, deltaFormatter)
+      ? 0
+      : computedDelta
   const sentiment = resolveSentiment(
-    computedDelta,
+    shownDelta,
     comparison?.direction ?? target?.direction ?? direction,
     sentimentProp
   )
@@ -674,7 +682,7 @@ const BigNumberInner = (
         : "",
       unit,
       comparisonLabel: comparison?.label,
-      delta: computedDelta,
+      delta: shownDelta,
       deltaFormatted,
       deltaPercent,
       targetText,

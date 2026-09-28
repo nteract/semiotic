@@ -21,6 +21,7 @@ import type { Datum } from "../shared/datumTypes"
 import type { HoverData } from "../../realtime/types"
 import type { CoercibleNumber } from "../../stream/accessorUtils"
 import type { ChartAccessor } from "../shared/types"
+import { formatDateMonthDay } from "../../stream/xyDateTicks"
 
 const tooltipStyle: React.CSSProperties = {
   background: "var(--semiotic-tooltip-bg, rgba(0, 0, 0, 0.85))",
@@ -56,6 +57,41 @@ interface DefaultRealtimeTooltipOptions<TDatum extends Datum = Datum> {
    */
   xLabel?: string
   yLabel?: string
+  /** Formats a histogram bin's bounds (the chart's `tickFormatTime`). */
+  formatTime?: (value: number) => string
+}
+
+/**
+ * Bins at or past this many epoch milliseconds (March 1973), up to the last
+ * valid Date, are timestamps; smaller bounds, such as tick counters or
+ * seconds, stay plain numbers.
+ */
+const EPOCH_MS_THRESHOLD = 1e11
+const MAX_DATE_MS = 8.64e15
+
+/**
+ * UTC `start–end` label for an epoch-ms range: `"Mar 28 10:41–10:42"`, the
+ * date written once when both ends share a day, with seconds and
+ * milliseconds only when either end carries them.
+ */
+function formatDateTimeRange(start: number, end: number): string {
+  const ends = [new Date(start), new Date(end)]
+  const clockEnd = Math.max(...ends.map((d) => (d.getUTCMilliseconds() ? 23 : d.getUTCSeconds() ? 19 : 16)))
+  const [from, to] = ends.map((d) => d.toISOString())
+  const toDay = from.slice(0, 10) === to.slice(0, 10) ? "" : `${formatDateMonthDay(end)} `
+  return `${formatDateMonthDay(start)} ${from.slice(11, clockEnd)}–${toDay}${to.slice(11, clockEnd)}`
+}
+
+/**
+ * A histogram bin's `start–end` label: through `formatTime` when the chart
+ * formats its time axis, as a UTC date and time for epoch-ms bounds, else as
+ * numbers.
+ */
+function formatBinRange(start: number, end: number, formatTime?: (value: number) => string): string {
+  if (formatTime) return `${formatTime(start)}–${formatTime(end)}`
+  return start >= EPOCH_MS_THRESHOLD && end <= MAX_DATE_MS
+    ? formatDateTimeRange(start, end)
+    : `${format(start)}–${format(end)}`
 }
 
 function readField<TDatum extends Datum>(
@@ -115,7 +151,7 @@ export function buildHistogramMultiTooltip<TDatum extends Datum = Datum>(
     if (!rows?.length || datum?.binStart == null || datum.binEnd == null) return single(d)
     return (
       <div className="semiotic-tooltip" style={tooltipStyle}>
-        <div><span style={labelStyle}>range:</span>{format(datum.binStart)}–{format(datum.binEnd)}</div>
+        <div><span style={labelStyle}>range:</span>{formatBinRange(datum.binStart, datum.binEnd, options.formatTime)}</div>
         {rows.map((row, i) => row.group !== "" && (
           <div key={i}>
             <span style={{ ...swatchStyle, backgroundColor: row.color }} />
@@ -196,7 +232,7 @@ export function buildWaterfallTooltip<TDatum extends Datum = Datum>(
 export function buildHistogramTooltip<TDatum extends Datum = Datum>(
   options: DefaultRealtimeTooltipOptions<TDatum> = {},
 ): (d: HoverData) => ReactNode {
-  const { timeAccessor, valueAccessor } = options
+  const { timeAccessor, valueAccessor, formatTime } = options
   return (d: HoverData) => {
     const datum = (d?.data ?? null) as (TDatum & {
       binStart?: number; binEnd?: number; total?: number;
@@ -216,7 +252,7 @@ export function buildHistogramTooltip<TDatum extends Datum = Datum>(
     }
     return (
       <div className="semiotic-tooltip" style={tooltipStyle}>
-        <div><span style={labelStyle}>range:</span>{format(datum!.binStart)}–{format(datum!.binEnd)}</div>
+        <div><span style={labelStyle}>range:</span>{formatBinRange(datum!.binStart!, datum!.binEnd!, formatTime)}</div>
         {datum!.total != null && (
           <div><span style={labelStyle}>count:</span>{format(datum!.total)}</div>
         )}

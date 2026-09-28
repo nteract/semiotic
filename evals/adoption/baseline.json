@@ -6,7 +6,7 @@
     "packageVersion": "3.11.1",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "9eb5ae2a9582a33f61b2a25833e2fc0dfe6030b9de93235f4125da4754cb54d7",
+    "revision": "54640f2f3901d5440c5c41e8d83fb5922f21b0dfa3a39cf44bca32767c6371b7",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -70,7 +70,7 @@
         "ai/reference.md",
         "docs/public/llms.txt"
       ],
-      "bytes": 163188,
+      "bytes": 163574,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "historicalSkill": {
@@ -78,7 +78,7 @@
         "ai/reference.md",
         "agent-skill/semiotic-charts/SKILL.md"
       ],
-      "bytes": 159662,
+      "bytes": 160048,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "candidateFixedPackets": {
@@ -87,7 +87,7 @@
           "ai/system-prompt.md",
           "docs/public/tasks/compare-category-totals.md"
         ],
-        "bytes": 24649,
+        "bytes": 24575,
         "measurement": "UTF-8 source bytes; not token usage or billed cost"
       },
       "update-live-chart": {
@@ -95,7 +95,7 @@
           "ai/system-prompt.md",
           "docs/public/tasks/update-live-chart.md"
         ],
-        "bytes": 32928,
+        "bytes": 32854,
         "measurement": "UTF-8 source bytes; not token usage or billed cost"
       },
       "correct-published-chart": {
@@ -103,7 +103,7 @@
           "ai/system-prompt.md",
           "docs/public/tasks/correct-published-chart.md"
         ],
-        "bytes": 38466,
+        "bytes": 38392,
         "measurement": "UTF-8 source bytes; not token usage or billed cost"
       }
     },
@@ -165,7 +165,7 @@
     {
       "path": "README.md",
       "bytes": 44413,
-      "sha256": "538ddca27940ab301d23633e7385cce6d88bbd3acdfb260abf4b78c031a3c418"
+      "sha256": "5bcc465b58bf57a9b3111666e08b2b45b3627d083ba8155f5190fbfcace6cb3a"
     },
     {
       "path": "agent-skill/semiotic-charts/SKILL.md",
@@ -199,13 +199,13 @@
     },
     {
       "path": "ai/reference.md",
-      "bytes": 151587,
-      "sha256": "29a5de382dd31ccb9fa821f629f9614c18c82bd437fbf4bb460ab3aee736f036"
+      "bytes": 151973,
+      "sha256": "b3da1bcff06b0847678af0ce26bc9decadd718034f948e45d57c88c51772079e"
     },
     {
       "path": "ai/schema.json",
-      "bytes": 1455192,
-      "sha256": "f82c3884f7ce49cdb1dc1b3494080644ea3c7bc293fbd84fcf998e9126c1e425"
+      "bytes": 1455312,
+      "sha256": "ae38caa02ddcfd01f0030a1f43f4d4f0e35709878c76849ec5eb1a94721907c1"
     },
     {
       "path": "ai/surface-manifest.json",
@@ -219,38 +219,38 @@
     },
     {
       "path": "ai/task-packets/compare-category-totals.json",
-      "bytes": 16605,
-      "sha256": "5bab07a6a84072a4fc9b6f646995501f8edbd6e4e4ae84924aa003b3be67e761"
+      "bytes": 14457,
+      "sha256": "227a58aa015d381166fe006f8bc66bc9df01bfe0f8fe69dc147237ae391d7c9b"
     },
     {
       "path": "ai/task-packets/compare-category-totals.md",
-      "bytes": 9153,
-      "sha256": "0d50680c6016ae721a0340be1444669e3989755d43ddf18d567e4f81a4bac468"
+      "bytes": 9079,
+      "sha256": "467160fad05b7b387835ab8b755c49e599bb085e30bb6bb042ca579543819c13"
     },
     {
       "path": "ai/task-packets/correct-published-chart.json",
-      "bytes": 30340,
-      "sha256": "f05d452b915425ed5ee1df33e8d1bc2f1a440644128ab3cad9f9ccc0e5980889"
+      "bytes": 28192,
+      "sha256": "9d10c29fdff336a19fea490d1ef6c4b699f326c6a22d66633bcd27f746099153"
     },
     {
       "path": "ai/task-packets/correct-published-chart.md",
-      "bytes": 22970,
-      "sha256": "84fbe7b0f5fddc8ac66a2bec4eb2ab4a9cf6e0b9f4928240c36d4b148c45f4ed"
+      "bytes": 22896,
+      "sha256": "6738349f68e007fd7ad7ff0437968f6f33dabb87e6e5da372f1747989e1724dd"
     },
     {
       "path": "ai/task-packets/index.json",
-      "bytes": 1811,
-      "sha256": "007108fabc55d688fba4de59148fdc1acfdcfded9f24cce7612fe1d9a9c8eb01"
+      "bytes": 1772,
+      "sha256": "b6aec0db9f2e832122fb5d16c815d4480f09afba68a3d1007a4e9cece888d0c5"
     },
     {
       "path": "ai/task-packets/update-live-chart.json",
-      "bytes": 25100,
-      "sha256": "18ef0d4879162009262d1f17e01b40ebb43cf44e897c8384993d25f94ed1e715"
+      "bytes": 22952,
+      "sha256": "94b1b6fde0a9b15a6a48a8184aaa4b16276b9480bd9e3ca0c96bdc18fac3aee6"
     },
     {
       "path": "ai/task-packets/update-live-chart.md",
-      "bytes": 17432,
-      "sha256": "bfd4427332645f149fb5003531f7baa0c6957da20935df9765529edf153f02af"
+      "bytes": 17358,
+      "sha256": "9efb9ca54416459a225efde1b9aaf749e9f8bb050062973a46e7db19eed6f8c5"
     },
     {
       "path": "ai/tasks/compare-category-totals.json",
@@ -279,33 +279,33 @@
     },
     {
       "path": "docs/public/tasks/compare-category-totals.json",
-      "bytes": 16605,
-      "sha256": "5bab07a6a84072a4fc9b6f646995501f8edbd6e4e4ae84924aa003b3be67e761"
+      "bytes": 14457,
+      "sha256": "227a58aa015d381166fe006f8bc66bc9df01bfe0f8fe69dc147237ae391d7c9b"
     },
     {
       "path": "docs/public/tasks/compare-category-totals.md",
-      "bytes": 9153,
-      "sha256": "0d50680c6016ae721a0340be1444669e3989755d43ddf18d567e4f81a4bac468"
+      "bytes": 9079,
+      "sha256": "467160fad05b7b387835ab8b755c49e599bb085e30bb6bb042ca579543819c13"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.json",
-      "bytes": 30340,
-      "sha256": "f05d452b915425ed5ee1df33e8d1bc2f1a440644128ab3cad9f9ccc0e5980889"
+      "bytes": 28192,
+      "sha256": "9d10c29fdff336a19fea490d1ef6c4b699f326c6a22d66633bcd27f746099153"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.md",
-      "bytes": 22970,
-      "sha256": "84fbe7b0f5fddc8ac66a2bec4eb2ab4a9cf6e0b9f4928240c36d4b148c45f4ed"
+      "bytes": 22896,
+      "sha256": "6738349f68e007fd7ad7ff0437968f6f33dabb87e6e5da372f1747989e1724dd"
     },
     {
       "path": "docs/public/tasks/update-live-chart.json",
-      "bytes": 25100,
-      "sha256": "18ef0d4879162009262d1f17e01b40ebb43cf44e897c8384993d25f94ed1e715"
+      "bytes": 22952,
+      "sha256": "94b1b6fde0a9b15a6a48a8184aaa4b16276b9480bd9e3ca0c96bdc18fac3aee6"
     },
     {
       "path": "docs/public/tasks/update-live-chart.md",
-      "bytes": 17432,
-      "sha256": "bfd4427332645f149fb5003531f7baa0c6957da20935df9765529edf153f02af"
+      "bytes": 17358,
+      "sha256": "9efb9ca54416459a225efde1b9aaf749e9f8bb050062973a46e7db19eed6f8c5"
     },
     {
       "path": "evals/adoption/fixtures.json",

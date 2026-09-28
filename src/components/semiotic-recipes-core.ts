@@ -250,6 +250,8 @@ export {
   reserveSeries,
   thresholdBandsForReserve,
   reserveAnnotationBands,
+  reserveClasses,
+  classifyReserve,
   summarizeOperatingPoint,
   gridEventAnnotations,
   tightestHours,
@@ -261,6 +263,8 @@ export type {
   GridHour,
   ReserveSnapshot,
   ReserveLevels,
+  ReserveClass,
+  ReserveClassId,
   FuelStackRow,
   DemandForecastRow,
   OperatingPointSummary,
@@ -282,6 +286,7 @@ export type {
 export { wordTrailsLayout, wordTrailsProgressiveReveal } from "./recipes/wordTrails"
 export type {
   WordTrailsConfig,
+  WordTrailsLayoutResult,
   WordTrailsProgressiveRevealOptions,
   WordTrailsWordInfo,
 } from "./recipes/wordTrails"

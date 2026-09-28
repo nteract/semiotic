@@ -874,7 +874,7 @@ export default function VisualizationControlsPage() {
         </article>
         <article style={styles.card}>
           <h3>Observability</h3>
-          <p>Direct controls now emit <code>control-start</code>, <code>control-change</code>, and <code>control-end</code> into the existing <code>onObservation</code> stream. The adapter remains usable without an observation provider.</p>
+          <p>Direct controls, <code>LinearBrush</code>, and <code>CircularBrush</code> emit <code>control-start</code>, <code>control-change</code>, and <code>control-end</code> into the existing <code>onObservation</code> stream, as do <code>SentenceFilter</code>'s number and range filters. The adapter remains usable without an observation provider.</p>
         </article>
         <article style={styles.card}>
           <h3>Annotations</h3>

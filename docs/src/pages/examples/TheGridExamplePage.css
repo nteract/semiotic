@@ -387,6 +387,9 @@
 .the-grid__swatch--ok {
   background: var(--grid-ok);
 }
+.the-grid__swatch--moderate {
+  background: var(--grid-cyan);
+}
 .the-grid__swatch--watch {
   background: var(--grid-amber);
 }

@@ -98,9 +98,17 @@ describe("formatVal", () => {
     expect(result).toBe((-50000).toLocaleString())
   })
 
-  it("handles Date objects", () => {
-    const d = new Date("2024-06-15")
-    expect(formatVal(d)).toBe(d.toLocaleDateString())
+  it("handles Date objects, keeping the time on intraday values", () => {
+    const midnight = new Date(2024, 5, 15)
+    expect(formatVal(midnight)).toBe(midnight.toLocaleDateString())
+    const intraday = new Date(2024, 5, 15, 9, 30)
+    expect(formatVal(intraday)).toBe(intraday.toLocaleString())
+    expect(formatVal(intraday)).not.toBe(formatVal(new Date(2024, 5, 15, 9, 31)))
+  })
+
+  it("drops floating-point noise without rounding real digits", () => {
+    expect(formatVal(0.1 + 0.2)).toBe("0.3")
+    expect(formatVal(12.345678)).toBe("12.345678")
   })
 
   it("converts strings as-is", () => {

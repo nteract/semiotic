@@ -1210,6 +1210,14 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
+      <p>
+        Band fills draw above the data by default. Set <code>layer: "under"</code> on a{" "}
+        <code>band</code> or <code>x-band</code> to paint its fill beneath the marks instead, so
+        bars and areas inside the range keep their color; the label stays on top. This works on
+        the canvas and in static SVG for XY charts, including the realtime and temporal
+        histograms.
+      </p>
+
       {/* ----------------------------------------------------------------- */}
       {/* Anomaly Band */}
       {/* ----------------------------------------------------------------- */}
@@ -1562,7 +1570,7 @@ export default function AnnotationsPage() {
             ["highlight", "All", "style", "Redraws a mark on annotation layer with custom style"],
             ["bracket", "Ordinal", "category, label, width, height, depth", "Bracket spanning a category or range"],
             ["trend", "XY", "method, color, bandwidth, label", "Regression line (linear, polynomial, or loess)"],
-            ["band", "XY", "y0, y1, fill, fillOpacity, label", "Shaded horizontal band between two values"],
+            ["band", "XY", "y0, y1, fill, fillOpacity, label, layer", "Shaded horizontal band between two values; layer: \"under\" draws the fill beneath the marks"],
             ["envelope", "XY", "bounds, fill, fillOpacity, label", "Envelope around a series or coordinate set"],
             ["anomaly-band", "XY", "threshold, fill, anomalyColor, label", "Mean ± N×σ band with highlighted outliers"],
             ["forecast", "XY", "steps, confidence, method, fill, label", "Extrapolated trend with widening confidence envelope"],

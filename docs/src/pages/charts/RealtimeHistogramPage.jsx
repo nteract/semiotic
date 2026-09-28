@@ -568,7 +568,7 @@ const RealtimeHistogramProps = [
   { name: "responsiveHeight", type: "boolean", description: "Fit a parent with a definite height." },
   { name: "showTimeAxis", type: "boolean", default: "true", description: "Hide the time axis with false; removes its default margin." },
   { name: "showValueAxis", type: "boolean", default: "true", description: "Hide the value axis with false; removes its default margin." },
-  { name: "axes", type: "array", description: "Shared XY axes configuration, overriding the visibility conveniences." },
+  { name: "axes", type: "array", description: "Shared XY axes configuration. Its entries override the visibility conveniences; an orientation it leaves out still follows showTimeAxis / showValueAxis." },
   { name: "direction", type: '"up" | "down"', default: '"up"', description: "Reverse the value domain for mirrored histograms, including push mode." },
   { name: "linkedHover", type: "boolean | string | object", description: "Publish a named hover selection using bin fields or authored source-row fields." },
   { name: "selection", type: "object", description: "Consume a named selection and dim unmatched bins." },
@@ -582,7 +582,7 @@ const RealtimeHistogramProps = [
   { name: "onHover", type: "function", required: false, default: null, description: "Callback fired on hover. Receives hover data or null." },
   { name: "annotations", type: "array", required: false, default: null, description: "Array of annotation objects rendered on the chart." },
   { name: "svgAnnotationRules", type: "function", required: false, default: null, description: "Custom SVG annotation render function." },
-  { name: "tickFormatTime", type: "function", required: false, default: null, description: "Custom formatter for time axis tick labels." },
+  { name: "tickFormatTime", type: "function", required: false, default: null, description: "Custom formatter for time axis tick labels; the default tooltip formats its bin range with it too (epoch-millisecond bins otherwise show a UTC date and time)." },
   { name: "tickFormatValue", type: "function", required: false, default: null, description: "Custom formatter for value axis tick labels." },
   { name: "className", type: "string", required: false, default: null, description: "CSS class name for the chart container." },
   { name: "brush", type: 'boolean | "x" | object', required: false, default: null, description: 'Brush configuration. `true` defaults to `{ dimension: "x", snap: "bin" }`. Object form accepts `dimension` ("x"|"y"|"xy") and `snap` ("continuous"|"bin").' },
@@ -980,7 +980,11 @@ function FilteredMultiLineOverlay({ allData, width }) {
         {" "}<code>[binStart, binEnd)</code> on its time field (the string{" "}
         <code>timeAccessor</code>, else <code>time</code>), even when no row carries
         that exact time, so hovering a linked line chart highlights the bin it falls in.
-        Selected times may be numbers, Dates, or date strings.
+        Selected times may be numbers, Dates, or date strings. To find those bins outside
+        the chart (for example to open a tooltip on the matched bin), pass each bin through
+        {" "}<code>histogramBinSelectionDatum(timeField)</code> from <code>semiotic/realtime</code>
+        {" "}or <code>semiotic/utils</code> before testing it with{" "}
+        <code>useSelection().predicate</code>.
       </p>
       <p>
         For application events, <code>onHover</code> receives a hover object whose

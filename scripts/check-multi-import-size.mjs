@@ -56,7 +56,9 @@ const analyze = process.argv.includes("--analyze")
 // Bumped 393→395: bin time-range selection matching, index-aware tick
 // relabeling, top-level showAxes, and BumpChart label margins measure
 // 393.9 KiB on the same union.
-const MULTI_IMPORT_GZIP_BUDGET = 395 * 1024
+// Bumped 395→396: under-layer band fills, per-glyph BumpChart label widths,
+// and hub-fitted gauge centers measure 395.3 KiB on the same union.
+const MULTI_IMPORT_GZIP_BUDGET = 396 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

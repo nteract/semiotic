@@ -328,10 +328,11 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     min,
     max,
     radius,
+    innerRadius,
     showScaleLabels,
     valueFormat,
     compact: compactMode,
-  }), [centerContent, centerLabel, clampedValue, min, max, valueFormat, showScaleLabels, radius, compactMode])
+  }), [centerContent, centerLabel, clampedValue, min, max, valueFormat, showScaleLabels, radius, innerRadius, compactMode])
 
   // Context-mode value annotation: rendered as SVG text inside the bottom gap
   // of the arc (the 120° wedge the 240° sweep leaves at 6 o'clock). User-

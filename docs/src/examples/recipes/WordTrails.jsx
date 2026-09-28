@@ -189,7 +189,8 @@ export default function WordTrails() {
 
       <p style={{ fontSize: "12px", color: "var(--text-secondary, #8888a0)", marginTop: "10px" }}>
         Drop <strong>Padding</strong> toward 0 for a crowded cloud, or push <strong>Words / speaker</strong> to the max —
-        it stays overlap-free, shrinking uniformly so relative sizes never change. Real transcripts: 2012 &amp; 2016 via
+        it stays overlap-free, shrinking uniformly so relative areas never change. At the densest settings (repeats on,
+        high padding) the few words that still find no room are left out rather than drawn over others. Real transcripts: 2012 &amp; 2016 via
         debates.org (Commission on Presidential Debates), 2020 via the m-arg dataset.
       </p>
     </div>

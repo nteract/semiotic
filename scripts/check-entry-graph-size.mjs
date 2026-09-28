@@ -72,14 +72,21 @@ const ENTRY_GRAPHS = [
   // histogram column hover (bar plugin) measure 160.01 KiB gzip.
   // Bumped 161→162: BumpChart's text-sized endpoint-label margins (shared
   // with renderChart) measure 161.43 KiB gzip.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 162 },
+  // Bumped 162→163: 3.11.1 left xy at 161.96 KiB; BumpChart's per-glyph
+  // endpoint-label width estimate measures 162.04 KiB gzip.
+  // Bumped 163→164: BumpChart's UTC Date x labels (locale/time-zone-free, so
+  // browser and renderChart agree) and time-aware default tooltip dates
+  // measure 163.02 KiB gzip after trimming both helpers.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 164 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
   // Bumped 121→122: shared selection matching of covered ranges (histogram
   // bins against point selections) and multi-series edge snapping measure
   // 121.24 KiB gzip.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 122 },
+  // Bumped 122→123: under-layer band fills (canvas and SVG pre-render pass,
+  // shared by every StreamXYFrame chart) measure 122.02 KiB gzip.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 123 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -152,7 +159,9 @@ const ENTRY_GRAPHS = [
   // The reachable graph measures 162.0 KiB gzip; keep one KiB headroom.
   // Bumped 163→164: histogram category breakdowns, column multi hover, and
   // bin time-range selection matching measure 163.45 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 164 },
+  // Bumped 164→165: under-layer band fills for histogram and line annotations
+  // measure 164.26 KiB gzip.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 165 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -176,7 +185,9 @@ const ENTRY_GRAPHS = [
   // Bumped 246→248: MinimapChart's static overview brush (mask, handles,
   // extent labels) and the LinearBrush geometry and label layout it shares
   // with the browser reach the static renderer (247.66 KiB measured).
-  { entry: "server.module.min.js", label: "server", limitKb: 248 },
+  // Bumped 248→249: static under-layer band fills and GaugeChart hub-fitted
+  // centers reach the static renderer (248.26 KiB measured).
+  { entry: "server.module.min.js", label: "server", limitKb: 249 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -255,7 +266,11 @@ const ENTRY_GRAPHS = [
   // relabeling of index-aware formatters measure 596.03 KiB gzip.
   // Bumped 597→598: BumpChart text-sized endpoint-label margins measure
   // 597.27 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 598 },
+  // Bumped 598→599: 3.11.1 left 598.0 KiB with no headroom; GaugeChart
+  // hub-fitted primitive centers measure 598.03 KiB gzip.
+  // Bumped 599→600: under-layer band fills, per-glyph BumpChart label widths,
+  // and histogram tooltip time ranges measure 599.02 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 600 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

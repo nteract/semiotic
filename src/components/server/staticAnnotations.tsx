@@ -118,6 +118,11 @@ export interface StaticAnnotationConfig {
   ) => React.ReactNode
   /** Chart data forwarded into the AnnotationContext for custom rules. */
   annotationData?: Datum[]
+  /**
+   * The renderer paints `layer: "under"` band fills beneath its marks
+   * (staticXY), so only their labels render here. Other frames keep the fill.
+   */
+  underLayerBands?: boolean
   /** Laid-out mark anchors for pointId/latest/semantic annotation modes. */
   pointNodes?: AnnotationContext["pointNodes"]
   /**
@@ -454,13 +459,15 @@ function renderAnnotation(
       // Base fill alpha from `fillOpacity` (matches the client renderer);
       // `opacity` is the group/decay alpha so freshness dimming composes.
       const fillOpacity = ann.fillOpacity ?? 0.1
+      // A `layer: "under"` band's fill renders beneath the marks (staticXY).
+      const fillUnderMarks = config.underLayerBands === true && ann.layer === "under"
       return (
         <g key={`ann-band-${index}`} opacity={ann.opacity}>
-          {bandFill.def && <defs>{bandFill.def}</defs>}
-          <rect
+          {!fillUnderMarks && bandFill.def && <defs>{bandFill.def}</defs>}
+          {!fillUnderMarks && <rect
             x={0} y={top} width={layout.width} height={height}
             fill={bandFill.fill} fillOpacity={fillOpacity}
-          />
+          />}
           {ann.label && (
             <AnnotationLabel
               x={layout.width - 4} y={Math.max(top, 0) + TOP_LABEL_BASELINE}
@@ -495,13 +502,14 @@ function renderAnnotation(
         resolveAnnotationColor(ann, theme),
       )
       const fillOpacity = ann.fillOpacity ?? 0.1
+      const fillUnderMarks = config.underLayerBands === true && ann.layer === "under"
       return (
         <g key={`ann-xband-${index}`} opacity={ann.opacity}>
-          {xBandFill.def && <defs>{xBandFill.def}</defs>}
-          <rect
+          {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
+          {!fillUnderMarks && <rect
             x={left} y={0} width={width} height={layout.height}
             fill={xBandFill.fill} fillOpacity={fillOpacity}
-          />
+          />}
           {ann.label && (
             <AnnotationLabel
               x={left + 4} y={TOP_LABEL_BASELINE}

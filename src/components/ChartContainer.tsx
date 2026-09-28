@@ -336,9 +336,8 @@ function NotificationLevelIcon({ level }: { level: ChartNotificationLevel }) {
 }
 
 /**
- * A single notification card, as rendered inside the popover. Extracted so the
- * card markup stays identical to the pre-popover stack (same class hooks,
- * dismiss affordance, and level styling).
+ * A single notification card, as rendered inside the popover, with its class
+ * hooks, dismiss affordance, and level styling.
  */
 function NotificationCard({
   notification,

@@ -3,8 +3,31 @@ import { describe, expect, it, vi } from "vitest"
 import {
   adaptiveTimeTicks,
   createTooltip,
-  resolveAdaptiveTimeZone
+  formatLargeNumber,
+  resolveAdaptiveTimeZone,
+  smartTickFormat
 } from "./formatUtils"
+
+describe("compact number formatting", () => {
+  it("smartTickFormat moves a mantissa that rounds to 1000 to the next unit", () => {
+    expect(smartTickFormat(999_950)).toBe("1M")
+    expect(smartTickFormat(-999_950)).toBe("-1M")
+    expect(smartTickFormat(999_999_999)).toBe("1B")
+    expect(smartTickFormat(1_500_000)).toBe("1.5M")
+    expect(smartTickFormat(12_345.678)).toBe("12.3K")
+    expect(smartTickFormat(9_999)).toBe("9999")
+  })
+
+  it("formatLargeNumber keeps the suffix on negatives and carries rollovers", () => {
+    expect(formatLargeNumber(-1_500_000)).toBe("-1.5M")
+    expect(formatLargeNumber(-5e6)).toBe("-5.0M")
+    expect(formatLargeNumber(-2_500)).toBe("-2.5K")
+    expect(formatLargeNumber(999_950)).toBe("1.0M")
+    expect(formatLargeNumber(999.96)).toBe("1.0K")
+    expect(formatLargeNumber(1_234_567_890)).toBe("1.2B")
+    expect(formatLargeNumber(42)).toBe("42.0")
+  })
+})
 
 describe("createTooltip", () => {
   it("ignores inherited and malformed formatter or label-map entries", () => {

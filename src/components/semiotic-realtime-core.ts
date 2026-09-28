@@ -1,7 +1,7 @@
 /**
  * Established primary realtime runtime surface.
  *
- * Despite the historical `/core` name, this entry includes React Stream
+ * Despite its `/core` name, this entry includes React Stream
  * Frames, chart HOCs, and tooltips alongside buffer/aggregation helpers. It is
  * a client entry. Use narrower data utilities from `semiotic/utils/core` when
  * a React-free server surface is required.
@@ -140,6 +140,9 @@ export type {
 // Authored rows behind a histogram bin, stacked segment, or `categories`
 // entry, read from the datum or from the hover that wraps it.
 export { getSourceRows } from "./store/selectionProvenance"
+// A histogram bin as the chart's selection matching sees it, for finding the
+// bins a selection matches outside the chart.
+export { histogramBinSelectionDatum } from "./charts/realtime/histogramSelectionCoverage"
 
 export type {
   Style,

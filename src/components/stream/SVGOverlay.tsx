@@ -293,7 +293,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     // Hide retracted/superseded by default so paint matches describe/nav tree.
     const visibleAnnotations = filterAnnotationsByStatus(annotations).filter(a => !a._directLabel && !a._directLabelRequest)
 
-    const defaultRules = createDefaultAnnotationRules("xy", annotationActivation)
+    const defaultRules = createDefaultAnnotationRules("xy", annotationActivation, true)
 
     const context: AnnotationContext = {
       scales: scales

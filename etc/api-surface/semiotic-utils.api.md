@@ -84,6 +84,7 @@ function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | Rea
 function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchFillKey(h: HatchFill): string
+function histogramBinSelectionDatum(timeField: string): (datum: Datum) => Datum
 function isHatchFill(fill: unknown): boolean
 function isMultiTooltip(tooltip: TooltipProp | undefined): boolean
 function lightenColor(hex: string, factor?: number | undefined): string

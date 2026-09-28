@@ -157,6 +157,24 @@ describe("BigNumber — comparison + delta + sentiment", () => {
     expect(formatSignedDelta(-5, f)).toBe("−5")
   })
 
+  it("formatSignedDelta leaves a delta that rounds to zero unsigned", () => {
+    const pct = buildFormatter("percent")
+    expect(formatSignedDelta(0.00001, pct)).toBe("0%")
+    expect(formatSignedDelta(-0.00001, pct)).toBe("0%")
+    const whole = buildFormatter(undefined)
+    expect(formatSignedDelta(-0.2, whole)).toBe("0")
+    expect(formatSignedDelta(0.6, whole)).toBe("+1")
+  })
+
+  it("reads and colors a delta that formats as zero as no change", () => {
+    const { container } = render(
+      <BigNumber value={100.2} comparison={{ value: 100 }} direction="higher-is-better" />
+    )
+    expect(container.querySelector("[data-sentiment='neutral']")).toBeTruthy()
+    expect(container.textContent).not.toMatch(/\+0(?!\.)/)
+    expect(container.querySelector("[aria-label]")?.getAttribute("aria-label") ?? "").not.toMatch(/\bup\b/)
+  })
+
   it("formatDeltaPercent returns null when from is 0", () => {
     expect(formatDeltaPercent(0, 100)).toBeNull()
   })
@@ -671,6 +689,17 @@ describe("formatting helpers", () => {
     expect(formatDuration(2500)).toBe("2.5s")
     expect(formatDuration(125_000)).toBe("2m 5s")
     expect(formatDuration(3_700_000)).toBe("1h 2m")
+  })
+
+  it("formatDuration carries a rounded remainder into the next unit", () => {
+    expect(formatDuration(999.6)).toBe("1s")
+    expect(formatDuration(59_999)).toBe("1m")
+    expect(formatDuration(3_599_600)).toBe("1h")
+    expect(formatDuration(7_199_000)).toBe("2h")
+    expect(formatDuration(86_399_000)).toBe("1d")
+    expect(formatDuration(172_799_000)).toBe("2d")
+    expect(formatDuration(-59_999)).toBe("-1m")
+    expect(formatDuration(90_061_000)).toBe("1d 1h")
   })
 
   it("buildFormatter returns a pass-through for function input", () => {

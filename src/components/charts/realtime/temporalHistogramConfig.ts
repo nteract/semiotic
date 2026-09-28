@@ -1,17 +1,32 @@
 import { resolveHiddenAxisMargins, resolveXYAxisChrome } from "../../legendLayout"
 
-/** Resolve histogram conveniences into the shared XY axis configuration. */
+/**
+ * The histogram's axes: `showTimeAxis`/`showValueAxis` defaults, or the
+ * explicit `axes`, whose entries win. An orientation the explicit axes leave
+ * out still follows its visibility flag, so `axes={[{ orient: "bottom",
+ * tickValues }]}` with `showValueAxis={false}` hides the value axis the frame
+ * would otherwise draw by default.
+ */
 export function resolveHistogramAxes(props: {
   axes?: import("../../stream/xyFrameAxisTypes").XYFrameAxisConfig[]
   showTimeAxis?: boolean
   showValueAxis?: boolean
 }): import("../../stream/xyFrameAxisTypes").XYFrameAxisConfig[] {
-  return (
-    props.axes ?? [
+  if (!props.axes) {
+    return [
       { orient: "bottom", visible: props.showTimeAxis !== false },
       { orient: "left", visible: props.showValueAxis !== false }
     ]
-  )
+  }
+  const has = (...orients: string[]) => props.axes!.some((axis) => orients.includes(axis.orient))
+  const hideTime = props.showTimeAxis === false && !has("bottom", "top")
+  const hideValue = props.showValueAxis === false && !has("left", "right")
+  if (!hideTime && !hideValue) return props.axes
+  return [
+    ...props.axes,
+    ...(hideTime ? [{ orient: "bottom" as const, visible: false }] : []),
+    ...(hideValue ? [{ orient: "left" as const, visible: false }] : [])
+  ]
 }
 
 export function histogramMarginDefaults(

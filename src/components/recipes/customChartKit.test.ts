@@ -92,6 +92,14 @@ describe("cyclical math", () => {
     expect(shortestArcDelta(0, 10, 365)).toBe(10)
   })
 
+  it("shortestArcDelta returns +period/2 for a half-cycle step in either direction", () => {
+    // The documented range is (-period/2, period/2].
+    expect(shortestArcDelta(0, 180, 360)).toBe(180)
+    expect(shortestArcDelta(0, -180, 360)).toBe(180)
+    expect(shortestArcDelta(180, 0, 360)).toBe(180)
+    expect(shortestArcDelta(0, 540, 360)).toBe(180)
+  })
+
   it("cyclicRangeContains handles wrap-around ranges", () => {
     expect(cyclicRangeContains(15, 10, 20)).toBe(true)
     expect(cyclicRangeContains(5, 350, 20)).toBe(true) // wraps

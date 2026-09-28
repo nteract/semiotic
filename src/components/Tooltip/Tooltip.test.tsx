@@ -47,6 +47,16 @@ describe("Tooltip", () => {
     expect(container.textContent).toContain("1")
   })
 
+  it("shows the time of intraday Date values and the date alone at midnight", () => {
+    const tooltipFn = Tooltip({ title: "time" })
+    const intraday = new Date(2026, 8, 24, 9, 41)
+    const day = new Date(2026, 8, 24)
+    expect(render(<>{tooltipFn({ time: intraday })}</>).container.textContent).toContain(intraday.toLocaleString())
+    const { container } = render(<>{tooltipFn({ time: day })}</>)
+    expect(container.textContent).toContain(day.toLocaleDateString())
+    expect(container.textContent).not.toContain(day.toLocaleString())
+  })
+
   it("renders both title AND fields when both are provided", () => {
     const tooltipFn = Tooltip({ title: "category", fields: ["x", "y"] })
     const { container } = render(<>{tooltipFn(sampleData)}</>)

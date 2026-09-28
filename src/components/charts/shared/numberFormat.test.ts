@@ -70,9 +70,10 @@ describe("numberFormat — d3-format subset", () => {
   })
 
   describe("exponential (`e`)", () => {
-    it("uses scientific notation with 2-digit exponent", () => {
-      expect(format(".2e")(12345)).toBe("1.23e+04")
-      expect(format(".2e")(0.0001)).toBe("1.00e-04")
+    it("uses scientific notation with d3's unpadded exponent", () => {
+      expect(format(".2e")(12345)).toBe("1.23e+4")
+      expect(format(".2e")(0.0001)).toBe("1.00e-4")
+      expect(format(".1e")(1000)).toBe("1.0e+3")
     })
 
     it("trims trailing zeros with `~.2e`", () => {
@@ -93,10 +94,33 @@ describe("numberFormat — d3-format subset", () => {
 
     it("switches to exponential when value exceeds precision", () => {
       // 1234567 has exponent 6, precision 6 → exponential. Comma is
-      // a no-op in scientific form. 2-digit exponent matches our `e`
-      // formatter — d3 emits a single-digit exponent here, but the
-      // chart-axis use case treats both as equivalent.
-      expect(format(",.6g")(1234567)).toBe("1.23457e+06")
+      // a no-op in scientific form.
+      expect(format(",.6g")(1234567)).toBe("1.23457e+6")
+    })
+
+    it("formats a spec without a type as a trimmed g at precision 12", () => {
+      expect(format(",")(1234567.891)).toBe("1,234,567.891")
+      expect(format("")(0.1 + 0.2)).toBe("0.3")
+      expect(format(".3")(12345)).toBe("1.23e+4")
+    })
+  })
+
+  describe("parity with d3-format at rounding boundaries", () => {
+    // Expected strings are real d3-format output.
+    it.each([
+      [".3s", 999.95, "1.00k"],
+      [".3s", 999999, "1.00M"],
+      [".3s", -999999, "-1.00M"],
+      [".2s", 0.000999, "1.0m"],
+      [".2~s", 999.9, "1k"],
+      [".4s", -0.000123456, "-123.5µ"],
+      [".3s", 1e-27, "0.001y"],
+      [".3s", 1e27, "1000Y"],
+      ["s", 123456, "123.456k"],
+      [".1e", 1e-7, "1.0e-7"],
+      [",d", 1e21, "1,000,000,000,000,000,000,000"],
+    ])("%s of %d is %s", (spec, value, expected) => {
+      expect(format(spec)(value)).toBe(expected)
     })
   })
 

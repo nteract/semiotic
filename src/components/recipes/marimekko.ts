@@ -188,7 +188,7 @@ function renderCategoryLabels(
   fill: string
 ): import("react").ReactElement {
   // `bandLabel` owns the centered placement + overflow suppression (it hides a
-  // label wider than its slot, the dedup pattern this used to hand-roll).
+  // label wider than its slot).
   const elements = slots.map((slot, i) =>
     bandLabel({
       keyId: `marimekko-label-${i}`,

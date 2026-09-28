@@ -65,7 +65,7 @@ const chartProps = [
   { name: "styleRules", type: "array", default: null, description: "Apply ordered, data-aware fill, stroke, and opacity rules." },
   { name: "stroke / strokeWidth / opacity", type: "string / number / number", default: null, description: "Shared primitive styling applied to ribbons, lines, and optional points." },
   { name: "showLabels", type: 'boolean | "start" | "end" | "both" | "auto"', default: "true", description: "Show endpoint labels; auto sheds collisions and budgets labels by plot density." },
-  { name: "margin", type: "number | object", default: "label-aware", description: "Endpoint labels reserve room from their text on the labeled sides (each capped at 38% of the width; longer labels truncate with the full name in a tooltip). Start labels clear the rank ticks. Partial margins merge over these defaults." },
+  { name: "margin", type: "number | object", default: "label-aware", description: "Endpoint labels reserve room from their text on the labeled sides (each capped at 38% of the width; longer labels truncate with the full name in a tooltip). Widths are estimated per glyph for common UI sans-serif faces; pin the side for a much wider face such as Verdana. Start labels clear the rank ticks. Partial margins merge over these defaults." },
   { name: "labelPriorityAccessor", type: "string | function", default: null, description: "Prioritize labels by a numeric field or accessor when endpoints collide." },
   { name: "maxLabels", type: "number", default: null, description: "Hard cap for visible labels when showLabels is auto." },
   { name: "xFormat / yFormat", type: "function", default: null, description: "Format time or ordered x labels and original values in tooltips." },

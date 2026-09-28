@@ -1,318 +1,36 @@
-// @ts-nocheck legacy d3 ribbon geometry. Parameters `p`, `c`, `d`, etc. are
-// dynamically shaped from d3-shape input and typing them correctly is a rewrite
-// (~20 implicit-any sites plus some null assignments to typed fields). Tracked
-// as tech debt.
 import { interpolateNumber } from "d3-interpolate"
-import { line, curveLinearClosed } from "d3-shape"
+import type { CircularPathData } from "../stream/networkTypes"
 import { buildRibbonGeometry } from "./ribbonGeometry"
-
-const dedupeRibbonPoints =
-  (weight = 1) =>
-  (p, c) => {
-    const l = p[p.length - 1]
-    if (
-      !l ||
-      Math.round(l.x / weight) !== Math.round(c.x / weight) ||
-      Math.round(l.y / weight) !== Math.round(c.y / weight)
-    ) {
-      p.push(c)
-    }
-    return p
-  }
-
-function linearRibbon() {
-  const _lineConstructor = line()
-  let _xAccessor = function (d) {
-    return d.x
-  }
-  let _yAccessor = function (d) {
-    return d.y
-  }
-  let _rAccessor = function (d) {
-    return d.r
-  }
-  let _interpolator = curveLinearClosed
-
-  function _ribbon(pathData) {
-    if (pathData.multiple) {
-      const original_r = _rAccessor
-      const parallelTotal = pathData.multiple.reduce((p, c) => p + c.weight, 0)
-
-      _rAccessor = () => parallelTotal
-
-      const totalPoints = buildRibbon(pathData.points)
-
-      let currentPoints = totalPoints
-        .filter((d) => d.direction === "forward")
-        .reduce(dedupeRibbonPoints(), [])
-
-      const allRibbons = []
-
-      pathData.multiple.forEach((siblingPath, siblingI) => {
-        _rAccessor = () => siblingPath.weight
-        const currentRibbon = buildRibbon(currentPoints)
-        allRibbons.push(currentRibbon)
-        const nextSibling = pathData.multiple[siblingI + 1]
-
-        if (nextSibling) {
-          const currentLeftSide = currentRibbon
-            .reverse()
-            .filter((d) => d.direction === "back")
-            .reduce(dedupeRibbonPoints(), [])
-
-          _rAccessor = () => nextSibling.weight
-
-          const leftHandInflatedRibbon = buildRibbon(currentLeftSide)
-          currentPoints = leftHandInflatedRibbon
-            .reverse()
-            .filter((d) => d.direction === "back")
-            .reduce(dedupeRibbonPoints(), [])
-        }
-      })
-
-      _rAccessor = original_r
-      return allRibbons.map((d) =>
-        _lineConstructor.x(_xAccessor).y(_yAccessor).curve(_interpolator)(d)
-      )
-    }
-    const bothPoints = buildRibbon(pathData).reduce(dedupeRibbonPoints(), [])
-
-    return _lineConstructor.x(_xAccessor).y(_yAccessor).curve(_interpolator)(
-      bothPoints
-    )
-  }
-
-  _ribbon.x = function (_value) {
-    if (!arguments.length) return _xAccessor
-
-    _xAccessor = _value
-    return _ribbon
-  }
-
-  _ribbon.y = function (_value) {
-    if (!arguments.length) return _yAccessor
-
-    _yAccessor = _value
-    return _ribbon
-  }
-
-  _ribbon.r = function (_value) {
-    if (!arguments.length) return _rAccessor
-
-    _rAccessor = _value
-    return _ribbon
-  }
-
-  _ribbon.interpolate = function (_value) {
-    if (!arguments.length) return _interpolator
-
-    _interpolator = _value
-    return _ribbon
-  }
-
-  return _ribbon
-
-  function offsetEdge(d) {
-    const diffX = _yAccessor(d.target) - _yAccessor(d.source)
-    const diffY = _xAccessor(d.target) - _xAccessor(d.source)
-
-    const angle0 = Math.atan2(diffY, diffX) + Math.PI / 2
-    const angle1 = angle0 + Math.PI * 0.5
-    const angle2 = angle0 + Math.PI * 0.5
-
-    const x1 = _xAccessor(d.source) + _rAccessor(d.source) * Math.cos(angle1)
-    const y1 = _yAccessor(d.source) - _rAccessor(d.source) * Math.sin(angle1)
-    const x2 = _xAccessor(d.target) + _rAccessor(d.target) * Math.cos(angle2)
-    const y2 = _yAccessor(d.target) - _rAccessor(d.target) * Math.sin(angle2)
-
-    return { x1: x1, y1: y1, x2: x2, y2: y2 }
-  }
-
-  function buildRibbon(points) {
-    const bothCode = []
-    let x = 0
-
-    while (x < points.length) {
-      if (x !== points.length - 1) {
-        const transformedPoints = offsetEdge({
-          source: points[x],
-          target: points[x + 1]
-        })
-        const p1 = {
-          x: transformedPoints.x1,
-          y: transformedPoints.y1,
-          direction: "forward"
-        }
-        const p2 = {
-          x: transformedPoints.x2,
-          y: transformedPoints.y2,
-          direction: "forward"
-        }
-        bothCode.push(p1, p2)
-        if (bothCode.length > 3) {
-          const l = bothCode.length - 1
-          const lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
-          const lineB = { a: bothCode[l - 1], b: bothCode[l] }
-          const intersect = findIntersect(
-            lineA.a.x,
-            lineA.a.y,
-            lineA.b.x,
-            lineA.b.y,
-            lineB.a.x,
-            lineB.a.y,
-            lineB.b.x,
-            lineB.b.y
-          )
-          if (intersect.found === true) {
-            lineA.b.x = intersect.x
-            lineA.b.y = intersect.y
-            lineB.a.x = intersect.x
-            lineB.a.y = intersect.y
-          }
-        }
-      }
-
-      x++
-    }
-    x--
-    //Back
-    while (x >= 0) {
-      if (x !== 0) {
-        transformedPoints = offsetEdge({
-          source: points[x],
-          target: points[x - 1]
-        })
-        const p1 = {
-          x: transformedPoints.x1,
-          y: transformedPoints.y1,
-          direction: "back"
-        }
-        const p2 = {
-          x: transformedPoints.x2,
-          y: transformedPoints.y2,
-          direction: "back"
-        }
-        bothCode.push(p1, p2)
-        if (bothCode.length > 3) {
-          const l = bothCode.length - 1
-          const lineA = { a: bothCode[l - 3], b: bothCode[l - 2] }
-          const lineB = { a: bothCode[l - 1], b: bothCode[l] }
-          const intersect = findIntersect(
-            lineA.a.x,
-            lineA.a.y,
-            lineA.b.x,
-            lineA.b.y,
-            lineB.a.x,
-            lineB.a.y,
-            lineB.b.x,
-            lineB.b.y
-          )
-          if (intersect.found === true) {
-            lineA.b.x = intersect.x
-            lineA.b.y = intersect.y
-            lineB.a.x = intersect.x
-            lineB.a.y = intersect.y
-          }
-        }
-      }
-
-      x--
-    }
-
-    return bothCode
-  }
-
-  function findIntersect(l1x1, l1y1, l1x2, l1y2, l2x1, l2y1, l2x2, l2y2) {
-    let a, b
-
-    const result = {
-      x: null,
-      y: null,
-      found: false
-    }
-
-    const d = (l2y2 - l2y1) * (l1x2 - l1x1) - (l2x2 - l2x1) * (l1y2 - l1y1)
-    if (d === 0) {
-      return result
-    }
-    a = l1y1 - l2y1
-    b = l1x1 - l2x1
-    const n1 = (l2x2 - l2x1) * a - (l2y2 - l2y1) * b
-    const n2 = (l1x2 - l1x1) * a - (l1y2 - l1y1) * b
-    a = n1 / d
-    b = n2 / d
-
-    result.x = l1x1 + a * (l1x2 - l1x1)
-    result.y = l1y1 + a * (l1y2 - l1y1)
-
-    if (a > 0 && a < 1 && b > 0 && b < 1) {
-      result.found = true
-    }
-
-    return result
-  }
-}
 
 const curvature = 0.5
 
-const _ribbonLink = (d) => {
-  const diff =
-    d.direction === "down"
-      ? Math.abs(d.target.y - d.source.y)
-      : Math.abs(d.source.x - d.target.x)
-  // const halfWidth = d.width / 2
-  const testCoordinates =
-    d.direction === "down"
-      ? [
-          {
-            x: d.y0,
-            y: d.source.y
-          },
-          {
-            x: d.y0,
-            y: d.source.y + diff / 3
-          },
-          {
-            x: d.y1,
-            y: d.target.y - diff / 3
-          },
-          {
-            x: d.y1,
-            y: d.target.y
-          }
-        ]
-      : [
-          {
-            x: d.source.x0,
-            y: d.y0
-          },
-          {
-            x: d.source.x0 + diff / 3,
-            y: d.y0
-          },
-          {
-            x: d.target.x0 - diff / 3,
-            y: d.y1
-          },
-          {
-            x: d.target.x0,
-            y: d.y1
-          }
-        ]
-
-  const linkGenerator = linearRibbon()
-
-  linkGenerator.x((d) => d.x)
-  linkGenerator.y((d) => d.y)
-  linkGenerator.r(() => d.sankeyWidth / 2)
-
-  return linkGenerator(testCoordinates)
+/** A laid-out sankey node end: its depth extent along the flow. */
+interface SankeyLinkEnd {
+  x0: number
+  x1: number
 }
 
-export const areaLink = (d) => {
-  // Vertical-only locals — horizontal path delegates to
-  // buildRibbonGeometry below and re-declares its own coords.
-  let x0, x1, x2, x3, y0, y1, xi, y2, y3
+/** The laid-out sankey edge fields the ribbon paths read. */
+export interface SankeyAreaLinkInput {
+  /** Unresolved (string) ends have no geometry yet, and produce no path. */
+  source: SankeyLinkEnd | string
+  target: SankeyLinkEnd | string
+  y0: number
+  y1: number
+  sankeyWidth: number
+  direction?: string
+}
+
+export interface SankeyCircularLinkInput {
+  sankeyWidth: number
+  circularPathData?: CircularPathData
+  circularLinkType?: string
+  direction?: string
+}
+
+export const areaLink = (d: SankeyAreaLinkInput): string | null => {
+  const { source, target } = d
+  if (typeof source === "string" || typeof target === "string") return null
 
   if (d.direction === "down") {
     // Vertical sankey: d3-sankey uses swapped extent so x = depth, y = breadth.
@@ -320,15 +38,15 @@ export const areaLink = (d) => {
     // edge.y0/y1 = breadth offsets at source/target → horizontal center
     // source.x1 = depth bottom of source node → vertical start
     // target.x0 = depth top of target node → vertical end
-    x0 = d.y0 - d.sankeyWidth / 2
-    x1 = d.y1 - d.sankeyWidth / 2
-    x2 = d.y1 + d.sankeyWidth / 2
-    x3 = d.y0 + d.sankeyWidth / 2
-    y0 = d.source.x1
-    y1 = d.target.x0
-    xi = interpolateNumber(y0, y1)
-    y2 = xi(curvature)
-    y3 = xi(1 - curvature)
+    const x0 = d.y0 - d.sankeyWidth / 2
+    const x1 = d.y1 - d.sankeyWidth / 2
+    const x2 = d.y1 + d.sankeyWidth / 2
+    const x3 = d.y0 + d.sankeyWidth / 2
+    const y0 = source.x1
+    const y1 = target.x0
+    const xi = interpolateNumber(y0, y1)
+    const y2 = xi(curvature)
+    const y3 = xi(1 - curvature)
 
     return `M${x0},${y0}C${x0},${y2} ${x1},${y3} ${x1},${y1}L${x2},${y1}C${x2},${y3} ${x3},${y2} ${x3},${y0}Z`
   }
@@ -340,12 +58,12 @@ export const areaLink = (d) => {
   // ProcessSankey reads attachment time + centerline mass) but the
   // emission rule is shared.
   const hw = d.sankeyWidth / 2
-  const horizontalXi = interpolateNumber(d.source.x1, d.target.x0)
+  const horizontalXi = interpolateNumber(source.x1, target.x0)
   const { pathD } = buildRibbonGeometry({
-    sx: d.source.x1,
+    sx: source.x1,
     sTop: d.y0 - hw,
     sBot: d.y0 + hw,
-    tx: d.target.x0,
+    tx: target.x0,
     tTop: d.y1 - hw,
     tBot: d.y1 + hw,
     cp1X: horizontalXi(curvature),
@@ -354,7 +72,7 @@ export const areaLink = (d) => {
   return pathD
 }
 
-export function circularAreaLink(link) {
+export function circularAreaLink(link: SankeyCircularLinkInput): string | null {
   const cpd = link.circularPathData
   if (!cpd) return null
   const hw = link.sankeyWidth / 2

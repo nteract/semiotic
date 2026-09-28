@@ -111,6 +111,24 @@ describe("buildHistogramTooltip", () => {
   it("falls back to x/y for a datum without a bin", () => {
     expect(rowsOf(fakeHover())).toEqual(["x:42", "y:87.50"])
   })
+
+  it("labels epoch-millisecond bins with a UTC date and time instead of raw numbers", () => {
+    const minute = Date.UTC(2023, 2, 28, 10, 41)
+    expect(rowsOf(fakeHover({ data: { binStart: minute, binEnd: minute + 60_000, total: 11 } }))[0])
+      .toBe("range:Mar 28 10:41–10:42")
+    expect(rowsOf(fakeHover({ data: { binStart: minute + 30_000, binEnd: minute + 60_000, total: 1 } }))[0])
+      .toBe("range:Mar 28 10:41:30–10:42:00")
+    const lateEvening = Date.UTC(2023, 2, 28, 23, 30)
+    expect(rowsOf(fakeHover({ data: { binStart: lateEvening, binEnd: lateEvening + 1_800_000, total: 1 } }))[0])
+      .toBe("range:Mar 28 23:30–Mar 29 00:00")
+  })
+
+  it("formats bin bounds with the chart's time formatter when one is set", () => {
+    const { container } = render(<>{buildHistogramTooltip({ formatTime: (v) => `t${v / 1000}` })(
+      fakeHover({ data: { binStart: 1000, binEnd: 2000, total: 3 } })
+    )}</>)
+    expect(container.querySelector(".semiotic-tooltip > div")?.textContent).toBe("range:t1–t2")
+  })
 })
 
 describe("buildHistogramMultiTooltip", () => {
@@ -140,6 +158,13 @@ describe("buildHistogramMultiTooltip", () => {
 
   it("falls back to the single-bin tooltip without column rows", () => {
     expect(rowsOf(fakeHover({ data: bin }))).toEqual(["range:0–10", "count:6"])
+  })
+
+  it("labels an epoch-millisecond column with a UTC date and time", () => {
+    const minute = Date.UTC(2023, 2, 28, 10, 41)
+    const allSeries = [{ group: "North", value: 5, color: "#f00", datum: {} }]
+    expect(rowsOf(fakeHover({ data: { binStart: minute, binEnd: minute + 60_000, total: 5 }, allSeries }))[0])
+      .toBe("range:Mar 28 10:41–10:42")
   })
 })
 

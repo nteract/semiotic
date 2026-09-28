@@ -3,6 +3,7 @@ import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { HoverData } from "../realtime/types"
 import { normalizeHoverDatum } from "../stream/hoverUtils"
+import { formatTooltipDate } from "./formatTooltipDate"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import { attachSelectionProvenance, getSelectionProvenance } from "../store/selectionProvenance"
 import {
@@ -125,7 +126,7 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
 
   // Format dates
   if (value instanceof Date) {
-    return value.toLocaleDateString()
+    return formatTooltipDate(value)
   }
 
   // Handle objects (e.g. resolved network nodes with an id property)

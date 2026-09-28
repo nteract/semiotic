@@ -1,4 +1,11 @@
 import * as React from "react"
+import {
+  createControlObservationAdapter,
+  type ControlInputSource,
+  type ControlObservationCallback,
+  type VisualizationControlType,
+  type VisualizationControlValue,
+} from "./controlContract"
 
 // file-size-limit: allow — public types and six accessible editors stay colocated by design
 
@@ -135,6 +142,43 @@ export interface SentenceFilterProps {
   id?: string
   renderControl?: (context: SentenceFilterRenderContext) => React.ReactNode
   onOpenChange?: (key: string | null) => void
+  /**
+   * Receives `semiotic/controls` observations for `number` and `range`
+   * filters: `control-start`, `control-change`, and `control-end` for each
+   * committed value, with `controlType` `"value"` (number) or
+   * `"range-boundary"` (range) and `controlId` set to the filter key. Other
+   * filter types have no numeric value and emit none.
+   */
+  onObservation?: ControlObservationCallback
+  /** Chart the filters drive, carried on observations. */
+  chartId?: string
+  /** Observation `chartType`. @default "SentenceFilter" */
+  chartType?: string
+}
+
+const OBSERVATION_SOURCES: Partial<Record<SentenceFilterChangeMeta["source"], ControlInputSource>> = {
+  pointer: "pointer",
+  keyboard: "keyboard",
+  programmatic: "programmatic",
+}
+
+/** The contract value and type for a numeric filter change, else null. */
+function numericObservation(
+  definition: SentenceFilterDefinition | undefined,
+  value: SentenceFilterValue,
+): { controlType: VisualizationControlType; value: VisualizationControlValue } | null {
+  if (definition?.type === "number" && typeof value === "number" && Number.isFinite(value)) {
+    return { controlType: "value", value }
+  }
+  if (
+    definition?.type === "range" &&
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((part) => typeof part === "number" && Number.isFinite(part))
+  ) {
+    return { controlType: "range-boundary", value: [value[0] as number, value[1] as number] }
+  }
+  return null
 }
 
 type SentenceFilterTemplateSegment =
@@ -836,6 +880,9 @@ export function SentenceFilter({
   id,
   renderControl,
   onOpenChange,
+  onObservation,
+  chartId,
+  chartType = "SentenceFilter",
 }: SentenceFilterProps): React.ReactElement {
   const [uncontrolledFilters, setUncontrolledFilters] = React.useState<
     Record<string, SentenceFilterValue>
@@ -1051,13 +1098,27 @@ export function SentenceFilter({
       const meta: SentenceFilterChangeMeta = { key, previousValue, value, source }
       onChange?.(nextFilters, meta)
       const definition = definitions[key]
+      const observation = onObservation ? numericObservation(definition, value) : null
+      if (observation) {
+        // Each committed value is a discrete change: start, change, and end.
+        const observe = createControlObservationAdapter({
+          controlType: observation.controlType,
+          controlId: key,
+          chartId,
+          chartType,
+          onObservation,
+        })
+        for (const phase of ["control-start", "control-change", "control-end"] as const) {
+          observe(phase, observation.value, OBSERVATION_SOURCES[source])
+        }
+      }
       if (definition) {
         const before = accessibleValue(definition, previousValue, previousFilters)
         const after = accessibleValue(definition, value, nextFilters)
         setAnnouncement(`${definition.label} changed from ${before} to ${after}.`)
       }
     },
-    [controlled, definitions, onChange],
+    [controlled, definitions, onChange, onObservation, chartId, chartType],
   )
 
   const fullSentence = React.useMemo(

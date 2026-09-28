@@ -54,7 +54,7 @@ describe("theGridData fixtures", () => {
     expect(reserves.length).toBe(hours.length)
     expect(operating?.ba).toBe("ERCO")
     expect(riskHours.length).toBeGreaterThan(0)
-    expect(thresholdBandsForReserve()).toHaveLength(3)
+    expect(thresholdBandsForReserve()).toHaveLength(4)
     expect(reserveMarginPct({ demand: 100, capacityOrNetGen: 110 })).toBeCloseTo(10)
   })
 

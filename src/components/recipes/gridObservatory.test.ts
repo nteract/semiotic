@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest"
 import {
+  classifyReserve,
   demandForecastRows,
   formatMw,
   formatReservePct,
   gridEventAnnotations,
   GRID_FUEL_KEYS,
   reserveAnnotationBands,
+  reserveClasses,
   reserveMarginPct,
   reserveSeries,
   stackFuelSeries,
@@ -121,6 +123,8 @@ describe("reserveSeries + tightestHours", () => {
   it("maps hours to snapshots and ranks the tightest first", () => {
     const series = reserveSeries(SAMPLE)
     expect(series).toHaveLength(3)
+    // Net load is demand minus wind and solar.
+    expect(series[0].netLoadMw).toBe(50_000 - 15_000 - 3_000)
     const tight = tightestHours(series, 2)
     expect(tight[0].t).toBe(SAMPLE[2].t)
     expect(tight[0].reserveMarginPct).toBeLessThan(tight[1].reserveMarginPct)
@@ -132,10 +136,11 @@ describe("thresholdBandsForReserve", () => {
     const rules = thresholdBandsForReserve()
     expect(rules.map((r) => r.id)).toEqual([
       "reserve-comfortable",
+      "reserve-moderate",
       "reserve-watch",
       "reserve-tight",
     ])
-    const tightStyle = rules[2].style
+    const tightStyle = rules[3].style
     expect(typeof tightStyle).toBe("object")
     if (typeof tightStyle === "object" && tightStyle && "fill" in tightStyle) {
       expect(isHatchFill(tightStyle.fill)).toBe(true)
@@ -150,17 +155,59 @@ describe("thresholdBandsForReserve", () => {
 
   it("supports a named field for XY / bar contexts", () => {
     const rules = thresholdBandsForReserve({}, { field: "reserveMarginPct" })
-    // 15% is in the watch band (default 12–20); ctx.value is ignored when field is set.
-    const resolved = resolveStyleRules({ reserveMarginPct: 15 }, rules, { value: 999 })
+    // 8% is in the watch band (default 5–12); ctx.value is ignored when field is set.
+    const resolved = resolveStyleRules({ reserveMarginPct: 8 }, rules, { value: 999 })
     expect(resolved.fill).toBe("var(--semiotic-warning, #d97706)")
   })
 })
 
 describe("reserveAnnotationBands", () => {
-  it("returns secondary y-bands for tight / watch / headroom", () => {
+  it("returns secondary y-bands for each class", () => {
     const bands = reserveAnnotationBands({ tight: 5, watch: 12, comfortable: 20 })
-    expect(bands).toHaveLength(3)
+    expect(bands.map((b) => [b.label, b.y0, b.y1])).toEqual([
+      ["Tight", -50, 5],
+      ["Watch", 5, 12],
+      ["Moderate", 12, 20],
+      ["Comfortable", 20, 50],
+    ])
     expect(bands.every((b) => b.type === "band" && b.emphasis === "secondary")).toBe(true)
+  })
+
+  it("spans the outer bands to the value extent, reaching the levels", () => {
+    const bands = reserveAnnotationBands({}, { extent: [-12, 34] })
+    expect([bands[0].y0, bands.at(-1)?.y1]).toEqual([-12, 34])
+    const narrow = reserveAnnotationBands({}, { extent: [8, 15] })
+    expect([narrow[0].y0, narrow.at(-1)?.y1]).toEqual([5, 20])
+  })
+})
+
+describe("reserve classification", () => {
+  const levels = { tight: 5, watch: 12, comfortable: 20 }
+  const rules = thresholdBandsForReserve(levels, { field: "reserveMarginPct" })
+  const bands = reserveAnnotationBands(levels)
+  const ruleLabel = (value: number) => {
+    const style = resolveStyleRules({ reserveMarginPct: value }, rules, { value })
+    return rules.find((r) => r.style === style || (typeof r.style === "object" && r.style?.fill === style.fill))?.id
+  }
+  const bandLabel = (value: number) =>
+    bands.find((b, i) => value >= b.y0 && (value < b.y1 || i === bands.length - 1))?.label
+
+  it("gives a mark's style rule and the band behind it the same class", () => {
+    for (const value of [-10, 3, 4.99, 5, 8, 11.99, 12, 15, 19.99, 20, 25, 50]) {
+      const cls = classifyReserve(value, levels)
+      expect(ruleLabel(value), `rule at ${value}`).toBe(`reserve-${cls?.id}`)
+      expect(bandLabel(value), `band at ${value}`).toBe(cls?.name)
+    }
+    expect(classifyReserve(8, levels)?.id).toBe("watch")
+    expect(classifyReserve(Number.NaN, levels)).toBeNull()
+  })
+
+  it("raises crossed levels and drops empty classes", () => {
+    expect(reserveClasses({ tight: 10, watch: 4, comfortable: 30 }).map((c) => [c.id, c.min, c.max])).toEqual([
+      ["tight", undefined, 10],
+      ["moderate", 10, 30],
+      ["comfortable", 30, undefined],
+    ])
   })
 })
 
@@ -198,6 +245,16 @@ describe("gridEventAnnotations", () => {
     expect(anns[0].x0).toBe(1_700_000_000_000)
     expect((anns[0].provenance as { stableId: string }).stableId).toBe("heat-1")
     expect((anns[0].lifecycle as { status: string }).status).toBe("accepted")
+    expect((anns[0].lifecycle as { ttlHint: string }).ttlHint).toBe("P14D")
+    expect(anns[0].provenance).not.toHaveProperty("confidence")
+  })
+
+  it("stamps a caller-supplied provenance confidence", () => {
+    const [ann] = gridEventAnnotations(
+      [{ id: "e", start: 0, end: 1, label: "E" }],
+      { confidence: 0.6 },
+    )
+    expect((ann.provenance as { confidence: number }).confidence).toBe(0.6)
   })
 })
 
