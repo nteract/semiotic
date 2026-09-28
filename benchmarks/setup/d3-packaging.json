@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "package": "3.11.0",
-  "generatedAt": "2026-09-27T22:20:35.676Z",
+  "package": "3.11.1",
+  "generatedAt": "2026-09-28T15:37:47.350Z",
   "environment": {
     "platform": "darwin",
     "architecture": "arm64",
@@ -30,10 +30,10 @@
     ]
   },
   "bundledVariant": {
-    "rawBytes": 1455841,
-    "gzipBytes": 473254,
-    "files": 62,
-    "outputFiles": 56
+    "rawBytes": 1481388,
+    "gzipBytes": 483303,
+    "files": 65,
+    "outputFiles": 59
   },
   "d3InstallClosure": {
     "directPackages": 12,
@@ -70,20 +70,20 @@
       "subpath": "xy",
       "symbol": "LineChart",
       "externalized": {
-        "rawBytes": 459060,
-        "gzipBytes": 150523,
+        "rawBytes": 462785,
+        "gzipBytes": 152114,
         "files": 10,
         "resolvedD3Modules": 29
       },
       "bundled": {
-        "rawBytes": 538538,
-        "gzipBytes": 169967,
+        "rawBytes": 562530,
+        "gzipBytes": 178800,
         "files": 13,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 79478,
-        "gzipBytes": 19444
+        "rawBytes": 99745,
+        "gzipBytes": 26686
       }
     },
     {
@@ -91,20 +91,20 @@
       "subpath": "ordinal",
       "symbol": "BarChart",
       "externalized": {
-        "rawBytes": 448837,
-        "gzipBytes": 134098,
+        "rawBytes": 450473,
+        "gzipBytes": 134626,
         "files": 4,
         "resolvedD3Modules": 6
       },
       "bundled": {
-        "rawBytes": 463747,
-        "gzipBytes": 138193,
+        "rawBytes": 465404,
+        "gzipBytes": 138765,
         "files": 4,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 14910,
-        "gzipBytes": 4095
+        "rawBytes": 14931,
+        "gzipBytes": 4139
       }
     },
     {
@@ -112,20 +112,20 @@
       "subpath": "network",
       "symbol": "SankeyDiagram",
       "externalized": {
-        "rawBytes": 622173,
-        "gzipBytes": 204657,
+        "rawBytes": 622673,
+        "gzipBytes": 204864,
         "files": 9,
         "resolvedD3Modules": 23
       },
       "bundled": {
-        "rawBytes": 621280,
-        "gzipBytes": 204415,
+        "rawBytes": 621833,
+        "gzipBytes": 204508,
         "files": 9,
         "resolvedD3Modules": 4
       },
       "delta": {
-        "rawBytes": -893,
-        "gzipBytes": -242
+        "rawBytes": -840,
+        "gzipBytes": -356
       }
     },
     {
@@ -133,20 +133,20 @@
       "subpath": "geo",
       "symbol": "ChoroplethMap",
       "externalized": {
-        "rawBytes": 1825732,
-        "gzipBytes": 574487,
+        "rawBytes": 1826191,
+        "gzipBytes": 574771,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "bundled": {
-        "rawBytes": 1839441,
-        "gzipBytes": 578755,
+        "rawBytes": 1840003,
+        "gzipBytes": 578971,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 13709,
-        "gzipBytes": 4268
+        "rawBytes": 13812,
+        "gzipBytes": 4200
       }
     }
   ],
@@ -156,18 +156,18 @@
       "symbol": "LineChart"
     },
     "externalized": {
-      "rawBytes": 1371126,
-      "gzipBytes": 430128,
+      "rawBytes": 1374720,
+      "gzipBytes": 431077,
       "files": 27
     },
     "bundled": {
-      "rawBytes": 1461077,
-      "gzipBytes": 453064,
+      "rawBytes": 1484745,
+      "gzipBytes": 462271,
       "files": 32
     },
     "delta": {
-      "rawBytes": 89951,
-      "gzipBytes": 22936
+      "rawBytes": 110025,
+      "gzipBytes": 31194
     }
   },
   "decision": {

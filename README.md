@@ -26,25 +26,24 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.11.0
+## What's New in 3.11.1
 
-3.11.0 improves chart correctness as data changes, layouts resize, and charts
-move between interactive views and static exports.
+3.11.1 improves multi-series tooltips, histogram linking, minimap brushing,
+and consistency between interactive charts and static exports.
 
-- Aggregation, histogram imports, hierarchy values, and statistical overlays
-  preserve the quantities and grouping in the source data.
-- Resizing keeps marks, axes, tooltips, and keyboard focus aligned; accessible
-  tables retain focus and live regions announce deliberate keyboard interaction.
-- Sankey, ProcessSankey, force, and other network layouts handle cycles, worker
-  failures, and live mutations more reliably with less repeated work.
-- Physics settling preserves arrivals and confinement; MCP uploads have bounded
-  admission and deadlines.
-- Tooltip wrappers can use the exported `hasTooltipContent` helper, and `rollup`
-  supports multiple grouping fields and a named output field.
+- Histogram tooltips expose stacked categories and source rows through
+  `getSourceRows`; multi-series hover and keyboard focus preserve every series.
+- The accessible `LinearBrush` control powers MinimapChart's themed overview
+  brush, with custom handles, extent labels, and end-of-gesture callbacks.
+- XY charts expose `showAxes`, `adaptiveTimeTicks` supports shorter labels,
+  and GaugeChart adds a native SVG `centerLabel`.
+- BumpChart labels, chart opacity, responsive modes, and brushed domains align
+  more closely across browser and server rendering.
+- Layout fit helpers and network camera utilities let overlays and minimaps
+  share the graph's coordinate transforms.
 
-See [the changelog](CHANGELOG.md#3110---2026-09-27) and the
-[release post](https://semiotic.nteract.io/blog/release-3-11-0) for details and
-upgrade notes.
+See [the changelog](CHANGELOG.md#3111---2026-09-28) for details, including
+MinimapChart brush DOM and gesture changes that may affect custom CSS or tests.
 
 ## Why Semiotic
 
