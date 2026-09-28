@@ -12,6 +12,8 @@ import {
 } from "./BumpChart"
 import { LIGHT_THEME, ThemeProvider } from "../../ThemeProvider"
 import { isMultiTooltipConfig } from "../../Tooltip/Tooltip"
+import { adaptiveTimeTicks } from "../shared/formatUtils"
+import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 
 let capturedProps: XYCustomChartProps | null = null
 
@@ -153,6 +155,78 @@ describe("BumpChart", () => {
     expect(capturedProps?.layoutConfig).toMatchObject({
       ribbon: true,
       seriesOrder: ["Alpha", "Bravo", "Cinder"],
+    })
+  })
+
+  it("hands index-aware x formatters the rendered ticks as authored dates", () => {
+    const days = [Date.UTC(2026, 8, 29), Date.UTC(2026, 8, 30), Date.UTC(2026, 9, 1)]
+    const dated = days.flatMap((day, i) => [
+      { day: new Date(day), team: "Alpha", score: 10 + i },
+      { day: new Date(day), team: "Bravo", score: 12 - i },
+    ])
+    render(<BumpChart data={dated} xAccessor="day" yAccessor="score" lineBy="team" xFormat={adaptiveTimeTicks("days")} />)
+    const axes = capturedProps?.frameProps?.axes as Array<{ orient: string; tickFormat: (v: number, i?: number, all?: number[]) => string }>
+    const bottom = axes.find((axis) => axis.orient === "bottom")!
+    const ticks = [0, 1, 2]
+    expect(ticks.map((tick, index) => bottom.tickFormat(tick, index, ticks))).toEqual(["Sep 29, 2026", "30", "Oct 1"])
+    expect(bottom.tickFormat(1)).toBe("Sep 30, 2026")
+  })
+
+  describe("endpoint label margins", () => {
+    const long = "Northern Territories Region"
+    const teams = (names: string[]) => [0, 1].flatMap(x => names.map((team, i) => ({ x, team, y: i + x })))
+    const renderBump = (props: Record<string, unknown>) => {
+      render(<BumpChart data={teams(["Alpha", "Beta"])} lineBy="team" width={600} height={300} {...props} />)
+      return capturedProps?.margin as Record<string, number>
+    }
+
+    it("keeps the classic margins for short labels", () => {
+      expect(renderBump({})).toEqual({ top: 20, right: 110, bottom: 48, left: 48 })
+    })
+
+    it("grows labeled sides for long labels", () => {
+      const end = renderBump({ data: teams(["Alpha", long]) })
+      expect(end.right).toBeGreaterThan(110)
+      expect(end.left).toBe(48)
+      const both = renderBump({ data: teams(["Alpha", long]), showLabels: "both" })
+      expect(both.left).toBeGreaterThan(48)
+      expect(both.right).toBe(end.right)
+      expect(capturedProps?.layoutConfig).toMatchObject({ labelBudget: { start: expect.any(Number), end: expect.any(Number) } })
+    })
+
+    it("merges partial, numeric, and frameProps margins over the label-aware defaults", () => {
+      const data = teams(["Alpha", long])
+      const aware = renderBump({ data })
+      expect(renderBump({ data, margin: { right: 64 } })).toEqual({ ...aware, right: 64 })
+      expect(renderBump({ data, margin: 30 })).toEqual({ top: 30, right: 30, bottom: 30, left: 30 })
+      expect(renderBump({ data, frameProps: { margin: { top: 5 } } })).toEqual({ ...aware, top: 5 })
+      expect((capturedProps?.frameProps as Record<string, unknown>).margin).toBeUndefined()
+    })
+
+    it("shares the end side with a right legend and gutters the legend past the labels", () => {
+      const endBudget = () => (capturedProps?.layoutConfig as { labelBudget: { end: number } }).labelBudget.end
+      const gutter = () => (capturedProps?.frameProps as { legendLayout?: { sideGutter?: number } }).legendLayout?.sideGutter
+      renderBump({ data: teams(["Alpha", long]) })
+      const alone = endBudget()
+      renderBump({ data: teams(["Alpha", long]), showLegend: true })
+      expect(endBudget()).toBeLessThan(alone)
+      expect(gutter()).toBeCloseTo(8 + 4 + endBudget())
+      renderBump({ data: teams(["Alpha", long]), showLegend: true, frameProps: { legendLayout: { sideGutter: 3 } } })
+      expect(gutter()).toBe(3)
+    })
+
+    it.each([
+      [{}],
+      [{ showLabels: "both" }],
+      [{ margin: { right: 64 } }],
+      [{ frameProps: { margin: { left: 90 } } }],
+      // A hidden rank axis must not take the start labels' room.
+      [{ showLabels: "both", frameProps: { axes: [{ orient: "left", visible: false }, { orient: "bottom" }] } }],
+    ])("matches renderChart's margin with %j", (extra) => {
+      const props = { data: teams(["Alpha", long]), lineBy: "team", width: 600, height: 300, ...extra }
+      const browser = renderBump(props)
+      const { evidence } = renderChartWithEvidence("BumpChart", props)
+      expect(evidence.margin).toEqual(browser)
     })
   })
 

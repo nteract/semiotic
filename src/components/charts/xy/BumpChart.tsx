@@ -9,14 +9,18 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 import type { StyleRule } from "../shared/styleRules"
-import { useThemeCategorical } from "../shared/hooks"
+import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 import { useTheme } from "../../ThemeProvider"
 import { useBumpTooltip } from "./bumpTooltip"
 import { bumpLayout, type BumpLayoutConfig } from "./bumpLayout"
+import { resolveBumpLabelLayout, resolveBumpLabelSpace } from "./bumpLabelMargins"
+import { normalizePartialMargin, type MarginType } from "../../types/marginType"
 import {
   mapBumpAnnotations,
+  normalizeBumpColor,
+  normalizeBumpCount,
   rankBumpData,
   resolveBumpColorScheme,
 } from "./bumpData"
@@ -76,6 +80,7 @@ export interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartP
   labelPriorityAccessor?: ChartAccessor<TDatum, number>
   /** Optional hard cap on visible labels when `showLabels="auto"`. */
   maxLabels?: number
+  /** Show the rank and x axes. Defaults to the chart mode; an explicit value wins, and matching `responsiveRules` win over it. */
   showAxes?: boolean
   showGrid?: boolean
   showLegend?: boolean
@@ -141,8 +146,8 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     ribbonSizeRange = [4, 28],
     samplesPerSegment = 12,
     lineWidth = 3,
-    highlightTop,
-    neutralColor,
+    highlightTop: highlightTopProp,
+    neutralColor: neutralColorProp,
     styleRules,
     labelStyle,
     colorScheme,
@@ -153,7 +158,6 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showLabels = true,
     labelPriorityAccessor,
     maxLabels,
-    showAxes = true,
     showGrid = true,
     showLegend = false,
     enableHover = true,
@@ -165,6 +169,19 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     onClick,
   } = props
 
+  // Normalized as in renderChart, so JSON-sourced props behave identically.
+  const highlightTop = normalizeBumpCount(highlightTopProp)
+  const neutralColor = normalizeBumpColor(neutralColorProp)
+  const bumpColor = normalizeBumpColor(props.color)
+
+  // Axes follow the chart mode and responsive rules, as in renderChart.
+  const modeAxes = useChartMode(props.mode, {
+    width: props.width,
+    height: props.height,
+    showAxes: props.showAxes,
+    responsiveRules: props.responsiveRules,
+  })
+
   const ranked = useMemo(
     () => rankBumpData(data, { xAccessor, yAccessor, lineBy, rankDirection, highlightTop }),
     [data, xAccessor, yAccessor, lineBy, rankDirection, highlightTop],
@@ -174,15 +191,43 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     axes: userAxes,
     areaStyle: frameAreaStyle,
     pointStyle: framePointStyle,
+    margin: frameMargin,
     ...restFrameProps
   } = frameProps
+
+  // Endpoint labels reserve room from their text on the labeled sides.
+  // Caller margins (top-level, else frameProps) merge over those defaults.
+  const labelFontSize = typeof labelStyle === "object" && typeof labelStyle?.fontSize === "number"
+    ? labelStyle.fontSize
+    : 12
+  const legendPosition = props.legendPosition ?? "right"
+  const legendSide = showLegend && (legendPosition === "left" || legendPosition === "right")
+    ? legendPosition
+    : undefined
+  const labelLayout = useMemo(() => resolveBumpLabelLayout({
+    labels: ranked.seriesOrder,
+    showLabels,
+    width: modeAxes.width,
+    showAxes: modeAxes.showAxes,
+    rankCount: ranked.seriesOrder.length,
+    yLabel: props.yLabel ?? "Rank",
+    fontSize: labelFontSize,
+    legendSide,
+  }), [ranked.seriesOrder, showLabels, modeAxes.width, modeAxes.showAxes, props.yLabel, labelFontSize, legendSide])
+  const explicitMargin = props.margin ?? frameMargin
+  const margin = useMemo<MarginType>(
+    () => ({ ...labelLayout.margin, ...normalizePartialMargin(explicitMargin) }),
+    [labelLayout, explicitMargin],
+  )
+  const labelSpace = useMemo(() => resolveBumpLabelSpace(margin, labelLayout), [margin, labelLayout])
+  const legendSideGutter = legendSide ? labelSpace.sideGutter[legendSide] : undefined
 
   const resolvedColorScheme = useMemo(
     () => resolveBumpColorScheme({
       seriesOrder: ranked.seriesOrder,
       overallOrder: ranked.overallOrder,
       highlightTop,
-      color: props.color,
+      color: bumpColor,
       colorScheme,
       neutralColor,
       themeCategorical,
@@ -192,7 +237,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
       ranked.seriesOrder,
       ranked.overallOrder,
       highlightTop,
-      props.color,
+      bumpColor,
       colorScheme,
       neutralColor,
       themeCategorical,
@@ -211,7 +256,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     ribbonOpacity,
     lineOpacity,
     neutralColor,
-    color: props.color,
+    color: bumpColor,
     colorMap: resolvedColorScheme && typeof resolvedColorScheme === "object" && !Array.isArray(resolvedColorScheme)
       ? resolvedColorScheme
       : undefined,
@@ -227,12 +272,15 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
     showLabels,
     labelPriorityAccessor: labelPriorityAccessor as BumpLayoutConfig["labelPriorityAccessor"],
     maxLabels,
+    startLabelOffset: labelLayout.startLabelOffset,
+    labelBudget: labelSpace.budget,
+    labelFontSize,
   }), [
     ribbon, curve, samplesPerSegment, ribbonSizeRange, ranked.valueExtent,
     ranked.seriesOrder, lineWidth, ribbonOpacity, lineOpacity, neutralColor, resolvedColorScheme,
-    props.color, props.stroke, props.strokeWidth, props.opacity, styleRules,
+    bumpColor, props.stroke, props.strokeWidth, props.opacity, styleRules,
     frameAreaStyle, framePointStyle, labelStyle, showPoints, pointRadius, showLabels,
-    labelPriorityAccessor, maxLabels,
+    labelPriorityAccessor, maxLabels, labelLayout.startLabelOffset, labelSpace.budget, labelFontSize,
   ])
 
   const { tooltip: resolvedTooltip, formatX } = useBumpTooltip<TDatum>({
@@ -283,7 +331,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
       layoutConfig={layoutConfig}
       xExtent={[0, Math.max(1, ranked.xValues.length - 1)]}
       yExtent={[maxRank + 0.5, 0.5]}
-      showAxes={showAxes}
+      showAxes={modeAxes.showAxes}
       showGrid={showGrid}
       showLegend={showLegend}
       enableHover={enableHover}
@@ -302,7 +350,7 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
       mobileInteraction={props.mobileInteraction}
       mobileSemantics={props.mobileSemantics}
       mode={props.mode}
-      margin={props.margin ?? { top: 20, right: showLabels ? 110 : 24, bottom: 48, left: 48 }}
+      margin={margin}
       className={props.className}
       title={props.title}
       description={props.description}
@@ -327,6 +375,12 @@ export const BumpChart = forwardRef(function BumpChart<TDatum extends Datum = Da
         axes,
         axisExtent: "exact",
         ...restFrameProps,
+        // Composes after the frameProps spread: a side legend that shares a
+        // margin with endpoint labels starts past them, unless the caller set
+        // its own legendLayout.sideGutter.
+        ...(legendSideGutter != null && restFrameProps.legendLayout?.sideGutter == null && {
+          legendLayout: { ...restFrameProps.legendLayout, sideGutter: legendSideGutter },
+        }),
       }}
     />
   )

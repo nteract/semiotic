@@ -11,6 +11,7 @@ import { buildBumpRibbonGeometry } from "../../geometry/bumpRibbonGeometry"
 import { resolveExplicitColor } from "../shared/colorUtils"
 import type { Datum } from "../shared/datumTypes"
 import { resolveStyleRules, type StyleRule } from "../shared/styleRules"
+import { truncateBumpLabel } from "./bumpLabelMargins"
 import type { RankedBumpDatum } from "./bumpData"
 
 export interface BumpLayoutConfig {
@@ -38,6 +39,12 @@ export interface BumpLayoutConfig {
   showLabels: boolean | "start" | "end" | "both" | "auto"
   labelPriorityAccessor?: string | ((datum: Datum) => number)
   maxLabels?: number
+  /** Distance from the first column to start labels, clearing the rank ticks. @default 8 */
+  startLabelOffset?: number
+  /** Label text width available on each side; longer labels truncate with "…". */
+  labelBudget?: { start: number; end: number }
+  /** Font size the label budget was estimated with. @default 12 */
+  labelFontSize?: number
 }
 
 export interface BumpLabelSelectionCandidate {
@@ -91,6 +98,9 @@ function BumpLabel({
   color,
   highlighted,
   labelStyle,
+  offset,
+  budget,
+  fontSize,
 }: {
   datum: RankedBumpDatum
   x: number
@@ -99,16 +109,22 @@ function BumpLabel({
   color: string
   highlighted: boolean
   labelStyle?: React.CSSProperties | ((datum: Datum) => React.CSSProperties)
+  offset: number
+  budget?: number
+  fontSize: number
 }): React.ReactElement {
   const selection = useCustomLayoutSelection()
   const dimmed = selection.isActive && !selection.predicate(datum)
   const customStyle = typeof labelStyle === "function"
     ? labelStyle(datum.__bumpRaw)
     : labelStyle
+  const label = budget == null
+    ? { text: datum.__bumpSeries, truncated: false }
+    : truncateBumpLabel(datum.__bumpSeries, budget, fontSize)
   return (
     <text
       className="semiotic-bump-label"
-      x={x + (side === "end" ? 8 : -8)}
+      x={x + (side === "end" ? offset : -offset)}
       y={y}
       dy="0.35em"
       textAnchor={side === "end" ? "start" : "end"}
@@ -123,7 +139,8 @@ function BumpLabel({
         ...customStyle,
       }}
     >
-      {datum.__bumpSeries}
+      {label.truncated && <title>{datum.__bumpSeries}</title>}
+      {label.text}
     </text>
   )
 }
@@ -304,6 +321,9 @@ export function bumpLayout(ctx: LayoutContext<BumpLayoutConfig>): LayoutResult {
         color={candidate.color}
         highlighted={candidate.highlighted}
         labelStyle={config.labelStyle}
+        offset={candidate.side === "end" ? 8 : config.startLabelOffset ?? 8}
+        budget={config.labelBudget?.[candidate.side]}
+        fontSize={config.labelFontSize ?? 12}
       />,
     )
   }

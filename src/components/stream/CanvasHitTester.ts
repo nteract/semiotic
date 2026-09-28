@@ -185,6 +185,37 @@ function interpolatePathAtX(path: [number, number][], px: number, maxXDistance: 
 }
 
 /**
+ * Clamp a plot-space x into the rendered x range of the hoverable series:
+ * the union of every line path and interactive area top path, sampled the
+ * same way `findAllNodesAtX` samples them. Multi-series hover calls this so
+ * padded or explicit `xExtent` space reads the first or last sample instead
+ * of finding nothing. Returns `px` unchanged when no series has two points.
+ */
+export function clampToSeriesXRange(scene: SceneNode[], px: number): number {
+  let min = Infinity
+  let max = -Infinity
+  for (const node of scene) {
+    let lookup: [number, number][] | undefined
+    if (node.type === "line") {
+      const lineNode = node as LineSceneNode
+      if (lineNode.path.length >= 2) lookup = getCurveSampledPath(lineNode.path, lineNode.curve)
+    } else if (node.type === "area") {
+      const areaNode = node as AreaSceneNode
+      if (areaNode.interactive !== false && areaNode.topPath.length >= 2) {
+        lookup = getCurveSampledPath(areaNode.topPath, areaNode.curve)
+      }
+    }
+    if (!lookup || lookup.length === 0) continue
+    const first = lookup[0][0]
+    const last = lookup[lookup.length - 1][0]
+    min = Math.min(min, first, last)
+    max = Math.max(max, first, last)
+  }
+  if (min > max) return px
+  return Math.min(max, Math.max(min, px))
+}
+
+/**
  * Find all line/area nodes at a given X pixel coordinate.
  * For each node, interpolates the Y value at px using the path data.
  * Used for multi-point tooltip (show all series values at the hovered X).

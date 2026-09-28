@@ -51,7 +51,12 @@ const analyze = process.argv.includes("--analyze")
 // measure 389.0 KiB gzip on the same union. Keep ~1 KiB of headroom.
 // Bumped 390→392: the published Atlas reader catalog and shared accessibility
 // surface add 1.4 KiB gzip to the representative union (391.4 KiB measured).
-const MULTI_IMPORT_GZIP_BUDGET = 392 * 1024
+// Bumped 392→393: multi-series edge snapping, histogram category breakdowns,
+// and column multi hover reach the shared client graph (392.4 KiB measured).
+// Bumped 393→395: bin time-range selection matching, index-aware tick
+// relabeling, top-level showAxes, and BumpChart label margins measure
+// 393.9 KiB on the same union.
+const MULTI_IMPORT_GZIP_BUDGET = 395 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

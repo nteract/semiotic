@@ -10,6 +10,7 @@ import {
   type CanvasContextMock
 } from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
+import { BRUSH_ACCENT } from "./brushTheme"
 
 const publicFramePropsMustNotExposeInternalColorResolution: StreamXYFrameProps =
   {
@@ -940,6 +941,10 @@ describe("StreamXYFrame", () => {
       await waitFor(() => {
         expect(container.querySelector(".brush-g")).toBeTruthy()
       })
+      const selection = container.querySelector(".brush-g .selection")!
+      expect(selection.getAttribute("fill")).toBe(BRUSH_ACCENT)
+      expect(selection.getAttribute("stroke")).toBe(BRUSH_ACCENT)
+      expect(selection.getAttribute("fill-opacity")).toBe("0.15")
     })
 
     it("does not render brush overlay when brush prop is absent", () => {

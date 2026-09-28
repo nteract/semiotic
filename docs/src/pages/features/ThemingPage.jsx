@@ -187,7 +187,7 @@ const themeShapeProps = [
     type: "string",
     required: false,
     default: "undefined",
-    description: "Linked hover/brush highlight color. Maps to --semiotic-selection-color.",
+    description: "Linked hover and brush selection color; brushes fall back to colors.primary. Maps to --semiotic-selection-color.",
   },
   {
     name: "colors.selectionOpacity",

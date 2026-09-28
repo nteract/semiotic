@@ -80,6 +80,7 @@ const scatterplotProps = [
   { name: "pointOpacity", type: "number", required: false, default: "0.8", description: "Opacity of the points." },
   { name: "regression", type: "boolean | string | object", required: false, default: null, description: "Overlay a regression line. true = linear, \"linear\" | \"polynomial\" | \"loess\" = method, or a full RegressionConfig object. Sugar over the trend annotation." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend. Defaults to true when colorBy is specified." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },

@@ -210,12 +210,13 @@ function xySceneNodeToSVGMark(
         : areaHatch
           ? `url(#${areaHatchId})`
           : svgFill(n.style.fill)
-      // Canvas applies `style.opacity` to a gradient as a whole, while the
-      // gradient's stops control its internal alpha. Do not additionally
-      // apply the flat-area `fillOpacity`, which would dim stop opacities.
+      // Canvas multiplies a flat fill's `fillOpacity` (default 0.7) by
+      // `style.opacity`; SVG composes the same product from `fill-opacity`
+      // and `opacity`. A gradient takes `style.opacity` alone, since its stops
+      // carry their own alpha.
       const areaFillOpacity = areaGradient
         ? undefined
-        : (n.style.fillOpacity ?? n.style.opacity ?? 0.7)
+        : (n.style.fillOpacity ?? 0.7)
       // Canvas fills the closed area, then strokes only its top edge. SVG's
       // `stroke` on the closed fill path outlines the baseline and vertical
       // ends too, producing the conspicuous SSR-only border.
@@ -368,7 +369,7 @@ function xySceneNodeToSVGMark(
                 d={d}
                 fill={areaFill}
                 fillOpacity={areaFillOpacity}
-                opacity={areaGradient ? n.style.opacity : undefined}
+                opacity={n.style.opacity}
                 stroke="none"
               />
               {topStroke}
@@ -394,7 +395,7 @@ function xySceneNodeToSVGMark(
             d={d}
             fill={areaFill}
             fillOpacity={areaFillOpacity}
-            opacity={areaGradient ? n.style.opacity : undefined}
+            opacity={n.style.opacity}
             stroke="none"
           />
           {topStroke}

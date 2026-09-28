@@ -37,6 +37,14 @@ const tooltipStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = { opacity: 0.7, marginRight: 4 }
 
+const swatchStyle: React.CSSProperties = {
+  display: "inline-block",
+  width: 8,
+  height: 8,
+  borderRadius: "50%",
+  marginRight: 6,
+}
+
 interface DefaultRealtimeTooltipOptions<TDatum extends Datum = Datum> {
   timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   valueAccessor?: ChartAccessor<TDatum, number>
@@ -87,6 +95,36 @@ export function buildDefaultRealtimeTooltip<TDatum extends Datum = Datum>(
       <div className="semiotic-tooltip" style={tooltipStyle}>
         <div><span style={labelStyle}>{xLabel}:</span>{format(x)}</div>
         <div><span style={labelStyle}>{yLabel}:</span>{format(y)}</div>
+      </div>
+    )
+  }
+}
+
+/**
+ * Multi-series histogram tooltip (`tooltip="multi"`): the hovered bin's
+ * range, one colored row per stacked category from bottom to top, and the
+ * bin total. Without column rows it renders `buildHistogramTooltip`.
+ */
+export function buildHistogramMultiTooltip<TDatum extends Datum = Datum>(
+  options: DefaultRealtimeTooltipOptions<TDatum> = {},
+): (d: HoverData) => ReactNode {
+  const single = buildHistogramTooltip(options)
+  return (d: HoverData) => {
+    const rows = d?.allSeries
+    const datum = (d?.data ?? null) as { binStart?: number; binEnd?: number; total?: number } | null
+    if (!rows?.length || datum?.binStart == null || datum.binEnd == null) return single(d)
+    return (
+      <div className="semiotic-tooltip" style={tooltipStyle}>
+        <div><span style={labelStyle}>range:</span>{format(datum.binStart)}–{format(datum.binEnd)}</div>
+        {rows.map((row, i) => row.group !== "" && (
+          <div key={i}>
+            <span style={{ ...swatchStyle, backgroundColor: row.color }} />
+            <span style={labelStyle}>{row.group}:</span>{format(row.value)}
+          </div>
+        ))}
+        {datum.total != null && (
+          <div><span style={labelStyle}>count:</span>{format(datum.total)}</div>
+        )}
       </div>
     )
   }
@@ -184,6 +222,9 @@ export function buildHistogramTooltip<TDatum extends Datum = Datum>(
         )}
         {datum!.category != null && (
           <div><span style={labelStyle}>category:</span>{format(datum!.category)}</div>
+        )}
+        {datum!.category != null && datum!.categoryValue != null && (
+          <div><span style={labelStyle}>category count:</span>{format(datum!.categoryValue)}</div>
         )}
       </div>
     )

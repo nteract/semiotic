@@ -45,6 +45,8 @@ interface ParityCase {
   comparison?: "pixel" | "structural"
   /** Legend text that must remain fully inside both fixed chart viewports. */
   visibleLegendLabel?: string
+  /** Every match (and its count) must stay inside the chart and clear the legend. */
+  containedSelector?: { selector: string; count: number }
   dependencyEvidence?: DependencyXRayEvidence
   circuitEvidence?: FlowCircuitEvidence
 }
@@ -368,6 +370,11 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(evidence.markCountByType.area).toBe(4)
     expect(evidence.markCountByType.point ?? 0).toBe(0)
   }
+  // highlightTop: neutral trajectories fade to 0.58 on both backends.
+  if (id === "bump-highlight" || id === "bump-ribbon-highlight") {
+    expect(evidence.markCountByType.area).toBe(4)
+    expect(svg).toMatch(/fill-opacity="1" opacity="0\.58"/)
+  }
   // band draws a filled envelope that follows the line's curve. SSR dropped
   // the band; the ribbon also used to ignore the curve (straight edges).
   if (id === "line-band") {
@@ -462,6 +469,11 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
     expect(evidence.frameType).toBe("geo")
     expect(evidence.markCount).toBeGreaterThan(0)
     expect(svg).toContain("<circle")
+  }
+  if (id === "minimap-composite-styled") {
+    expect(svg.match(/data-semiotic-brush-part="mask"/g)).toHaveLength(2)
+    expect(svg.match(/class="semiotic-brush-handle"/g)).toHaveLength(3)
+    expect(svg).toContain("<tspan")
   }
   if (id === "minimap-composite") {
     expect(evidence.frameType).toBe("xy")
@@ -652,11 +664,11 @@ test.describe("SSR / CSR parity", () => {
       } else {
         await waitForChartReady(page, `csr-${c.id}`)
       }
-      if (c.id === "minimap-composite") {
+      if (c.id.startsWith("minimap-composite")) {
         // Canvas readiness does not include the asynchronously loaded brush.
-        // Compare the complete controlled selection, including its SVG overlay.
+        // Compare the complete controlled selection, including its overlay.
         await expect(
-          page.locator(`[data-testid="csr-${c.id}"] .brush-group .selection`)
+          page.locator(`[data-testid="csr-${c.id}"] [data-semiotic-brush-part="selection"]`)
         ).toBeVisible()
       }
 
@@ -739,6 +751,31 @@ test.describe("SSR / CSR parity", () => {
           expect(labelBox, `${c.id}: legend label ${c.visibleLegendLabel} must render`).not.toBeNull()
           expect(labelBox!.x).toBeGreaterThanOrEqual(visualBox!.x)
           expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(visualBox!.x + visualBox!.width + 0.5)
+        }
+      }
+      if (c.containedSelector) {
+        const { selector, count } = c.containedSelector
+        const boxesOf = (locator: typeof ssrVisual) =>
+          locator.evaluateAll((elements) =>
+            elements.map((element) => {
+              const rect = element.getBoundingClientRect()
+              return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom }
+            }),
+          )
+        for (const visual of [ssrVisual, csrVisual]) {
+          const bounds = (await visual.boundingBox())!
+          const boxes = await boxesOf(visual.locator(selector))
+          const legends = await boxesOf(visual.locator(".legend-item, .semiotic-legend"))
+          expect(boxes, `${c.id}: every ${selector} must render`).toHaveLength(count)
+          for (const box of boxes) {
+            expect(box.x).toBeGreaterThanOrEqual(bounds.x - 0.5)
+            expect(box.right).toBeLessThanOrEqual(bounds.x + bounds.width + 0.5)
+            for (const legend of legends) {
+              const overlaps = box.x < legend.right && legend.x < box.right &&
+                box.y < legend.bottom && legend.y < box.bottom
+              expect(overlaps, `${c.id}: ${selector} must clear the legend`).toBe(false)
+            }
+          }
         }
       }
       const currentDiff = await compareCurrentPanels(page, ssrVisual, csrVisual)

@@ -3,6 +3,8 @@ import type { StreamChartType, StreamLayout, SceneNode } from "../types"
 import type { StreamRendererFn } from "../renderers/types"
 import type { XYSceneContext } from "../xySceneBuilders/types"
 import type { BarSceneResult } from "../xySceneBuilders/barScene"
+import type { HoverData } from "../../realtime/types"
+import type { PipelineStore } from "../PipelineStore"
 
 /**
  * Register XY scene + canvas plugins with a value import of the plugin.
@@ -21,10 +23,22 @@ export type XYSceneBuilder = (
   layout: StreamLayout,
 ) => XYSceneBuildResult
 
+/**
+ * Chart-specific multi-series hover (for example every bar in a histogram
+ * column). When present it replaces the frame's line/area interpolation.
+ */
+export type XYMultiHover = (
+  hover: HoverData,
+  store: Pick<PipelineStore, "scene" | "scales">,
+  px: number,
+  options: { hasHit: boolean; fallbackColor: string }
+) => HoverData
+
 export interface XYChartPlugin {
   chartType: StreamChartType
   buildScene: XYSceneBuilder
   canvasRenderers: StreamRendererFn[]
+  multiHover?: XYMultiHover
 }
 
 const registry: Partial<Record<StreamChartType, XYChartPlugin>> = Object.create(null)

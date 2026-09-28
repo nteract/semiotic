@@ -226,6 +226,9 @@ export { getHitRadius } from "./stream/hitTestUtils"
 // Collapse the wrapped-vs-raw datum split that bites onObservation consumers:
 // always yields the raw user object whether the frame wrapped it or not.
 export { unwrapDatum } from "./recipes/recipeUtils"
+// Authored rows behind an aggregate mark (a histogram bin, stacked segment,
+// or `categories` entry), read from the datum or the hover that wraps it.
+export { getSourceRows } from "./store/selectionProvenance"
 
 // ── Serialization ────────────────────────────────────────────────────────
 export {

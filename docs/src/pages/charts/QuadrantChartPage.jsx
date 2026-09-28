@@ -98,6 +98,7 @@ const quadrantChartProps = [
   { name: "pointRadius", type: "number", required: false, default: "5", description: "Default point radius." },
   { name: "pointOpacity", type: "number", required: false, default: "0.8", description: "Opacity of the points." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover tooltips." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend." },
   { name: "tooltip", type: "boolean | object | function", required: false, default: null, description: "Enable/disable default tooltip (boolean), or provide a config object or render function." },

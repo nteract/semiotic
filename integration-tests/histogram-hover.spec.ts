@@ -39,6 +39,55 @@ async function hoverColumn(
   )
 }
 
+test("multi histogram tooltip lists every category above the stacks and at bin edges", async ({
+  page
+}) => {
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  await page.goto("/chart-features-examples/?histogram-hover&bounded&multi")
+  const chart = page.getByTestId("histogram-hover")
+  const tooltip = chart.locator(".stream-frame-tooltip")
+  await expect
+    .poll(async () => (await columnPixels(chart))[0][1])
+    .toEqual([200, 50, 50, 255])
+
+  // Stacks reach 8 of the 10-unit value extent, so the band under the top
+  // grid line is empty. The title band sits above that line.
+  const aboveStacks = async () => {
+    const canvasTop = (await chart.locator("canvas").first().boundingBox())!.y
+    const gridTop = await chart
+      .locator(".stream-grid line")
+      .evaluateAll((lines) => Math.min(...lines.map((line) => line.getBoundingClientRect().top)))
+    return gridTop - canvasTop + 8
+  }
+
+  for (const width of [720, 420]) {
+    await hoverColumn(page, chart, 1, await aboveStacks())
+    await expect(tooltip).toContainText("range:10–20")
+    await expect(tooltip).toContainText("North:4")
+    await expect(tooltip).toContainText("South:4")
+    await expect(tooltip).toContainText("count:8")
+    await expect(page.getByTestId("hovered-bin")).toHaveText("10")
+    await expectTooltipWithinPlot(chart, margin)
+
+    // Just left of the first bin edge (the inter-bar gap) is still bin 0.
+    const box = (await chart.locator("canvas").first().boundingBox())!
+    const edge = box.x + margin.left + (box.width - margin.left - margin.right) / 3
+    await page.mouse.move(edge - 0.3, box.y + (await aboveStacks()))
+    await expect(tooltip).toContainText("range:0–10")
+
+    await page.mouse.move(850, 10)
+    await expect(tooltip).toHaveCount(0)
+    if (width === 720) {
+      await page.getByRole("button", { name: "Resize histogram" }).click()
+      await expect
+        .poll(async () => (await chart.locator("canvas").first().boundingBox())!.width)
+        .toBe(420)
+    }
+  }
+  expect(errors).toEqual([])
+})
+
 for (const mode of ["bounded", "push", "single"]) {
   test(`${mode} histogram highlights whole bins and keeps tooltips after resize`, async ({
     page

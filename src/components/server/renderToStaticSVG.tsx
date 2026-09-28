@@ -504,6 +504,11 @@ function renderChartInternal(
     size,
     margin: effectiveMargin,
     __compactMode: resolvedMode.compactMode,
+    // Sides the caller pinned; chart-owned chrome (direct and endpoint labels)
+    // may only grow the others, as in the React charts.
+    __explicitMarginSides: typeof explicitMargin === "number"
+      ? ["top", "right", "bottom", "left"]
+      : Object.keys(normalizedExplicitMargin ?? {}),
     // renderChart is the HOC-level server API. Its legend reservation must
     // follow useChartLegendAndMargin rather than the lower-level static
     // renderer's content-measurement-only behavior.

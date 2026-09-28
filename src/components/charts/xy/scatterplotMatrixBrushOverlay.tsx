@@ -10,6 +10,7 @@ import { brush as d3Brush, type D3BrushEvent } from "d3-brush"
 import { select as d3Select } from "d3-selection"
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { isTwoDimensionalBrushSelection } from "./scatterplotMatrixInteractionTypes"
+import { applyBrushSelectionStyle } from "../../stream/brushTheme"
 
 const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
 
@@ -25,6 +26,10 @@ export function ScatterplotMatrixBrushOverlay({
   onBrush,
 }: ScatterplotMatrixBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  // Read through a ref so a new callback identity doesn't recreate the brush
+  // mid-drag; d3-brush finishes a gesture on the instance that started it.
+  const onBrushRef = useRef(onBrush)
+  onBrushRef.current = onBrush
 
   const chartW = cellSize - CELL_MARGIN.left - CELL_MARGIN.right
   const chartH = cellSize - CELL_MARGIN.top - CELL_MARGIN.bottom
@@ -40,7 +45,7 @@ export function ScatterplotMatrixBrushOverlay({
         if (!scales) return
 
         if (!isTwoDimensionalBrushSelection(event.selection)) {
-          onBrush(null)
+          onBrushRef.current(null)
           return
         }
 
@@ -49,21 +54,17 @@ export function ScatterplotMatrixBrushOverlay({
           [scales.x.invert(px0), scales.y.invert(py0)],
           [scales.x.invert(px1), scales.y.invert(py1)],
         ]
-        onBrush(dataExtent)
+        onBrushRef.current(dataExtent)
       })
 
     g.call(brush)
 
-    g.select(".selection")
-      .attr("fill", "steelblue")
-      .attr("fill-opacity", 0.15)
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1)
+    applyBrushSelectionStyle(g.select(".selection"), 0.15)
 
     return () => {
       brush.on("brush end", null)
     }
-  }, [chartW, chartH, frameRef, onBrush])
+  }, [chartW, chartH, frameRef])
 
   return (
     <svg

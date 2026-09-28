@@ -7,6 +7,7 @@ import { RealtimeHistogram, TemporalHistogram } from "./RealtimeHistogram"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { useSelection } from "../../store/useSelection"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { attachSelectionProvenance } from "../../store/selectionProvenance"
 
 // `useChartMode` only affects the props RealtimeHistogram forwards to
 // StreamXYFrame; asserting on those requires mocking the frame. Kept in a
@@ -158,6 +159,88 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s bin hover", (Histogram
     expect(style(10, "North").opacity).toBe(0.5)
     act(() => lastXYFrameProps.customHoverBehavior!(null))
     expect(selection!.isActive).toBe(false)
+  })
+
+  it("publishes the tapped bin's source-row times to linked hover", () => {
+    let selection: ReturnType<typeof useSelection>
+    function Probe() {
+      selection = useSelection({ name: "histogram-time" })
+      return null
+    }
+    render(<SelectionProvider>
+      <Probe />
+      <Histogram data={data} binSize={10} mode="mobile"
+        linkedHover={{ name: "histogram-time", fields: ["time"] }} />
+    </SelectionProvider>)
+    const rows = [{ time: 2, value: 1 }, { time: 7, value: 3 }]
+    act(() => lastXYFrameProps.customClickBehavior!({
+      data: attachSelectionProvenance({ binStart: 0, binEnd: 10, total: 4 }, rows),
+      xValue: 5,
+      x: 100,
+      y: 100
+    }))
+    expect([2, 5, 7].map(time => selection!.predicate({ time }))).toEqual([true, false, true])
+  })
+
+  it.each([
+    ["a number", 13],
+    ["a Date", new Date(13)],
+    ["an ISO string", new Date(13).toISOString()],
+  ])("keeps a bin selected when %s selects a time inside it", (_label, selected) => {
+    let selection: ReturnType<typeof useSelection>
+    function Probe() {
+      selection = useSelection({ name: "picked-time" })
+      return null
+    }
+    render(<SelectionProvider>
+      <Probe />
+      <Histogram data={data} binSize={10} opacity={0.8}
+        selection={{ name: "picked-time", unselectedOpacity: 0.2 }} />
+    </SelectionProvider>)
+    act(() => selection!.selectPoints({ time: [selected] }))
+    expect([style(10).opacity, style(0).opacity]).toEqual([0.8, 0.2])
+  })
+
+  it.each([
+    ["a string accessor", "timestamp", "timestamp"],
+    ["a function accessor", (d: { timestamp: number }) => d.timestamp, "time"],
+  ] as const)("covers the bin on the time field of %s", (_label, timeAccessor, field) => {
+    let selection: ReturnType<typeof useSelection>
+    function Probe() {
+      selection = useSelection({ name: "picked-time" })
+      return null
+    }
+    const rows = data.map(({ time, ...rest }) => ({ timestamp: time, ...rest }))
+    render(<SelectionProvider>
+      <Probe />
+      <Histogram data={rows} binSize={10} opacity={0.8} timeAccessor={timeAccessor}
+        selection={{ name: "picked-time", unselectedOpacity: 0.2 }} />
+    </SelectionProvider>)
+    act(() => selection!.selectPoints({ [field]: [13] }))
+    expect([style(10).opacity, style(0).opacity]).toEqual([0.8, 0.2])
+  })
+
+  it("publishes the tapped bin's source-row times to its selection", () => {
+    let selection: ReturnType<typeof useSelection>
+    function Probe() {
+      selection = useSelection({ name: "tapped-time" })
+      return null
+    }
+    render(<SelectionProvider>
+      <Probe />
+      <Histogram data={data} binSize={10} mode="mobile"
+        mobileInteraction={{ tapToSelect: true }}
+        linkedHover={{ name: "tap-hover", fields: ["time"] }}
+        selection={{ name: "tapped-time" }} />
+    </SelectionProvider>)
+    const rows = [{ time: 2, value: 1 }, { time: 7, value: 3 }]
+    act(() => lastXYFrameProps.customClickBehavior!({
+      data: attachSelectionProvenance({ binStart: 0, binEnd: 10, total: 4 }, rows),
+      xValue: 5,
+      x: 100,
+      y: 100
+    }))
+    expect([2, 5, 7].map(time => selection!.predicate({ time }))).toEqual([true, false, true])
   })
 
   it("restores a sibling selection after local hover ends", () => {

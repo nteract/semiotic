@@ -42,6 +42,13 @@ const bumpData = [
   { period: "Q3", team: "West", score: 54 },
 ]
 
+const bumpLongNames = {
+  North: "Northern Territories",
+  South: "Southern Highlands Region",
+  East: "Eastern Seaboard",
+  West: "Western Plains",
+}
+
 const temporalHistogramData = [
   { time: 0, value: 5, kind: "Errors" },
   { time: 350, value: 7, kind: "Warnings" },
@@ -2221,6 +2228,67 @@ function makeSsrParityCases(React, recipes = {}) {
       },
     },
     {
+      // BumpChart endpoint labels sized from their text: long names on both
+      // sides plus a right legend. Every label must stay inside the chart and
+      // clear the legend on both backends.
+      id: "bump-long-labels",
+      component: "BumpChart",
+      containedSelector: { selector: ".semiotic-bump-label", count: 8 },
+      props: {
+        data: bumpData.map((d) => ({ ...d, team: bumpLongNames[d.team] })),
+        xAccessor: "period",
+        yAccessor: "score",
+        lineBy: "team",
+        showLabels: "both",
+        showLegend: true,
+        // An explicit map keeps legend swatches and trajectories on the
+        // same colors (the legend otherwise orders categories by name).
+        colorScheme: {
+          "Northern Territories": "#1f77b4",
+          "Southern Highlands Region": "#ff7f0e",
+          "Eastern Seaboard": "#2ca02c",
+          "Western Plains": "#d62728",
+        },
+        width: 640,
+        height: 320,
+      },
+    },
+    {
+      // BumpChart highlightTop with a named scheme: only the best series takes
+      // a palette color; the rest share the neutral color at 0.58 opacity.
+      // SSR must compose fill-opacity with opacity the way the canvas
+      // multiplies them, and honor the scheme over the theme palette.
+      id: "bump-highlight",
+      component: "BumpChart",
+      props: {
+        data: bumpData,
+        xAccessor: "period",
+        yAccessor: "score",
+        lineBy: "team",
+        highlightTop: 1,
+        colorScheme: "tableau10",
+        showPoints: true,
+        width: 480,
+        height: 300,
+      },
+    },
+    {
+      // Ribbon mode with two highlighted series: the ribbons' 0.82 opacity and
+      // the neutral 0.58 both reach SSR.
+      id: "bump-ribbon-highlight",
+      component: "BumpChart",
+      props: {
+        data: bumpData,
+        xAccessor: "period",
+        yAccessor: "score",
+        lineBy: "team",
+        ribbon: true,
+        highlightTop: 2,
+        width: 480,
+        height: 300,
+      },
+    },
+    {
       // AreaChart semanticLine: the new value-banded top stroke. semanticGradient
       // (new `{ stops }` form, offset along the y-domain) paints the fill, and
       // semanticLine (default true) splits the top stroke into hard color bands
@@ -2448,6 +2516,28 @@ function makeSsrParityCases(React, recipes = {}) {
         width: 400,
         height: 200,
       },
+    },
+    {
+      id: "minimap-composite-styled",
+      component: "MinimapChart",
+      props: {
+        data: xyData,
+        xAccessor: "x",
+        yAccessor: "y",
+        brushExtent: [1, 3],
+        minimap: {
+          height: 50,
+          brushStyle: { mask: true },
+          handles: { move: true },
+          showExtentLabels: true,
+          extentLabelFormat: (value) => `Step ${value}\nof 4`,
+        },
+        showLegend: false,
+        description: "Selected interval with a masked, labeled overview brush.",
+        width: 400,
+        height: 200,
+      },
+      containedSelector: { selector: "[data-semiotic-brush-label]", count: 2 },
     },
     {
       id: "scatterplot-matrix-composite",

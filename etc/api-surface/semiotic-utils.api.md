@@ -79,6 +79,7 @@ function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
 function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
+function getSourceRows<TDatum extends Datum = Datum>(value: unknown): readonly TDatum[] | undefined
 function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
 function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
@@ -215,6 +216,10 @@ interface-member AccessibilityAuditResult::property::findings = required finding
 interface-member AccessibilityAuditResult::property::ok = required ok: boolean
 interface-member AccessibilityAuditResult::property::reference = required reference: string
 interface-member AccessibilityAuditResult::property::summary = required summary: {criticalsPassed: number; criticalsEvaluated: number; fails: number; warnings: number; manual: number; passes: number;}
+interface-member AdaptiveTimeTickOptions::property::deltaStyle = optional deltaStyle: "clock" | "compact" | undefined
+interface-member AdaptiveTimeTickOptions::property::includeDate = optional includeDate: "always" | "auto" | "never" | undefined
+interface-member AdaptiveTimeTickOptions::property::includeYear = optional includeYear: "always" | "auto" | "never" | undefined
+interface-member AdaptiveTimeTickOptions::property::referenceTime = optional referenceTime: Date | number | undefined
 interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
 interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
 interface-member AestheticEvaluationResult::property::component = required readonly component: string

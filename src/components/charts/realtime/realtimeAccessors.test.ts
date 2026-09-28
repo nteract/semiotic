@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
+import { readRealtimeNumber, readRealtimeTime, realtimeTimeNumber } from "./realtimeAccessors"
 import { RealtimeAccumulator } from "./RealtimeAccumulator"
 
 describe("realtime temporal normalization", () => {
@@ -41,5 +41,20 @@ describe("realtime temporal normalization", () => {
     expect(accumulator.emit(aggregate)).toMatchObject([
       { time: Date.UTC(2024, 0, 1, 12), value: 5, count: 2, __aggStart: Date.UTC(2024, 0, 1), __aggEnd: Date.UTC(2024, 0, 2) }
     ])
+  })
+})
+
+describe("realtimeTimeNumber", () => {
+  it("coerces every time form readRealtimeTime accepts to the same epoch milliseconds", () => {
+    const inputs: unknown[] = [42, new Date(Date.UTC(2026, 0, 2)), "2026-01-02", "2026-01-02T03:04:05Z", "100", " "]
+    for (const input of inputs) {
+      const read = readRealtimeTime({ time: input }, undefined, "time")
+      const expected = read instanceof Date ? read.getTime() : read ?? NaN
+      expect(realtimeTimeNumber(input)).toBe(expected)
+    }
+  })
+
+  it("returns NaN for missing and non-time values", () => {
+    expect([null, undefined, "", "soon", new Date(Number.NaN)].map(realtimeTimeNumber)).toEqual([NaN, NaN, NaN, NaN, NaN])
   })
 })

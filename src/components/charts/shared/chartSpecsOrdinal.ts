@@ -419,7 +419,8 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // kept out of the tool definition.
       valueFormat: { type: "function", omitFromSchema: true },
       centerContent: { type: ["object", "string", "number", "function"], omitFromSchema: true },
-      showScaleLabels: { type: "boolean", default: true },
+      centerLabel: { type: "string", description: "Caption drawn as SVG text beneath the center value (for example a unit or metric name)." },
+      showScaleLabels: { type: "boolean", description: "Show the min, max, and threshold scale labels. Defaults to true, and false in context and sparkline modes." },
       backgroundColor: { type: "string", omitFromSchema: true },
       styleRules: STYLE_RULES_PROP_SPEC,
     },

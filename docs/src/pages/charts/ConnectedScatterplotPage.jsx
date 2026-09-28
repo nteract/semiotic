@@ -85,6 +85,13 @@ const chartProps = [
     description: "Enable hover tooltips.",
   },
   {
+    name: "showAxes",
+    type: "boolean",
+    required: false,
+    default: "mode-driven",
+    description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept.",
+  },
+  {
     name: "showGrid",
     type: "boolean",
     required: false,

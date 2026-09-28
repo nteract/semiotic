@@ -36,7 +36,8 @@ import type {
   MobileInteractionProp
 } from "../shared/types"
 import type { OnObservationCallback } from "../../store/ObservationStore"
-import { buildHistogramTooltip } from "./defaultRealtimeTooltip"
+import { buildHistogramMultiTooltip, buildHistogramTooltip } from "./defaultRealtimeTooltip"
+import { histogramBinSelectionDatum } from "./histogramSelectionCoverage"
 import {
   renderLoadingState,
   renderEmptyState
@@ -53,7 +54,7 @@ import type { PartialMargin } from "../../types/marginType"
 import { resolveHistogramAxes, histogramMarginDefaults } from "./temporalHistogramConfig"
 import { resolveXYAxisChrome } from "../../legendLayout"
 import type { XYFrameAxisConfig } from "../../stream/xyFrameAxisTypes"
-import { resolveTooltipContent } from "../../Tooltip/Tooltip"
+import { resolveMultiCapableTooltip } from "../../Tooltip/Tooltip"
 import type {
   RealtimeAccessibilityProps,
   RealtimeData,
@@ -431,16 +432,14 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     true
   )
   // See RealtimeLineChart for the data-space-vs-pixel-space tooltip rationale.
-  const resolvedTooltip =
-    tooltipContent ??
-    resolveTooltipContent({
-      tooltip,
-      defaultTooltipContent: buildHistogramTooltip({
-        timeAccessor,
-        valueAccessor
-      }),
-      customFunctionContext: "hover"
-    }).tooltipContent
+  // Multi mode lists every stacked category in the hovered bin.
+  const tooltipProps = resolveMultiCapableTooltip({
+    tooltip,
+    defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor }),
+    multiDefaultContent: buildHistogramMultiTooltip({ timeAccessor, valueAccessor }),
+    customFunctionContext: "hover"
+  })
+  const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
 
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -565,10 +564,18 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   )
   const effectiveSelectionHook =
     hoverSelectionHook || legendState.legendSelectionHook || activeSelectionHook
+  // Bins match selected times inside [binStart, binEnd) on the time field
+  // (the same field linkedBrush publishes).
+  const coverageField = typeof timeAccessor === "string" ? timeAccessor : "time"
+  const binSelectionDatum = useMemo(
+    () => histogramBinSelectionDatum(coverageField),
+    [coverageField]
+  )
   const interactiveBarStyle = useRealtimeSelectionStyle(
     resolvedBarStyle,
     [effectiveSelectionHook],
-    selection
+    selection,
+    binSelectionDatum
   )
 
   const resolvedClassName = emphasis
@@ -618,6 +625,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       background={background}
       hoverAnnotation={enableHover}
       tooltipContent={resolvedTooltip}
+      tooltipMode={tooltipProps.tooltipMode}
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,

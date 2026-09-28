@@ -285,6 +285,13 @@ const lineChartProps = [
     description: "Enable hover annotations on data points.",
   },
   {
+    name: "showAxes",
+    type: "boolean",
+    required: false,
+    default: "mode-driven",
+    description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept.",
+  },
+  {
     name: "showGrid",
     type: "boolean",
     required: false,
@@ -1014,7 +1021,8 @@ export default function LineChartPage() {
       <p>
         Set <code>tooltip="multi"</code> to show all series values at the hovered x position with
         color swatches. The tooltip follows the cursor across the rendered x range, so readers can
-        compare series between sampled points as well as directly over them.
+        compare series between sampled points as well as directly over them. In x-extent padding
+        before or after the data, the crosshair and values snap to the first or last sample.
       </p>
 
       <LiveExample

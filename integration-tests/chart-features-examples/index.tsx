@@ -7,6 +7,7 @@ import { renderChart } from "../../dist/server.module.min.js"
 import TemporalHistogramLinkedExample from "../../docs/src/examples/TemporalHistogramLinkedExample"
 import { BumpTooltipFixture } from "./BumpTooltipFixture"
 import { HistogramHoverFixture } from "./HistogramHoverFixture"
+import { LineMultiEdgeFixture } from "./LineMultiEdgeFixture"
 
 function App() {
   const [compact, setCompact] = useState(false)
@@ -100,5 +101,6 @@ function App() {
 }
 createRoot(document.getElementById("root")!).render(
   new URLSearchParams(location.search).has("histogram-hover") ? <HistogramHoverFixture /> :
-    new URLSearchParams(location.search).has("bump-tooltip") ? <BumpTooltipFixture /> : <App />
+    new URLSearchParams(location.search).has("bump-tooltip") ? <BumpTooltipFixture /> :
+      new URLSearchParams(location.search).has("line-multi-edge") ? <LineMultiEdgeFixture /> : <App />
 )

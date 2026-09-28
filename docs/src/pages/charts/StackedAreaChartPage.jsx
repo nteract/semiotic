@@ -54,6 +54,7 @@ const stackedAreaChartProps = [
   { name: "pointRadius", type: "number", required: false, default: "3", description: "Point radius when showPoints is true." },
   { name: "normalize", type: "boolean", required: false, default: "false", description: "Normalize to 100% stacked (proportional) areas." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (multi-area)", description: "Show a legend. Defaults to true when multiple areas are present." },
   { name: "tooltip", type: '"multi" | object | function', required: false, default: null, description: 'Tooltip configuration or render function. Pass "multi" to show every stack value at the hovered x position.' },
@@ -240,7 +241,8 @@ export default function StackedAreaChartPage() {
         Pass <code>tooltip="multi"</code> when readers need to compare every
         stack at the same x position. The tooltip follows the cursor across the
         rendered x range and lists each stack's individual contribution, not the
-        cumulative stack height.
+        cumulative stack height. In x-extent padding before or after the data,
+        the crosshair and values snap to the first or last sample.
       </p>
 
       <LiveExample

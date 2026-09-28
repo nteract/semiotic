@@ -71,7 +71,9 @@ const EMPTY_STYLE = () => ({})
 export function useRealtimeSelectionStyle<TStyle extends Datum>(
   baseStyle: ((datum: Datum) => TStyle) | undefined,
   hooks: readonly (SelectionHookResult | null)[],
-  selection: SelectionConfig | undefined
+  selection: SelectionConfig | undefined,
+  /** Maps a mark's datum to the datum the selection predicate tests. */
+  selectionDatum?: (datum: Datum) => Datum
 ): ((datum: Datum) => TStyle) | undefined {
   const activeHook = hooks.find(Boolean) ?? null
   return React.useMemo<((datum: Datum) => TStyle) | undefined>(
@@ -80,10 +82,11 @@ export function useRealtimeSelectionStyle<TStyle extends Datum>(
         ? (wrapStyleWithSelection(
             (baseStyle ?? EMPTY_STYLE) as (datum: Datum) => TStyle,
             activeHook,
-            selection
+            selection,
+            selectionDatum
           ) as (datum: Datum) => TStyle)
         : baseStyle,
-    [activeHook, baseStyle, selection]
+    [activeHook, baseStyle, selection, selectionDatum]
   )
 }
 

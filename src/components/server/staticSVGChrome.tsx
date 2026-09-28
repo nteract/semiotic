@@ -113,6 +113,8 @@ export interface ThemeAwareProps {
   _idPrefix?: string
   /** Internal HOC mode signal used by axis-free static chart chrome. */
   __compactMode?: boolean
+  /** Internal: margin sides the caller set explicitly (top-level or frameProps). */
+  __explicitMarginSides?: string[]
   __autoLegendMargin?: boolean
   /**
    * The supplied legend already contains the chart HOC's inferred groups.

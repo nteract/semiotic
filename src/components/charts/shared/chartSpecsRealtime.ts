@@ -12,6 +12,11 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      tooltip: {
+        type: ["boolean", "string", "function", "object"],
+        description:
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config.'
+      },
       styleRules: STYLE_RULES_PROP_SPEC,
       stroke: { type: "string" },
       strokeWidth: { type: "number" },
@@ -59,6 +64,11 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      tooltip: {
+        type: ["boolean", "string", "function", "object"],
+        description:
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config.'
+      },
       showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
       showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
       hoverHighlight: { type: "boolean", default: false, description: "Dim other time bins on hover. All stacked segments sharing binStart stay highlighted together; no category accessor is required." },
@@ -204,7 +214,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       tooltip: {
         type: ["boolean", "string", "function", "object"],
         description:
-          "Tooltip boolean, multi-series mode, content function, or config."
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config.'
       },
       tooltipContent: { type: "function", omitFromSchema: true },
       onHover: { type: "function", omitFromSchema: true },

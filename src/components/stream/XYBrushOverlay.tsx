@@ -23,6 +23,7 @@ import { select as d3Select } from "d3-selection"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { StreamScales } from "./types"
 import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
+import { applyBrushSelectionStyle } from "./brushTheme"
 
 export interface XYBrushOverlayProps {
   width: number
@@ -259,11 +260,7 @@ export function XYBrushOverlay({
     g.call(brushFn)
     brushRef.current = brushFn
 
-    g.select(".selection")
-      .attr("fill", "steelblue")
-      .attr("fill-opacity", 0.15)
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1)
+    applyBrushSelectionStyle(g.select(".selection"), 0.15)
 
     return () => {
       brushFn.on("brush end", null)

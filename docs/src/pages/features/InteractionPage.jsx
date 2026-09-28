@@ -508,17 +508,23 @@ function OrdinalBrushExample() {
       <CodeBlock
         code={`minimap={{
   height: 50,               // Height of the overview chart
-  brushDirection: "x",      // "x" (default) or "y"
+  brushDirection: "x",      // "x" (default) or "y": the detail axis the brush sets
   showAxes: false,          // Show axes in overview (default: false)
   background: "#f5f5f5",    // Background color for overview
-  margin: { left: 50, top: 0, bottom: 10, right: 20 },
-  lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1 })
+  margin: { left: 50, right: 20 }, // top/bottom default to room for handles and labels
+  lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1 }),
+  brushStyle: { mask: true },   // fill, fillOpacity, stroke, strokeWidth, activeStroke
+  handles: { move: true },      // true, or { size, radius, fill, activeFill, stroke, move }
+  showExtentLabels: true,       // labels use xFormat, or extentLabelFormat
+  resetOnDoubleClick: true,     // double-click clears the brush
+  minSpan: 7,                   // smallest selection, in data units
 }}
 
-// Controlled brush state:
+// Controlled brush state (extents are ascending, in data units):
 <MinimapChart
   brushExtent={[startDate, endDate]}
-  onBrush={(extent) => setExtent(extent)}
+  onBrush={(extent) => setExtent(extent)}           // every change
+  onBrushEnd={(extent, meta) => commit(extent)}     // once per release or key
   ...
 />`}
         language="jsx"

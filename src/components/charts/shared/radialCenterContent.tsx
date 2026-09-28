@@ -23,16 +23,33 @@ const SVG_CENTER_CONTENT_TAGS = new Set([
   "symbol"
 ])
 
+/** An allow-listed SVG element, or a fragment/array made only of them. */
+function isSvgCenterContent(node: React.ReactNode): boolean {
+  if (Array.isArray(node)) return node.length > 0 && node.every(isSvgCenterContent)
+  if (!React.isValidElement(node)) return false
+  if (node.type === React.Fragment) {
+    const children = React.Children.toArray((node.props as { children?: React.ReactNode }).children)
+    return children.length > 0 && children.every(isSvgCenterContent)
+  }
+  return typeof node.type === "string" && SVG_CENTER_CONTENT_TAGS.has(node.type)
+}
+
 export function renderSvgCenterContent(
   centerContent: React.ReactNode,
   centerX: number,
   centerY: number
 ): React.ReactNode | null {
-  if (!React.isValidElement(centerContent)) return null
-  if (
-    !SVG_CENTER_CONTENT_TAGS.has(centerContent.type as string)
-  ) {
-    return null
+  if (!isSvgCenterContent(centerContent)) return null
+  if (!React.isValidElement(centerContent) || centerContent.type === React.Fragment) {
+    return (
+      <g
+        className="semiotic-radial-center-content"
+        transform={`translate(${centerX},${centerY})`}
+        pointerEvents="none"
+      >
+        {centerContent}
+      </g>
+    )
   }
 
   const svgElement = centerContent as React.ReactElement<

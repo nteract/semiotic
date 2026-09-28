@@ -35,6 +35,12 @@ registerXYPlugin(heatmapXYPlugin)
  */
 export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /**
+   * Show the axes. Defaults to the chart mode; an explicit value wins over
+   * the mode, matching `responsiveRules` win over the prop, and
+   * `frameProps.showAxes` wins over both. Hiding axes keeps the margins.
+   */
+  showAxes?: boolean
+  /**
    * Array of data points with x, y, and value properties.
    * @example
    * ```ts
@@ -255,6 +261,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: undefined,
     enableHover: props.enableHover,
     showLegend: undefined,

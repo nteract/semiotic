@@ -543,7 +543,7 @@ describe("xySceneNodeToSVG — area", () => {
     expect(xySceneNodeToSVG(node, 0)).toBeNull()
   })
 
-  it("defaults fillOpacity from style.opacity when fillOpacity absent", () => {
+  it("composes the default fillOpacity with style.opacity like the canvas", () => {
     const node = {
       type: "area",
       topPath: [[0, 0], [10, 10]],
@@ -551,7 +551,7 @@ describe("xySceneNodeToSVG — area", () => {
       style: { opacity: 0.3 }
     }
     const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
-    expect(html).toContain('fill-opacity="0.3"')
+    expect(html).toContain('fill-opacity="0.7" opacity="0.3"')
   })
 
   it("defaults fillOpacity to 0.7 when neither fillOpacity nor opacity set", () => {

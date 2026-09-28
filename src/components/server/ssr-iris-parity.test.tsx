@@ -28,6 +28,10 @@ import { PieChart, type PieChartProps } from "../charts/ordinal/PieChart"
 import { DonutChart } from "../charts/ordinal/DonutChart"
 import { Treemap, type TreemapProps } from "../charts/network/Treemap"
 import { ProportionalSymbolMap } from "../charts/geo/ProportionalSymbolMap"
+import { Heatmap } from "../charts/xy/Heatmap"
+import { MultiAxisLineChart } from "../charts/xy/MultiAxisLineChart"
+import { MinimapChart } from "../charts/xy/MinimapChart"
+import { BumpChart } from "../charts/xy/BumpChart"
 
 /** Count `<path>` marks whose fill is a real paint (color or url()) — i.e.
  * filled areas. Lines render with `fill="none"`, so this isolates area fills. */
@@ -774,5 +778,49 @@ describe("SSR honors top-level primitive styling", () => {
     expect(gap(renderChart("StackedBarChart", {
       ...props, categoryLabel: "Region",
     }))).toBe(46)
+  })
+})
+
+// Top-level `showAxes` on XY charts resolves through the chart mode on both
+// paths: renderChart and the live HOC's in-frame SSR branch hide the same axes.
+describe("XY charts — top-level showAxes SSR parity", () => {
+  const points = [{ x: 0, y: 1, z: 10 }, { x: 1, y: 3, z: 20 }, { x: 2, y: 2, z: 15 }]
+  const axisCount = (svg: string) => (svg.match(/semiotic-axis-(?:bottom|left|right)/g) ?? []).length
+  const cases: Array<[string, React.ComponentType<Record<string, unknown>>, Record<string, unknown>]> = [
+    ["LineChart", LineChart as never, { data: points }],
+    ["Heatmap", Heatmap as never, { data: points.map(p => ({ ...p, value: p.y })) }],
+    ["MultiAxisLineChart", MultiAxisLineChart as never, {
+      data: points,
+      series: [{ yAccessor: "y", label: "Y" }, { yAccessor: "z", label: "Z" }],
+    }],
+  ]
+
+  it.each(cases)("%s hides every axis on both paths", (name, Component, props) => {
+    const base = { ...props, width: 400, height: 240, showLegend: false }
+    expect(axisCount(renderChart(name, base))).toBeGreaterThan(0)
+    expect(axisCount(renderChart(name, { ...base, showAxes: false }))).toBe(0)
+    expect(axisCount(renderToString(<Component {...base} showAxes={false} />))).toBe(0)
+  })
+
+  it("MinimapChart hides the detail axes without touching the overview", () => {
+    const base = { data: points, width: 400, height: 240, minimap: { showAxes: true } }
+    const shown = axisCount(renderChart("MinimapChart", base))
+    const hidden = axisCount(renderChart("MinimapChart", { ...base, showAxes: false }))
+    expect(hidden).toBeGreaterThan(0)
+    expect(hidden).toBeLessThan(shown)
+    expect(axisCount(renderToString(<MinimapChart {...base} showAxes={false} />))).toBe(hidden)
+  })
+
+  it("BumpChart follows sparkline mode on both paths", () => {
+    const props = {
+      data: [0, 1].flatMap(x => [{ x, team: "A", y: x + 1 }, { x, team: "B", y: 2 - x }]),
+      lineBy: "team" as const,
+      mode: "sparkline" as const,
+      width: 200,
+      height: 60,
+    }
+    expect(axisCount(renderChart("BumpChart", props))).toBe(0)
+    expect(axisCount(renderToString(<BumpChart {...props} />))).toBe(0)
+    expect(axisCount(renderToString(<BumpChart {...props} mode="primary" />))).toBeGreaterThan(0)
   })
 })

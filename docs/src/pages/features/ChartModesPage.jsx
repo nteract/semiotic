@@ -771,7 +771,10 @@ export default function ChartModesPage() {
       <p>
         Each mode sets sensible defaults. Any prop you set explicitly overrides
         the mode default — <code>mode="sparkline" width={200}</code> gives you
-        a 200px-wide sparkline instead of the default 120px.
+        a 200px-wide sparkline instead of the default 120px. On XY charts,
+        {" "}<code>showAxes</code> works the same way: <code>mode="sparkline" showAxes</code>
+        {" "}keeps the axes, a matching <code>responsiveRules</code> transform wins over
+        the prop, and hiding axes keeps the mode's margins.
       </p>
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>

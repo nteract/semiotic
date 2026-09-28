@@ -507,6 +507,55 @@ describe("BumpChart shared styling in static SVG", () => {
     }
   })
 
+  describe("highlightTop parity", () => {
+    const data = [
+      { year: 2023, series: "Alpha", value: 10 },
+      { year: 2023, series: "Bravo", value: 7 },
+      { year: 2024, series: "Alpha", value: 9 },
+      { year: 2024, series: "Bravo", value: 12 },
+    ]
+    const base = {
+      data,
+      xAccessor: "year" as const,
+      yAccessor: "value" as const,
+      lineBy: "series" as const,
+      showLabels: false,
+      width: 400,
+      height: 200,
+    }
+    const bothPaths = (props: Record<string, unknown>) => [
+      renderChart("BumpChart", { ...base, ...props }),
+      renderToString(<BumpChart {...base} {...(props as object)} />),
+    ]
+    const tableau10 = ["#4e79a7", "#f28e2c", "#e15759"]
+
+    it("dims neutral trajectories on both paths", () => {
+      for (const svg of bothPaths({ highlightTop: 1 })) {
+        expect(svg).toMatch(/fill-opacity="1" opacity="0\.58"/)
+        expect(svg).toMatch(/fill-opacity="1" opacity="0\.9"/)
+      }
+    })
+
+    it("colors highlighted series from a named colorScheme on both paths", () => {
+      for (const svg of bothPaths({ highlightTop: 1, colorScheme: "tableau10" })) {
+        expect(svg).toContain(`fill="${tableau10[0]}"`)
+        expect(svg).not.toContain(`fill="${tableau10[1]}"`)
+      }
+    })
+
+    it("treats a numeric string highlightTop like the number", () => {
+      const [asNumberServer, asNumberBrowser] = bothPaths({ highlightTop: 1 })
+      const [asStringServer, asStringBrowser] = bothPaths({ highlightTop: "1" })
+      expect(asStringServer).toBe(asNumberServer)
+      expect(asStringBrowser).toBe(asNumberBrowser)
+    })
+
+    it("draws the default grid on both paths", () => {
+      for (const svg of bothPaths({})) expect(svg).toMatch(/class="[^"]*\b(?:semiotic|stream)-grid\b/)
+      for (const svg of bothPaths({ showGrid: false })) expect(svg).not.toMatch(/class="[^"]*\b(?:semiotic|stream)-grid\b/)
+    })
+  })
+
   it("honors automatic label priority and caps in static SVG", () => {
     const props = {
       data: [

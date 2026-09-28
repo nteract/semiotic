@@ -19,21 +19,14 @@ import {
   type ServerChartData,
   type ServerColorScheme
 } from "./serverChartConfigShared"
-import { lineChart } from "./serverChartConfigsXY"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../charts/shared/styleRules"
 import { renderChainReaction } from "./serverCompositeChainReaction"
 import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
+import { renderMinimap } from "./serverCompositeMinimap"
+import { finiteNumber, placedSvg, readPayload } from "./serverCompositeShared"
 
 const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
-
-interface CompositePayload {
-  data: ServerChartData
-  colorBy: ServerAccessor | undefined
-  colorScheme: ServerColorScheme
-  common: Datum
-  rest: Datum
-}
 
 function payload(
   data: ServerChartData,
@@ -47,10 +40,6 @@ function payload(
   }
 }
 
-function readPayload(frameProps: Datum): CompositePayload {
-  return frameProps.__composite as CompositePayload
-}
-
 function rows(value: ServerChartData): Datum[] {
   return Array.isArray(value)
     ? value.filter(
@@ -60,255 +49,11 @@ function rows(value: ServerChartData): Datum[] {
     : []
 }
 
-function finiteNumber(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback
-}
-
 function positiveInteger(value: unknown, fallback: number): number {
   return Math.max(1, Math.floor(finiteNumber(value, fallback)))
 }
 
-function placedSvg(svg: string, x: number, y: number, part: string): string {
-  return svg.replace(
-    /^<svg\b/,
-    `<svg x="${x}" y="${y}" data-semiotic-composite-part="${part}"`
-  )
-}
-
-function mergedPartEvidence(
-  parts: ReadonlyArray<RenderEvidence | undefined>,
-  type: keyof RenderEvidence
-): [number, number] | undefined {
-  for (const part of parts) {
-    const value = part?.[type]
-    if (
-      Array.isArray(value) &&
-      value.length === 2 &&
-      typeof value[0] === "number" &&
-      typeof value[1] === "number"
-    ) {
-      return value as [number, number]
-    }
-  }
-  return undefined
-}
-
 // ── MinimapChart ───────────────────────────────────────────────────────
-
-function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
-  const { data, colorBy, colorScheme, common, rest } = readPayload(frameProps)
-  const [width, detailHeight] = (common.size as [number, number]) ?? [600, 400]
-  const minimap =
-    rest.minimap && typeof rest.minimap === "object"
-      ? (rest.minimap as Datum)
-      : {}
-  const overviewHeight = finiteNumber(minimap.height, 60)
-  const detailMargin = common.margin as Datum
-  const configuredMargin =
-    minimap.margin && typeof minimap.margin === "object"
-      ? (minimap.margin as Datum)
-      : {}
-  const overviewMargin = {
-    top: finiteNumber(configuredMargin.top, 0),
-    right: finiteNumber(
-      configuredMargin.right,
-      finiteNumber(detailMargin?.right, 20)
-    ),
-    bottom: finiteNumber(configuredMargin.bottom, 20),
-    left: finiteNumber(
-      configuredMargin.left,
-      finiteNumber(detailMargin?.left, 40)
-    )
-  }
-  const overviewTotalHeight =
-    overviewHeight + overviewMargin.top + overviewMargin.bottom
-  const framePropsOverride =
-    rest.frameProps && typeof rest.frameProps === "object"
-      ? (rest.frameProps as Datum)
-      : {}
-
-  const lineRest: Datum = {
-    ...rest,
-    xAccessor: rest.xAccessor || "x",
-    yAccessor: rest.yAccessor || "y"
-  }
-  const detailCommon: Datum = {
-    ...common,
-    size: [width, detailHeight],
-    xExtent: framePropsOverride.xExtent ?? rest.brushExtent ?? common.xExtent,
-    yExtent: framePropsOverride.yExtent ?? rest.yExtent ?? common.yExtent,
-    _idPrefix: `${String(common._idPrefix ?? "minimap")}-detail`
-  }
-  const detailProps = lineChart.buildProps(
-    data,
-    colorBy,
-    colorScheme,
-    detailCommon,
-    lineRest
-  )
-  // MinimapChart's documented frameProps escape hatch is spread last.
-  Object.assign(detailProps, framePropsOverride)
-
-  // The overview is deliberately a quiet, non-interactive copy of the full
-  // series. Remove detail-only frame overrides before asking the shared line
-  // server config to construct it.
-  const overviewCommon: Datum = {
-    ...common,
-    size: [width, overviewTotalHeight],
-    margin: overviewMargin,
-    title: undefined,
-    description: `${String(common.description ?? common.title ?? "Chart")} overview minimap`,
-    showAxes: minimap.showAxes ?? false,
-    showLegend: false,
-    showGrid: false,
-    accessibleTable: false,
-    background: minimap.background,
-    xExtent: undefined,
-    yExtent: rest.yExtent ?? common.yExtent,
-    _idPrefix: `${String(common._idPrefix ?? "minimap")}-overview`
-  }
-  // `common` may contain detail-only frameProps. Omitting these keys is
-  // materially different from assigning undefined: lineChart's computed
-  // overview style must survive its final common-prop spread.
-  delete overviewCommon.lineStyle
-  delete overviewCommon.pointStyle
-  const overviewRest: Datum = {
-    ...lineRest,
-    fillArea: false,
-    lineWidth: 1,
-    showPoints: false,
-    directLabel: false,
-    forecast: undefined,
-    anomaly: undefined,
-    band: undefined
-  }
-  const overviewProps = lineChart.buildProps(
-    data,
-    colorBy,
-    colorScheme,
-    overviewCommon,
-    overviewRest
-  )
-  // The HOC keeps the area layout when fillArea=true but intentionally uses
-  // a no-fill overview style. A caller-provided overview lineStyle wins.
-  overviewProps.chartType = rest.fillArea ? "area" : "line"
-  if (typeof minimap.lineStyle === "function") {
-    overviewProps.lineStyle = minimap.lineStyle
-  }
-
-  const detailSink: EvidenceSink = {}
-  const overviewSink: EvidenceSink = {}
-  const detailSvg = renderStreamXYFrame(detailProps as never, detailSink)
-  const overviewSvg = renderStreamXYFrame(overviewProps as never, overviewSink)
-  const renderBefore = rest.renderBefore === true
-  const detailY = renderBefore ? overviewTotalHeight : 0
-  const overviewY = renderBefore ? 0 : detailHeight
-  const childMarkup = [
-    placedSvg(detailSvg, 0, detailY, "detail"),
-    placedSvg(overviewSvg, 0, overviewY, "overview")
-  ].join("")
-  const totalHeight = detailHeight + overviewTotalHeight
-  const theme = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0])
-  const styles = themeStyles(theme)
-  const title = typeof common.title === "string" ? common.title : undefined
-  const description =
-    typeof common.description === "string"
-      ? common.description
-      : title || "Chart with overview minimap"
-  const idPrefix = chartUID(common)
-  const titleId = title ? `${idPrefix}-title` : undefined
-  const descriptionId = `${idPrefix}-description`
-  const brushDirection = minimap.brushDirection === "y" ? "y" : "x"
-  const controlledBrush =
-    Array.isArray(rest.brushExtent) && rest.brushExtent.length >= 2
-      ? [Number(rest.brushExtent[0]), Number(rest.brushExtent[1])]
-      : null
-  const overviewEvidence = overviewSink.evidence
-  let brushSelection: React.ReactNode = null
-  if (
-    controlledBrush &&
-    controlledBrush.every(Number.isFinite) &&
-    overviewEvidence
-  ) {
-    const domain =
-      brushDirection === "x"
-        ? overviewEvidence.xDomain
-        : overviewEvidence.yDomain
-    if (domain && domain[0] !== domain[1]) {
-      const plotWidth = Math.max(
-        0,
-        width - overviewMargin.left - overviewMargin.right
-      )
-      const plotHeight = overviewHeight
-      const project = (value: number) =>
-        (value - domain[0]) / (domain[1] - domain[0])
-      if (brushDirection === "x") {
-        const x0 = project(Math.min(...controlledBrush)) * plotWidth
-        const x1 = project(Math.max(...controlledBrush)) * plotWidth
-        brushSelection = (
-          <rect
-            className="selection"
-            x={overviewMargin.left + x0}
-            y={overviewY + overviewMargin.top}
-            width={x1 - x0}
-            height={plotHeight}
-            fill="steelblue"
-            fillOpacity={0.2}
-            stroke="steelblue"
-            strokeWidth={1}
-          />
-        )
-      } else {
-        const y0 = (1 - project(Math.max(...controlledBrush))) * plotHeight
-        const y1 = (1 - project(Math.min(...controlledBrush))) * plotHeight
-        brushSelection = (
-          <rect
-            className="selection"
-            x={overviewMargin.left}
-            y={overviewY + overviewMargin.top + y0}
-            width={plotWidth}
-            height={y1 - y0}
-            fill="steelblue"
-            fillOpacity={0.2}
-            stroke="steelblue"
-            strokeWidth={1}
-          />
-        )
-      }
-    }
-  }
-  const svg = ReactDOMServer.renderToStaticMarkup(
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="minimap-chart"
-      width={width}
-      height={totalHeight}
-      role="img"
-      aria-labelledby={[titleId, descriptionId].filter(Boolean).join(" ")}
-      style={{ fontFamily: styles.fontFamily }}
-    >
-      {title && <title id={titleId}>{title}</title>}
-      <desc id={descriptionId}>{description}</desc>
-      <g dangerouslySetInnerHTML={{ __html: childMarkup }} />
-      {brushSelection}
-    </svg>
-  )
-
-  if (sink) {
-    const parts = [detailSink.evidence, overviewSink.evidence]
-    sink.evidence = buildCompositeEvidence({
-      frameType: "xy",
-      width,
-      height: totalHeight,
-      parts,
-      title,
-      description,
-      xDomain: mergedPartEvidence(parts, "xDomain"),
-      yDomain: mergedPartEvidence(parts, "yDomain")
-    })
-  }
-  return svg
-}
 
 export const minimapChart: ChartConfig = {
   frameType: "xy",

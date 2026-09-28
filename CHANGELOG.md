@@ -7,6 +7,161 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- RealtimeHistogram and TemporalHistogram stacked segments carry `categories`:
+  every non-zero `{ category, value }` in the bin, bottom to top, shared by the
+  bin's segments. The default histogram tooltip adds a `category count` row.
+- `getSourceRows(datumOrHover)` in `semiotic/realtime` and `semiotic/utils`
+  returns the authored rows behind a histogram bin, stacked segment, or
+  `categories` entry. The `HistogramBinDatum` type describes the bin datum.
+- `createDagreFit(nodes, edges, plot, config?)` and
+  `createFlextreeFit(nodes, plot, config?)` in `semiotic/recipes` return the
+  exact fit `dagreLayout` / `flextreeLayout` apply (`scale`, `dx`, `dy`,
+  `bounds`, `project`, `invert`, `nodeBounds`), so minimaps and overlays can
+  align with the fitted graph without copying recipe defaults.
+  `semiotic/network/zoom` exports `projectNetworkPoint` and
+  `invertNetworkRect` for applying the zoom camera.
+- `adaptiveTimeTicks` accepts opt-in `includeYear` and `includeDate`
+  (`"always"` default, `"auto"`, `"never"`), `referenceTime`, and
+  `deltaStyle: "clock"` to shorten axis labels. Defaults and value-only
+  (tooltip) labels are unchanged.
+- Top-level `showAxes` on LineChart, AreaChart, StackedAreaChart,
+  DifferenceChart, Scatterplot, BubbleChart, Heatmap, QuadrantChart,
+  MultiAxisLineChart, WaterfallChart, CandlestickChart, ConnectedScatterplot,
+  and MinimapChart (its detail chart). It follows the chart mode by default;
+  an explicit value wins, matching `responsiveRules` win over it, and
+  `frameProps.showAxes` still wins over both. Margins are kept. Chart schemas
+  and `validateProps` accept it.
+- GaugeChart `centerLabel`: a serializable caption drawn beneath the center
+  value as native SVG text.
+- RealtimeHistogram and TemporalHistogram support `tooltip="multi"` and
+  `{ mode: "multi", content? }`: hovering anywhere in a column (above a short
+  stack or between bars included) lists every stacked category in that bin,
+  with its range and total. Keyboard focus gets the same rows.
+- `LinearBrush` in `semiotic/controls`: an accessible one-dimensional range
+  brush for any track. It is controlled (`value`) or uncontrolled
+  (`defaultValue`); `onChange` fires on every change and `onChangeEnd` once
+  per release or keyboard step, with `atDomainStart`/`atDomainEnd` flags. Map
+  it with `domain` or the chart's own `scale`, overlay a chart's plot with
+  `inset`, and customize it with `maskStyle`, selection and handle styles,
+  `renderHandle`, a move handle, double-click reset, `minSpan`, `snap`, and
+  extent and domain labels (two lines with a `\n`). It is a group of three
+  sliders with arrow, Shift, Page Up/Down, Home/End, and Escape keys, emits
+  control observations, and follows the ThemeProvider colors without a store.
+- MinimapChart overview brush options: `minimap.brushStyle` (`fill`,
+  `fillOpacity`, `stroke`, `strokeWidth`, `activeStroke`, `mask`),
+  `minimap.handles` (with an optional move handle), `minimap.renderHandle`,
+  `minimap.showExtentLabels` with `minimap.extentLabelFormat` (defaults to
+  `xFormat`), `minimap.resetOnDoubleClick`, `minimap.minSpan`, and
+  `minimap.brushLabel`. `onBrushEnd(extent, meta)` fires once per changed
+  release, keyboard step, or reset. MinimapChart accepts `onObservation`
+  (`brush`/`brush-end`, plus `control-start`/`control-end` for gestures) and
+  `chartId`. `renderChart` draws the mask, handles, and labels.
+
+### Changed
+
+- Multi-series hover (`tooltip="multi"` and `{ mode: "multi" }`) snaps to the
+  first or last sample in x-extent padding instead of showing nothing, on every
+  chart that uses it (LineChart, AreaChart, StackedAreaChart, DifferenceChart,
+  MultiAxisLineChart, MinimapChart, BumpChart, XYCustomChart, and
+  RealtimeLineChart). The crosshair and series dots sit on the edge sample, and
+  `xValue`/`xPx` report it; the tooltip still follows the cursor.
+- Brush selections take the theme's `colors.selection`, falling back to
+  `colors.primary`, instead of a fixed steelblue: XY and ordinal frame brushes,
+  ScatterplotMatrix, MinimapChart, and `renderChart` MinimapChart output. In
+  the browser they follow the `--semiotic-selection-color` and
+  `--semiotic-primary` variables that ThemeProvider sets, so theme changes
+  restyle them in place. Without a theme they use the light theme's
+  `#00a2ce`.
+
+- MinimapChart's overview brush is a LinearBrush, so the minimap no longer
+  loads d3-brush. It is keyboard-accessible (start, range, and end sliders)
+  and themed. Unlike the d3 brush, the ends cannot cross (they stop 1px, or
+  `minSpan`, apart), there are no Alt/Space/Meta modifier gestures, a touch
+  drag across the brush axis pans the page, edges have 24px targets, a new
+  selection starts after 3px of movement, and `onBrush` no longer repeats the
+  final extent on release. The d3 `.brush-group` / `.overlay` / `.selection`
+  SVG is replaced by HTML parts marked `data-semiotic-brush-part`; update
+  CSS or tests that target the d3 classes. Static output insets the
+  selection by half its stroke to match the browser's border.
+- MinimapChart re-reads the overview's scales after size, margin, and
+  y-extent changes, not only data changes, so the brush maps through the
+  current layout after a resize.
+
+### Fixed
+
+- Horizontal XY axes call index-aware formatters such as `adaptiveTimeTicks`
+  with the ticks actually rendered, after overlapping labels are thinned, and
+  judge duplicate labels on those rendered labels. Date changes are no longer
+  hidden by thinning, rendered ticks are no longer dropped as look-alike
+  duplicates, and `includeMax` labels compare with the tick before them. A
+  formatter that reads `index` now sees rendered indices. Static rendering
+  matches.
+- `adaptiveTimeTicks` hour-granularity labels show the tick's minutes
+  (`"14:30"`) instead of always `":00"`.
+- BumpChart passes the rendered ticks to `xFormat` as authored dates, so
+  `adaptiveTimeTicks` shortens its labels there too.
+- BumpChart resolves `showAxes` through `mode` and `responsiveRules` in the
+  browser, matching `renderChart`, so compact modes hide its axes.
+- GaugeChart string and number `centerContent` render as native SVG text in
+  the browser and in static SVG, instead of an HTML overlay and
+  `foreignObject`. Fragments of SVG elements also stay native.
+- `renderChart` GaugeChart takes its compact readout and scale-label defaults
+  from the resolved mode, including `responsiveRules`, as the browser does.
+- Static and pre-hydration SVG areas multiply `fillOpacity` (default 0.7) by
+  `opacity`, as the canvas does. This fixes BumpChart `highlightTop` neutral
+  trajectories and ribbon/line opacity (drawn fully opaque in SSR), bounds
+  bands, and the AreaChart/StackedAreaChart `opacity` prop. SSR areas that set
+  only `opacity` now render lighter, matching the canvas.
+- BumpChart honors a named `colorScheme` together with `highlightTop`, instead
+  of deferring to the theme palette.
+- `renderChart` BumpChart normalizes `highlightTop`, `neutralColor`, and
+  `color` the same way as the browser (numeric strings count) and draws the
+  default rank grid.
+- Static SVG violins fall back to `opacity` for their fill opacity, as the
+  canvas does.
+- BumpChart reserves endpoint-label room from the label text on each labeled
+  side (capped at 38% of the width; today's margins are the floor), so long
+  names no longer run off the chart. Start labels clear the rank ticks, and
+  over-long labels truncate with "…" and keep the full name in `<title>`.
+  Partial margins merge over these defaults in the browser and in
+  `renderChart` alike, `frameProps.margin` counts as explicit, and a side
+  legend shares its side with the labels instead of overlapping them.
+- `renderChart` LineChart `directLabel` no longer grows margin sides the
+  caller pinned, matching the browser.
+- Custom multi-series tooltip content near the last sample receives every
+  series instead of one datum.
+- Keyboard focus in multi-series mode carries `allSeries` and `xValue` like
+  pointer hover.
+- LineChart `gapStrategy="break"` no longer writes `_gapSegment` onto datums
+  passed to tooltips, `onClick`, and observations. Series from a function
+  `lineBy` stay separate across gaps, `fillArea` series lists keep their fill,
+  style rules see the authored series, and multi-series rows show the series
+  name instead of an internal segment key.
+- Multi-series rows for an ungrouped series have an empty `group` instead of
+  `_default`, so RealtimeLineChart labels its row with the value accessor.
+- Declarative and multi-series tooltip content, click observations, and
+  tap-to-lock linked hover keep a histogram bin's source rows instead of
+  losing them to a copied datum.
+- Realtime and physics chart specs no longer claim multi-series tooltip
+  support for charts that fall back to one datum (RealtimeSwarmChart,
+  RealtimeWaterfallChart, RealtimeHeatmap, and physics charts). In
+  development, `{ mode: "multi", content }` on such a chart warns once.
+- RealtimeHistogram and TemporalHistogram bins match a linked point selection
+  on any time inside `[binStart, binEnd)`, not only a time a source row carries
+  exactly, so a time picked on a linked line chart highlights its bin.
+- Mobile `tapToSelect` on an aggregate mark publishes its source rows' field
+  values, as linked hover does.
+- MinimapChart keeps a brush drag going when the chart re-renders during it,
+  as with a controlled `brushExtent` or an inline `onBrush` that sets parent
+  state. Every move after the first, and the release, used to be lost.
+  ScatterplotMatrix cell brushes read their callback the same way.
+- MinimapChart `minimap.brushDirection: "y"` sets the detail chart's y domain
+  instead of its x domain, reports ascending extents, and draws a controlled
+  y extent in the overview (it was drawn with negative height, so invisible).
+  `renderChart` applies the brushed range to the same axis.
+
 ## [3.11.0] - 2026-09-27
 
 ### Added

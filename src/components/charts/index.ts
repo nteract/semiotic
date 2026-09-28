@@ -51,7 +51,13 @@ export { ScatterplotMatrix } from "./xy/ScatterplotMatrix"
 export type { ScatterplotMatrixProps } from "./xy/ScatterplotMatrix"
 
 export { MinimapChart } from "./xy/MinimapChart"
-export type { MinimapChartProps, MinimapConfig } from "./xy/MinimapChart"
+export type {
+  MinimapBrushEndMeta,
+  MinimapBrushStyle,
+  MinimapChartProps,
+  MinimapConfig,
+  MinimapHandleOptions,
+} from "./xy/MinimapChart"
 
 export { QuadrantChart } from "./xy/QuadrantChart"
 export type { QuadrantChartProps, QuadrantsConfig, QuadrantsConfigOverride, QuadrantConfig, CenterlineStyle } from "./xy/QuadrantChart"

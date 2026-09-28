@@ -59,6 +59,7 @@ const bubbleChartProps = [
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on data points." },
   { name: "brush", type: "boolean", required: false, default: "false", description: "Enable an xy brush overlay for range selection. Also enabled when linkedBrush is set." },
   { name: "onBrush", type: "function", required: false, default: null, description: "Callback with { x, y } extents, or null when the brush clears." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true (when colorBy)", description: "Show a legend. Defaults to true when colorBy is specified." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },

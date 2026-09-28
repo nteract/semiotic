@@ -201,16 +201,22 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
   return { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus }
 }
 
-export function useXYKeyboardNavigation(
-  params: KeyboardInteractionParams<PipelineStore, SceneNode>
-) {
+interface XYKeyboardParams extends KeyboardInteractionParams<PipelineStore, SceneNode> {
+  /** Adds frame-owned context, such as multi-series rows, to a focused point's hover. */
+  decorateHover?: (hover: HoverData, store: PipelineStore) => HoverData
+}
+
+export function useXYKeyboardNavigation({ decorateHover, ...params }: XYKeyboardParams) {
   return useGraphKeyboardNavigation({
     ...params,
     extractPoints: extractXYNavPoints,
-    toHover: (point, store) => navPointToHover({
-      ...point,
-      datum: enrichDatumWithBand(point.datum, store.resolvedRibbons)
-    })
+    toHover: (point, store) => {
+      const hover = navPointToHover({
+        ...point,
+        datum: enrichDatumWithBand(point.datum, store.resolvedRibbons)
+      })
+      return decorateHover ? decorateHover(hover, store) : hover
+    }
   })
 }
 

@@ -1,9 +1,31 @@
-import type { ChartAccessor } from "../shared/types"
+import type { AxisConfig, ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import { resolveDefaultFill } from "../shared/hooks"
+import { resolveCategoricalPalette } from "../shared/colorUtils"
 import { bumpXIdentity } from "./bumpIdentity"
 
 const OTHER_COLOR_GROUP = "Other"
+
+/**
+ * Axis and tooltip formatter over BumpChart's index-based x scale: maps a tick
+ * position to its authored x value. When every x value is a number or Date,
+ * index-aware formatters such as `adaptiveTimeTicks` also receive the
+ * rendered ticks as authored epoch values.
+ */
+export function createBumpXFormatter(
+  xValues: readonly unknown[],
+  xFormat: AxisConfig["xFormat"] | undefined
+): NonNullable<AxisConfig["xFormat"]> {
+  const rawAt = (value: number | Date | string) =>
+    xValues[Math.max(0, Math.min(xValues.length - 1, Math.round(Number(value))))] as number | Date | string
+  const temporal = xValues.every((value) => typeof value === "number" || value instanceof Date)
+  return (value, index, allTicks) => {
+    if (xValues.length === 0) return ""
+    const raw = rawAt(value)
+    if (!xFormat) return String(raw instanceof Date ? raw.toLocaleDateString() : raw)
+    return xFormat(raw, index, allTicks && temporal ? allTicks.map((tick) => Number(rawAt(tick).valueOf())) : undefined)
+  }
+}
 
 export interface RankedBumpDatum<TDatum extends Datum = Datum> extends Datum {
   x: number
@@ -71,6 +93,19 @@ export function mapBumpAnnotations(
   })
 }
 
+/** A non-negative whole count from a number or numeric string (`highlightTop`), else undefined. */
+export function normalizeBumpCount(value: unknown): number | undefined {
+  const n = typeof value === "number"
+    ? value
+    : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : undefined
+}
+
+/** A non-empty color string, else undefined. */
+export function normalizeBumpColor(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== "" ? value : undefined
+}
+
 export function resolveBumpColorScheme(options: {
   seriesOrder: string[]
   overallOrder: string[]
@@ -92,6 +127,11 @@ export function resolveBumpColorScheme(options: {
     themeNeutral,
   } = options
   if (highlightTop == null && color == null) return colorScheme
+  // A named scheme is an explicit choice here, not a prop default, so resolve
+  // it to its palette: highlighted series take its colors over the theme's.
+  const palette = typeof colorScheme === "string"
+    ? [...resolveCategoricalPalette(colorScheme, themeCategorical)]
+    : colorScheme
 
   const topCount = highlightTop == null
     ? overallOrder.length
@@ -105,7 +145,7 @@ export function resolveBumpColorScheme(options: {
       enumerable: true,
       writable: true,
       value: color ?? (highlighted.has(series)
-        ? resolveDefaultFill(undefined, themeCategorical, colorScheme, series, categoryIndexMap)
+        ? resolveDefaultFill(undefined, themeCategorical, palette, series, categoryIndexMap)
         : neutralColor ?? themeNeutral ?? "#b8bec8"),
     })
   }

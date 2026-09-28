@@ -247,6 +247,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     showLegend: props.showLegend,

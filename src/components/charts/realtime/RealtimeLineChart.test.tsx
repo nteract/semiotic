@@ -1,6 +1,6 @@
 
 import React from "react"
-import { render, act } from "@testing-library/react"
+import { render, act, fireEvent } from "@testing-library/react"
 import { RealtimeLineChart } from "./RealtimeLineChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
@@ -143,5 +143,28 @@ describe("RealtimeLineChart", () => {
       </TooltipProvider>
     )
     expect(getByText("Series")).toBeTruthy()
+  })
+
+  it("labels its single multi-tooltip row with the value accessor", async () => {
+    const { container } = render(
+      <TooltipProvider>
+        <RealtimeLineChart
+          data={[{ time: 0, value: 10 }, { time: 10, value: 20 }]}
+          timeAccessor="time"
+          valueAccessor="value"
+          tooltip="multi"
+          width={200}
+          height={100}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          showAxes={false}
+        />
+      </TooltipProvider>
+    )
+    await act(async () => { await Promise.resolve() })
+    fireEvent.mouseMove(container.querySelector(".stream-xy-frame > div[role='img']")!, { clientX: 100, clientY: 50 })
+    await act(async () => { await Promise.resolve() })
+    const labels = Array.from(container.querySelectorAll(".stream-frame-tooltip span"))
+      .map(span => span.textContent)
+    expect(labels).toEqual(["", "value", "15"])
   })
 })

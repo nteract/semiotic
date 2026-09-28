@@ -151,6 +151,7 @@ const heatmapProps = [
   { name: "cellBorderColor", type: "string", required: false, default: '"#fff"', description: "Border color of heatmap cells." },
   { name: "cellBorderWidth", type: "number", required: false, default: "1", description: "Border width of heatmap cells." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover annotations on cells." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },

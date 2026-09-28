@@ -68,11 +68,18 @@ const ENTRY_GRAPHS = [
   // This costs the family ~3 KiB but removes a split-instance correctness bug.
   // Bumped 159→160 (3.9.2): shared XY frame title/accessibility defaults
   // add a sub-KiB shared-graph increase.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 160 },
+  // Bumped 160→161: multi-series edge snapping, keyboard multi focus, and
+  // histogram column hover (bar plugin) measure 160.01 KiB gzip.
+  // Bumped 161→162: BumpChart's text-sized endpoint-label margins (shared
+  // with renderChart) measure 161.43 KiB gzip.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 162 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 121 },
+  // Bumped 121→122: shared selection matching of covered ranges (histogram
+  // bins against point selections) and multi-series edge snapping measure
+  // 121.24 KiB gzip.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 122 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -143,7 +150,9 @@ const ENTRY_GRAPHS = [
   // Bumped 161→163 (3.9.0): shared legend/axis/title chrome also respects
   // final frameProps overrides and prevents static/live plot geometry drift.
   // The reachable graph measures 162.0 KiB gzip; keep one KiB headroom.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 163 },
+  // Bumped 163→164: histogram category breakdowns, column multi hover, and
+  // bin time-range selection matching measure 163.45 KiB gzip.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 164 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -162,7 +171,12 @@ const ENTRY_GRAPHS = [
   // Bumped 242→244: the published Atlas readers and renderer-aware server
   // configs add 1.6 KiB gzip to the reachable graph (243.6 KiB measured).
   // Bumped 244→245: Linux CI measures 244.2 KiB gzip; retain 0.8 KiB headroom.
-  { entry: "server.module.min.js", label: "server", limitKb: 245 },
+  // Bumped 245→246: BumpChart endpoint-label margins, Gauge center content,
+  // and area opacity parity reach the static renderer (245.69 KiB measured).
+  // Bumped 246→248: MinimapChart's static overview brush (mask, handles,
+  // extent labels) and the LinearBrush geometry and label layout it shares
+  // with the browser reach the static renderer (247.66 KiB measured).
+  { entry: "server.module.min.js", label: "server", limitKb: 248 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -232,7 +246,16 @@ const ENTRY_GRAPHS = [
   // still have unused runway.
   // Bumped 586→594: the published Atlas reader catalog and compatibility
   // surface add 7.2 KiB gzip (593.2 KiB measured).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 594 },
+  // Bumped 594→595: multi-series edge snapping (shared with keyboard focus)
+  // and index-keyed LineChart gap segments add 0.7 KiB gzip; production
+  // measures 594.7 KiB.
+  // Bumped 595→596: histogram category breakdowns, column multi hover, and
+  // corrected realtime/physics tooltip specs measure 595.45 KiB gzip.
+  // Bumped 596→597: adaptiveTimeTicks label options and rendered-tick
+  // relabeling of index-aware formatters measure 596.03 KiB gzip.
+  // Bumped 597→598: BumpChart text-sized endpoint-label margins measure
+  // 597.27 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 598 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

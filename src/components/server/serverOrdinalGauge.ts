@@ -1,4 +1,4 @@
-import { GaugeReadout } from "../charts/shared/GaugeReadout"
+import { resolveGaugeCenterContent } from "../charts/shared/GaugeReadout"
 import type { Datum } from "../charts/shared/datumTypes"
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
 import { normalizeColorGradient } from "../charts/shared/gradient"
@@ -27,6 +27,10 @@ export const gaugeChart: ChartConfig = {
     const showNeedle = rest.showNeedle !== false
     const fillZones = rest.fillZones !== false
     const { startAngleDeg } = sweepToAngles(sweep)
+    // Compactness and scale-label defaults follow the resolved mode (including
+    // responsive rules), as in the React chart.
+    const compact = common.__compactMode === true
+    const showScaleLabels = rest.showScaleLabels ?? !compact
 
     const thresholds = rest.thresholds
     const gradientFill = normalizeColorGradient(
@@ -40,7 +44,7 @@ export const gaugeChart: ChartConfig = {
       fillColor: rest.color,
       backgroundColor: rest.backgroundColor || "#e0e0e0",
       fillZones,
-      showScaleLabels: rest.showScaleLabels !== false,
+      showScaleLabels,
       gradientFill
     })
     const gaugeRules = rest.styleRules as StyleRule[] | undefined
@@ -85,17 +89,17 @@ export const gaugeChart: ChartConfig = {
         ? rest.valueFormat(value)
         : String(Math.round(value))
     const suppliedCenterContent = rest.centerContent ?? common.centerContent
-    const centerContent =
-      suppliedCenterContent != null
-        ? typeof suppliedCenterContent === "function"
-          ? suppliedCenterContent(value, gMin, gMax)
-          : suppliedCenterContent
-        : rest.mode === "sparkline" || rest.mode === "context"
-          ? undefined
-          : GaugeReadout({
-              value: formattedValue, min: gMin, max: gMax, radius,
-              showScaleLabels: rest.showScaleLabels !== false
-            })
+    const centerContent = resolveGaugeCenterContent({
+      centerContent: suppliedCenterContent,
+      centerLabel: typeof rest.centerLabel === "string" ? rest.centerLabel : undefined,
+      value,
+      min: gMin,
+      max: gMax,
+      radius,
+      showScaleLabels,
+      valueFormat: typeof rest.valueFormat === "function" ? rest.valueFormat : undefined,
+      compact
+    })
 
     return {
       chartType: "donut",
@@ -138,7 +142,7 @@ export const gaugeChart: ChartConfig = {
         centerY: frameCenterY,
         radius,
         innerRadius: computedInnerRadius,
-        showScaleLabels: rest.showScaleLabels !== false,
+        showScaleLabels,
         needleLength:
           computedInnerRadius > 20 ? computedInnerRadius - 8 : radius - 1,
         showNeedle,

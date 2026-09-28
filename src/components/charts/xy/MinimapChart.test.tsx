@@ -3,14 +3,26 @@ import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render, waitFor } from "@testing-library/react"
+import { scaleLinear } from "d3-scale"
 import { MinimapChart } from "./MinimapChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
-// Track all StreamXYFrame render calls to verify main + overview frames
+// Track all StreamXYFrame render calls to verify main + overview frames. The
+// frame's scales span its plot, which the overview brush waits for.
 const xyFrameRenders: CapturedXYFrameProps[] = []
 vi.mock("../../stream/StreamXYFrame", () => {
-  const ForwardRef = React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, _ref) => {
+  const ForwardRef = React.forwardRef<Partial<StreamXYFrameHandle>, CapturedXYFrameProps>((props, ref) => {
     xyFrameRenders.push(props)
+    React.useImperativeHandle(ref, () => ({
+      getScales: () => {
+        const [width, height] = props.size
+        const margin = props.margin as { top: number; right: number; bottom: number; left: number }
+        return {
+          x: scaleLinear().domain([0, 4]).range([0, width - margin.left - margin.right]),
+          y: scaleLinear().domain([10, 25]).range([height - margin.top - margin.bottom, 0]),
+        }
+      },
+    }))
     return <div className="stream-xy-frame"><svg /></div>
   })
   return {
@@ -95,8 +107,9 @@ describe("MinimapChart", () => {
         <MinimapChart data={sampleData} />
       </TooltipProvider>
     )
-    // Should have rendered 2 frames
-    expect(xyFrameRenders.length).toBe(2)
+    // Every render pass draws the main frame, then the overview
+    expect(xyFrameRenders.length % 2).toBe(0)
+    expect(xyFrameRenders.slice(-2).map((p) => p.enableHover)).toEqual([true, false])
     // Main chart should have enableHover true, overview should have enableHover false
     const mainProps = xyFrameRenders.find((p) => p.enableHover === true)
     const overviewProps = xyFrameRenders.find((p) => p.enableHover === false)!
@@ -143,15 +156,16 @@ describe("MinimapChart", () => {
     expect(overviewProps.size[1]).toBe(80)
   })
 
-  it("renders brush overlay for minimap", async () => {
+  it("renders the overview brush once its chunk loads", async () => {
     const { container } = render(
       <TooltipProvider>
         <MinimapChart data={sampleData} />
       </TooltipProvider>
     )
-    // Brush overlay is lazy-loaded (d3-brush code-split); wait for the chunk.
+    // The brush is lazy-loaded; wait for the chunk.
     await waitFor(() => {
-      expect(container.querySelector(".brush-group")).toBeTruthy()
+      expect(container.querySelector("[data-semiotic-control='linear-brush']")?.getAttribute("aria-label"))
+        .toBe("Overview range brush")
     })
   })
 
@@ -163,7 +177,7 @@ describe("MinimapChart", () => {
     )
 
     const initialFrameCount = xyFrameRenders.length
-    expect(initialFrameCount).toBe(2)
+    expect(initialFrameCount % 2).toBe(0)
 
     const newData = [
       { x: 0, y: 5 },

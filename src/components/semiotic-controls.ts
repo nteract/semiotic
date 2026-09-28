@@ -2,9 +2,10 @@
  * Lightweight, frame-independent visualization controls.
  *
  * Import from `semiotic/controls` when a chart needs accessible HTML or SVG
- * controls but does not need a frame renderer in the same bundle. Frame-owned
- * brushing remains in `semiotic/xy` and `semiotic/ordinal` because it depends
- * on frame scales, streaming state, and selection stores.
+ * controls but does not need a frame renderer in the same bundle. LinearBrush
+ * is a standalone range brush for any track; frame-owned brushing remains in
+ * `semiotic/xy` and `semiotic/ordinal` because it depends on frame scales,
+ * streaming state, and selection stores.
  */
 export {
   DirectManipulationControl,
@@ -55,6 +56,18 @@ export type {
 
 export { CircularBrush } from "./CircularBrush"
 export type { CircularBrushProps, CircularBrushValue } from "./CircularBrush"
+
+export { LinearBrush } from "./controls/LinearBrush"
+export type {
+  LinearBrushChangeMeta,
+  LinearBrushChangeSource,
+  LinearBrushGestureMode,
+  LinearBrushHandleRenderContext,
+  LinearBrushLabelRenderContext,
+  LinearBrushProps,
+  LinearBrushScale,
+  LinearBrushValue,
+} from "./controls/LinearBrush"
 
 export {
   MobileStandardControls,

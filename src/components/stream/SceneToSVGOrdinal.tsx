@@ -363,7 +363,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           d={n.pathString}
           transform={n.translateX || n.translateY ? `translate(${n.translateX},${n.translateY})` : undefined}
           fill={svgFill(n.style.fill)}
-          fillOpacity={n.style.fillOpacity ?? 0.6}
+          fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.6}
           stroke={n.style.stroke || "#333"}
           strokeWidth={n.style.strokeWidth ?? 1}
         />

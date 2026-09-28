@@ -211,15 +211,17 @@ export const lineChart: ChartConfig = {
       rest,
     )
 
-    // Direct-label margin expansion (right/left).
+    // Direct-label margin expansion (right/left). Sides the caller pinned
+    // keep their value, as in the React LineChart.
     let margin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
+    const pinned = new Set(Array.isArray(common.__explicitMarginSides) ? common.__explicitMarginSides : [])
     if (series.marginExtra && margin && typeof margin === "object") {
       margin = {
         ...margin,
-        ...(series.marginExtra.right != null && {
+        ...(series.marginExtra.right != null && !pinned.has("right") && {
           right: Math.max(Number(margin.right) || 0, series.marginExtra.right),
         }),
-        ...(series.marginExtra.left != null && {
+        ...(series.marginExtra.left != null && !pinned.has("left") && {
           left: Math.max(Number(margin.left) || 0, series.marginExtra.left),
         }),
       }

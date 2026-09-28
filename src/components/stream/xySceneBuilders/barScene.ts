@@ -111,10 +111,20 @@ export function buildBarScene(
     if (barWidth <= 0) continue
 
     if (categoryOrder && bin.categories.size > 0) {
+      // One breakdown per bin, shared by its segments: stack order (bottom to
+      // top), zero values skipped as rendering skips them, each entry carrying
+      // its category's rows and the array carrying the whole bin's.
+      const categories = attachSelectionProvenance(
+        categoryOrder.flatMap((category) => {
+          const value = bin.categories.get(category) || 0
+          return value === 0
+            ? []
+            : [attachSelectionProvenance({ category, value }, bin.categoryRows?.get(category))]
+        }),
+        bin.rows
+      )
       let cumulativeBase = 0
-      for (const cat of categoryOrder) {
-        const catVal = bin.categories.get(cat) || 0
-        if (catVal === 0) continue
+      for (const { category: cat, value: catVal } of categories) {
         const yBottom = scales.y(cumulativeBase)
         const yTop = scales.y(cumulativeBase + catVal)
         const rectY = Math.min(yBottom, yTop)
@@ -133,7 +143,8 @@ export function buildBarScene(
             binEnd: bin.end,
             total: bin.total,
             category: cat,
-            categoryValue: catVal
+            categoryValue: catVal,
+            categories
           },
           bin.categoryRows?.get(cat)
         )

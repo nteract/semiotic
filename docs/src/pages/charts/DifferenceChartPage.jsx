@@ -158,6 +158,7 @@ const differenceChartProps = [
   { name: "pointIdAccessor", type: "string | function", required: false, default: null, description: "Stable ID accessor for push-mode remove()/update()." },
   { name: "windowSize", type: "number", required: false, default: null, description: "Maximum number of raw rows kept in the push buffer. When exceeded, oldest rows are evicted FIFO. Recommended for long-running streams so segment recomputation stays bounded." },
   { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects (x-threshold, y-threshold, etc.)." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "tooltip", type: "boolean | function | object", required: false, default: null, description: "Custom tooltip; default tooltip shows both series + Δ at the hovered x." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamXYFrame." },
 ]

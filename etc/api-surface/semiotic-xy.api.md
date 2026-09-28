@@ -348,6 +348,7 @@ interface-member HeatmapProps::property::heatmapYBins = optional heatmapYBins: n
 interface-member HeatmapProps::property::legend = optional legend: Pick<GradientLegendValue, "legendDistance"> | undefined
 interface-member HeatmapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member HeatmapProps::property::showAxes = optional showAxes: boolean | undefined
 interface-member HeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member HeatmapProps::property::showValues = optional showValues: boolean | undefined
 interface-member HeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined

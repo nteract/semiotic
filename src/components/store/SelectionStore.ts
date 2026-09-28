@@ -1,7 +1,11 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createStore } from "./createStore"
-import { getSelectionProvenance } from "./selectionProvenance"
+import {
+  getSelectionCoverage,
+  getSelectionProvenance,
+  type SelectionCoverage
+} from "./selectionProvenance"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -44,10 +48,25 @@ export interface SelectionStoreState {
 
 // ── Predicate builders ─────────────────────────────────────────────────────
 
-function buildRowClausePredicate(
-  clause: SelectionClause
-): (d: Datum) => boolean {
-  const fieldTests: Array<(d: Datum) => boolean> = []
+type RowTest = (d: Datum, coverage?: SelectionCoverage) => boolean
+
+const coverageNumber = (value: unknown): number =>
+  value instanceof Date ? value.getTime() : typeof value === "number" ? value : NaN
+
+/** Whether sorted `values` contain one inside the half-open `[start, end)`. */
+function hasValueInRange(values: Float64Array, start: number, end: number): boolean {
+  let lo = 0
+  let hi = values.length
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1
+    if (values[mid] < start) lo = mid + 1
+    else hi = mid
+  }
+  return lo < values.length && values[lo] < end
+}
+
+function buildRowClausePredicate(clause: SelectionClause): RowTest {
+  const fieldTests: RowTest[] = []
 
   for (const [field, constraint] of Object.entries(clause.fields)) {
     if (constraint.type === "point") {
@@ -60,7 +79,27 @@ function buildRowClausePredicate(
           timestamps.add(value.getTime())
         }
       }
-      fieldTests.push((d) => {
+      // A datum covering a range on this field (a histogram bin) matches any
+      // selected value inside it. Sorted values are built once per coercer.
+      const sortedByCoercer = new Map<(value: unknown) => number, Float64Array>()
+      const sortedValues = (toNumber: (value: unknown) => number) => {
+        let sorted = sortedByCoercer.get(toNumber)
+        if (!sorted) {
+          const numbers: number[] = []
+          for (const value of constraint.values) {
+            const n = toNumber(value)
+            if (Number.isFinite(n)) numbers.push(n)
+          }
+          sorted = Float64Array.from(numbers).sort()
+          sortedByCoercer.set(toNumber, sorted)
+        }
+        return sorted
+      }
+      fieldTests.push((d, coverage) => {
+        if (coverage && Object.prototype.hasOwnProperty.call(coverage.ranges, field)) {
+          const [start, end] = coverage.ranges[field]
+          return hasValueInRange(sortedValues(coverage.toNumber ?? coverageNumber), start, end)
+        }
         const value = d[field]
         return value instanceof Date
           ? (timestamps?.has(value.getTime()) ?? false)
@@ -76,14 +115,14 @@ function buildRowClausePredicate(
     }
   }
 
-  return (d) => fieldTests.every((fn) => fn(d))
+  return (d, coverage) => fieldTests.every((fn) => fn(d, coverage))
 }
 
 export function buildPredicate(
   selection: Selection,
   requestingClientId?: string
 ): (d: Datum) => boolean {
-  const rowClausePredicates: Array<(d: Datum) => boolean> = []
+  const rowClausePredicates: RowTest[] = []
 
   for (const [clientId, clause] of selection.clauses) {
     // In crossfilter mode, exclude the requesting client's own clause
@@ -98,15 +137,20 @@ export function buildPredicate(
   if (rowClausePredicates.length === 0) return () => true
 
   // An aggregate represents a set of source rows. Intersected clauses must
-  // all match the same row, including crossfilter's remaining clauses.
-  const matchesRow =
+  // all match the same row, including crossfilter's remaining clauses. The
+  // aggregate's covered ranges apply to it and to each of its rows.
+  const matchesRow: RowTest =
     selection.resolution !== "union"
-      ? (row: Datum) => rowClausePredicates.every((predicate) => predicate(row))
-      : (row: Datum) => rowClausePredicates.some((predicate) => predicate(row))
+      ? (row, coverage) => rowClausePredicates.every((predicate) => predicate(row, coverage))
+      : (row, coverage) => rowClausePredicates.some((predicate) => predicate(row, coverage))
 
-  return (datum) =>
-    matchesRow(datum) ||
-    (getSelectionProvenance(datum)?.some(matchesRow) ?? false)
+  return (datum) => {
+    const coverage = getSelectionCoverage(datum)
+    return (
+      matchesRow(datum, coverage) ||
+      (getSelectionProvenance(datum)?.some((row) => matchesRow(row, coverage)) ?? false)
+    )
+  }
 }
 
 // ── Store factory ──────────────────────────────────────────────────────────

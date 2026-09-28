@@ -296,8 +296,11 @@ interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface LineStyle
 interface LinkedChartsProps
+interface MinimapBrushEndMeta
+interface MinimapBrushStyle
 interface MinimapChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "linkedHover" | "onClick" | "onObservation" | "selection">, AxisConfig
 interface MinimapConfig
+interface MinimapHandleOptions
 interface MobileAnnotationCalloutListProps
 interface MobileChartChip
 interface MobileChartContainerProps extends Omit<ChartContainerProps, "mobile">
@@ -434,6 +437,10 @@ interface-member AccessibleNavTreeProps::property::visible = optional visible: b
 interface-member ActivateObservation::property::datum = required datum: Datum
 interface-member ActivateObservation::property::inputType = required inputType: ObservationInputType
 interface-member ActivateObservation::property::type = required type: "activate"
+interface-member AdaptiveTimeTickOptions::property::deltaStyle = optional deltaStyle: "clock" | "compact" | undefined
+interface-member AdaptiveTimeTickOptions::property::includeDate = optional includeDate: "always" | "auto" | "never" | undefined
+interface-member AdaptiveTimeTickOptions::property::includeYear = optional includeYear: "always" | "auto" | "never" | undefined
+interface-member AdaptiveTimeTickOptions::property::referenceTime = optional referenceTime: Date | number | undefined
 interface-member AdaptiveTimeTickOptions::property::timeZone = optional timeZone: "UTC" | "local" | (string & {}) | undefined
 interface-member AdaptiveTimeTickOptions::property::utc = optional utc: boolean | undefined
 interface-member AggregateConfig::property::band = optional band: AggregateBand | undefined
@@ -539,6 +546,7 @@ interface-member AreaChartProps::property::yAccessor = optional yAccessor: Chart
 interface-member AreaChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
 interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
+interface-member AxisConfig::property::showAxes = optional showAxes: boolean | undefined
 interface-member AxisConfig::property::xFormat = optional xFormat: ((Date | d: number | string, index?: number, allTicks?: number[]) => string | React.ReactNode) | undefined
 interface-member AxisConfig::property::xLabel = optional xLabel: string | undefined
 interface-member AxisConfig::property::yFormat = optional yFormat: ((Date | d: number | string) => string | React.ReactNode) | undefined
@@ -1108,6 +1116,7 @@ interface-member GaugeChartProps::property::annotations = optional annotations: 
 interface-member GaugeChartProps::property::arcWidth = optional arcWidth: number | undefined
 interface-member GaugeChartProps::property::backgroundColor = optional backgroundColor: string | undefined
 interface-member GaugeChartProps::property::centerContent = optional centerContent: ((value: number, min: number, max: number) => React.ReactNode) | React.ReactNode
+interface-member GaugeChartProps::property::centerLabel = optional centerLabel: string | undefined
 interface-member GaugeChartProps::property::color = optional color: string | undefined
 interface-member GaugeChartProps::property::cornerRadius = optional cornerRadius: number | undefined
 interface-member GaugeChartProps::property::enableHover = optional enableHover: boolean | undefined
@@ -1193,6 +1202,7 @@ interface-member HeatmapProps::property::heatmapYBins = optional heatmapYBins: n
 interface-member HeatmapProps::property::legend = optional legend: Pick<GradientLegendValue, "legendDistance"> | undefined
 interface-member HeatmapProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member HeatmapProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
+interface-member HeatmapProps::property::showAxes = optional showAxes: boolean | undefined
 interface-member HeatmapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member HeatmapProps::property::showValues = optional showValues: boolean | undefined
 interface-member HeatmapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -1369,6 +1379,15 @@ interface-member LinkedChartsProps::property::legendPosition = optional legendPo
 interface-member LinkedChartsProps::property::legendSelectionName = optional legendSelectionName: string | undefined
 interface-member LinkedChartsProps::property::selections = optional selections: Record<string, {resolution?: ResolutionMode;}> | undefined
 interface-member LinkedChartsProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member MinimapBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
+interface-member MinimapBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
+interface-member MinimapBrushEndMeta::property::source = required source: LinearBrushChangeSource
+interface-member MinimapBrushStyle::property::activeStroke = optional activeStroke: string | undefined
+interface-member MinimapBrushStyle::property::fill = optional fill: string | undefined
+interface-member MinimapBrushStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member MinimapBrushStyle::property::mask = optional mask: boolean | undefined | {fill?: string; opacity?: number;}
+interface-member MinimapBrushStyle::property::stroke = optional stroke: string | undefined
+interface-member MinimapBrushStyle::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member MinimapChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member MinimapChartProps::property::brushExtent = optional brushExtent: [number, number] | undefined
 interface-member MinimapChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
@@ -1384,6 +1403,8 @@ interface-member MinimapChartProps::property::lineDataAccessor = optional lineDa
 interface-member MinimapChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member MinimapChartProps::property::minimap = optional minimap: MinimapConfig | undefined
 interface-member MinimapChartProps::property::onBrush = optional onBrush: ((extent: [number, number] | null) => void) | undefined
+interface-member MinimapChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: [number, number] | null, meta: MinimapBrushEndMeta) => void) | undefined
+interface-member MinimapChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
 interface-member MinimapChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member MinimapChartProps::property::renderBefore = optional renderBefore: boolean | undefined
 interface-member MinimapChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -1396,10 +1417,24 @@ interface-member MinimapChartProps::property::yAccessor = optional yAccessor: Ch
 interface-member MinimapChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member MinimapConfig::property::background = optional background: string | undefined
 interface-member MinimapConfig::property::brushDirection = optional brushDirection: "x" | "y" | undefined
+interface-member MinimapConfig::property::brushLabel = optional brushLabel: string | undefined
+interface-member MinimapConfig::property::brushStyle = optional brushStyle: MinimapBrushStyle | undefined
+interface-member MinimapConfig::property::extentLabelFormat = optional extentLabelFormat: ((value: number) => string) | undefined
+interface-member MinimapConfig::property::handles = optional handles: MinimapHandleOptions | boolean | undefined
 interface-member MinimapConfig::property::height = optional height: number | undefined
 interface-member MinimapConfig::property::lineStyle = optional lineStyle: ((d: Datum) => Datum) | undefined
 interface-member MinimapConfig::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member MinimapConfig::property::minSpan = optional minSpan: number | undefined
+interface-member MinimapConfig::property::renderHandle = optional renderHandle: ((context: LinearBrushHandleRenderContext) => ReactNode) | undefined
+interface-member MinimapConfig::property::resetOnDoubleClick = optional resetOnDoubleClick: boolean | undefined
 interface-member MinimapConfig::property::showAxes = optional showAxes: boolean | undefined
+interface-member MinimapConfig::property::showExtentLabels = optional showExtentLabels: boolean | undefined
+interface-member MinimapHandleOptions::property::activeFill = optional activeFill: string | undefined
+interface-member MinimapHandleOptions::property::fill = optional fill: string | undefined
+interface-member MinimapHandleOptions::property::move = optional move: boolean | undefined
+interface-member MinimapHandleOptions::property::radius = optional radius: number | undefined
+interface-member MinimapHandleOptions::property::size = optional size: number | undefined
+interface-member MinimapHandleOptions::property::stroke = optional stroke: string | undefined
 interface-member MobileAnnotationCalloutListProps::property::className = optional className: string | undefined
 interface-member MobileAnnotationCalloutListProps::property::empty = optional empty: React.ReactNode
 interface-member MobileAnnotationCalloutListProps::property::items = required items: readonly MobileAnnotationCalloutItem[]

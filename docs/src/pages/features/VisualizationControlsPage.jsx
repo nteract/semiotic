@@ -5,6 +5,7 @@ import { XYCustomChart } from "semiotic/xy"
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
+import LinearBrushDemo from "./controls/LinearBrushDemo"
 
 const DEMO_VALUES = [42, 55, 61, 49, 72, 67, 58, 78].map((value, index) => ({
   id: `control-demo-${index + 1}`,
@@ -193,6 +194,7 @@ const controlsBundleCode = `// Frame-independent controls: no XY, ordinal, geo, 
 import {
   DirectManipulationControl,
   CircularBrush,
+  LinearBrush,
   MobileStandardControls,
   SentenceFilter,
 } from "semiotic/controls"
@@ -200,6 +202,31 @@ import {
 // Frame-owned brushing stays close to its scale and streaming contracts.
 import { StreamXYFrame } from "semiotic/xy"
 import { StreamOrdinalFrame } from "semiotic/ordinal"`
+
+const linearBrushCode = `import { LinearBrush } from "semiotic/controls"
+import { StackedAreaChart } from "semiotic/xy"
+
+const margin = { top: 14, right: 16, bottom: 36, left: 16 }
+
+function Overview({ data, range, setRange, save }) {
+  return (
+    <div style={{ position: "relative", width: 640, height: 110 }}>
+      <StackedAreaChart data={data} xAccessor="time" yAccessor="value" areaBy="series"
+        width={640} height={110} margin={margin} showAxes={false} enableHover={false} />
+      <LinearBrush
+        domain={[start, end]}
+        inset={margin}                            // overlay the overview's plot
+        value={range}
+        onChange={(next) => setRange(next)}       // live, while dragging
+        onChangeEnd={(next, meta) => save(next)}  // once per release or key
+        step={DAY} largeStep={7 * DAY} minSpan={7 * DAY} snap
+        maskStyle showMoveHandle resetOnDoubleClick resetValue={[start, end]}
+        showExtentLabels
+        formatValue={(t) => \`\${formatDay(t)}\\n\${formatYear(t)}\`}  // two-line labels
+      />
+    </div>
+  )
+}`
 
 const recipeContractCode = `// Portable recipe control declaration.
 controls: [{
@@ -430,6 +457,12 @@ const candidates = [
     decision: "Move with the controls bundle. Its geometry is self-contained and it does not need frame state.",
   },
   {
+    surface: "LinearBrush",
+    status: "Public now",
+    scope: "Linear range control",
+    decision: "Controls bundle only. Geometry in, value out: it maps a domain or the chart's scale and never reads frame state, so any chart or overview can host it.",
+  },
+  {
     surface: "MobileStandardControls + useMobileRangeControls",
     status: "Public now",
     scope: "HTML fallback and mobile rail",
@@ -445,7 +478,7 @@ const candidates = [
     surface: "MinimapChart brush",
     status: "Composite pattern",
     scope: "Overview + detail navigation",
-    decision: "Keep as a chart HOC. A minimap is visual context plus a brush, not merely a generic control.",
+    decision: "Keep as a chart HOC built on LinearBrush. A minimap is visual context plus a brush, not merely a generic control.",
   },
   {
     surface: "DetailsPanel",
@@ -497,6 +530,47 @@ const sentenceFilterProps = [
   },
 ]
 
+const linearBrushProps = [
+  {
+    names: "value, defaultValue, onChange, onChangeStart, onChangeEnd",
+    purpose:
+      "Controlled or uncontrolled [start, end] | null. onChange fires on every change, including each pointer move; onChangeEnd fires once per release, keyboard step, clear, or reset. Both receive { source, mode, changed, atDomainStart, atDomainEnd }.",
+  },
+  {
+    names: "domain, scale, orientation, reverse",
+    purpose:
+      "Map values linearly over domain, or pass the chart's own scale so the brush lines up with its marks exactly (log and time scales work). A y brush puts the minimum at the bottom.",
+  },
+  {
+    names: "width, height, inset",
+    purpose: "Size the track, or overlay the nearest positioned parent inset by a chart's margins.",
+  },
+  {
+    names: "step, largeStep, snap, minSpan",
+    purpose: "Keyboard steps (span / 20 and span / 5 by default), pointer snapping to step, and the smallest selection.",
+  },
+  {
+    names: "allowCreate, clearOnBackgroundClick, clearable, resetOnDoubleClick, resetValue, emptySelection, disabled",
+    purpose:
+      "Background drags draw a selection, background clicks and Escape clear it, and double-click resets it. emptySelection=\"full-extent\" keeps the handles at the domain ends when nothing is selected.",
+  },
+  {
+    names: "selectionStyle, activeSelectionStyle, maskStyle, handleStyle, activeHandleStyle, handleSize, hitSize, showHandles, showMoveHandle, renderHandle",
+    purpose:
+      "Style the selection and the drag state, dim the track outside it, and restyle or replace the handles. renderHandle receives side, value, fraction, active, dragging, and focused. Edge hit targets are 24px.",
+  },
+  {
+    names: "showExtentLabels, showDomainLabels, formatValue, renderExtentLabel, labelPosition, labelOffset, labelWidth, labelBounds, labelStyle",
+    purpose:
+      "Label the ends, and the domain ends where they fit. A newline in formatValue makes a two-line label; labels flip inward at labelBounds.",
+  },
+  {
+    names: "label, description, controlType, controlId, onObservation, chartId, chartType, className, style",
+    purpose:
+      "Accessible names, control-start, control-change, and control-end observations with the range-boundary type, and wrapper styling.",
+  },
+]
+
 const sentenceFilterDefinitionTypes = [
   ["number", "min, max, step, inputMode", "Number field, slider, or both"],
   ["select", "options, searchable", "Single searchable option list"],
@@ -534,6 +608,53 @@ export default function VisualizationControlsPage() {
       <DirectControlDemo />
 
       <CodeBlock code={directControlCode} language="jsx" />
+
+      <h2 id="linear-brush">Linear Brush</h2>
+      <p>
+        <code>LinearBrush</code> is a one-dimensional range brush for any track: an overview chart,
+        a timeline, or a plain row. Give it a <code>domain</code> (or the chart&apos;s own{" "}
+        <code>scale</code>) and lay it over the chart&apos;s plot with <code>inset</code>. It is
+        controlled or uncontrolled, fires <code>onChange</code> while a gesture moves and{" "}
+        <code>onChangeEnd</code> once on release, and positions every part by fraction, so it is
+        responsive and renders the same on the server.
+      </p>
+
+      <LinearBrushDemo />
+
+      <CodeBlock code={linearBrushCode} language="jsx" />
+
+      <p>
+        The brush is a group of three sliders: the start, the whole range, and the end. Arrow keys
+        step (Shift, Page Up, and Page Down take the large step), Home and End go to the limits, and
+        Escape clears. Resizing from the keyboard means focusing an end. Its colors come from the
+        ThemeProvider variables (<code>colors.selection</code>, falling back to <code>primary</code>),
+        so it needs no store and follows theme changes in place.
+      </p>
+
+      <h3 id="linear-brush-api">API at a glance</h3>
+      <details style={styles.apiDetails}>
+        <summary style={styles.apiSummary}>Show the complete prop reference</summary>
+        <div style={styles.tableWrap}>
+          <table style={{ ...styles.table, minWidth: 680 }}>
+            <thead>
+              <tr>
+                <th>Props</th>
+                <th>Contract</th>
+              </tr>
+            </thead>
+            <tbody>
+              {linearBrushProps.map((row) => (
+                <tr key={row.names}>
+                  <td>
+                    <code>{row.names}</code>
+                  </td>
+                  <td>{row.purpose}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       <h2 id="sentence-filter">Sentence Filter</h2>
       <p>
@@ -685,7 +806,7 @@ export default function VisualizationControlsPage() {
         </article>
         <article style={styles.card}>
           <h3>Range and brush</h3>
-          <p><code>CircularBrush</code> provides a self-contained cyclical range. XY and ordinal brushes remain frame-owned because they must track scale changes, bin snapping, streaming, and selections.</p>
+          <p><code>CircularBrush</code> provides a self-contained cyclical range and <code>LinearBrush</code> a linear one that overlays any chart. XY and ordinal brushes remain frame-owned because they must track scale changes, bin snapping, streaming, and selections.</p>
         </article>
         <article style={styles.card}>
           <h3>Mobile alternatives</h3>

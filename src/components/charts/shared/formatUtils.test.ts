@@ -119,6 +119,82 @@ describe("adaptiveTimeTicks", () => {
   })
 })
 
+describe("adaptiveTimeTicks axis label options", () => {
+  const MIN = 60_000
+  const HOUR = 60 * MIN
+  const DAY = 24 * HOUR
+  const series = (start: number, step: number, count: number) =>
+    Array.from({ length: count }, (_, i) => start + i * step)
+  const axis = (format: ReturnType<typeof adaptiveTimeTicks>, ticks: number[]) =>
+    ticks.map((tick, index) => format(tick, index, ticks))
+  const noon = Date.UTC(2026, 8, 27, 12)
+
+  it("keeps the classic labels by default", () => {
+    expect(axis(adaptiveTimeTicks(), series(noon, 10 * MIN, 7))).toEqual([
+      "Sep 27, 2026 12:00", ":10", ":20", ":30", ":40", ":50", "13:00",
+    ])
+    expect(axis(adaptiveTimeTicks(), series(noon, 4 * HOUR, 7))).toEqual([
+      "Sep 27, 2026 12:00", "16:00", "20:00", "Sep 28 00:00", "04:00", "08:00", "12:00",
+    ])
+    expect(axis(adaptiveTimeTicks(), series(Date.UTC(2026, 8, 20), 5 * DAY, 7))).toEqual([
+      "Sep 20, 2026", "25", "30", "Oct 5", "10", "15", "20",
+    ])
+  })
+
+  it("prints the minutes of hourly ticks that are not on the hour", () => {
+    expect(axis(adaptiveTimeTicks("hours"), series(noon + 30 * MIN, 2 * HOUR, 3))).toEqual([
+      "Sep 27, 2026 12:30", "14:30", "16:30",
+    ])
+  })
+
+  it("drops the year inside the reference year with includeYear auto", () => {
+    const days = series(Date.UTC(2026, 8, 20), 5 * DAY, 3)
+    const inYear = adaptiveTimeTicks(undefined, { includeYear: "auto", referenceTime: Date.UTC(2026, 0, 5) })
+    expect(axis(inYear, days)).toEqual(["Sep 20", "25", "30"])
+    const otherYear = adaptiveTimeTicks(undefined, { includeYear: "auto", referenceTime: new Date(Date.UTC(2027, 0, 5)) })
+    expect(axis(otherYear, days)).toEqual(["Sep 20, 2026", "25", "30"])
+  })
+
+  it("keeps the year at a year boundary unless includeYear is never", () => {
+    const newYear = series(Date.UTC(2026, 11, 22), 5 * DAY, 3)
+    const auto = adaptiveTimeTicks(undefined, { includeYear: "auto", referenceTime: Date.UTC(2026, 5, 1) })
+    expect(axis(auto, newYear)).toEqual(["Dec 22, 2026", "27", "Jan 1, 2027"])
+    expect(axis(adaptiveTimeTicks(undefined, { includeYear: "never" }), newYear)).toEqual(["Dec 22", "27", "Jan 1"])
+    expect(axis(adaptiveTimeTicks("years", { includeYear: "never" }), [Date.UTC(2025, 0), Date.UTC(2026, 0)])).toEqual(["2025", "2026"])
+  })
+
+  it("shows only times for one calendar day with includeDate auto", () => {
+    const oneDay = adaptiveTimeTicks(undefined, { includeDate: "auto" })
+    expect(axis(oneDay, series(noon, 10 * MIN, 3))).toEqual(["12:00", ":10", ":20"])
+    expect(axis(oneDay, series(noon, 4 * HOUR, 4))).toEqual(["Sep 27, 2026 12:00", "16:00", "20:00", "Sep 28 00:00"])
+    expect(axis(adaptiveTimeTicks(undefined, { includeDate: "never" }), series(noon, 4 * HOUR, 4))).toEqual([
+      "12:00", "16:00", "20:00", "00:00",
+    ])
+  })
+
+  it("finds the calendar day in the configured time zone", () => {
+    // 20:00 and 23:00 Los Angeles on Sep 27 are 03:00 and 06:00 UTC on Sep 28.
+    const ticks = [Date.UTC(2026, 8, 28, 3), Date.UTC(2026, 8, 28, 6)]
+    const la = adaptiveTimeTicks("hours", { includeDate: "auto", timeZone: "America/Los_Angeles" })
+    expect(axis(la, ticks)).toEqual(["20:00", "23:00"])
+    const utcSpan = [Date.UTC(2026, 8, 27, 23), Date.UTC(2026, 8, 28, 2)]
+    expect(axis(adaptiveTimeTicks("hours", { includeDate: "auto" }), utcSpan)).toEqual(["Sep 27, 2026 23:00", "Sep 28 02:00"])
+  })
+
+  it("writes readable clock and date deltas with deltaStyle clock", () => {
+    const clock = { deltaStyle: "clock" as const }
+    expect(axis(adaptiveTimeTicks("minutes", clock), series(noon, 10 * MIN, 2))).toEqual(["Sep 27, 2026 12:00", "12:10"])
+    expect(axis(adaptiveTimeTicks("seconds", clock), [noon + MIN, noon + MIN + 5000])).toEqual(["Sep 27, 2026 12:01:00", "12:01:05"])
+    expect(axis(adaptiveTimeTicks("days", clock), [Date.UTC(2026, 9, 1), Date.UTC(2026, 9, 7)])).toEqual(["Oct 1, 2026", "Oct 7"])
+  })
+
+  it("keeps full labels for value-only calls such as tooltips", () => {
+    const format = adaptiveTimeTicks("minutes", { includeYear: "never", includeDate: "never", deltaStyle: "clock" })
+    expect(format(noon)).toBe("Sep 27, 2026 12:00")
+    expect(format(noon, 2)).toBe("Sep 27, 2026 12:00")
+  })
+})
+
 describe("resolveAdaptiveTimeZone", () => {
   it("defaults to UTC", () => {
     expect(resolveAdaptiveTimeZone()).toEqual({ kind: "utc" })
