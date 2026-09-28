@@ -9,10 +9,10 @@
     "packageName": "semiotic",
     "packageVersion": "3.11.0",
     "channel": "source",
-    "sourceRevision": "sha256:9827636d9f00c52c689c33a3d418d76183585bacea3cc6e2c9b8f365a7018791",
+    "sourceRevision": "sha256:2a85951bfa60b8af1687d42b9068f0c8b914548c08d8c351ecbaadf7f905a748",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:41b4b7e3c7fe1d0f4ec37cb1171e16de0a5ebf9f5d67946c06716e32877e90fd",
+      "digest": "sha256:a4044987d69373bbaa85dacc7fb5c3314ab49d6da8f08bd55871b6f434bc4be1",
       "fileCount": 1265
     },
     "taskSources": {
@@ -195,54 +195,8 @@
     "claimId": "task.compare-category-totals",
     "statement": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
     "owner": "Semiotic repository maintainers",
-    "status": "supported-in-scope",
-    "observed": {
-      "verifiedAt": "2026-09-28T08:18:03.919Z",
-      "environment": {
-        "node": "v22.22.1",
-        "platform": "darwin",
-        "architecture": "arm64",
-        "browser": "Playwright Chromium"
-      },
-      "runs": [
-        {
-          "kind": "unit",
-          "targets": [
-            "docs/src/pages/tasks/examples/category-comparison.test.ts",
-            "docs/src/pages/tasks/examples/live-chart.test.tsx",
-            "docs/src/pages/tasks/examples/source-correction.test.ts"
-          ],
-          "name": "Task source units",
-          "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
-          "exitCode": 0,
-          "passed": 14,
-          "skipped": 0,
-          "passedByFile": {
-            "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
-            "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
-            "docs/src/pages/tasks/examples/source-correction.test.ts": 5
-          }
-        },
-        {
-          "kind": "browser",
-          "targets": [
-            "integration-tests/docs-examples-task-live.spec.ts",
-            "integration-tests/docs-examples-tasks.spec.ts"
-          ],
-          "name": "Task browser behavior",
-          "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
-          "exitCode": 0,
-          "passed": 6,
-          "skipped": 0,
-          "passedByFile": {
-            "integration-tests/docs-examples-task-live.spec.ts": 2,
-            "integration-tests/docs-examples-tasks.spec.ts": 4
-          }
-        }
-      ],
-      "record": "ai/tasks/verification.json",
-      "authorship": "Agent-observed execution of repository tests; independent review is not recorded."
-    },
+    "status": "stale",
+    "observed": null,
     "validity": "Only the content digests and environment recorded here; not a release range or an adoption result.",
     "invalidation": "Changes to runtime source, schemas, manifests, task examples, tests, verification tooling or this task definition invalidate the recorded result.",
     "commands": [
