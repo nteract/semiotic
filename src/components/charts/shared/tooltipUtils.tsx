@@ -1,3 +1,4 @@
+import { formatTooltipNumber } from "../../Tooltip/formatTooltipNumber"
 import * as React from "react"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import { formatTooltipDate } from "../../Tooltip/formatTooltipDate"
@@ -50,11 +51,7 @@ export function accessorName(acc: TooltipAccessor): string {
 export function formatVal(v: unknown): string {
   if (v == null) return "–"
   if (typeof v === "number") {
-    // Drop floating-point noise (0.1 + 0.2 → "0.3") without rounding real
-    // digits away.
-    const clean = Number.isFinite(v) ? parseFloat(v.toPrecision(12)) : v
-    // Only add commas for numbers > 9999 to avoid formatting years (2005 → "2,005")
-    return Math.abs(clean) > 9999 ? clean.toLocaleString() : String(clean)
+    return formatTooltipNumber(v)
   }
   if (v instanceof Date) return formatTooltipDate(v)
   return String(v)

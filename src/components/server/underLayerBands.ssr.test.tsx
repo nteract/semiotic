@@ -15,6 +15,23 @@ const annotations = [
 ]
 
 describe("layer: \"under\" bands", () => {
+  it.each(["static", "component"])("filters lifecycle fills and labels in %s SVG", (mode) => {
+    const lifecycleBands = [
+      { ...annotations[0], label: "Retracted", lifecycle: { status: "retracted" } },
+      { ...annotations[1], label: "Superseded", provenance: { stableId: "old" } },
+      { type: "y-threshold", value: 30, label: "Replacement", lifecycle: { supersedes: "old" } },
+      { ...annotations[0], fill: "#abcdef", label: "Visible" },
+    ]
+    const props = { data, xAccessor: "x", yAccessor: "y", width: 400, height: 240, annotations: lifecycleBands }
+    const svg = mode === "static" ? renderChart("LineChart", props) : renderToString(<LineChart {...props} />)
+    expect(svg).not.toContain('fill="#123456"')
+    expect(svg).not.toContain('fill="#654321"')
+    expect(svg).not.toContain(">Retracted<")
+    expect(svg).not.toContain(">Superseded<")
+    expect(svg).toContain('fill="#abcdef"')
+    expect(svg).toContain(">Visible<")
+  })
+
   it("render their fills beneath the marks, clipped to the plot, in renderChart", () => {
     const svg = renderChart("LineChart", { data, xAccessor: "x", yAccessor: "y", width: 400, height: 240, annotations })
     const clip = svg.indexOf("clip-path=")

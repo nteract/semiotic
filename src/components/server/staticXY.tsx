@@ -1,3 +1,4 @@
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { directLabelDescription } from "../charts/shared/directLabels"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
@@ -340,7 +341,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   // `layer: "under"` bands fill beneath the marks, clipped to the plot like
   // the canvas pre-render pass.
-  const underBands = props.annotations?.filter(isUnderLayerBand) ?? []
+  const underBands = filterAnnotationsByStatus(props.annotations ?? []).filter(isUnderLayerBand)
   const underBandNodes = underBands.length > 0
     ? underBandSVGRenderer(
         underBands,

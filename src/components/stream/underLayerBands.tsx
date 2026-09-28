@@ -7,6 +7,7 @@
  * pre-renderer pass QuadrantChart uses for its fills.
  */
 import * as React from "react"
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
 import { normalizeAnnotationGradient } from "../charts/shared/hatchFill"
@@ -122,7 +123,7 @@ export function useUnderLayerBandRenderers(
   // Keyed by index so the two-level shallow compare reaches each band's fields
   // (it compares array entries by identity).
   const byIndex = useStableShallow(
-    React.useMemo((): Record<number, Datum> => Object.assign({}, annotations?.filter(isUnderLayerBand)), [annotations])
+    React.useMemo((): Record<number, Datum> => Object.assign({}, filterAnnotationsByStatus(annotations ?? []).filter(isUnderLayerBand)), [annotations])
   )
   const bands = React.useMemo(() => Object.values(byIndex), [byIndex])
   return React.useMemo(() => bands.length === 0

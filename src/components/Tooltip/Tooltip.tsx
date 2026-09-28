@@ -1,3 +1,4 @@
+import { formatTooltipNumber } from "./formatTooltipNumber"
 import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -116,12 +117,9 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     return ""
   }
 
-  // Format numbers: round to reasonable precision, add commas for large values
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return String(value)
-    // Round to avoid floating point noise (e.g. 12.300000000001 → 12.3)
-    const rounded = Number.isInteger(value) ? value : parseFloat(value.toPrecision(6))
-    return Math.abs(rounded) > 9999 ? rounded.toLocaleString() : String(rounded)
+    return formatTooltipNumber(value)
   }
 
   // Format dates

@@ -30,6 +30,16 @@ type NullableTooltipFn<TFn extends TooltipRenderer> = (
 type TooltipElement = ReactElement<{ children?: ReactNode }>
 
 describe("Tooltip", () => {
+  it.each([1234567890123, 1.23456789012345, 12345.6789012345, 0.1 + 0.2])("preserves precision for %s", (value) => {
+    const tooltip = Tooltip({ fields: ["value"] })
+    const { container } = render(tooltip({ value }))
+    const expected = value === 0.1 + 0.2 ? "0.3"
+      : Math.abs(value) > 9999
+        ? value.toLocaleString(undefined, { maximumSignificantDigits: 21 })
+        : String(value)
+    expect(container.textContent).toContain(expected)
+  })
+
   const sampleData = { x: 1, y: 5, category: "A", size: 10 }
 
   it("renders title value when title is provided", () => {

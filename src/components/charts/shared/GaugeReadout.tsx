@@ -3,8 +3,6 @@ import { estimateLabelWidth } from "./AnnotationLabel"
 
 /** Share of the hub's diameter the readout text may span. */
 const HUB_TEXT_FRACTION = 0.8
-/** The readout never shrinks below the caption size. */
-const MIN_READOUT_FONT_SIZE = 11
 
 /**
  * Readout font size: `max(16, radius * 0.3)`, shrunk until the text's
@@ -16,7 +14,7 @@ export function gaugeReadoutFontSize(text: string, radius: number, innerRadius?:
   if (innerRadius == null || innerRadius <= 0) return baseSize
   const width = estimateLabelWidth(text, baseSize)
   const available = 2 * innerRadius * HUB_TEXT_FRACTION
-  return width <= available ? baseSize : Math.max(MIN_READOUT_FONT_SIZE, (baseSize * available) / width)
+  return width <= available ? baseSize : (baseSize * available) / width
 }
 
 /** Portable default center readout, shared by React and static GaugeChart. */

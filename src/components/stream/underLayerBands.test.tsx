@@ -96,6 +96,24 @@ describe("underBandSVGRenderer", () => {
 describe("useUnderLayerBandRenderers", () => {
   const authored: CanvasRendererFn = () => {}
 
+  it("removes canvas fills when bands are retracted or superseded by non-bands", () => {
+    const band = { type: "band", layer: "under", y0: 20, y1: 60, fill: "#22c55e", provenance: { stableId: "old" } }
+    const { result, rerender } = renderHook(
+      ({ annotations }) => useUnderLayerBandRenderers(annotations, undefined, undefined),
+      { initialProps: { annotations: [band] as Array<Record<string, unknown>> } }
+    )
+    const { ctx, calls } = recordingContext()
+    paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
+    expect(calls).toHaveLength(1)
+    rerender({ annotations: [{ ...band, lifecycle: { status: "retracted" } }] })
+    paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
+    expect(calls).toHaveLength(1)
+    rerender({ annotations: [band, { type: "y-threshold", lifecycle: { supersedes: "old" } }] })
+    paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
+    expect(calls).toHaveLength(1)
+    expect(result.current.svgPreRenderers).toBeUndefined()
+  })
+
   it("returns the authored renderers untouched without under-layer bands", () => {
     const canvas = [authored]
     const { result } = renderHook(() => useUnderLayerBandRenderers([{ type: "band", y0: 1, y1: 2 }], canvas, undefined))
