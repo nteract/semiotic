@@ -12,6 +12,7 @@ import {
 import type { Datum } from "../shared/datumTypes"
 import type { AxisConfig } from "../shared/types"
 import type { RankedBumpDatum } from "./BumpChart"
+import { createBumpXFormatter } from "./bumpData"
 
 interface BumpTooltipOptions {
   tooltip?: TooltipProp
@@ -32,16 +33,9 @@ export function useBumpTooltip<TDatum extends Datum>({
   yFormat,
 }: BumpTooltipOptions): {
   tooltip: TooltipProp
-  formatX: (value: number | Date | string, index?: number) => React.ReactNode
+  formatX: NonNullable<AxisConfig["xFormat"]>
 } {
-  const formatX = useCallback((value: number | Date | string, index?: number) => {
-    if (xValues.length === 0) return ""
-    const numericIndex = Math.max(0, Math.min(xValues.length - 1, Math.round(Number(value))))
-    const raw = xValues[numericIndex] as number | Date | string
-    return xFormat
-      ? xFormat(raw, index)
-      : String(raw instanceof Date ? raw.toLocaleDateString() : raw)
-  }, [xFormat, xValues])
+  const formatX = useMemo(() => createBumpXFormatter(xValues, xFormat), [xFormat, xValues])
 
   const formatValue = useCallback((value: number) => {
     return yFormat ? yFormat(value) : value.toLocaleString()

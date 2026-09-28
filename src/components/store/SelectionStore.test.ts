@@ -4,6 +4,7 @@ import {
   type SelectionClause
 } from "./SelectionStore"
 import {
+  attachSelectionCoverage,
   attachSelectionProvenance,
   getSelectionProvenance
 } from "./selectionProvenance"
@@ -362,5 +363,72 @@ describe("SelectionStore — buildPredicate", () => {
       expect(pred({ x: 5, y: 15 })).toBe(false) // y out
       expect(pred({ x: 15, y: 5 })).toBe(false) // x out
     })
+  })
+})
+
+describe("SelectionStore — covered ranges", () => {
+  const pointClause = (
+    clientId: string,
+    fields: Record<string, unknown[]>
+  ): SelectionClause => ({
+    clientId,
+    type: "point",
+    fields: Object.fromEntries(
+      Object.entries(fields).map(([field, values]) => [field, { type: "point", values: new Set(values) }])
+    )
+  })
+  const bin = (start: number, end: number, extra: Record<string, unknown> = {}, rows?: Record<string, unknown>[]) =>
+    attachSelectionCoverage(
+      attachSelectionProvenance({ binStart: start, binEnd: end, ...extra }, rows),
+      { ranges: { time: [start, end] } }
+    )
+
+  it("matches a selected value inside a covered half-open range", () => {
+    const pred = buildPredicate(makeSelection("union", [pointClause("a", { time: [13] })]))
+    expect([bin(10, 20), bin(0, 10), bin(13, 14), bin(14, 20)].map(pred)).toEqual([true, false, true, false])
+    const atEdges = buildPredicate(makeSelection("union", [pointClause("a", { time: [10, 20] })]))
+    expect([bin(10, 20), bin(20, 30), bin(0, 10)].map(atEdges)).toEqual([true, true, false])
+  })
+
+  it("accepts number and Date producers and needs a coercer for strings", () => {
+    const dates = buildPredicate(makeSelection("union", [pointClause("a", { time: [new Date(15)] })]))
+    expect(dates(bin(10, 20))).toBe(true)
+    const strings = buildPredicate(makeSelection("union", [pointClause("a", { time: ["15"] })]))
+    expect(strings(bin(10, 20))).toBe(false)
+    const coerced = attachSelectionCoverage({ binStart: 10 }, { ranges: { time: [10, 20] }, toNumber: Number })
+    expect(strings(coerced)).toBe(true)
+  })
+
+  it("combines a covered field with exact fields on the same source row", () => {
+    const pred = buildPredicate(
+      makeSelection("union", [pointClause("a", { time: [13], category: ["North"] })])
+    )
+    const rows = [{ time: 12, category: "South" }, { time: 15, category: "North" }]
+    expect(pred(bin(10, 20, {}, rows))).toBe(true)
+    expect(pred(bin(10, 20, {}, rows.slice(0, 1)))).toBe(false)
+    expect(pred(bin(10, 20, { category: "North" }))).toBe(true)
+  })
+
+  it("applies coverage under intersect and crossfilter resolution", () => {
+    const clauses = [pointClause("a", { time: [13] }), pointClause("b", { category: ["North"] })]
+    const northBin = bin(10, 20, { category: "North" })
+    const southBin = bin(10, 20, { category: "South" })
+    const intersect = buildPredicate(makeSelection("intersect", clauses))
+    expect([intersect(northBin), intersect(southBin)]).toEqual([true, false])
+    const crossfilter = buildPredicate(makeSelection("crossfilter", clauses), "b")
+    expect([crossfilter(northBin), crossfilter(southBin), crossfilter(bin(0, 10))]).toEqual([true, true, false])
+  })
+
+  it("leaves interval clauses and uncovered datums on their own values", () => {
+    const interval: SelectionClause = {
+      clientId: "a",
+      type: "interval",
+      fields: { time: { type: "interval", range: [12, 14] } }
+    }
+    const intervalPred = buildPredicate(makeSelection("union", [interval]))
+    expect(intervalPred(bin(10, 20, {}, [{ time: 15 }]))).toBe(false)
+    expect(intervalPred(bin(10, 20, {}, [{ time: 13 }]))).toBe(true)
+    const point = buildPredicate(makeSelection("union", [pointClause("a", { time: [13] })]))
+    expect([point({ time: 13 }), point({ time: "13" }), point({ time: 14 })]).toEqual([true, false, false])
   })
 })

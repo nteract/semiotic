@@ -208,6 +208,7 @@ interface-member GaugeChartProps::property::annotations = optional annotations: 
 interface-member GaugeChartProps::property::arcWidth = optional arcWidth: number | undefined
 interface-member GaugeChartProps::property::backgroundColor = optional backgroundColor: string | undefined
 interface-member GaugeChartProps::property::centerContent = optional centerContent: ((value: number, min: number, max: number) => React.ReactNode) | React.ReactNode
+interface-member GaugeChartProps::property::centerLabel = optional centerLabel: string | undefined
 interface-member GaugeChartProps::property::color = optional color: string | undefined
 interface-member GaugeChartProps::property::cornerRadius = optional cornerRadius: number | undefined
 interface-member GaugeChartProps::property::enableHover = optional enableHover: boolean | undefined

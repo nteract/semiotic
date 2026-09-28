@@ -88,7 +88,22 @@ export function generateXYTicks(options: {
       ? Math.max(20, Math.min(width + 8, 55))
       : Math.max(55, width + 8)
   }
+  // Index-aware user formatters (adaptiveTimeTicks) label a tick against its
+  // neighbours, so they relabel whatever survives thinning, against the
+  // rendered ticks, before duplicates are dropped and again at the end.
+  // Built-in formatters keep their candidate labels.
+  const relabel =
+    horizontal && (axis?.tickFormat || options.format)
+      ? (list: AxisTick[]) => {
+          const rendered = list.map((tick) => tick.value.valueOf())
+          return list.map((tick, index) => ({
+            ...tick,
+            label: formatter(tick.value, index, rendered)
+          }))
+        }
+      : undefined
   let ticks = filterTicksByPixelDistance(candidates, minPx)
+  if (relabel) ticks = relabel(ticks)
   if (ticks.length > 1) {
     ticks = ticks.filter(
       (tick, index) =>
@@ -113,5 +128,5 @@ export function generateXYTicks(options: {
       }
     }
   }
-  return ticks
+  return relabel ? relabel(ticks) : ticks
 }

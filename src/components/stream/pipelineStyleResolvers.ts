@@ -11,6 +11,9 @@ import {
 import type { PipelineConfig } from "./pipelineConfig"
 import type { Style } from "./types"
 
+/** Group key the pipeline gives every row when no group accessor is set. */
+export const UNGROUPED_SERIES_KEY = "_default"
+
 function explicitPipelineColor(
   scheme: PipelineConfig["colorScheme"],
   group: string
@@ -50,7 +53,7 @@ export function groupPipelineData(
 
   let result: { key: string; data: Datum[] }[]
   if (!getGroup) {
-    result = [{ key: "_default", data }]
+    result = [{ key: UNGROUPED_SERIES_KEY, data }]
   } else {
     const groups = new Map<string, Datum[]>()
     for (const d of data) {

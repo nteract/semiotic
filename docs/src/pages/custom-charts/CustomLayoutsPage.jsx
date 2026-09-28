@@ -733,6 +733,24 @@ const edges = g.edges().map(e => {
   layout={dagreLayout}
   layoutConfig={{ edgeStyle: "smooth" }}
 />`}</CodeBlock>
+        <p>
+          To place a minimap, overlay, or viewport on the fitted graph, compute the same fit the
+          layout applies with <code>createDagreFit(nodes, edges, plot, config)</code> (or{" "}
+          <code>createFlextreeFit(nodes, plot, config)</code> for flextree) instead of copying the
+          recipe's defaults. It returns <code>scale</code>, <code>dx</code>, <code>dy</code>,
+          {" "}<code>bounds</code>, <code>project(point)</code>, <code>invert(point)</code>, and{" "}
+          <code>nodeBounds(node)</code>, which equals the rect the layout draws. The plot is
+          plot-relative (frame margins excluded); fit each chart size separately. With{" "}
+          <code>ZoomableNetworkCustomChart</code>, apply the camera afterwards with{" "}
+          <code>projectNetworkPoint</code> / <code>invertNetworkRect</code> from{" "}
+          <code>semiotic/network/zoom</code>.
+        </p>
+        <CodeBlock language="jsx">{`import { createDagreFit } from "semiotic/recipes"
+
+const plot = { x: 0, y: 0, width: width - margin.left - margin.right, height: height - margin.top - margin.bottom }
+const fit = createDagreFit(nodes, edges, plot)
+const box = fit.nodeBounds(nodes[0]) // { x, y, width, height, cx, cy } in plot space
+const authored = fit.invert({ x: pointerX, y: pointerY })`}</CodeBlock>
       </section>
 
       <section>

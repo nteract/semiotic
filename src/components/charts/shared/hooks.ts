@@ -8,6 +8,7 @@ export { DEFAULT_COLOR, resolveDefaultFill } from "./colorUtils"
 import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
+import { selectionFieldValues } from "../../store/selectionProvenance"
 import {
   setCrosshairPosition,
   clearCrosshairPosition,
@@ -464,11 +465,7 @@ export function useChartSelection({
             mobileInteraction?.tapToSelect &&
             linkFields.length > 0
           ) {
-            const fieldValues: Record<string, unknown[]> = {}
-            for (const field of linkFields) {
-              const value = datum[field]
-              if (value !== undefined) fieldValues[field] = [value]
-            }
+            const fieldValues = selectionFieldValues(datum, linkFields)
             if (hasOwnEnumerableKey(fieldValues)) {
               selectionHook.selectPoints(fieldValues)
             }

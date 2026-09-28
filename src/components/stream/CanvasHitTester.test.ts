@@ -1,4 +1,4 @@
-import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
+import { findNearestNode, findAllNodesAtX, clampToSeriesXRange } from "./CanvasHitTester"
 import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
@@ -502,5 +502,55 @@ describe("findAllNodesAtX", () => {
     const results = findAllNodesAtX([point, lineA], 50, 30)
     expect(results).toHaveLength(1)
     expect(results[0].group).toBe("Series A")
+  })
+})
+
+describe("clampToSeriesXRange", () => {
+  const line = (path: [number, number][], group: string): LineSceneNode => ({
+    type: "line",
+    path,
+    style: { stroke: "red" },
+    datum: path.map((_, i) => ({ i })),
+    group,
+  })
+  const early = line([[10, 100], [50, 60]], "early")
+  const late = line([[30, 90], [90, 20]], "late")
+
+  it("clamps to the first and last sample across every series", () => {
+    expect(clampToSeriesXRange([early, late], 0)).toBe(10)
+    expect(clampToSeriesXRange([early, late], 150)).toBe(90)
+    expect(clampToSeriesXRange([early, late], 42)).toBe(42)
+  })
+
+  it("keeps series that do not reach the clamped x out of the lookup", () => {
+    const x = clampToSeriesXRange([early, late], 150)
+    expect(findAllNodesAtX([early, late], x, 1000).map(hit => hit.group)).toEqual(["late"])
+  })
+
+  it("ignores single-sample lines and non-interactive areas", () => {
+    const dot = line([[0, 50]], "dot")
+    const band: AreaSceneNode = {
+      type: "area",
+      topPath: [[0, 10], [200, 10]],
+      bottomPath: [[0, 90], [200, 90]],
+      style: { fill: "grey" },
+      datum: [],
+      group: "band",
+      interactive: false,
+    }
+    expect(clampToSeriesXRange([dot, band, early], 150)).toBe(50)
+  })
+
+  it("returns x unchanged without a series path", () => {
+    expect(clampToSeriesXRange([line([[5, 5]], "dot")], 150)).toBe(150)
+    expect(clampToSeriesXRange([], -3)).toBe(-3)
+  })
+
+  it("lands on the last sample of a curved line", () => {
+    const curved: LineSceneNode = { ...line([[10, 100], [50, 20], [90, 60]], "curved"), curve: "monotoneX" }
+    const x = clampToSeriesXRange([curved], 400)
+    const [hit] = findAllNodesAtX([curved], x, 1000)
+    expect(x).toBe(90)
+    expect(hit.y).toBeCloseTo(60)
   })
 })

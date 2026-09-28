@@ -4,6 +4,11 @@ import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { positionedNetworkNodes } from "./positionedNetworkNodes"
+import {
+  createPositionedNetworkFit,
+  type PositionedNetworkFit,
+  type PositionedNetworkFitRect
+} from "./positionedNetworkFit"
 
 export interface DagreConfig {
   /** Default node width when nodes don't carry a `width` field. @default 100 */
@@ -22,6 +27,42 @@ export interface DagreConfig {
   nodeFill?: string
   /** Stroke for edges. */
   edgeStroke?: string
+}
+
+/** An edge's authored waypoints (raw `points`, then wrapper `points`); empty unless valid. */
+function dagreWaypoints(edge: object): { x: number; y: number }[] {
+  const raw = ((edge as Datum).data ?? edge) as Datum
+  const points = Array.isArray(raw.points)
+    ? raw.points
+    : (edge as { points?: unknown }).points
+  return Array.isArray(points) &&
+    points.length >= 2 &&
+    points.every((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y))
+    ? (points as { x: number; y: number }[])
+    : []
+}
+
+/** Geometry-only subset of the dagre recipe configuration. */
+export type DagreFitConfig = Pick<DagreConfig, "nodeWidth" | "nodeHeight" | "fit">
+
+/**
+ * The fit `dagreLayout` applies, computed from the same `nodes` and `edges`
+ * (including edge waypoints) and a plot-relative box. Pure and usable before
+ * rendering or in SSR, for example to align a minimap or overlay with the
+ * fitted graph without copying the recipe's defaults.
+ */
+export function createDagreFit(
+  nodes: readonly Datum[],
+  edges: readonly Datum[],
+  plot: PositionedNetworkFitRect,
+  config: DagreFitConfig = {}
+): PositionedNetworkFit {
+  return createPositionedNetworkFit(nodes, plot, {
+    nodeWidth: config.nodeWidth ?? 100,
+    nodeHeight: config.nodeHeight ?? 36,
+    fit: config.fit,
+    waypoints: edges.flatMap(dagreWaypoints)
+  })
 }
 
 /**
@@ -67,20 +108,7 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
   const cfg = ctx.config ?? {}
   const edgeStyle = cfg.edgeStyle ?? "polyline"
   const waypoints = new Map(
-    ctx.edges.map((edge) => {
-      const raw = (edge.data ?? edge) as Datum
-      const points = Array.isArray(raw.points)
-        ? raw.points
-        : (edge as { points?: unknown }).points
-      return [
-        edge,
-        Array.isArray(points) &&
-        points.length >= 2 &&
-        points.every((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y))
-          ? (points as { x: number; y: number }[])
-          : []
-      ] as const
-    })
+    ctx.edges.map((edge) => [edge, dagreWaypoints(edge)] as const)
   )
   const { positions, sceneNodes, labels, project } = positionedNetworkNodes(
     ctx,

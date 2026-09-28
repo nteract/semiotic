@@ -86,6 +86,27 @@ export interface HoverAnnotationConfig {
   pointColor?: string
 }
 
+/**
+ * Datum of a RealtimeHistogram / TemporalHistogram bar, as tooltips, hover
+ * callbacks, and observations receive it. `getSourceRows(datum)` returns the
+ * rows binned into it; for a stacked segment that is its category's rows.
+ */
+export interface HistogramBinDatum {
+  binStart: number
+  binEnd: number
+  /** Sum of every category in the bin. */
+  total: number
+  /** Stacked segments: the hovered segment's category and value. */
+  category?: string
+  categoryValue?: number
+  /**
+   * Stacked segments: every non-zero category in the bin, bottom to top. The
+   * same array is shared by all of the bin's segments; `getSourceRows` on an
+   * entry returns that category's rows, and on the array the bin's rows.
+   */
+  categories?: ReadonlyArray<{ category: string; value: number }>
+}
+
 export interface HoverData {
   /** The raw datum from the user's data array (may be an object, array, or null for exit nodes) */
   data: Datum | null

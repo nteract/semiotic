@@ -25,7 +25,7 @@ export interface SemioticTheme {
     /** Separator/border color for cell-like marks such as treemap tiles and heatmap cells. Falls back to `border`. */
     cellBorder?: string
     focus?: string
-    /** Linked hover/selection highlight color */
+    /** Linked hover/selection highlight color; brush selections use it, falling back to `primary` */
     selection?: string
     /** Opacity for non-selected (dimmed) elements, 0–1 */
     selectionOpacity?: number

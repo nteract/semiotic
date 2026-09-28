@@ -12,6 +12,7 @@ import {
   resolveMultiCapableTooltip,
 } from "./Tooltip"
 import { ThemeProvider } from "../ThemeProvider"
+import { attachSelectionProvenance, getSourceRows } from "../store/selectionProvenance"
 import { buildDefaultTooltip } from "../charts/shared/tooltipUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ReactElement, ReactNode } from "react"
@@ -598,6 +599,21 @@ describe("MultiPointTooltip", () => {
     expect(container.textContent).toContain("A,B")
   })
 
+  it("keeps aggregate source rows on the datum it re-attaches hover context to", () => {
+    const rows = [{ time: 2 }, { time: 7 }]
+    let seen: Record<string, unknown> | undefined
+    const fn = normalizeTooltip((d) => { seen = d; return <div>ok</div> })
+    render(<>{(fn as (d: Record<string, unknown>) => React.ReactNode)({
+      __semioticHoverData: true,
+      data: attachSelectionProvenance({ binStart: 0, binEnd: 10, total: 2 }, rows),
+      x: 40,
+      y: 10,
+      xValue: 5,
+    })}</>)
+    expect(seen).toEqual({ binStart: 0, binEnd: 10, total: 2, xValue: 5 })
+    expect(getSourceRows(seen)).toEqual(rows)
+  })
+
   it("a real datum field wins over the cursor's xValue", () => {
     let seen: Record<string, unknown> | undefined
     const fn = normalizeTooltip((d) => { seen = d; return <div>ok</div> })
@@ -640,6 +656,25 @@ describe("MultiPointTooltip", () => {
     }) : null}</>)
     expect(container.textContent).toContain("Single geometry")
     expect(container.textContent).toContain("9")
+  })
+
+  it("warns once when multi content reaches a chart without multi-series hover", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const content = (d: Record<string, unknown>) => <div>{String(d.label)}</div>
+    const first = normalizeTooltip({ mode: "multi", content })
+    normalizeTooltip({ mode: "multi", content })
+    const multiWarnings = warn.mock.calls.filter(([message]) =>
+      String(message).includes("reached a chart without multi-series hover")
+    )
+    warn.mockRestore()
+    expect(multiWarnings).toHaveLength(1)
+    const { container } = render(<>{typeof first === "function" ? first({
+      __semioticHoverData: true,
+      data: { label: "Single geometry" },
+      x: 10,
+      y: 20,
+    }) : null}</>)
+    expect(container.textContent).toBe("Single geometry")
   })
 
   it("formats circular object values without throwing", () => {

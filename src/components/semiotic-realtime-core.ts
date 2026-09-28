@@ -133,8 +133,13 @@ export type {
   CrosshairStyle,
   HoverAnnotationConfig,
   HoverData,
+  HistogramBinDatum,
   RealtimeFrameHandle
 } from "./realtime/types"
+
+// Authored rows behind a histogram bin, stacked segment, or `categories`
+// entry, read from the datum or from the hover that wraps it.
+export { getSourceRows } from "./store/selectionProvenance"
 
 export type {
   Style,

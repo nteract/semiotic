@@ -17,6 +17,20 @@ export function readRealtimeNumber<TDatum extends Datum>(
   return Number.isFinite(value) ? value : null
 }
 
+/**
+ * Epoch milliseconds for a time value in any form `readRealtimeTime`
+ * accepts (number, Date, date or numeric string); NaN otherwise.
+ */
+export function realtimeTimeNumber(value: unknown): number {
+  if (value == null || (typeof value === "string" && value.trim() === "")) return NaN
+  if (value instanceof Date) return value.getTime()
+  if (typeof value === "string") {
+    const parsed = parseDateLikeString(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return Number(value)
+}
+
 /** Preserve date identity for the frame's temporal detection while rejecting missing times. */
 export function readRealtimeTime<TDatum extends Datum>(
   datum: Datum,

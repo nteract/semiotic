@@ -39,22 +39,22 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 138,
+    "kb": 139,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 168,
+    "kb": 178,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 132,
+    "kb": 133,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 158,
+    "kb": 159,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
@@ -69,12 +69,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 173,
+    "kb": 175,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 172,
+    "kb": 173,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -84,22 +84,22 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 245,
+    "kb": 249,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 245,
+    "kb": 249,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 254,
+    "kb": 258,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 101,
+    "kb": 102,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
@@ -109,7 +109,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils/react",
-    "kb": 7,
+    "kb": 8,
     "blurb": "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus"
   },
   {
@@ -154,7 +154,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 168,
+    "kb": 169,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -169,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 609,
+    "kb": 620,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -179,8 +179,8 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/controls",
-    "kb": 11,
-    "blurb": "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer"
+    "kb": 16,
+    "blurb": "DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer"
   },
   {
     "importPath": "semiotic/rough",
@@ -194,7 +194,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 387,
+    "kb": 397,
     "blurb": "Full chart API and shared utilities"
   }
 ])

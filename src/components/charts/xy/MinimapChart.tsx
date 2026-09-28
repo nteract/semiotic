@@ -6,127 +6,30 @@ import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, StreamScales } from "../../stream/types"
-import { MinimapBrushOverlayLazy } from "./minimapBrushOverlayLazy"
+import { MinimapBrushLazy } from "./minimapBrushLazy"
 import { getColor } from "../shared/colorUtils"
 import { useColorScale, useChartLegendAndMargin, DEFAULT_COLOR } from "../shared/hooks"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
-import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import type { LegendPosition } from "../shared/hooks"
-import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { resolveMultiCapableTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { composeStyleRules, makeXYRuleContext } from "../shared/styleRules"
+import type { ChartAccessor } from "../shared/types"
+import { resolveMultiCapableTooltip } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
+import type { MinimapChartProps } from "./minimapChartTypes"
+import { minimapChromeMargins } from "./minimapLayout"
+
+export type {
+  MinimapBrushEndMeta,
+  MinimapBrushStyle,
+  MinimapChartProps,
+  MinimapConfig,
+  MinimapHandleOptions,
+} from "./minimapChartTypes"
 
 registerLineFamilyXYPlugins()
-
-// ── Types ──────────────────────────────────────────────────────────────
-
-export interface MinimapConfig {
-  /** Height of the minimap overview (default: 60) */
-  height?: number
-  /** Margin for the minimap chart */
-  margin?: { top?: number; right?: number; bottom?: number; left?: number }
-  /** Line style override for the minimap */
-  lineStyle?: (d: Datum) => Datum
-  /** Show axes in minimap (default: false) */
-  showAxes?: boolean
-  /** Background color for minimap */
-  background?: string
-  /** Brush direction: "x" (default) or "y" */
-  brushDirection?: "x" | "y"
-}
-
-export interface MinimapChartProps<TDatum extends Datum = Datum>
-  extends Omit<BaseChartProps, "onClick" | "onObservation" | "selection" | "linkedHover">,
-    AxisConfig {
-  /** Array of data points or line objects with coordinates */
-  data: TDatum[]
-
-  /** X accessor (default: "x") */
-  xAccessor?: ChartAccessor<TDatum, number>
-
-  /** Y accessor (default: "y") */
-  yAccessor?: ChartAccessor<TDatum, number>
-
-  /** Group data into multiple lines */
-  lineBy?: ChartAccessor<TDatum, string>
-
-  /** Field containing coordinate arrays in line objects (default: "coordinates") */
-  lineDataAccessor?: string
-
-  /** Color-by field or function */
-  colorBy?: ChartAccessor<TDatum, string>
-
-  /** Color scheme (default: "category10") */
-  colorScheme?: string | string[] | Record<string, string>
-
-  /** Curve type (default: "linear") */
-  curve?: "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | "basis" | "cardinal" | "catmullRom"
-
-  /** Line stroke width (default: 2) */
-  lineWidth?: number
-  /**
-   * Declarative, threshold-aware line styling. Applied to the detail view
-   * and the default overview. Per-series against the first point, same as
-   * LineChart. `minimap.lineStyle` still wins on the overview.
-   */
-  styleRules?: StyleRule[]
-
-  /** Fill area under lines */
-  fillArea?: boolean
-
-  /** Area opacity when fillArea is true (default: 0.3) */
-  areaOpacity?: number
-
-  /** Show points on lines */
-  showPoints?: boolean
-
-  /** Point radius (default: 3) */
-  pointRadius?: number
-
-  /** Enable hover (default: true) */
-  enableHover?: boolean
-
-  /** Show grid (default: false) */
-  showGrid?: boolean
-
-  /** Show legend */
-  showLegend?: boolean
-
-  /** Legend position */
-  legendPosition?: LegendPosition
-
-  /** Tooltip config */
-  tooltip?: TooltipProp
-
-  /** Minimap configuration */
-  minimap?: MinimapConfig
-
-  /** Show minimap above the main chart (default: false — below) */
-  renderBefore?: boolean
-
-  /** Callback when brush extent changes */
-  onBrush?: (extent: [number, number] | null) => void
-
-  /** Controlled brush extent */
-  brushExtent?: [number, number]
-
-  /**
-   * Fixed y domain `[min, max]` (either bound may be undefined to leave
-   * that side data-derived). xExtent is reserved for brush selection on
-   * MinimapChart — pass `frameProps.xExtent` if you need to override the
-   * brushed x range from advanced consumers.
-   */
-  yExtent?: [number | undefined, number | undefined] | [number]
-
-  /** Additional StreamXYFrame props */
-  frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
-}
-
-// ── Brush overlay ──────────────────────────────────────────────────────
 
 // ── MinimapChart ────────────────────────────────────────────────────────
 
@@ -211,6 +114,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     showPoints = false,
     pointRadius = 3,
     enableHover = true,
+    showAxes = true,
     showGrid = false,
     showLegend,
     legendPosition: legendPositionProp,
@@ -218,6 +122,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     minimap: minimapConfig = {},
     renderBefore = false,
     onBrush,
+    onBrushEnd,
+    onObservation,
+    chartId,
     brushExtent: controlledExtent,
     yExtent,
     frameProps = {},
@@ -236,42 +143,9 @@ export function MinimapChart<TDatum extends Datum = Datum>(
   const [internalExtent, setInternalExtent] = useState<[number, number] | null>(null)
   const brushExtent = controlledExtent ?? internalExtent
 
-  const handleBrush = useCallback(
-    (ext: [number, number] | null) => {
-      if (!controlledExtent) {
-        setInternalExtent(ext)
-      }
-      onBrush?.(ext)
-    },
-    [controlledExtent, onBrush]
-  )
-
   // ── Overview ref to get scales ──────────────────────────────────────
   const overviewRef = useRef<StreamXYFrameHandle>(null)
   const [overviewScales, setOverviewScales] = useState<StreamScales | null>(null)
-
-  // Poll for scales after mount (overview sets them async via rAF).
-  // Track the rAF handle so we can cancel on unmount or data change — without
-  // this the polling keeps running and calls setOverviewScales on an unmounted
-  // component (React state-update-on-unmounted warning + leak).
-  useEffect(() => {
-    let rafId = 0
-    let cancelled = false
-    const check = () => {
-      if (cancelled) return
-      const s = overviewRef.current?.getScales?.()
-      if (s) {
-        setOverviewScales(s)
-        return
-      }
-      rafId = requestAnimationFrame(check)
-    }
-    rafId = requestAnimationFrame(check)
-    return () => {
-      cancelled = true
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [data])
 
   // ── Data normalization (same as LineChart) ──────────────────────────
 
@@ -383,22 +257,78 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     chartHeight: height,
     frameLegend: frameProps,
     hasTitle: !!title,
-    // The detail chart always renders axes (see the `showAxes: true` frame
-    // props below); `minimap.showAxes` only governs the overview strip.
-    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: true, xLabel, yLabel }),
+    // Top-level `showAxes` governs the detail chart; `minimap.showAxes`
+    // governs the overview strip.
+    axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes, xLabel, yLabel }),
   })
 
   const minimapHeight = minimapConfig.height || 60
+  const chromeMargins = minimapChromeMargins(minimapConfig)
   const minimapMargin = useMemo(() => {
     return {
-      top: minimapConfig.margin?.top ?? 0,
-      bottom: minimapConfig.margin?.bottom ?? 20,
+      top: minimapConfig.margin?.top ?? chromeMargins.top,
+      bottom: minimapConfig.margin?.bottom ?? chromeMargins.bottom,
       left: minimapConfig.margin?.left ?? mainMargin.left,
       right: minimapConfig.margin?.right ?? mainMargin.right
     }
-  }, [minimapConfig.margin, mainMargin])
+  }, [minimapConfig.margin, chromeMargins.top, chromeMargins.bottom, mainMargin])
 
   const brushDirection = minimapConfig.brushDirection || "x"
+  const overviewPlotWidth = Math.max(0, width - minimapMargin.left - minimapMargin.right)
+  const yExtentLow = yExtent?.[0]
+  const yExtentHigh = yExtent?.[1]
+
+  // Poll for the overview's scales after mount and after anything that
+  // relays it out (the store replaces them via rAF). Wait until they span
+  // the current plot, so the brush never maps through a stale layout, and
+  // stop after about a second either way. The rAF handle is cancelled on
+  // unmount and on re-poll.
+  useEffect(() => {
+    let rafId = 0
+    let cancelled = false
+    let frames = 0
+    const check = () => {
+      if (cancelled) return
+      const s = overviewRef.current?.getScales?.()
+      const spans = (range: number[], size: number) => Math.abs(Math.max(...range) - Math.min(...range) - size) < 0.5
+      if (s && (frames >= 60 || (spans(s.x.range(), overviewPlotWidth) && spans(s.y.range(), minimapHeight)))) {
+        setOverviewScales(s)
+        return
+      }
+      frames++
+      rafId = requestAnimationFrame(check)
+    }
+    rafId = requestAnimationFrame(check)
+    return () => {
+      cancelled = true
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [data, overviewPlotWidth, minimapHeight, minimapMargin.top, minimapMargin.bottom, yExtentLow, yExtentHigh])
+
+  const handleBrush = useCallback(
+    (ext: [number, number] | null) => {
+      if (!controlledExtent) {
+        setInternalExtent(ext)
+      }
+      onBrush?.(ext)
+      if (!onObservation) return
+      if (!ext) {
+        onObservation({ type: "brush-end", timestamp: Date.now(), chartType: "MinimapChart", chartId })
+        return
+      }
+      // The unbrushed axis spans the overview's domain.
+      const other = overviewScales?.[brushDirection === "x" ? "y" : "x"].domain().map(Number) as [number, number] | undefined
+      const full: [number, number] = other ?? [ext[0], ext[1]]
+      onObservation({
+        type: "brush",
+        extent: brushDirection === "x" ? { x: ext, y: full } : { x: full, y: ext },
+        timestamp: Date.now(),
+        chartType: "MinimapChart",
+        chartId,
+      })
+    },
+    [controlledExtent, onBrush, onObservation, chartId, overviewScales, brushDirection]
+  )
 
   // Default tooltip with accessor-aware labels. `tooltip={true}` should
   // show a useful tooltip even without a chart-specific default — the
@@ -442,7 +372,7 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     responsiveHeight: props.responsiveHeight,
     ...(props.maxDevicePixelRatio !== undefined && { maxDevicePixelRatio: props.maxDevicePixelRatio }),
     margin: mainMargin,
-    showAxes: true,
+    showAxes,
     xLabel,
     yLabel,
     xFormat,
@@ -458,9 +388,10 @@ export function MinimapChart<TDatum extends Datum = Datum>(
     ...(props.animate !== undefined && { animate: props.animate }),
     ...(props.hoverRadius !== undefined && { hoverRadius: props.hoverRadius }),
     ...resolveMultiCapableTooltip({ tooltip, defaultTooltipContent }),
-    // Apply brush extent to main chart
-    ...(brushExtent && { xExtent: brushExtent }),
+    // The brushed range sets the detail's domain on the brushed axis.
+    ...(brushExtent && brushDirection === "x" && { xExtent: brushExtent }),
     ...(yExtent && { yExtent }),
+    ...(brushExtent && brushDirection === "y" && { yExtent: brushExtent }),
     ...(props.axisExtent !== undefined && { axisExtent: props.axisExtent }),
     ...(props.autoPlaceAnnotations !== undefined && { autoPlaceAnnotations: props.autoPlaceAnnotations }),
     ...frameProps
@@ -490,20 +421,27 @@ export function MinimapChart<TDatum extends Datum = Datum>(
 
   // ── Render ──────────────────────────────────────────────────────────
 
+  const brushChrome = !!minimapConfig.handles || !!minimapConfig.showExtentLabels || !!minimapConfig.renderHandle
   const overviewChart = (
     <div
       key="minimap"
-      style={{ position: "relative", width, overflow: "hidden" }}
+      // Handles and labels may reach past the overview's plot.
+      style={{ position: "relative", width, overflow: brushChrome ? "visible" : "hidden" }}
     >
       <StreamXYFrame ref={overviewRef} {...overviewProps} />
-      <MinimapBrushOverlayLazy
-        width={width - minimapMargin.left - minimapMargin.right}
-        height={minimapHeight}
-        margin={minimapMargin}
+      <MinimapBrushLazy
+        config={minimapConfig}
         scales={overviewScales}
+        margin={minimapMargin}
+        plotWidth={overviewPlotWidth}
+        plotHeight={minimapHeight}
         brushDirection={brushDirection}
         extent={brushExtent}
+        axisFormat={(brushDirection === "x" ? xFormat : yFormat) as ((value: number) => unknown) | undefined}
         onBrush={handleBrush}
+        onBrushEnd={onBrushEnd}
+        onObservation={onObservation}
+        chartId={chartId}
       />
     </div>
   )

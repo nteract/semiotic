@@ -1,5 +1,8 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
 import { test } from "node:test"
 import { runInNewContext } from "node:vm"
 import {
@@ -392,17 +395,87 @@ test("a hung npm request is retryable, but a missing npm executable fails", asyn
   )
 })
 
-test("release workflow waits for the exact artifact before installing its public version", () => {
+function runPublicationCLI(t, args, { recovery = false } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "semiotic-publication-cli-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const script = recovery
+    ? ".release-publication/scripts/wait-for-npm-publication.mjs"
+    : "scripts/wait-for-npm-publication.mjs"
+  mkdirSync(dirname(join(root, script)), { recursive: true })
+  copyFileSync(new URL("./wait-for-npm-publication.mjs", import.meta.url), join(root, script))
+  // The recovery tooling checkout deliberately has no package.json. Identity
+  // must come from the tagged source in the working directory.
+  writeFileSync(join(root, "package.json"), JSON.stringify({
+    name: publishedManifest.name,
+    version: publishedManifest.version
+  }))
+  const bin = join(root, "bin")
+  mkdirSync(bin)
+  writeFileSync(join(bin, "npm"), `#!/usr/bin/env node
+const assert = require("node:assert/strict")
+assert.deepEqual(process.argv.slice(2, 4), ["view", "semiotic@3.10.0"])
+assert.ok(process.argv.includes("--registry=https://registry.npmjs.org"))
+console.log(${JSON.stringify(JSON.stringify(publishedManifest))})
+`, { mode: 0o755 })
+  const result = spawnSync(process.execPath, [script, ...args], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${dirname(process.execPath)}` },
+    encoding: "utf8",
+    timeout: 5000
+  })
+  assert.ifError(result.error)
+  return result
+}
+
+test("publication CLI preserves the original invocation and default timeout", (t) => {
+  const result = runPublicationCLI(t, ["--expected-integrity", "sha512-expected"])
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Waiting up to 900s for semiotic@3\.10\.0/)
+  assert.match(result.stdout, /exact integrity, registry signatures and provenance/)
+})
+
+test("publication CLI rejects invalid options before querying the registry", (t) => {
+  for (const args of [
+    [],
+    ["--expected-integrity"],
+    ["--expected-integrity", "sha512-expected", "--unknown", "value"],
+    ...["0", "-1", "NaN", "Infinity", ""].map((timeout) => [
+      "--expected-integrity", "sha512-expected", `--timeout-ms=${timeout}`
+    ])
+  ]) {
+    const result = runPublicationCLI(t, args)
+    assert.equal(result.status, 1, result.stderr)
+    assert.notEqual(result.stderr.trim(), "")
+    assert.equal(result.stdout, "")
+  }
+})
+
+test("release workflow waits for the exact artifact before installing its public version", (t) => {
   const workflow = readFileSync(
     new URL("../.github/workflows/release.yml", import.meta.url),
     "utf8"
   )
-  assert.match(
-    workflow,
-    /timeout-minutes: 16\n {8}run: node scripts\/wait-for-npm-publication\.mjs --expected-integrity/
-  )
+  const waitIndex = workflow.indexOf("- name: Wait for published artifact and provenance")
+  assert.ok(waitIndex >= 0)
+  const waitStep = workflow.slice(waitIndex).split(/\n {6}- name:/)[0]
+  const stepTimeout = Number(waitStep.match(/timeout-minutes: (\d+)/)?.[1])
+  const command = waitStep.match(/run: >-\n([\s\S]+)/)?.[1]
+  assert.ok(command, "publication step must supply a command")
+  assert.match(command, /--expected-integrity "\$\{\{ steps\.release-artifact\.outputs\.integrity \}\}"/)
+  const args = command
+    .replace('"${{ steps.release-artifact.outputs.integrity }}"', "sha512-expected")
+    .trim().split(/\s+/)
+  assert.deepEqual(args.slice(0, 2), ["node", ".release-publication/scripts/wait-for-npm-publication.mjs"])
+  const timeoutMs = Number(args[args.indexOf("--timeout-ms") + 1])
+  assert.equal(timeoutMs, 3_600_000)
+  assert.ok(stepTimeout * 60_000 > timeoutMs, "Actions must allow the publication wait to finish")
+  assert.equal(args[args.indexOf("--package-json") + 1], "package.json")
+  const result = runPublicationCLI(t, args.slice(2), { recovery: true })
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Waiting up to 3600s for semiotic@3\.10\.0/)
+  assert.match(result.stdout, /exact integrity, registry signatures and provenance/)
   assert.ok(
-    workflow.indexOf("Wait for published artifact and provenance") <
+    waitIndex <
       workflow.indexOf("Post-publish smoke test")
   )
   assert.match(

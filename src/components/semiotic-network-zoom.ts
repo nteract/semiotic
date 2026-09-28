@@ -19,3 +19,6 @@ export type {
   NetworkViewTransform,
   NetworkViewportRect
 } from "./stream/networkViewportTypes"
+// Apply or invert a zoom camera; pair with a layout fit (for example
+// createDagreFit) to move between authored, plot, and viewport coordinates.
+export { projectNetworkPoint, invertNetworkRect } from "./stream/networkViewTransform"

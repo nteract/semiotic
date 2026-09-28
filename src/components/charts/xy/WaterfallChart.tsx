@@ -100,6 +100,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     showLegend: props.showLegend,

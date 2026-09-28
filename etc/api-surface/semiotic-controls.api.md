@@ -7,6 +7,7 @@ _Edit dist/semiotic-controls.d.ts's sources, then re-run `npm run docs:api-surfa
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function LinearBrush(props: LinearBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
@@ -22,6 +23,11 @@ interface ControlAuditResult
 interface ControlObservation
 interface ControlObservationAdapterOptions
 interface DirectManipulationControlProps
+interface LinearBrushChangeMeta
+interface LinearBrushHandleRenderContext
+interface LinearBrushLabelRenderContext
+interface LinearBrushProps
+interface LinearBrushScale
 interface MobileStandardBrushControls
 interface MobileStandardControlLegendItem
 interface MobileStandardControlsProps
@@ -108,6 +114,79 @@ interface-member DirectManipulationControlProps::property::value = required valu
 interface-member DirectManipulationControlProps::property::valueText = optional valueText: string | undefined
 interface-member DirectManipulationControlProps::property::x = required x: number
 interface-member DirectManipulationControlProps::property::y = required y: number
+interface-member LinearBrushChangeMeta::property::atDomainEnd = required atDomainEnd: boolean
+interface-member LinearBrushChangeMeta::property::atDomainStart = required atDomainStart: boolean
+interface-member LinearBrushChangeMeta::property::changed = required changed: boolean
+interface-member LinearBrushChangeMeta::property::mode = required mode: LinearBrushGestureMode
+interface-member LinearBrushChangeMeta::property::source = required source: LinearBrushChangeSource
+interface-member LinearBrushHandleRenderContext::property::active = required active: boolean
+interface-member LinearBrushHandleRenderContext::property::dragging = required dragging: boolean
+interface-member LinearBrushHandleRenderContext::property::focused = required focused: boolean
+interface-member LinearBrushHandleRenderContext::property::fraction = required fraction: number
+interface-member LinearBrushHandleRenderContext::property::orientation = required orientation: "x" | "y"
+interface-member LinearBrushHandleRenderContext::property::side = required side: "end" | "move" | "start"
+interface-member LinearBrushHandleRenderContext::property::value = required value: number
+interface-member LinearBrushLabelRenderContext::property::fraction = required fraction: number
+interface-member LinearBrushLabelRenderContext::property::kind = required kind: "domain-end" | "domain-start" | "end" | "start"
+interface-member LinearBrushLabelRenderContext::property::placement = required placement: "after" | "before"
+interface-member LinearBrushLabelRenderContext::property::row = required row: 0 | 1
+interface-member LinearBrushLabelRenderContext::property::text = required text: string
+interface-member LinearBrushLabelRenderContext::property::value = required value: number
+interface-member LinearBrushProps::property::activeHandleStyle = optional activeHandleStyle: CSSProperties | undefined
+interface-member LinearBrushProps::property::activeSelectionStyle = optional activeSelectionStyle: CSSProperties | undefined
+interface-member LinearBrushProps::property::allowCreate = optional allowCreate: boolean | undefined
+interface-member LinearBrushProps::property::chartId = optional chartId: string | undefined
+interface-member LinearBrushProps::property::chartType = optional chartType: string | undefined
+interface-member LinearBrushProps::property::className = optional className: string | undefined
+interface-member LinearBrushProps::property::clearOnBackgroundClick = optional clearOnBackgroundClick: boolean | undefined
+interface-member LinearBrushProps::property::clearable = optional clearable: boolean | undefined
+interface-member LinearBrushProps::property::controlId = optional controlId: string | undefined
+interface-member LinearBrushProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
+interface-member LinearBrushProps::property::defaultValue = optional defaultValue: null | readonly [number, number] | undefined
+interface-member LinearBrushProps::property::description = optional description: string | undefined
+interface-member LinearBrushProps::property::disabled = optional disabled: boolean | undefined
+interface-member LinearBrushProps::property::domain = optional domain: readonly [number, number] | undefined
+interface-member LinearBrushProps::property::emptySelection = optional emptySelection: "full-extent" | "hidden" | undefined
+interface-member LinearBrushProps::property::formatValue = optional formatValue: ((value: number) => string) | undefined
+interface-member LinearBrushProps::property::handleSize = optional handleSize: number | undefined
+interface-member LinearBrushProps::property::handleStyle = optional handleStyle: CSSProperties | undefined
+interface-member LinearBrushProps::property::height = optional height: number | undefined
+interface-member LinearBrushProps::property::hitSize = optional hitSize: number | undefined
+interface-member LinearBrushProps::property::inset = optional inset: number | undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member LinearBrushProps::property::label = optional label: string | undefined
+interface-member LinearBrushProps::property::labelBounds = optional labelBounds: readonly [number, number] | undefined
+interface-member LinearBrushProps::property::labelOffset = optional labelOffset: number | undefined
+interface-member LinearBrushProps::property::labelPosition = optional labelPosition: "above" | "below" | undefined
+interface-member LinearBrushProps::property::labelStyle = optional labelStyle: CSSProperties | undefined
+interface-member LinearBrushProps::property::labelWidth = optional labelWidth: number | undefined
+interface-member LinearBrushProps::property::largeStep = optional largeStep: number | undefined
+interface-member LinearBrushProps::property::maskStyle = optional maskStyle: CSSProperties | boolean | undefined
+interface-member LinearBrushProps::property::minSpan = optional minSpan: number | undefined
+interface-member LinearBrushProps::property::onChange = optional onChange: ((value: LinearBrushValue, meta: LinearBrushChangeMeta) => void) | undefined
+interface-member LinearBrushProps::property::onChangeEnd = optional onChangeEnd: ((value: LinearBrushValue, meta: LinearBrushChangeMeta) => void) | undefined
+interface-member LinearBrushProps::property::onChangeStart = optional onChangeStart: ((value: LinearBrushValue, meta: LinearBrushChangeMeta) => void) | undefined
+interface-member LinearBrushProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member LinearBrushProps::property::orientation = optional orientation: "x" | "y" | undefined
+interface-member LinearBrushProps::property::renderExtentLabel = optional renderExtentLabel: ((context: LinearBrushLabelRenderContext) => ReactNode) | undefined
+interface-member LinearBrushProps::property::renderHandle = optional renderHandle: ((context: LinearBrushHandleRenderContext) => ReactNode) | undefined
+interface-member LinearBrushProps::property::resetOnDoubleClick = optional resetOnDoubleClick: boolean | undefined
+interface-member LinearBrushProps::property::resetValue = optional resetValue: LinearBrushValue | undefined
+interface-member LinearBrushProps::property::reverse = optional reverse: boolean | undefined
+interface-member LinearBrushProps::property::scale = optional scale: LinearBrushScale | undefined
+interface-member LinearBrushProps::property::selectionStyle = optional selectionStyle: CSSProperties | undefined
+interface-member LinearBrushProps::property::showDomainLabels = optional showDomainLabels: boolean | undefined
+interface-member LinearBrushProps::property::showExtentLabels = optional showExtentLabels: boolean | undefined
+interface-member LinearBrushProps::property::showHandles = optional showHandles: boolean | undefined
+interface-member LinearBrushProps::property::showMoveHandle = optional showMoveHandle: boolean | undefined
+interface-member LinearBrushProps::property::snap = optional snap: boolean | undefined
+interface-member LinearBrushProps::property::step = optional step: number | undefined
+interface-member LinearBrushProps::property::style = optional style: CSSProperties | undefined
+interface-member LinearBrushProps::property::value = optional value: null | readonly [number, number] | undefined
+interface-member LinearBrushProps::property::width = optional width: number | undefined
+interface-member LinearBrushScale::call::%24call = required (value: number): number
+interface-member LinearBrushScale::method::domain = required domain(): (Date | number)[]
+interface-member LinearBrushScale::method::invert = required invert(pixel: number): Date | number
+interface-member LinearBrushScale::method::range = required range(): number[]
 interface-member MobileStandardBrushControls::property::disabled = optional disabled: boolean | undefined
 interface-member MobileStandardBrushControls::property::domain = optional domain: [number, number] | undefined
 interface-member MobileStandardBrushControls::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
@@ -232,6 +311,9 @@ type ControlAuditStatus = "fail" | "pass" | "warn"
 type ControlInputSource = "keyboard" | "pointer" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
 type ControlObservationPhase = "control-change" | "control-end" | "control-start"
+type LinearBrushChangeSource = "background-click" | "double-click" | "keyboard" | "pointer"
+type LinearBrushGestureMode = "clear" | "create" | "end" | "keyboard" | "move" | "reset" | "start"
+type LinearBrushValue = [number, number] | null
 type MobileStandardControlRequest = MobileStandardControlsMode
 type SentenceFilterDefinition = SentenceFilterMultiSelectDefinition | SentenceFilterNumberDefinition | SentenceFilterRangeDefinition | SentenceFilterSelectDefinition | SentenceFilterTextDefinition | SentenceFilterToggleDefinition
 type SentenceFilterPrimitive = boolean | null | number | string

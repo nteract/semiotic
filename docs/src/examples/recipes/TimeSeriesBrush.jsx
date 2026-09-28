@@ -27,7 +27,7 @@ function formatDate(d) {
   return `${months[date.getMonth()]} ${date.getDate()}`
 }
 
-export default function TimeSeriesBrush({ data = sampleData, width = 700, height = 350 }) {
+export default function TimeSeriesBrush({ data = sampleData, width = 700, height = 350, onBrushEnd }) {
   return (
     <MinimapChart
       data={data}
@@ -45,9 +45,14 @@ export default function TimeSeriesBrush({ data = sampleData, width = 700, height
       margin={{ left: 60, top: 10, bottom: 40, right: 20 }}
       minimap={{
         height: 60,
-        margin: { left: 60, top: 0, bottom: 20, right: 20 },
+        margin: { left: 60, right: 20 },
         lineStyle: (d) => ({ stroke: d.color, strokeWidth: 1 }),
+        brushStyle: { mask: true },
+        handles: { move: true },
+        showExtentLabels: true,
+        resetOnDoubleClick: true,
       }}
+      onBrushEnd={onBrushEnd}
       tooltip={{
         title: "series",
         fields: [

@@ -163,4 +163,56 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
     expect(rows!.textContent).toContain("A=20")
     expect(rows!.textContent).toContain("B=10")
   })
+
+  it("gives custom multi content every series at and past the last sample", async () => {
+    // Regression (reported downstream by Iris): two series over minutes 0..11
+    // of a 20-minute xExtent. Near the last sample the cursor sat in padding
+    // outside the rendered paths, so content received a single datum and no
+    // rows. Multi hover now snaps to the edge sample.
+    const minutes = Array.from({ length: 12 }, (_, minute) => minute)
+    const data = [
+      ...minutes.map(minute => ({ series: "A", minute, value: minute })),
+      ...minutes.map(minute => ({ series: "B", minute, value: minute * 2 })),
+    ]
+    const seen: Array<{ header: unknown; rows: string; keys: string[] }> = []
+
+    const { container } = render(
+      <LineChart
+        data={data}
+        xAccessor="minute"
+        yAccessor="value"
+        lineBy="series"
+        tooltip={{
+          mode: "multi",
+          content: (d: Record<string, unknown>) => {
+            const all = (d.allSeries ?? []) as Array<{ group: string; value: number; datum: Record<string, unknown> }>
+            seen.push({
+              header: d.xValue,
+              rows: all.map(s => `${s.group}=${Math.round(s.value)}`).join(" "),
+              keys: Object.keys(all[0]?.datum ?? {}).sort(),
+            })
+            return <div>{all.length}</div>
+          },
+        }}
+        showLegend={false}
+        xExtent={[0, 20]}
+        yExtent={[0, 30]}
+        width={200}
+        height={100}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        frameProps={{ showAxes: false }}
+      />
+    )
+    await act(async () => { await Promise.resolve() })
+
+    const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
+    for (const clientX of [110, 150, 199]) {
+      fireEvent.mouseMove(hoverTarget, { clientX, clientY: 50 })
+      await act(async () => { await Promise.resolve() })
+    }
+
+    expect(seen.slice(-3).map(({ header, rows, keys }) => ({ header: Math.round(Number(header)), rows, keys }))).toEqual(
+      Array(3).fill({ header: 11, rows: "A=11 B=22", keys: ["minute", "series", "value"] })
+    )
+  })
 })

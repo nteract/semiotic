@@ -12,7 +12,7 @@ function formatDate(d) {
   return \`\${months[date.getMonth()]} \${date.getDate()}\`
 }
 
-export default function TimeSeriesBrush({ data, width = 700, height = 350 }) {
+export default function TimeSeriesBrush({ data, width = 700, height = 350, onBrushEnd }) {
   return (
     <MinimapChart
       data={data}
@@ -30,8 +30,13 @@ export default function TimeSeriesBrush({ data, width = 700, height = 350 }) {
       margin={{ left: 60, top: 10, bottom: 40, right: 20 }}
       minimap={{
         height: 60,
-        margin: { left: 60, top: 0, bottom: 20, right: 20 },
+        margin: { left: 60, right: 20 },
+        brushStyle: { mask: true },
+        handles: { move: true },
+        showExtentLabels: true,
+        resetOnDoubleClick: true,
       }}
+      onBrushEnd={onBrushEnd}  // once per changed drag, key, or reset
       tooltip={{
         title: "series",
         fields: [
@@ -66,9 +71,10 @@ export default function TimeSeriesBrushPage() {
     >
       <p>
         A multi-series time series chart with a brush minimap for zooming into
-        a date range. Uses Semiotic's <code>MinimapChart</code> which
-        renders a main chart and an overview minimap with d3-brush for
-        selecting a date range.
+        a date range. Uses Semiotic's <code>MinimapChart</code>, which
+        renders a main chart and an overview minimap with an accessible range
+        brush: drag its handles or the window, draw a new window, double-click
+        to clear it, or focus it and use the arrow keys.
       </p>
 
       <h2 id="preview">Preview</h2>
@@ -112,14 +118,31 @@ export default function TimeSeriesBrushPage() {
             <td><code>brushExtent</code></td>
             <td>Pass an initial <code>[startDate, endDate]</code> for controlled brushing</td>
           </tr>
+          <tr>
+            <td>Brush look</td>
+            <td><code>minimap.brushStyle</code></td>
+            <td>Set <code>fill</code>, <code>fillOpacity</code>, <code>stroke</code>, and <code>mask: true</code> to dim the overview outside the window</td>
+          </tr>
+          <tr>
+            <td>Handles and labels</td>
+            <td><code>minimap.handles</code>, <code>minimap.showExtentLabels</code></td>
+            <td><code>{"{ move: true }"}</code> adds a move handle; labels use <code>xFormat</code> or <code>minimap.extentLabelFormat</code> (a newline makes two lines)</td>
+          </tr>
+          <tr>
+            <td>Commit on release</td>
+            <td><code>onBrushEnd</code></td>
+            <td>Called once per changed drag, keyboard step, or reset, while <code>onBrush</code> follows every move</td>
+          </tr>
         </tbody>
       </table>
 
       <h2 id="how-it-works">How It Works</h2>
       <p>
         <code>MinimapChart</code> renders two coordinated StreamXYFrames: a main chart
-        and a smaller overview below it. The overview has a d3-brush overlay that
-        controls the <code>xExtent</code> of the main chart. Drag the brush to zoom
+        and a smaller overview below it. The overview carries a{" "}
+        <Link to="/features/controls#linear-brush">LinearBrush</Link> that
+        controls the <code>xExtent</code> of the main chart (its <code>yExtent</code>
+        with <code>minimap.brushDirection: "y"</code>). Drag the brush to zoom
         into a date range, or drag the brush edges to resize the selection.
       </p>
       <p>

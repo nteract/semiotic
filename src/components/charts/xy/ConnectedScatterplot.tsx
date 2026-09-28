@@ -148,6 +148,7 @@ export const ConnectedScatterplot = forwardRef(function ConnectedScatterplot<TDa
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     title: props.title,

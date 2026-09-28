@@ -10,6 +10,7 @@ import {
 } from "../../test-utils/canvasMock"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
+import { BRUSH_ACCENT } from "./brushTheme"
 
 // Mock ResizeObserver for jsdom
 const resizeObserverGlobal = globalThis as typeof globalThis & {
@@ -1178,6 +1179,10 @@ describe("StreamOrdinalFrame", () => {
       await waitFor(() => {
         expect(container.querySelector(".brush-g")).toBeTruthy()
       })
+      const selection = container.querySelector(".brush-g .selection")!
+      expect(selection.getAttribute("fill")).toBe(BRUSH_ACCENT)
+      expect(selection.getAttribute("stroke")).toBe(BRUSH_ACCENT)
+      expect(selection.getAttribute("fill-opacity")).toBe("0.15")
     })
 
     it("does not render brush overlay when brush is not set", () => {

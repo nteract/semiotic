@@ -4,6 +4,7 @@ import {
   renderOrdinalToStaticSVG,
   renderXYToStaticSVG,
 } from "./renderToStaticSVG"
+import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
 const xyData = [
   { x: 0, y: 10 },
@@ -228,6 +229,25 @@ describe("static axis tick parity", () => {
 
     expect(svg).toContain(">Jan 1<")
     expect(svg).toContain(">Feb 1<")
+  })
+
+  it("labels static index-aware ticks against the rendered ticks", () => {
+    const start = Date.UTC(2026, 8, 27, 12)
+    const hours = (step: number, count: number) =>
+      Array.from({ length: count }, (_, i) => new Date(start + i * step * 3_600_000))
+    const svg = renderXYToStaticSVG({
+      chartType: "line",
+      data: hours(24, 2).map((x, i) => ({ x, y: i })),
+      xAccessor: "x",
+      yAccessor: "y",
+      xScaleType: "time",
+      size: [460, 220],
+      margin: { top: 10, right: 30, bottom: 30, left: 30 },
+      xFormat: adaptiveTimeTicks(),
+      axes: [{ orient: "bottom", tickValues: hours(4, 7) }],
+    })
+    const labels = [...svg.matchAll(/>(Sep 2\d[^<]*|\d\d:\d\d)</g)].map((match) => match[1])
+    expect(labels).toEqual(["Sep 27, 2026 12:00", "20:00", "Sep 28 04:00", "12:00"])
   })
 
   it("keeps distinct subsecond labels in a direct frame export", () => {

@@ -5,6 +5,11 @@ export type AxisTickFormat =
   | ((d: string, index?: number, allTicks?: number[]) => string)
   | ((d: Date, index?: number, allTicks?: number[]) => string)
 
+/**
+ * Tick label formatter. Horizontal axes pass the tick's `index` among the
+ * rendered ticks and every rendered tick value (`allTicks`); vertical axes
+ * pass the value only.
+ */
 export type AxisTickFormatter = {
   bivarianceHack(
     d: string | number | Date,

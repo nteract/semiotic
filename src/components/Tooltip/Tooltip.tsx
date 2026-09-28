@@ -4,6 +4,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { HoverData } from "../realtime/types"
 import { normalizeHoverDatum } from "../stream/hoverUtils"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
+import { attachSelectionProvenance, getSelectionProvenance } from "../store/selectionProvenance"
 import {
   TooltipRoot,
   hasOwnTooltipChrome,
@@ -610,6 +611,8 @@ export function MultiPointTooltip(): TooltipContentFn {
   }
 }
 
+let warnedMultiContent = false
+
 /**
  * Convert a tooltip prop to the format Semiotic expects.
  * Returns `false` to disable, or a `TooltipContentFn` compatible with
@@ -704,7 +707,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       // data row. Real datum fields win, so a data row that legitimately
       // carries an `xValue` column is not overwritten by the cursor's.
       if (looksLikeHoverWrapper && (hoverData.allSeries !== undefined || hoverData.xValue !== undefined)) {
-        const withHoverContext: Datum = { ...datum }
+        const withHoverContext: Datum = attachSelectionProvenance({ ...datum }, getSelectionProvenance(datum))
         if (hoverData.allSeries !== undefined && withHoverContext.allSeries === undefined) {
           withHoverContext.allSeries = hoverData.allSeries
         }
@@ -742,6 +745,12 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   // which single-mode ordinal/network/geo/physics frames do not provide.
   if (isMultiTooltipConfig(tooltip)) {
     if (typeof tooltip.content === "function") {
+      if (!warnedMultiContent && typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+        warnedMultiContent = true
+        console.warn(
+          '[semiotic] tooltip={{ mode: "multi", content }} reached a chart without multi-series hover. content receives one datum and no allSeries.',
+        )
+      }
       return normalizeTooltip(tooltip.content)
     }
     if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {

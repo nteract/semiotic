@@ -241,6 +241,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     showLegend: props.showLegend,

@@ -4,6 +4,7 @@ import type { XYSceneContext } from "./types"
 import type { Datum } from "../../charts/shared/datumTypes"
 import { getSelectionProvenance } from "../../store/selectionProvenance"
 import { wrapStyleWithSelection } from "../../charts/shared/selectionUtils"
+import { datumToValues } from "../accessibleDataRows"
 
 function selectionAwareStyle(): (datum: Datum) => Datum {
   return wrapStyleWithSelection(() => ({}), {
@@ -165,6 +166,40 @@ describe("buildBarScene", () => {
     expect(nodeA!.h).toBe(3)
     expect(nodeB!.y).toBe(3)
     expect(nodeB!.h).toBe(2)
+  })
+
+  it("shares one ordered category breakdown across a stacked bin's segments", () => {
+    const data = [
+      { x: 1, y: 3, cat: "B" },
+      { x: 2, y: 0, cat: "C" },
+      { x: 3, y: 2, cat: "A" },
+      { x: 4, y: 4, cat: "B" },
+      { x: 12, y: 5, cat: "A" },
+    ]
+    const ctx = makeCtx({
+      config: { binSize: 10, barColors: { B: "red", A: "blue" }, trackHoverRows: true },
+      getCategory: (d) => d.cat,
+    })
+    const [first, second, third] = buildBarScene(ctx, data).nodes.map(node => node.datum!)
+
+    expect(first.categories).toEqual([{ category: "B", value: 7 }, { category: "A", value: 2 }])
+    expect(second.categories).toBe(first.categories)
+    expect(third.categories).toEqual([{ category: "A", value: 5 }])
+    expect(first.categories.reduce((sum: number, entry: Datum) => sum + entry.value, 0)).toBe(first.total)
+
+    expect(getSelectionProvenance(first.categories)).toEqual(data.slice(0, 4))
+    expect(getSelectionProvenance(first.categories[0])).toEqual([data[0], data[3]])
+    expect(getSelectionProvenance(first.categories[1])).toEqual([data[2]])
+    expect(JSON.parse(JSON.stringify(first.categories))).toEqual([
+      { category: "B", value: 7 },
+      { category: "A", value: 2 },
+    ])
+    expect(datumToValues(first)).toEqual({ binStart: 0, binEnd: 10, total: 9, category: "B", categoryValue: 7 })
+  })
+
+  it("keeps the unstacked bin datum to its range and total", () => {
+    const result = buildBarScene(makeCtx({ config: { binSize: 10 } }), [{ x: 5, y: 3 }])
+    expect(Object.keys(result.nodes[0]!.datum!)).toEqual(["binStart", "binEnd", "total"])
   })
 
   it("category colors come from barColors config", () => {

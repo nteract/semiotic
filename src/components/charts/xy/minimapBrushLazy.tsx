@@ -1,21 +1,21 @@
 /**
- * Lazy-loaded wrapper for MinimapBrushOverlay (pulls d3-brush).
+ * Lazy-loaded wrapper for MinimapBrush (pulls LinearBrush).
  */
 "use client"
 import * as React from "react"
-import type { MinimapBrushOverlayProps } from "./minimapBrushOverlay"
+import type { MinimapBrushProps } from "./minimapBrush"
 
-type BrushComponent = React.ComponentType<MinimapBrushOverlayProps>
+type BrushComponent = React.ComponentType<MinimapBrushProps>
 
 let cached: BrushComponent | null = null
 let loadPromise: Promise<BrushComponent> | null = null
 
-function loadMinimapBrushOverlay(): Promise<BrushComponent> {
+function loadMinimapBrush(): Promise<BrushComponent> {
   if (cached) return Promise.resolve(cached)
   if (!loadPromise) {
-    loadPromise = import("./minimapBrushOverlay")
+    loadPromise = import("./minimapBrush")
       .then((mod) => {
-        cached = mod.MinimapBrushOverlay
+        cached = mod.MinimapBrush
         return cached
       })
       .catch((err) => {
@@ -26,14 +26,14 @@ function loadMinimapBrushOverlay(): Promise<BrushComponent> {
   return loadPromise
 }
 
-/** Renders nothing until d3-brush module resolves, then mounts the brush. */
-export function MinimapBrushOverlayLazy(props: MinimapBrushOverlayProps) {
+/** Renders nothing until the brush module resolves, then mounts the brush. */
+export function MinimapBrushLazy(props: MinimapBrushProps) {
   const [Comp, setComp] = React.useState<BrushComponent | null>(() => cached)
 
   React.useEffect(() => {
     if (Comp) return
     let cancelled = false
-    loadMinimapBrushOverlay().then((Loaded) => {
+    loadMinimapBrush().then((Loaded) => {
       if (!cancelled) setComp(() => Loaded)
     }).catch(() => {
       // Chunk load failure — leave brush unmounted; chart still works.

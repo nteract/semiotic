@@ -256,11 +256,22 @@ export type DatumClickHandler = {
  * Axis configuration props
  */
 export interface AxisConfig {
+  /**
+   * Show the axes. Defaults to the chart mode (on in primary, off in context
+   * and sparkline); an explicit value wins over the mode, matching
+   * `responsiveRules` win over the prop, and `frameProps.showAxes` wins over
+   * both. Hiding axes keeps the chart's margins.
+   */
+  showAxes?: boolean
   /** Label for the x-axis */
   xLabel?: string
   /** Label for the y-axis */
   yLabel?: string
-  /** Format function for x-axis tick labels. Return string or ReactNode for custom rendering. */
+  /**
+   * Format function for x-axis tick labels. Return string or ReactNode for custom rendering.
+   * On the x axis, `index` and `allTicks` describe the ticks actually rendered, after
+   * overlapping labels are thinned; tooltips call it with the value only.
+   */
   xFormat?: (d: number | Date | string, index?: number, allTicks?: number[]) => string | React.ReactNode
   /** Format function for y-axis tick labels. Return string or ReactNode for custom rendering. */
   yFormat?: (d: number | Date | string) => string | React.ReactNode

@@ -30,6 +30,12 @@ import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statistical
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import { forecastYExtent } from "../shared/forecastExtent"
 import { useXYBrush } from "../shared/useXYBrush"
+import {
+  applyLineGapStrategy,
+  segmentAreaGroups,
+  withSegmentSeriesStyle,
+  withSegmentSeriesTooltip,
+} from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 
@@ -394,6 +400,7 @@ export const LineChart = forwardRef(
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     showLegend: props.showLegend,
@@ -626,94 +633,28 @@ export const LineChart = forwardRef(
     return [{ [lineDataAccessor]: chartData }]
   }, [isLineObjectFormat, effectiveGroupAccessor, lineDataAccessor, chartData, lineBy, needsCompoundGroup])
 
-  // Apply gap strategy to line data
-  //
-  // "break" splits each line into separate segment objects with unique group
-  //   keys so the Frame renders them as independent lines (with gaps between).
-  // "interpolate" filters out null points so the line connects across gaps.
-  //   Filtering must happen here because the pipeline accessor coerces null→0.
-  // "zero" replaces null y-values with 0 so the line drops to the baseline.
-  //
-  // hasGaps tracks whether any null/NaN values were found, so we only switch
-  // the group accessor to _gapSegment when gaps actually exist (avoids
-  // interfering with forecast segmentation or normal grouping).
-  const { gapProcessedLineData, hasGaps } = useMemo(() => {
-    if (gapStrategy === "interpolate") {
-      // Filter out gap points from each line's coordinates so the line
-      // connects directly from the last valid point to the next valid one.
-      // We can't rely on SceneGraph filtering because resolveAccessor uses
-      // unary + which converts null→0 before SceneGraph ever sees it.
-      let found = false
-      const result: Datum[] = []
-      for (const line of lineData) {
-        const coords: Datum[] = line[lineDataAccessor] || []
-        const filtered = coords.filter(d => {
-          if (isGap(d)) { found = true; return false }
-          return true
-        })
-        if (filtered.length > 0) {
-          result.push({ ...line, [lineDataAccessor]: filtered })
-        }
+  // Apply gap strategy to line data. "break" segments carry index-based
+  // frame group keys (no marker field on the data); `seriesOfLine` records
+  // the authored series each segment belongs to.
+  const { lines: gapProcessedLineData, hasGaps, segments } = useMemo(() => {
+    const seriesOfLine = (line: Datum): string => {
+      if (!frameGroupAccessor) return ""
+      if (typeof frameGroupAccessor === "string") {
+        const value = line[frameGroupAccessor]
+        return value == null ? "" : String(value)
       }
-      return { gapProcessedLineData: result, hasGaps: found }
+      const first: Datum | undefined = line[lineDataAccessor]?.[0]
+      const value = first ? frameGroupAccessor(first) : undefined
+      return value == null ? "" : String(value)
     }
-
-    if (gapStrategy === "break") {
-      // Split each line into segments at gap boundaries. Each segment gets
-      // a unique _gapSegment key injected into its coordinates so that when
-      // the data is flattened and re-grouped by the Frame, segments stay separate.
-      let found = false
-      const result: Datum[] = []
-      for (const line of lineData) {
-        const coords: Datum[] = line[lineDataAccessor] || []
-        let segment: Datum[] = []
-        let segIdx = 0
-        const groupVal = frameGroupAccessor && typeof frameGroupAccessor === "string"
-          ? line[frameGroupAccessor]
-          : undefined
-
-        for (const d of coords) {
-          if (isGap(d)) {
-            found = true
-            if (segment.length > 0) {
-              result.push({ ...line, [lineDataAccessor]: segment })
-              segment = []
-              segIdx++
-            }
-          } else {
-            const segKey = groupVal != null ? `${groupVal}__seg${segIdx}` : `__seg${segIdx}`
-            segment.push({ ...d, _gapSegment: segKey })
-          }
-        }
-        if (segment.length > 0) {
-          result.push({ ...line, [lineDataAccessor]: segment })
-        }
-      }
-      return { gapProcessedLineData: result, hasGaps: found }
-    }
-
-    if (gapStrategy === "zero") {
-      // Replace null y-values with 0 so the line drops to the baseline
-      let found = false
-      const yField = typeof yAccessor === "string" ? yAccessor : "y"
-      const result: Datum[] = []
-      for (const line of lineData) {
-        const coords: Datum[] = line[lineDataAccessor] || []
-        const processed: Datum[] = []
-        for (const d of coords) {
-          if (isGap(d)) {
-            found = true
-            processed.push({ ...d, [yField]: 0 })
-          } else {
-            processed.push(d)
-          }
-        }
-        result.push({ ...line, [lineDataAccessor]: processed })
-      }
-      return { gapProcessedLineData: result, hasGaps: found }
-    }
-
-    return { gapProcessedLineData: lineData, hasGaps: false }
+    return applyLineGapStrategy({
+      lineData,
+      strategy: gapStrategy,
+      lineDataAccessor,
+      isGap,
+      yField: typeof yAccessor === "string" ? yAccessor : "y",
+      seriesOfLine,
+    })
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
 
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
@@ -935,29 +876,40 @@ export const LineChart = forwardRef(
     defaultDimension: "x",
   })
 
-  const flattenedData = useMemo(() => {
+  // Split segments group by point identity: each forwarded point maps to its
+  // segment's key, so no grouping field is written onto the data.
+  const { flattenedData, segmentGroupAccessor } = useMemo(() => {
     const needsFlatten = isLineObjectFormat || frameGroupAccessor || hasGaps
+    if (!needsFlatten) return { flattenedData: chartData, segmentGroupAccessor: undefined }
 
-    if (needsFlatten) {
-      return gapProcessedLineData.flatMap((line: Datum) => {
-        const coords = line[lineDataAccessor] || []
-        if (frameGroupAccessor && typeof frameGroupAccessor === "string") {
-          return coords.map((c: Datum) => ({
+    const pointKeys = segments ? new WeakMap<Datum, string>() : undefined
+    const flat = gapProcessedLineData.flatMap((line: Datum) => {
+      const coords: Datum[] = line[lineDataAccessor] || []
+      const points = frameGroupAccessor && typeof frameGroupAccessor === "string"
+        ? coords.map((c: Datum) => ({
             ...c,
             [frameGroupAccessor]: c[frameGroupAccessor] ?? line[frameGroupAccessor],
           }))
-        }
-        return coords
-      })
+        : coords
+      const key = segments?.keyOf.get(line)
+      if (pointKeys && key !== undefined) {
+        for (const point of points) pointKeys.set(point, key)
+      }
+      return points
+    })
+    return {
+      flattenedData: flat,
+      segmentGroupAccessor: pointKeys ? (d: Datum) => pointKeys.get(d) ?? "" : undefined,
     }
-    return chartData
-  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, frameGroupAccessor, chartData, hasGaps])
+  }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, frameGroupAccessor, chartData, hasGaps, segments])
+
+  const frameLineStyle = useMemo(() => withSegmentSeriesStyle(lineStyle, segments), [lineStyle, segments])
 
   // Build StreamXYFrame props
   const normalizedLineGradient = normalizeColorGradient(lineGradient)
   const streamProps: StreamXYFrameProps = {
     chartType,
-    ...(Array.isArray(fillArea) && { areaGroups: fillArea }),
+    ...(Array.isArray(fillArea) && { areaGroups: segmentAreaGroups(fillArea, segments) }),
     ...(normalizedLineGradient && { lineGradient: normalizedLineGradient }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
@@ -974,10 +926,10 @@ export const LineChart = forwardRef(
     ...((yExtent && (yExtent[0] != null || yExtent[1] != null))
       ? { yExtent }
       : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
-    groupAccessor: gapStrategy === "break" && hasGaps ? "_gapSegment" : frameGroupAccessor || undefined,
+    groupAccessor: segmentGroupAccessor ?? (frameGroupAccessor || undefined),
     ...(band && { band: band as StreamXYFrameProps["band"] }),
     curve,
-    lineStyle,
+    lineStyle: frameLineStyle,
     ...(showPoints && { pointStyle }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
@@ -1004,11 +956,11 @@ export const LineChart = forwardRef(
     ...(accessibleTable !== undefined && { accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
-    ...resolveMultiCapableTooltip({
+    ...withSegmentSeriesTooltip(resolveMultiCapableTooltip({
       tooltip,
       defaultTooltipContent,
       multiDefaultContent: MultiPointTooltip(),
-    }),
+    }), segments),
     ...buildCustomBehaviorProps({
       linkedHover,
       selection,

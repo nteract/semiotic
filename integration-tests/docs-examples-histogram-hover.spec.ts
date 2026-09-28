@@ -127,3 +127,35 @@ test("histogram docs combine horizontal grids with whole-column hover", async ({
   await expect.poll(() => pixels(chart)).toEqual(baseline)
   expect(errors).toEqual([])
 })
+
+test("histogram docs list every category in a hovered column", async ({
+  page
+}) => {
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  await page.goto("/charts/realtime-histogram#column-tooltip")
+  const demo = page.getByRole("region", {
+    name: "Histogram column tooltip example"
+  })
+  const chart = demo.locator(".stream-xy-frame")
+  const tooltip = chart.locator(".stream-frame-tooltip")
+  await chart.scrollIntoViewIfNeeded()
+  await expect
+    .poll(async () => (await pixels(chart))[0])
+    .toEqual([
+      [37, 99, 235, 255],
+      [217, 119, 6, 255]
+    ])
+  await expect(demo.locator("pre")).toContainText('tooltip="multi"')
+
+  // The first column stacks to 8 of 16, so 14 is above its stack.
+  await hoverSegment(page, chart, 14)
+  await expect(tooltip).toContainText("range:0–10")
+  await expect(tooltip).toContainText("Completed:6")
+  await expect(tooltip).toContainText("Retried:2")
+  await expect(tooltip).toContainText("count:8")
+  await expectTooltipWithinPlot(chart, margin)
+  await page.mouse.move(0, 0)
+  await expect(tooltip).toHaveCount(0)
+  expect(errors).toEqual([])
+})

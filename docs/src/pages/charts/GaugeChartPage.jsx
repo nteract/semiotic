@@ -100,7 +100,14 @@ const gaugeProps = [
     type: "ReactNode | (value, min, max) => ReactNode",
     required: false,
     default: "value label",
-    description: "Custom content rendered at the gauge center.",
+    description: "Content at the gauge center. Strings and numbers render as SVG text and SVG elements stay native; other React content uses an HTML overlay (a foreignObject in static SVG).",
+  },
+  {
+    name: "centerLabel",
+    type: "string",
+    required: false,
+    default: null,
+    description: "Caption drawn as SVG text beneath the center value, such as a unit or metric name.",
   },
   {
     name: "valueFormat",
@@ -503,8 +510,21 @@ export default function GaugeChartPage() {
 
       <h3 id="custom-center">Custom Center Content</h3>
       <p>
-        Replace the default value label with any React content via <code>centerContent</code>.
+        Add a caption with <code>centerLabel</code>, or replace the value with{" "}
+        <code>centerContent</code>. Strings, numbers, and SVG elements (including fragments of
+        them) render as native SVG, so static exports and SVG importers keep them. Other React
+        content renders as an HTML overlay, which becomes a <code>foreignObject</code> in static
+        SVG; some importers, such as Figma, drop those.
       </p>
+
+      <CodeBlock
+        code={`// Portable: native SVG text in the browser and in renderChart output
+<GaugeChart value={92} centerLabel="Uptime SLA" valueFormat={(v) => \`\${v}%\`} />
+<GaugeChart value={92} centerContent={(value) => \`\${value}%\`} centerLabel="Uptime SLA" />`}
+        language="jsx"
+      />
+
+      <p>Arbitrary HTML still works where the chart renders in a browser:</p>
 
       <CodeBlock
         code={`<GaugeChart

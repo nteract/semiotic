@@ -110,6 +110,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     title: props.title,

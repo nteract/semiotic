@@ -859,6 +859,36 @@ export default function AxesPage() {
         hiddenProps={{}}
       />
 
+      <h3 id="hierarchical-time-labels">Hierarchical time labels</h3>
+      <p>
+        <code>adaptiveTimeTicks()</code> fully qualifies the first time tick and then labels each
+        tick with only what changed since the previous rendered tick, re-qualifying at minute,
+        hour, day, month, and year boundaries. Index-aware formatters like this one receive the
+        ticks that survive label thinning, so a date change is never hidden. Opt-in options
+        shorten the labels further: <code>includeYear</code> and <code>includeDate</code>
+        {" "}(<code>"always"</code> by default, <code>"auto"</code>, or <code>"never"</code>),
+        {" "}<code>referenceTime</code> for <code>includeYear: "auto"</code>, and{" "}
+        <code>deltaStyle: "clock"</code> for readable clock labels. Tooltips keep the full label.
+      </p>
+      <CodeBlock language="jsx">{`import { LineChart } from "semiotic/xy"
+import { adaptiveTimeTicks } from "semiotic/utils"
+
+// A single-day monitoring window: "12:00", "12:10", … instead of "Sep 27, 2026 12:00", ":10"
+<LineChart
+  data={events}
+  xAccessor="time"
+  yAccessor="value"
+  xFormat={adaptiveTimeTicks(undefined, { includeDate: "auto", deltaStyle: "clock" })}
+/>
+
+// This year's data without repeating the year (pin referenceTime when server and client both render)
+<LineChart
+  data={daily}
+  xAccessor="day"
+  yAccessor="value"
+  xFormat={adaptiveTimeTicks("days", { includeYear: "auto", referenceTime: Date.UTC(2026, 0, 1) })}
+/>`}</CodeBlock>
+
       <h3 id="multi-axis">Multiple Axes</h3>
       <p>
         You can place axes on all four sides. This is useful for dual-axis charts or adding

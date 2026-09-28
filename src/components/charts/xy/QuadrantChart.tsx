@@ -190,6 +190,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
+    showAxes: props.showAxes,
     showGrid: props.showGrid,
     enableHover: props.enableHover,
     showLegend: props.showLegend,

@@ -12,7 +12,7 @@
 import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
-import { buildDefaultRealtimeTooltip, buildWaterfallTooltip, buildHeatmapTooltip } from "./defaultRealtimeTooltip"
+import { buildDefaultRealtimeTooltip, buildHistogramMultiTooltip, buildHistogramTooltip, buildWaterfallTooltip, buildHeatmapTooltip } from "./defaultRealtimeTooltip"
 import type { HoverData } from "../../realtime/types"
 
 function fakeHover(overrides: Partial<HoverData> = {}): HoverData {
@@ -82,6 +82,64 @@ describe("buildDefaultRealtimeTooltip", () => {
     expect(() =>
       render(<>{Tooltip(fakeHover({ data: null }))}</>),
     ).not.toThrow()
+  })
+})
+
+describe("buildHistogramTooltip", () => {
+  const rowsOf = (hover: HoverData) => {
+    const { container } = render(<>{buildHistogramTooltip()(hover)}</>)
+    return Array.from(container.querySelectorAll(".semiotic-tooltip > div")).map(row => row.textContent)
+  }
+
+  it("lists the range and count of an unstacked bin", () => {
+    expect(rowsOf(fakeHover({ data: { binStart: 0, binEnd: 10, total: 6 } }))).toEqual([
+      "range:0–10",
+      "count:6",
+    ])
+  })
+
+  it("adds the category and its count for a stacked segment", () => {
+    const data = { binStart: 0, binEnd: 10, total: 6, category: "North", categoryValue: 4 }
+    expect(rowsOf(fakeHover({ data }))).toEqual([
+      "range:0–10",
+      "count:6",
+      "category:North",
+      "category count:4",
+    ])
+  })
+
+  it("falls back to x/y for a datum without a bin", () => {
+    expect(rowsOf(fakeHover())).toEqual(["x:42", "y:87.50"])
+  })
+})
+
+describe("buildHistogramMultiTooltip", () => {
+  const rowsOf = (hover: HoverData) => {
+    const { container } = render(<>{buildHistogramMultiTooltip()(hover)}</>)
+    return Array.from(container.querySelectorAll(".semiotic-tooltip > div")).map(row => row.textContent)
+  }
+  const bin = { binStart: 0, binEnd: 10, total: 6 }
+
+  it("lists each stacked category between the range and the bin count", () => {
+    const allSeries = [
+      { group: "North", value: 5, color: "#f00", datum: {} },
+      { group: "South", value: 1, color: "#00f", datum: {} },
+    ]
+    expect(rowsOf(fakeHover({ data: bin, allSeries }))).toEqual([
+      "range:0–10",
+      "North:5",
+      "South:1",
+      "count:6",
+    ])
+  })
+
+  it("omits the category rows of an unstacked bin", () => {
+    const allSeries = [{ group: "", value: 6, color: "#f00", datum: {} }]
+    expect(rowsOf(fakeHover({ data: bin, allSeries }))).toEqual(["range:0–10", "count:6"])
+  })
+
+  it("falls back to the single-bin tooltip without column rows", () => {
+    expect(rowsOf(fakeHover({ data: bin }))).toEqual(["range:0–10", "count:6"])
   })
 })
 

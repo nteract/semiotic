@@ -212,17 +212,18 @@ export const distanceCartogram: ChartConfig = {
   layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const points = data || rest.points
+    const mode = common.__resolvedMode ?? rest.mode
+    const isSparkline = mode === "sparkline"
     const basePointStyle =
       rest.pointStyle ??
       buildGeoPointBaseStyle(points, colorBy as string | ((d: Datum) => unknown) | undefined, colorScheme, {
-        pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 5,
+        pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : isSparkline ? 1.5 : 5,
         fillOpacity: 0.85,
         strokeWidth: 1,
       })
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
     const cartogramLayout = rest.cartogramLayout
-      || (rest.mode === "sparkline" ? "strip" : "radial")
-    const isSparkline = rest.mode === "sparkline"
+      || (isSparkline ? "strip" : "radial")
     const isStrip = cartogramLayout === "strip"
     const ruledStyle = rest.styleRules
       ? composeStyleRules(
@@ -269,7 +270,7 @@ export const distanceCartogram: ChartConfig = {
       cartogramChrome: {
         showRings: rest.showRings ?? true,
         showNorth: rest.showNorth ?? (isStrip ? false : !isSparkline),
-        showRingLabels: rest.showRingLabels ?? (isStrip ? false : true),
+        showRingLabels: rest.showRingLabels ?? (!isStrip && mode !== "context" && !isSparkline),
         costLabel: rest.costLabel,
       },
     }

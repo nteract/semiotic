@@ -188,6 +188,23 @@ describe("static/runtime parity regressions", () => {
     expect(outerClose).toBeGreaterThan(needle)
   })
 
+  it("keeps a fragment of SVG Gauge center elements native", () => {
+    const svg = renderChart("GaugeChart", {
+      value: 50,
+      centerContent: (
+        <>
+          <text y={-6}>50%</text>
+          <text y={14} fontSize={10}>load</text>
+        </>
+      ),
+      width: 300,
+      height: 250,
+    })
+    expect(svg).toContain('class="semiotic-radial-center-content"')
+    expect(svg).toContain(">load</text>")
+    expect(svg).not.toContain("<foreignObject")
+  })
+
   it("keeps SVG Gauge center text out of foreignObject", () => {
     const svg = renderChart("GaugeChart", {
       value: 50,

@@ -122,11 +122,12 @@ export type {
 } from "./recipes/geographicDotGrid"
 
 // ── Network recipes (use with StreamNetworkFrame's customNetworkLayout) ──
-export { flextreeLayout } from "./recipes/flextree"
-export type { FlextreeConfig } from "./recipes/flextree"
+export { flextreeLayout, createFlextreeFit } from "./recipes/flextree"
+export type { FlextreeConfig, FlextreeFitConfig } from "./recipes/flextree"
 
-export { dagreLayout } from "./recipes/dagre"
-export type { DagreConfig } from "./recipes/dagre"
+export { dagreLayout, createDagreFit } from "./recipes/dagre"
+export type { DagreConfig, DagreFitConfig } from "./recipes/dagre"
+export type { PositionedNetworkFit, PositionedNetworkFitRect } from "./recipes/positionedNetworkFit"
 
 export {
   transitDiagramLayout,

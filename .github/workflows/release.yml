@@ -360,6 +360,17 @@ jobs:
         run: npm run bench:release-vs-previous
         continue-on-error: true
 
+      # Recovery uses the selected workflow's publication checks without
+      # changing the tagged source or rebuilding its immutable archive.
+      - name: Checkout release publication tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          path: .release-publication
+          sparse-checkout: scripts/wait-for-npm-publication.mjs
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Check whether this exact version is already published
         id: published-artifact
         env:
@@ -367,7 +378,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { appendFileSync, readFileSync } from "node:fs"
-          import { readNpmPublication } from "./scripts/wait-for-npm-publication.mjs"
+          import { readNpmPublication } from "./.release-publication/scripts/wait-for-npm-publication.mjs"
 
           const { name: packageName, version } = JSON.parse(readFileSync("package.json", "utf8"))
           const { manifest, pending, code } = await readNpmPublication({ packageName, version, timeoutMs: 10_000 })
@@ -391,11 +402,15 @@ jobs:
         if: steps.published-artifact.outputs.already-published != 'true'
         run: npm publish "${{ steps.release-artifact.outputs.tarball }}" --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }} --registry=https://registry.npmjs.org
 
-      # npm can accept the upload before asynchronous processing makes it public.
+      # npm accepted 3.11.0 over twenty minutes before making it public.
       # Keep publication identity/provenance checks inside the bounded wait.
       - name: Wait for published artifact and provenance
-        timeout-minutes: 16
-        run: node scripts/wait-for-npm-publication.mjs --expected-integrity "${{ steps.release-artifact.outputs.integrity }}"
+        timeout-minutes: 61
+        run: >-
+          node .release-publication/scripts/wait-for-npm-publication.mjs
+          --expected-integrity "${{ steps.release-artifact.outputs.integrity }}"
+          --timeout-ms 3600000
+          --package-json package.json
 
       - name: Post-publish smoke test
         run: |

@@ -21,6 +21,7 @@ import { select as d3Select } from "d3-selection"
 import { brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { OrdinalScales } from "./ordinalTypes"
 import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
+import { applyBrushSelectionStyle } from "./brushTheme"
 
 export interface OrdinalBrushOverlayProps {
   width: number
@@ -144,11 +145,7 @@ export function OrdinalBrushOverlay({
     g.call(brushFn)
     brushRef.current = brushFn
 
-    g.select(".selection")
-      .attr("fill", "steelblue")
-      .attr("fill-opacity", 0.15)
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1)
+    applyBrushSelectionStyle(g.select(".selection"), 0.15)
 
     return () => {
       brushFn.on("brush end", null)

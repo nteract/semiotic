@@ -1,5 +1,5 @@
 "use client"
-import { GaugeReadout } from "../shared/GaugeReadout"
+import { resolveGaugeCenterContent } from "../shared/GaugeReadout"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
@@ -67,8 +67,16 @@ export interface GaugeChartProps extends BaseChartProps {
   showNeedle?: boolean
   /** Needle color (default: var(--semiotic-text, #333)) */
   needleColor?: string
-  /** Center content — ReactNode rendered at the gauge center. If not provided, shows the value. */
+  /**
+   * Center content, or a function of `(value, min, max)`. Defaults to the
+   * formatted value. Strings and numbers render as native SVG text, and SVG
+   * elements (or fragments of them) stay native; other React content falls
+   * back to an HTML overlay, and to a `foreignObject` in static SVG, which
+   * some SVG importers drop. Wrap custom SVG components in a `<g>`.
+   */
   centerContent?: React.ReactNode | ((value: number, min: number, max: number) => React.ReactNode)
+  /** Caption drawn as SVG text beneath the center value, for example a unit or metric name. */
+  centerLabel?: string
   /** Format function for the default center value label */
   valueFormat?: (value: number) => string
   /** Show scale tick labels at min, max, and threshold boundaries (default true) */
@@ -191,6 +199,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
     showNeedle = true,
     needleColor = "var(--semiotic-text, #333)",
     centerContent,
+    centerLabel,
     valueFormat,
     showScaleLabels = !compactMode,
     sweep = 240,
@@ -312,14 +321,17 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
   //   below the dial (see `gauge-value` rule) so it can't be clipped by the
   //   center-slot's absolute-positioning constraints
   // - sparkline: nothing at all — a sparkline gauge is a dial indicator
-  const centerEl = useMemo(() => {
-    if (compactMode && centerContent == null) return null
-    if (centerContent != null) {
-      return typeof centerContent === "function" ? centerContent(clampedValue, min, max) : centerContent
-    }
-    const formatted = valueFormat ? valueFormat(clampedValue) : String(Math.round(clampedValue))
-    return GaugeReadout({ value: formatted, min, max, radius, showScaleLabels })
-  }, [centerContent, clampedValue, min, max, valueFormat, showScaleLabels, radius, compactMode])
+  const centerEl = useMemo(() => resolveGaugeCenterContent({
+    centerContent,
+    centerLabel,
+    value: clampedValue,
+    min,
+    max,
+    radius,
+    showScaleLabels,
+    valueFormat,
+    compact: compactMode,
+  }), [centerContent, centerLabel, clampedValue, min, max, valueFormat, showScaleLabels, radius, compactMode])
 
   // Context-mode value annotation: rendered as SVG text inside the bottom gap
   // of the arc (the 120° wedge the 240° sweep leaves at 6 o'clock). User-

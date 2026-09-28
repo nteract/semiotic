@@ -73,7 +73,9 @@ function composePhysicsControllers(controllers: null | readonly PhysicsControlle
 function computeTransitDiagramPositions(nodes: readonly {id: string; data: Datum;}[], edges: readonly TransitDiagramEdgeLike[], plot: PlotBox, options?: TransitDiagramPositionOptions | undefined): TransitDiagramPositionResult
 function countPairwiseCrossings<T>(items: readonly T[], endpoints: (item: T) => readonly [number, number], comparePair?: ((a: T, b: T) => boolean) | undefined): number
 function createCapacityQueueController(options: CapacityQueueControllerOptions): PhysicsController
+function createDagreFit(nodes: readonly Datum[], edges: readonly Datum[], plot: PositionedNetworkFitRect, config?: DagreFitConfig | undefined): PositionedNetworkFit
 function createDependencyGateController(options: DependencyGateOptions): DependencyGateController
+function createFlextreeFit(nodes: readonly Datum[], plot: PositionedNetworkFitRect, config?: FlextreeFitConfig | undefined): PositionedNetworkFit
 function createLineageDagFit(nodes: readonly Datum[], plot: LineageDagFitRect, config?: LineageDagFitConfig | undefined): LineageDagFit
 function createPortalController(options: {id?: string; fromRegionId: string; impulse?: StreamPhysicsRegionVector; continuous?: boolean; onPortal?: (body: PhysicsBodyState) => void;}): PhysicsController
 function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
@@ -394,6 +396,8 @@ interface PhysicsTraceComparisonPoint
 interface PhysicsZone
 interface Point
 interface PolarOptions
+interface PositionedNetworkFit
+interface PositionedNetworkFitRect
 interface PositionedNode
 interface PositionedToken<D = unknown> extends VisualToken<D>
 interface ProcessChromeGroup
@@ -1579,6 +1583,18 @@ interface-member PhysicsZone::property::y = required y: number
 interface-member Point::property::x = required x: number
 interface-member Point::property::y = required y: number
 interface-member PolarOptions::property::center = optional center: Point | undefined
+interface-member PositionedNetworkFit::method::invert = required invert(point: {x: number; y: number;}): {x: number; y: number;}
+interface-member PositionedNetworkFit::method::nodeBounds = required nodeBounds(node: Datum): (PositionedNetworkFitRect & {cx: number; cy: number;}) | undefined
+interface-member PositionedNetworkFit::method::project = required project(point: {x: number; y: number;}): {x: number; y: number;}
+interface-member PositionedNetworkFit::property::bounds = required bounds: PositionedNetworkFitRect | null
+interface-member PositionedNetworkFit::property::dx = required dx: number
+interface-member PositionedNetworkFit::property::dy = required dy: number
+interface-member PositionedNetworkFit::property::fit = required fit: "contain" | "none"
+interface-member PositionedNetworkFit::property::scale = required scale: number
+interface-member PositionedNetworkFitRect::property::height = required height: number
+interface-member PositionedNetworkFitRect::property::width = required width: number
+interface-member PositionedNetworkFitRect::property::x = required x: number
+interface-member PositionedNetworkFitRect::property::y = required y: number
 interface-member PositionedNode::property::data = required data: Datum
 interface-member PositionedNode::property::fixedValue = required fixedValue: number
 interface-member PositionedNode::property::height = required height: number
@@ -2120,9 +2136,11 @@ type CalloutConnector = "curve" | "elbow" | "straight"
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type DagreFitConfig = Pick<DagreConfig, "fit" | "nodeHeight" | "nodeWidth">
 type DemandForecastRow = {t: number; a: number; b: number; demandMw: number; forecastMw: number; errorMw: number; ba: string;}
 type EdgeKeyFn<T> = (edge: T) => string
 type EdgeOrientation = "horizontal" | "vertical"
+type FlextreeFitConfig = Pick<FlextreeConfig, "fit" | "nodeHeight" | "nodeWidth">
 type FuelStackRow = {t: number; fuel: GridFuelKey; fuelLabel: string; mw: number; ba: string;}
 type GeographicDotGridAccessor = ((datum: GeographicDotGridDatum, index: number) => unknown) | string
 type GeographicDotGridShape = "circle" | "hexagon" | "square"

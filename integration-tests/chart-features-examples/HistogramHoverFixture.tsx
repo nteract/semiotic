@@ -42,7 +42,11 @@ export function HistogramHoverFixture() {
     colors: { North: "#c83232", South: "#3232c8" },
     fill: "#c83232",
     title: "Events by time bin",
-    tooltip: params.has("no-tooltip") ? (false as const) : undefined,
+    tooltip: params.has("no-tooltip")
+      ? (false as const)
+      : params.has("multi")
+        ? ("multi" as const)
+        : undefined,
     onHover: (datum) => setHover(datum ? String(datum.data.binStart) : "none")
   }
   return (

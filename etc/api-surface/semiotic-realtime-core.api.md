@@ -96,6 +96,7 @@ function bandBounds(w: AggregatedWindow, band: AggregateBand, stat: AggregateSta
 function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
+function getSourceRows<TDatum extends Datum = Datum>(value: unknown): readonly TDatum[] | undefined
 function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
 function hasTooltipContent(node: React.ReactNode): boolean
 function markTooltipChrome<T>(component: T): T
@@ -119,6 +120,7 @@ interface DecayConfig
 interface EventTimeConfig
 interface GradientLegendConfig
 interface GradientLegendValue
+interface HistogramBinDatum
 interface HoverAnnotationConfig
 interface HoverData
 interface LegendGroup
@@ -234,6 +236,12 @@ interface-member GradientLegendConfig::property::format = optional format: ((v: 
 interface-member GradientLegendConfig::property::label = optional label: string | undefined
 interface-member GradientLegendValue::property::gradient = required gradient: GradientLegendConfig
 interface-member GradientLegendValue::property::legendDistance = optional legendDistance: number | undefined
+interface-member HistogramBinDatum::property::binEnd = required binEnd: number
+interface-member HistogramBinDatum::property::binStart = required binStart: number
+interface-member HistogramBinDatum::property::categories = optional categories: readonly {category: string; value: number;}[] | undefined
+interface-member HistogramBinDatum::property::category = optional category: string | undefined
+interface-member HistogramBinDatum::property::categoryValue = optional categoryValue: number | undefined
+interface-member HistogramBinDatum::property::total = required total: number
 interface-member HoverAnnotationConfig::property::crosshair = optional crosshair: CrosshairStyle | boolean | undefined
 interface-member HoverAnnotationConfig::property::pointColor = optional pointColor: string | undefined
 interface-member HoverAnnotationConfig::property::snapToPoint = optional snapToPoint: boolean | undefined

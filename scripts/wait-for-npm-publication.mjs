@@ -3,7 +3,7 @@ import { execFile } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { setTimeout as sleep } from "node:timers/promises"
 import { pathToFileURL } from "node:url"
-import { promisify } from "node:util"
+import { parseArgs, promisify } from "node:util"
 
 const execFileAsync = promisify(execFile)
 const REGISTRY = "https://registry.npmjs.org"
@@ -151,21 +151,30 @@ if (
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   try {
-    if (
-      process.argv.length !== 4 ||
-      process.argv[2] !== "--expected-integrity"
-    ) {
+    const { values } = parseArgs({
+      options: {
+        "expected-integrity": { type: "string" },
+        "timeout-ms": { type: "string" },
+        "package-json": { type: "string" }
+      }
+    })
+    if (!values["expected-integrity"]) {
       throw new Error(
-        "Usage: node scripts/wait-for-npm-publication.mjs --expected-integrity sha512-…"
+        "Usage: node scripts/wait-for-npm-publication.mjs --expected-integrity sha512-… [--timeout-ms milliseconds] [--package-json path]"
       )
     }
     const { name, version } = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8")
+      // Recovery tooling may live in a sparse checkout separate from the tag.
+      // Explicit paths resolve against the caller's working directory.
+      readFileSync(values["package-json"] ?? new URL("../package.json", import.meta.url), "utf8")
     )
     await waitForNpmPublication({
       packageName: name,
       version,
-      expectedIntegrity: process.argv[3]
+      expectedIntegrity: values["expected-integrity"],
+      timeoutMs: values["timeout-ms"] === undefined
+        ? undefined
+        : Number(values["timeout-ms"])
     })
   } catch (error) {
     console.error(error.message)

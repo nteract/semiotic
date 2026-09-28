@@ -70,6 +70,7 @@ const multiAxisProps = [
   { name: "curve", type: "string", required: false, default: '"monotoneX"', description: 'Curve interpolation: "linear", "monotoneX", "step", etc.' },
   { name: "lineWidth", type: "number", required: false, default: "2", description: "Line stroke width." },
   { name: "enableHover", type: "boolean", required: false, default: "true", description: "Enable hover tooltips." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "showGrid", type: "boolean", required: false, default: "false", description: "Show background grid lines." },
   { name: "showLegend", type: "boolean", required: false, default: "true", description: "Show a legend." },
   { name: "tooltip", type: "boolean | object | function", required: false, default: null, description: "Enable/disable default tooltip (boolean), or provide a config object or render function." },

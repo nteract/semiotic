@@ -99,12 +99,13 @@ describe("realtime tooltip prop consistency", () => {
     }
   })
 
-  it("enables multi hover on the line geometry without claiming it for point/rect charts", () => {
+  it("enables multi hover on line and histogram columns without claiming it for point/cell charts", () => {
+    const multiCharts = new Set(["line", "histogram"])
     for (const [name, element] of cases({ mode: "multi" })) {
       capturedFrames.length = 0
       const view = render(element)
       const frame = capturedFrames.at(-1)
-      expect(frame?.tooltipMode, name).toBe(name === "line" ? "multi" : undefined)
+      expect(frame?.tooltipMode, name).toBe(multiCharts.has(name) ? "multi" : undefined)
       view.unmount()
     }
   })
@@ -113,7 +114,7 @@ describe("realtime tooltip prop consistency", () => {
     "renders a useful single-datum fallback for unsupported %o requests",
     (tooltip) => {
       for (const [name, element] of cases(tooltip)) {
-        if (name === "line") continue
+        if (name === "line" || name === "histogram") continue
         capturedFrames.length = 0
         const view = render(element)
         const content = capturedFrames.at(-1)?.tooltipContent?.(hover)

@@ -11,6 +11,7 @@ import { heatmapXYPlugin } from "./heatmapPlugin"
 import { customXYPlugin } from "./customPlugin"
 import { registerBuiltInXYPlugins } from "./registerBuiltIn"
 import { registerLineFamilyXYPlugins } from "./lineFamily"
+import { attachBarColumnHover } from "./barColumnLookup"
 
 describe("XY plugin registry", () => {
   afterEach(() => {
@@ -36,6 +37,13 @@ describe("XY plugin registry", () => {
     expect(getXYPlugin("heatmap")).toBeTruthy()
     expect(getXYPlugin("candlestick")).toBe(candlestickXYPlugin)
     expect(getXYPlugin("custom")?.canvasRenderers.length).toBeGreaterThan(3)
+  })
+
+  it("gives bars column multi hover and leaves path charts on series interpolation", () => {
+    registerBuiltInXYPlugins()
+    expect(getXYPlugin("bar")?.multiHover).toBe(attachBarColumnHover)
+    expect(getXYPlugin("line")?.multiHover).toBeUndefined()
+    expect(getXYPlugin("stackedarea")?.multiHover).toBeUndefined()
   })
 
   it("line family registration does not install heatmap or candlestick", () => {

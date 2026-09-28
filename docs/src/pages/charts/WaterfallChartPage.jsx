@@ -22,6 +22,7 @@ const props = [
   { name: "positiveColor", type: "string", required: false, default: "theme success", description: "Fill for positive deltas." },
   { name: "negativeColor", type: "string", required: false, default: "theme danger", description: "Fill for negative deltas." },
   { name: "gap", type: "number", required: false, default: "1", description: "Pixel gap between adjacent bars." },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
 ]
 
 export default function WaterfallChartPage() {

@@ -1,6 +1,8 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import React from "react"
 import { TemporalAccessorExample } from "./TemporalAccessorExample.jsx"
+import { MinimapControlledExample } from "./MinimapControlledExample.jsx"
+import { LinearBrushExample } from "./LinearBrushExample.jsx"
 import { createRoot } from "react-dom/client"
 import { lineData, scatterData, areaData, colors } from "../test-data.js"
 
@@ -644,8 +646,13 @@ const examples = [
 
 // Render all examples
 const root = createRoot(document.getElementById("root"))
+const params = new URLSearchParams(location.search)
 root.render(
-  new URLSearchParams(location.search).has("temporal-accessors")
+  params.has("temporal-accessors")
     ? React.createElement(TemporalAccessorExample)
-    : React.createElement("div", { className: "test-grid" }, examples)
+    : params.has("minimap-controlled")
+      ? React.createElement(MinimapControlledExample)
+      : params.has("linear-brush")
+        ? React.createElement(LinearBrushExample)
+        : React.createElement("div", { className: "test-grid" }, examples)
 )

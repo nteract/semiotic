@@ -3,6 +3,7 @@ import { RealtimeHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData 
 
 import TemporalHistogramLinkedExample from "../../examples/TemporalHistogramLinkedExample"
 import TemporalHistogramHoverExample, { temporalHistogramHoverCode } from "../../examples/TemporalHistogramHoverExample"
+import TemporalHistogramMultiTooltipExample, { temporalHistogramMultiTooltipCode } from "../../examples/TemporalHistogramMultiTooltipExample"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -576,6 +577,7 @@ const RealtimeHistogramProps = [
   { name: "hoverHighlight", type: "boolean", default: "false", description: "Dim other time bins on hover, keeping the whole stacked column highlighted. Also supported by TemporalHistogram; no category accessor is required." },
   { name: "background", type: "string", required: false, default: null, description: "Background fill color for the chart area." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on bars." },
+  { name: "tooltip", type: 'boolean | "multi" | object | function', required: false, default: null, description: 'Tooltip config. "multi" or { mode: "multi", content? } lists every stacked category in the hovered bin.' },
   { name: "tooltipContent", type: "function", required: false, default: null, description: "Custom tooltip render function. Receives hover data." },
   { name: "onHover", type: "function", required: false, default: null, description: "Callback fired on hover. Receives hover data or null." },
   { name: "annotations", type: "array", required: false, default: null, description: "Array of annotation objects rendered on the chart." },
@@ -694,6 +696,25 @@ function StreamingBars() {
         bottom axis removes vertical lines. <code>hoverHighlight</code> matches
         the whole time bin, including all its stacked categories. These props
         work on both <code>TemporalHistogram</code> and <code>RealtimeHistogram</code>.
+      </p>
+
+      <h3 id="column-tooltip">Column tooltip for every category</h3>
+      <p>
+        Set <code>tooltip="multi"</code> to list every stacked category in the
+        hovered time bin, from bottom to top, with the bin total. The tooltip
+        responds anywhere in the column, including the space above a short stack
+        and the gap between bars; an empty bin shows nothing.
+      </p>
+      <section aria-label="Histogram column tooltip example">
+        <TemporalHistogramMultiTooltipExample />
+        <CodeBlock code={temporalHistogramMultiTooltipCode} language="tsx" />
+      </section>
+      <p>
+        Custom <code>{'tooltip={{ mode: "multi", content }}'}</code> content receives
+        {" "}<code>allSeries</code> rows (<code>group</code>, <code>value</code>,
+        {" "}<code>color</code>, <code>datum</code>) and the bin's range and{" "}
+        <code>categories</code>; <code>getSourceRows(datum)</code> returns the
+        bin's authored rows.
       </p>
 
       <h3 id="stacked-bars">Stacked Bars by Category</h3>
@@ -955,11 +976,26 @@ function FilteredMultiLineOverlay({ allData, width }) {
         Moving off a mark clears the hover selection.
       </p>
       <p>
+        With <code>selection</code>, a bin also matches a selected time anywhere inside
+        {" "}<code>[binStart, binEnd)</code> on its time field (the string{" "}
+        <code>timeAccessor</code>, else <code>time</code>), even when no row carries
+        that exact time, so hovering a linked line chart highlights the bin it falls in.
+        Selected times may be numbers, Dates, or date strings.
+      </p>
+      <p>
         For application events, <code>onHover</code> receives a hover object whose
         {" "}<code>data</code> contains those bin fields, or <code>null</code> on exit.
         {" "}<code>onObservation</code> provides the standard hover and hover-end
         observation events. A field join selects matching rows; use
         {" "}<code>mode: "x-position"</code> with <code>xField</code> for a linked crosshair.
+      </p>
+      <p>
+        A stacked segment's datum also carries <code>categories</code>: every non-zero
+        category in its bin, bottom to top, as <code>{"{ category, value }"}</code> entries.
+        {" "}<code>getSourceRows(datum)</code> from <code>semiotic/realtime</code> or
+        {" "}<code>semiotic/utils</code> returns the authored rows behind a bin, a segment,
+        or a <code>categories</code> entry, and accepts the hover object as well. Tooltip
+        content, observations, and tap-to-lock linked hover keep those rows.
       </p>
       <CodeBlock language="jsx" code={`import { LinkedCharts } from "semiotic/ai"
 import { LineChart } from "semiotic/xy"

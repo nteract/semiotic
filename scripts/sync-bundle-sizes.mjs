@@ -116,7 +116,7 @@ const BLURBS = {
   "./ai/core":
     "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components",
   "./controls":
-    "DirectManipulationControl, CircularBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
+    "DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer",
   "./rough":
     "Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative",
   "./text": "Optional Pretext annotation hook — peer package excluded"

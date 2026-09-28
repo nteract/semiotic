@@ -1,4 +1,5 @@
 import type { Datum } from "./datumTypes"
+import { attachSelectionProvenance, getSelectionProvenance } from "../../store/selectionProvenance"
 
 export function resolveHoverXPosition(
   interactionDatum: Datum,
@@ -21,7 +22,10 @@ export function observationDatum(interactionDatum: Datum): Datum {
     !Array.isArray(datum) &&
     datum.xValue == null
   ) {
-    return { ...datum, xValue: interactionDatum.xValue }
+    return attachSelectionProvenance(
+      { ...datum, xValue: interactionDatum.xValue },
+      getSelectionProvenance(datum)
+    )
   }
   return datum || {}
 }

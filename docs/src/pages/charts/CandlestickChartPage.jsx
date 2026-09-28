@@ -304,6 +304,7 @@ const candlestickProps = [
   { name: "closeAccessor", type: "string | function", required: false, default: null, description: "Closing value. Must be provided together with openAccessor for OHLC mode." },
   { name: "candlestickStyle", type: "object", required: false, default: null, description: "Style overrides: { upColor, downColor, wickColor, wickWidth, bodyWidth, rangeColor }." },
   { name: "mode", type: '"primary" | "context" | "sparkline"', required: false, default: '"primary"', description: 'Compact-layout preset. Sparkline (120\u00D724) and context (400\u00D7250) strip axes; primary is the default 600\u00D7400.' },
+  { name: "showAxes", type: "boolean", required: false, default: "mode-driven", description: "Show the axes. Defaults to the chart mode (off in context and sparkline); an explicit value wins, matching responsiveRules win over it, and margins are kept." },
   { name: "tooltip", type: "boolean | object | function", required: false, default: null, description: "Default tooltip shows O/H/L/C in OHLC mode and H/L in range mode. Pass `false` to disable." },
   { name: "width", type: "number", required: false, default: "600", description: "Chart width (px). Overrides the mode default." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height (px). Overrides the mode default." },

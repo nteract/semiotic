@@ -3,6 +3,7 @@ import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { vi } from "vitest"
 import React from "react"
 import { render } from "@testing-library/react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { GaugeChart } from "./GaugeChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { Datum } from "../shared/datumTypes"
@@ -362,6 +363,18 @@ describe("GaugeChart", () => {
       expect(valueAnn).toBeTruthy()
       expect(valueAnn?.text).toBe("50")
       // centerContent slot is suppressed so the value doesn't render twice.
+      expect(lastOrdinalFrameProps.centerContent).toBeNull()
+    })
+
+    it("renders string centers and centerLabel as SVG text, suppressed in compact modes", () => {
+      const markup = () => renderToStaticMarkup(<svg>{lastOrdinalFrameProps.centerContent}</svg>)
+      render(<TooltipProvider><GaugeChart value={50} centerContent="50%" /></TooltipProvider>)
+      expect(markup()).toContain(">50%</text>")
+      expect(markup()).not.toContain("0 – 100")
+      render(<TooltipProvider><GaugeChart value={50} centerLabel="Load" /></TooltipProvider>)
+      expect(markup()).toContain(">Load</text>")
+      expect(markup()).toContain(">0 – 100</text>")
+      render(<TooltipProvider><GaugeChart value={50} centerLabel="Load" mode="sparkline" /></TooltipProvider>)
       expect(lastOrdinalFrameProps.centerContent).toBeNull()
     })
 

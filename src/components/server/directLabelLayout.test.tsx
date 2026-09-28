@@ -255,3 +255,27 @@ describe("direct-label rendered evidence", () => {
     expect(coordinates(live)).toEqual(coordinates(svg))
   })
 })
+
+describe("direct-label margins in renderChart", () => {
+  const longSeries = (right?: number) => ({
+    data: [
+      { x: 0, y: 1, series: "An unusually long series name" },
+      { x: 1, y: 2, series: "An unusually long series name" },
+    ],
+    width: 500,
+    height: 280,
+    xAccessor: "x" as const,
+    yAccessor: "y" as const,
+    lineBy: "series" as const,
+    colorBy: "series" as const,
+    directLabel: true,
+    ...(right != null && { margin: { right } }),
+  })
+
+  it("grows an unpinned side for long labels but keeps a side the caller pinned", () => {
+    const grown = renderChartWithEvidence("LineChart", longSeries()).evidence.margin!
+    expect(grown.right).toBeGreaterThan(90)
+    const pinned = renderChartWithEvidence("LineChart", longSeries(30)).evidence.margin!
+    expect(pinned.right).toBe(30)
+  })
+})

@@ -2,6 +2,11 @@ import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
 import { positionedNetworkNodes } from "./positionedNetworkNodes"
+import {
+  createPositionedNetworkFit,
+  type PositionedNetworkFit,
+  type PositionedNetworkFitRect
+} from "./positionedNetworkFit"
 
 export interface FlextreeConfig {
   /** Default node width when nodes don't carry a `width` field. @default 80 */
@@ -20,6 +25,25 @@ export interface FlextreeConfig {
   labelAccessor?: string | ((d: Datum) => string)
   /** Per-node fill style override. */
   nodeFill?: string
+}
+
+/** Geometry-only subset of the flextree recipe configuration. */
+export type FlextreeFitConfig = Pick<FlextreeConfig, "nodeWidth" | "nodeHeight" | "fit">
+
+/**
+ * The fit `flextreeLayout` applies, computed from the same `nodes` and a
+ * plot-relative box. Pure and usable before rendering or in SSR.
+ */
+export function createFlextreeFit(
+  nodes: readonly Datum[],
+  plot: PositionedNetworkFitRect,
+  config: FlextreeFitConfig = {}
+): PositionedNetworkFit {
+  return createPositionedNetworkFit(nodes, plot, {
+    nodeWidth: config.nodeWidth ?? 80,
+    nodeHeight: config.nodeHeight ?? 30,
+    fit: config.fit
+  })
 }
 
 /**

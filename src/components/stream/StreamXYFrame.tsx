@@ -19,7 +19,8 @@ import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from ".
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import { findNearestNode, findAllNodesAtX } from "./CanvasHitTester"
+import { findNearestNode } from "./CanvasHitTester"
+import { attachMultiHover } from "./xyMultiHover"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { resolveStaleness } from "./stalenessBands"
@@ -676,53 +677,22 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         xValue != null ? { xValue, xPx: posX } : undefined
       )
 
-      // Multi-tooltip mode: attach all series values at this X to the hover data.
-      // Keep the interpolation generous for sparse paths, but range-bounded in
-      // CanvasHitTester so padded/explicit xExtent space outside the rendered
-      // path does not clamp to the first/last point.
-      if (isMulti && store.scene.length > 0 && store.scales) {
-        const allHits = findAllNodesAtX(store.scene, posX, Math.max(hitRadius, adjustedWidth))
-        if (allHits.length > 0) {
-          const yInvert = store.scales.y.invert
-          // Read the cached theme primary (updated from the render loop) so
-          // each hit without its own color falls back to --semiotic-primary.
-          // Avoids re-invoking resolveThemeColors (getComputedStyle) on every
-          // pointermove. Required by downstream consumers like MultiPointTooltip
-          // that render a color swatch from s.color.
-          const fallbackColor = themePrimaryRef.current
-          const multiXValue = xInvert ? xInvert(posX) : posX
-          if (!hit) {
-            const syntheticDatum: Datum = { xValue: multiXValue }
-            if (typeof xAccessor === "string") syntheticDatum[xAccessor] = multiXValue
-            hover = buildHoverData(syntheticDatum, posX, posY, { xValue: multiXValue, xPx: posX })
-          } else {
-            hover.xValue = multiXValue
-            hover.xPx = posX
-          }
-          hover.allSeries = allHits.map(h => {
-            const topValue = yInvert ? yInvert(h.y) : h.y
-            const bottomValue = h.y0 != null
-              ? (yInvert ? yInvert(h.y0) : h.y0)
-              : undefined
-            const value = chartType === "stackedarea" && bottomValue != null
-              ? topValue - bottomValue
-              : topValue
-            return {
-              group: h.group || "",
-              value,
-              valuePx: h.y,
-              color: h.color || fallbackColor,
-              // Each per-series datum gets its own band enrichment so
-              // multi-mode tooltips can read `s.datum.band` per series.
-              datum: enrichDatumWithBand(h.datum, store.resolvedRibbons),
-            }
-          })
-        }
+      // Multi-tooltip mode: attach every series value at this x. Padding
+      // outside the data snaps to the first/last sample. The theme primary is
+      // cached from the render loop so rows without a color of their own
+      // don't re-read computed styles on every pointermove.
+      if (isMulti) {
+        hover = attachMultiHover(hover, store, posX, {
+          chartType,
+          xAccessor,
+          fallbackColor: themePrimaryRef.current,
+          maxXDistance: Math.max(hitRadius, adjustedWidth),
+          hasHit: !!hit,
+        })
       }
 
-      // Hover-anywhere with no real hit and no series under the cursor (e.g.
-      // before/after the data range) is nothing to show — clear instead of
-      // rendering an empty tooltip at the synthetic cursor position.
+      // Hover-anywhere with no real hit and no series to read is nothing to
+      // show — clear instead of rendering an empty tooltip at the cursor.
       if (!hit && !hover.allSeries?.length) {
         clearHover()
         return
@@ -801,7 +771,16 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         setHoverPoint,
         customHoverBehavior,
         customClickBehavior,
-        scheduleRender
+        scheduleRender,
+        decorateHover: tooltipMode === "multi"
+          ? (hover, store) => attachMultiHover(hover, store, hover.x, {
+              chartType,
+              xAccessor,
+              fallbackColor: themePrimaryRef.current,
+              maxXDistance: adjustedWidth,
+              hasHit: true,
+            })
+          : undefined
       })
 
     // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced

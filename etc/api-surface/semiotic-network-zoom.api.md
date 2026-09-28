@@ -6,6 +6,8 @@ _Edit dist/semiotic-network-zoom.d.ts's sources, then re-run `npm run docs:api-s
 ```
 function ZoomableNetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<ZoomableNetworkCustomChartHandle> & ZoomableNetworkCustomChartProps<TNode, TEdge, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function getNetworkContentBounds(layout: NetworkLayoutResult | null | undefined): NetworkViewportRect | null
+function invertNetworkRect(rect: NetworkViewportRect, view: NetworkViewTransform): NetworkViewportRect
+function projectNetworkPoint<T extends {x: number; y: number;}>(point: T, view: NetworkViewTransform): T
 function useNetworkLOD(width: number, height: number, options: NetworkLODOptions): {level: number; width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
 function useNetworkProjectedSize(width: number, height: number): {width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
 function useNetworkZoom(): NetworkZoomState
