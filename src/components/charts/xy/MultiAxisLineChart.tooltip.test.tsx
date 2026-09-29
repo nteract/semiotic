@@ -47,6 +47,26 @@ describe("MultiAxisLineChart tooltips", () => {
     capturedProps = null
   })
 
+  it("honors xFormat in the single tooltip, including React content", () => {
+    render(<MultiAxisLineChart data={data} xAccessor="time" series={series}
+      xFormat={(value) => <strong>Time {String(value)}</strong>} />)
+    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    expect(view.container.querySelector("strong")?.textContent).toBe("Time 1")
+  })
+
+  it("honors header and per-series formatting in original units", () => {
+    render(<MultiAxisLineChart data={data} xAccessor="time" tooltip="multi"
+      xFormat={(value) => `Time ${value}`}
+      series={[
+        { ...series[0], format: (value) => `${value.toFixed(0)}°` },
+        { ...series[1], format: (value) => `${value.toFixed(8)} humidity` }
+      ]} />)
+    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    expect(view.container.textContent).toContain("Time 1")
+    expect(view.container.textContent).toContain("72°")
+    expect(view.container.textContent).toContain("0.45000000 humidity")
+  })
+
   it("enables multi mode and displays every series in original units", () => {
     render(
       <MultiAxisLineChart

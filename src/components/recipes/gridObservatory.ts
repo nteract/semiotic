@@ -57,18 +57,47 @@ export type ReserveSnapshot = {
   ba: string
   /** Rough operational headroom proxy — never claim ISO-grade contingency reserve. */
   reserveMarginPct: number
+  /**
+   * Net load: demand minus variable renewables (wind + solar), the load the
+   * dispatchable fleet has to serve. Equals demand when the hour reports no
+   * wind or solar.
+   */
   netLoadMw: number
   demandMw: number
   netGenMw: number
 }
 
+/**
+ * Reserve-margin thresholds, in percent. Levels that would cross (for
+ * example `watch` below `tight`) are raised to the level beneath them.
+ */
 export type ReserveLevels = {
   /** Margin below this % is "tight" / danger. Default 5. */
   tight?: number
-  /** Margin below this % is "watch" / warning. Default 12. */
+  /** Margin below this % (and at or above `tight`) is "watch" / warning. Default 12. */
   watch?: number
-  /** Margin at or above this % is comfortable / success. Default 20. */
+  /**
+   * Margin at or above this % is comfortable / success. Default 20. Between
+   * `watch` and `comfortable` is "moderate" / info.
+   */
   comfortable?: number
+}
+
+export type ReserveClassId = "tight" | "watch" | "moderate" | "comfortable"
+
+/** One reserve class: a half-open `[min, max)` margin range; open ends are omitted. */
+export type ReserveClass = {
+  id: ReserveClassId
+  /** Display label, e.g. `"Watch (5% to < 12%)"`. */
+  label: string
+  /** Short name: `"Tight"`, `"Watch"`, `"Moderate"`, `"Comfortable"`. */
+  name: string
+  /** Inclusive lower bound in %; omitted for the lowest class. */
+  min?: number
+  /** Exclusive upper bound in %; omitted for the highest class. */
+  max?: number
+  /** Semantic theme color for the class. */
+  color: string
 }
 
 export type FuelStackRow = {
@@ -114,7 +143,7 @@ export type GridEventWindow = {
   note?: string
   /** "heat-wave" | "outage" | "demand-spike" | open string. */
   kind?: string
-  /** ISO 8601 duration or ms; default "P7D". */
+  /** ISO 8601 duration or ms; default "P14D". */
   ttlHint?: string | number
   y?: number
   /** Data y for y-threshold style notes. */
@@ -129,6 +158,45 @@ const DEFAULT_LEVELS: Required<ReserveLevels> = {
 
 function finite(n: unknown, fallback = 0): number {
   return typeof n === "number" && Number.isFinite(n) ? n : fallback
+}
+
+const CLASS_COLORS: Record<ReserveClassId, string> = {
+  tight: "var(--semiotic-danger, #c2410c)",
+  watch: "var(--semiotic-warning, #d97706)",
+  moderate: "var(--semiotic-info, #0891b2)",
+  comfortable: "var(--semiotic-success, #16a34a)"
+}
+
+function resolveLevels(levels: ReserveLevels): Required<ReserveLevels> {
+  const tight = finite(levels.tight, DEFAULT_LEVELS.tight)
+  const watch = Math.max(tight, finite(levels.watch, DEFAULT_LEVELS.watch))
+  const comfortable = Math.max(watch, finite(levels.comfortable, DEFAULT_LEVELS.comfortable))
+  return { tight, watch, comfortable }
+}
+
+/**
+ * The reserve classes for `levels`, lowest first: tight `< tight`, watch
+ * `[tight, watch)`, moderate `[watch, comfortable)`, comfortable
+ * `>= comfortable`. {@link thresholdBandsForReserve},
+ * {@link reserveAnnotationBands}, and {@link classifyReserve} all read this
+ * table, so a mark's style and the band behind it always agree. A class whose
+ * range is empty (equal levels) is left out.
+ */
+export function reserveClasses(levels: ReserveLevels = {}): ReserveClass[] {
+  const { tight, watch, comfortable } = resolveLevels(levels)
+  const classes: ReserveClass[] = [
+    { id: "tight", name: "Tight", label: `Tight (< ${tight}%)`, max: tight, color: CLASS_COLORS.tight },
+    { id: "watch", name: "Watch", label: `Watch (${tight}% to < ${watch}%)`, min: tight, max: watch, color: CLASS_COLORS.watch },
+    { id: "moderate", name: "Moderate", label: `Moderate (${watch}% to < ${comfortable}%)`, min: watch, max: comfortable, color: CLASS_COLORS.moderate },
+    { id: "comfortable", name: "Comfortable", label: `Comfortable (≥ ${comfortable}%)`, min: comfortable, color: CLASS_COLORS.comfortable }
+  ]
+  return classes.filter((c) => c.min == null || c.max == null || c.max > c.min)
+}
+
+/** The reserve class a margin % falls in (see {@link reserveClasses}); null for a non-finite value. */
+export function classifyReserve(value: number, levels: ReserveLevels = {}): ReserveClass | null {
+  if (!Number.isFinite(value)) return null
+  return reserveClasses(levels).find((c) => (c.min == null || value >= c.min) && (c.max == null || value < c.max)) ?? null
 }
 
 /**
@@ -225,11 +293,13 @@ export function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[] {
         capacityOrNetGen: netGenMw,
         interchange: hour.interchangeMw
       })
+      const variableRenewablesMw =
+        Math.max(0, finite(hour.fuels?.wind)) + Math.max(0, finite(hour.fuels?.solar))
       return {
         t: hour.t,
         ba: hour.ba,
         reserveMarginPct: margin,
-        netLoadMw: demandMw,
+        netLoadMw: demandMw - variableRenewablesMw,
         demandMw,
         netGenMw
       }
@@ -237,8 +307,9 @@ export function reserveSeries(hours: readonly GridHour[]): ReserveSnapshot[] {
 }
 
 /**
- * Declarative `styleRules` for marks whose primary value is reserve margin %.
- * Hatch on the tight band so color is not the only encoding.
+ * Declarative `styleRules` for marks whose primary value is reserve margin %,
+ * one rule per {@link reserveClasses} class, highest first. Hatch on the tight
+ * class so color is not the only encoding.
  *
  * Works on BarChart / DotPlot (ordinal) and LineChart / Scatterplot when the
  * mark value (or `field: "reserveMarginPct"`) is the margin percent.
@@ -251,10 +322,10 @@ export function thresholdBandsForReserve(
     tightHatch?: HatchFill
     tightFill?: string
     watchFill?: string
+    moderateFill?: string
     comfortableFill?: string
   } = {}
 ): StyleRule[] {
-  const { watch, comfortable } = { ...DEFAULT_LEVELS, ...levels }
   const field = options.field
   const whenField = field ? { field } : {}
 
@@ -262,7 +333,7 @@ export function thresholdBandsForReserve(
     options.tightHatch ??
     ({
       type: "hatch",
-      background: "var(--semiotic-danger, #c2410c)",
+      background: CLASS_COLORS.tight,
       stroke: "rgba(255, 240, 200, 0.55)",
       spacing: 5,
       angle: -35,
@@ -270,44 +341,45 @@ export function thresholdBandsForReserve(
       lineOpacity: 0.9
     } as HatchFill)
 
-  return [
-    {
-      id: "reserve-comfortable",
-      label: `Comfortable (≥ ${comfortable}%)`,
-      when: { ...whenField, gte: comfortable },
-      style: {
-        fill: options.comfortableFill ?? "var(--semiotic-success, #16a34a)",
-        fillOpacity: 0.85
-      }
-    },
-    {
-      id: "reserve-watch",
-      label: `Watch (< ${comfortable}%, ≥ ${watch}%)`,
-      when: { ...whenField, lt: comfortable, gte: watch },
-      style: {
-        fill: options.watchFill ?? "var(--semiotic-warning, #d97706)",
-        fillOpacity: 0.9
-      }
-    },
-    {
-      id: "reserve-tight",
-      label: `Tight (< ${watch}%)`,
-      when: { ...whenField, lt: watch },
-      style: {
-        fill: tightHatch,
-        stroke: options.tightFill ?? "var(--semiotic-danger, #c2410c)",
-        strokeWidth: 1,
-        fillOpacity: 1
-      }
+  const styles: Record<ReserveClassId, StyleRule["style"]> = {
+    comfortable: { fill: options.comfortableFill ?? CLASS_COLORS.comfortable, fillOpacity: 0.85 },
+    moderate: { fill: options.moderateFill ?? CLASS_COLORS.moderate, fillOpacity: 0.85 },
+    watch: { fill: options.watchFill ?? CLASS_COLORS.watch, fillOpacity: 0.9 },
+    tight: {
+      fill: tightHatch,
+      stroke: options.tightFill ?? CLASS_COLORS.tight,
+      strokeWidth: 1,
+      fillOpacity: 1
     }
-  ]
+  }
+
+  return reserveClasses(levels).reverse().map((c) => ({
+    id: `reserve-${c.id}`,
+    label: c.label,
+    when: {
+      ...whenField,
+      ...(c.min != null ? { gte: c.min } : {}),
+      ...(c.max != null ? { lt: c.max } : {})
+    },
+    style: styles[c.id]
+  }))
 }
 
 /**
- * Annotation band descriptors for reserve threshold strips (y-band style).
- * Pair with chart `annotations` — not the same object as styleRules.
+ * Annotation band descriptors for reserve threshold strips (y-band style), one
+ * per {@link reserveClasses} class, lowest first, named like the matching
+ * {@link thresholdBandsForReserve} rule. Pair with chart `annotations` — not
+ * the same object as styleRules.
+ *
+ * `extent` is the value axis' `[min, max]` margin (for example the shown
+ * reserves' range); the lowest band starts at its min and the highest ends
+ * at its max, widened to reach the levels. Without it the outer bands span
+ * `-50` to `max(comfortable + 30, 40)`.
  */
-export function reserveAnnotationBands(levels: ReserveLevels = {}): Array<{
+export function reserveAnnotationBands(
+  levels: ReserveLevels = {},
+  options: { extent?: readonly [number, number] } = {}
+): Array<{
   type: "band"
   y0: number
   y1: number
@@ -316,36 +388,20 @@ export function reserveAnnotationBands(levels: ReserveLevels = {}): Array<{
   fillOpacity: number
   emphasis: "secondary"
 }> {
-  const { tight, watch, comfortable } = { ...DEFAULT_LEVELS, ...levels }
-  return [
-    {
-      type: "band",
-      y0: -50,
-      y1: tight,
-      label: "Tight",
-      color: "var(--semiotic-danger, #c2410c)",
-      fillOpacity: 0.12,
-      emphasis: "secondary"
-    },
-    {
-      type: "band",
-      y0: tight,
-      y1: watch,
-      label: "Watch",
-      color: "var(--semiotic-warning, #d97706)",
-      fillOpacity: 0.1,
-      emphasis: "secondary"
-    },
-    {
-      type: "band",
-      y0: watch,
-      y1: Math.max(comfortable + 30, 40),
-      label: "Headroom",
-      color: "var(--semiotic-success, #16a34a)",
-      fillOpacity: 0.06,
-      emphasis: "secondary"
-    }
-  ]
+  const { tight, comfortable } = resolveLevels(levels)
+  const [extentMin, extentMax] = options.extent ?? []
+  const low = Math.min(tight, finite(extentMin, -50))
+  const high = Math.max(comfortable, finite(extentMax, Math.max(comfortable + 30, 40)))
+  const fillOpacity: Record<ReserveClassId, number> = { tight: 0.12, watch: 0.1, moderate: 0.08, comfortable: 0.06 }
+  return reserveClasses(levels).map((c) => ({
+    type: "band" as const,
+    y0: c.min ?? low,
+    y1: c.max ?? high,
+    label: c.name,
+    color: c.color,
+    fillOpacity: fillOpacity[c.id],
+    emphasis: "secondary" as const
+  }))
 }
 
 /** Summarize the operating point at `now` (or the last hour ≤ now). */
@@ -426,6 +482,11 @@ export function gridEventAnnotations(
     now?: number
     author?: string
     source?: string
+    /**
+     * Provenance confidence (0–1) stamped on every event. Omitted by default:
+     * authored windows carry no measured confidence.
+     */
+    confidence?: number
   } = {}
 ): Array<Record<string, unknown>> {
   const now = options.now ?? Date.now()
@@ -454,7 +515,9 @@ export function gridEventAnnotations(
         authorKind: "system",
         source,
         basis: "rule",
-        confidence: 0.85,
+        ...(typeof options.confidence === "number" && Number.isFinite(options.confidence)
+          ? { confidence: Math.min(1, Math.max(0, options.confidence)) }
+          : {}),
         createdAt,
         stableId: event.id,
         dataVersion: String(event.start)

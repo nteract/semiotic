@@ -24,8 +24,8 @@
  *   - type: `f` (fixed), `%` (percent ×100), `e` (exponential),
  *     `d` (integer; precision ignored), `s` (SI prefix), `r` (rounded
  *     to N significant digits), `g` (general — switches between fixed
- *     and exponential), or omitted (treated as `g` with default
- *     precision, matching d3).
+ *     and exponential), or omitted (a trimmed `g` at precision 12,
+ *     matching d3).
  *
  * What's NOT implemented (rare in chart axis labels):
  *
@@ -119,19 +119,11 @@ function formatPercent(value: number, precision: number, comma: boolean, trim: b
 function formatExponential(value: number, precision: number, trim: boolean): string {
   // toExponential(p) gives p digits after the decimal in mantissa,
   // matching d3-format's `e` type (precision = mantissa-digits).
-  let s = value.toExponential(precision)
-  if (trim) {
-    // Trim trailing zeros from mantissa only.
-    s = s.replace(/\.?0+e/, "e")
-    // d3's `~` also strips the leading zero of a single-digit exponent
-    // — emits `e+0` not `e+00`. JS's toExponential already gives the
-    // unpadded form (`e+0`), so leave it alone in trim mode.
-    return s
-  }
-  // d3 uses lowercase `e` and a 2-digit exponent like `1.0e+3`. JS's
-  // toExponential matches `e±d+`; widen to 2 digits when single-digit.
-  s = s.replace(/e([+-])(\d)$/, "e$10$2")
-  return s
+  // JS's toExponential already matches d3's lowercase, unpadded exponent
+  // (`1.0e+3`, `1.20e-4`).
+  const s = value.toExponential(precision)
+  // `~` trims trailing zeros from the mantissa only.
+  return trim ? s.replace(/\.?0+e/, "e") : s
 }
 
 function formatRounded(value: number, precision: number, comma: boolean, trim: boolean): string {
@@ -158,20 +150,38 @@ function formatRounded(value: number, precision: number, comma: boolean, trim: b
   return s
 }
 
+/**
+ * `x.toExponential(p - 1)` split into its significant digits (no decimal
+ * point) and exponent, as d3-format's `formatDecimalParts`. `p` of 0 keeps
+ * every digit.
+ */
+function decimalParts(x: number, p: number): [string, number] {
+  const s = p ? x.toExponential(p - 1) : x.toExponential()
+  const e = s.indexOf("e")
+  const coefficient = s.slice(0, e)
+  return [coefficient.length > 1 ? coefficient[0] + coefficient.slice(2) : coefficient, Number(s.slice(e + 1))]
+}
+
 function formatSI(value: number, precision: number, trim: boolean): string {
-  // SI prefix: divide by the largest 10^(3k) ≤ |value|, append
-  // suffix. d3's precision = significant digits in the mantissa.
-  // Clamp to ≥ 1 so a malformed `.0s` spec doesn't crash toPrecision.
+  // SI prefix, as d3-format's `formatPrefixAuto`: round to `precision`
+  // significant digits first, then pick the prefix from the rounded
+  // exponent, so 999 999 at `.3s` reads `1.00M` rather than `1000k`.
+  // Clamp to ≥ 1 so a malformed `.0s` spec doesn't crash toExponential.
   const safe = Math.max(1, precision)
   if (value === 0) return safe > 1 ? "0." + "0".repeat(safe - 1) : "0"
   const abs = Math.abs(value)
-  const e = Math.floor(Math.log10(abs))
-  const prefix = SI_PREFIXES.find((p) => e >= p.exp) || SI_PREFIXES[SI_PREFIXES.length - 1]
-  const mantissa = value / Math.pow(10, prefix.exp)
-  let s = mantissa.toPrecision(safe)
-  if (s.includes("e")) s = Number(s).toString()
+  const [coefficient, exponent] = decimalParts(abs, safe)
+  const prefixExp = Math.max(-8, Math.min(8, Math.floor(exponent / 3))) * 3
+  const prefix = SI_PREFIXES.find((p) => p.exp === prefixExp) ?? SI_PREFIXES[8]
+  // Digits before the decimal point once scaled by the prefix.
+  const i = exponent - prefixExp + 1
+  const n = coefficient.length
+  let s = i === n ? coefficient
+    : i > n ? coefficient + "0".repeat(i - n)
+      : i > 0 ? `${coefficient.slice(0, i)}.${coefficient.slice(i)}`
+        : `0.${"0".repeat(-i)}${decimalParts(abs, Math.max(0, safe + i - 1))[0]}`
   if (trim) s = trimTrailingZeros(s)
-  return s + prefix.suffix
+  return (value < 0 ? "-" : "") + s + prefix.suffix
 }
 
 function formatGeneral(value: number, precision: number, comma: boolean, trim: boolean): string {
@@ -231,7 +241,12 @@ export function format(spec: string): (value: number) => string {
     case "d": {
       // d3's `d` ignores precision; emits integer with optional grouping.
       return (v: number) => {
-        const s = Math.round(v).toString()
+        // At 1e21 and above toString switches to exponent form; d3 writes
+        // every digit so grouping still applies.
+        const rounded = Math.round(v)
+        const s = Math.abs(rounded) >= 1e21
+          ? rounded.toLocaleString("en").replace(/,/g, "")
+          : rounded.toString()
         return comma ? applyGrouping(s) : s
       }
     }
@@ -243,11 +258,15 @@ export function format(spec: string): (value: number) => string {
       const p = precision ?? 6
       return (v: number) => formatRounded(v, p, comma, trim)
     }
-    case "g":
-    case "": {
-      // d3 default (no type) is `g` with precision 6.
+    case "g": {
       const p = precision ?? 6
       return (v: number) => formatGeneral(v, p, comma, trim)
+    }
+    case "": {
+      // d3 with no type is a trimmed `g` at precision 12, so `,` groups
+      // 1234567.891 as "1,234,567.891" and 0.1 + 0.2 reads "0.3".
+      const p = precision ?? 12
+      return (v: number) => formatGeneral(v, p, comma, true)
     }
     default: {
       throw new Error(

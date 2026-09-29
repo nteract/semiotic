@@ -1,7 +1,8 @@
 import React from "react"
 import { act, render, waitFor } from "@testing-library/react"
-import { beforeEach, afterEach, expect, it } from "vitest"
+import { beforeEach, afterEach, describe, expect, it } from "vitest"
 import { RealtimeHistogram, TemporalHistogram } from "./RealtimeHistogram"
+import { resolveHistogramAxes } from "./temporalHistogramConfig"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import type { StreamScales } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -186,3 +187,30 @@ it.each([false, true])(
     ])
   }
 )
+
+describe("axes that leave an orientation out", () => {
+  const ticks = [0, 10, 20]
+
+  it("resolves the missing orientation from its visibility flag, keeping explicit entries", () => {
+    const bottom = [{ orient: "bottom" as const, tickValues: ticks }]
+    expect(resolveHistogramAxes({ axes: bottom })).toBe(bottom)
+    expect(resolveHistogramAxes({ axes: bottom, showValueAxis: true })).toBe(bottom)
+    expect(resolveHistogramAxes({ axes: bottom, showValueAxis: false })).toEqual([...bottom, { orient: "left", visible: false }])
+    const left = [{ orient: "left" as const }]
+    expect(resolveHistogramAxes({ axes: left, showTimeAxis: false })).toEqual([...left, { orient: "bottom", visible: false }])
+    // An explicit entry on that orientation wins over the flag.
+    const both = [{ orient: "bottom" as const }, { orient: "right" as const }]
+    expect(resolveHistogramAxes({ axes: both, showValueAxis: false, showTimeAxis: false })).toBe(both)
+  })
+
+  it("hides the value axis with bottom-only tick axes in both renderers", async () => {
+    const props = { data, binSize: 10, width: 400, height: 200, axes: [{ orient: "bottom" as const, tickValues: ticks }] }
+    const { container } = render(<RealtimeHistogram {...props} showValueAxis={false} />)
+    await waitFor(() => expect(container.querySelector('[data-orient="bottom"]')).toBeTruthy())
+    expect(container.querySelector('[data-orient="left"]')).toBeNull()
+    const hidden = renderChartWithEvidence("TemporalHistogram", { ...props, showValueAxis: false }).svg
+    expect(hidden).toContain('data-orient="bottom"')
+    expect(hidden).not.toContain('data-orient="left"')
+    expect(renderChartWithEvidence("TemporalHistogram", props).svg).toContain('data-orient="left"')
+  })
+})

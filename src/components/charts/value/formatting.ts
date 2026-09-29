@@ -76,30 +76,29 @@ export function buildFormatter(
 /**
  * Format a millisecond duration as a short human string:
  * `2h 14m`, `45s`, `12ms`. Useful for latency-style KPIs.
+ *
+ * Each form rounds to its display precision before splitting into units,
+ * carrying into the larger unit, so 59 999ms reads `1m` rather than `60s`
+ * and 3 599 600ms reads `1h` rather than `59m 60s`.
  */
 export function formatDuration(ms: number): string {
   if (!Number.isFinite(ms)) return String(ms)
   const sign = ms < 0 ? "-" : ""
   const v = Math.abs(ms)
-  if (v < 1000) return `${sign}${Math.round(v)}ms`
-  const s = v / 1000
-  if (s < 60) return `${sign}${trimZero(s)}s`
-  const m = s / 60
-  if (m < 60) {
-    const wholeM = Math.floor(m)
-    const remS = Math.round(s - wholeM * 60)
-    return remS === 0 ? `${sign}${wholeM}m` : `${sign}${wholeM}m ${remS}s`
-  }
-  const h = m / 60
-  if (h < 24) {
-    const wholeH = Math.floor(h)
-    const remM = Math.round(m - wholeH * 60)
-    return remM === 0 ? `${sign}${wholeH}h` : `${sign}${wholeH}h ${remM}m`
-  }
-  const d = h / 24
-  const wholeD = Math.floor(d)
-  const remH = Math.round(h - wholeD * 24)
-  return remH === 0 ? `${sign}${wholeD}d` : `${sign}${wholeD}d ${remH}h`
+  const wholeMs = Math.round(v)
+  if (wholeMs < 1000) return `${sign}${wholeMs}ms`
+  const seconds = Math.round(v / 10) / 100
+  if (seconds < 60) return `${sign}${trimZero(seconds)}s`
+  const totalS = Math.round(v / 1000)
+  if (totalS < 3600) return `${sign}${unitPair(Math.floor(totalS / 60), "m", totalS % 60, "s")}`
+  const totalM = Math.round(v / 60_000)
+  if (totalM < 1440) return `${sign}${unitPair(Math.floor(totalM / 60), "h", totalM % 60, "m")}`
+  const totalH = Math.round(v / 3_600_000)
+  return `${sign}${unitPair(Math.floor(totalH / 24), "d", totalH % 24, "h")}`
+}
+
+function unitPair(major: number, majorUnit: string, minor: number, minorUnit: string): string {
+  return minor === 0 ? `${major}${majorUnit}` : `${major}${majorUnit} ${minor}${minorUnit}`
 }
 
 function trimZero(n: number): string {
@@ -121,16 +120,29 @@ export function decorate(
 }
 
 /**
+ * True when `delta` formats the same as zero, including a small non-zero
+ * delta that rounds away (0.0004 under a one-decimal percent formatter), so
+ * it reads, and is colored, as no change.
+ */
+export function isFormattedZero(
+  delta: number,
+  formatter: (value: number) => string
+): boolean {
+  return delta === 0 || formatter(Math.abs(delta)) === formatter(0)
+}
+
+/**
  * Format a signed delta — always carry an explicit + on positive values
- * so the sign-as-information stays legible. Zero renders as `"0"`
- * unformatted-by-sign (no `+0`).
+ * so the sign-as-information stays legible. Zero, including a delta that
+ * rounds to zero, renders as the formatter's zero with no sign (no `+0`
+ * or `−0%`).
  */
 export function formatSignedDelta(
   delta: number,
   formatter: (value: number) => string
 ): string {
   if (!Number.isFinite(delta)) return ""
-  if (delta === 0) return formatter(0)
+  if (isFormattedZero(delta, formatter)) return formatter(0)
   const sign = delta > 0 ? "+" : "−"
   // Use the formatter on the absolute value so currency symbols /
   // percent signs / grouping all render before we prepend the sign.

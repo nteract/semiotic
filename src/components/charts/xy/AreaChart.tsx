@@ -560,7 +560,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
     ...resolveMultiCapableTooltip({
       tooltip,
       defaultTooltipContent,
-      multiDefaultContent: MultiPointTooltip(),
+      multiDefaultContent: MultiPointTooltip({ xFormat, yFormat }),
     }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,

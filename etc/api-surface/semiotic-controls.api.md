@@ -5,11 +5,11 @@ _Edit dist/semiotic-controls.d.ts's sources, then re-run `npm run docs:api-surfa
 
 ```
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
-function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, onObservation, controlType, controlId, chartId, chartType, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function LinearBrush(props: LinearBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
-function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, onObservation, chartId, chartType, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
@@ -50,13 +50,18 @@ interface VisualizationControlDefinition
 interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
 interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
 interface-member CircularBrushProps::property::arcFill = optional arcFill: string | undefined
+interface-member CircularBrushProps::property::chartId = optional chartId: string | undefined
+interface-member CircularBrushProps::property::chartType = optional chartType: string | undefined
 interface-member CircularBrushProps::property::className = optional className: string | undefined
+interface-member CircularBrushProps::property::controlId = optional controlId: string | undefined
+interface-member CircularBrushProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
 interface-member CircularBrushProps::property::formatValue = optional formatValue: ((value: number) => string) | undefined
 interface-member CircularBrushProps::property::height = optional height: number | undefined
 interface-member CircularBrushProps::property::innerRadius = optional innerRadius: number | undefined
 interface-member CircularBrushProps::property::label = optional label: string | undefined
 interface-member CircularBrushProps::property::largeStep = optional largeStep: number | undefined
 interface-member CircularBrushProps::property::onChange = required onChange: (((current: CircularBrushValue) => CircularBrushValue) | next: CircularBrushValue) => void
+interface-member CircularBrushProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
 interface-member CircularBrushProps::property::period = optional period: number | undefined
 interface-member CircularBrushProps::property::radius = optional radius: number | undefined
 interface-member CircularBrushProps::property::step = optional step: number | undefined
@@ -250,6 +255,8 @@ interface-member SentenceFilterOption::property::value = required value: T
 interface-member SentenceFilterProps::property::align = optional align: "center" | "end" | "start" | undefined
 interface-member SentenceFilterProps::property::ariaLabel = optional ariaLabel: string | undefined
 interface-member SentenceFilterProps::property::as = optional as: React.ElementType<any, keyof React.JSX.IntrinsicElements> | undefined
+interface-member SentenceFilterProps::property::chartId = optional chartId: string | undefined
+interface-member SentenceFilterProps::property::chartType = optional chartType: string | undefined
 interface-member SentenceFilterProps::property::className = optional className: string | undefined
 interface-member SentenceFilterProps::property::defaultFilters = optional defaultFilters: Record<string, SentenceFilterValue> | undefined
 interface-member SentenceFilterProps::property::definitions = required definitions: Record<string, SentenceFilterDefinition>
@@ -257,6 +264,7 @@ interface-member SentenceFilterProps::property::disabled = optional disabled: bo
 interface-member SentenceFilterProps::property::filters = optional filters: Record<string, SentenceFilterValue> | undefined
 interface-member SentenceFilterProps::property::id = optional id: string | undefined
 interface-member SentenceFilterProps::property::onChange = optional onChange: ((filters: Record<string, SentenceFilterValue>, meta: SentenceFilterChangeMeta) => void) | undefined
+interface-member SentenceFilterProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
 interface-member SentenceFilterProps::property::onOpenChange = optional onOpenChange: ((key: string | null) => void) | undefined
 interface-member SentenceFilterProps::property::readOnly = optional readOnly: boolean | undefined
 interface-member SentenceFilterProps::property::renderControl = optional renderControl: ((context: SentenceFilterRenderContext) => React.ReactNode) | undefined

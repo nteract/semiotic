@@ -26,8 +26,10 @@ export function wrapValue(value: number, period: number, min = 0): number {
 export function shortestArcDelta(from: number, to: number, period: number): number {
   if (period <= 0) return to - from
   let raw = (to - from) % period
+  // Half-open, so a half-cycle step is always +period/2 whichever end it
+  // starts from.
   if (raw > period / 2) raw -= period
-  else if (raw < -period / 2) raw += period
+  else if (raw <= -period / 2) raw += period
   return raw
 }
 

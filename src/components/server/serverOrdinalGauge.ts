@@ -97,6 +97,7 @@ export const gaugeChart: ChartConfig = {
       min: gMin,
       max: gMax,
       radius,
+      innerRadius: computedInnerRadius,
       showScaleLabels,
       valueFormat: typeof rest.valueFormat === "function" ? rest.valueFormat : undefined,
       compact

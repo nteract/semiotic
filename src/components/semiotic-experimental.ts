@@ -3,13 +3,13 @@
 /**
  * Experimental entry point for temporary adapters and unstable previews.
  *
- * Anything imported from "semiotic/experimental" is intentionally outside
+ * Anything imported from "semiotic/experimental" is outside
  * Semiotic's stable public API. Exports may be renamed, moved, or removed
  * without a deprecation window and are excluded from stable API-surface and
  * bundle-size gates.
  */
 
-// PR-preview surface for the GoFish collaboration. The adapter is intentionally
+// PR-preview surface for the GoFish collaboration. The adapter is
 // named `unstable-gofish-displaylist-adapter`; it is available here so GoFish
 // can test against Semiotic's custom chart pipeline without promoting the API
 // to the normal recipe catalog. It consumes GoFish's *DisplayList* render IR —
@@ -172,7 +172,7 @@ export type {
   FlintSemanticAnnotation as UnstableFlintSemanticAnnotation
 } from "./data/fromFlintChart"
 
-// StreamPhysicsFrame M1 substrate. These are intentionally low-level and
+// StreamPhysicsFrame M1 substrate. These are low-level and
 // unstable while the frame/HOC contract is proven in the internal sandbox.
 export {
   DEFAULT_PHYSICS_CANVAS_THEME as unstable_DEFAULT_PHYSICS_CANVAS_THEME,

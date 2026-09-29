@@ -174,7 +174,11 @@ export interface RealtimeHistogramProps<
   showTimeAxis?: boolean
   /** Show the value axis; hidden axes reserve no default margin. */
   showValueAxis?: boolean
-  /** Shared XY axis configuration. Explicit axes override visibility conveniences. */
+  /**
+   * Shared XY axis configuration. Its entries override the visibility
+   * conveniences; an orientation it leaves out still follows `showTimeAxis` /
+   * `showValueAxis`.
+   */
   axes?: XYFrameAxisConfig[]
   /** Background fill color */
   background?: string
@@ -435,8 +439,8 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   // Multi mode lists every stacked category in the hovered bin.
   const tooltipProps = resolveMultiCapableTooltip({
     tooltip,
-    defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor }),
-    multiDefaultContent: buildHistogramMultiTooltip({ timeAccessor, valueAccessor }),
+    defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor, formatTime: tickFormatTime }),
+    multiDefaultContent: buildHistogramMultiTooltip({ timeAccessor, valueAccessor, formatTime: tickFormatTime }),
     customFunctionContext: "hover"
   })
   const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent

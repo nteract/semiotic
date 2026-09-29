@@ -400,12 +400,11 @@ function renderComposite(item: GofishCompositeItem | GofishMaskItem, key: string
     )
   }
 
-  // Robust blend/composite without `feImage` fragment references. GoFish's
+  // Blend/composite without `feImage` fragment references. GoFish's
   // reference filter graph wires a composite through `feImage href="#g"` to pull
   // in two sub-renders — but Chrome dropped local `feImage` element references
   // and librsvg never implemented them, so that graph renders blank everywhere
-  // except Firefox (it was dead code here until a `paint`/`blendMode` spec like
-  // the bottle-fill first exercised it). We reproduce the same *visual* with CSS
+  // except Firefox. We reproduce the same *visual* with CSS
   // `mix-blend-mode` in an isolated group: the source supplies luminosity
   // (desaturated), the dest blends its hue on top, and an alpha mask clips the
   // result to the source silhouette for the coverage-limiting operators

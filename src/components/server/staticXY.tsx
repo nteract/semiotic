@@ -1,3 +1,4 @@
+import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { directLabelDescription } from "../charts/shared/directLabels"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
@@ -34,6 +35,7 @@ import {
 } from "./staticSVGChrome"
 import { renderGridSVG } from "./staticXYGrid"
 import { makeDateTickFormatter } from "../stream/xyDateTicks"
+import { isUnderLayerBand, underBandSVGRenderer } from "../stream/underLayerBands"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "../stream/normalizeXYData"
 import { resolveFrameGraphics } from "../stream/frameGraphics"
@@ -302,6 +304,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     xAccessor: typeof props.xAccessor === "string" ? props.xAccessor : undefined,
     yAccessor: typeof props.yAccessor === "string" ? props.yAccessor : undefined,
     idPrefix: idPfx,
+    underLayerBands: true,
     onRender: result => { annotationRender = result },
   }) : null
 
@@ -336,6 +339,17 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         .filter(Boolean)
     : null
 
+  // `layer: "under"` bands fill beneath the marks, clipped to the plot like
+  // the canvas pre-render pass.
+  const underBands = filterAnnotationsByStatus(props.annotations ?? []).filter(isUnderLayerBand)
+  const underBandNodes = underBands.length > 0
+    ? underBandSVGRenderer(
+        underBands,
+        `${chartUID(props)}-under-band`,
+        theme.colors.annotation || theme.colors.text
+      )(store.scene, store.scales, { width, height })
+    : null
+
   const content = (
     <>
       {resolvedBackgroundGraphics}
@@ -346,7 +360,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
           <rect x={0} y={0} width={width} height={height} />
         </clipPath>
       </defs>
-      <g clipPath={`url(#${plotClipId})`}>{dataMarks}</g>
+      <g clipPath={`url(#${plotClipId})`}>{underBandNodes}{dataMarks}</g>
       {axes}
       {pairedRightAxis}
       {annotationNodes}

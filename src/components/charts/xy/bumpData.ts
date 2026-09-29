@@ -3,6 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import { resolveDefaultFill } from "../shared/hooks"
 import { resolveCategoricalPalette } from "../shared/colorUtils"
 import { bumpXIdentity } from "./bumpIdentity"
+import { formatDateMonthDay, makeDateTickFormatter } from "../../stream/xyDateTicks"
 
 const OTHER_COLOR_GROUP = "Other"
 
@@ -19,12 +20,36 @@ export function createBumpXFormatter(
   const rawAt = (value: number | Date | string) =>
     xValues[Math.max(0, Math.min(xValues.length - 1, Math.round(Number(value))))] as number | Date | string
   const temporal = xValues.every((value) => typeof value === "number" || value instanceof Date)
+  const formatDate = xFormat ? undefined : bumpDateFormatter(xValues)
   return (value, index, allTicks) => {
     if (xValues.length === 0) return ""
     const raw = rawAt(value)
-    if (!xFormat) return String(raw instanceof Date ? raw.toLocaleDateString() : raw)
+    if (!xFormat) return raw instanceof Date && formatDate ? formatDate(raw) : String(raw)
     return xFormat(raw, index, allTicks && temporal ? allTicks.map((tick) => Number(rawAt(tick).valueOf())) : undefined)
   }
+}
+
+/**
+ * Default label for Date x values, in UTC so the browser and renderChart
+ * agree whatever the machine's locale or time zone. The periods' alignment
+ * picks the detail: `2024` when every period starts a year, `Mar 2024` a
+ * month, `Mar 1` a day (`Mar 1, 2024` when the periods span years),
+ * otherwise the span-based labels other XY date axes use.
+ */
+function bumpDateFormatter(xValues: readonly unknown[]): ((value: Date) => string) | undefined {
+  const dates = xValues.filter((value): value is Date => value instanceof Date && Number.isFinite(value.valueOf()))
+  if (dates.length === 0) return undefined
+  const midnight = dates.every((d) => d.valueOf() % 864e5 === 0)
+  const monthStart = midnight && dates.every((d) => d.getUTCDate() === 1)
+  if (monthStart && dates.every((d) => d.getUTCMonth() === 0)) return (d) => String(d.getUTCFullYear())
+  if (monthStart) return (d) => `${formatDateMonthDay(d).split(" ")[0]} ${d.getUTCFullYear()}`
+  const times = dates.map((d) => d.valueOf())
+  const domain: [number, number] = [Math.min(...times), Math.max(...times)]
+  if (midnight) {
+    const oneYear = new Date(domain[0]).getUTCFullYear() === new Date(domain[1]).getUTCFullYear()
+    return (d) => oneYear ? formatDateMonthDay(d) : `${formatDateMonthDay(d)}, ${d.getUTCFullYear()}`
+  }
+  return makeDateTickFormatter(domain)
 }
 
 export interface RankedBumpDatum<TDatum extends Datum = Datum> extends Datum {

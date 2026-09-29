@@ -7,6 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `band` and `x-band` annotations accept `layer: "under"` on XY charts
+  (including RealtimeHistogram and TemporalHistogram): the fill paints beneath
+  the data marks, on the canvas and in static SVG, so bars and areas inside the
+  range keep their color, and the label stays above the marks. Bands without
+  `layer` draw above the data as before, as do bands on ordinal, geo, and
+  network charts, which ignore `layer`.
+- `histogramBinSelectionDatum(timeField)` in `semiotic/realtime` and
+  `semiotic/utils` returns a histogram bin as the chart's own selection
+  matching sees it, so `useSelection().predicate` matches it for any selected
+  time inside `[binStart, binEnd)`. Code outside the chart, such as a tooltip
+  on the matched bin, can find the bins a linked selection highlights.
+- `CircularBrush` and `SentenceFilter` accept `onObservation` (plus
+  `chartId`/`chartType`, and `controlId`/`controlType` on CircularBrush) and
+  emit the `semiotic/controls` `control-start`, `control-change`, and
+  `control-end` observations. CircularBrush reports `[start, end]` for pointer
+  drags and keyboard changes; SentenceFilter reports its `number` and `range`
+  filters, with the filter key as `controlId`.
+- `CircularBrush` supports Home/End (first and last step of the cycle) and
+  PageUp/PageDown (`largeStep`), shows a focus ring for keyboard focus, and
+  focuses the handle you grab.
+
+### Fixed
+
+- `thresholdBandsForReserve` and `reserveAnnotationBands` classify reserve
+  margins from one table, so a mark's style rule and the band behind it agree
+  (an 8% margin read "Tight" on the bar and "Watch" on the band). The classes
+  follow `ReserveLevels` as documented: tight `< tight`, watch
+  `[tight, watch)`, moderate `[watch, comfortable)` (new, info color,
+  `moderateFill`), comfortable `≥ comfortable`. The table is exported as
+  `reserveClasses(levels)` and `classifyReserve(value, levels)` from
+  `semiotic/recipes`, and `reserveAnnotationBands` takes an optional
+  `extent` for its outer bounds.
+- `reserveSeries` reports `netLoadMw` as demand minus wind and solar instead
+  of repeating demand; `gridEventAnnotations` no longer stamps a fixed
+  `confidence: 0.85` on authored events (pass `confidence` to set one), and
+  `GridEventWindow.ttlHint` documents its actual `"P14D"` default.
+- `CircularBrush` works for fractional cycles. Pointer values snap to `step`
+  instead of whole units, so a phase brush (`period: 1`) no longer snaps both
+  handles to 0, and `period: 24, step: 0.5` brushes half-hours. Without
+  `step`, a period that isn't an integer of 2 or more steps by `period / 100`
+  (integer periods keep 1 and 7). `aria-valuemax` is the last step before the
+  wrap (`period - step`), and nudges no longer accumulate float noise.
+- BigNumber's `"duration"` format carries rounded remainders into the next
+  unit (`1m`, not `60s`; `1h`, not `59m 60s`; `1d`, not `23h 60m`), and a
+  delta that rounds to zero reads `0` / `0%` with neutral sentiment instead of
+  `+0%` or `−0` in a success or danger color.
+- `smartTickFormat`, the default axis tick format, moves a value that rounds
+  to 1000 of one suffix to the next (`1M`, not `1000K`).
+- Default tooltips show the time of intraday `Date` values (midnight values
+  still show the date alone), and the default tooltip value drops
+  floating-point noise (`0.3`, not `0.30000000000000004`).
+- BumpChart labels `Date` periods without an `xFormat` in UTC, at the
+  periods' alignment (`2024`, `Mar 2024`, `Mar 11`), instead of the
+  machine's locale date, so the browser, renderChart, and the tooltip agree
+  in every time zone.
+- RealtimeHistogram and TemporalHistogram's default tooltip labels a bin's
+  range with the chart's `tickFormatTime`, or as a UTC date and time for
+  epoch-millisecond bins (`"Mar 28 10:41–10:42"`), instead of raw
+  milliseconds. Smaller bounds, such as tick counters, stay numbers.
+- RealtimeHistogram and TemporalHistogram hide an axis that `showTimeAxis` /
+  `showValueAxis` turn off when `axes` lists only the other one, for example
+  `axes={[{ orient: "bottom", tickValues }]}` with `showValueAxis={false}`,
+  in the browser and static SVG. Explicit `axes` entries still win.
+- BumpChart estimates endpoint-label widths per glyph (narrow, wide, capital,
+  and wide-script classes at bold sans-serif widths) instead of a flat 0.65em
+  per character, so labels that fit are no longer truncated and labeled
+  margins stay close to the text. Estimates stay at or above the drawn width
+  for Arial, Helvetica, and SF; pin the margin for much wider faces such as
+  Verdana.
+- GaugeChart string and number `centerContent` shrinks to fit inside the arc
+  when it is too wide for the readout's full size (for example `"140 / 200"`),
+  instead of spilling over the arc. Short values keep their size; the browser
+  and static SVG agree.
+- `wordTrailsLayout` sizes words by area (`maxFontSize · √(weight /
+  maxWeight)`), so a word twice as frequent covers twice the area; before,
+  weights 100 and 200 drew at 11px and 42px. `minFontSize` is now a
+  legibility floor, and words raised to it are listed in the result's new
+  `sizeFloored`. A word that finds no free spot is left out and listed in
+  `unplaced` instead of being drawn over another word. Word boxes are measured
+  with bold metrics and keep capitals' widths, rotated words collide by their
+  rotated bounds, placement is cached by content, and the layout supplies
+  `restyle`, so selection and color/opacity-only changes don't re-run the
+  collision search, which now uses a spatial grid.
+
 ## [3.11.1] - 2026-09-28
 
 ### Added

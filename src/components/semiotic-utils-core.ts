@@ -229,6 +229,9 @@ export { unwrapDatum } from "./recipes/recipeUtils"
 // Authored rows behind an aggregate mark (a histogram bin, stacked segment,
 // or `categories` entry), read from the datum or the hover that wraps it.
 export { getSourceRows } from "./store/selectionProvenance"
+// A histogram bin as the chart's selection matching sees it: a selected time
+// anywhere in `[binStart, binEnd)` on the time field matches the bin.
+export { histogramBinSelectionDatum } from "./charts/realtime/histogramSelectionCoverage"
 
 // ── Serialization ────────────────────────────────────────────────────────
 export {

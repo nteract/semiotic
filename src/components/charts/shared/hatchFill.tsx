@@ -196,20 +196,21 @@ export function resolveSvgFill(
 }
 
 /**
- * Resolve the serializable `gradient` option accepted by band annotations.
+ * Validate the serializable `gradient` option accepted by band annotations:
+ * sorted, clamped `{ offset, color, opacity? }` stops and the direction.
  *
  * Gradient stops deliberately share the familiar `{ offset: 0..1, color?,
  * opacity? }` contract used by area and legend gradients. The annotation owns
  * its direction: horizontal for an x-band and vertical for a y-band, unless
- * callers explicitly select the other direction. Invalid JSON input simply
- * falls through to the annotation's solid fill instead of breaking rendering.
+ * callers explicitly select the other direction. Invalid JSON input returns
+ * undefined, so the annotation keeps its solid fill instead of breaking
+ * rendering.
  */
-export function resolveAnnotationGradient(
+export function normalizeAnnotationGradient(
   gradient: unknown,
-  idBase: string,
   defaultDirection: AnnotationGradientDirection,
   fallback: string,
-): { fill: string; def: React.ReactElement } | undefined {
+): { direction: AnnotationGradientDirection; stops: Array<{ offset: number; color: string; opacity?: number }> } | undefined {
   if (!gradient || typeof gradient !== "object") return undefined
   const candidate = gradient as {
     direction?: unknown
@@ -242,6 +243,22 @@ export function resolveAnnotationGradient(
     : candidate.direction === "vertical"
       ? "vertical"
       : defaultDirection
+  return { direction, stops }
+}
+
+/**
+ * Resolve the serializable `gradient` option accepted by band annotations
+ * into an SVG `<linearGradient>` def (see {@link normalizeAnnotationGradient}).
+ */
+export function resolveAnnotationGradient(
+  gradient: unknown,
+  idBase: string,
+  defaultDirection: AnnotationGradientDirection,
+  fallback: string,
+): { fill: string; def: React.ReactElement } | undefined {
+  const normalized = normalizeAnnotationGradient(gradient, defaultDirection, fallback)
+  if (!normalized) return undefined
+  const { direction, stops } = normalized
   const id = `${idBase}-gradient`
   return {
     fill: `url(#${id})`,

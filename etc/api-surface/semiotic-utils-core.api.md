@@ -42,7 +42,7 @@ const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip(): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
@@ -83,6 +83,7 @@ function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | Rea
 function hasTooltipContent(node: React.ReactNode): boolean
 function hatchFillId(prefix: string, h: HatchFill): string
 function hatchFillKey(h: HatchFill): string
+function histogramBinSelectionDatum(timeField: string): (datum: Datum) => Datum
 function isHatchFill(fill: unknown): boolean
 function isMultiTooltip(tooltip: TooltipProp | undefined): boolean
 function lightenColor(hex: string, factor?: number | undefined): string

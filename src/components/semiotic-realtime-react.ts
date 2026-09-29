@@ -1,7 +1,7 @@
 /**
  * Supplemental realtime React hooks.
  *
- * The historical `/realtime/core` entry already owns Frames, HOCs, tooltips,
+ * The `/realtime/core` entry already owns Frames, HOCs, tooltips,
  * and data helpers. This slice adds hooks and runtime-facing adapters; it is
  * not the only React-bearing realtime subpath.
  */

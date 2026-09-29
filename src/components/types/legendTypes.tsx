@@ -106,8 +106,8 @@ export interface LegendLayout {
   maxWidth?: number
   /**
    * Space between a left/right legend and the outer SVG edge. The default is
-   * sized for the interactive swatch focus ring; set to 0 to preserve the
-   * historical flush placement.
+   * sized for the interactive swatch focus ring; set to 0 to place the legend
+   * flush against the edge.
    */
   edgeGutter?: number
   /**

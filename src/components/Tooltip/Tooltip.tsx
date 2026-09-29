@@ -1,10 +1,11 @@
+import { formatTooltipNumber } from "./formatTooltipNumber"
 import * as React from "react"
 import type { Accessor } from "../charts/shared/types"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { HoverData } from "../realtime/types"
-import { normalizeHoverDatum } from "../stream/hoverUtils"
+import { normalizeTooltipDatum } from "./normalizeTooltipDatum"
+import { formatTooltipDate } from "./formatTooltipDate"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
-import { attachSelectionProvenance, getSelectionProvenance } from "../store/selectionProvenance"
 import {
   TooltipRoot,
   hasOwnTooltipChrome,
@@ -115,17 +116,14 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     return ""
   }
 
-  // Format numbers: round to reasonable precision, add commas for large values
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return String(value)
-    // Round to avoid floating point noise (e.g. 12.300000000001 → 12.3)
-    const rounded = Number.isInteger(value) ? value : parseFloat(value.toPrecision(6))
-    return Math.abs(rounded) > 9999 ? rounded.toLocaleString() : String(rounded)
+    return formatTooltipNumber(value)
   }
 
   // Format dates
   if (value instanceof Date) {
-    return value.toLocaleDateString()
+    return formatTooltipDate(value)
   }
 
   // Handle objects (e.g. resolved network nodes with an id property)
@@ -573,7 +571,24 @@ export function resolveTooltipContent(input: {
  * Multi-point tooltip: shows all series values at the hovered X position
  * with color swatches (legend-style). Used when tooltipMode="multi".
  */
-export function MultiPointTooltip(): TooltipContentFn {
+export function MultiPointTooltip({
+  xFormat,
+  yFormat
+}: {
+  xFormat?: (value: number | Date | string) => React.ReactNode
+  yFormat?: (value: number, group?: string) => React.ReactNode
+} = {}): TooltipContentFn {
+  function formatted<T>(value: T, format?: (value: T) => React.ReactNode): React.ReactNode {
+    if (format) {
+      try {
+        const content = format(value)
+        if (content != null) return content
+      } catch {
+        // Match field tooltips: a failed formatter uses the rounded default.
+      }
+    }
+    return formatValue(value)
+  }
   return (d: Datum) => {
     const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: Datum }> | undefined
     if (!allSeries || allSeries.length === 0) {
@@ -583,7 +598,7 @@ export function MultiPointTooltip(): TooltipContentFn {
       const val = d.data?.value ?? d.data?.y
       return (
         <TooltipRoot>
-          <div>{formatValue(val)}</div>
+          <div>{formatted(val, yFormat)}</div>
         </TooltipRoot>
       )
     }
@@ -596,14 +611,14 @@ export function MultiPointTooltip(): TooltipContentFn {
       <TooltipRoot>
         {headerValue != null && (
           <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
-            {formatValue(headerValue)}
+            {formatted(headerValue, xFormat)}
           </div>
         )}
         {allSeries.map((s, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "1px 0" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }} />
             <span style={{ flex: 1, fontSize: "0.85em" }}>{s.group}</span>
-            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatValue(s.value)}</span>
+            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatted(s.value, yFormat && ((value) => yFormat(value, s.group)))}</span>
           </div>
         ))}
       </TooltipRoot>
@@ -642,80 +657,8 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     //    We wrap all results in the standard tooltip chrome.
     const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
     const normalized = (hoverData: Datum) => {
-      // Unwrap Semiotic HoverData → raw datum so user functions receive
-      // the data they pushed/passed. Prefer the explicit internal marker
-      // emitted by Stream Frames. Accept frame-only metadata as a narrow
-      // fallback, but avoid guessing
-      // from common raw fields like `{ x, y, data }` — those are valid user
-      // datum shapes and must not be over-unwrapped.
-      const explicitlyMarked = hoverData?.__semioticHoverData === true
-      const hasLegacyFrameMarker = hoverData && (
-        hoverData.type === "node" ||
-        hoverData.type === "edge" ||
-        hoverData.nodeOrEdge !== undefined ||
-        hoverData.allSeries !== undefined ||
-        hoverData.stats !== undefined ||
-        hoverData.__chartType !== undefined
-      )
-      const looksLikeHoverWrapper = explicitlyMarked || (hoverData
-        && hoverData.data !== undefined
-        && typeof hoverData.x === "number"
-        && typeof hoverData.y === "number"
-        && hasLegacyFrameMarker)
-      let datum = normalizeHoverDatum(looksLikeHoverWrapper ? (hoverData.data ?? {}) : hoverData)
-      // Network frames wrap the user's datum twice. HoverData.data is the
-      // RealtimeNode/RealtimeEdge that layout produced (carrying x0/y0/
-      // sourceLinks — and, for edges, `source`/`target` resolved to node
-      // OBJECTS), while the raw datum the user passed in `nodes`/`edges`
-      // sits one level deeper at `.data`. Unwrap that extra level so network
-      // HOC tooltips receive raw data, matching the XY/ordinal contract.
-      // Without it a custom tooltip rendering `edge.source` gets a node
-      // object and React throws "Objects are not valid as a React child".
-      //
-      // Match only genuine RealtimeNode/RealtimeEdge wrappers, not just the
-      // presence of `nodeOrEdge` + a nested `.data`: every node built by the
-      // network pipeline has numeric x0/x1 (createNode), and every edge a
-      // numeric sankeyWidth (0 for non-sankey layouts). A customNetworkLayout
-      // hit whose datum is the user's own object — even one that happens to
-      // carry an incidental `.data` field — lacks those layout fields and is
-      // passed through untouched.
-      const isNodeWrapper =
-        hoverData?.nodeOrEdge === "node" &&
-        typeof datum?.x0 === "number" &&
-        typeof datum?.x1 === "number"
-      const isEdgeWrapper =
-        hoverData?.nodeOrEdge === "edge" && typeof datum?.sankeyWidth === "number"
+      const datum = normalizeTooltipDatum(hoverData)
       if (!datum) return null
-      if (
-        (isNodeWrapper || isEdgeWrapper) &&
-        datum.data &&
-        typeof datum.data === "object"
-      ) {
-        datum = datum.data
-      }
-      if (!datum) return null
-      // Multi-tooltip mode (`tooltip="multi"`) puts the per-series values on
-      // the hover ROOT as `allSeries`, alongside the data-space `xValue` of
-      // the cursor — not inside `.data`. Unwrapping to `.data` above would
-      // therefore discard exactly the fields a multi-series tooltip needs
-      // (and `allSeries !== undefined` is itself one of the markers that
-      // *enables* the unwrap, so its presence triggered the step that
-      // dropped it). Re-attach them onto a shallow copy so a user function
-      // can read `datum.allSeries` the way `MultiPointTooltip` — which is
-      // wired as `tooltipContent` directly and never passes through here —
-      // always could. Copy rather than mutate: `datum` is the caller's own
-      // data row. Real datum fields win, so a data row that legitimately
-      // carries an `xValue` column is not overwritten by the cursor's.
-      if (looksLikeHoverWrapper && (hoverData.allSeries !== undefined || hoverData.xValue !== undefined)) {
-        const withHoverContext: Datum = attachSelectionProvenance({ ...datum }, getSelectionProvenance(datum))
-        if (hoverData.allSeries !== undefined && withHoverContext.allSeries === undefined) {
-          withHoverContext.allSeries = hoverData.allSeries
-        }
-        if (hoverData.xValue !== undefined && withHoverContext.xValue === undefined) {
-          withHoverContext.xValue = hoverData.xValue
-        }
-        datum = withHoverContext
-      }
       const result = userFn(datum)
       if (!hasTooltipContent(result)) return null
       // A custom renderer can own its chrome either with TooltipRoot, the

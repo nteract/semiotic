@@ -2,11 +2,12 @@
  * Seeded, deterministic force layout for custom network charts.
  *
  * `ForceDirectedGraph` runs a force simulation internally, but `NetworkCustomChart`
- * expects pre-computed positions — and there was no reproducible positioner to
- * feed it. This is a compact spring/repulsion/gravity sim with a seeded PRNG, so
- * the same graph + seed always produces the same layout (change the seed to get a
- * different one — useful for "re-run the layout" interactions). Positions are
- * returned normalized to [0, 1], so you map them into the plot yourself.
+ * expects pre-computed positions. This runs a d3-force simulation (many-body
+ * charge, links, collision, centering) for a fixed number of ticks with a
+ * seeded PRNG, so the same graph + seed always produces the same layout (change
+ * the seed to get a different one — useful for "re-run the layout"
+ * interactions). Positions are returned normalized to [0, 1], so you map them
+ * into the plot yourself.
  *
  * Synchronous and deterministic: it settles before returning, so consumers get
  * stable coordinates without running an interactive simulation.
@@ -32,11 +33,19 @@ export interface ForceLayoutOptions {
   seed?: number
   /** Simulation iterations. @default 260 */
   iterations?: number
-  /** Repulsion strength between every pair of nodes. @default 5200 */
+  /**
+   * Many-body repulsion. Each node's charge is `-sqrt(repulsion) * 2.5 *
+   * sqrt(degree + 1)`, so hubs push harder. @default 5200
+   */
   repulsion?: number
   /** Target edge length in the virtual (pre-normalization) space. @default 165 */
   linkDistance?: number
-  /** Spring stiffness pulling connected nodes to `linkDistance`. @default 0.045 */
+  /**
+   * Spring stiffness pulling connected nodes to `linkDistance`, relative to the
+   * default: each link's d3 strength is `(linkStrength / 0.045) / min(source
+   * degree, target degree)`, so the default is 1 for a link between leaves.
+   * @default 0.045
+   */
   linkStrength?: number
   /** Gravity toward the center (keeps disconnected pieces on screen). @default 0.018 */
   centerStrength?: number

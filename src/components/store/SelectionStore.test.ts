@@ -432,3 +432,28 @@ describe("SelectionStore — covered ranges", () => {
     expect([point({ time: 13 }), point({ time: "13" }), point({ time: 14 })]).toEqual([true, false, false])
   })
 })
+
+describe("histogramBinSelectionDatum (public)", () => {
+  it("lets a predicate match a bin outside the chart the way the chart does", async () => {
+    const utils = await import("../semiotic-utils-core")
+    const realtime = await import("../semiotic-realtime-core")
+    expect(realtime.histogramBinSelectionDatum).toBe(utils.histogramBinSelectionDatum)
+    const toBin = utils.histogramBinSelectionDatum("timestamp")
+    const clause: SelectionClause = {
+      clientId: "line",
+      type: "point",
+      fields: { timestamp: { type: "point", values: new Set([65_000]) } }
+    }
+    const pred = buildPredicate(makeSelection("union", [clause]))
+    const bins = [0, 60_000, 120_000].map((binStart) => ({ binStart, binEnd: binStart + 60_000, total: 1 }))
+    expect(bins.map((bin) => pred(toBin(bin)))).toEqual([false, true, false])
+    // A plain bin only matches an exact field value.
+    expect(bins.map(pred)).toEqual([false, false, false])
+    const dates = buildPredicate(makeSelection("union", [{
+      ...clause,
+      fields: { timestamp: { type: "point", values: new Set([new Date(125_000), "1970-01-01T00:00:05.000Z"]) } }
+    }]))
+    expect(bins.map((bin) => dates(toBin(bin)))).toEqual([true, false, true])
+    expect(toBin({ total: 1 })).toEqual({ total: 1 })
+  })
+})

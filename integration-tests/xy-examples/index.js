@@ -41,6 +41,13 @@ const annotationPlacementData = [
   { x: 72, y: 82, category: "B" },
 ]
 
+// Exercise the public formatter callbacks without changing default visual fixtures.
+const tooltipPrecision = new URLSearchParams(window.location.search).get("tooltipPrecision")
+const multiTooltipFormats = tooltipPrecision == null ? {} : {
+  xFormat: (value) => `Time ${Number(value).toFixed(Number(tooltipPrecision))}`,
+  yFormat: (value) => `${Number(value).toFixed(Number(tooltipPrecision))}°`
+}
+
 const examples = [
   // 1. Basic Line Chart
   TestCase({
@@ -441,6 +448,7 @@ const examples = [
       lineBy: "series",
       colorBy: "series",
       tooltip: "multi",
+      ...multiTooltipFormats,
       curve: "monotoneX",
       width: 400,
       height: 300,
@@ -458,6 +466,7 @@ const examples = [
       areaBy: "series",
       colorBy: "series",
       tooltip: "multi",
+      ...multiTooltipFormats,
       curve: "monotoneX",
       width: 400,
       height: 300,
@@ -475,6 +484,7 @@ const examples = [
       areaBy: "series",
       colorBy: "series",
       tooltip: "multi",
+      ...multiTooltipFormats,
       width: 400,
       height: 300,
       colorScheme: colors,

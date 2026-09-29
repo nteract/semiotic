@@ -1,7 +1,7 @@
 /**
  * semiotic/access — public access-contract surface.
  *
- * This entry is deliberately separate from chart family entries so production
+ * This entry is separate from chart family entries so production
  * routes do not load access tooling merely to render a chart.
  */
 export {

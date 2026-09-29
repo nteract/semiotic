@@ -67,8 +67,9 @@ export default function WordTrailsPage() {
           the word peaked, so height reads as <em>when</em> it was said.
         </li>
         <li>
-          <strong>Font size</strong> encodes frequency, and words never overlap — they settle into
-          the nearest free space around their moment in time.
+          <strong>Font size</strong> encodes frequency by area — a word said twice as often covers
+          twice the area — and words never overlap: they settle into the nearest free space around
+          their moment in time.
         </li>
         <li>
           <strong>Color</strong> encodes <em>distinctiveness</em>: each word&apos;s usage is split
@@ -110,16 +111,29 @@ export default function WordTrailsPage() {
       <p>
         Each column is placed independently with a greedy, largest-first search: every word looks
         outward from its segment anchor for the nearest spot that clears every word already placed,
-        so the layout is <em>overlap-free by construction</em> rather than by relaxation. Because
-        that works on label <em>boxes</em> — not rasterized sprites — no canvas text measurement is
-        needed, and the layout is pure and renders identically on the server.
+        so the layout is <em>overlap-free by construction</em> rather than by relaxation. Rotated
+        words collide by their rotated bounds. Because that works on label <em>boxes</em> — not
+        rasterized sprites — no canvas text measurement is needed, and the layout is pure and
+        renders identically on the server. Placement is cached by content and the layout supplies{" "}
+        <code>restyle</code>, so selection changes and color or opacity changes (such as a
+        progressive reveal) reuse it instead of searching again.
+      </p>
+      <p>
+        <strong>Size is area.</strong> A word&apos;s font size is{" "}
+        <code>maxFontSize · √(weight / maxWeight)</code>, so its area is proportional to its
+        weight. <code>minFontSize</code> is a legibility floor: a word that would be smaller is
+        drawn at the floor, which overstates it, and the layout lists it in the result&apos;s{" "}
+        <code>sizeFloored</code>.
       </p>
       <p>
         <strong>Scale to fit.</strong> Before placing, the recipe computes one global font scale
         from the total word area, then shrinks it further only if some word cannot find room. The
         scale is shared by every word, so relative magnitude is preserved everywhere: add more words
-        (or turn on repeats) and the whole cloud gets smaller together rather than any word being
-        clipped or dropped.
+        (or turn on repeats) and the whole cloud gets smaller together. If a word still finds no
+        room after the last shrink (or with <code>scaleToFit: false</code>), it is left out rather
+        than drawn over another word, and listed in the result&apos;s <code>unplaced</code>. Wrap
+        the layout to read these lists, for example{" "}
+        <code>{"layout={(ctx) => { const r = wordTrailsLayout(ctx); report(r.unplaced); return r }}"}</code>.
       </p>
 
       <h2 id="config">Key configuration</h2>
@@ -167,7 +181,10 @@ export default function WordTrailsPage() {
             <td>
               <code>scaleToFit</code> / <code>packingDensity</code>
             </td>
-            <td>Uniformly shrink all words until nothing overlaps; magnitude preserved.</td>
+            <td>
+              Uniformly shrink all words until every word finds room; magnitude preserved. Words
+              that still don&apos;t fit are left out and listed in <code>unplaced</code>.
+            </td>
           </tr>
           <tr>
             <td>

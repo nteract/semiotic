@@ -524,11 +524,11 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
         React.createElement("div", {
           style: { fontWeight: 600, marginBottom: 4, color: seriesColors[seriesIdx] || "inherit" }
         }, seriesName),
-        React.createElement("div", null, `${typeof xAccessor === "string" ? xAccessor : "x"}: ${xVal}`),
+        React.createElement("div", null, `${typeof xAccessor === "string" ? xAccessor : "x"}: `, xFormat ? xFormat(xVal) : String(xVal)),
         React.createElement("div", null, `${seriesName}: ${fmt(originalVal)}`)
       )
     }
-  }, [seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor])
+  }, [seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor, xFormat])
 
   // StreamXYFrame interpolates multi-series values in the shared unitized
   // coordinate system. Translate them back to each axis's original units
@@ -568,7 +568,10 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
     return mapped
   }, [extents, isDualAxis, seriesLabels])
 
-  const builtInMultiTooltip = useMemo(() => MultiPointTooltip(), [])
+  const builtInMultiTooltip = useMemo(() => MultiPointTooltip({
+    xFormat,
+    yFormat: (value, group) => series[seriesLabels.indexOf(group ?? "")]?.format?.(value)
+  }), [xFormat, series, seriesLabels])
   const multiDefaultContent = useCallback(
     (datum: Datum) => builtInMultiTooltip(mapMultiAxisHover(datum)),
     [builtInMultiTooltip, mapMultiAxisHover],

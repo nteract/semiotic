@@ -158,8 +158,8 @@
     },
     {
       "path": "src/components/stream/StreamXYFrame.tsx",
-      "maxLines": 1481,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +9 (2026-07-11): accessorRevision + onLayoutError prop plumbing, getLayoutFailure() handle, and consuming the restyle-only repaint flag. -21 (2026-09-27): multi-series hover lookup extracted into xyMultiHover.ts, shared with keyboard focus."
+      "maxLines": 1476,
+      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +9 (2026-07-11): accessorRevision + onLayoutError prop plumbing, getLayoutFailure() handle, and consuming the restyle-only repaint flag. -21 (2026-09-27): multi-series hover lookup extracted into xyMultiHover.ts, shared with keyboard focus. -5 (2026-09-28): the canvas pre-renderer pass moved into underLayerBands.tsx with the under-layer band renderers."
     },
     {
       "path": "src/components/stream/types.ts",

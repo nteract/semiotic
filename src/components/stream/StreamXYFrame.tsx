@@ -32,6 +32,7 @@ import { xySceneNodeToSVG } from "./SceneToSVGXY"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
+import { paintCanvasPreRenderers, useUnderLayerBandRenderers } from "./underLayerBands"
 import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
@@ -185,8 +186,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
-      canvasPreRenderers,
-      svgPreRenderers,
+      canvasPreRenderers: authoredCanvasPreRenderers,
+      svgPreRenderers: authoredSvgPreRenderers,
       title,
       categoryAccessor,
       brush,
@@ -223,6 +224,7 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       layoutConfig,
       layoutSelection,
     } = props
+    const { canvasPreRenderers, svgPreRenderers } = useUnderLayerBandRenderers(annotations, authoredCanvasPreRenderers, authoredSvgPreRenderers)
 
     const windowMode = windowModeProp ?? capacityMode ?? "sliding"
     const windowSize = windowSizeProp ?? capacity ?? 200
@@ -938,15 +940,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
             ctx.clip()
           }
 
-          // Custom pre-renderers (e.g. connecting lines under points)
-          // Each call is wrapped in save/restore to prevent ctx state leaks
-          if (canvasPreRenderers && store.scales) {
-            for (const renderer of canvasPreRenderers) {
-              ctx.save()
-              renderer(ctx, store.scene, store.scales, { width: adjustedWidth, height: adjustedHeight })
-              ctx.restore()
-            }
-          }
+          // Pre-renderers (under-layer bands, then e.g. connecting lines under points)
+          paintCanvasPreRenderers(ctx, canvasPreRenderers, store.scene, store.scales, { width: adjustedWidth, height: adjustedHeight })
 
           // When customLayout is provided, the user can emit any node type.
           // Use the "custom" renderer set (every renderer, each self-filtering)

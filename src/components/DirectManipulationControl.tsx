@@ -74,7 +74,7 @@ function clampAndSnap(value: number, min: number, max: number, step: number): nu
 /**
  * A small SVG-native control surface for a chart that owns its own scales.
  *
- * `DirectManipulationControl` deliberately does not know about a particular
+ * `DirectManipulationControl` does not know about a particular
  * Semiotic frame. The chart supplies `pointerToValue`, making this usable in
  * XY, ordinal, geographic, radial, and custom-layout overlays without the
  * control reaching into frame internals. It contributes the repeated parts
@@ -147,7 +147,7 @@ export function DirectManipulationControl({
   }
 
   const moveDrag = (event: React.PointerEvent<SVGGElement>) => {
-    // SVGOverlay intentionally disables pointer events at the root so labels
+    // SVGOverlay disables pointer events at the root so labels
     // and annotations never interfere with chart hover. A real control opts
     // back in below that layer and owns pointer movement while it is present.
     event.stopPropagation()

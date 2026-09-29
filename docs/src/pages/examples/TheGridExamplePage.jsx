@@ -76,7 +76,7 @@ const fuelStack = stackFuelSeries(hours)           // StackedAreaChart
 const demandForecast = demandForecastRows(hours) // DifferenceChart a/b
 const reserves = reserveSeries(hours)            // Minimap + risk bars
 const operating = summarizeOperatingPoint(hours)
-const styleRules = thresholdBandsForReserve({ tight: 5, watch: 12 })
+const styleRules = thresholdBandsForReserve({ tight: 5, watch: 12, comfortable: 20 })
 const annotations = applyAnnotationLifecycle(
   gridEventAnnotations(events),
   { dataExtent: [hours[0].t, hours.at(-1).t] },
@@ -531,12 +531,16 @@ export default function TheGridExamplePage() {
               Comfortable · 20% or more
             </li>
             <li>
+              <span className="the-grid__swatch the-grid__swatch--moderate" aria-hidden="true" />
+              Moderate · 12% to 20%
+            </li>
+            <li>
               <span className="the-grid__swatch the-grid__swatch--watch" aria-hidden="true" />
-              Watch · 12% to 20%
+              Watch · 5% to 12%
             </li>
             <li>
               <span className="the-grid__swatch the-grid__swatch--tight" aria-hidden="true" />
-              Tight · under 12% (hatched)
+              Tight · under 5% (hatched)
             </li>
           </ul>
           <p className="the-grid__methods">

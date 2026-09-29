@@ -443,7 +443,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
     ...resolveMultiCapableTooltip({
       tooltip,
       defaultTooltipContent,
-      multiDefaultContent: MultiPointTooltip(),
+      multiDefaultContent: MultiPointTooltip({ xFormat, yFormat }),
     }),
     ...buildCustomBehaviorProps({
       linkedHover, selection, onObservation, onClick, hoverHighlight,

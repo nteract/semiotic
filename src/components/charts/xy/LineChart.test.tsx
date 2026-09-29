@@ -23,6 +23,19 @@ vi.mock("../../stream/StreamXYFrame", () => {
 })
 
 describe("LineChart", () => {
+  it.each([1, 8])("honors xFormat and yFormat in multi tooltips at %s decimals", (precision) => {
+    render(<LineChart data={[{ x: 1, y: 16.514400921658986 }]} xAccessor="x" yAccessor="y" tooltip="multi"
+      xFormat={(value) => `Time ${Number(value).toFixed(precision)}`}
+      yFormat={(value) => `${Number(value).toFixed(precision)}°`} />)
+    const content = lastXYFrameProps.tooltipContent?.({
+      xValue: 2.543778801843318,
+      allSeries: [{ group: "A", value: 16.514400921658986, color: "red" }]
+    } as Parameters<NonNullable<typeof lastXYFrameProps.tooltipContent>>[0])
+    const view = render(<>{content}</>)
+    expect(view.container.textContent).toContain(`Time ${(2.543778801843318).toFixed(precision)}`)
+    expect(view.container.textContent).toContain(`${(16.514400921658986).toFixed(precision)}°`)
+  })
+
   const sampleData = [
     { x: 1, y: 10 },
     { x: 2, y: 20 },

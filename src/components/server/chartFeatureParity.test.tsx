@@ -37,6 +37,19 @@ it("exports primitive gauge centers and centerLabel as native SVG text", () => {
   expect(donut).toContain("foreignObject")
 })
 
+it("fits a long primitive gauge center to the same size on both paths", () => {
+  const props = { value: 140, max: 200, width: 400, height: 300 }
+  const fontSizeOf = (svg: string, text: string) =>
+    new RegExp(`font-size="([\\d.]+)"[^>]*>${text}</text>`).exec(svg)?.[1]
+  const long = "140 / 200"
+  const server = fontSizeOf(renderChart("GaugeChart", { ...props, centerContent: long }), long)
+  const browser = fontSizeOf(renderToString(<GaugeChart {...props} centerContent={long} />), long)
+  const short = fontSizeOf(renderChart("GaugeChart", { ...props, centerContent: "70" }), "70")
+  expect(server).toBeDefined()
+  expect(browser).toBe(server)
+  expect(Number(server)).toBeLessThan(Number(short))
+})
+
 it("takes gauge compactness and scale labels from the resolved mode on both paths", () => {
   const thresholds = [{ value: 40, color: "#2a2", label: "Low" }, { value: 100, color: "#a22", label: "High" }]
   const contextByRule = [{ when: { maxWidth: 100000 }, transform: { mode: "context" as const } }]

@@ -378,6 +378,23 @@ describe("GaugeChart", () => {
       expect(lastOrdinalFrameProps.centerContent).toBeNull()
     })
 
+    it("fits a long string center inside the hub and keeps short values at full size", () => {
+      const valueFontSize = () => {
+        const markup = renderToStaticMarkup(<svg>{lastOrdinalFrameProps.centerContent}</svg>)
+        return Number(/<text[^>]*font-size="([\d.]+)"/.exec(markup)?.[1])
+      }
+      render(<TooltipProvider><GaugeChart value={140} max={200} width={400} height={300} centerContent="70" /></TooltipProvider>)
+      const shortSize = valueFontSize()
+      render(<TooltipProvider><GaugeChart value={140} max={200} width={400} height={300} centerContent={(value, _min, max) => `${value} / ${max}`} /></TooltipProvider>)
+      const longSize = valueFontSize()
+      const { radius, innerRadius } = { radius: shortSize / 0.3, innerRadius: lastOrdinalFrameProps.innerRadius as number }
+      expect(shortSize).toBeCloseTo(Math.max(16, radius * 0.3))
+      expect(longSize).toBeLessThan(shortSize)
+      expect(longSize).toBeGreaterThanOrEqual(11)
+      // The estimated width of the fitted text spans at most 80% of the hub.
+      expect("140 / 200".length * longSize * 0.6).toBeLessThanOrEqual(2 * innerRadius * 0.8 + 1e-6)
+    })
+
     it("sparkline mode suppresses threshold scale labels and the value readout", () => {
       render(
         <TooltipProvider>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  estimateBumpLabelWidth,
   resolveBumpLabelLayout,
   resolveBumpLabelSpace,
   truncateBumpLabel,
@@ -15,8 +16,28 @@ const input = (overrides: Partial<BumpLabelLayoutInput> = {}): BumpLabelLayoutIn
   yLabel: "Rank",
   ...overrides,
 })
-// estimateLabel: 0.65em per glyph at 12px.
-const width = (text: string) => Array.from(text).length * 12 * 0.65
+const width = (text: string) => estimateBumpLabelWidth(text, 12)
+
+describe("estimateBumpLabelWidth", () => {
+  it("tracks the drawn text instead of a flat per-character width", () => {
+    // Chromium draws 12px "clickstream-enrichment" 135px wide in Arial.
+    const measured = 135
+    const estimate = width("clickstream-enrichment")
+    expect(estimate).toBeGreaterThanOrEqual(measured)
+    expect(estimate).toBeLessThan(measured * 1.15)
+    expect(estimate).toBeLessThan("clickstream-enrichment".length * 12 * 0.65)
+  })
+
+  it("weighs narrow, wide, capital, and wide-script glyphs", () => {
+    expect(width("iiii")).toBeLessThan(width("aaaa"))
+    expect(width("aaaa")).toBeLessThan(width("AAAA"))
+    expect(width("AAAA")).toBeLessThan(width("MMMM"))
+    expect(width("É")).toBe(width("E"))
+    expect(width("東京")).toBeGreaterThanOrEqual(2 * 12)
+    expect(width("…")).toBeGreaterThanOrEqual(12 * 0.99)
+    expect(estimateBumpLabelWidth("Northern", 20)).toBeCloseTo(width("Northern") * 20 / 12)
+  })
+})
 
 describe("resolveBumpLabelLayout", () => {
   it("keeps today's margins for short labels", () => {
@@ -50,7 +71,7 @@ describe("resolveBumpLabelLayout", () => {
 
   it("estimates with a numeric label font size", () => {
     const layout = resolveBumpLabelLayout(input({ labels: ["Southeastern"], fontSize: 20 }))
-    expect(layout.margin.right).toBeCloseTo(8 + 12 * 20 * 0.65 + 4)
+    expect(layout.margin.right).toBeCloseTo(8 + estimateBumpLabelWidth("Southeastern", 20) + 4)
   })
 })
 
@@ -92,6 +113,8 @@ describe("truncateBumpLabel", () => {
     expect(short.truncated).toBe(true)
     expect(short.text.endsWith("…")).toBe(true)
     expect(width(short.text)).toBeLessThanOrEqual(60)
-    expect(width(short.text) + 12 * 0.65).toBeGreaterThan(60)
+    const kept = short.text.slice(0, -1)
+    const next = "Northern Territories".slice(kept.length, kept.length + 1)
+    expect(width(`${kept}${next}…`)).toBeGreaterThan(60)
   })
 })

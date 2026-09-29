@@ -73,7 +73,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
       hoverHighlight: { type: "boolean", default: false, description: "Dim other time bins on hover. All stacked segments sharing binStart stay highlighted together; no category accessor is required." },
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
-      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
+      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them." },
       styleRules: STYLE_RULES_PROP_SPEC,
       binSize: {
         type: "number",
@@ -157,7 +157,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
       hoverHighlight: { type: "boolean", default: false, description: "Dim other time bins on hover. All stacked segments sharing binStart stay highlighted together; no category accessor is required." },
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
-      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Overrides showTimeAxis/showValueAxis." },
+      axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them." },
       styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "array", description: "Array of temporal observations" },
       binSize: {

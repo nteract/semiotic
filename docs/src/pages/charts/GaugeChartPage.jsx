@@ -512,7 +512,9 @@ export default function GaugeChartPage() {
       <p>
         Add a caption with <code>centerLabel</code>, or replace the value with{" "}
         <code>centerContent</code>. Strings, numbers, and SVG elements (including fragments of
-        them) render as native SVG, so static exports and SVG importers keep them. Other React
+        them) render as native SVG, so static exports and SVG importers keep them. String and
+        number content is shrunk to fit inside the arc when it is too long for the readout's
+        full size. Other React
         content renders as an HTML overlay, which becomes a <code>foreignObject</code> in static
         SVG; some importers, such as Figma, drop those.
       </p>

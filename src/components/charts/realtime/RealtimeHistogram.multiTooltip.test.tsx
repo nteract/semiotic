@@ -21,7 +21,11 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s multi tooltip", (Histo
   // its North segment spans y 100..50, and y 20 is above the stack.
   async function hoverFirstBin(
     tooltip: React.ComponentProps<typeof RealtimeHistogram>["tooltip"],
-    { clientY = 20, onHover }: { clientY?: number; onHover?: (hover: Datum | null) => void } = {}
+    { clientY = 20, onHover, tickFormatTime }: {
+      clientY?: number
+      onHover?: (hover: Datum | null) => void
+      tickFormatTime?: (value: number) => string
+    } = {}
   ) {
     const view = render(
       <Histogram
@@ -40,6 +44,7 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s multi tooltip", (Histo
         showAxes={false}
         showLegend={false}
         onHover={onHover}
+        tickFormatTime={tickFormatTime}
       />
     )
     await act(async () => { await Promise.resolve() })
@@ -65,6 +70,11 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s multi tooltip", (Histo
     })
     expect(tooltip?.textContent).toBe("North,South")
     expect(getSourceRows(seen.at(-1))).toEqual(data)
+  })
+
+  it("formats the default tooltip's range with the chart's tickFormatTime", async () => {
+    const tooltip = await hoverFirstBin("multi", { tickFormatTime: (value) => `t${value}` })
+    expect(tooltip?.querySelector(".semiotic-tooltip > div")?.textContent).toBe("range:t0–t10")
   })
 
   it("renders nothing with tooltip={false} while hover still reports the segment", async () => {

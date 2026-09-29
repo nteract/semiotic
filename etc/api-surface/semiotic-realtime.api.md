@@ -74,7 +74,7 @@ class-member WindowAccumulator::method::emit = required emit(): AggregatedWindow
 class-member WindowAccumulator::method::push = required push(time: number, value: number, distinctKey?: number | string | undefined): void
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip(): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -99,6 +99,7 @@ function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed
 function getSourceRows<TDatum extends Datum = Datum>(value: unknown): readonly TDatum[] | undefined
 function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
 function hasTooltipContent(node: React.ReactNode): boolean
+function histogramBinSelectionDatum(timeField: string): (datum: Datum) => Datum
 function markTooltipChrome<T>(component: T): T
 function opacityFromAge(options: MotionAgeOpacityOptions): number
 function parseWindowDuration(spec: number | string): null | number

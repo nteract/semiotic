@@ -48,7 +48,13 @@ const CURVE_FACTORIES: Partial<Record<CurveType, CurveFactory>> = {
 
 export function createDefaultAnnotationRules(
   _frameType: "xy" | "ordinal" | "network",
-  activation: AnnotationActivationOptions = {}
+  activation: AnnotationActivationOptions = {},
+  /**
+   * The frame paints `layer: "under"` band fills beneath its marks
+   * (StreamXYFrame), so these rules draw only the label. Elsewhere such a
+   * band keeps its fill in the overlay rather than losing it.
+   */
+  underLayerBands = false
 ): (
   annotation: Datum,
   index: number,
@@ -308,19 +314,21 @@ export function createDefaultAnnotationRules(
         const y1Value = ann.y1 ?? yDomain?.[1]
         const y0px = y0Value != null && scaleY ? scaleY(y0Value) : 0
         const y1px = y1Value != null && scaleY ? scaleY(y1Value) : (context.height || 0)
-        // Region fill may be a declarative HatchFill → inline <pattern>.
+        // Region fill may be a declarative HatchFill → inline <pattern>. A
+        // `layer: "under"` band paints its fill beneath the marks instead.
         const bandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "vertical", "var(--semiotic-primary, #6366f1)")
+        const fillUnderMarks = underLayerBands && ann.layer === "under"
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
-            {bandFill.def && <defs>{bandFill.def}</defs>}
-            <rect
+            {!fillUnderMarks && bandFill.def && <defs>{bandFill.def}</defs>}
+            {!fillUnderMarks && <rect
               x={0}
               y={Math.min(y0px, y1px)}
               width={context.width || 0}
               height={Math.abs(y1px - y0px)}
               fill={bandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
-            />
+            />}
             {ann.label && (
               <AnnotationLabel
                 x={(context.width || 0) - 4}
@@ -349,17 +357,18 @@ export function createDefaultAnnotationRules(
         const x1px = x1Value != null && scaleX ? scaleX(x1Value) : null
         if (x0px == null || x1px == null) return null
         const xBandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "horizontal", "var(--semiotic-primary, #6366f1)")
+        const fillUnderMarks = underLayerBands && ann.layer === "under"
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
-            {xBandFill.def && <defs>{xBandFill.def}</defs>}
-            <rect
+            {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
+            {!fillUnderMarks && <rect
               x={Math.min(x0px, x1px)}
               y={0}
               width={Math.abs(x1px - x0px)}
               height={context.height || 0}
               fill={xBandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
-            />
+            />}
             {ann.label && (
               <AnnotationLabel
                 x={Math.min(x0px, x1px) + 4}

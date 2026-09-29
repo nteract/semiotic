@@ -462,3 +462,53 @@ describe("SentenceFilter", () => {
     warn.mockRestore()
   })
 })
+
+describe("SentenceFilter control observations", () => {
+  const definitions: Record<string, SentenceFilterDefinition> = {
+    amount: { type: "number", label: "Amount", min: 1, max: 20 },
+    years: { type: "range", label: "Years", min: 1500, max: 1700 },
+    annotated: { type: "toggle", label: "Annotations", trueLabel: "annotated", falseLabel: "plain" },
+  }
+
+  it("emits start, change, and end for number and range filters only", () => {
+    const onObservation = vi.fn()
+    render(
+      <SentenceFilter
+        sentence="{amount}; {years}; {annotated}"
+        defaultFilters={{ amount: 5, years: [1550, 1650], annotated: false }}
+        definitions={definitions}
+        onObservation={onObservation}
+        chartId="poems"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /Amount: 5/ }))
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Amount" }), { target: { value: "10" } })
+    expect(onObservation.mock.calls.map(([o]) => o.type)).toEqual(["control-start", "control-change", "control-end"])
+    expect(onObservation.mock.calls[1][0]).toMatchObject({
+      controlType: "value",
+      value: 10,
+      controlId: "amount",
+      chartId: "poems",
+      chartType: "SentenceFilter",
+    })
+    fireEvent.keyDown(document, { key: "Escape" })
+
+    onObservation.mockClear()
+    fireEvent.click(screen.getByRole("button", { name: /Years: 1550 to 1650/ }))
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Minimum" }), { target: { value: "1575" } })
+    expect(onObservation.mock.calls[1][0]).toMatchObject({
+      type: "control-change",
+      controlType: "range-boundary",
+      value: [1575, 1650],
+      controlId: "years",
+    })
+    fireEvent.keyDown(document, { key: "Escape" })
+
+    onObservation.mockClear()
+    fireEvent.click(screen.getByRole("button", { name: /Annotations: plain/ }))
+    fireEvent.click(screen.getByRole("option", { name: "annotated" }), { detail: 1 })
+    expect(screen.getByRole("button", { name: /Annotations: annotated/ })).toBeInTheDocument()
+    expect(onObservation).not.toHaveBeenCalled()
+  })
+})
