@@ -81,7 +81,20 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              exit 0
+            else
+              status=$?
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit "$status"
+            fi
+            delay=$((attempt * 10))
+            echo "npm ci failed (attempt $attempt/3); retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       # Explicit preparation also supports manual recovery of older tags whose
       # test typecheck command did not yet build its own declarations.
@@ -134,7 +147,20 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              exit 0
+            else
+              status=$?
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit "$status"
+            fi
+            delay=$((attempt * 10))
+            echo "npm ci failed (attempt $attempt/3); retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       # The pinned Playwright image supplies browsers and OS dependencies.
       # Keep release validation independent of Ubuntu package mirror updates.
@@ -215,7 +241,20 @@ jobs:
           echo "Verified $TAGGED_SHA is an ancestor of origin/main"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              exit 0
+            else
+              status=$?
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit "$status"
+            fi
+            delay=$((attempt * 10))
+            echo "npm ci failed (attempt $attempt/3); retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       - name: Audit the release dependency graph
         run: npm audit --registry=https://registry.npmjs.org --audit-level=moderate

@@ -552,3 +552,15 @@ test("manual browser recovery uses the workflow harness against tagged applicati
   const publish = workflow.split("  publish:")[1]
   assert.doesNotMatch(publish, /run: cp \.release-validation/)
 })
+
+test("release dependency installs retry transient package-download failures", () => {
+  const workflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8")
+  const installSteps = [...workflow.matchAll(/- name: Install dependencies\n\s+run: \|([\s\S]*?)(?=\n\s{6}- name:|\n\s{2}[\w-]+:)/g)]
+  assert.equal(installSteps.length, 3)
+  for (const [, script] of installSteps) {
+    assert.match(script, /for attempt in 1 2 3; do/)
+    assert.match(script, /if npm ci; then/)
+    assert.match(script, /exit "\$status"/)
+    assert.match(script, /sleep "\$delay"/)
+  }
+})
