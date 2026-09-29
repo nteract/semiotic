@@ -1,16 +1,6 @@
-/** Preserve numeric precision, normalizing only noise near a short decimal. */
+/** Compact default display; authored tooltip formatters control precision. */
 export function formatTooltipNumber(value: number): string {
-  let clean = value
-  if (Number.isFinite(value) && !Number.isInteger(value)) {
-    const shorter = Number(value.toPrecision(12))
-    // A short representation must be within floating-point relative precision.
-    // Do not round integers: their digits may be identifiers or exact counts.
-    if (Math.abs(value - shorter) <= Number.EPSILON * Math.abs(value)) {
-      clean = shorter
-    }
-  }
-  // Preserve fractional digits when grouping; Intl defaults to three decimals.
-  return Math.abs(clean) > 9999
-    ? clean.toLocaleString(undefined, { maximumSignificantDigits: 21 })
-    : String(clean)
+  if (!Number.isFinite(value)) return String(value)
+  const rounded = Number.isInteger(value) ? value : Number(value.toPrecision(6))
+  return Math.abs(rounded) > 9999 ? rounded.toLocaleString() : String(rounded)
 }

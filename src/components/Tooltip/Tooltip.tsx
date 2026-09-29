@@ -572,7 +572,24 @@ export function resolveTooltipContent(input: {
  * Multi-point tooltip: shows all series values at the hovered X position
  * with color swatches (legend-style). Used when tooltipMode="multi".
  */
-export function MultiPointTooltip(): TooltipContentFn {
+export function MultiPointTooltip({
+  xFormat,
+  yFormat
+}: {
+  xFormat?: (value: number | Date | string) => React.ReactNode
+  yFormat?: (value: number, group?: string) => React.ReactNode
+} = {}): TooltipContentFn {
+  function formatted<T>(value: T, format?: (value: T) => React.ReactNode): React.ReactNode {
+    if (format) {
+      try {
+        const content = format(value)
+        if (content != null) return content
+      } catch {
+        // Match field tooltips: a failed formatter uses the rounded default.
+      }
+    }
+    return formatValue(value)
+  }
   return (d: Datum) => {
     const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: Datum }> | undefined
     if (!allSeries || allSeries.length === 0) {
@@ -582,7 +599,7 @@ export function MultiPointTooltip(): TooltipContentFn {
       const val = d.data?.value ?? d.data?.y
       return (
         <TooltipRoot>
-          <div>{formatValue(val)}</div>
+          <div>{formatted(val, yFormat)}</div>
         </TooltipRoot>
       )
     }
@@ -595,14 +612,14 @@ export function MultiPointTooltip(): TooltipContentFn {
       <TooltipRoot>
         {headerValue != null && (
           <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
-            {formatValue(headerValue)}
+            {formatted(headerValue, xFormat)}
           </div>
         )}
         {allSeries.map((s, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "1px 0" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }} />
             <span style={{ flex: 1, fontSize: "0.85em" }}>{s.group}</span>
-            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatValue(s.value)}</span>
+            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatted(s.value, yFormat && ((value) => yFormat(value, s.group)))}</span>
           </div>
         ))}
       </TooltipRoot>

@@ -30,13 +30,14 @@ type NullableTooltipFn<TFn extends TooltipRenderer> = (
 type TooltipElement = ReactElement<{ children?: ReactNode }>
 
 describe("Tooltip", () => {
-  it.each([1234567890123, 1.23456789012345, 12345.6789012345, 0.1 + 0.2])("preserves precision for %s", (value) => {
+  it.each([
+    [1234567890123, (1234567890123).toLocaleString()],
+    [1.23456789012345, "1.23457"],
+    [16.514400921658986, "16.5144"],
+    [0.1 + 0.2, "0.3"]
+  ])("uses a compact default for %s", (value, expected) => {
     const tooltip = Tooltip({ fields: ["value"] })
     const { container } = render(tooltip({ value }))
-    const expected = value === 0.1 + 0.2 ? "0.3"
-      : Math.abs(value) > 9999
-        ? value.toLocaleString(undefined, { maximumSignificantDigits: 21 })
-        : String(value)
     expect(container.textContent).toContain(expected)
   })
 
@@ -542,6 +543,25 @@ describe("buildDefaultTooltip with title role", () => {
 // ── MultiPointTooltip ─────────────────────────────────────────────────
 
 describe("MultiPointTooltip", () => {
+  it.each([0, 1, 8])("honors formatters with %s decimals using raw values", (precision) => {
+    const value = 16.514400921658986
+    const xFormat = vi.fn((x) => <strong>Time {Number(x).toFixed(precision)}</strong>)
+    const yFormat = vi.fn((y: number) => `${y.toFixed(precision)}°`)
+    const fn = MultiPointTooltip({ xFormat, yFormat })
+    const { container } = render(<>{fn({ xValue: 2.543778801843318, allSeries: [{ group: "A", value, color: "red" }] })}</>)
+    expect(container.textContent).toContain(`Time ${(2.543778801843318).toFixed(precision)}`)
+    expect(container.textContent).toContain(`${value.toFixed(precision)}°`)
+    expect(yFormat).toHaveBeenCalledWith(value, "A")
+    expect(container.querySelector("strong")).not.toBeNull()
+  })
+
+  it("falls back to rounded values when a formatter throws or returns null", () => {
+    const fn = MultiPointTooltip({ xFormat: () => { throw new Error("bad format") }, yFormat: () => null })
+    const { container } = render(<>{fn({ xValue: 2.543778801843318, allSeries: [{ group: "A", value: 16.514400921658986 }] })}</>)
+    expect(container.textContent).toContain("2.54378")
+    expect(container.textContent).toContain("16.5144")
+  })
+
   it("renders all series with group names and values", () => {
     const fn = MultiPointTooltip()
     const data = {

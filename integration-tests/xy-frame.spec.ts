@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { waitForChartReady, waitForRafs } from "./helpers"
+import { expectTooltipWithinPlot, waitForChartReady, waitForRafs } from "./helpers"
 
 async function hoverAndScreenshotMultiTooltip(
   page: Page,
@@ -26,10 +26,32 @@ async function hoverAndScreenshotMultiTooltip(
   await expect(tooltip).toHaveCSS("visibility", "visible")
   await expect(tooltip).toContainText("A")
   await expect(tooltip).toContainText("B")
+  // Default values stay compact; explicit formatter coverage below checks
+  // that callers can choose either less or more precision.
+  const values = tooltip.locator(":scope > div > span:last-child")
+  await expect(values).toHaveCount(2)
+  for (const value of await values.allTextContents()) {
+    expect(value).toMatch(/^\d+\.\d{1,4}$/)
+    expect(Number(value)).toBeGreaterThan(0)
+  }
+  const margins = { left: 0, right: 0, top: 0, bottom: 0 }
+  await expectTooltipWithinPlot(testCase, margins)
 
   await expect(testCase).toHaveScreenshot(snapshotName, {
     maxDiffPixels: 300,
   })
+
+  await testCase.locator("h2").hover()
+  await expect(tooltip).not.toBeVisible()
+  await page.setViewportSize({ width: 800, height: 700 })
+  await testCase.scrollIntoViewIfNeeded()
+  const resizedBox = await canvas.boundingBox()
+  if (!resizedBox) throw new Error("resized canvas bounding box unavailable")
+  await page.mouse.move(resizedBox.x + resizedBox.width * 0.52, resizedBox.y + resizedBox.height * 0.5)
+  await expect(tooltip).toBeVisible()
+  await expectTooltipWithinPlot(testCase, margins)
+  await testCase.locator("h2").hover()
+  await expect(tooltip).not.toBeVisible()
 }
 
 test.describe("XY Charts - Line Charts", () => {
@@ -391,6 +413,28 @@ test.describe("XY Charts - Interaction states", () => {
       snapshot: "xy-stacked-area-multi-tooltip-hover.png",
     },
   ]) {
+    for (const precision of [1, 8]) {
+      test(`${name} multi tooltip honors ${precision} decimal formatters`, async ({ page }) => {
+        await page.goto(`/xy-examples/?tooltipPrecision=${precision}`)
+        await waitForChartReady(page, testId)
+        const chart = page.getByTestId(testId)
+        await chart.scrollIntoViewIfNeeded()
+        const box = await chart.locator("canvas").first().boundingBox()
+        if (!box) throw new Error("canvas bounding box unavailable")
+        await page.mouse.move(box.x + box.width * 0.52, box.y + box.height * 0.5)
+        const tooltip = chart.locator(".stream-frame-tooltip .semiotic-tooltip")
+        await expect(tooltip).toBeVisible()
+        await expect(tooltip.locator(":scope > div").first()).toHaveText(new RegExp(`^Time \\d+\\.\\d{${precision}}$`))
+        const values = tooltip.locator(":scope > div > span:last-child")
+        await expect(values).toHaveCount(2)
+        for (const value of await values.allTextContents()) {
+          expect(value).toMatch(new RegExp(`^\\d+\\.\\d{${precision}}°$`))
+        }
+        await expectTooltipWithinPlot(chart, { left: 0, right: 0, top: 0, bottom: 0 })
+        await chart.locator("h2").hover()
+        await expect(tooltip).not.toBeVisible()
+      })
+    }
     test(`${name} multi tooltip appears away from explicit points`, async ({ page }) => {
       await hoverAndScreenshotMultiTooltip(page, testId, snapshot)
     })

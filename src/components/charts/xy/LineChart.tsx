@@ -959,7 +959,7 @@ export const LineChart = forwardRef(
     ...withSegmentSeriesTooltip(resolveMultiCapableTooltip({
       tooltip,
       defaultTooltipContent,
-      multiDefaultContent: MultiPointTooltip(),
+      multiDefaultContent: MultiPointTooltip({ xFormat, yFormat }),
     }), segments),
     ...buildCustomBehaviorProps({
       linkedHover,

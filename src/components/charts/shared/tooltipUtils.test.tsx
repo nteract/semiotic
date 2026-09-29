@@ -106,16 +106,10 @@ describe("formatVal", () => {
     expect(formatVal(intraday)).not.toBe(formatVal(new Date(2024, 5, 15, 9, 31)))
   })
 
-  it.each([1234567890123, -1234567890123, 1.23456789012345, 12345.6789012345, 1.23456789012345e-20])("preserves meaningful digits in %s", (value) => {
-    const expected = Math.abs(value) > 9999
-      ? value.toLocaleString(undefined, { maximumSignificantDigits: 21 })
-      : String(value)
-    expect(formatVal(value)).toBe(expected)
-  })
-
-  it("drops floating-point noise without rounding real digits", () => {
+  it("keeps integer identifiers intact and rounds default decimal displays", () => {
+    expect(formatVal(1234567890123)).toBe((1234567890123).toLocaleString())
     expect(formatVal(0.1 + 0.2)).toBe("0.3")
-    expect(formatVal(12.345678)).toBe("12.345678")
+    expect(formatVal(12.345678)).toBe("12.3457")
   })
 
   it("converts strings as-is", () => {

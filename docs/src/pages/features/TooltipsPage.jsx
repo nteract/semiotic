@@ -131,12 +131,21 @@ export default function TooltipsPage() {
           <code>tooltip={"{false}"}</code> — no tooltip is rendered.
         </li>
         <li>
-          <code>tooltip={"{customFn}"}</code>, <code>{"{\"multi\"}"}</code>,
+          <code>tooltip={"{customFn}"}</code>, custom multi-mode content,
           or <code>{"{Tooltip({...})}"}</code>/
           <code>{"{MultiLineTooltip({...})}"}</code> — your content fully
           replaces the default. Axis formatters do <strong>not</strong>{" "}
           apply automatically; re-pass <code>valueFormat</code>/
           <code>xFormat</code> inside your tooltip if you want them.
+        </li>
+        <li>
+          <code>tooltip="multi"</code> (or <code>{'tooltip={{ mode: "multi" }}'}</code>)
+          on LineChart, AreaChart, and StackedAreaChart uses <code>xFormat</code>
+          {" "}for the header and <code>yFormat</code> for each series value.
+          MultiAxisLineChart uses <code>xFormat</code> and each series' <code>format</code>.
+          Formatters receive unrounded values, so <code>{'yFormat={v => `${Number(v).toFixed(1)}°`}'}</code>
+          {" "}can show one decimal, or a higher precision when needed. Without
+          a formatter, decimal values use a compact six-significant-digit default.
         </li>
         <li>
           Default tooltip active — the chart's <code>valueFormat</code>{" "}
