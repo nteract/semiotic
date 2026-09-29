@@ -16,7 +16,7 @@ function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> &
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip(): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element

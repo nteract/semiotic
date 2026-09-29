@@ -42,7 +42,7 @@ const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip(): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function ThemeProvider({ theme, children }: ThemeProviderProps): React.JSX.Element
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element

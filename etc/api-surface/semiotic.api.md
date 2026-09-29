@@ -80,7 +80,7 @@ function MobileChartContainer({ children, controls, mobile, breakpoint, chartMod
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip(): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
