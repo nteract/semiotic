@@ -42,16 +42,19 @@ async function hoverAndScreenshotMultiTooltip(
   })
 
   await testCase.locator("h2").hover()
-  await expect(tooltip).not.toBeVisible()
+  await expect(tooltip).not.toBeVisible() // test-quality-gate: allow-mount-only — verifies dismissal after moving off the plot
   await page.setViewportSize({ width: 800, height: 700 })
   await testCase.scrollIntoViewIfNeeded()
   const resizedBox = await canvas.boundingBox()
   if (!resizedBox) throw new Error("resized canvas bounding box unavailable")
   await page.mouse.move(resizedBox.x + resizedBox.width * 0.52, resizedBox.y + resizedBox.height * 0.5)
-  await expect(tooltip).toBeVisible()
+  await expect(tooltip).toBeVisible() // test-quality-gate: allow-mount-only — verifies hover recovery after viewport resize
+  await expect(tooltip).toContainText("A")
+  await expect(tooltip).toContainText("B")
+  await expect(values).toHaveCount(2)
   await expectTooltipWithinPlot(testCase, margins)
   await testCase.locator("h2").hover()
-  await expect(tooltip).not.toBeVisible()
+  await expect(tooltip).not.toBeVisible() // test-quality-gate: allow-mount-only — verifies dismissal after moving off the plot
 }
 
 test.describe("XY Charts - Line Charts", () => {
@@ -423,7 +426,7 @@ test.describe("XY Charts - Interaction states", () => {
         if (!box) throw new Error("canvas bounding box unavailable")
         await page.mouse.move(box.x + box.width * 0.52, box.y + box.height * 0.5)
         const tooltip = chart.locator(".stream-frame-tooltip .semiotic-tooltip")
-        await expect(tooltip).toBeVisible()
+        await expect(tooltip).toBeVisible() // test-quality-gate: allow-mount-only — verifies hover appearance alongside formatted content below
         await expect(tooltip.locator(":scope > div").first()).toHaveText(new RegExp(`^Time \\d+\\.\\d{${precision}}$`))
         const values = tooltip.locator(":scope > div > span:last-child")
         await expect(values).toHaveCount(2)
@@ -432,7 +435,7 @@ test.describe("XY Charts - Interaction states", () => {
         }
         await expectTooltipWithinPlot(chart, { left: 0, right: 0, top: 0, bottom: 0 })
         await chart.locator("h2").hover()
-        await expect(tooltip).not.toBeVisible()
+        await expect(tooltip).not.toBeVisible() // test-quality-gate: allow-mount-only — verifies dismissal after moving off the plot
       })
     }
     test(`${name} multi tooltip appears away from explicit points`, async ({ page }) => {
