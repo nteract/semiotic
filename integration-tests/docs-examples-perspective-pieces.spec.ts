@@ -74,7 +74,7 @@ test("a layout recipe's node cards and hit targets follow the projection", async
   await expect(panel(page, lineage).locator('[data-perspective="ground"] path.lineage-dag-hull')).toHaveCount(3)
   // The node card stands over its projected slab, so hovering at the card
   // finds the node the card names.
-  let at = await hoverUntil(page, await labelCenter(page, lineage, "Join"), /Join/)
+  const at = await hoverUntil(page, await labelCenter(page, lineage, "Join"), /Join/)
   let tip = (await tooltip(page).boundingBox())!
   expect(Math.hypot(tip.x + tip.width / 2 - at.x, tip.y + tip.height - at.y)).toBeLessThan(220)
   await page.mouse.move(2, 2)
@@ -84,7 +84,7 @@ test("a layout recipe's node cards and hit targets follow the projection", async
   await page.getByRole("radio", { name: "Military" }).first().click()
   await page.waitForTimeout(900)
   await panel(page, lineage).scrollIntoViewIfNeeded()
-  at = await hoverUntil(page, await labelCenter(page, lineage, "Warehouse"), /Warehouse/)
+  await hoverUntil(page, await labelCenter(page, lineage, "Warehouse"), /Warehouse/)
   tip = (await tooltip(page).boundingBox())!
   expect(tip.width).toBeGreaterThan(30)
   await page.mouse.move(2, 2)

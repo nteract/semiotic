@@ -30,7 +30,8 @@ export function paintPerspectiveFaces(
   fallback: string
 ): void {
   if (!faces?.length || !style.fill) return
-  const alpha = (style.opacity ?? 1) * (style.fillOpacity ?? 1)
+  const priorAlpha = ctx.globalAlpha
+  const alpha = (style.opacity ?? priorAlpha) * (style.fillOpacity ?? 1)
   if (!(alpha > 0)) return
   const resolved = resolveCanvasFill(ctx, style.fill, fallback)
   let base: string | CanvasPattern | CanvasGradient = resolved
@@ -42,7 +43,6 @@ export function paintPerspectiveFaces(
     base = ctx.fillStyle
     if (/^rgba\(.*,\s*0(\.0+)?\s*\)$/.test(base)) return
   }
-  const priorAlpha = ctx.globalAlpha
   ctx.globalAlpha = alpha
   for (const face of faces) {
     const path = cachedScenePath2D(face.pathD)
@@ -52,4 +52,3 @@ export function paintPerspectiveFaces(
   }
   ctx.globalAlpha = priorAlpha
 }
-

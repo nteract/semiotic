@@ -20,7 +20,11 @@ function networkSymbolTokenRenderer(ctx: CanvasRenderingContext2D, nodes: Networ
   for (const node of nodes) {
     if (node.type !== "symbol") continue
     if (node.faces) {
-      paintPerspectiveFaces(ctx, node.style, node.faces, "#007bff")
+      // Symbols multiply mark opacity by the frame alpha, including walls.
+      paintPerspectiveFaces(ctx, {
+        ...node.style,
+        opacity: alpha * (node.style.opacity ?? 1)
+      }, node.faces, "#007bff")
       ctx.globalAlpha = alpha
     }
     networkSymbolRenderer(ctx, [node])

@@ -13532,9 +13532,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -13582,9 +13589,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -13598,9 +13612,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -14324,9 +14347,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -14374,9 +14404,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -14390,9 +14427,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -15097,9 +15143,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -15147,9 +15200,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -15163,9 +15223,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -15848,9 +15917,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -15898,9 +15974,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -15914,9 +15997,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -16603,9 +16695,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -16653,9 +16752,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -16669,9 +16775,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -17339,9 +17454,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -17389,9 +17511,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -17405,9 +17534,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -18067,9 +18205,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -18117,9 +18262,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -18133,9 +18285,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }
@@ -25923,9 +26084,16 @@
                       ]
                     },
                     "elevationScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "elevationGuides": {
@@ -25973,9 +26141,16 @@
                       ]
                     },
                     "extrudeScale": {
-                      "type": [
-                        "number",
-                        "string"
+                      "oneOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "auto"
+                          ]
+                        }
                       ]
                     },
                     "edges": {
@@ -25989,9 +26164,18 @@
                           ]
                         },
                         "elevation": {
-                          "type": [
-                            "string",
-                            "number"
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "surface",
+                                "ground",
+                                "nodes"
+                              ]
+                            }
                           ]
                         }
                       }

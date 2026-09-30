@@ -34,6 +34,8 @@ export class NetworkPerspectiveState {
   edgeLift = 0
   /** Called when lazily loaded perspective code arrives so the host repaints. */
   onExtrasReady: (() => void) | null = null
+  /** Projection changed since the last build, even if its tween has ended. */
+  needsRebuild = false
   /** Engine-owned bookkeeping (applied key, resolved settings, tween). */
   internal: { tween?: unknown } | null = null
   /** Scene builds since reset; the first build never animates. */
@@ -70,9 +72,17 @@ export class NetworkPerspectiveState {
 
   /** Advance a tween; true while it needs another scene build. */
   advance(now: number, instant = false): boolean {
-    return this.internal?.tween != null
+    const changed = this.internal?.tween != null
       ? getNetworkPerspectiveEngine()?.advance(this, now, instant) ?? false
       : false
+    if (changed) this.needsRebuild = true
+    return changed
+  }
+
+  /** Invalidate retained projected scenes before asking the host to repaint. */
+  extrasReady(): void {
+    this.needsRebuild = true
+    this.onExtrasReady?.()
   }
 
   reset(): void {
@@ -81,6 +91,7 @@ export class NetworkPerspectiveState {
     this.edgeLift = 0
     this.internal = null
     this.builds = 0
+    this.needsRebuild = false
   }
 
   /** Project one scene; null keeps the caller's flat arrays untouched. */
@@ -89,12 +100,13 @@ export class NetworkPerspectiveState {
     size: [number, number],
     parts: NetworkSceneParts
   ): NetworkPerspectiveScene | null {
+    this.needsRebuild = false
     const first = this.builds++ === 0
     const flat = !config.perspective || config.perspective === "flat"
     if (flat && !this.internal) return null
     const engine = getNetworkPerspectiveEngine()
     if (!engine) {
-      loadNetworkPerspectiveEngine().then(() => this.onExtrasReady?.(), () => {})
+      loadNetworkPerspectiveEngine().then(() => this.extrasReady(), () => {})
       return null
     }
     return engine.project(this, config, size, parts, first)

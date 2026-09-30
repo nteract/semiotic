@@ -16,7 +16,7 @@ const BOOLEAN = { type: "boolean" } as const
 const FLAG_OR_OBJECT = { type: ["boolean", "object"] } as const
 /** Constant layout px or a datum field name; callbacks are React-only. */
 const ACCESSOR = { type: ["number", "string"] } as const
-const SCALE = { type: ["number", "string"] } as const
+const SCALE = { oneOf: [NUMBER, { type: "string", enum: ["auto"] }] } as const
 
 // Kept deliberately shallow: this schema is repeated in every network chart's
 // tool definition. The prop description names the nested fields.
@@ -45,7 +45,7 @@ const CONFIG_SCHEMA = {
       type: "object",
       properties: {
         route: { enum: ["layout", "orthogonal", "orthogonal-rounded"] },
-        elevation: { type: ["string", "number"] }
+        elevation: { oneOf: [NUMBER, { type: "string", enum: ["surface", "ground", "nodes"] }] }
       }
     },
     labels: { type: "object", properties: { mode: { enum: ["upright", "ground"] }, axis: { enum: ["x", "y"] } } },

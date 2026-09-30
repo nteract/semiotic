@@ -155,9 +155,10 @@ describe("canvasRenderHelpers", () => {
     })
 
     it("combines opacity × fillOpacity into globalAlpha when fillOpacity is set", () => {
-      const paint = vi.fn()
+      const paint = vi.fn(() => expect(ctx.globalAlpha).toBeCloseTo(0.2))
       paintNetworkFill(ctx, { fill: "#ff0000", opacity: 0.5, fillOpacity: 0.4 } as Style, "#007bff", paint)
-      expect((ctx as unknown as { globalAlpha: number }).globalAlpha).toBeCloseTo(0.2)
+      expect(paint).toHaveBeenCalledOnce()
+      expect(ctx.globalAlpha).toBe(1)
     })
 
     it("leaves globalAlpha untouched when fillOpacity is unset", () => {
@@ -186,13 +187,13 @@ describe("canvasRenderHelpers", () => {
     })
 
     it("resolves strokeStyle/lineWidth/globalAlpha and invokes paint for a real color", () => {
-      const paint = vi.fn()
+      const paint = vi.fn(() => expect(ctx.globalAlpha).toBe(0.6))
       paintNetworkStroke(ctx, { stroke: "#00ff00", strokeWidth: 3, opacity: 0.6 } as Style, paint)
       expect(paint).toHaveBeenCalledOnce()
       const mutableCtx = ctx as unknown as { strokeStyle: string; lineWidth: number; globalAlpha: number }
       expect(mutableCtx.strokeStyle).toBe("#00ff00")
       expect(mutableCtx.lineWidth).toBe(3)
-      expect(mutableCtx.globalAlpha).toBe(0.6)
+      expect(mutableCtx.globalAlpha).toBe(1)
     })
 
     it("defaults lineWidth to 1 and globalAlpha to 1 when unset", () => {
@@ -204,13 +205,14 @@ describe("canvasRenderHelpers", () => {
     })
 
     it("combines opacity × strokeOpacity for a translucent network border", () => {
-      const paint = vi.fn()
+      const paint = vi.fn(() => expect(ctx.globalAlpha).toBeCloseTo(0.2))
       paintNetworkStroke(
         ctx,
         { stroke: "#00ff00", opacity: 0.5, strokeOpacity: 0.4 } as Style,
         paint,
       )
-      expect((ctx as unknown as { globalAlpha: number }).globalAlpha).toBeCloseTo(0.2)
+      expect(paint).toHaveBeenCalledOnce()
+      expect(ctx.globalAlpha).toBe(1)
     })
   })
 })

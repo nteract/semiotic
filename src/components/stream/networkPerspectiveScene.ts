@@ -334,17 +334,22 @@ export function prepareNetworkPerspectiveScene(
   // Edge base height: the surface a node stands on (default), the node itself
   // ("nodes"), the ground, or a constant. Edges ride `thickness` above it.
   const edgeZ = config.edges?.elevation ?? "surface"
-  const zByKey = new Map<string, number>()
+  const zById = new Map<string, number>()
+  const zByPoint = new Map<string, number>()
   for (const item of items) {
     const z = edgeZ === "nodes" ? item.z : item.z - item.lift
-    zByKey.set(`${item.gx}|${item.gy}`, z)
-    for (const id of nodeIds(item.node)) if (!zByKey.has(id)) zByKey.set(id, z)
+    zByPoint.set(`${item.gx}|${item.gy}`, z)
+    for (const id of nodeIds(item.node)) if (!zById.has(id)) zById.set(id, z)
   }
-  const endZ = (endpoint: unknown, x?: number, y?: number) =>
-    (x != null && zByKey.get(`${x}|${y}`)) || zByKey.get(endpointId(endpoint) ?? "") || 0
+  const endZ = (endpoint: unknown, x?: number, y?: number) => {
+    const id = endpointId(endpoint)
+    const idHeight = id != null ? zById.get(id) : undefined
+    const pointHeight = x != null && y != null ? zByPoint.get(`${x}|${y}`) : undefined
+    return idHeight ?? pointHeight ?? 0
+  }
   const edgeBase = (e: NetworkSceneEdge): [number, number] => {
     if (typeof edgeZ === "number") return Number.isFinite(edgeZ) ? [edgeZ, edgeZ] : [0, 0]
-    if (edgeZ === "ground" || !zByKey.size) return [0, 0]
+    if (edgeZ === "ground" || !zByPoint.size) return [0, 0]
     const d = e.datum as { source?: unknown; target?: unknown } | null
     return e.type === "line"
       ? [endZ(d?.source, e.x1, e.y1), endZ(d?.target, e.x2, e.y2)]

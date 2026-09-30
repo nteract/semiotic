@@ -315,6 +315,31 @@ describe("projectNetworkScene", () => {
     expect((ground.sceneEdges[0] as NetworkLineEdge).x1).toBeCloseTo(gx, 6)
   })
 
+  it.each(["nodes", "surface"] as const)("uses endpoint identity for coincident nodes at different %s heights", (elevation) => {
+    const low = circle("low", 50, 50, { tier: 0 })
+    const high = circle("high", 50, 50, { tier: 30 })
+    const scene = project({
+      type: "isometric",
+      elevation: "tier",
+      elevationScale: 1,
+      regions: elevation === "surface" ? [{ id: "raised", nodes: ["high"], depth: 30 }] : [],
+      edges: { elevation }
+    }, [low, high, b], [line(low, b), line(high, b)])
+    const edges = scene.sceneEdges as NetworkLineEdge[]
+    expect(edges[0].y1).toBeCloseTo(scene.frame.project(50, 50, 6)[1], 6)
+    expect(edges[1].y1).toBeCloseTo(scene.frame.project(50, 50, 36)[1], 6)
+  })
+
+  it("separates node IDs from coordinate keys and retains coordinate fallback", () => {
+    const named = circle("50|50", 100, 100, { tier: 30 })
+    const fallback = { ...line(named, b), datum: null }
+    const scene = project({ type: "isometric", elevation: "tier", elevationScale: 1, edges: { elevation: "nodes" } },
+      [a, named, b], [line(named, b), fallback])
+    for (const edge of scene.sceneEdges as NetworkLineEdge[]) {
+      expect(edge.y1).toBeCloseTo(scene.frame.project(100, 100, 36)[1], 6)
+    }
+  })
+
   it("fits declared decoration bounds inside the plot", () => {
     const perspective = resolveNetworkPerspective("isometric")!
     const box = { x: 40, y: 40, width: 900, height: 60 }

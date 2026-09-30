@@ -103,6 +103,7 @@ export function normalizeSvgPath(d: string): NormalizedPathSegment[] {
       x = startX
       y = startY
       lastC = lastQ = null
+      cmd = ""
       continue
     }
     if (i + n > tokens.length) break

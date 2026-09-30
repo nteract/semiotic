@@ -40,7 +40,7 @@ test("hover, resize, perspective switch and dismissal follow projected marks", a
   await expect(page.getByText("PRIVATE SUBNET", { exact: true })).toBeVisible()
 
   // A pictogram: the tooltip names the host, its role and its load.
-  let at = await hoverUntil(page, await hostPoint(page, /CPU 81%/), /web-prd-1/)
+  const at = await hoverUntil(page, await hostPoint(page, /CPU 81%/), /web-prd-1/)
   await expect(tooltip(page)).toContainText("Web tier (public)")
   await expect(tooltip(page)).toContainText("CPU 81%")
   let tip = (await tooltip(page).boundingBox())!
@@ -70,7 +70,7 @@ test("hover, resize, perspective switch and dismissal follow projected marks", a
 
   // After a resize the projection refits; hovering the host still works.
   await page.setViewportSize({ width: 900, height: 900 })
-  at = await hoverUntil(page, await hostPoint(page, /CPU 81%/), /web-prd-1/)
+  await hoverUntil(page, await hostPoint(page, /CPU 81%/), /web-prd-1/)
   tip = (await tooltip(page).boundingBox())!
   expect(tip.width).toBeGreaterThan(40)
   await page.mouse.move(2, 2)

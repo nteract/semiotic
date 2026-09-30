@@ -104,7 +104,7 @@ function project(
     return null
   }
   if (wantsNetworkPerspectiveExtras(modes.config) && !getNetworkPerspectiveExtras()) {
-    preloadNetworkPerspectiveExtras().then(() => state.onExtrasReady?.(), () => {})
+    preloadNetworkPerspectiveExtras().then(() => state.extrasReady(), () => {})
   }
   const prepared = prepareNetworkPerspectiveScene({
     ...parts,

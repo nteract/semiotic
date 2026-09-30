@@ -789,8 +789,9 @@ export class NetworkPipelineStore implements UpdateResultStore {
       if (this._customLayoutCache.reuse(
         this.config, size, this.getUpdateSnapshot().revisions.data, this.layoutVersion, this.hasCustomRestyle
       )) {
-        if (this.perspective.transitioning && this._rawCustomResult) {
-          // Retained layout, moving projection: re-emit the same raw scene.
+        if (this.perspective.needsRebuild && this._rawCustomResult) {
+          // Reuse layout geometry for tween ticks (including the last) and
+          // repaints after the projection engine or extras finish loading.
           this.commitCustomScene(this._rawCustomResult, size)
           this._sceneNodesRevision++
           if (this.hasCustomRestyle) {

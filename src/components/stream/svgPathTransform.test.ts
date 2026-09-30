@@ -16,6 +16,16 @@ function cubicAt(p0: number[], p: number[], t: number): [number, number] {
 }
 
 describe("normalizeSvgPath", () => {
+  it.each(["Z", "z"])("stops at implicit coordinates after %s", (close) => {
+    expect(serializeSvgPath(normalizeSvgPath(`M0 0L10 10${close} 1 2`))).toBe("M0 0L10 10Z")
+    expect(transformSvgPath(`M0 0${close} 1 2`, (x, y) => [x + 5, y + 5])).toBe("M5 5Z")
+  })
+
+  it("accepts explicit commands after closing and resets the relative origin", () => {
+    expect(serializeSvgPath(normalizeSvgPath("M10 20L30 40Zl5 6m10 10 2 3z")))
+      .toBe("M10 20L30 40ZL15 26M25 36L27 39Z")
+  })
+
   it("absolutizes relative commands and expands H/V/S/T", () => {
     const segs = normalizeSvgPath("m10 10 h5 v5 l-5 0 z")
     expect(segs.map((s) => s.c).join("")).toBe("MLLLZ")
