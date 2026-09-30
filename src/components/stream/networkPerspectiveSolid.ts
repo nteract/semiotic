@@ -76,8 +76,10 @@ export function extrudeOutline(top: readonly Pt[], drop: number): NetworkPerspec
     const nx = (sign * dy) / len
     const ny = (-sign * dx) / len
     if (ny <= 0.02) return null
-    // Quantized so curved outlines merge into a few lit bands.
-    return Math.round((-0.26 - 0.16 * nx) / 0.04) * 0.04
+    // Quantized so curved outlines merge into a few lit bands. Isometric
+    // normals land on half-step ties; absorb coordinate/libm roundoff so
+    // ties consistently follow Math.round's direction toward +Infinity.
+    return Math.round(-6.5 - 4 * nx + 1e-9) * 0.04
   })
   // Start after a break so no strip wraps across index 0.
   let start = shades.findIndex((s, i) => s !== shades[(i + n - 1) % n])

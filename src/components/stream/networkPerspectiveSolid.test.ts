@@ -42,6 +42,31 @@ describe("extrudeOutline", () => {
     expect(extrudeOutline([[0, 0], [1, 1]], 10)).toEqual([])
   })
 
+  it("rounds isometric shade ties consistently despite coordinate roundoff", () => {
+    for (const drift of [-1e-12, 0, 1e-12]) {
+      for (const scale of [0.1, 1, 10]) {
+        const x = Math.sqrt(3) * 20 * (1 + drift)
+        const outline: Array<[number, number]> = [[0, 0], [x, 20], [0, 40], [-x, 20]]
+        const top = outline.map(([px, py]): [number, number] => [100 + px * scale, 100 + py * scale])
+        for (const points of [top, [...top].reverse()]) {
+          expect(extrudeOutline(points, 10).map((face) => face.shade).sort((a, b) => a - b))
+            .toEqual([-0.32, -0.32, -0.16])
+        }
+      }
+    }
+  })
+
+  it("retains distinct shade bands outside the roundoff tolerance", () => {
+    for (const [drift, expected] of [
+      [-1e-6, [-0.36, -0.36, -0.16]],
+      [1e-6, [-0.32, -0.32, -0.2]]
+    ] as const) {
+      const x = Math.sqrt(3) * 20 * (1 + drift)
+      expect(extrudeOutline([[0, 0], [x, 20], [0, 40], [-x, 20]], 10)
+        .map((face) => face.shade).sort((a, b) => a - b)).toEqual(expected)
+    }
+  })
+
   it("merges a curved rim into a few lit bands", () => {
     const ellipse = Array.from({ length: 48 }, (_, i): [number, number] => {
       const t = (i / 48) * Math.PI * 2
