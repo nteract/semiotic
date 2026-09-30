@@ -337,39 +337,41 @@ export function prepareNetworkPerspectiveScene(
   // Edge base height: the surface a node stands on (default), the node itself
   // ("nodes"), the ground, or a constant. Edges ride `thickness` above it.
   const edgeZ = config.edges?.elevation ?? "surface"
-  const zById = new Map<string, number>()
-  const zByPoint = new Map<string, number>()
+  const byPoint = new Map<string, PerspectiveNodeItem>()
+  const byId = new Map<string, PerspectiveNodeItem>()
+  const edgeByPoint = new Map<string, PerspectiveNodeItem>()
   for (const item of items) {
-    const z = edgeZ === "nodes" ? item.z : item.z - item.lift
-    zByPoint.set(`${item.gx}|${item.gy}`, z)
-    for (const id of nodeIds(item.node)) if (!zById.has(id)) zById.set(id, z)
+    const key = `${item.gx}|${item.gy}`
+    if (!byPoint.has(key)) byPoint.set(key, item)
+    edgeByPoint.set(key, item)
+    for (const id of nodeIds(item.node)) if (!byId.has(id)) byId.set(id, item)
   }
   const endZ = (endpoint: unknown, x?: number, y?: number) => {
     const id = endpointId(endpoint)
-    const idHeight = id != null ? zById.get(id) : undefined
-    const pointHeight = x != null && y != null ? zByPoint.get(`${x}|${y}`) : undefined
-    return idHeight ?? pointHeight ?? 0
+    const item = (id != null ? byId.get(id) : undefined) ??
+      (x != null && y != null ? edgeByPoint.get(`${x}|${y}`) : undefined)
+    return item ? item.z - (edgeZ === "nodes" ? 0 : item.lift) : 0
   }
   const edgeBase = (e: NetworkSceneEdge): [number, number] => {
     if (typeof edgeZ === "number") return Number.isFinite(edgeZ) ? [edgeZ, edgeZ] : [0, 0]
-    if (edgeZ === "ground" || !zByPoint.size) return [0, 0]
+    if (edgeZ === "ground" || !byPoint.size) return [0, 0]
     const d = e.datum as { source?: unknown; target?: unknown } | null
     return e.type === "line"
       ? [endZ(d?.source, e.x1, e.y1), endZ(d?.target, e.x2, e.y2)]
       : [endZ(d?.source), endZ(d?.target)]
   }
   const paths = new Map<NetworkSceneEdge, NormalizedPathSegment[]>()
-  const edgeHeights = new Map<NetworkSceneEdge, (progress: number) => number>()
-  const particleHeights = new Map<unknown, (progress: number) => number>()
+  const edgeHeights: Array<[number, number]> = []
+  const particleHeights = new Map<unknown, [number, number]>()
+  const heightAt = ([z0, z1]: [number, number], progress: number) => z0 + (z1 - z0) * progress
   for (const e of input.sceneEdges) {
     const [z0, z1] = edgeBase(e)
     // Lines interpolate their endpoint heights; path bands lie on the mean
     // endpoint plane. Keep particles on exactly the same surface as the edge.
-    const heightAt = e.type === "line"
-      ? (progress: number) => z0 + (z1 - z0) * progress + T
-      : () => (z0 + z1) / 2 + T
-    edgeHeights.set(e, heightAt)
-    particleHeights.set(e.datum, heightAt)
+    const heights: [number, number] = [z0, z1]
+    edgeHeights.push(heights)
+    const mean = (z0 + z1) / 2
+    particleHeights.set(e.datum, e.type === "line" ? heights : [mean, mean])
     if (e.type === "line") {
       for (const h of [0, T]) {
         add(e.x1, e.y1, z0 + h)
@@ -389,13 +391,6 @@ export function prepareNetworkPerspectiveScene(
   // Labels: anchored labels ride their node with a fixed screen offset;
   // others are ground points lifted onto the piece they sit in (or to piece
   // height, so they line up with edges and slab tops).
-  const byPoint = new Map<string, PerspectiveNodeItem>()
-  const byId = new Map<string, PerspectiveNodeItem>()
-  for (const item of items) {
-    const key = `${item.gx}|${item.gy}`
-    if (!byPoint.has(key)) byPoint.set(key, item)
-    for (const id of nodeIds(item.node)) if (!byId.has(id)) byId.set(id, item)
-  }
   const pieces = items.filter((i) => i.mode === "ground" || i.mode === "extrude")
   const labelPlans = input.labels.map((label) => {
     const [l, r, t, b] = textExtents(label)
@@ -578,28 +573,26 @@ export function prepareNetworkPerspectiveScene(
     const visible = (paint: unknown) => typeof paint === "string" ? paint !== "" && paint !== "none" && paint !== "transparent" : paint != null
     const shadow = (e: NetworkSceneEdge, pathD: string) => {
       if (!casts || (e.style.opacity ?? 1) <= 0) return
+      const style = e.style
       const band = e.type === "bezier" || e.type === "ribbon"
-      const fillAlpha = e.type === "curved" ? e.style.fillOpacity ?? 0.1
-        : e.style.fillOpacity ?? e.style.opacity ?? 0.5
-      const strokeAlpha = (e.style.opacity ?? 1) * (e.style.strokeOpacity ?? 1) * (band ? e.type === "bezier" ? 0.5 : 0.3 : 1)
-      if (e.type !== "line" && visible(e.style.fill) && fillAlpha > 0) {
+      const width = style.strokeWidth ?? (band ? 0.5 : 1)
+      const fillAlpha = style.fillOpacity ?? (e.type === "curved" ? 0.1 : style.opacity ?? 0.5)
+      if (e.type !== "line" && visible(style.fill) && fillAlpha > 0) {
         filledShadows.push(pathD)
-      } else if (visible(e.style.stroke || (band ? undefined : "#999")) && strokeAlpha > 0 &&
-        (e.style.strokeWidth ?? (band ? 0.5 : 1)) > 0) {
-        const width = e.style.strokeWidth ?? (band ? 0.5 : 1)
+      } else if (visible(style.stroke || (band ? undefined : "#999")) &&
+        (style.opacity ?? 1) * (style.strokeOpacity ?? 1) > 0 && width > 0) {
         const list = strokedShadows.get(width) ?? []
         list.push(pathD)
         strokedShadows.set(width, list)
       }
     }
-    const sceneEdges = input.sceneEdges.map((e): NetworkSceneEdge => {
-      const heightAt = edgeHeights.get(e)!
-      const z0 = heightAt(0) - T
-      const z1 = heightAt(1) - T
+    const sceneEdges = input.sceneEdges.map((e, index): NetworkSceneEdge => {
+      const heights = edgeHeights[index]
+      const [z0, z1] = heights
       if (e.type === "line") {
         if (route && route !== "layout" && extras) {
           const rounded = route === "orthogonal-rounded"
-          const at = (h: number) => (x: number, y: number, t: number) => project(x, y, heightAt(t) - T + h)
+          const at = (h: number) => (x: number, y: number, t: number) => project(x, y, heightAt(heights, t) + h)
           const routed = extras.route(e, rounded, at(T))
           if (casts) shadow(e, (extras.route(e, rounded, at(0)) as { pathD: string }).pathD)
           return routed
@@ -657,16 +650,15 @@ export function prepareNetworkPerspectiveScene(
     })
 
     const htmlMarks = htmlPlans.map(({ mark: m, item }) => {
-      if (item) {
-        if (item.mode === "billboard") {
-          const [dx, dy] = moved.get(item)!
-          return { ...m, x: m.x + dx, y: m.y + dy }
-        }
-        const [px, py] = project(item.gx, item.gy, topOf(item))
-        return { ...m, x: m.x + px - item.gx, y: m.y + py - item.gy }
+      const x = item?.gx ?? m.x + m.width / 2
+      const y = item?.gy ?? m.y + m.height / 2
+      let offset = item?.mode === "billboard" ? moved.get(item) : undefined
+      if (!offset) {
+        const [px, py] = project(x, y, item ? topOf(item) : T)
+        offset = [px - x, py - y]
       }
-      const [px, py] = project(m.x + m.width / 2, m.y + m.height / 2, T)
-      return { ...m, x: px - m.width / 2, y: py - m.height / 2 }
+      const [dx, dy] = offset
+      return { ...m, x: m.x + dx, y: m.y + dy }
     })
 
     const chrome = plan?.underlay(frame) ?? { edges: [], labels: [] }
@@ -722,7 +714,11 @@ export function prepareNetworkPerspectiveScene(
       underlay,
       frame: { ...frame, thickness: T },
       edgeLift: T,
-      projectParticle: (x, y, edge, progress) => project(x, y, particleHeights.get(edge)?.(progress) ?? T)
+      projectParticle: (x, y, edge, progress) => {
+        const heights = particleHeights.get(edge)
+        const z = heights ? heightAt(heights, progress) : 0
+        return project(x, y, T + z)
+      }
     }
   }
 

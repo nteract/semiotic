@@ -56,10 +56,8 @@ import { resolveThemeSemanticColors } from "../store/themeCore"
 import { provideNetworkPerspectiveExtras } from "../stream/networkPerspectiveLoader"
 import { networkPerspectiveExtras } from "../stream/networkPerspectiveExtras"
 import { projectNetworkScene } from "../stream/networkPerspectiveScene"
-import { registerNetworkPerspective } from "../stream/networkPerspectiveRuntime"
 
-// Static rendering is synchronous: install the engine and the extras.
-registerNetworkPerspective()
+// Static rendering projects scenes directly and needs synchronous extras.
 provideNetworkPerspectiveExtras(networkPerspectiveExtras)
 
 registerBuiltInNetworkLayouts()

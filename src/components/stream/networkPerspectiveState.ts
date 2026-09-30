@@ -56,9 +56,7 @@ export class NetworkPerspectiveState {
     if (!drawn(result.backgrounds) && !drawn(result.overlays)) return
     this.warnedFlatDecorations = true
     console.warn(
-      "[semiotic] customNetworkLayout returned backgrounds/overlays under `perspective`; they stay flat. " +
-        'Return perspective: "ground", or place them with NetworkPerspectiveGround/Billboard and ' +
-        'return perspective: "manual".'
+      '[semiotic] customNetworkLayout backgrounds/overlays stay flat. Use perspective: "ground", or NetworkPerspectiveGround/Billboard with perspective: "manual".'
     )
   }
 
