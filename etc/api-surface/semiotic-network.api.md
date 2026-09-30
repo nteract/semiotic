@@ -448,6 +448,7 @@ interface-member NetworkPerspectiveScene::property::edgeLift = required edgeLift
 interface-member NetworkPerspectiveScene::property::frame = required frame: NetworkPerspectiveFrame
 interface-member NetworkPerspectiveScene::property::htmlMarks = required htmlMarks: NetworkHtmlMark[]
 interface-member NetworkPerspectiveScene::property::labels = required labels: NetworkLabel[]
+interface-member NetworkPerspectiveScene::property::projectParticle = required projectParticle: (x: number, y: number, edge: RealtimeEdge, progress: number) => [number, number]
 interface-member NetworkPerspectiveScene::property::sceneEdges = required sceneEdges: NetworkSceneEdge[]
 interface-member NetworkPerspectiveScene::property::sceneNodes = required sceneNodes: NetworkSceneNode[]
 interface-member NetworkPerspectiveScene::property::underlay = required underlay: NetworkSceneEdge[]
