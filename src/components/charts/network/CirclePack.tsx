@@ -1,9 +1,11 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { createHierarchyStyle } from "../shared/hierarchyStyle"
@@ -28,6 +30,7 @@ import {
 } from "../shared/styleRules"
 
 registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+registerNetworkPerspective()
 
 /**
  * CirclePack component props
@@ -42,6 +45,12 @@ export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartP
   colorByDepth?: boolean
   /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   showLabels?: boolean
   nodeLabel?: ChartAccessor<TNode, string>
   circleOpacity?: number
@@ -279,6 +288,7 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...frameProps}
     />
   </SafeRender>)

@@ -1,5 +1,7 @@
 import {
   CURVE_CHARTS,
+  HIERARCHY_CHARTS,
+  NETWORK_CHARTS,
   NORMALIZED_STACK_ACCESSORS,
   PART_TO_WHOLE_ACCESSORS,
   PIE_CHARTS,
@@ -195,6 +197,35 @@ export function checkPieTooManySlices(
       code: "PIE_TOO_MANY_SLICES",
       message: `${distinct.size} slices — angle judgments degrade rapidly past ~${MAX_LEGIBLE_SLICES} categories (Cleveland & McGill), and thin slices become unreadable and unlabelable.`,
       fix: `Use a BarChart or DotPlot for ${distinct.size} categories, or group the long tail into an "Other" slice before charting.`,
+    })
+  }
+}
+
+/**
+ * Perspective foreshortens distance: honest for topological positions, not
+ * for ProcessSankey's time axis. Network charts have no geo `projection`.
+ */
+export function checkNetworkPerspective(
+  component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  if (!NETWORK_CHARTS.has(component) && !HIERARCHY_CHARTS.has(component) && !/^(Process|Network)(Sankey|CustomChart)$/.test(component)) return
+  const p = props.perspective
+  if (component === "ProcessSankey" && p && p !== "flat" && (p as Datum).type !== "flat") {
+    out.push({
+      severity: "warning",
+      code: "PERSPECTIVE_MEASURED_POSITION",
+      message: "ProcessSankey positions flows on a time axis; perspective foreshortens it, so equal durations stop looking equal.",
+      fix: "Keep ProcessSankey flat when readers compare durations, or pair it with a flat view.",
+    })
+  }
+  if (props.projection !== undefined) {
+    out.push({
+      severity: "warning",
+      code: "NETWORK_PROJECTION_PROP",
+      message: `${component} has no projection prop (that is the geo map projection).`,
+      fix: 'Use perspective instead, e.g. perspective="isometric".',
     })
   }
 }

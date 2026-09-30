@@ -1155,6 +1155,8 @@ async function build() {
       clientOnly: true
     },
     { input: "src/components/semiotic-network-zoom.ts", name: "semiotic-network-zoom", minify, clientOnly: true },
+    // Dependency-free pictograms + toggle; the `perspective` prop ships in network.
+    { input: "src/components/semiotic-network-perspective.ts", name: "semiotic-network-perspective", minify, clientOnly: true },
     {
       input: "src/components/semiotic-realtime.ts",
       name: "realtime",
@@ -1424,6 +1426,7 @@ async function build() {
   const auxiliaryClientEntryNames = new Set([
     "semiotic-text",
     "semiotic-network-zoom",
+    "semiotic-network-perspective",
     "controls",
     "semiotic-access",
     "semiotic-artifact-react",
@@ -1574,17 +1577,20 @@ async function build() {
     "semiotic-recipes-core",
     "semiotic-recipes-react",
   ])
+  // Standalone client entries hold no shared React context (the Pretext text
+  // hook; perspective pictograms), so they need no client namespace graph.
+  const standaloneClientCjsNames = new Set(["semiotic-text", "semiotic-network-perspective"])
   const clientCjsBundles = bundledEntries.filter(
     (bundle) =>
       bundle.clientOnly &&
-      bundle.name !== "semiotic-text" &&
+      !standaloneClientCjsNames.has(bundle.name) &&
       !isolatedClientCjsNames.has(bundle.name),
   )
   const standaloneCjsBundles = bundledEntries.filter(
-    // The text hook has no shared React context and must not make other CJS
-    // charts require its optional Pretext peer.
+    // The text hook must not make other CJS charts require its optional
+    // Pretext peer.
     (bundle) =>
-      bundle.name === "semiotic-text" ||
+      standaloneClientCjsNames.has(bundle.name) ||
       (!bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name))
   )
   await createCjsBundle({

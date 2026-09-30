@@ -1,5 +1,10 @@
 import * as React from "react"
 import type { ReactNode } from "react"
+import {
+  NetworkPerspectiveBillboard,
+  NetworkPerspectiveGround
+} from "../stream/networkPerspectivePlacement"
+import type { NetworkPerspectiveBound } from "../stream/networkPerspective"
 
 interface HullPoint {
   x: number
@@ -179,6 +184,35 @@ function roundedHullPath(points: HullPoint[], radius: number): string {
   return path
 }
 
+/**
+ * Ground boxes of the hulls and upright boxes of their labels, so an active
+ * `perspective` fits them in the plot with the nodes.
+ */
+export function lineageHullBounds(
+  groups: Map<string, LineageHullRect[]>,
+  options: Pick<LineageHullOptions, "padding" | "label">
+): NetworkPerspectiveBound[] {
+  const bounds: NetworkPerspectiveBound[] = []
+  for (const [groupValue, rects] of groups) {
+    const corners = rects.flatMap((rect) => [
+      { x: rect.x, y: rect.y },
+      { x: rect.x + rect.w, y: rect.y },
+      { x: rect.x + rect.w, y: rect.y + rect.h },
+      { x: rect.x, y: rect.y + rect.h }
+    ])
+    const hull = expandConvexHull(convexHull(corners), options.padding)
+    if (!hull.length) continue
+    const xs = hull.map((point) => point.x)
+    const ys = hull.map((point) => point.y)
+    const minX = Math.min(...xs)
+    const minY = Math.min(...ys)
+    bounds.push({ x: minX, y: minY, width: Math.max(...xs) - minX, height: Math.max(...ys) - minY })
+    const label = options.label?.(groupValue)
+    if (label) bounds.push({ x: minX + 8, y: minY + 14, z: 0, extent: [0, label.length * 6.6, 12, 3] })
+  }
+  return bounds
+}
+
 /** Deterministic plot-space hull layer for lineageDagLayout. */
 export function renderLineageHullBackgrounds(
   groups: Map<string, LineageHullRect[]>,
@@ -223,30 +257,36 @@ export function renderLineageHullBackgrounds(
             data-lineage-hull={groupValue}
             opacity={fullyDimmed ? options.dimOpacity : undefined}
           >
-            <path
-              className="lineage-dag-hull"
-              d={path}
-              fill={color}
-              fillOpacity={options.fillOpacity}
-              stroke={color}
-              strokeOpacity={options.strokeOpacity}
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-              style={{ pointerEvents: "none" }}
-            />
-            {label ? (
-              <text
-                className="lineage-dag-hull-label"
-                x={minX + 8}
-                y={minY + 14}
+            {/* Under a `perspective` the hull lies on the ground and its
+                label stands at the hull's projected corner. */}
+            <NetworkPerspectiveGround>
+              <path
+                className="lineage-dag-hull"
+                d={path}
                 fill={color}
-                fillOpacity={Math.max(options.strokeOpacity, 0.7)}
-                fontSize={11}
-                fontWeight={600}
+                fillOpacity={options.fillOpacity}
+                stroke={color}
+                strokeOpacity={options.strokeOpacity}
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
                 style={{ pointerEvents: "none" }}
-              >
-                {label}
-              </text>
+              />
+            </NetworkPerspectiveGround>
+            {label ? (
+              <NetworkPerspectiveBillboard x={minX + 8} y={minY + 14} z={0}>
+                <text
+                  className="lineage-dag-hull-label"
+                  x={minX + 8}
+                  y={minY + 14}
+                  fill={color}
+                  fillOpacity={Math.max(options.strokeOpacity, 0.7)}
+                  fontSize={11}
+                  fontWeight={600}
+                  style={{ pointerEvents: "none" }}
+                >
+                  {label}
+                </text>
+              </NetworkPerspectiveBillboard>
             ) : null}
           </g>
         )

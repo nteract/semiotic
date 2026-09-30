@@ -1,5 +1,6 @@
 import * as React from "react"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
+import { NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
 import type {
   NetworkCurvedEdge,
   NetworkLabel,
@@ -364,7 +365,8 @@ export const adjacencyFlowLayout: NetworkCustomLayout<AdjacencyFlowConfig> = (
         })
       )
     }
-    backgrounds = React.createElement(React.Fragment, null, ...grid)
+    // Under a `perspective` the matrix grid lies on the ground.
+    backgrounds = React.createElement(NetworkPerspectiveGround, null, ...grid)
   }
 
   return {
@@ -372,6 +374,12 @@ export const adjacencyFlowLayout: NetworkCustomLayout<AdjacencyFlowConfig> = (
     sceneNodes,
     labels: [...valueLabels, ...nodeLabels],
     backgrounds,
-    overlays: React.createElement(React.Fragment, null, ...arrowElements)
+    // Arrowheads ride inside their routes, at edge height.
+    overlays: React.createElement(NetworkPerspectiveGround, { z: "top" }, ...arrowElements),
+    perspective: "manual",
+    // The grid spans the whole matrix, past the diagonal of nodes.
+    ...(ctx.perspective && backgrounds
+      ? { perspectiveBounds: [{ x: originX, y: originY, width: matrixSide, height: matrixSide }] }
+      : {})
   }
 }

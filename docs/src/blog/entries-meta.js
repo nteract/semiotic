@@ -20,6 +20,17 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "network-perspective",
+    title: "One Prop, Six Perspectives",
+    subtitle: "Draw any Semiotic network chart in isometric, pixel, dimetric, military or cabinet projection — without changing the layout.",
+    author: "Semiotic Team",
+    date: "2026-09-29",
+    tags: ["case-study", "network"],
+    excerpt:
+      "Network charts now take a perspective prop. The layout stays flat; the chart projects the finished scene, stands pictograms on zone plates, routes links along the ground and keeps tooltips, keyboard focus and server rendering working on the projected marks.",
+    draft: true,
+  },
+  {
     slug: "release-3-11-0",
     title: "Semiotic 3.11.0",
     subtitle: "Correct quantities, resilient layouts, and consistent interaction as charts change and travel.",

@@ -40,6 +40,9 @@ import type {
 import type { LegendGroup } from "../../types/legendTypes"
 import { clampLegendReservation, reserveLegendMargin } from "../../legendLayout"
 import type { ProcessSankeyProps } from "./ProcessSankeyProps"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+
+registerNetworkPerspective()
 
 export type {
   ProcessSankeyProps,
@@ -690,6 +693,7 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
         // ProcessSankey emits a custom scene. Forward the resolved named
         // selection so its bands/ribbons can dim in place without a relayout.
         layoutSelection={setup.effectiveSelectionHook}
+        perspective={props.perspective}
         {...frameProps}
       />
     </div>

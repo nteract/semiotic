@@ -13474,6 +13474,211 @@
                 "additionalProperties": false
               }
             },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "nodes": {
               "type": "array",
               "description": "Array of node objects"
@@ -14061,6 +14266,211 @@
                 "additionalProperties": false
               }
             },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "edges": {
               "type": "array",
               "description": "Array of edge objects with source, target, and value"
@@ -14629,6 +15039,211 @@
                 "additionalProperties": false
               }
             },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "edges": {
               "type": "array",
               "description": "Array of edge objects with source, target, and value"
@@ -15174,6 +15789,211 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             },
             "data": {
               "type": "object",
@@ -15725,6 +16545,211 @@
                 "additionalProperties": false
               }
             },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -16256,6 +17281,211 @@
                 "additionalProperties": false
               }
             },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "data": {
               "type": "object",
               "description": "Root node object with nested children"
@@ -16778,6 +18008,211 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             },
             "data": {
               "type": "object",
@@ -24277,6 +25712,364 @@
                 }
               }
             },
+            "styleRules": {
+              "type": "array",
+              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "when": {
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "axis": {
+                            "type": "string",
+                            "enum": [
+                              "x",
+                              "y",
+                              "value"
+                            ]
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "gt": {
+                            "type": "number"
+                          },
+                          "gte": {
+                            "type": "number"
+                          },
+                          "lt": {
+                            "type": "number"
+                          },
+                          "lte": {
+                            "type": "number"
+                          },
+                          "eq": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "ne": {
+                            "type": [
+                              "number",
+                              "string"
+                            ]
+                          },
+                          "within": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "outside": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "in": {
+                            "type": "array",
+                            "items": {
+                              "type": [
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "style": {
+                    "type": "object",
+                    "properties": {
+                      "fill": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "hatch"
+                              },
+                              "background": {
+                                "type": "string"
+                              },
+                              "stroke": {
+                                "type": "string"
+                              },
+                              "lineWidth": {
+                                "type": "number"
+                              },
+                              "spacing": {
+                                "type": "number"
+                              },
+                              "angle": {
+                                "type": "number"
+                              },
+                              "lineOpacity": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "fillOpacity": {
+                        "type": "number"
+                      },
+                      "stroke": {
+                        "type": "string"
+                      },
+                      "strokeWidth": {
+                        "type": "number"
+                      },
+                      "strokeDasharray": {
+                        "type": "string"
+                      },
+                      "opacity": {
+                        "type": "number"
+                      },
+                      "cursor": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "style"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "perspective": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+              "default": "flat",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "flat",
+                    "isometric",
+                    "pixel",
+                    "dimetric",
+                    "military",
+                    "cabinet"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "flat",
+                        "isometric",
+                        "pixel",
+                        "dimetric",
+                        "military",
+                        "cabinet"
+                      ]
+                    },
+                    "rotation": {
+                      "type": "number"
+                    },
+                    "tilt": {
+                      "type": "number"
+                    },
+                    "verticalScale": {
+                      "type": "number"
+                    },
+                    "fit": {
+                      "enum": [
+                        "contain",
+                        "none"
+                      ]
+                    },
+                    "fitPadding": {
+                      "type": "number"
+                    },
+                    "elevation": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "elevationGuides": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "depthSort": {
+                      "type": "boolean"
+                    },
+                    "thickness": {
+                      "type": "number"
+                    },
+                    "edgeShadow": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    },
+                    "marks": {
+                      "enum": [
+                        "token",
+                        "billboard",
+                        "ground",
+                        "extrude"
+                      ]
+                    },
+                    "anchor": {
+                      "enum": [
+                        "center",
+                        "feet"
+                      ]
+                    },
+                    "glyph": {
+                      "type": "object"
+                    },
+                    "glyphSize": {
+                      "type": "number"
+                    },
+                    "extrude": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "extrudeScale": {
+                      "type": [
+                        "number",
+                        "string"
+                      ]
+                    },
+                    "edges": {
+                      "type": "object",
+                      "properties": {
+                        "route": {
+                          "enum": [
+                            "layout",
+                            "orthogonal",
+                            "orthogonal-rounded"
+                          ]
+                        },
+                        "elevation": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "labels": {
+                      "type": "object",
+                      "properties": {
+                        "mode": {
+                          "enum": [
+                            "upright",
+                            "ground"
+                          ]
+                        },
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      }
+                    },
+                    "ground": {
+                      "type": "object",
+                      "properties": {
+                        "grid": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        },
+                        "plate": {
+                          "type": [
+                            "boolean",
+                            "object"
+                          ]
+                        }
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "nodes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "elevation": {
+                            "type": "number"
+                          },
+                          "depth": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    },
+                    "transition": {
+                      "type": [
+                        "boolean",
+                        "object"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
             "edges": {
               "type": "array",
               "description": "Array of timed edge records with source, target, value, startTime, endTime. Omit for push-mode."
@@ -24517,159 +26310,6 @@
             "edgeOpacity": {
               "type": "number",
               "default": 0.35
-            },
-            "styleRules": {
-              "type": "array",
-              "description": "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "label": {
-                    "type": "string"
-                  },
-                  "when": {
-                    "oneOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "axis": {
-                            "type": "string",
-                            "enum": [
-                              "x",
-                              "y",
-                              "value"
-                            ]
-                          },
-                          "field": {
-                            "type": "string"
-                          },
-                          "gt": {
-                            "type": "number"
-                          },
-                          "gte": {
-                            "type": "number"
-                          },
-                          "lt": {
-                            "type": "number"
-                          },
-                          "lte": {
-                            "type": "number"
-                          },
-                          "eq": {
-                            "type": [
-                              "number",
-                              "string"
-                            ]
-                          },
-                          "ne": {
-                            "type": [
-                              "number",
-                              "string"
-                            ]
-                          },
-                          "within": {
-                            "type": "array",
-                            "items": {
-                              "type": "number"
-                            },
-                            "minItems": 2,
-                            "maxItems": 2
-                          },
-                          "outside": {
-                            "type": "array",
-                            "items": {
-                              "type": "number"
-                            },
-                            "minItems": 2,
-                            "maxItems": 2
-                          },
-                          "in": {
-                            "type": "array",
-                            "items": {
-                              "type": [
-                                "number",
-                                "string"
-                              ]
-                            }
-                          }
-                        },
-                        "additionalProperties": false
-                      }
-                    ]
-                  },
-                  "style": {
-                    "type": "object",
-                    "properties": {
-                      "fill": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "object",
-                            "properties": {
-                              "type": {
-                                "const": "hatch"
-                              },
-                              "background": {
-                                "type": "string"
-                              },
-                              "stroke": {
-                                "type": "string"
-                              },
-                              "lineWidth": {
-                                "type": "number"
-                              },
-                              "spacing": {
-                                "type": "number"
-                              },
-                              "angle": {
-                                "type": "number"
-                              },
-                              "lineOpacity": {
-                                "type": "number"
-                              }
-                            },
-                            "required": [
-                              "type"
-                            ],
-                            "additionalProperties": false
-                          }
-                        ]
-                      },
-                      "fillOpacity": {
-                        "type": "number"
-                      },
-                      "stroke": {
-                        "type": "string"
-                      },
-                      "strokeWidth": {
-                        "type": "number"
-                      },
-                      "strokeDasharray": {
-                        "type": "string"
-                      },
-                      "opacity": {
-                        "type": "number"
-                      },
-                      "cursor": {
-                        "type": "string"
-                      }
-                    },
-                    "additionalProperties": false
-                  }
-                },
-                "required": [
-                  "style"
-                ],
-                "additionalProperties": false
-              }
             },
             "layoutExecution": {
               "type": "string",

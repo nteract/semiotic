@@ -111,6 +111,7 @@ import {
 } from "./networkFrameCursorInteraction"
 import { networkFrameDefaultMargin } from "./frameDefaultMargins"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
+import { useNetworkPerspectiveExtrasReady, useStableNetworkPerspective, withNetworkPerspective } from "./networkPerspectiveContext"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ const StreamNetworkFrame = memo(forwardRef<
     showParticles = false,
     particleStyle: particleStyleProp,
     renderMode,
+    perspective: perspectiveProp,
     nodeStyle,
     edgeStyle,
     colorBy,
@@ -304,6 +306,7 @@ const StreamNetworkFrame = memo(forwardRef<
   )
 
   // ── Pipeline config ──────────────────────────────────────────────────
+  const perspective = useStableNetworkPerspective(perspectiveProp)
 
   const pipelineConfig = useMemo(
     (): NetworkPipelineConfig =>
@@ -369,9 +372,10 @@ const StreamNetworkFrame = memo(forwardRef<
         customNetworkLayout,
         onLayoutError,
         layoutConfig,
+        perspective,
         currentTheme
       }),
-    [chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
+    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
   )
 
   // Stabilize the config reference so inline-object / inline-array
@@ -649,6 +653,7 @@ const StreamNetworkFrame = memo(forwardRef<
   // dim/highlight) flows through here too: updateConfig → dirty → render-loop
   // buildScene re-emits the overlays → setAnnotationFrame re-render reads them.
   useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
+  useNetworkPerspectiveExtrasReady(storeRef.current, useCallback(() => { dirtyRef.current = true; scheduleRender() }, [scheduleRender]))
 
   // Bridge the resolved custom-layout selection into the scene store +
   // repaint. See useLayoutSelectionSync for why this is a legitimate
@@ -1631,7 +1636,7 @@ const StreamNetworkFrame = memo(forwardRef<
           overflowVisible
         >
           <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
-            {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
+            {composeOverlays(resolvedBackground, withNetworkPerspective(store?.customLayoutBackgrounds, store?.perspective.frame, store?.lastCustomLayoutResult?.perspective))}
           </NetworkViewGroup>
         </CanvasFrameBackground>
 
@@ -1640,7 +1645,7 @@ const StreamNetworkFrame = memo(forwardRef<
           aria-label={computeNetworkAriaLabel(
             store?.sceneNodes?.length ?? 0,
             store?.sceneEdges?.length ?? 0,
-            "Network chart"
+            store?.perspective.label("Network chart") ?? "Network chart"
           )}
           style={{
             position: "absolute",
@@ -1667,13 +1672,13 @@ const StreamNetworkFrame = memo(forwardRef<
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}
           legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={composeOverlays(
+          foregroundGraphics={withNetworkPerspective(composeOverlays(
             resolvedForeground,
-            wrapWithCustomLayoutSelection(
+            withNetworkPerspective(wrapWithCustomLayoutSelection(
               storeRef.current?.customLayoutOverlays,
               layoutSelection ?? null
-            )
-          )}
+            ), store?.perspective.frame, store?.lastCustomLayoutResult?.perspective)
+          ), store?.perspective.frame)}
           annotations={annotations}
           onAnnotationActivate={onAnnotationActivate}
           onObservation={annotationObservationCallback ?? onObservation}

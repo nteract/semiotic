@@ -429,7 +429,7 @@ export default function StyleRulesPage() {
         { label: "Style Rules & Labels", path: "/features/style-rules" },
       ]}
       prevPage={{ title: "Legends", path: "/features/legends" }}
-      nextPage={null}
+      nextPage={{ title: "Perspective", path: "/features/perspective" }}
     >
       <p>
         Three composable capabilities for turning a plain chart into a decision-ready one:{" "}

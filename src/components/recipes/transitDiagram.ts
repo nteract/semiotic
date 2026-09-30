@@ -1,6 +1,7 @@
 import { createElement, type ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
+import { NetworkPerspectiveBillboard } from "../stream/networkPerspectivePlacement"
 import type {
   NetworkArcNode,
   NetworkCurvedEdge,
@@ -425,6 +426,8 @@ function placeLabels(
     labels.push({
       x: winner.candidate.x,
       y: winner.candidate.y,
+      // Keeps the label's offset from its station under a `perspective`.
+      anchorPoint: [point.x, point.y],
       text,
       anchor: winner.candidate.anchor,
       baseline: "middle",
@@ -728,15 +731,20 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
           mode,
         })
         if (rendered != null) {
+          // Custom stations stand upright over their projected station
+          // under a `perspective`.
           stationGlyphs.push(
             createElement(
-              "g",
-              {
-                key: node.id,
-                opacity: opacityFor(node.data),
-                style: { pointerEvents: "none" },
-              },
-              rendered,
+              NetworkPerspectiveBillboard,
+              { key: node.id, x: point.x, y: point.y },
+              createElement(
+                "g",
+                {
+                  opacity: opacityFor(node.data),
+                  style: { pointerEvents: "none" },
+                },
+                rendered,
+              ),
             ),
           )
         }
@@ -752,6 +760,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     sceneEdges,
     sceneNodes,
     overlays,
+    perspective: "manual" as const,
     labels: placeLabels(
       nodes,
       positionResult.positions,

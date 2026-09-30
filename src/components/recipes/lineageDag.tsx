@@ -11,8 +11,10 @@ import type {
 import type { Datum } from "../charts/shared/datumTypes"
 import { clamp, nonNegativeFinite, readField } from "./recipeUtils"
 import { edgeArrow } from "./directedEdge"
+import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
 import { createLineageDagFit } from "./lineageDagFit"
 import {
+  lineageHullBounds,
   renderLineageHullBackgrounds,
   type LineageHullRect,
 } from "./lineageDagHulls"
@@ -397,21 +399,25 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const overlays: ReactNode =
     glyphs.length === 0 && arrows.length === 0 ? null : (
       <g>
-        {arrows}
+        {/* Under a `perspective`, arrowheads lie on the ground at edge height
+            and node chrome stands upright over its projected node. */}
+        <NetworkPerspectiveGround z="top">{arrows}</NetworkPerspectiveGround>
         {glyphs.length > 0 && (
           <g className="lineage-dag-glyphs">
-            {glyphs.map((g) =>
-              renderGlyph(g, {
-                w,
-                h,
-                lod,
-                partColors,
-                chipColor,
-                showChips,
-                renderIcon: cfg.renderIcon,
-                typeLabel: cfg.typeLabel,
-              })
-            )}
+            {glyphs.map((g) => (
+              <NetworkPerspectiveBillboard key={g.id} x={g.cx} y={g.cy}>
+                {renderGlyph(g, {
+                  w,
+                  h,
+                  lod,
+                  partColors,
+                  chipColor,
+                  showChips,
+                  renderIcon: cfg.renderIcon,
+                  typeLabel: cfg.typeLabel,
+                })}
+              </NetworkPerspectiveBillboard>
+            ))}
           </g>
         )}
       </g>
@@ -432,9 +438,19 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
       })
     : null
 
-  return backgrounds
-    ? { sceneNodes, sceneEdges, backgrounds, overlays }
-    : { sceneNodes, sceneEdges, overlays }
+  // Decorations place themselves under a perspective (see above and the
+  // hulls); hull outlines and labels reach past the nodes, so declare them.
+  const perspectiveBounds =
+    ctx.perspective && hullGroups && hullGroups.size > 0
+      ? lineageHullBounds(hullGroups, {
+          padding: cfg.hullPadding == null ? 16 : nonNegativeFinite(cfg.hullPadding),
+          label: cfg.hullLabel,
+        })
+      : undefined
+  const result = backgrounds
+    ? { sceneNodes, sceneEdges, backgrounds, overlays, perspective: "manual" as const }
+    : { sceneNodes, sceneEdges, overlays, perspective: "manual" as const }
+  return perspectiveBounds ? { ...result, perspectiveBounds } : result
 }
 
 // ── Overlay glyph renderer ─────────────────────────────────────────────────

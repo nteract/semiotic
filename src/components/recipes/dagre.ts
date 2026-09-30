@@ -1,5 +1,6 @@
 import { createElement } from "react"
 import { edgeArrow, rectBoundary } from "./directedEdge"
+import { NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkCurvedEdge, NetworkLineEdge } from "../stream/networkTypes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -219,6 +220,10 @@ export const dagreLayout: NetworkCustomLayout<DagreConfig> = (ctx) => {
     sceneNodes,
     sceneEdges,
     labels,
-    overlays: arrows.length ? createElement("g", null, arrows) : null
+    // Arrowheads lie on the ground at edge height under a `perspective`.
+    overlays: arrows.length
+      ? createElement("g", null, createElement(NetworkPerspectiveGround, { z: "top" }, arrows))
+      : null,
+    perspective: "manual"
   }
 }

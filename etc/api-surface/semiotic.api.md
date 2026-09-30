@@ -82,6 +82,8 @@ function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineCh
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function NetworkPerspectiveBillboard({ x, y, z, onGround, children }: {x: number; y: number; z?: NetworkPerspectiveHeight; onGround?: boolean; children?: React.ReactNode;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function NetworkPerspectiveGround({ z, children }: {z?: NetworkPerspectiveHeight; children?: React.ReactNode;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function ObservationReadout<TDatum extends Datum = Datum>({ children, observation: directObservation, chartId, types, fallback, as, live, atomic, className, style }: ObservationReadoutProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function OrbitDiagram<TDatum extends Datum = Datum>(props: OrbitDiagramProps<TDatum>): React.JSX.Element
 function OrdinalCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: OrdinalCustomChartProps<TDatum, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -166,6 +168,7 @@ function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: Styl
 function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
 function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
 function opacityFromAge(options: MotionAgeOpacityOptions): number
+function preloadNetworkPerspectiveExtras(): Promise<void>
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function registerBuiltInXYPlugins(): void
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
@@ -203,6 +206,7 @@ function useLinkedChartsActive(): boolean
 function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult
 function useMobileRangeControls(options: UseMobileRangeControlsOptions): UseMobileRangeControlsResult
 function useNavigationSync(options: UseNavigationSyncOptions): UseNavigationSyncResult
+function useNetworkPerspective(): NetworkPerspectiveFrame
 function useSelection(options: UseSelectionOptions): UseSelectionResult
 function useSelectionActions(name: string, clientId?: string | undefined): UseSelectionActionsResult
 function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
@@ -327,6 +331,9 @@ interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
 interface NavTreeNode
 interface NetworkLabel
+interface NetworkPerspectiveConfig
+interface NetworkPerspectiveFrame
+interface NetworkPerspectiveRegion
 interface ObservationReadoutProps<TDatum extends Datum = Datum>
 interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface OrbitNode
@@ -828,6 +835,7 @@ interface-member ChordDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member ChordDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member ChordDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ChordDiagramProps::property::padAngle = optional padAngle: number | undefined
+interface-member ChordDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member ChordDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ChordDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ChordDiagramProps::property::sortGroups = optional sortGroups: ((a: number, b: number) => number) | undefined
@@ -849,6 +857,7 @@ interface-member CirclePackProps::property::legendPosition = optional legendPosi
 interface-member CirclePackProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::padding = optional padding: number | undefined
+interface-member CirclePackProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member CirclePackProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member CirclePackProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -1087,6 +1096,7 @@ interface-member ForceDirectedGraphProps::property::nodeStroke = optional nodeSt
 interface-member ForceDirectedGraphProps::property::nodeStrokeWidth = optional nodeStrokeWidth: number | undefined
 interface-member ForceDirectedGraphProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ForceDirectedGraphProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
+interface-member ForceDirectedGraphProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member ForceDirectedGraphProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ForceDirectedGraphProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ForceDirectedGraphProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -1587,16 +1597,63 @@ interface-member NavTreeNode::property::level = required level: number
 interface-member NavTreeNode::property::role = required role: NavTreeRole
 interface-member NavTreeNode::property::value = optional value: number | undefined
 interface-member NetworkLabel::property::anchor = optional anchor: "end" | "middle" | "start" | undefined
+interface-member NetworkLabel::property::anchorPoint = optional anchorPoint: [number, number] | undefined
 interface-member NetworkLabel::property::baseline = optional baseline: string | undefined
 interface-member NetworkLabel::property::fill = optional fill: string | undefined
 interface-member NetworkLabel::property::fontSize = optional fontSize: number | undefined
 interface-member NetworkLabel::property::fontWeight = optional fontWeight: number | string | undefined
 interface-member NetworkLabel::property::paintOrder = optional paintOrder: string | undefined
+interface-member NetworkLabel::property::rotate = optional rotate: number | undefined
 interface-member NetworkLabel::property::stroke = optional stroke: string | undefined
 interface-member NetworkLabel::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member NetworkLabel::property::text = required text: string
 interface-member NetworkLabel::property::x = required x: number
 interface-member NetworkLabel::property::y = required y: number
+interface-member NetworkPerspectiveConfig::property::anchor = optional anchor: "center" | "feet" | undefined
+interface-member NetworkPerspectiveConfig::property::depthSort = optional depthSort: boolean | undefined
+interface-member NetworkPerspectiveConfig::property::edgeShadow = optional edgeShadow: boolean | undefined | {color?: string; opacity?: number;}
+interface-member NetworkPerspectiveConfig::property::edges = optional edges: NetworkPerspectiveEdgeConfig | undefined
+interface-member NetworkPerspectiveConfig::property::elevation = optional elevation: NetworkPerspectiveAccessor | undefined
+interface-member NetworkPerspectiveConfig::property::elevationGuides = optional elevationGuides: NetworkPerspectiveGuideConfig | boolean | undefined
+interface-member NetworkPerspectiveConfig::property::elevationScale = optional elevationScale: "auto" | number | undefined
+interface-member NetworkPerspectiveConfig::property::extrude = optional extrude: NetworkPerspectiveAccessor | undefined
+interface-member NetworkPerspectiveConfig::property::extrudeScale = optional extrudeScale: "auto" | number | undefined
+interface-member NetworkPerspectiveConfig::property::fit = optional fit: "contain" | "none" | undefined
+interface-member NetworkPerspectiveConfig::property::fitPadding = optional fitPadding: number | undefined
+interface-member NetworkPerspectiveConfig::property::glyph = optional glyph: ((datum: Datum) => GlyphDef | null | undefined) | GlyphDef | undefined
+interface-member NetworkPerspectiveConfig::property::glyphSize = optional glyphSize: number | undefined
+interface-member NetworkPerspectiveConfig::property::ground = optional ground: undefined | {grid?: NetworkPerspectiveGridConfig | boolean; plate?: NetworkPerspectivePlateConfig | boolean;}
+interface-member NetworkPerspectiveConfig::property::labels = optional labels: NetworkPerspectiveLabelConfig | undefined
+interface-member NetworkPerspectiveConfig::property::marks = optional marks: ((node: NetworkSceneNode) => NetworkPerspectiveMarkMode | undefined) | NetworkPerspectiveMarkMode | undefined
+interface-member NetworkPerspectiveConfig::property::origin = optional origin: [number, number] | undefined
+interface-member NetworkPerspectiveConfig::property::regions = optional regions: NetworkPerspectiveRegion[] | undefined
+interface-member NetworkPerspectiveConfig::property::rotation = optional rotation: number | undefined
+interface-member NetworkPerspectiveConfig::property::thickness = optional thickness: number | undefined
+interface-member NetworkPerspectiveConfig::property::tilt = optional tilt: number | undefined
+interface-member NetworkPerspectiveConfig::property::transition = optional transition: NetworkPerspectiveTransitionConfig | boolean | undefined
+interface-member NetworkPerspectiveConfig::property::type = optional type: NetworkPerspectiveName | undefined
+interface-member NetworkPerspectiveConfig::property::verticalScale = optional verticalScale: number | undefined
+interface-member NetworkPerspectiveFrame::method::billboardTransform = required billboardTransform(x: number, y: number, z?: number | undefined): string
+interface-member NetworkPerspectiveFrame::method::depth = required depth(x: number, y: number, z?: number | undefined): number
+interface-member NetworkPerspectiveFrame::method::project = required project(x: number, y: number, z?: number | undefined): [number, number]
+interface-member NetworkPerspectiveFrame::method::unproject = required unproject(sx: number, sy: number, z?: number | undefined): [number, number]
+interface-member NetworkPerspectiveFrame::property::bounds = required readonly bounds: NetworkViewportRect | null
+interface-member NetworkPerspectiveFrame::property::groundTransform = required readonly groundTransform: string
+interface-member NetworkPerspectiveFrame::property::lift = required readonly lift: number
+interface-member NetworkPerspectiveFrame::property::matrix = required readonly matrix: readonly [number, number, number, number, number, number]
+interface-member NetworkPerspectiveFrame::property::scale = required readonly scale: number
+interface-member NetworkPerspectiveFrame::property::thickness = optional readonly thickness: number | undefined
+interface-member NetworkPerspectiveFrame::property::type = required readonly type: NetworkPerspectiveName
+interface-member NetworkPerspectiveRegion::property::bounds = optional bounds: [[number, number], [number, number]] | undefined
+interface-member NetworkPerspectiveRegion::property::depth = optional depth: number | undefined
+interface-member NetworkPerspectiveRegion::property::elevation = optional elevation: number | undefined
+interface-member NetworkPerspectiveRegion::property::fill = optional fill: string | undefined
+interface-member NetworkPerspectiveRegion::property::id = required id: string
+interface-member NetworkPerspectiveRegion::property::label = optional label: string | undefined
+interface-member NetworkPerspectiveRegion::property::labelColor = optional labelColor: string | undefined
+interface-member NetworkPerspectiveRegion::property::nodes = optional nodes: string[] | undefined
+interface-member NetworkPerspectiveRegion::property::padding = optional padding: number | undefined
+interface-member NetworkPerspectiveRegion::property::stroke = optional stroke: string | undefined
 interface-member ObservationReadoutProps::property::as = optional as: "div" | "output" | "p" | undefined
 interface-member ObservationReadoutProps::property::atomic = optional atomic: boolean | undefined
 interface-member ObservationReadoutProps::property::chartId = optional chartId: string | undefined
@@ -1624,6 +1681,7 @@ interface-member OrbitDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member OrbitDiagramProps::property::nodeRadius = optional nodeRadius: ((node: Datum) => number) | number | undefined
 interface-member OrbitDiagramProps::property::orbitMode = optional orbitMode: OrbitMode | undefined
 interface-member OrbitDiagramProps::property::orbitSize = optional orbitSize: ((node: Datum) => number) | number | undefined
+interface-member OrbitDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member OrbitDiagramProps::property::revolution = optional revolution: ((node: Datum) => number) | undefined
 interface-member OrbitDiagramProps::property::revolutionStyle = optional revolutionStyle: "alternate" | "decay" | "locked" | undefined
 interface-member OrbitDiagramProps::property::showLabels = optional showLabels: boolean | undefined
@@ -1701,6 +1759,7 @@ interface-member ProcessSankeyProps::property::orientation = optional orientatio
 interface-member ProcessSankeyProps::property::packing = optional packing: "off" | "reuse" | undefined
 interface-member ProcessSankeyProps::property::pairing = optional pairing: "temporal" | "value" | undefined
 interface-member ProcessSankeyProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
+interface-member ProcessSankeyProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member ProcessSankeyProps::property::ribbonLane = optional ribbonLane: "both" | "source" | "target" | undefined
 interface-member ProcessSankeyProps::property::ribbonMinRun = optional ribbonMinRun: "auto" | number | undefined
 interface-member ProcessSankeyProps::property::selection = optional selection: SelectionConfig | undefined
@@ -2197,6 +2256,7 @@ interface-member SankeyDiagramProps::property::nodePaddingRatio = optional nodeP
 interface-member SankeyDiagramProps::property::nodeWidth = optional nodeWidth: number | undefined
 interface-member SankeyDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member SankeyDiagramProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member SankeyDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member SankeyDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member SankeyDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member SankeyDiagramProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -2475,6 +2535,7 @@ interface-member StreamNetworkFrameProps::property::padding = optional padding: 
 interface-member StreamNetworkFrameProps::property::paddingTop = optional paddingTop: number | undefined
 interface-member StreamNetworkFrameProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
 interface-member StreamNetworkFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamNetworkFrameProps::property::perspective = optional perspective: import("./networkPerspective").NetworkPerspective | undefined
 interface-member StreamNetworkFrameProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member StreamNetworkFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
 interface-member StreamNetworkFrameProps::property::renderMode = optional renderMode: SceneRenderMode<NetworkSceneEdge | NetworkSceneNode> | undefined
@@ -2914,6 +2975,7 @@ interface-member TreeDiagramProps::property::nodeIdAccessor = optional nodeIdAcc
 interface-member TreeDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: number | undefined
 interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
+interface-member TreeDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreeDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreeDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -2934,6 +2996,7 @@ interface-member TreemapProps::property::nodeLabel = optional nodeLabel: ChartAc
 interface-member TreemapProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
 interface-member TreemapProps::property::padding = optional padding: number | undefined
 interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
+interface-member TreemapProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
 interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreemapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreemapProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -3158,6 +3221,10 @@ type MotionTimeUnit = "frames" | "index" | "milliseconds" | "seconds"
 type NavTreeRole = "annotation" | "axis" | "chart" | "datum" | "series"
 type NetworkChartType = "chord" | "circlepack" | "cluster" | "force" | "orbit" | "partition" | "sankey" | "tree" | "treemap"
 type NetworkMarkStyle = (Datum & Pick<Style, "cursor">) | Style
+type NetworkPerspective = NetworkPerspectiveConfig | NetworkPerspectiveName
+type NetworkPerspectiveBound = {x: number; y: number; extent: readonly [number, number, number, number]; z?: "top" | number;} | {x: number; y: number; width: number; height: number; z?: "top" | number;}
+type NetworkPerspectiveHeight = "top" | number
+type NetworkPerspectiveName = "cabinet" | "dimetric" | "flat" | "isometric" | "military" | "pixel"
 type NetworkSceneEdge = NetworkBezierEdge | NetworkCurvedEdge | NetworkLineEdge | NetworkRibbonEdge
 type NetworkSceneNode = NetworkArcNode | NetworkCircleNode | NetworkGlyphNode | NetworkRectNode | NetworkSymbolNode
 type ObservationInputType = "keyboard" | "navigation-tree" | "pointer" | "touch"

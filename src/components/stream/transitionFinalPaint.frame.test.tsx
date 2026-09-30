@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import { NetworkPerspectiveState } from "./networkPerspectiveState"
 import { PipelineStore } from "./PipelineStore"
 import StreamGeoFrame from "./StreamGeoFrame"
 import StreamXYFrame from "./StreamXYFrame"
@@ -220,7 +221,9 @@ describe("terminal transition paint", () => {
       hasActiveTopologyDiff: false,
       hasActivePulses: false,
       hasActiveThresholds: false,
-      lastIngestTime: 0
+      lastIngestTime: 0,
+      perspective: new NetworkPerspectiveState(),
+      advancePerspectiveTransition: () => false
     } as unknown as NetworkPipelineStore
 
     paintNetworkFrame({

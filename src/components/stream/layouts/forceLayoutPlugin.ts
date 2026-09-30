@@ -454,7 +454,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
           text: String(text),
           anchor: "middle",
           baseline: "auto",
-          fontSize: 11
+          fontSize: 11,
+          anchorPoint: [node.x, node.y]
         })
       }
     }

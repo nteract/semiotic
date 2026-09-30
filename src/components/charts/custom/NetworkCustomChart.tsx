@@ -1,4 +1,5 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import * as React from "react"
 import { forwardRef, useMemo } from "react"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
@@ -21,6 +22,9 @@ import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+
+registerNetworkPerspective()
 
 export interface NetworkCustomChartProps<
   TNode extends Datum = Datum,
@@ -35,6 +39,12 @@ export interface NetworkCustomChartProps<
   layout: NetworkCustomLayout<TConfig>
   /** Config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: TConfig
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   /** Receives a structured diagnostic if the layout throws. */
   onLayoutError?: StreamNetworkFrameProps["onLayoutError"]
   recipe?: ChartRecipe<TNode, TConfig>
@@ -258,6 +268,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
     }),
     // Consume side: the resolved predicate the layout reads as ctx.selection.
     layoutSelection,
+    perspective: props.perspective,
     // Annotations anchor to emitted marks by `pointId` (the scene node's id);
     // `frameProps` can still override if a caller needs the raw frame prop.
     ...(annotations != null && { annotations }),

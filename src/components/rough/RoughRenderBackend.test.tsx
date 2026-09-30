@@ -41,6 +41,23 @@ describe("createRoughRenderMode", () => {
     expect(firstMarkup).toContain('data-semiotic-render-backend="roughjs"')
   })
 
+  it("sketches a perspective-projected rect from its outline, not its bounds", () => {
+    const mode = createRoughRenderMode({ seed: 7 })
+    const projected = { ...rect, pathD: "M50 20L90 40L50 60L10 40Z" }
+    const markup = svgFor(mode, projected as RectSceneNode)
+    expect(markup).not.toBe(svgFor(mode))
+    // Rough traces the diamond: no stroke reaches the bounding box corner.
+    expect(markup).not.toMatch(/M10 20\b|M10\.0+ 20\.0+/)
+    // Extruded prisms keep the built-in painter for their shaded faces.
+    expect(
+      mode.renderStaticSVG({
+        node: { ...projected, faces: [{ pathD: "M0 0Z", shade: -0.2 }] } as unknown as RectSceneNode,
+        style: rect.style,
+        key: "prism"
+      })
+    ).toBeNull()
+  })
+
   it("derives deterministic, non-zero seeds and distinguishes base seeds", () => {
     expect(stableRoughSeed("mort")).toBe(stableRoughSeed("mort"))
     expect(stableRoughSeed("mort")).toBeGreaterThan(0)

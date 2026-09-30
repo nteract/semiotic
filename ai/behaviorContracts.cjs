@@ -310,6 +310,28 @@ const BEHAVIOR_CONTRACTS = [
     example: '{ "points": [{"city":"A","longitude":-122.4,"latitude":37.8,"incidents":18}], "xAccessor":"longitude", "yAccessor":"latitude", "sizeBy":"incidents", "sizeRange":[5,40] }',
   },
   {
+    id: "network.perspective-is-presentational",
+    category: "network",
+    title: "Network perspective is presentational",
+    severity: "warning",
+    appliesTo: {
+      components: [
+        "ForceDirectedGraph",
+        "SankeyDiagram",
+        "ProcessSankey",
+        "ChordDiagram",
+        "TreeDiagram",
+        "Treemap",
+        "CirclePack",
+        "OrbitDiagram",
+      ],
+      propsAny: ["perspective", "projection"],
+    },
+    summary: "Network perspective is a parallel projection applied after layout. Layout coordinates and data semantics are unchanged, interaction and the accessible table follow the projected marks, and elevation is the only added encoding. Network charts use perspective, not projection, which belongs to geo charts.",
+    agentAction: "Use a preset string (\"isometric\", \"pixel\", \"dimetric\", \"military\", \"cabinet\") or a config object in JSON; function elevation/extrude/marks and glyph are React-only. Choose it for categorical or topological positions, not measured ones, and do not describe it as 3D or WebGL. Rename projection to perspective on network charts.",
+    example: '{ "component": "ForceDirectedGraph", "props": { "nodes": [{"id":"api","tier":2}], "edges": [], "perspective": { "type": "isometric", "elevation": "tier", "ground": { "grid": true } } } }',
+  },
+  {
     id: "physics.sample-and-mechanical-inputs",
     category: "physics",
     title: "Physics charts separate chart mode from simulation input",

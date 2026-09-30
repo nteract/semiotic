@@ -12,7 +12,9 @@ export function renderNetworkParticles(
   pool: ParticlePool,
   edges: RealtimeEdge[],
   style: ParticleStyle,
-  edgeColorFn: (edge: RealtimeEdge) => string
+  edgeColorFn: (edge: RealtimeEdge) => string,
+  /** Perspective projection for layout-space particle positions. */
+  project?: (x: number, y: number) => [number, number]
 ): void {
   const radius = style.radius ?? DEFAULT_PARTICLE_STYLE.radius
   const opacity = style.opacity ?? DEFAULT_PARTICLE_STYLE.opacity
@@ -49,7 +51,12 @@ export function renderNetworkParticles(
     ctx.fillStyle = resolveCSSColor(ctx, resolved) || resolved
 
     ctx.beginPath()
-    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+    if (project) {
+      const [px, py] = project(p.x, p.y)
+      ctx.arc(px, py, radius, 0, Math.PI * 2)
+    } else {
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)
+    }
     ctx.fill()
   }
 

@@ -81,6 +81,11 @@ function geometryFor(node: RoughSceneNode): Geometry | null {
     return null
   }
 
+  // Perspective-projected network areas carry their exact outline. Pieces
+  // with thickness keep the built-in painter, which shades their side walls.
+  if ((node.type === "rect" || node.type === "circle" || node.type === "arc") && typeof node.pathD === "string" && node.pathD) {
+    return Array.isArray(node.faces) && node.faces.length ? null : { kind: "path", d: node.pathD }
+  }
   if (node.type === "rect" && finite(node.x) && finite(node.y) && finite(node.w) && finite(node.h)) {
     return { kind: "rectangle", x: node.x, y: node.y, width: node.w, height: node.h }
   }
@@ -122,6 +127,8 @@ function geometryFor(node: RoughSceneNode): Geometry | null {
   if (node.type === "violin" && typeof node.pathString === "string" && finite(node.translateX) && finite(node.translateY)) {
     return { kind: "path", d: node.pathString, transform: { x: node.translateX, y: node.translateY } }
   }
+  // Perspective tokens shade their rim with the built-in painter too.
+  if (node.type === "symbol" && Array.isArray(node.faces) && node.faces.length) return null
   if (node.type === "symbol" && typeof node.path === "string") {
     const x = finite(node.x) ? node.x : node.cx
     const y = finite(node.y) ? node.y : node.cy

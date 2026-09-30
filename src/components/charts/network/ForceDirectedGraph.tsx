@@ -1,10 +1,12 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { forceLayoutPlugin } from "../../stream/layouts/forceLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -26,6 +28,7 @@ import {
 } from "../shared/networkUtils"
 
 registerLayoutPlugin("force", forceLayoutPlugin)
+registerNetworkPerspective()
 
 /**
  * ForceDirectedGraph component props
@@ -100,6 +103,12 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
    * `fill` may be a color or a HatchFill. Layers over the resolved node color.
    */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   /**
    * Constant pixel radius, or a function/field returning a numeric value
    * scaled into `nodeSizeRange`.
@@ -522,6 +531,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...frameProps}
     />
   </SafeRender>)

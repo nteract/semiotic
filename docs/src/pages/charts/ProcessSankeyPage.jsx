@@ -5,6 +5,7 @@ import { ProcessSankey } from "semiotic"
 import ComponentMeta from "../../components/ComponentMeta"
 import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
+import { Link } from "react-router-dom"
 import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
@@ -44,6 +45,7 @@ const processSankeyProps = [
   { name: "showParticles", type: "boolean", description: "Animate particles along ribbons (pair with particleStyle)." },
   { name: "timeFormat", type: "function", description: "Formats axis and tooltip times: numbers for numeric domains, Dates for Date/ISO domains." },
   { name: "valueFormat", type: "string | function", description: "Formatter for flow values." },
+  { name: "perspective", type: "string | object", default: '"flat"', description: <>{'Parallel projection applied after layout: "isometric", "pixel", "dimetric", "military", "cabinet", or a config object (elevation, ground grid/plate, regions, edges.route, labels, transition). Lanes and bands lie on the ground as projected shapes. Layout is unchanged; tooltips and keyboard focus follow the projected marks. The x position here is measured time, so keep the chart flat when readers compare durations.'} <Link to="/features/perspective">See Perspective</Link>.</> },
 ]
 
 // Default formatter the sandbox uses for both axis ticks and tooltip

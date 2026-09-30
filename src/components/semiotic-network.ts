@@ -71,6 +71,40 @@ export type {
   NetworkLineEdgeHitTargetProps,
   NetworkPathEdgeHitTargetProps,
 } from "./stream/hitTarget"
+// perspective — parallel projection (isometric, pixel, dimetric, military,
+// cabinet) applied to any network chart after layout.
+export { resolveNetworkPerspective } from "./stream/networkPerspective"
+export { createNetworkPerspectiveFrame } from "./stream/networkPerspectiveFit"
+export { useNetworkPerspective } from "./stream/networkPerspectiveContext"
+export {
+  NetworkPerspectiveBillboard,
+  NetworkPerspectiveGround
+} from "./stream/networkPerspectivePlacement"
+export type { NetworkPerspectiveHeight } from "./stream/networkPerspectivePlacement"
+export { projectNetworkScene } from "./stream/networkPerspectiveScene"
+export type {
+  NetworkPerspectiveScene,
+  NetworkPerspectiveSceneInput
+} from "./stream/networkPerspectiveScene"
+export { preloadNetworkPerspectiveExtras } from "./stream/networkPerspectiveLoader"
+export type {
+  NetworkPerspective,
+  NetworkPerspectiveAccessor,
+  NetworkPerspectiveBound,
+  NetworkPerspectiveConfig,
+  NetworkPerspectiveEdgeConfig,
+  NetworkPerspectiveFrame,
+  NetworkPerspectiveGridConfig,
+  NetworkPerspectiveGuideConfig,
+  NetworkPerspectiveLabelConfig,
+  NetworkPerspectiveMarkMode,
+  NetworkPerspectiveName,
+  NetworkPerspectivePlateConfig,
+  NetworkPerspectiveRegion,
+  NetworkPerspectiveTransitionConfig,
+  ResolvedNetworkPerspective,
+} from "./stream/networkPerspective"
+export type { NetworkPerspectiveProps } from "./charts/shared/networkPerspectiveProps"
 // glyph — the composite-pictogram scene node for custom network layouts.
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"

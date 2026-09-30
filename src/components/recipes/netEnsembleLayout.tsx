@@ -18,7 +18,7 @@ import {
   LayoutCache,
   clamp
 } from "./recipeUtils"
-import { buildNetEnsembleOverlays } from "./netEnsembleOverlays"
+import { buildNetEnsembleOverlays, netEnsemblePerspectiveBands } from "./netEnsembleOverlays"
 
 /**
  * `netEnsembleLayout` — a layout for **ensembles of disconnected (or only
@@ -257,6 +257,8 @@ export interface BandInfo {
   y: number
   width: number
   height: number
+  /** Width the band's cells actually use (≤ `width`). */
+  contentWidth?: number
   exemplar: {
     nodes: NetEnsemblePlacedNode[]
     edges: NetEnsemblePlacedEdge[]
@@ -774,13 +776,16 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
     }
   }
 
-  const overlays = buildNetEnsembleOverlays(geom.bands, {
+  const showExemplars = cfg.showExemplars !== false
+  const showBandLabels = cfg.showBandLabels !== false
+  const placed = netEnsemblePerspectiveBands(geom.bands, !!ctx.perspective, showExemplars, showBandLabels)
+  const overlays = buildNetEnsembleOverlays(placed.bands, {
     convergeColor,
     branchColor,
     edgeColor,
     plot,
-    showBandLabels: cfg.showBandLabels !== false,
-    showExemplars: cfg.showExemplars !== false,
+    showBandLabels,
+    showExemplars,
     // The legend explains the directedness colors; only show it when fill
     // actually encodes directedness (not in motif / category color modes).
     showLegend: cfg.showLegend !== false && colorMode === "directedness",
@@ -788,7 +793,9 @@ export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
     subText: semantic.textSecondary ?? "var(--semiotic-text-secondary, #888)"
   })
 
-  return { sceneNodes, sceneEdges, overlays }
+  // The overlays place themselves under a perspective.
+  const bounds = placed.bounds ? { perspectiveBounds: placed.bounds } : {}
+  return { sceneNodes, sceneEdges, overlays, perspective: "manual", ...bounds }
 }
 
 // ── Geometry builder (pure; cached) ────────────────────────────────────────────
@@ -923,6 +930,7 @@ function buildGeometry(
       y: bandTop,
       width: availW,
       height: o.headerHeight + rows * (cell + o.cellGap),
+      contentWidth: Math.min(comps.length, cols) * (cell + o.cellGap) - o.cellGap,
       exemplar
     })
 

@@ -116,6 +116,7 @@ const ThemeExplorerPage = lazy(() => import("./pages/theming/ThemeExplorerPage")
 const SemanticColorsPage = lazy(() => import("./pages/theming/SemanticColorsPage"))
 const LegendsPage = lazy(() => import("./pages/features/LegendsPage"))
 const StyleRulesPage = lazy(() => import("./pages/features/StyleRulesPage"))
+const PerspectivePage = lazy(() => import("./pages/features/PerspectivePage"))
 const RealtimeEncodingPage = lazy(() => import("./pages/features/RealtimeEncodingPage"))
 const MotionEncodingsPage = lazy(() => import("./pages/features/MotionEncodingsPage"))
 const PhysicsEncodingPage = lazy(() => import("./pages/features/PhysicsEncodingPage"))
@@ -311,6 +312,9 @@ const SemioticArchitectureExamplePage = lazy(
   () => import("./pages/examples/SemioticArchitectureExamplePage"),
 )
 const OctopusMetaphorExamplePage = lazy(() => import("./pages/examples/OctopusMetaphorExamplePage"))
+const IsometricInfrastructureExamplePage = lazy(
+  () => import("./pages/examples/IsometricInfrastructureExamplePage"),
+)
 const GestaltPrinciplesExamplePage = lazy(
   () => import("./pages/examples/GestaltPrinciplesExamplePage"),
 )
@@ -411,6 +415,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "OctopusMetaphorExamplePage.jsx": OctopusMetaphorExamplePage,
   "ClimateAnomalyExamplePage.jsx": ClimateAnomalyExamplePage,
   "GestaltPrinciplesExamplePage.jsx": GestaltPrinciplesExamplePage,
+  "IsometricInfrastructureExamplePage.jsx": IsometricInfrastructureExamplePage,
   "SemioticStandardExamplePage.jsx": SemioticStandardExamplePage,
   "DataVizForDummiesExamplePage.jsx": DataVizForDummiesExamplePage,
   "DataVizForDummiesTwoExamplePage.jsx": DataVizForDummiesTwoExamplePage,
@@ -818,6 +823,7 @@ export default function DocsApp() {
                 <Route path="linked-charts" element={<SmallMultiplesPage />} />
                 <Route path="legends" element={<LegendsPage />} />
                 <Route path="style-rules" element={<StyleRulesPage />} />
+                <Route path="perspective" element={<PerspectivePage />} />
                 <Route path="realtime-encoding" element={<RealtimeEncodingPage />} />
                 <Route path="motion-encodings" element={<MotionEncodingsPage />} />
                 <Route path="physics-encoding" element={<PhysicsEncodingPage />} />

@@ -104,6 +104,13 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
    * `NetworkLayoutSelection` type.
    */
   selection?: NetworkLayoutSelection | null
+  /**
+   * Active `perspective` settings, or null when flat. The frame projects the
+   * scene nodes, edges, labels and HTML marks you return; use this only to
+   * adapt the layout (for example, routing or spacing). Overlay components
+   * read the fitted projection with `useNetworkPerspective()`.
+   */
+  perspective?: import("./networkPerspective").NetworkPerspectiveConfig | null
 }
 
 /**
@@ -208,4 +215,18 @@ export interface NetworkLayoutResult {
   restyle?: (node: NetworkSceneNode, selection: CustomLayoutSelection | null) => Partial<Style> | void
   /** Per-frame restyle of edges — same contract as {@link NetworkLayoutResult.restyle}. */
   restyleEdge?: (edge: NetworkSceneEdge, selection: CustomLayoutSelection | null) => Partial<Style> | void
+  /**
+   * How `backgrounds`/`overlays` follow an active `perspective`. `"ground"`
+   * maps them onto the projected ground plane (hulls, zones, flat ground
+   * art). `"manual"` leaves them in plot coordinates for components that
+   * project themselves with `useNetworkPerspective()`. @default "manual"
+   */
+  perspective?: "ground" | "manual"
+  /**
+   * What your `backgrounds`/`overlays` draw beyond the scene marks (hulls,
+   * bands, headers), so an active `perspective` fits it inside the plot.
+   * Boxes lie on the ground; points with `extent` are upright content.
+   * Ignored when flat.
+   */
+  perspectiveBounds?: readonly import("./networkPerspective").NetworkPerspectiveBound[]
 }

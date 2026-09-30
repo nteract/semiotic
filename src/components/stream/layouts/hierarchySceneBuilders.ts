@@ -216,7 +216,8 @@ export function buildTreeScene(
         text: String(text),
         anchor,
         baseline: "middle",
-        fontSize: 11
+        fontSize: 11,
+        anchorPoint: [nx, ny]
       })
     }
   }

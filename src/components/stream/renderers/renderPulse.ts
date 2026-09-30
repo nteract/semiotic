@@ -31,12 +31,15 @@ export function hasPulse(node: PulseFields): boolean {
 export function renderRectPulse(
   ctx: CanvasRenderingContext2D,
   node: PulseFields & { x: number; y: number; w: number; h: number },
-  alphaMultiplier = 0.3
+  alphaMultiplier = 0.3,
+  /** Projected outline to flash instead of the bounding rectangle. */
+  path?: Path2D | null
 ): void {
   if (!hasPulse(node)) return
   ctx.globalAlpha = node._pulseIntensity! * alphaMultiplier
   ctx.fillStyle = node._pulseColor || "rgba(255,255,255,0.6)"
-  ctx.fillRect(node.x, node.y, node.w, node.h)
+  if (path) ctx.fill(path)
+  else ctx.fillRect(node.x, node.y, node.w, node.h)
 }
 
 /**

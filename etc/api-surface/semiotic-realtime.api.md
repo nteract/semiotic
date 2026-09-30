@@ -762,6 +762,7 @@ interface-member StreamNetworkFrameProps::property::padding = optional padding: 
 interface-member StreamNetworkFrameProps::property::paddingTop = optional paddingTop: number | undefined
 interface-member StreamNetworkFrameProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
 interface-member StreamNetworkFrameProps::property::paused = optional paused: boolean | undefined
+interface-member StreamNetworkFrameProps::property::perspective = optional perspective: import("./networkPerspective").NetworkPerspective | undefined
 interface-member StreamNetworkFrameProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member StreamNetworkFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
 interface-member StreamNetworkFrameProps::property::renderMode = optional renderMode: SceneRenderMode<NetworkSceneEdge | NetworkSceneNode> | undefined

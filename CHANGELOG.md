@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `perspective` on every network chart (ForceDirectedGraph, SankeyDiagram,
+  ProcessSankey, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
+  NetworkCustomChart, and StreamNetworkFrame) draws the finished layout in a
+  parallel projection: `"isometric"` (true 30°), `"pixel"` (2:1),
+  `"dimetric"`, `"military"`, or `"cabinet"`. Every piece has `thickness`
+  (6 layout px by default; `0` draws flat pieces): circles and symbols become
+  tokens lying on the ground at their pixel size with a shaded rim; rects,
+  chord arcs, and circle-pack circles become slabs with side walls; Treemap and
+  CirclePack levels stack on their parents; edges and bands ride one thickness
+  above their surface and cast a soft shadow (`edgeShadow`). `marks:
+  "billboard"` keeps upright point marks. Standing marks paint back to front.
+  Layout coordinates
+  do not change, and hover, tooltips, keyboard focus, annotations, the
+  accessible table, the zoom camera, component SSR, and `renderToStaticSVG`
+  follow the projected marks.
+- The object form adds `elevation` (a field, constant, or callback, with drop
+  lines and ground shadows), `marks: "extrude"` prisms for leaf rects,
+  `ground.grid` and `ground.plate`, `regions` (labelled plates under node ids
+  that seat their members; plates and regions default to the piece thickness), orthogonal ground routing (`edges.route`),
+  ground-aligned labels, pictogram `glyph`s, and an animated `transition`.
+  Grid, plates, regions, routing, and extrusion load on demand in browsers;
+  `preloadNetworkPerspectiveExtras()` loads them before hydration.
+- `semiotic/network/perspective`: `isometricGlyphs` (box, server, database,
+  cylinder, tile, cloud, pin), builders (`isoBox`, `isoStack`, `isoCylinder`,
+  `isoTile`, `isoCloud`, `isoPin`), and an accessible `PerspectiveToggle`.
+- `semiotic/network` exports `resolveNetworkPerspective`,
+  `createNetworkPerspectiveFrame`, `projectNetworkScene`, and
+  `useNetworkPerspective()` (the fitted projection for custom-layout overlays).
+  Custom layouts read `ctx.perspective` and can set `perspective: "ground"` on
+  their result to lay `backgrounds`/`overlays` on the projected ground, or
+  place individual decorations with `NetworkPerspectiveGround` (flat geometry,
+  optionally at piece height) and `NetworkPerspectiveBillboard` (upright
+  content that follows its anchor, or lies flat at pixel size with
+  `onGround`). Layouts list decorations that reach past their marks in
+  `perspectiveBounds` so the projection's fit keeps them in the plot. A
+  development warning fires when a projected layout leaves decorations in
+  plot space. All built-in network recipes place their hulls,
+  arrowheads, node cards, headers and badges this way; `mermaidDagLayout`
+  emits solid shaped pieces and real edges under a perspective.
+- `diagnoseConfig` warns when a ProcessSankey (a time axis) is projected and
+  when a network chart is given the geo-only `projection` prop.
+
+### Fixed
+
+- `renderToStaticSVG`/`renderChart` paint `frameProps.background`, as the live
+  chart does; an undefined top-level `background` no longer erases it.
+- Static ForceDirectedGraph `colorBy` colors follow category order, matching the
+  live chart and the static legend, instead of hashing categories into a
+  different palette.
+- Filled `curved` network edges honor `fillOpacity` in SVG output (default
+  0.1, as on canvas); they previously rendered opaque in SSR.
+
 ## [3.11.2] - 2026-09-28
 
 ### Added

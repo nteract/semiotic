@@ -1638,6 +1638,21 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "isometric-infrastructure",
+    shortLabel: "Isometric Infrastructure",
+    note: "A NetworkCustomChart layout places hosts on flat grid cells; the perspective prop projects the scene, stands pictograms on raised zone plates, routes links along the ground and follows every mark with tooltips, annotations and keyboard focus.",
+    uses: [
+      "input-static",
+      "hoc-network-custom",
+      "feature-custom-layout",
+      "feature-annotations",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "gestalt-principles",
     shortLabel: "Gestalt Principles",
     note: "Five perception chapters span the frame models — DifferenceChart, LineChart and AreaChart, Scatterplot, an XYCustomChart, and a seeded-force NetworkCustomChart — each art-directed with fixed extents, annotations, and click-driven interaction.",

@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { getColor, resolveDefaultFill } from "../charts/shared/colorUtils"
+import { createColorScale, getColor, resolveDefaultFill } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { styleRulesToNodeStyle } from "../charts/shared/styleRules"
 import type { ChartConfig } from "./serverChartConfigShared"
@@ -15,6 +15,20 @@ export const forceDirectedGraph: ChartConfig = {
       common.theme as Parameters<typeof resolveTheme>[0]
     ).colors.categorical
     const categoryIndexMap = new Map<string, number>()
+    // Assign palette colors by first appearance, like the HOC and the SSR
+    // legend; without a scale getColor hashes categories into another palette.
+    const nodeRows = (Array.isArray(rest.nodes) ? rest.nodes : []) as Datum[]
+    const colorKey = typeof colorBy === "string" ? colorBy : "__ssrForceColorBy"
+    const colorScale = colorBy
+      ? createColorScale(
+          typeof colorBy === "function"
+            ? nodeRows.map((d) => ({ ...d, __ssrForceColorBy: (colorBy as (node: Datum) => unknown)(d) }))
+            : nodeRows,
+          colorKey,
+          (colorScheme ?? common.colorScheme ?? themeCategorical) as
+            string | string[] | Record<string, string>
+        )
+      : undefined
     const baseNodeStyle =
       rest.nodeStyle ??
       ((d: Datum) => {
@@ -27,7 +41,7 @@ export const forceDirectedGraph: ChartConfig = {
             ? getColor(
                 raw,
                 colorBy as string | ((node: Datum) => string),
-                undefined
+                colorScale
               )
             : resolveDefaultFill(
                 undefined,

@@ -90,6 +90,8 @@ const ENTRY_GRAPHS = [
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
+  // Opt-in isometric pictograms + perspective toggle; no frame or engine code.
+  { entry: "semiotic-network-perspective.module.min.js", label: "network/perspective (kit)", limitKb: 4 },
   // Access contracts compose AI grounding/audit systems; keep them off chart
   // production graphs while retaining a narrow tooling budget.
   // Bumped 35→36: authored hierarchy rollups and choropleth coverage/range/
@@ -149,7 +151,19 @@ const ENTRY_GRAPHS = [
   // Bumped 156→157: visualization text now inherits the theme font family,
   // including network labels in live and SSR frames. Linux CI measures the
   // resulting network graph at 156.2 KiB; retain less than 1 KiB headroom.
-  { entry: "network.module.min.js", label: "network", limitKb: 157 },
+  // Bumped 157→163: network `perspective`. Every network chart registers the
+  // projection engine so a JSON/SSR `perspective="isometric"` renders on first
+  // paint; ground grid, plates, regions, routing and extrusion lazy-load. The
+  // graph measures 162.2 KiB gzip (main 152.4 KiB).
+  // Bumped 163→164.5: perspective pieces have thickness by default (tokens,
+  // slab side walls, stacked hierarchy levels, edge shadows). It is the first
+  // paint of every projected chart, so it ships with the eager engine, not the
+  // lazy extras. Measures 163.9 KiB gzip.
+  // Bumped 164.5→165.5: custom-layout decorations follow a perspective
+  // (exported NetworkPerspectiveGround/Billboard, a realm-shared lazy context
+  // so recipes and frames in separate bundles meet, invisible-fill wall guards,
+  // a dev warning for unplaced decorations). Measures 164.7 KiB gzip.
+  { entry: "network.module.min.js", label: "network", limitKb: 165.5 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -161,7 +175,14 @@ const ENTRY_GRAPHS = [
   // bin time-range selection matching measure 163.45 KiB gzip.
   // Bumped 164→165: under-layer band fills for histogram and line annotations
   // measure 164.26 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 165 },
+  // Bumped 165→168: StreamNetworkFrame's perspective shell (projected outline
+  // painting, ordered paint, loader). Frame-only bundles fetch the engine on
+  // first use rather than bundling it; measures 167.6 KiB gzip.
+  // Bumped 168→168.5: the same frame shell now shares its perspective context
+  // across bundles, guards walls on invisible fills and warns in development
+  // about unplaced layout decorations (168.1 KiB measured). The placement
+  // components themselves stay out of this graph.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 168.5 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -187,7 +208,12 @@ const ENTRY_GRAPHS = [
   // with the browser reach the static renderer (247.66 KiB measured).
   // Bumped 248→249: static under-layer band fills and GaugeChart hub-fitted
   // centers reach the static renderer (248.26 KiB measured).
-  { entry: "server.module.min.js", label: "server", limitKb: 249 },
+  // Bumped 249→260: static rendering installs the perspective engine and its
+  // extras synchronously so renderChart/MCP draw every perspective feature
+  // (259.3 KiB measured).
+  // Bumped 260→261.5: perspective thickness (tokens, slab walls, edge
+  // shadows) in the same engine (260.8 KiB measured).
+  { entry: "server.module.min.js", label: "server", limitKb: 261.5 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -270,7 +296,10 @@ const ENTRY_GRAPHS = [
   // hub-fitted primitive centers measure 598.03 KiB gzip.
   // Bumped 599→600: under-layer band fills, per-glyph BumpChart label widths,
   // and histogram tooltip time ranges measure 599.02 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 600 },
+  // Bumped 600→610: the AI graph carries the network charts' perspective
+  // engine and the static renderer's extras (609.5 KiB measured).
+  // Bumped 610→612: perspective thickness in that engine (611.2 KiB measured).
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 612 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -283,14 +312,22 @@ const ENTRY_GRAPHS = [
   // remains 1,765 bytes (+1 gzip byte / -1 raw byte); no new retained runtime.
   // Bumped 102.5→104: the complete reader graph measures 103.2 KiB gzip
   // after the published Atlas layout exports were included.
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 104 },
+  // Bumped 104→105: every network recipe places its decorations under a
+  // `perspective` (ground/billboard placement, declared fit bounds, Mermaid's
+  // solid pieces). Measures 104.5 KiB gzip.
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 105 },
   // Optional readers reuse the existing network/physics hosts and stores.
   // Initial complete graphs: 272.3 KiB for readers, 13.4 KiB for pure Core.
   // Bumped 275→277: the published reader graph measures 276.7 KiB gzip
   // after the complete Atlas surface was wired into the package entry.
   // Approved 256-byte allowance for dense-pile settling: 283,747 bytes gzip,
   // with unchanged simulation output and a faster Linux coverage regression.
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 277.25 },
+  // Bumped 277.25→286.5: Atlas readers reuse NetworkCustomChart, which now
+  // registers the perspective engine (285.8 KiB measured).
+  // Bumped 286.5→288: perspective thickness in that engine (287.4 KiB measured).
+  // Bumped 288→289.5: Atlas layouts (dependency forest) and NetworkCustomChart
+  // place their decorations under a perspective (288.7 KiB measured).
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 289.5 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

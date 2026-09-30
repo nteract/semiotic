@@ -8,6 +8,13 @@ import {
   buildResolveColor
 } from "./customLayoutPalette"
 import { runCustomLayoutAttempt } from "./customLayoutAttempt"
+import type { NetworkPerspective, NetworkPerspectiveConfig } from "./networkPerspective"
+
+/** The active perspective config for `ctx.perspective`, or null when flat. */
+function layoutPerspective(perspective: NetworkPerspective | undefined): NetworkPerspectiveConfig | null {
+  const config = typeof perspective === "string" ? { type: perspective } : perspective
+  return !config || config.type === "flat" ? null : config
+}
 import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import type {
   NetworkPipelineConfig,
@@ -62,7 +69,8 @@ export function runNetworkCustomLayout({
     },
     resolveColor: buildResolveColor(palette, config.colorScheme),
     config: (config.layoutConfig ?? {}) as Record<string, unknown>,
-    selection: config.layoutSelection ?? null
+    selection: config.layoutSelection ?? null,
+    perspective: layoutPerspective(config.perspective)
   }
 
   return runCustomLayoutAttempt({

@@ -1,10 +1,12 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { chordLayoutPlugin } from "../../stream/layouts/chordLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -27,6 +29,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 registerLayoutPlugin("chord", chordLayoutPlugin)
+registerNetworkPerspective()
 
 /**
  * ChordDiagram component props
@@ -46,6 +49,12 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
    * raw node object. A rule `fill` may be a color or a HatchFill.
    */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   edgeColorBy?: "source" | "target" | ((d: Datum) => string)
   padAngle?: number
   groupWidth?: number
@@ -361,6 +370,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...frameProps}
     />
   </SafeRender>)

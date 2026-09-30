@@ -1,9 +1,11 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import { orbitLayoutPlugin } from "../../stream/layouts/orbitLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { getColor, DEPTH_PALETTE_COLORS, DEFAULT_COLORS, COLOR_SCHEMES } from "../shared/colorUtils"
@@ -29,6 +31,7 @@ import {
 } from "../shared/styleRules"
 
 registerLayoutPlugin("orbit", orbitLayoutPlugin)
+registerNetworkPerspective()
 
 // ── Orbit layout types (kept for API compatibility) ──────────────────
 
@@ -63,6 +66,12 @@ export interface OrbitDiagramProps<TDatum extends Datum = Datum> extends BaseCha
   colorByDepth?: boolean
   /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   /**
    * Ring arrangement mode:
    * - "flat": all children in one ring
@@ -406,6 +415,7 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
         orbitAnimated={animated}
         accessibleTable={accessibleTable}
         {...(props.animate != null && { animate: props.animate })}
+        perspective={props.perspective}
         {...frameProps}
       />
     </SafeRender>

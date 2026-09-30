@@ -40,10 +40,14 @@ test("only the experimental namespace is excluded, not similarly named stable en
 
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
-  assert.equal(entries.length, 40)
+  assert.equal(entries.length, 41)
   assert.equal(
     entries.find((entry) => entry.subpath === "./network/zoom")?.sourcePath,
     "src/components/semiotic-network-zoom.ts"
+  )
+  assert.equal(
+    entries.find((entry) => entry.subpath === "./network/perspective")?.sourcePath,
+    "src/components/semiotic-network-perspective.ts"
   )
   assert.equal(
     entries.find((entry) => entry.subpath === "./atlas")?.sourcePath,
@@ -81,7 +85,7 @@ test("derives every importable package subpath and keeps previews out of API sna
     entries.find((entry) => entry.subpath === "./experimental/vacp")?.stableApi,
     false
   )
-  assert.equal(stableApiEntrypoints().length, 38)
+  assert.equal(stableApiEntrypoints().length, 39)
 })
 
 test("retains condition-only JavaScript exports in the inventory", () => {

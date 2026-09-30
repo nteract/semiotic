@@ -1,5 +1,7 @@
 import * as React from "react"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
+import { NetworkPerspectiveGround } from "../../stream/networkPerspectivePlacement"
+import type { NetworkPerspectiveBound } from "../../stream/networkPerspective"
 import type {
   NetworkCurvedEdge,
   NetworkLabel,
@@ -76,14 +78,22 @@ export const dependencyForestLayout: NetworkCustomLayout<
   const sceneNodes: NetworkSceneNode[] = []
   const sceneEdges: NetworkCurvedEdge[] = []
   const overlays: React.ReactNode[] = []
-  const label = (x: number, y: number, value: string, size = 11) =>
+  const label = (
+    x: number,
+    y: number,
+    value: string,
+    size = 11,
+    anchorPoint?: [number, number]
+  ) =>
     labels.push({
       x,
       y,
       text: value,
       fill: text,
       anchor: "middle",
-      fontSize: size
+      fontSize: size,
+      // Node labels keep their offset from the node under a `perspective`.
+      ...(anchorPoint ? { anchorPoint } : {})
     })
   const nodeWidth = Math.max(
     16,
@@ -153,14 +163,16 @@ export const dependencyForestLayout: NetworkCustomLayout<
         internalEdges: internalEdgeIds.join(", ")
       }
     })
-    label(point.x, point.y + 4, hiddenCount ? `${id} +${hiddenCount}` : id, 12)
-    if (status) label(point.x, point.y + 30, status, 9)
+    const at: [number, number] = [point.x, point.y]
+    label(point.x, point.y + 4, hiddenCount ? `${id} +${hiddenCount}` : id, 12, at)
+    if (status) label(point.x, point.y + 30, status, 9, at)
     else if (hiddenCount)
       label(
         point.x,
         point.y + 30,
         `${internalEdgeIds.length} internal links`,
-        9
+        9,
+        at
       )
   }
   const backbone = new Set(forest.forest.backboneEdgeIds)
@@ -263,6 +275,7 @@ export const dependencyForestLayout: NetworkCustomLayout<
       })
     )
   }
+  let bracket: NetworkPerspectiveBound | undefined
   if (reading === "required-paths" && selected) {
     const claims = requiredTargets(forest, selected)
     const targets = [
@@ -273,6 +286,7 @@ export const dependencyForestLayout: NetworkCustomLayout<
       const x = Math.max(...points.map((point) => point.x)) + nodeWidth / 2 + 8
       const low = Math.min(...points.map((point) => point.y)) - 23
       const high = Math.max(...points.map((point) => point.y)) + 23
+      bracket = { x: x - 7, y: low, width: 7, height: high - low, z: "top" }
       overlays.push(
         React.createElement("path", {
           key: "required-bracket",
@@ -314,6 +328,15 @@ export const dependencyForestLayout: NetworkCustomLayout<
           ? 0.2
           : 1
     }),
-    overlays: React.createElement("g", { "aria-hidden": true }, overlays)
+    // Arrowheads and the required-path bracket lie on the ground at edge
+    // height under a `perspective`.
+    overlays: React.createElement(
+      "g",
+      { "aria-hidden": true },
+      React.createElement(NetworkPerspectiveGround, { z: "top" }, ...overlays)
+    ),
+    perspective: "manual",
+    // The bracket stands beside its targets, past the nodes.
+    ...(ctx.perspective && bracket ? { perspectiveBounds: [bracket] } : {})
   }
 }

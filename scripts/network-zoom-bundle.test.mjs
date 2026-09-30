@@ -71,3 +71,20 @@ test("opt-in gestures stay small and published zoom entries reuse the canonical 
     /Network viewport controls/
   )
 })
+
+test("perspective pictograms stay opt-in and dependency-free", async () => {
+  for (const entry of ["semiotic", "semiotic-network", "semiotic-xy"]) {
+    const result = await consumer(`./src/components/${entry}`)
+    assert.equal(
+      Object.keys(result.metafile.inputs).some((path) =>
+        path.includes("/networkPerspectiveKit/")
+      ),
+      false,
+      entry
+    )
+  }
+  const kit = await consumer("./src/components/semiotic-network-perspective")
+  const inputs = Object.keys(kit.metafile.inputs)
+  assert.equal(inputs.some((path) => /networkPerspective(Scene|Runtime|Extras)|StreamNetworkFrame/.test(path)), false)
+  assert.ok(gzipSync(kit.outputFiles[0].contents).length < 4 * 1024)
+})

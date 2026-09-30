@@ -1,9 +1,11 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { createHierarchyStyle } from "../shared/hierarchyStyle"
@@ -33,6 +35,7 @@ registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
 registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
 registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
 registerLayoutPlugin("partition", hierarchyLayoutPlugin)
+registerNetworkPerspective()
 
 const defaultEdgeStyle = () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
 
@@ -51,6 +54,12 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
   colorByDepth?: boolean
   /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   edgeStyle?: "line" | "curve"
   nodeLabel?: ChartAccessor<TNode, string>
   showLabels?: boolean
@@ -301,6 +310,7 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...frameProps}
     />
   </SafeRender>)

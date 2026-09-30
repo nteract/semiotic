@@ -107,11 +107,6 @@
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +58 (2026-07-11): custom-layout failure recovery (lastCustomLayoutFailure, onLayoutError, preserved-scene fallback) + a restyle-only repaint flag (_stylePaintPending)."
     },
     {
-      "path": "src/components/stream/networkTypes.ts",
-      "maxLines": 862,
-      "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines. +12 (2026-07-11): onLayoutError type on both pipeline config and props, plus getLayoutFailure() on the frame handle, for custom-layout failure recovery."
-    },
-    {
       "path": "src/components/stream/OrdinalPipelineStore.ts",
       "maxLines": 1612,
       "reason": "Grandfathered production file above hard limit (800). Split on meaningful touch; do not grow past maxLines."

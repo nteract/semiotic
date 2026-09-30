@@ -902,6 +902,83 @@ const edges = [
 
 Key props: **`edges`** (required), shows bidirectional relationships in a circle
 
+### ForceDirectedGraph with perspective (isometric service map)
+
+Every network chart takes `perspective`, a parallel projection applied after
+layout. Positions stay the same; pictogram nodes stand upright, plain nodes
+become thick tokens, and edges ride just above the ground with a soft shadow
+under them. Use it when position is categorical or topological,
+not when it encodes a measured quantity.
+
+```jsx
+import { useState } from "react"
+import { ForceDirectedGraph } from "semiotic/network"
+import { isometricGlyphs, PerspectiveToggle } from "semiotic/network/perspective"
+
+const nodes = [
+  { id: "gateway", zone: "edge", tier: 3 },
+  { id: "api", zone: "app", tier: 2 },
+  { id: "worker", zone: "app", tier: 2 },
+  { id: "cache", zone: "data", tier: 1 },
+  { id: "postgres", zone: "data", tier: 1 }
+]
+const edges = [
+  { source: "gateway", target: "api" },
+  { source: "api", target: "worker" },
+  { source: "api", target: "cache" },
+  { source: "worker", target: "postgres" }
+]
+
+function ServiceMap() {
+  const [view, setView] = useState("isometric")
+  return (
+    <>
+      <PerspectiveToggle value={view} onChange={setView} options={["flat", "isometric", "military"]} />
+      <ForceDirectedGraph
+        nodes={nodes}
+        edges={edges}
+        colorBy="zone"
+        showLabels
+        title="Service map"
+        description="Services by zone, lifted by tier"
+        perspective={{
+          type: view,
+          elevation: "tier",              // the one added encoding (field, px, or callback)
+          glyph: isometricGlyphs.server,  // React-only; takes each node's color
+          ground: { grid: true },
+          regions: [{ id: "data", label: "DATA", nodes: ["cache", "postgres"] }],
+          transition: true
+        }}
+      />
+    </>
+  )
+}
+```
+
+Serialized/MCP configs use the preset string or the config object without
+callbacks or glyphs:
+
+```json
+{
+  "component": "ForceDirectedGraph",
+  "props": {
+    "nodes": [
+      { "id": "gateway", "zone": "edge", "tier": 3 },
+      { "id": "api", "zone": "app", "tier": 2 },
+      { "id": "postgres", "zone": "data", "tier": 1 }
+    ],
+    "edges": [
+      { "source": "gateway", "target": "api" },
+      { "source": "api", "target": "postgres" }
+    ],
+    "colorBy": "zone",
+    "perspective": { "type": "isometric", "elevation": "tier", "ground": { "grid": true } }
+  }
+}
+```
+
+Key props: `perspective` (`"flat"` default, `"isometric"`, `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config with `elevation`, `marks: "extrude"`, `ground`, `regions`, `edges.route`, `labels.mode`, `transition`). The prop is `perspective`, not `projection` (geo only). Extras such as the grid and regions render synchronously in `renderChart`; call `preloadNetworkPerspectiveExtras()` before hydrating server-rendered charts that use them.
+
 ---
 
 ## Realtime — Push API via Ref
