@@ -80,6 +80,8 @@ const BLURBS = {
     "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
   "./network/zoom":
     "Optional virtual network viewport, camera controls and consumer-owned LOD",
+  "./network/perspective":
+    "Isometric pictograms and an accessible perspective toggle (the prop ships in ./network)",
   "./geo": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
   "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
   "./server":
@@ -138,6 +140,7 @@ const ORDER = [
   "./ordinal",
   "./network",
   "./network/zoom",
+  "./network/perspective",
   "./geo",
   "./realtime",
   "./realtime/core",

@@ -16,7 +16,7 @@
     "Custom/network chart tooltip callbacks receive raw authored data. frameProps.tooltipContent receives a hover wrapper: use unwrapDatum once. Handle nodes and edges separately; use TooltipRoot for custom chrome. Do not guess nested d.data paths.",
     "Atlas readers: import MotifBraidChart, DependencyForestChart and FlowCircuitChart from semiotic/atlas. Prepare admitted artifacts and query evidence with semiotic/atlas/core. The same complete props support renderChartWithEvidence from semiotic/server.",
     "Stable sub-paths: /line,/access,/evidence,/artifact,/artifact/react,/xy,/ordinal,/network,/geo,/realtime,/realtime/core,/realtime/react,/physics,/physics/rapier,/physics/matter,/server,/server/node,/server/edge,/ai,/ai/core",
-    "More stable sub-paths: /atlas,/atlas/core,/network/zoom,/utils,/utils/core,/utils/react,/themes,/themes/core,/themes/react,/data,/recipes,/recipes/core,/recipes/react,/value,/spec,/controls,/rough,/text",
+    "More stable sub-paths: /atlas,/atlas/core,/network/zoom,/network/perspective,/utils,/utils/core,/utils/react,/themes,/themes/core,/themes/react,/data,/recipes,/recipes/core,/recipes/react,/value,/spec,/controls,/rough,/text",
     "Use usePretextAnnotations from semiotic/text for opt-in SVG note wrapping; install @chenglou/pretext@0.0.9. Pass returned notes to annotations. Browser fonts drive measurement; SSR and serialized JSON retain ordinary wrapping.",
     "Use semiotic/artifact for renderer-independent purpose, claims, evidence, time, reception, corrections, policy, collections, grounding, and transfer. Keep unknown source, review, or timing facts explicit; deterministic helpers do not invent them.",
     "Use /line only when LineChart is the route's sole XY chart; use /xy for any other XY chart or mixed XY catalog.",
@@ -35,6 +35,7 @@
     "ProportionalSymbolMap uses points + xAccessor(longitude) + yAccessor(latitude) + sizeBy(radius field); sizeRange is [min,max] pixel radius. Do not substitute generic data or valueAccessor props.",
     "Physics snapshots use data plus semantic accessors. React refs push source records; pushRows and dataIdAccessor are not physics props. Galton uses valueAccessor/bins; UnitPile uses categoryAccessor/valueAccessor/unitValue.",
     "CrucibleChart is an authored ledger, not inference: supply data, phases, products, events, and outlets. buildCrucibleProductEvents expands form/contribute/complete only; callers own membership, timing, reasons, loss, and routing. replay() restarts.",
-    "Word Trails callbacks receive source datum, canonical fields, and resolvedColumnColor. Put derived encodings on rows. Spread wordTrailsProgressiveReveal({currentSegment,segmentDomain}) into layoutConfig to fade history and hide future rows without reflow."
+    "Word Trails callbacks receive source datum, canonical fields, and resolvedColumnColor. Put derived encodings on rows. Spread wordTrailsProgressiveReveal({currentSegment,segmentDomain}) into layoutConfig to fade history and hide future rows without reflow.",
+    "Network charts take perspective: \"isometric\" | \"pixel\" | \"dimetric\" | \"military\" | \"cabinet\" or a config (elevation, regions, ground.grid, edges.route). Presentational only; use perspective, not projection, on network charts."
   ]
 }

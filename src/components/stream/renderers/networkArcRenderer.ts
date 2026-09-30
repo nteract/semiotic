@@ -1,5 +1,6 @@
 import type { NetworkSceneNode, NetworkArcNode } from "../networkTypes"
 import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
+import { cachedScenePath2D, paintPerspectiveFaces } from "./networkPerspectivePaint"
 
 /**
  * Canvas painter for NetworkArcNode (chord diagram arc segments).
@@ -18,14 +19,22 @@ export function networkArcRenderer(
       ctx.globalAlpha = a.style.opacity
     }
 
-    // Draw arc segment (annular sector)
-    ctx.beginPath()
-    ctx.arc(a.cx, a.cy, a.outerR, a.startAngle, a.endAngle)
-    ctx.arc(a.cx, a.cy, a.innerR, a.endAngle, a.startAngle, true)
-    ctx.closePath()
+    const path = a.pathD ? cachedScenePath2D(a.pathD) : null
+    if (path) {
+      // Projected (perspective) annular sector and its side walls.
+      paintPerspectiveFaces(ctx, a.style, a.faces, "#007bff")
+      paintNetworkFill(ctx, a.style, "#007bff", () => ctx.fill(path))
+      paintNetworkStroke(ctx, a.style, () => ctx.stroke(path))
+    } else {
+      // Draw arc segment (annular sector)
+      ctx.beginPath()
+      ctx.arc(a.cx, a.cy, a.outerR, a.startAngle, a.endAngle)
+      ctx.arc(a.cx, a.cy, a.innerR, a.endAngle, a.startAngle, true)
+      ctx.closePath()
 
-    paintNetworkFill(ctx, a.style, "#007bff", () => ctx.fill())
-    paintNetworkStroke(ctx, a.style, () => ctx.stroke())
+      paintNetworkFill(ctx, a.style, "#007bff", () => ctx.fill())
+      paintNetworkStroke(ctx, a.style, () => ctx.stroke())
+    }
 
     ctx.restore()
   }

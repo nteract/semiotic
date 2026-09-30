@@ -62,6 +62,7 @@ export type NetworkPipelineConfigSources = Pick<
   | "customNetworkLayout"
   | "onLayoutError"
   | "layoutConfig"
+  | "perspective"
 > & {
   tensionConfig: NetworkPipelineConfig["tensionConfig"]
   showParticles: boolean

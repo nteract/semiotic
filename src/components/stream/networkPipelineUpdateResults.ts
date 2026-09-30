@@ -128,6 +128,8 @@ export const NETWORK_CONFIG_PATCH_DEPENDENCIES: Readonly<
   orbitAnimated: dependency("preserve", LAYOUT),
   customNetworkLayout: dependency("preserve", LAYOUT),
   layoutConfig: dependency("preserve", LAYOUT),
+  // Projection runs after layout: rebuild the scene, keep positions.
+  perspective: dependency("preserve", GEOMETRY),
 
   nodeSize: dependency("preserve", GEOMETRY),
   nodeSizeRange: dependency("preserve", GEOMETRY),

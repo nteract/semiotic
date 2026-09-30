@@ -1,10 +1,12 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { sankeyLayoutPlugin } from "../../stream/layouts/sankeyLayoutPlugin"
 import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -28,6 +30,7 @@ import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 
 registerLayoutPlugin("sankey", sankeyLayoutPlugin)
+registerNetworkPerspective()
 
 /**
  * SankeyDiagram component props
@@ -48,6 +51,12 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
    * color or a HatchFill. Layers over the resolved node color.
    */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)
   orientation?: "horizontal" | "vertical"
   nodeAlign?: "justify" | "left" | "right" | "center"
@@ -370,6 +379,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...frameProps}
     />
   </SafeRender>)

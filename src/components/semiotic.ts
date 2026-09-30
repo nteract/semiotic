@@ -420,6 +420,21 @@ export type {
   NetworkLabel,
   ThresholdAlertConfig
 } from "./stream/networkTypes"
+export type {
+  NetworkPerspective,
+  NetworkPerspectiveBound,
+  NetworkPerspectiveConfig,
+  NetworkPerspectiveFrame,
+  NetworkPerspectiveName,
+  NetworkPerspectiveRegion
+} from "./stream/networkPerspective"
+export { useNetworkPerspective } from "./stream/networkPerspectiveContext"
+export {
+  NetworkPerspectiveBillboard,
+  NetworkPerspectiveGround
+} from "./stream/networkPerspectivePlacement"
+export type { NetworkPerspectiveHeight } from "./stream/networkPerspectivePlacement"
+export { preloadNetworkPerspectiveExtras } from "./stream/networkPerspectiveLoader"
 
 // ── Coordinated views types ────────────────────────────────────────────
 

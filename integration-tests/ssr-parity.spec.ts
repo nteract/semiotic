@@ -12,6 +12,7 @@ import {
   makeDependencyXRayParityCases,
   type DependencyXRayEvidence,
 } from "./dependency-xray-parity-fixtures"
+import { makeNetworkPerspectiveParityCases } from "./network-perspective-parity-fixtures"
 
 /**
  * SSR / CSR visual parity gate.
@@ -87,6 +88,7 @@ const cases: ParityCase[] = [
   ...makeSsrParityCases(React, recipes),
   ...makeDependencyXRayParityCases(),
   ...makeFlowCircuitParityCases(),
+  ...makeNetworkPerspectiveParityCases(recipes),
 ]
 
 // Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
@@ -142,6 +144,23 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   expect(evidence.status).toBe("ok")
   expect(evidence.empty).toBe(false)
   expect(evidence.markCount).toBeGreaterThan(0)
+  if (id.startsWith("perspective-")) {
+    // The projection reached the static SVG: area marks, bands and routes
+    // are projected paths, never axis-aligned rects.
+    expect(svg).toMatch(/<path\b[^>]*d="M/)
+    expect(svg).not.toMatch(/<rect\b[^>]*class="[^"]*network-node/)
+  }
+  if (id === "perspective-infrastructure") {
+    expect(svg).toContain("INTERNET FACING")
+    expect(svg).toContain("PRIVATE SUBNET")
+    expect(svg).toMatch(/<text\b[^>]*transform="rotate\(/)
+    expect(evidence.markCountByType?.["node:glyph"]).toBe(8)
+    expect(evidence.markCountByType?.["edge:curved"]).toBe(7)
+  }
+  if (id === "perspective-treemap-extrude") {
+    // Prism side faces are shaded from each leaf's fill.
+    expect(svg).toMatch(/fill="rgb\(\d+,\d+,\d+\)"/)
+  }
   if (id === "area") {
     expect(svg).toMatch(/<path[^>]*d="M[^"]*C/)
     expect(svg).toContain("<linearGradient")

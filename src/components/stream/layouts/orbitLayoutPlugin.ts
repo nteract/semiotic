@@ -424,7 +424,8 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
           text: String(text),
           anchor: "middle",
           fontSize: 10,
-          fill: "currentColor"
+          fill: "currentColor",
+          anchorPoint: [node.x, node.y]
         })
       }
     }

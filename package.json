@@ -63,6 +63,12 @@
       "require": "./dist/semiotic-network-zoom.min.js",
       "default": "./dist/semiotic-network-zoom.module.min.js"
     },
+    "./network/perspective": {
+      "types": "./dist/semiotic-network-perspective.d.ts",
+      "import": "./dist/semiotic-network-perspective.module.min.js",
+      "require": "./dist/semiotic-network-perspective.min.js",
+      "default": "./dist/semiotic-network-perspective.module.min.js"
+    },
     "./realtime": {
       "types": "./dist/semiotic-realtime.d.ts",
       "import": "./dist/realtime.module.min.js",

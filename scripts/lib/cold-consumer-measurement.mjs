@@ -100,6 +100,11 @@ export const NAMED_IMPORT_CASES = Object.freeze([
     symbol: "ZoomableNetworkCustomChart",
     platform: "browser"
   },
+  {
+    exportKey: "./network/perspective",
+    symbol: "isometricGlyphs",
+    platform: "browser"
+  },
   { exportKey: "./realtime", symbol: "RealtimeLineChart", platform: "browser" },
   { exportKey: "./realtime/core", symbol: "RingBuffer", platform: "browser" },
   {

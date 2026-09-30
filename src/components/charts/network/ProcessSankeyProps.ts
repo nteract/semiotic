@@ -1,4 +1,5 @@
 import type * as React from "react"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { ProcessSankeyOrientation } from "./processSankey/orientation"
 import type { ProcessSankeyLayoutExecution } from "./processSankey/processSankeyLayoutWorkerClient"
 import type { ProcessSankeyTimeLike } from "./processSankey/time"
@@ -138,6 +139,12 @@ export interface ProcessSankeyProps<
   edgeOpacity?: number | ((edge: TEdge) => number)
   /** Declarative threshold-aware styling for node bands (raw node datum). */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   /** Layout execution: auto (cost threshold), worker, or sync. SSR always sync. */
   layoutExecution?: ProcessSankeyLayoutExecution
   /** Override auto worker cost threshold (see estimateProcessSankeyLayoutCost). */

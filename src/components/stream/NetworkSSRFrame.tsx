@@ -14,6 +14,7 @@ import { renderSceneWithBackend } from "./renderBackend"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { filterSparseArray } from "../charts/shared/sparseArray"
+import { withNetworkPerspective } from "./networkPerspectiveContext"
 
 interface NetworkSSRFrameProps {
   tableId: string
@@ -101,6 +102,9 @@ export function NetworkSSRFrame({
   const sceneNodes = store?.sceneNodes ?? []
   const sceneEdges = store?.sceneEdges ?? []
   const labels = store?.labels ?? []
+  const perspectiveFrame = store?.perspective.frame
+  const perspectiveMode = store?.lastCustomLayoutResult?.perspective
+  const underlay = store?.perspective.underlay ?? []
 
   return (
     <div
@@ -148,11 +152,12 @@ export function NetworkSSRFrame({
         ) : null}
         <g transform={`translate(${margin.left},${margin.top})`}>
           <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
-          {composeOverlays(resolvedBackground, store?.customLayoutBackgrounds)}
+          {composeOverlays(resolvedBackground, withNetworkPerspective(store?.customLayoutBackgrounds, perspectiveFrame, perspectiveMode))}
           </NetworkViewGroup>
         </g>
         <g transform={`translate(${margin.left},${margin.top})`}>
           <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
+          {underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index + sceneEdges.length + sceneNodes.length))}
           {sceneEdges
             .map((edge, index) => renderSceneWithBackend({
               node: edge,
@@ -190,13 +195,13 @@ export function NetworkSSRFrame({
         legendClickBehavior={legendClickBehavior}
         legendHighlightedCategory={legendHighlightedCategory}
         legendIsolatedCategories={legendIsolatedCategories}
-        foregroundGraphics={composeOverlays(
+        foregroundGraphics={withNetworkPerspective(composeOverlays(
           resolvedForeground,
-          wrapWithCustomLayoutSelection(
+          withNetworkPerspective(wrapWithCustomLayoutSelection(
             store?.customLayoutOverlays,
             layoutSelection ?? null
-          )
-        )}
+          ), perspectiveFrame, perspectiveMode)
+        ), perspectiveFrame)}
         annotations={annotations}
         onAnnotationActivate={onAnnotationActivate}
         onObservation={annotationObservationCallback ?? onObservation}

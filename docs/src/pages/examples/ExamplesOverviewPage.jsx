@@ -70,6 +70,7 @@ const PREVIEW_COMPONENTS = {
   architecture: MiniArchitecturePreview,
   octopus: MiniOctopusPreview,
   gestalt: MiniGestaltPreview,
+  "isometric-infrastructure": MiniIsometricInfrastructurePreview,
   "semiotic-standard": MiniSemioticStandardPreview,
   "data-viz-for-dummies": MiniDataVizForDummiesPreview,
   "data-viz-for-dummies-2": MiniDataVizForDummiesTwoPreview,
@@ -2041,6 +2042,35 @@ function MiniNetworkVizPreview() {
         strokeWidth="1"
         opacity="0.7"
       />
+    </svg>
+  )
+}
+
+function MiniIsometricInfrastructurePreview() {
+  // A tiny isometric plate with three stacked hosts and a routed link.
+  const iso = (x, y, z = 0) => [121 + (x - y) * 17, 30 + (x + y) * 9.8 - z]
+  const pts = (list) => list.map(([x, y, z]) => iso(x, y, z).join(",")).join(" ")
+  const host = (x, y, key) => (
+    <g key={key}>
+      <polygon points={pts([[x - 0.35, y + 0.35, 0], [x + 0.35, y + 0.35, 0], [x + 0.35, y + 0.35, 12], [x - 0.35, y + 0.35, 12]])} fill="#8f9ff5" />
+      <polygon points={pts([[x + 0.35, y - 0.35, 0], [x + 0.35, y + 0.35, 0], [x + 0.35, y + 0.35, 12], [x + 0.35, y - 0.35, 12]])} fill="#6f7fd8" />
+      <polygon points={pts([[x - 0.35, y - 0.35, 12], [x + 0.35, y - 0.35, 12], [x + 0.35, y + 0.35, 12], [x - 0.35, y + 0.35, 12]])} fill="#c5cdff" />
+    </g>
+  )
+  const grid = []
+  for (let i = -2; i <= 6; i += 1) {
+    grid.push(<line key={`a${i}`} x1={iso(i, -2)[0]} y1={iso(i, -2)[1]} x2={iso(i, 6)[0]} y2={iso(i, 6)[1]} stroke="rgba(160,176,255,0.18)" />)
+    grid.push(<line key={`b${i}`} x1={iso(-2, i)[0]} y1={iso(-2, i)[1]} x2={iso(6, i)[0]} y2={iso(6, i)[1]} stroke="rgba(160,176,255,0.18)" />)
+  }
+  return (
+    <svg viewBox="0 0 242 96" style={styles.preview} aria-hidden="true">
+      <rect width="242" height="96" fill="#0b1a5c" />
+      {grid}
+      <polygon points={pts([[0.3, 0.3, 4], [3.7, 0.3, 4], [3.7, 2.7, 4], [0.3, 2.7, 4]])} fill="#12267a" stroke="#3653d4" />
+      <polyline points={pts([[1, 1.5, 4], [2, 1.5, 4], [2, 2.2, 4], [3, 2.2, 4]])} fill="none" stroke="#eef2ff" strokeWidth="1.2" />
+      {host(1, 1.5, "a")}
+      {host(3, 2.2, "b")}
+      {host(2.6, 0.9, "c")}
     </svg>
   )
 }

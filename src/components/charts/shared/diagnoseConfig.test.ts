@@ -1241,3 +1241,27 @@ describe("diagnoseConfig", () => {
     })
   })
 })
+
+describe("network perspective diagnostics", () => {
+  const edges = [{ source: "a", target: "b", value: 1, startTime: 0, endTime: 1 }]
+  it("warns when a time-positioned ProcessSankey is projected", () => {
+    const result = diagnoseConfig("ProcessSankey", {
+      nodes: [{ id: "a" }, { id: "b" }], edges, domain: [0, 2], perspective: "isometric"
+    })
+    expect(result.diagnoses.map((d) => d.code)).toContain("PERSPECTIVE_MEASURED_POSITION")
+    const flat = diagnoseConfig("ProcessSankey", { nodes: [{ id: "a" }, { id: "b" }], edges, domain: [0, 2] })
+    expect(flat.diagnoses.map((d) => d.code)).not.toContain("PERSPECTIVE_MEASURED_POSITION")
+  })
+
+  it("points network charts from projection to perspective", () => {
+    const result = diagnoseConfig("ForceDirectedGraph", {
+      nodes: [{ id: "a" }, { id: "b" }], edges: [{ source: "a", target: "b" }], projection: "isometric"
+    })
+    const finding = result.diagnoses.find((d) => d.code === "NETWORK_PROJECTION_PROP")
+    expect(finding?.fix).toContain("perspective")
+    const ok = diagnoseConfig("ForceDirectedGraph", {
+      nodes: [{ id: "a" }, { id: "b" }], edges: [{ source: "a", target: "b" }], perspective: "isometric"
+    })
+    expect(ok.diagnoses.map((d) => d.code)).not.toContain("NETWORK_PROJECTION_PROP")
+  })
+})

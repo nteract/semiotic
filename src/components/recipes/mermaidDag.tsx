@@ -1,7 +1,8 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
-import type { NetworkSceneNode, RealtimeNode } from "../stream/networkTypes"
+import type { NetworkLabel, NetworkSceneEdge, NetworkSceneNode, RealtimeNode } from "../stream/networkTypes"
+import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
 import { readField } from "./recipeUtils"
 
 /**
@@ -137,6 +138,71 @@ function shapeGlyph(
   }
 }
 
+/** Rounded-rectangle outline as a closed path. */
+function roundedRectPath(left: number, top: number, w: number, h: number, r: number): string {
+  const q = Math.max(0, Math.min(r, w / 2, h / 2))
+  const right = left + w
+  const bottom = top + h
+  return `M${left + q},${top} H${right - q} A${q},${q} 0 0 1 ${right},${top + q} V${bottom - q} ` +
+    `A${q},${q} 0 0 1 ${right - q},${bottom} H${left + q} A${q},${q} 0 0 1 ${left},${bottom - q} ` +
+    `V${top + q} A${q},${q} 0 0 1 ${left + q},${top} Z`
+}
+
+/** Closed silhouette of a node shape, for solid pieces under a `perspective`. */
+function shapeOutline(shape: NodeShape, cx: number, cy: number, w: number, h: number): string {
+  const left = cx - w / 2
+  const top = cy - h / 2
+  switch (shape) {
+    case "diamond":
+      return `M${cx},${top} L${cx + w / 2},${cy} L${cx},${cy + h / 2} L${left},${cy} Z`
+    case "circle": {
+      const r = Math.min(w, h) / 2
+      return `M${cx - r},${cy} A${r},${r} 0 1 1 ${cx + r},${cy} A${r},${r} 0 1 1 ${cx - r},${cy} Z`
+    }
+    case "stadium":
+    case "round":
+      return roundedRectPath(left, top, w, h, shape === "stadium" ? h / 2 : 8)
+    case "hexagon": {
+      const inset = Math.min(w * 0.18, 16)
+      return `M${left + inset},${top} L${cx + w / 2 - inset},${top} L${cx + w / 2},${cy} ` +
+        `L${cx + w / 2 - inset},${cy + h / 2} L${left + inset},${cy + h / 2} L${left},${cy} Z`
+    }
+    case "cylinder": {
+      const ry = Math.min(h * 0.16, 8)
+      return `M${left},${top + ry} A${w / 2},${ry} 0 0 1 ${left + w},${top + ry} V${top + h - ry} ` +
+        `A${w / 2},${ry} 0 0 1 ${left},${top + h - ry} Z`
+    }
+    case "subroutine":
+      return roundedRectPath(left, top, w, h, 3)
+    case "flag":
+    case "rect":
+    default:
+      return roundedRectPath(left, top, w, h, 4)
+  }
+}
+
+/** Inner detail lines drawn on a solid piece's top face (cylinder rim, subroutine bars). */
+function shapeDetail(shape: NodeShape, cx: number, cy: number, w: number, h: number, stroke: string): ReactNode {
+  const left = cx - w / 2
+  const top = cy - h / 2
+  if (shape === "cylinder") {
+    const ry = Math.min(h * 0.16, 8)
+    return <path d={`M${left},${top + ry} a${w / 2},${ry} 0 0 0 ${w},0`} fill="none" stroke={stroke} strokeWidth={1.5} />
+  }
+  if (shape === "subroutine") {
+    const bar = Math.min(8, w * 0.08)
+    return (
+      <path
+        d={`M${left + bar},${top} V${top + h} M${left + w - bar},${top} V${top + h}`}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={1.5}
+      />
+    )
+  }
+  return null
+}
+
 export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => {
   const cfg = ctx.config || {}
   const plot = ctx.dimensions.plot
@@ -195,7 +261,12 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
     (horizontal ? plot.y : plot.x) + ((indexInLayer + 1) / (count + 1)) * crossSpan
 
   const pos = new Map<string, { cx: number; cy: number; shape: NodeShape }>()
+  // Under a `perspective`, nodes, edges and labels become scene marks so the
+  // frame draws them as solid pieces; flat charts keep the overlay drawing.
+  const solid = ctx.perspective != null
   const sceneNodes: NetworkSceneNode[] = []
+  const sceneEdges: NetworkSceneEdge[] = []
+  const labels: NetworkLabel[] = []
   const nodeGlyphs: ReactNode[] = []
 
   for (const [layer, list] of byLayer) {
@@ -212,6 +283,29 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
       // The datum is tooltip-shaped: a name + a human-readable type, so the
       // smart default tooltip shows "Valid?" / "type: decision" rather than the
       // node id alone. `shape` is kept for custom tooltips that want the glyph.
+      const datum = { id: node.id, name: label, type: SHAPE_KIND[shape] ?? "process", shape }
+      const text = truncate(label, Math.max(4, Math.floor((w - 12) / 7)))
+      if (solid) {
+        // Under a `perspective` the node is a real piece: its silhouette is
+        // the outline the frame thickens into a slab.
+        const stroke = shape === "diamond" ? accent : nodeStroke
+        sceneNodes.push({
+          type: "rect",
+          x: cx - w / 2,
+          y: cy - h / 2,
+          w,
+          h,
+          style: { fill: nodeFill, stroke, strokeWidth: 1.5 },
+          _hitPath: { pathD: shapeOutline(shape, cx, cy, w, h), transform: [0, 0, 1, 1], fill: true, strokeWidth: 0 },
+          datum,
+          id: node.id,
+          label,
+        })
+        labels.push({ x: cx, y: cy, text, anchor: "middle", baseline: "middle", fontSize: 13, fill: textColor, anchorPoint: [cx, cy] })
+        const detail = shapeDetail(shape, cx, cy, w, h, stroke)
+        if (detail) nodeGlyphs.push(<g key={`n-${node.id}`}>{detail}</g>)
+        return
+      }
       sceneNodes.push({
         type: "rect",
         x: cx - w / 2,
@@ -219,7 +313,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
         w,
         h,
         style: { fill: "transparent", stroke: "transparent" },
-        datum: { id: node.id, name: label, type: SHAPE_KIND[shape] ?? "process", shape },
+        datum,
         id: node.id,
         label,
       })
@@ -236,7 +330,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
             fill={textColor}
             style={{ pointerEvents: "none" }}
           >
-            {truncate(label, Math.max(4, Math.floor((w - 12) / 7)))}
+            {text}
           </text>
         </g>,
       )
@@ -276,11 +370,24 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
     const mx = (sx + tx) / 2
     const my = (sy + ty) / 2
 
+    if (solid) {
+      // A real edge under a `perspective`: it rides at piece height and casts
+      // a shadow; the arrowhead lies on the same plane.
+      sceneEdges.push({
+        type: "curved",
+        pathD,
+        style: { stroke: edgeColor, strokeWidth: 1.4, fill: "none" },
+        datum: edge.data ?? edge,
+      })
+    }
     edgeGlyphs.push(
       <g key={`e-${ei}`}>
-        <path d={pathD} fill="none" stroke={edgeColor} strokeWidth={1.4} />
-        <polygon points={head} fill={edgeColor} />
+        {!solid && <path d={pathD} fill="none" stroke={edgeColor} strokeWidth={1.4} />}
+        <NetworkPerspectiveGround z="top">
+          <polygon points={head} fill={edgeColor} />
+        </NetworkPerspectiveGround>
         {typeof elabel === "string" && elabel.length > 0 && (
+          <NetworkPerspectiveBillboard x={mx} y={my}>
           <g>
             <rect
               x={mx - (elabel.length * 6.5) / 2 - 4}
@@ -296,6 +403,7 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
               {elabel}
             </text>
           </g>
+          </NetworkPerspectiveBillboard>
         )}
       </g>,
     )
@@ -304,9 +412,11 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
   const overlays: ReactNode = (
     <g className="mermaid-dag">
       {edgeGlyphs}
-      {nodeGlyphs}
+      {solid ? <NetworkPerspectiveGround z="top">{nodeGlyphs}</NetworkPerspectiveGround> : nodeGlyphs}
     </g>
   )
 
-  return { sceneNodes, overlays }
+  return solid
+    ? { sceneNodes, sceneEdges, labels, overlays, perspective: "manual" }
+    : { sceneNodes, overlays }
 }

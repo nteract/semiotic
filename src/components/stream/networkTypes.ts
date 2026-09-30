@@ -5,15 +5,12 @@ import type { Datum } from "../charts/shared/datumTypes"
 type NetworkDatumComparator = { bivarianceHack(a: Datum, b: Datum): number }["bivarianceHack"]
 type NetworkGroupComparator = (a: number, b: number) => number
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
-import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneDatum, SceneAccessibilityMetadata, SceneRenderMode, FrameGraphicsProp } from "./types"
+import type { Style, DecayConfig, PulseConfig, TransitionConfig, StalenessConfig, ThemeSemanticColors, SceneRenderMode, FrameGraphicsProp } from "./types"
 import type { AnimateProp } from "./pipelineTransitionUtils"
-import type { NetworkSymbolName } from "./symbolPath"
-import type { GlyphDef } from "./glyphDef"
 import type { StreamNetworkFrameHandle } from "./networkFrameHandleTypes"
 import type { StreamNetworkInteractionProps } from "./networkInteractionTypes"
 import type { NetworkViewportProps } from "./networkViewportTypes"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
-import type { PathHitRegion } from "./hitTestUtils"
 
 /** Style-callback result, including `cursor` on legacy datum-shaped returns. */
 export type NetworkMarkStyle = Style | (Datum & Pick<Style, "cursor">)
@@ -238,232 +235,27 @@ export type NetworkChartType =
   | "orbit"
   | "partition"
 
-// ── Scene graph nodes ─────────────────────────────────────────────────
-
-/** Circle node — used by force, tree, cluster, circlepack */
-export interface NetworkCircleNode {
-  type: "circle"
-  cx: number
-  cy: number
-  r: number
-  style: Style
-  datum: SceneDatum
-  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
-  accessibility?: SceneAccessibilityMetadata["accessibility"]
-  id?: string
-  label?: string
-  depth?: number
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _pulseGlowRadius?: number
-}
-
-/** Rect node — used by sankey, treemap, partition */
-export interface NetworkRectNode {
-  type: "rect"
-  x: number
-  y: number
-  w: number
-  h: number
-  style: Style
-  datum: SceneDatum
-  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
-  accessibility?: SceneAccessibilityMetadata["accessibility"]
-  id?: string
-  label?: string
-  depth?: number
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _pulseGlowRadius?: number
-  /** @internal Exact pointer region for display-list paths; the rect remains the focus/navigation bounds. */
-  _hitPath?: PathHitRegion
-}
-
-/** Arc node — used by chord */
-/** Arc node — used by chord. Angles in canvas convention (0 = 3 o'clock). */
-export interface NetworkArcNode {
-  type: "arc"
-  cx: number
-  cy: number
-  innerR: number
-  outerR: number
-  /** Start angle in radians, canvas convention (0 = 3 o'clock, positive = clockwise) */
-  startAngle: number
-  /** End angle in radians, canvas convention */
-  endAngle: number
-  style: Style
-  datum: SceneDatum
-  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
-  accessibility?: SceneAccessibilityMetadata["accessibility"]
-  id?: string
-  label?: string
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _pulseGlowRadius?: number
-}
-
-/**
- * Symbol node — a glyph rendered from a `d3-shape` symbol path (or a custom
- * path). The per-datum shape channel: recipes that encode a categorical field
- * as marker shape (e.g. `packedClusterMatrix`) emit these. Hit-tests as a
- * circle of the symbol's effective radius; renders on canvas and in SVG/SSR.
- */
-export interface NetworkSymbolNode {
-  type: "symbol"
-  cx: number
-  cy: number
-  /** d3-symbol area in px² — drives the glyph's drawn size. */
-  size: number
-  /** Named shape. Ignored when `path` is set. @default "circle" */
-  symbolType?: NetworkSymbolName
-  /** Pre-built SVG path string, origin-centered — overrides `symbolType`. */
-  path?: string
-  /** Rotation in radians about (cx, cy). */
-  rotation?: number
-  style: Style
-  datum: SceneDatum
-  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
-  accessibility?: SceneAccessibilityMetadata["accessibility"]
-  id?: string
-  label?: string
-  depth?: number
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _pulseGlowRadius?: number
-}
-
-/**
- * Glyph node — the composite-pictogram channel for network scenes: a
- * multi-part `GlyphDef` stamped at (cx, cy) with per-node `color`/`accent`
- * paints and optional partial fill. The network sibling of the XY/ordinal/geo
- * `GlyphSceneNode`.
- */
-export interface NetworkGlyphNode {
-  type: "glyph"
-  cx: number
-  cy: number
-  /** Rendered height in px — width follows the definition's viewBox aspect. */
-  size: number
-  /** The multi-part pictogram definition to stamp. */
-  glyph: GlyphDef
-  /** Primary paint for parts declaring `"color"`. Falls back to `style.fill`. */
-  color?: string
-  /** Accent paint for parts declaring `"accent"`. */
-  accent?: string
-  /** Partial fill 0–1. @default 1 */
-  fraction?: number
-  /** Where the partial fill begins, 0–1. @default 0 */
-  fractionStart?: number
-  /** Partial-fill axis. @default "horizontal" */
-  fractionDirection?: "horizontal" | "vertical"
-  /** Ghost paint drawn at full extent beneath a partial fill. */
-  ghostColor?: string
-  /** Rotation in radians about (cx, cy). */
-  rotation?: number
-  style: Style
-  datum: SceneDatum
-  accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
-  accessibility?: SceneAccessibilityMetadata["accessibility"]
-  id?: string
-  label?: string
-  depth?: number
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _pulseGlowRadius?: number
-}
-
-/**
- * Semantic and interaction metadata shared by every network edge shape.
- * Custom layouts can expose a curated accessible-table row without changing
- * the render datum, and can opt decorative/table-only edges out of pointer
- * hit testing with `interactive: false`.
- */
-interface NetworkEdgeMetadata extends SceneAccessibilityMetadata {
-  id?: string
-  label?: string
-  interactive?: boolean
-}
-
-/** Line edge — used by force */
-export interface NetworkLineEdge extends NetworkEdgeMetadata {
-  type: "line"
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-  style: Style
-  datum: SceneDatum
-  _pulseIntensity?: number
-  _pulseColor?: string
-}
-
-/** Bezier band edge — used by sankey */
-export interface NetworkBezierEdge extends NetworkEdgeMetadata {
-  type: "bezier"
-  pathD: string
-  bezierCache?: BezierCache
-  style: Style
-  datum: SceneDatum
-  /** Internal gradient used by circular sankey stub bands. */
-  _gradient?: { x0: number; x1: number; y0?: number; y1?: number; from: number; to: number }
-  _pulseIntensity?: number
-  _pulseColor?: string
-  /** Lazily-built Path2D for hit testing; invalidated when pathD changes. */
-  _cachedPath2D?: Path2D
-  _cachedPath2DSource?: string
-}
-
-/** Ribbon edge — used by chord */
-export interface NetworkRibbonEdge extends NetworkEdgeMetadata {
-  type: "ribbon"
-  pathD: string
-  style: Style
-  datum: SceneDatum
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _cachedPath2D?: Path2D
-  _cachedPath2DSource?: string
-}
-
-/** Curved edge — used by tree, cluster */
-export interface NetworkCurvedEdge extends NetworkEdgeMetadata {
-  type: "curved"
-  pathD: string
-  style: Style
-  datum: SceneDatum
-  _pulseIntensity?: number
-  _pulseColor?: string
-  _cachedPath2D?: Path2D
-  _cachedPath2DSource?: string
-}
-
-export type NetworkSceneNode =
-  | NetworkCircleNode
-  | NetworkRectNode
-  | NetworkArcNode
-  | NetworkSymbolNode
-  | NetworkGlyphNode
-
-export type NetworkSceneEdge =
-  | NetworkLineEdge
-  | NetworkBezierEdge
-  | NetworkRibbonEdge
-  | NetworkCurvedEdge
-
-/** Label data for the SVG overlay */
-export interface NetworkLabel {
-  x: number
-  y: number
-  text: string
-  anchor?: "start" | "middle" | "end"
-  baseline?: string
-  fontSize?: number
-  fontWeight?: number | string
-  fill?: string
-  stroke?: string
-  strokeWidth?: number
-  paintOrder?: string
-}
+// ── Scene graph (see networkSceneTypes.ts) ───────────────────────────
+export type {
+  NetworkCircleNode,
+  NetworkPerspectiveFace,
+  NetworkRectNode,
+  NetworkArcNode,
+  NetworkSymbolNode,
+  NetworkGlyphNode,
+  NetworkLineEdge,
+  NetworkBezierEdge,
+  NetworkRibbonEdge,
+  NetworkCurvedEdge,
+  NetworkSceneNode,
+  NetworkSceneEdge,
+  NetworkLabel,
+} from "./networkSceneTypes"
+import type {
+  NetworkSceneNode,
+  NetworkSceneEdge,
+  NetworkLabel,
+} from "./networkSceneTypes"
 
 // ── Layout plugin interface ───────────────────────────────────────────
 
@@ -656,6 +448,9 @@ export interface NetworkPipelineConfig {
   /** @internal Previous node positions for warm-start force layout */
   __previousPositions?: Map<string, { x: number; y: number }>
 
+  /** Parallel projection applied after layout. See {@link StreamNetworkFrameProps.perspective}. */
+  perspective?: import("./networkPerspective").NetworkPerspective
+
   // ── customLayout escape hatch ────────────────────
   /** When provided, replaces both layout dispatch and scene building.
    *  Receives raw nodes/edges and returns positioned scene primitives. */
@@ -720,6 +515,15 @@ export interface StreamNetworkFrameProps<T = Datum>
   edgeSort?: NetworkDatumComparator
   /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
+  /**
+   * Parallel projection applied after layout: `"isometric"`, `"pixel"` (2:1),
+   * `"dimetric"`, `"military"`, `"cabinet"`, or a config object with
+   * elevation, extrusion, ground grid, regions and edge routing. Layout
+   * coordinates are unchanged; point marks stay upright, areas and edges lie
+   * on the projected ground, and hit testing, tooltips, keyboard focus,
+   * annotations and SSR follow the projected marks. @default "flat"
+   */
+  perspective?: import("./networkPerspective").NetworkPerspective
   treeOrientation?: "vertical" | "horizontal" | "radial"
   edgeType?: "line" | "curve"
   padding?: number

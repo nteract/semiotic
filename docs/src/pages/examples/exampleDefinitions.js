@@ -2038,6 +2038,18 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
   {
+    title: "Isometric Infrastructure",
+    path: "/examples/isometric-infrastructure",
+    publishedAt: "2026-09-29T17:00:00-07:00",
+    eyebrow: "Network perspective · one prop",
+    description:
+      "Which hosts need attention, and what do they talk to? Read a production footprint drawn in isometric perspective, then flatten it to see that the same layout was underneath all along.",
+    preview: "isometric-infrastructure",
+    badges: ["perspective", "semiotic/network/perspective", "Zone plates"],
+    frames: ["network", "custom"],
+    topics: ["process", "design"],
+  },
+  {
     title: "Pipeline Explorer",
     path: "/examples/pipeline-explorer",
     publishedAt: "2026-09-23T15:00:00-07:00",
@@ -2929,6 +2941,7 @@ const EXAMPLE_REGISTRY_METADATA = [
 ]
 
 const EXAMPLE_SOURCE_FILES_BY_PATH = Object.freeze({
+  "/examples/isometric-infrastructure": "IsometricInfrastructureExamplePage.jsx",
   "/examples/flow-circuit": "FlowCircuitExamplePage.tsx",
   "/examples/atlas-acceptance": "AtlasEvaluationExamplePage.tsx",
   "/examples/dependency-xray": "DependencyXRayExamplePage.tsx",

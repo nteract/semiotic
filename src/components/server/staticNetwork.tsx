@@ -50,6 +50,15 @@ import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { collectNetworkAnnotationAnchors } from "../stream/networkAnnotationAnchors"
 import { NetworkViewGroup } from "../stream/networkViewTransform"
 import { normalizeNetworkData } from "../stream/networkDataNormalization"
+import { resolveNetworkPerspective } from "../stream/networkPerspective"
+import { withNetworkPerspective } from "../stream/networkPerspectiveContext"
+import { resolveThemeSemanticColors } from "../store/themeCore"
+import { provideNetworkPerspectiveExtras } from "../stream/networkPerspectiveLoader"
+import { networkPerspectiveExtras } from "../stream/networkPerspectiveExtras"
+import { projectNetworkScene } from "../stream/networkPerspectiveScene"
+
+// Static rendering projects scenes directly and needs synchronous extras.
+provideNetworkPerspectiveExtras(networkPerspectiveExtras)
 
 registerBuiltInNetworkLayouts()
 
@@ -311,7 +320,9 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     // branch).
     customNetworkLayout: props.customNetworkLayout,
     layoutConfig: props.layoutConfig,
+    perspective: props.perspective,
   }
+  const perspective = resolveNetworkPerspective(props.perspective)
 
   let nodes: RealtimeNode[]
   let edges: RealtimeEdge[]
@@ -346,6 +357,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // `content` below so SSR uses the same below/above scene ordering as CSR.
   let customLayoutBackgrounds: import("react").ReactNode = null
   let customLayoutOverlays: import("react").ReactNode = null
+  let customLayoutPerspectiveMode: "ground" | "manual" | undefined
+  let customLayoutBounds: readonly import("../stream/networkPerspective").NetworkPerspectiveBound[] | undefined
   if (config.customNetworkLayout) {
     // Share named-palette and category-map resolution with NetworkPipelineStore.
     const customColorScheme = config.colorScheme as
@@ -384,8 +397,10 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       resolveColor,
       config: (config.layoutConfig ?? {}) as Record<string, unknown>,
       selection: props.layoutSelection ?? null,
+      perspective: perspective?.config ?? null,
     }
     const result = config.customNetworkLayout(ctx)
+    customLayoutPerspectiveMode = result.perspective
     sceneNodes = result.sceneNodes ?? []
     sceneEdges = result.sceneEdges ?? []
     restyleNetworkCustomScene({
@@ -399,6 +414,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     labels = result.labels ?? []
     customLayoutBackgrounds = result.backgrounds ?? null
     customLayoutOverlays = result.overlays ?? null
+    customLayoutBounds = result.perspectiveBounds
   } else if (plugin) {
     plugin.computeLayout(nodes, edges, config, [innerWidth, innerHeight])
     const built = plugin.buildScene(nodes, edges, config, [innerWidth, innerHeight])
@@ -406,6 +422,28 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     sceneEdges = built.sceneEdges
     labels = built.labels
   }
+
+  // Same post-layout projection stage as NetworkPipelineStore.buildScene.
+  let underlay: NetworkSceneEdge[] = []
+  const perspectiveFrame = perspective
+    ? (() => {
+        const projected = projectNetworkScene({
+          sceneNodes,
+          sceneEdges,
+          labels,
+          bounds: customLayoutBounds,
+          size: [innerWidth, innerHeight],
+          perspective,
+          chartType,
+          theme: resolveThemeSemanticColors(theme)
+        })
+        sceneNodes = projected.sceneNodes
+        sceneEdges = projected.sceneEdges
+        labels = projected.labels
+        underlay = projected.underlay
+        return projected.frame
+      })()
+    : null
 
   // Apply theme text color to labels (layout plugins default to #333)
   const s = themeStyles(theme)
@@ -439,14 +477,15 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       {resolvedBackgroundGraphics}
       {/* Layout-derived backgrounds share fitted plot coordinates with the
           scene, but paint first so static SVG matches the live canvas stack. */}
-      {customLayoutBackgrounds}
+      {withNetworkPerspective(customLayoutBackgrounds, perspectiveFrame, customLayoutPerspectiveMode)}
+      {underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index))}
       {edgeElements}
       {nodeElements}
       {labelElements}
       {annotationNodes}
-      {resolvedForegroundGraphics}
+      {withNetworkPerspective(resolvedForegroundGraphics, perspectiveFrame)}
       {/* Layout overlays paint above foreground graphics, matching NetworkSVGOverlay. */}
-      {customLayoutOverlays}
+      {withNetworkPerspective(customLayoutOverlays, perspectiveFrame, customLayoutPerspectiveMode)}
     </>
   )
 

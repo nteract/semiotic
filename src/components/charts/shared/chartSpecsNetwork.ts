@@ -2,7 +2,6 @@ import type { ChartSpec } from "./chartSpecCore"
 import {
   ORIENTATION_ENUM
 } from "./chartSpecCore"
-import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
   ForceDirectedGraph: {
@@ -12,9 +11,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["nodes", "edges"],
     dataShape: "network",
     dataAccessors: ["nodeIdAccessor", "sourceAccessor", "targetAccessor"],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       nodes: { type: "array", description: "Array of node objects" },
       edges: { type: "array", description: "Array of edge objects with source and target" },
       nodeIdAccessor: { type: ["string", "function"], default: "id", description: "Key for node unique identifier" },
@@ -54,9 +52,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["edges"],
     dataShape: "network",
     dataAccessors: ["sourceAccessor", "targetAccessor"],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects (auto-derived from edges if omitted)" },
       sourceAccessor: { type: ["string", "function"], default: "source" },
@@ -94,7 +91,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["domain"],
     dataShape: "network",
     dataAccessors: ["sourceAccessor", "targetAccessor"],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
       edges: { type: "array", description: "Array of timed edge records with source, target, value, startTime, endTime. Omit for push-mode." },
       nodes: { type: "array", description: "Optional array of node objects. Nodes may carry an `xExtent: [start, end]` to bound the lane explicitly." },
@@ -132,7 +129,6 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       showLaneRails: { type: "boolean", default: false },
       showQualityReadout: { type: "boolean", default: false },
       edgeOpacity: { type: "number", default: 0.35 },
-      styleRules: STYLE_RULES_PROP_SPEC,
       layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] as const, default: "auto", description: "Layout execution: auto (cost threshold), worker, or sync. SSR always sync." },
       layoutWorkerThreshold: { type: "number", description: "Override auto worker cost threshold for ProcessSankey packing/ordering." },
       layoutLoadingContent: { type: ["boolean", "string", "number", "object"], omitFromSchema: true, description: "React content while worker layout is pending; false suppresses it." },
@@ -158,9 +154,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["edges"],
     dataShape: "network",
     dataAccessors: ["sourceAccessor", "targetAccessor"],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       edges: { type: "array", description: "Array of edge objects with source, target, and value" },
       nodes: { type: "array", description: "Optional array of node objects" },
       sourceAccessor: { type: ["string", "function"], default: "source" },
@@ -192,9 +187,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["data"],
     dataShape: "object",
     dataAccessors: [],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       layout: { type: "string", enum: ["tree", "cluster", "partition", "treemap", "circlepack"] as const, default: "tree" },
       orientation: { type: "string", enum: ["vertical", "horizontal", "radial"] as const, default: "vertical" },
@@ -223,9 +217,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["data"],
     dataShape: "object",
     dataAccessors: [],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       childrenAccessor: { type: ["string", "function"], default: "children" },
       valueAccessor: { type: ["string", "function"], default: "value", description: "Own finite nonnegative value, added to descendants; missing or invalid values contribute zero." },
@@ -254,9 +247,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["data"],
     dataShape: "object",
     dataAccessors: [],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Root node object with nested children" },
       childrenAccessor: { type: ["string", "function"], default: "children" },
       valueAccessor: { type: ["string", "function"], default: "value", description: "Own finite nonnegative value, added to descendants; missing or invalid values contribute zero." },
@@ -283,9 +275,8 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     required: ["data"],
     dataShape: "object",
     dataAccessors: [],
-    propBags: ["common"],
+    propBags: ["common", "network"],
     ownProps: {
-      styleRules: STYLE_RULES_PROP_SPEC,
       data: { type: "object", description: "Hierarchical root object with children: { name: 'root', children: [...] }" },
       childrenAccessor: { type: ["string", "function"], default: "children", description: "Key to access children from each datum" },
       nodeIdAccessor: { type: ["string", "function"], default: "name", description: "Node ID; repeats get collision-free suffixes in source order. Use unique IDs for structural reordering." },

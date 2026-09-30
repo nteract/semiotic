@@ -160,6 +160,9 @@ const note = withProvenance(
 - Don't import charts from the bare `semiotic` barrel in production code.
 - Don't pass `data={[]}` for live charts (use push mode — omit `data`).
 - Don't promise live/interactive behavior from `renderChart` — it's a static snapshot.
+- Don't use network `perspective` (isometric and other parallel projections) when
+  position encodes a measured quantity, and don't call it 3D; on network charts
+  the prop is `perspective`, not `projection`.
 - Don't invent a component name; if no chart fits, say so and surface alternatives
   (`suggestCharts` / `repairChartConfig`) — a wrong chart deceives the reader who
   can least afford it.

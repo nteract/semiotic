@@ -47,6 +47,25 @@ describe("Network node coloring via nodeStyle", () => {
     expect(redCount).toBe(2)     // 2 teamB nodes
   })
 
+  it("assigns colorBy palette colors by first appearance, matching the legend", () => {
+    const svg = renderChart("ForceDirectedGraph", {
+      nodes,
+      edges,
+      colorBy: "group",
+      width: 400,
+      height: 300,
+      iterations: 10,
+    })
+    const fill = (id: string) => {
+      const index = nodes.findIndex((n) => n.id === id)
+      return [...svg.matchAll(/<circle[^>]*fill="([^"]+)"/g)].map((m) => m[1])[index]
+    }
+    // category10 in order of appearance: broker, teamA, teamB.
+    expect(fill("Lead")).toBe("#1f77b4")
+    expect(fill("Alice")).toBe("#ff7f0e")
+    expect(fill("Dave")).toBe("#2ca02c")
+  })
+
   it("should respect pre-set x/y positions with iterations=0", () => {
     // Positions in inner-chart coordinates (margins are 20px default for network)
     const pinnedNodes = [

@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 282,
+    "kb": 298,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -39,12 +39,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 139,
+    "kb": 141,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 178,
+    "kb": 180,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
@@ -54,27 +54,32 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network",
-    "kb": 159,
+    "kb": 175,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 164,
+    "kb": 180,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
+    "importPath": "semiotic/network/perspective",
+    "kb": 2,
+    "blurb": "Isometric pictograms and an accessible perspective toggle (the prop ships in ./network)"
+  },
+  {
     "importPath": "semiotic/geo",
-    "kb": 109,
+    "kb": 110,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 175,
+    "kb": 190,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 173,
+    "kb": 189,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -84,27 +89,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 249,
+    "kb": 262,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 249,
+    "kb": 262,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 258,
+    "kb": 272,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 102,
+    "kb": 103,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 94,
+    "kb": 95,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -114,12 +119,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 111,
+    "kb": 114,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 109,
+    "kb": 113,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -169,7 +174,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 620,
+    "kb": 636,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -179,7 +184,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/controls",
-    "kb": 16,
+    "kb": 17,
     "blurb": "DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer"
   },
   {
@@ -194,7 +199,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 397,
+    "kb": 415,
     "blurb": "Full chart API and shared utilities"
   }
 ])

@@ -58,7 +58,12 @@ const analyze = process.argv.includes("--analyze")
 // 393.9 KiB on the same union.
 // Bumped 395→396: under-layer band fills, per-glyph BumpChart label widths,
 // and hub-fitted gauge centers measure 395.3 KiB on the same union.
-const MULTI_IMPORT_GZIP_BUDGET = 396 * 1024
+// Bumped 396→407: SankeyDiagram registers the network perspective engine, and
+// this non-splitting consumer build also inlines its lazily loaded extras
+// (406.0 KiB measured on the same union).
+// Bumped 407→408.5: that engine now draws perspective pieces with thickness
+// (tokens, slab walls, edge shadows) on first paint (407.6 KiB measured).
+const MULTI_IMPORT_GZIP_BUDGET = 408.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

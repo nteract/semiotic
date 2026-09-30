@@ -40,6 +40,9 @@ request.
 - Nodes/edges: `ForceDirectedGraph`, `SankeyDiagram`, `ProcessSankey`, or
   `ChordDiagram`. Prefer these HOCs to `StreamNetworkFrame` unless the task
   needs lower-level streaming control.
+- Network and tree charts accept `perspective` (`"isometric"`, `"pixel"`, … or
+  a config): a post-layout parallel projection for categorical/topological
+  positions, not measured ones. Use `perspective`; `projection` is geo-only.
 - Geographic rows/features: charts from `semiotic/geo`.
 - Live time-windowed observations: Realtime HOCs from `semiotic/realtime`.
 - A single focal value: `BigNumber` from `semiotic/value`.
@@ -129,6 +132,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Axis formatters are React callbacks** (`serialization.formatters-are-react-callbacks`): xFormat, yFormat, categoryFormat, and valueFormat are callback props, not d3 format strings or axis-title strings. They are intentionally absent from JSON/MCP schemas and string values fail validation.
 - **Value components do not inherit chart-HOC props** (`value.bignumber-wire-contract`): BigNumber is a value component, not a chart HOC, so it does not inherit the common chart-HOC prop list. It uses label as its visible heading and supports description and summary; title and accessibleTable are invalid. Its percent format expects a ratio such as 0.97 and renders it as 97%.
 - **Proportional symbol maps use geographic props** (`geo.proportional-symbol-wire-shape`): ProportionalSymbolMap reads point rows from points, longitude from xAccessor (default lon), latitude from yAccessor (default lat), and radius from sizeBy. sizeRange is the two-number pixel-radius range.
+- **Network perspective is presentational** (`network.perspective-is-presentational`): Network perspective is a parallel projection applied after layout. Layout coordinates and data semantics are unchanged, interaction and the accessible table follow the projected marks, and elevation is the only added encoding. Network charts use perspective, not projection, which belongs to geo charts.
 - **Physics charts separate chart mode from simulation input** (`physics.sample-and-mechanical-inputs`): Sample simulations use data plus the chart's accessors. Seeded no-data demonstrations use simulationMode="mechanical" (legacy mode="mechanical" remains accepted); mode otherwise carries chart display modes such as primary or sparkline.
 - **Physics push methods ingest source records** (`physics.push-uses-source-records`): Physics HOC refs push source records through the chart's accessors. pushRows and dataIdAccessor are not component props; stable source id fields are retained on spawned bodies without an invented accessor.
 - **Distribution physics charts update bodies and projections together** (`physics.live-source-reconciliation`): Bodies, categories, domains, and totals update together without changing React keys. getData() returns source rows. New data replaces live rows; rerunMS restores the seed.

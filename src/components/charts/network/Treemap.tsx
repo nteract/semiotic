@@ -1,4 +1,5 @@
 "use client"
+import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import type { NetworkMarkStyle } from "../../stream/networkTypes"
 import * as React from "react"
@@ -27,6 +28,9 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+
+registerNetworkPerspective()
 
 registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
 
@@ -43,6 +47,12 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
   colorByDepth?: boolean
   /** Ordered data-aware node styling. Rules see the authored hierarchy node. */
   styleRules?: StyleRule[]
+  /**
+   * Draw the laid-out network in a parallel projection: `"isometric"`,
+   * `"pixel"`, `"dimetric"`, `"military"`, `"cabinet"`, or a config object.
+   * See {@link NetworkPerspectiveProps.perspective}. @default "flat"
+   */
+  perspective?: NetworkPerspectiveProps["perspective"]
   showLabels?: boolean
   labelMode?: "leaf" | "parent" | "all"
   nodeLabel?: ChartAccessor<TNode, string>
@@ -338,6 +348,7 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       summary={summary}
       accessibleTable={accessibleTable}
       {...(props.animate != null && { animate: props.animate })}
+      perspective={props.perspective}
       {...framePropsRest}
     />
   </SafeRender>)

@@ -266,7 +266,7 @@ const STREAM_DIR = path.join(ROOT, "src/components/stream")
 const FRAMES = {
   xy:      { typesFile: "types.ts",        unionName: "SceneNode",        svgFn: "xySceneNodeToSVG",      svgFile: "SceneToSVGXY.tsx" },
   ordinal: { typesFile: "ordinalTypes.ts", unionName: "OrdinalSceneNode", svgFn: "ordinalSceneNodeToSVG", svgFile: "SceneToSVGOrdinal.tsx" },
-  network: { typesFile: "networkTypes.ts", unionName: "NetworkSceneNode", svgFn: "networkSceneNodeToSVG", svgFile: "SceneToSVGNetwork.tsx" },
+  network: { typesFile: "networkSceneTypes.ts", unionName: "NetworkSceneNode", svgFn: "networkSceneNodeToSVG", svgFile: "SceneToSVGNetwork.tsx" },
   geo:     { typesFile: "geoTypes.ts",     unionName: "GeoSceneNode",     svgFn: "geoSceneNodeToSVG",     svgFile: "SceneToSVGGeo.tsx" },
 }
 

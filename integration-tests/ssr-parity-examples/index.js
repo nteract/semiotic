@@ -10,6 +10,7 @@ import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
 import { makeDependencyXRayParityCases } from "../dependency-xray-parity-fixtures"
 import { makeFlowCircuitParityCases } from "../flow-circuit-parity-fixtures"
 import { makeAtlasStoryParityCases } from "../atlas-story-parity-fixtures"
+import { makeNetworkPerspectiveParityCases } from "../network-perspective-parity-fixtures"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics, MotifBraidChart, DependencyForestChart, FlowCircuitChart }
@@ -29,6 +30,7 @@ const parityCases = [
   ...makeSsrParityCases(React, SemioticRecipes),
   ...makeDependencyXRayParityCases(),
   ...makeFlowCircuitParityCases(),
+  ...makeNetworkPerspectiveParityCases(SemioticRecipes),
 ]
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)
@@ -83,6 +85,10 @@ const examples = selectedCases.map((c) => {
     example
   )
 })
+
+// Server rendering installs perspective extras synchronously; load the same
+// browser chunk before the first CSR paint so both sides draw ground chrome.
+await Semiotic.preloadNetworkPerspectiveExtras()
 
 createRoot(document.getElementById("root")).render(
   React.createElement(React.Fragment, null, ...examples),

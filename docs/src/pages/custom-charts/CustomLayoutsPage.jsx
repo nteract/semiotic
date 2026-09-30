@@ -1191,6 +1191,14 @@ ref.current.update("planning", (d) => ({
           arrows, and other detail above it. Both SVG layers are included in static rendering and
           do not participate in canvas hit-testing.
         </p>
+        <p>
+          When the chart has a <Link to="/features/perspective">perspective</Link>, the frame
+          projects your scene marks but not those two SVG layers, since they are your own drawing.
+          Wrap ground geometry in <code>NetworkPerspectiveGround</code> and upright chrome in{" "}
+          <code>NetworkPerspectiveBillboard</code>, then return <code>perspective: "manual"</code>.
+          Both render their children unchanged on a flat chart, so the same layout serves both.
+          The built-in recipes on this page already do this.
+        </p>
       </section>
 
       <section>

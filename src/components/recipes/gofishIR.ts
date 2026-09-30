@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkCustomLayout, NetworkLayoutResult } from "../stream/networkCustomLayout"
 import type { NetworkSceneNode } from "../stream/networkTypes"
+import { NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
 import { svgPathBounds } from "../geometry/svgPathBounds"
 import type { Style } from "../stream/types"
 
@@ -540,13 +541,24 @@ function makeDisplayListLayout(
     collectHitNodes(doc.items, IDENTITY, sceneNodes, { n: 0 })
 
     const state: RenderState = { compositeId: 0 }
+    // The display list is a finished picture in baked painter order, so it
+    // cannot be split into scene marks. Under a `perspective` the whole
+    // picture lies on the plane its (transparent) hit targets occupy.
     const overlays = createElement(
       "g",
       { className: "semiotic-gofish-displaylist", "data-gofish-ir": doc.ir },
-      doc.items.map((item, i) => renderItem(item, `gf-${i}`, state)),
+      createElement(
+        NetworkPerspectiveGround,
+        { z: "top" },
+        doc.items.map((item, i) => renderItem(item, `gf-${i}`, state)),
+      ),
     )
 
-    const result: NetworkLayoutResult = { sceneNodes, overlays }
+    const result: NetworkLayoutResult = { sceneNodes, overlays, perspective: "manual" }
+    // The picture's axes and legends reach past its hit targets.
+    if (ctx.perspective && doc.viewport) {
+      result.perspectiveBounds = [{ x: 0, y: 0, width: doc.viewport.w, height: doc.viewport.h, z: "top" }]
+    }
     return result
   }
 }

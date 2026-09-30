@@ -16,7 +16,10 @@ function layoutKey(
       layoutVersion,
       ...size,
       config.customNetworkLayout,
-      config.layoutConfig
+      config.layoutConfig,
+      // Layouts may adapt to `ctx.perspective`; the frame keeps its identity
+      // stable while the value is unchanged.
+      config.perspective
     ],
     // Theme resolution recreates small color bags on unrelated prop changes.
     colors: {

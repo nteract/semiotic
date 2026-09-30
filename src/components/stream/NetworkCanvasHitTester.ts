@@ -211,12 +211,31 @@ function hitTestSymbol(
   return null
 }
 
+/** Exact fill test for a projected (perspective) outline. */
+function hitTestOutline(
+  node: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string; datum: SceneDatum },
+  px: number,
+  py: number,
+  x: number,
+  y: number
+): NetworkHitResult | null {
+  const path = getEdgePath2D(node)
+  const ctx = getHitContext()
+  if (!path || !ctx || !ctx.isPointInPath(path, px, py)) return null
+  return { type: "node", datum: node.datum, x, y, distance: 0 }
+}
+
 function hitTestCircle(
   node: NetworkCircleNode,
   px: number,
   py: number,
   maxDistance: number = 30
 ): NetworkHitResult | null {
+  // Projected ground ellipses hit exactly; perspective tokens keep the
+  // radius tolerance of a point mark.
+  if (node.pathD && !node._perspectiveToken) {
+    return hitTestOutline(node as NetworkCircleNode & { pathD: string }, px, py, node.cx, node.cy)
+  }
   const dx = px - node.cx
   const dy = py - node.cy
   const dist = Math.sqrt(dx * dx + dy * dy)
@@ -257,6 +276,7 @@ function hitTestArc(
   px: number,
   py: number
 ): NetworkHitResult | null {
+  if (node.pathD) return hitTestOutline(node as NetworkArcNode & { pathD: string }, px, py, px, py)
   // Convert to polar coordinates relative to arc center
   const dx = px - node.cx
   const dy = py - node.cy

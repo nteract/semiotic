@@ -293,7 +293,8 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
         },
         accessibleDatum
       })
-      label(x, y + size / 2 + 12, node.state)
+      // Keeps the state label's offset from its glyph under a `perspective`.
+      label(x, y + size / 2 + 12, node.state, { anchorPoint: [x, y] })
     }
 
     for (const group of panelGroups) {

@@ -28,6 +28,7 @@ const orbitDiagramProps = [
   { name: "legendPosition", type: '"right" | "left" | "top" | "bottom"', default: '"right"', description: "Position the legend around the plot" },
   { name: "legendInteraction", type: '"highlight" | "isolate" | "none"', default: '"none"', description: "Highlight or isolate categories from the legend" },
   { name: "tooltip", type: "function", default: "default", description: "Custom tooltip (static mode only — disabled during animation)" },
+  { name: "perspective", type: "string | object", default: '"flat"', description: <>{'Parallel projection applied after layout: "isometric", "pixel", "dimetric", "military", "cabinet", or a config object (elevation, ground grid/plate, regions, edges.route, labels, transition). Nodes stay upright and rings lie on the ground. Layout is unchanged; tooltips and keyboard focus follow the projected marks. Use for categorical or topological positions, not measured ones.'} <Link to="/features/perspective">See Perspective</Link>.</> },
 ]
 
 const orgData = {

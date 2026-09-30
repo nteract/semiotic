@@ -27,6 +27,7 @@ import {
   checkDualAxisUnlabeled,
   checkExtremeAspectRatio,
   checkInvertedAxis,
+  checkNetworkPerspective,
   checkNonPassingCurve,
   checkPartToWholeNegative,
   checkPieTooManySlices,
@@ -721,6 +722,7 @@ export function diagnoseConfig(
   checkAnnotationDensity(componentName, props, diagnoses)
 
   checkInvertedAxis(componentName, props, diagnoses)
+  checkNetworkPerspective(componentName, props, diagnoses)
   checkDualAxisUnlabeled(componentName, props, diagnoses)
   checkCherryPickedWindow(componentName, props, diagnoses)
   if (

@@ -280,7 +280,9 @@ const COMMON_FRAME_PROP_KEYS = [
   "legend",
   "legendLayout",
   // Forward the public annotation-placement option to the static frame.
-  "autoPlaceAnnotations"
+  "autoPlaceAnnotations",
+  // Network-family post-layout projection (distinct from geo `projection`).
+  "perspective"
 ] as const
 
 const CHART_MODE_PROP_KEYS = [
@@ -498,7 +500,9 @@ function renderChartInternal(
     yLabel: withFramePropsOverride("yLabel"),
     categoryLabel: withFramePropsOverride("categoryLabel"),
     valueLabel: withFramePropsOverride("valueLabel"),
-    background,
+    // HOCs take a surface color only through `frameProps.background`; an
+    // undefined top-level value must not erase it (CSR paints it).
+    background: background ?? (framePropsOverrides as Datum).background,
     className,
     annotations,
     size,

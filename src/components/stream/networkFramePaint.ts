@@ -33,6 +33,7 @@ import type {
   SceneRenderMode
 } from "./types"
 import { paintSceneWithBackend } from "./renderBackend"
+import { paintNetworkNodesInOrder } from "./renderers/networkNodePaintOrder"
 import type { NetworkViewTransform } from "./networkViewportTypes"
 import { normalizeNetworkView } from "./networkViewTransform"
 
@@ -149,6 +150,11 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       ? false
       : store.tickAnimation([adjustedWidth, adjustedHeight], deltaTime)
 
+  // Perspective tweens rebuild the projected scene each frame (including the
+  // final snap); reduced motion lands on the target immediately.
+  const perspectiveTicked =
+    !ctx.cameraOnly && store.advancePerspectiveTransition(now, reducedMotion)
+
   const wasDirty = !ctx.cameraOnly && dirtyRef.current
   const sceneRevisionCheck =
     !ctx.cameraOnly &&
@@ -159,7 +165,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   // The final transition step mutates/snap-aligns geometry while returning
   // false. Rebuild once for that step too so paint and pointer geometry reach
   // the same target.
-  const computedScene = transitionWasActive || wasDirty || animationTicked
+  const computedScene = transitionWasActive || wasDirty || animationTicked || perspectiveTicked
   if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
     // Resync particle/hover color caches from the freshly rebuilt scene fills
@@ -256,6 +262,11 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
     }
 
+    // Perspective ground chrome (grid, plates, regions, shadows) sits under edges.
+    if (store.perspective.underlay.length) {
+      networkEdgeRenderer(c2d, store.perspective.underlay)
+    }
+
     paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
       context: c2d,
       nodes: store.sceneEdges,
@@ -272,6 +283,12 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       pixelRatio: dpr,
       paintBuiltIn: (nodes) => {
         const builtInNodes = nodes as NetworkSceneNode[]
+        // A projected scene is depth-sorted across mark types; flat scenes
+        // keep the historical per-type passes.
+        if (store.perspective.frame) {
+          paintNetworkNodesInOrder(c2d, builtInNodes)
+          return
+        }
         networkRectRenderer(c2d, builtInNodes)
         networkCircleRenderer(c2d, builtInNodes)
         networkArcRenderer(c2d, builtInNodes)
@@ -317,7 +334,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
           store.particlePool!,
           edges,
           particleStyle,
-          getParticleColor
+          getParticleColor,
+          store.perspective.projectParticle
         )
       }
     }
@@ -337,7 +355,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       computeNetworkAriaLabel(
         store.sceneNodes?.length ?? 0,
         store.sceneEdges?.length ?? 0,
-        "Network chart"
+        store.perspective.label("Network chart")
       )
     )
   }
@@ -362,6 +380,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
     isContinuous ||
     isTransitioning ||
     store.transition != null ||
+    store.perspective.transitioning ||
     animationTicked ||
     store.hasActivePulses ||
     store.hasActiveThresholds ||

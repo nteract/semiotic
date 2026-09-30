@@ -59,6 +59,7 @@ import {
   restyleNetworkCustomScene,
   snapshotNetworkCustomStyles
 } from "./networkCustomRestyle"
+import { NetworkPerspectiveState } from "./networkPerspectiveState"
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -112,6 +113,10 @@ export class NetworkPipelineStore implements UpdateResultStore {
   customLayoutHtmlMarks: NetworkHtmlMark[] = []
   private _customLayoutDiagnosticsWarned = new Set<string>()
   private _customLayoutCache = new NetworkCustomLayoutCache((selection) => this.restyleScene(selection))
+  /** Post-layout projection (`perspective`): frame, ground chrome and tween. */
+  readonly perspective = new NetworkPerspectiveState()
+  /** Unprojected custom-layout output, re-projected during perspective tweens. */
+  private _rawCustomResult: NetworkLayoutResult | null = null
   /** Per-frame restyle callbacks from the custom layout result. When set, the
    *  frame routes selection changes through `restyleScene()` (style-only repaint)
    *  instead of a full `buildScene()`. */
@@ -783,7 +788,19 @@ export class NetworkPipelineStore implements UpdateResultStore {
     if (this.config.customNetworkLayout) {
       if (this._customLayoutCache.reuse(
         this.config, size, this.getUpdateSnapshot().revisions.data, this.layoutVersion, this.hasCustomRestyle
-      )) return
+      )) {
+        if (this.perspective.needsRebuild && this._rawCustomResult) {
+          // Reuse layout geometry for tween ticks (including the last) and
+          // repaints after the projection engine or extras finish loading.
+          this.commitCustomScene(this._rawCustomResult, size)
+          this._sceneNodesRevision++
+          if (this.hasCustomRestyle) {
+            this._baseStyles = snapshotNetworkCustomStyles(this.sceneNodes, this.sceneEdges)
+            this.restyleScene(this.config.layoutSelection ?? null)
+          }
+        }
+        return
+      }
       const outcome = runNetworkCustomLayout({
         config: this.config,
         customLayout: this.config.customNetworkLayout,
@@ -801,6 +818,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
           this.sceneNodes = []
           this.sceneEdges = []
           this.labels = []
+          this.perspective.underlay = []
           clearNetworkCustomLayoutOutput(this)
           this._customRestyle = undefined
           this._customRestyleEdge = undefined
@@ -812,10 +830,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
       }
       const result = outcome.result
       this._customLayoutCache.commit()
-      this.sceneNodes = result.sceneNodes ?? []
-      this.sceneEdges = result.sceneEdges ?? []
-      this.labels = result.labels ?? []
-      applyNetworkCustomLayoutOutput(this, result)
+      this._rawCustomResult = result
+      this.commitCustomScene(result, size)
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
       // quadtree. A recovered failure deliberately does not.
@@ -841,6 +857,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
     // Non-custom path: no restyle callbacks in effect.
     this._customLayoutCache.clear()
+    this._rawCustomResult = null
     this._customRestyle = undefined
     this._customRestyleEdge = undefined
     this.hasCustomRestyle = false
@@ -869,17 +886,49 @@ export class NetworkPipelineStore implements UpdateResultStore {
       ? Array.from(this.edges.values())
       : this.edgesArray
 
-    const { sceneNodes, sceneEdges, labels } = plugin.buildScene(
+    const built = plugin.buildScene(
       nodesArr,
       edgesArr,
       this.config,
       size
     )
+    const projected = this.perspective.project(this.config, size, built)
 
-    this.sceneNodes = sceneNodes
-    this.sceneEdges = sceneEdges
-    this.labels = labels
+    this.sceneNodes = projected?.sceneNodes ?? built.sceneNodes
+    this.sceneEdges = projected?.sceneEdges ?? built.sceneEdges
+    this.labels = projected?.labels ?? built.labels
     this._sceneNodesRevision++
+  }
+
+  /** Assign one custom-layout result, projected when a perspective is active. */
+  private commitCustomScene(result: NetworkLayoutResult, size: [number, number]): void {
+    const projected = this.perspective.project(this.config, size, {
+      sceneNodes: result.sceneNodes ?? [],
+      sceneEdges: result.sceneEdges ?? [],
+      labels: result.labels ?? [],
+      htmlMarks: result.htmlMarks,
+      bounds: result.perspectiveBounds
+    })
+    if (projected) this.perspective.warnFlatDecorations(result)
+    const committed: NetworkLayoutResult = projected
+      ? {
+          ...result,
+          sceneNodes: projected.sceneNodes,
+          sceneEdges: projected.sceneEdges,
+          labels: projected.labels,
+          htmlMarks: result.htmlMarks ? projected.htmlMarks : undefined
+        }
+      : result
+    this.sceneNodes = committed.sceneNodes ?? []
+    this.sceneEdges = committed.sceneEdges ?? []
+    this.labels = committed.labels ?? []
+    // Host readback (zoom fit, getCustomLayout) sees the projected geometry.
+    applyNetworkCustomLayoutOutput(this, committed)
+  }
+
+  /** Advance a perspective tween; true while it needs another scene build. */
+  advancePerspectiveTransition(now: number, instant = false): boolean {
+    return this.perspective.advance(now, instant)
   }
 
   /**
@@ -893,15 +942,19 @@ export class NetworkPipelineStore implements UpdateResultStore {
   private rebuildNodeQuadtree(): void {
     let circleCount = 0
     let maxR = 0
+    let exactOutlines = false
     for (const node of this.sceneNodes) {
       if (node.type === "circle" && node.datum) {
         circleCount++
         if (node.r > maxR) maxR = node.r
+        // Projected ground ellipses hit-test by exact outline, not radius
+        // (perspective tokens still hit by radius).
+        if (node.pathD && !node._perspectiveToken) exactOutlines = true
       }
     }
     this._maxNodeRadius = maxR
 
-    if (circleCount <= NetworkPipelineStore.QUADTREE_THRESHOLD) {
+    if (exactOutlines || circleCount <= NetworkPipelineStore.QUADTREE_THRESHOLD) {
       this._nodeQuadtree = null
       return
     }
@@ -1408,6 +1461,8 @@ export class NetworkPipelineStore implements UpdateResultStore {
 
   clear(): void {
     this._customLayoutCache.clear()
+    this._rawCustomResult = null
+    this.perspective.underlay = []
     this.nodes.clear()
     this.incidentEdges = null
     this.edges.clear()

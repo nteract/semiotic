@@ -81,6 +81,7 @@ const forceDirectedGraphProps = [
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
   { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
+  { name: "perspective", type: "string | object", required: false, default: '"flat"', description: <>{'Parallel projection applied after layout: "isometric", "pixel", "dimetric", "military", "cabinet", or a config object (elevation, ground grid/plate, regions, edges.route, labels, transition). Nodes stay upright (optionally as isometric glyphs) and edges lie on the ground. Layout is unchanged; tooltips and keyboard focus follow the projected marks. Use for categorical or topological positions, not measured ones.'} <Link to="/features/perspective">See Perspective</Link>.</> },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 

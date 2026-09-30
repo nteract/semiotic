@@ -1315,6 +1315,7 @@ interface-member NetworkLayoutContext::property::config = required config: C
 interface-member NetworkLayoutContext::property::dimensions = required dimensions: {width: number; height: number; plot: {x: number; y: number; width: number; height: number;};}
 interface-member NetworkLayoutContext::property::edges = required edges: RealtimeEdge[]
 interface-member NetworkLayoutContext::property::nodes = required nodes: RealtimeNode[]
+interface-member NetworkLayoutContext::property::perspective = optional perspective: import("./networkPerspective").NetworkPerspectiveConfig | null | undefined
 interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
 interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
 interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
@@ -1322,6 +1323,8 @@ interface-member NetworkLayoutResult::property::backgrounds = optional backgroun
 interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
 interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
 interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode
+interface-member NetworkLayoutResult::property::perspective = optional perspective: "ground" | "manual" | undefined
+interface-member NetworkLayoutResult::property::perspectiveBounds = optional perspectiveBounds: readonly import("./networkPerspective").NetworkPerspectiveBound[] | undefined
 interface-member NetworkLayoutResult::property::restyle = optional restyle: ((node: NetworkSceneNode, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
 interface-member NetworkLayoutResult::property::restyleEdge = optional restyleEdge: ((edge: NetworkSceneEdge, null | selection: CustomLayoutSelection) => Partial<Style> | void) | undefined
 interface-member NetworkLayoutResult::property::sceneEdges = optional sceneEdges: NetworkSceneEdge[] | undefined

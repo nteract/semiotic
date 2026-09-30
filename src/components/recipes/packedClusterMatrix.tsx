@@ -9,6 +9,8 @@ import { makeShade, readField, groupBy, dimFor, signatureKey, LayoutCache } from
 import { roundedEnclosure, bandLabel, markCallout } from "./recipeChrome"
 import type { MarkCalloutProps } from "./recipeChrome"
 import type { Datum } from "../charts/shared/datumTypes"
+import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
+import { packedMatrixPerspectiveBounds } from "./packedClusterMatrixPerspective"
 
 /**
  * Config for {@link packedClusterMatrix}. Accessors read `node.data.<field>`
@@ -600,7 +602,7 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
   }
 
   // ── Chrome overlay (pointer-events:none) ──────────────────────────────────────
-  const overlays = renderChrome(geom, {
+  const chrome: ChromeOpts = {
     markerDots,
     markerColor,
     iconMarks,
@@ -623,9 +625,12 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
     labelX: plot.x + labelW - 10,
     columnLabel: cfg.columnLabel,
     rowLabel: cfg.rowLabel,
-  })
+  }
+  const overlays = renderChrome(geom, chrome)
 
-  return { sceneNodes, overlays }
+  // The chrome places itself under a perspective and reaches past the marks: declare it for the fit.
+  const bounds = ctx.perspective ? { perspectiveBounds: packedMatrixPerspectiveBounds(geom, chrome) } : {}
+  return { sceneNodes, overlays, perspective: "manual", ...bounds }
 }
 
 // ── Geometry builder (cache-miss path) ──────────────────────────────────────────
@@ -946,9 +951,13 @@ interface ChromeOpts {
 function renderChrome(geom: Geom, c: ChromeOpts): ReactNode {
   const colLabel = c.columnLabel ?? ((s: string) => s)
   const rowLabel = c.rowLabel ?? ((s: string) => s)
+  // Under a `perspective`, icons and dots lie on their token; labels and callouts stand.
+  const lie = (key: string, x: number, y: number, node: ReactNode) => <NetworkPerspectiveBillboard key={key} x={x} y={y} onGround>{node}</NetworkPerspectiveBillboard>
+  const stand = (key: string, x: number, y: number, z: number | "top", node: ReactNode) => <NetworkPerspectiveBillboard key={key} x={x} y={y} z={z}>{node}</NetworkPerspectiveBillboard>
   return (
     <g className="packed-cluster-matrix-chrome" style={{ pointerEvents: "none" }}>
       {/* Group enclosures (per-cell in stacked, per-band in banded). */}
+      <NetworkPerspectiveGround>
       {c.showEnclosures &&
         geom.enclosures.map((b, i) =>
           roundedEnclosure({
@@ -963,13 +972,13 @@ function renderChrome(geom: Geom, c: ChromeOpts): ReactNode {
             opacity: c.enclosureOpacity,
           })
         )}
+      </NetworkPerspectiveGround>
 
       {/* Inner stroked icons — the composite-glyph decorator (drawn on top). */}
       {c.iconMarks.length > 0 && (
         <g className="packed-cluster-matrix-icons">
-          {c.iconMarks.map((m, i) => (
+          {c.iconMarks.map((m, i) => lie(`ic-${i}`, m.x, m.y,
             <path
-              key={`ic-${i}`}
               d={symbolPathString(m.shape, m.size)}
               transform={`translate(${m.x},${m.y})`}
               fill="none"
@@ -984,14 +993,12 @@ function renderChrome(geom: Geom, c: ChromeOpts): ReactNode {
       {/* Decorative marker dots (e.g. U.K.). */}
       {c.markerDots.length > 0 && (
         <g className="packed-cluster-matrix-markers">
-          {c.markerDots.map((d, i) => (
-            <circle key={`mk-${i}`} cx={d.x} cy={d.y} r={d.r} fill={c.markerColor} />
-          ))}
+          {c.markerDots.map((d, i) => lie(`mk-${i}`, d.x, d.y, <circle cx={d.x} cy={d.y} r={d.r} fill={c.markerColor} />))}
         </g>
       )}
 
       {c.showColumnHeaders &&
-        geom.colBands.map((b, i) =>
+        geom.colBands.map((b, i) => stand(`col-${i}`, b.x + b.w / 2, c.headerY, 0,
           bandLabel({
             keyId: `col-${i}`,
             text: colLabel(b.col),
@@ -1002,10 +1009,10 @@ function renderChrome(geom: Geom, c: ChromeOpts): ReactNode {
             fontWeight: 700,
             color: c.headerColor,
           })
-        )}
+        ))}
 
       {c.showRowLabels &&
-        [...geom.rowLabelY].map(([row, y]) =>
+        [...geom.rowLabelY].map(([row, y]) => stand(`row-${row}`, c.labelX, y, 0,
           bandLabel({
             keyId: `row-${row}`,
             text: rowLabel(row),
@@ -1016,9 +1023,9 @@ function renderChrome(geom: Geom, c: ChromeOpts): ReactNode {
             fontWeight: 600,
             color: c.labelColor,
           })
-        )}
+        ))}
 
-      {c.callouts.map((co) => markCallout(co))}
+      {c.callouts.map((co) => stand(String(co.keyId), co.markX, co.markY, "top", markCallout(co)))}
     </g>
   )
 }

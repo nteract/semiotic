@@ -71,3 +71,40 @@ test("opt-in gestures stay small and published zoom entries reuse the canonical 
     /Network viewport controls/
   )
 })
+
+test("perspective pictograms stay opt-in and dependency-free", async () => {
+  for (const entry of ["semiotic", "semiotic-network", "semiotic-xy"]) {
+    const result = await consumer(`./src/components/${entry}`)
+    assert.equal(
+      Object.keys(result.metafile.inputs).some((path) =>
+        path.includes("/networkPerspectiveKit/")
+      ),
+      false,
+      entry
+    )
+  }
+  const kit = await consumer("./src/components/semiotic-network-perspective")
+  const inputs = Object.keys(kit.metafile.inputs)
+  assert.equal(inputs.some((path) => /networkPerspective(Scene|Runtime|Extras)|StreamNetworkFrame/.test(path)), false)
+  assert.ok(gzipSync(kit.outputFiles[0].contents).length < 4 * 1024)
+})
+
+test("static network rendering excludes the perspective animation runtime", async () => {
+  for (const entry of ["semiotic-server", "semiotic-server-edge"]) {
+    const result = await consumer(`./src/components/${entry}`)
+    const inputs = result.metafile.inputs
+    const reachable = new Set()
+    const visit = (path) => {
+      if (reachable.has(path) || !inputs[path]) return
+      reachable.add(path)
+      for (const dependency of inputs[path].imports) {
+        if (dependency.kind !== "dynamic-import") visit(dependency.path)
+      }
+    }
+    visit("<stdin>")
+    assert.ok([...reachable].some((path) => path.endsWith("/networkPerspectiveScene.ts")), entry)
+    assert.equal([...reachable].some((path) => path.endsWith("/networkPerspectiveRuntime.ts")), false, entry)
+  }
+  const network = await consumer("./src/components/semiotic-network", "projectNetworkScene")
+  assert.ok(Object.keys(network.metafile.inputs).some((path) => path.endsWith("/networkPerspectiveScene.ts")))
+})

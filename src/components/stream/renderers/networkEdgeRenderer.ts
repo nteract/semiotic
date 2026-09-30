@@ -96,7 +96,7 @@ function renderBezierEdge(
   ) {
     ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
-    ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.5
+    ctx.globalAlpha = (edge.style.opacity ?? 1) * (edge.style.strokeOpacity ?? 1) * 0.5
     ctx.stroke(path)
   }
 
@@ -124,9 +124,7 @@ function renderLineEdge(
   const lineStroke = edge.style.stroke || "#999"
   ctx.strokeStyle = resolveCSSColor(ctx, lineStroke) || lineStroke
   ctx.lineWidth = edge.style.strokeWidth ?? 1
-  if (edge.style.opacity !== undefined) {
-    ctx.globalAlpha = edge.style.opacity
-  }
+  ctx.globalAlpha = (edge.style.opacity ?? ctx.globalAlpha) * (edge.style.strokeOpacity ?? 1)
 
   ctx.beginPath()
   ctx.moveTo(edge.x1, edge.y1)
@@ -175,7 +173,7 @@ function renderRibbonEdge(
   ) {
     ctx.strokeStyle = resolveCSSColor(ctx, edge.style.stroke) || edge.style.stroke
     ctx.lineWidth = edge.style.strokeWidth ?? 0.5
-    ctx.globalAlpha = (edge.style.opacity ?? 1) * 0.3
+    ctx.globalAlpha = (edge.style.opacity ?? 1) * (edge.style.strokeOpacity ?? 1) * 0.3
     ctx.stroke(path)
   }
 
@@ -209,9 +207,7 @@ function renderCurvedEdge(
     const curvedStroke = edge.style.stroke || "#999"
     ctx.strokeStyle = resolveCSSColor(ctx, curvedStroke) || curvedStroke
     ctx.lineWidth = edge.style.strokeWidth ?? 1
-    if (edge.style.opacity !== undefined) {
-      ctx.globalAlpha = edge.style.opacity
-    }
+    ctx.globalAlpha = (edge.style.opacity ?? ctx.globalAlpha) * (edge.style.strokeOpacity ?? 1)
     ctx.stroke(path)
   }
 

@@ -31,6 +31,9 @@
  *     (which only reads `type` and `enum`).
  */
 
+import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
+import { NETWORK_PERSPECTIVE_PROP_SPEC } from "./networkPerspectiveWireSchema"
+
 export type PropType =
   | "string"
   | "number"
@@ -532,8 +535,15 @@ const physicsProps: Record<string, ChartPropSpec> = {
   frameProps: { type: "object", omitFromSchema: true },
 }
 
+/** Props shared by every network-family chart. */
+const networkProps: Record<string, ChartPropSpec> = {
+  styleRules: STYLE_RULES_PROP_SPEC,
+  perspective: NETWORK_PERSPECTIVE_PROP_SPEC,
+}
+
 export const PROP_BAGS = {
   common: commonProps,
+  network: networkProps,
   xyAxis: xyAxisProps,
   ordinalAxis: ordinalAxisProps,
   realtime: realtimeProps,
