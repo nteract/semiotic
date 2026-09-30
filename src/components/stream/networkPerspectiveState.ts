@@ -32,6 +32,8 @@ export class NetworkPerspectiveState {
   underlay: NetworkSceneEdge[] = []
   /** Height edges ride above their surface (piece thickness), layout px. */
   edgeLift = 0
+  /** Uses the same resolved heights and current tween frame as scene edges. */
+  projectParticle: NetworkPerspectiveScene["projectParticle"] | undefined
   /** Called when lazily loaded perspective code arrives so the host repaints. */
   onExtrasReady: (() => void) | null = null
   /** Projection changed since the last build, even if its tween has ended. */
@@ -89,6 +91,7 @@ export class NetworkPerspectiveState {
     this.frame = null
     this.underlay = []
     this.edgeLift = 0
+    this.projectParticle = undefined
     this.internal = null
     this.builds = 0
     this.needsRebuild = false

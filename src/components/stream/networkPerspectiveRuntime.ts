@@ -99,6 +99,7 @@ function project(
     state.frame = null
     state.underlay = []
     state.edgeLift = 0
+    state.projectParticle = undefined
     // Nothing left to animate: flat charts skip the engine from now on.
     state.internal = null
     return null
@@ -119,6 +120,7 @@ function project(
   state.frame = scene.frame
   state.underlay = scene.underlay
   state.edgeLift = scene.edgeLift
+  state.projectParticle = scene.projectParticle
   return scene
 }
 

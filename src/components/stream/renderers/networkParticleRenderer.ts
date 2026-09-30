@@ -14,7 +14,7 @@ export function renderNetworkParticles(
   style: ParticleStyle,
   edgeColorFn: (edge: RealtimeEdge) => string,
   /** Perspective projection for layout-space particle positions. */
-  project?: (x: number, y: number) => [number, number]
+  project?: (x: number, y: number, edge: RealtimeEdge, progress: number) => [number, number]
 ): void {
   const radius = style.radius ?? DEFAULT_PARTICLE_STYLE.radius
   const opacity = style.opacity ?? DEFAULT_PARTICLE_STYLE.opacity
@@ -52,7 +52,7 @@ export function renderNetworkParticles(
 
     ctx.beginPath()
     if (project) {
-      const [px, py] = project(p.x, p.y)
+      const [px, py] = project(p.x, p.y, edge, p.t)
       ctx.arc(px, py, radius, 0, Math.PI * 2)
     } else {
       ctx.arc(p.x, p.y, radius, 0, Math.PI * 2)

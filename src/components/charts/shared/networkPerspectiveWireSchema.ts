@@ -27,6 +27,7 @@ const CONFIG_SCHEMA = {
     rotation: NUMBER,
     tilt: NUMBER,
     verticalScale: NUMBER,
+    origin: { type: "array", items: NUMBER, minItems: 2, maxItems: 2 },
     fit: { enum: ["contain", "none"] },
     fitPadding: NUMBER,
     elevation: ACCESSOR,

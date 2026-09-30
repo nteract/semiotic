@@ -14,7 +14,8 @@ import type {
   NetworkLabel,
   NetworkLineEdge,
   NetworkSceneEdge,
-  NetworkSceneNode
+  NetworkSceneNode,
+  RealtimeEdge
 } from "./networkTypes"
 import type { NetworkHtmlMark } from "./networkCustomLayout"
 import type { ThemeSemanticColors } from "./types"
@@ -67,6 +68,8 @@ export interface NetworkPerspectiveScene {
   frame: NetworkPerspectiveFrame
   /** Height edges (and their particles) ride above their surface. */
   edgeLift: number
+  /** Project layout-space particles on the same surface as their scene edge. */
+  projectParticle: (x: number, y: number, edge: RealtimeEdge, progress: number) => [number, number]
 }
 
 export interface PreparedNetworkPerspectiveScene {
@@ -356,8 +359,17 @@ export function prepareNetworkPerspectiveScene(
       : [endZ(d?.source), endZ(d?.target)]
   }
   const paths = new Map<NetworkSceneEdge, NormalizedPathSegment[]>()
+  const edgeHeights = new Map<NetworkSceneEdge, (progress: number) => number>()
+  const particleHeights = new Map<unknown, (progress: number) => number>()
   for (const e of input.sceneEdges) {
     const [z0, z1] = edgeBase(e)
+    // Lines interpolate their endpoint heights; path bands lie on the mean
+    // endpoint plane. Keep particles on exactly the same surface as the edge.
+    const heightAt = e.type === "line"
+      ? (progress: number) => z0 + (z1 - z0) * progress + T
+      : () => (z0 + z1) / 2 + T
+    edgeHeights.set(e, heightAt)
+    particleHeights.set(e.datum, heightAt)
     if (e.type === "line") {
       for (const h of [0, T]) {
         add(e.x1, e.y1, z0 + h)
@@ -378,9 +390,11 @@ export function prepareNetworkPerspectiveScene(
   // others are ground points lifted onto the piece they sit in (or to piece
   // height, so they line up with edges and slab tops).
   const byPoint = new Map<string, PerspectiveNodeItem>()
+  const byId = new Map<string, PerspectiveNodeItem>()
   for (const item of items) {
     const key = `${item.gx}|${item.gy}`
     if (!byPoint.has(key)) byPoint.set(key, item)
+    for (const id of nodeIds(item.node)) if (!byId.has(id)) byId.set(id, item)
   }
   const pieces = items.filter((i) => i.mode === "ground" || i.mode === "extrude")
   const labelPlans = input.labels.map((label) => {
@@ -406,9 +420,17 @@ export function prepareNetworkPerspectiveScene(
     add(label.x, label.y, z, l, r, t, b)
     return { label, item: undefined, z, ox: 0, oy: 0 }
   })
-  for (const m of input.htmlMarks ?? []) {
-    add(m.x + m.width / 2, m.y + m.height / 2, T, m.width / 2, m.width / 2, m.height / 2, m.height / 2)
-  }
+  const htmlPlans = (input.htmlMarks ?? []).map((mark) => {
+    const x = mark.x + mark.width / 2
+    const y = mark.y + mark.height / 2
+    const item = byId.get(mark.id) ?? byPoint.get(`${x}|${y}`)
+    const ox = item ? x - item.gx : 0
+    const oy = item ? y - item.gy : 0
+    add(item?.gx ?? x, item?.gy ?? y, item ? topOf(item) : T,
+      Math.max(0, mark.width / 2 - ox), Math.max(0, mark.width / 2 + ox),
+      Math.max(0, mark.height / 2 - oy), Math.max(0, mark.height / 2 + oy))
+    return { mark, item }
+  })
   for (const b of input.bounds ?? []) {
     if (!b || !Number.isFinite(b.x) || !Number.isFinite(b.y)) continue
     const height = (z: number | "top" | undefined, fallback: number) =>
@@ -553,24 +575,31 @@ export function prepareNetworkPerspectiveScene(
     const casts = T > 0 && shadowConfig !== false
     const filledShadows: string[] = []
     const strokedShadows = new Map<number, string[]>()
-    const visible = (paint: unknown) => typeof paint === "string" ? paint !== "none" && paint !== "transparent" : paint != null
+    const visible = (paint: unknown) => typeof paint === "string" ? paint !== "" && paint !== "none" && paint !== "transparent" : paint != null
     const shadow = (e: NetworkSceneEdge, pathD: string) => {
-      if (!casts || e.style.opacity === 0) return
-      if (e.type !== "line" && visible(e.style.fill) && (e.type !== "curved" || e.style.fill)) {
+      if (!casts || (e.style.opacity ?? 1) <= 0) return
+      const band = e.type === "bezier" || e.type === "ribbon"
+      const fillAlpha = e.type === "curved" ? e.style.fillOpacity ?? 0.1
+        : e.style.fillOpacity ?? e.style.opacity ?? 0.5
+      const strokeAlpha = (e.style.opacity ?? 1) * (e.style.strokeOpacity ?? 1) * (band ? e.type === "bezier" ? 0.5 : 0.3 : 1)
+      if (e.type !== "line" && visible(e.style.fill) && fillAlpha > 0) {
         filledShadows.push(pathD)
-      } else if (e.type === "line" || visible(e.style.stroke ?? "#999")) {
-        const width = e.style.strokeWidth ?? 1
+      } else if (visible(e.style.stroke || (band ? undefined : "#999")) && strokeAlpha > 0 &&
+        (e.style.strokeWidth ?? (band ? 0.5 : 1)) > 0) {
+        const width = e.style.strokeWidth ?? (band ? 0.5 : 1)
         const list = strokedShadows.get(width) ?? []
         list.push(pathD)
         strokedShadows.set(width, list)
       }
     }
     const sceneEdges = input.sceneEdges.map((e): NetworkSceneEdge => {
-      const [z0, z1] = edgeBase(e)
+      const heightAt = edgeHeights.get(e)!
+      const z0 = heightAt(0) - T
+      const z1 = heightAt(1) - T
       if (e.type === "line") {
         if (route && route !== "layout" && extras) {
           const rounded = route === "orthogonal-rounded"
-          const at = (h: number) => (x: number, y: number, t: number) => project(x, y, z0 + (z1 - z0) * t + h)
+          const at = (h: number) => (x: number, y: number, t: number) => project(x, y, heightAt(t) - T + h)
           const routed = extras.route(e, rounded, at(T))
           if (casts) shadow(e, (extras.route(e, rounded, at(0)) as { pathD: string }).pathD)
           return routed
@@ -627,7 +656,15 @@ export function prepareNetworkPerspectiveScene(
       return rotate == null ? { ...label, x, y } : { ...label, x, y, rotate }
     })
 
-    const htmlMarks = (input.htmlMarks ?? []).map((m) => {
+    const htmlMarks = htmlPlans.map(({ mark: m, item }) => {
+      if (item) {
+        if (item.mode === "billboard") {
+          const [dx, dy] = moved.get(item)!
+          return { ...m, x: m.x + dx, y: m.y + dy }
+        }
+        const [px, py] = project(item.gx, item.gy, topOf(item))
+        return { ...m, x: m.x + px - item.gx, y: m.y + py - item.gy }
+      }
       const [px, py] = project(m.x + m.width / 2, m.y + m.height / 2, T)
       return { ...m, x: px - m.width / 2, y: py - m.height / 2 }
     })
@@ -684,7 +721,8 @@ export function prepareNetworkPerspectiveScene(
       htmlMarks,
       underlay,
       frame: { ...frame, thickness: T },
-      edgeLift: T
+      edgeLift: T,
+      projectParticle: (x, y, edge, progress) => project(x, y, particleHeights.get(edge)?.(progress) ?? T)
     }
   }
 

@@ -154,7 +154,9 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
 export interface NetworkHtmlMark {
   /** Stable identity for reconciliation while mounted. Position-only updates
    * preserve content with stable descendant types/keys; viewport culling can
-   * unmount an unpinned, unfocused mark and discard its local state. */
+   * unmount an unpinned, unfocused mark and discard its local state.
+   * Under perspective, match a scene node's id (or datum id) to follow its
+   * elevation and preserve the mark's screen offset from that node. */
   id: string
   /** Top-left x in plot coordinates — the same space as `sceneNodes`. */
   x: number

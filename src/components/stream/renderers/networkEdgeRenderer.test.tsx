@@ -41,6 +41,20 @@ function context() {
 describe.each(["curved", "line", "bezier", "ribbon"] as const)(
   "%s edge paint visibility",
   (type) => {
+    it.each([0, 0.4])("honors strokeOpacity %s in Canvas and SVG", (strokeOpacity) => {
+      const mark = edge(type)
+      mark.style.opacity = 0.5
+      mark.style.strokeOpacity = strokeOpacity
+      const ctx = context()
+      const alphas: number[] = []
+      vi.mocked(ctx.stroke).mockImplementation(() => { alphas.push(ctx.globalAlpha) })
+      networkEdgeRenderer(ctx, [mark])
+      const factor = type === "bezier" ? 0.5 : type === "ribbon" ? 0.3 : 1
+      expect(alphas).toEqual([0.5 * strokeOpacity * factor])
+      expect(renderToStaticMarkup(<svg>{networkSceneEdgeToSVG(mark, 0)}</svg>))
+        .toContain(`stroke-opacity="${strokeOpacity}"`)
+    })
+
     it.each(["none", "zero"])(
       "skips a %s stroke while preserving an explicit fill",
       (hidden) => {

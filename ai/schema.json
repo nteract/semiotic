@@ -13516,6 +13516,14 @@
                     "verticalScale": {
                       "type": "number"
                     },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
                     "fit": {
                       "enum": [
                         "contain",
@@ -14331,6 +14339,14 @@
                     "verticalScale": {
                       "type": "number"
                     },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
                     "fit": {
                       "enum": [
                         "contain",
@@ -15127,6 +15143,14 @@
                     "verticalScale": {
                       "type": "number"
                     },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
                     "fit": {
                       "enum": [
                         "contain",
@@ -15900,6 +15924,14 @@
                     },
                     "verticalScale": {
                       "type": "number"
+                    },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
                     },
                     "fit": {
                       "enum": [
@@ -16679,6 +16711,14 @@
                     "verticalScale": {
                       "type": "number"
                     },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
                     "fit": {
                       "enum": [
                         "contain",
@@ -17438,6 +17478,14 @@
                     "verticalScale": {
                       "type": "number"
                     },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
                     "fit": {
                       "enum": [
                         "contain",
@@ -18188,6 +18236,14 @@
                     },
                     "verticalScale": {
                       "type": "number"
+                    },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
                     },
                     "fit": {
                       "enum": [
@@ -26067,6 +26123,14 @@
                     },
                     "verticalScale": {
                       "type": "number"
+                    },
+                    "origin": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
                     },
                     "fit": {
                       "enum": [

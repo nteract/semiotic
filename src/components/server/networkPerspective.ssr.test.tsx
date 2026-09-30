@@ -132,6 +132,32 @@ describe("perspective component SSR", () => {
 })
 
 describe("perspective static rendering", () => {
+  it.each(["SankeyDiagram", "ChordDiagram"])("omits %s shadows when edgeOpacity is zero", (chart) => {
+    for (const colorBy of [undefined, "id"]) {
+      const config = { edges: flows, width: 400, height: 300, edgeOpacity: 0, colorBy }
+      const shadow = renderChart(chart, { ...config, perspective: "isometric" })
+      const noShadow = renderChart(chart, { ...config, perspective: { type: "isometric", edgeShadow: false } })
+      expect(geometry(shadow)).toEqual(geometry(noShadow))
+      const visible = renderChart(chart, { ...config, edgeOpacity: 0.5, perspective: "isometric" })
+      expect(geometry(visible).length).toBeGreaterThan(geometry(shadow).length)
+    }
+  })
+
+  it("preserves the Chord React path's transparent fill and outline", () => {
+    const props = { edges: flows, colorBy: "id", edgeOpacity: 0, width: 400, height: 300 }
+    const shadow = ReactDOMServer.renderToStaticMarkup(<ChordDiagram {...props} perspective="isometric" />)
+    const noShadow = ReactDOMServer.renderToStaticMarkup(<ChordDiagram {...props} perspective={{ type: "isometric", edgeShadow: false }} />)
+    expect(geometry(shadow)).toEqual(geometry(noShadow))
+    expect(shadow).toContain('stroke-opacity="0"')
+  })
+
+  it("honors serialized origin when perspective fit is disabled", () => {
+    const config = { nodes, edges, iterations: 0, width: 400, height: 300 }
+    const a = renderChart("ForceDirectedGraph", { ...config, perspective: { type: "isometric", fit: "none", origin: [0, 0] } })
+    const b = renderChart("ForceDirectedGraph", { ...config, perspective: { type: "isometric", fit: "none", origin: [1, 1] } })
+    expect(geometry(a)).not.toEqual(geometry(b))
+  })
+
   it("projects a JSON config through renderChart and draws every mark", () => {
     const { svg, evidence } = renderChartWithEvidence("ForceDirectedGraph", {
       nodes,

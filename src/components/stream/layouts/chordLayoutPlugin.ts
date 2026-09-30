@@ -296,6 +296,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         fillOpacity: userStyle.fillOpacity ?? edgeOpacity,
         stroke: userStyle.stroke || "none",
         strokeWidth: userStyle.strokeWidth,
+        strokeOpacity: userStyle.strokeOpacity,
         opacity: userStyle.opacity,
         cursor: userStyle.cursor
       }

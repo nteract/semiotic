@@ -90,16 +90,6 @@ export interface NetworkFramePaintContext {
   }) => void
 }
 
-/** Particles travel along edges, which ride `edgeLift` above the ground. */
-function projectParticles(
-  perspective: NetworkPipelineStore["perspective"]
-): ((x: number, y: number) => [number, number]) | undefined {
-  const frame = perspective.frame
-  if (!frame) return undefined
-  const lift = perspective.edgeLift
-  return (x, y) => frame.project(x, y, lift)
-}
-
 /**
  * Run one paint tick. Returns whether another rAF should be scheduled
  * (also invoked via scheduleNextFrame for continuous modes).
@@ -345,7 +335,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
           edges,
           particleStyle,
           getParticleColor,
-          projectParticles(store.perspective)
+          store.perspective.projectParticle
         )
       }
     }

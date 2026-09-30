@@ -191,6 +191,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           key={`net-edge-${i}`}
           x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
           stroke={e.style.stroke || "#999"}
+          strokeOpacity={e.style.strokeOpacity}
           strokeWidth={e.style.strokeWidth ?? 1}
           strokeDasharray={e.style.strokeDasharray}
           strokeLinecap={e.style.strokeLinecap}
@@ -210,6 +211,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
+            strokeOpacity={e.style.strokeOpacity}
             strokeWidth={e.style.strokeWidth}
             strokeDasharray={e.style.strokeDasharray}
             strokeLinecap={e.style.strokeLinecap}
@@ -230,6 +232,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
+            strokeOpacity={e.style.strokeOpacity}
             strokeWidth={e.style.strokeWidth}
             strokeDasharray={e.style.strokeDasharray}
             strokeLinecap={e.style.strokeLinecap}
@@ -249,6 +252,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           // `fillOpacity ?? 0.1`; without this, SSR painted fills opaque.
           fillOpacity={e.style.fill && e.style.fill !== "none" ? e.style.fillOpacity ?? 0.1 : undefined}
           stroke={e.style.stroke || "#999"}
+          strokeOpacity={e.style.strokeOpacity}
           strokeWidth={e.style.strokeWidth ?? 1}
           strokeDasharray={e.style.strokeDasharray}
           strokeLinecap={e.style.strokeLinecap}
