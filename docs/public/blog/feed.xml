@@ -5,8 +5,19 @@
   <link rel="self" type="application/atom+xml" href="https://semiotic.nteract.io/blog/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog"/>
   <id>https://semiotic.nteract.io/blog/</id>
-  <updated>2026-09-27T00:00:00Z</updated>
+  <updated>2026-09-30T00:00:00Z</updated>
   <author><name>Semiotic</name></author>
+  <entry>
+    <title>Semiotic 3.12.0</title>
+    <id>https://semiotic.nteract.io/blog/release-3-12-0</id>
+    <link rel="alternate" type="text/html" href="https://semiotic.nteract.io/blog/release-3-12-0"/>
+    <link rel="enclosure" type="image/png" href="https://semiotic.nteract.io/blog/og/release-3-12-0.png"/>
+    <published>2026-09-30T00:00:00Z</published>
+    <updated>2026-09-30T00:00:00Z</updated>
+    <author><name>Semiotic Team</name></author>
+    <category term="release"/>
+    <summary type="text">3.12.0 adds projected network scenes and in-chart controls that work with pointer and keyboard input. Named imports ship less code, and rendering fixes keep hatches, gradients, annotations, and server exports consistent with the live chart.</summary>
+  </entry>
   <entry>
     <title>Semiotic 3.11.0</title>
     <id>https://semiotic.nteract.io/blog/release-3-11-0</id>

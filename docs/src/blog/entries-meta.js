@@ -20,6 +20,15 @@
 // inspection still work; the build scripts filter at consumption time.
 export const allBlogEntriesMeta = [
   {
+    slug: "release-3-12-0",
+    title: "Semiotic 3.12.0",
+    subtitle: "Network perspectives, accessible direct manipulation, and smaller chart imports.",
+    author: "Semiotic Team",
+    date: "2026-09-30",
+    tags: ["release"],
+    excerpt: "3.12.0 adds projected network scenes and in-chart controls that work with pointer and keyboard input. Named imports ship less code, and rendering fixes keep hatches, gradients, annotations, and server exports consistent with the live chart.",
+  },
+  {
     slug: "network-perspective",
     title: "One Prop, Six Perspectives",
     subtitle: "Draw any Semiotic network chart in isometric, pixel, dimetric, military or cabinet projection — without changing the layout.",

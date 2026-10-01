@@ -74,12 +74,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 208,
+    "kb": 209,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 207,
+    "kb": 208,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -174,7 +174,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 640,
+    "kb": 641,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {

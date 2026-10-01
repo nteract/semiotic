@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "package": "3.11.2",
-  "generatedAt": "2026-09-29T02:11:05.552Z",
+  "package": "3.12.0",
+  "generatedAt": "2026-10-01T03:13:26.415Z",
   "environment": {
     "platform": "darwin",
     "architecture": "arm64",
@@ -30,10 +30,10 @@
     ]
   },
   "bundledVariant": {
-    "rawBytes": 1484594,
-    "gzipBytes": 484562,
-    "files": 65,
-    "outputFiles": 59
+    "rawBytes": 1521812,
+    "gzipBytes": 501569,
+    "files": 79,
+    "outputFiles": 73
   },
   "d3InstallClosure": {
     "directPackages": 12,
@@ -70,20 +70,20 @@
       "subpath": "xy",
       "symbol": "LineChart",
       "externalized": {
-        "rawBytes": 464974,
-        "gzipBytes": 152795,
-        "files": 10,
+        "rawBytes": 469089,
+        "gzipBytes": 154141,
+        "files": 11,
         "resolvedD3Modules": 29
       },
       "bundled": {
-        "rawBytes": 565391,
-        "gzipBytes": 180058,
-        "files": 13,
+        "rawBytes": 589521,
+        "gzipBytes": 187729,
+        "files": 14,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 100417,
-        "gzipBytes": 27263
+        "rawBytes": 120432,
+        "gzipBytes": 33588
       }
     },
     {
@@ -91,20 +91,20 @@
       "subpath": "ordinal",
       "symbol": "BarChart",
       "externalized": {
-        "rawBytes": 450962,
-        "gzipBytes": 134774,
+        "rawBytes": 370338,
+        "gzipBytes": 118857,
         "files": 4,
         "resolvedD3Modules": 6
       },
       "bundled": {
-        "rawBytes": 465898,
-        "gzipBytes": 138980,
+        "rawBytes": 467066,
+        "gzipBytes": 139429,
         "files": 4,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 14936,
-        "gzipBytes": 4206
+        "rawBytes": 96728,
+        "gzipBytes": 20572
       }
     },
     {
@@ -112,20 +112,20 @@
       "subpath": "network",
       "symbol": "SankeyDiagram",
       "externalized": {
-        "rawBytes": 623002,
-        "gzipBytes": 204968,
-        "files": 9,
-        "resolvedD3Modules": 23
+        "rawBytes": 548980,
+        "gzipBytes": 183550,
+        "files": 12,
+        "resolvedD3Modules": 46
       },
       "bundled": {
-        "rawBytes": 622172,
-        "gzipBytes": 204637,
-        "files": 9,
+        "rawBytes": 671058,
+        "gzipBytes": 219805,
+        "files": 12,
         "resolvedD3Modules": 4
       },
       "delta": {
-        "rawBytes": -830,
-        "gzipBytes": -331
+        "rawBytes": 122078,
+        "gzipBytes": 36255
       }
     },
     {
@@ -133,20 +133,20 @@
       "subpath": "geo",
       "symbol": "ChoroplethMap",
       "externalized": {
-        "rawBytes": 1826502,
-        "gzipBytes": 574861,
+        "rawBytes": 1792757,
+        "gzipBytes": 566190,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "bundled": {
-        "rawBytes": 1840326,
-        "gzipBytes": 579087,
+        "rawBytes": 1840585,
+        "gzipBytes": 579337,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 13824,
-        "gzipBytes": 4226
+        "rawBytes": 47828,
+        "gzipBytes": 13147
       }
     }
   ],
@@ -156,23 +156,23 @@
       "symbol": "LineChart"
     },
     "externalized": {
-      "rawBytes": 1376858,
-      "gzipBytes": 431686,
-      "files": 27
+      "rawBytes": 1380898,
+      "gzipBytes": 433267,
+      "files": 28
     },
     "bundled": {
-      "rawBytes": 1487605,
-      "gzipBytes": 463485,
+      "rawBytes": 1508228,
+      "gzipBytes": 470003,
       "files": 32
     },
     "delta": {
-      "rawBytes": 110747,
-      "gzipBytes": 31799
+      "rawBytes": 127330,
+      "gzipBytes": 36736
     }
   },
   "decision": {
     "model": "externalized-runtime-dependencies",
-    "rationale": "Externalized d3 produced the smaller gzip payload in 3 of 4 representative webpack builds and in the Next/webpack route. The one bundled win was too small to justify larger common XY/ordinal/geo paths or a custom dependency contract.",
+    "rationale": "Externalized d3 produced the smaller gzip payload in 4 of 4 representative webpack builds and in the Next/webpack route. Keeping d3 external also preserves consumer tree-shaking and deduplication.",
     "exception": "None. Every directly imported d3 package remains a normal runtime dependency and a bare production-artifact import; consumer bundlers own final tree-shaking and deduplication."
   }
 }

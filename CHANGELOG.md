@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-09-30
+
 ### Added
 
 - XY and ordinal frames take `interactiveGraphics` (through `frameProps` on any
@@ -142,6 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Update the development dependency lockfile to patched `brace-expansion`,
+  `fast-uri`, and `markdown-it` releases, clearing the release security audit.
 - The "Skip to data table" link and the collapsed "View data summary" trigger
   are visible while keyboard-focused (they stayed clipped to 1px, hiding the
   focus indicator).
