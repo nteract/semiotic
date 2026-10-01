@@ -28,7 +28,6 @@ import {
   buildCircleScene,
 } from "./hierarchySceneBuilders"
 import type { Datum } from "../../charts/shared/datumTypes"
-import { registerLayoutPlugin } from "./registry"
 
 type HierarchyLayoutType = "tree" | "cluster" | "treemap" | "circlepack" | "partition"
 
@@ -330,9 +329,3 @@ function setPointBounds(node: RealtimeNode, r: number): void {
   node.width = r * 2
   node.height = r * 2
 }
-
-registerLayoutPlugin("tree", hierarchyLayoutPlugin)
-registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
-registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
-registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
-registerLayoutPlugin("partition", hierarchyLayoutPlugin)

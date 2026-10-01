@@ -44,8 +44,12 @@ import {
   buildDifferenceLineStyle,
   buildDifferencePointStyle
 } from "./differenceMarkStyle"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(mixedXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureDifferenceChartRegistrations(): void {
+  registerXYPlugin(mixedXYPlugin)
+}
 
 export { computeDifferenceSegments } from "./differenceSegments"
 
@@ -239,9 +243,10 @@ function buildOverlayLineRows<TDatum extends Datum>(
  * return <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
  * ```
  */
-export const DifferenceChart = forwardRef(function DifferenceChart<
+export const DifferenceChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DifferenceChart<
   TDatum extends Datum = Datum
 >(props: DifferenceChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureDifferenceChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -782,7 +787,7 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "DifferenceChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: DifferenceChartProps<TDatum> &
       React.RefAttributes<RealtimeFrameHandle>
@@ -790,6 +795,3 @@ export const DifferenceChart = forwardRef(function DifferenceChart<
   displayName?: string
 }
 
-if (typeof DifferenceChart === "function") {
-  ;(DifferenceChart as { displayName?: string }).displayName = "DifferenceChart"
-}

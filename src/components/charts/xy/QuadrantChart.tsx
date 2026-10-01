@@ -26,8 +26,12 @@ import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
 import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(scatterXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureQuadrantChartRegistrations(): void {
+  registerXYPlugin(scatterXYPlugin)
+}
 
 /**
  * Quadrant label and color configuration
@@ -182,7 +186,8 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
  * />
  * ```
  */
-export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const QuadrantChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureQuadrantChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -679,8 +684,7 @@ export const QuadrantChart = forwardRef(function QuadrantChart<TDatum extends Da
   if (validationError) return <ChartError componentName="QuadrantChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "QuadrantChart") as unknown as {
   <TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-QuadrantChart.displayName = "QuadrantChart"

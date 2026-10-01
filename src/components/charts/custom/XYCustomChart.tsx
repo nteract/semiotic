@@ -21,8 +21,12 @@ import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(customXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureXYCustomChartRegistrations(): void {
+  registerXYPlugin(customXYPlugin)
+}
 
 export interface XYCustomChartProps<
   TDatum extends Datum = Datum,
@@ -88,10 +92,11 @@ export interface XYCustomChartProps<
  * />
  * ```
  */
-export const XYCustomChart = forwardRef(function XYCustomChart<
+export const XYCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function XYCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: XYCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureXYCustomChartRegistrations()
   const {
     data,
     layout,
@@ -237,7 +242,7 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "XYCustomChart") as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>
@@ -246,5 +251,3 @@ export const XYCustomChart = forwardRef(function XYCustomChart<
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(XYCustomChart as { displayName?: string }).displayName = "XYCustomChart"

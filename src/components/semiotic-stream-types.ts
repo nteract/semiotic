@@ -10,6 +10,7 @@ export type {
   ThresholdType,
   LineStyle,
   BarStyle,
+  ValueBand,
   WaterfallStyle,
   SwarmStyle,
   AnnotationContext,

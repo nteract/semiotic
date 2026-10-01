@@ -22,8 +22,12 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(waterfallXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureWaterfallChartRegistrations(): void {
+  registerXYPlugin(waterfallXYPlugin)
+}
 
 export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]
@@ -90,10 +94,11 @@ export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseC
  * />
  * ```
  */
-export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends Datum = Datum>(
+export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function WaterfallChart<TDatum extends Datum = Datum>(
   props: WaterfallChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
+  ensureWaterfallChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
@@ -378,8 +383,7 @@ export const WaterfallChart = forwardRef(function WaterfallChart<TDatum extends 
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "WaterfallChart") as unknown as {
   <TDatum extends Datum = Datum>(props: WaterfallChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-WaterfallChart.displayName = "WaterfallChart"

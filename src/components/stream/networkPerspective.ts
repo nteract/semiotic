@@ -347,7 +347,7 @@ export function buildNetworkPerspectiveFrame(
 }
 
 /** Identity frame (flat). */
-export const FLAT_NETWORK_PERSPECTIVE_FRAME = buildNetworkPerspectiveFrame(
+export const FLAT_NETWORK_PERSPECTIVE_FRAME = /* @__PURE__ */ buildNetworkPerspectiveFrame(
   "flat",
   [1, 0, 0, 1, 0, 0],
   0

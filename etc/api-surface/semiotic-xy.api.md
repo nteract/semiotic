@@ -69,6 +69,7 @@ interface HatchFill
 interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface HitTargetPointProps
 interface HitTargetRectProps
+interface InteractiveGraphicsContext<S = StreamScales> extends FrameGraphicsContext<S>
 interface LayoutContext<C extends object = Record<string, unknown>>
 interface LayoutResult
 interface LegendGroup
@@ -317,6 +318,7 @@ interface-member GlyphSceneNode::property::style = required style: Style
 interface-member GlyphSceneNode::property::type = required type: "glyph"
 interface-member GlyphSceneNode::property::x = required x: number
 interface-member GlyphSceneNode::property::y = required y: number
+interface-member GradientConfig::property::extent = optional extent: "area" | "domain" | undefined
 interface-member GradientConfig::property::stops = required stops: GradientStop[]
 interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
 interface-member GradientLegendConfig::property::domain = required domain: [number, number]
@@ -377,6 +379,7 @@ interface-member HitTargetRectProps::property::id = optional id: number | string
 interface-member HitTargetRectProps::property::width = required width: number
 interface-member HitTargetRectProps::property::x = required x: number
 interface-member HitTargetRectProps::property::y = required y: number
+interface-member InteractiveGraphicsContext::property::pointerToPlot = required pointerToPlot: (event: {clientX: number; clientY: number;}) => {x: number; y: number;} | null
 interface-member LayoutContext::property::config = required config: C
 interface-member LayoutContext::property::data = required data: Datum[]
 interface-member LayoutContext::property::dimensions = required dimensions: {width: number; height: number; margin: MarginType; plot: {x: number; y: number; width: number; height: number;};}
@@ -662,6 +665,8 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<StreamScales>
+interface-member StreamXYFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined
 interface-member StreamXYFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamXYFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
@@ -835,6 +840,7 @@ type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
+type InteractiveGraphicsProp<S = StreamScales> = ((ctx: InteractiveGraphicsContext<S>) => ReactNode) | ReactNode
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type QuadrantsConfigOverride = {[TQuadrant in keyof QuadrantsConfig]?: Partial<QuadrantsConfig[TQuadrant]>;}
 type ResponsiveOrientation = "landscape" | "portrait"

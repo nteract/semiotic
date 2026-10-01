@@ -20,6 +20,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { MinimapChartProps } from "./minimapChartTypes"
 import { minimapChromeMargins } from "./minimapLayout"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export type {
   MinimapBrushEndMeta,
@@ -29,7 +30,10 @@ export type {
   MinimapHandleOptions,
 } from "./minimapChartTypes"
 
-registerLineFamilyXYPlugins()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureMinimapChartRegistrations(): void {
+  registerLineFamilyXYPlugins()
+}
 
 // ── MinimapChart ────────────────────────────────────────────────────────
 
@@ -84,9 +88,10 @@ registerLineFamilyXYPlugins()
  * />
  * ```
  */
-export function MinimapChart<TDatum extends Datum = Datum>(
+export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChart<TDatum extends Datum = Datum>(
   props: MinimapChartProps<TDatum>
 ) {
+  ensureMinimapChartRegistrations()
   const {
     data,
     width = 600,
@@ -468,5 +473,4 @@ export function MinimapChart<TDatum extends Datum = Datum>(
       </div>
     </SafeRender>
   )
-}
-MinimapChart.displayName = "MinimapChart"
+}, "MinimapChart")

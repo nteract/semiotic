@@ -17,6 +17,7 @@ import type {
   StalenessConfig,
   ThemeSemanticColors,
   FrameGraphicsProp,
+  InteractiveGraphicsProp,
   SceneAccessibilityMetadata,
   SceneRenderMode
 } from "./types"
@@ -561,6 +562,17 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   /** SVG on top (in the overlay). Function form receives `{ size, margin, scales }`
    *  with the frame's resolved `{o, r, projection}` scales (null pre-layout). */
   foregroundGraphics?: FrameGraphicsProp<OrdinalScales>
+  /**
+   * Focusable SVG controls drawn over the plot (for example
+   * `DirectManipulationControl` or `DirectManipulationMarkers` from
+   * `semiotic/controls`), in their own `role="group"` layer outside the
+   * chart's `role="img"` overlay. Content is drawn in plot coordinates; the
+   * function form adds `pointerToPlot` to `{ size, margin, scales }`.
+   * Client-only: it renders after hydration, not in server markup.
+   */
+  interactiveGraphics?: InteractiveGraphicsProp<OrdinalScales>
+  /** Accessible name for the `interactiveGraphics` group. @default "Chart controls" */
+  interactiveGraphicsLabel?: string
   title?: string | ReactNode
   className?: string
   background?: string

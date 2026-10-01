@@ -32,18 +32,16 @@ export function hasTextTitle(title: unknown): title is string {
 }
 
 /**
- * Reserve the shared top chrome before any frame calculates plot geometry.
- * A raw StreamFrame can supply both a compact margin and a top legend, so the
- * legend's first row needs its own minimum rather than relying on HOC margins.
+ * Reserve the shared title strip before any frame calculates plot geometry.
+ * A top legend's first-row minimum (`MIN_TOP_LEGEND_MARGIN`) belongs to the
+ * legend reservation in `reserveLegendMargin`, where the compact-frame cap
+ * can still shrink it.
  */
 export function reserveFrameChromeMargin<T extends TitleMargin>(
   margin: T,
   hasTitle: boolean,
-  hasTopLegend = false,
 ): T {
-  const minimumTop = hasTopLegend
-    ? hasTitle ? MIN_TITLE_TOP_LEGEND_MARGIN : MIN_TOP_LEGEND_MARGIN
-    : hasTitle ? MIN_TITLE_TOP_MARGIN : 0
+  const minimumTop = hasTitle ? MIN_TITLE_TOP_MARGIN : 0
   if (margin.top >= minimumTop) return margin
   return { ...margin, top: minimumTop } as T
 }

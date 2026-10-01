@@ -210,6 +210,98 @@ describe("renderStaticAnnotations", () => {
     })
   })
 
+  describe("threshold labelColor", () => {
+    const chip = { type: "box", fill: "#1f2937", radius: 3, padding: 4 } as const
+
+    it("paints the y-threshold label in labelColor while the line keeps color", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "y-threshold", value: 50, label: "Limit", color: "#dc2626", labelColor: "#ffffff", labelBackground: chip }],
+      })
+      expect(svg).toMatch(/<line[^>]*stroke="#dc2626"/)
+      expect(svg).toMatch(/<text[^>]*fill="#ffffff"[^>]*>Limit<\/text>/)
+      expect(svg).toMatch(/<rect[^>]*fill="#1f2937"/)
+    })
+
+    it("paints the x-threshold and horizontal-ordinal threshold labels in labelColor", () => {
+      const xSvg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "x-threshold", value: 50, label: "Deploy", color: "#dc2626", labelColor: "#fafafa" }],
+      })
+      expect(xSvg).toMatch(/<text[^>]*fill="#fafafa"[^>]*>Deploy<\/text>/)
+
+      const hSvg = renderAnnotationsString({
+        scales: { r: scaleLinear().domain([0, 100]).range([0, 400]) },
+        layout: { width: 400, height: 300 },
+        theme: LIGHT_THEME,
+        projection: "horizontal",
+        annotations: [{ type: "y-threshold", value: 50, label: "Goal", color: "#dc2626", labelColor: "#fafafa" }],
+      })
+      expect(hSvg).toMatch(/<line[^>]*stroke="#dc2626"/)
+      expect(hSvg).toMatch(/<text[^>]*fill="#fafafa"[^>]*>Goal<\/text>/)
+    })
+
+    it("falls back to the line color without labelColor", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "y-threshold", value: 50, label: "Limit", color: "#dc2626" }],
+      })
+      expect(svg).toMatch(/<text[^>]*fill="#dc2626"[^>]*>Limit<\/text>/)
+    })
+
+    it("applies labelColor to band and x-band labels", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [
+          { type: "band", y0: 20, y1: 40, label: "Band", fill: "#fee2e2", labelColor: "#7f1d1d" },
+          { type: "x-band", x0: 20, x1: 40, label: "Window", fill: "#e0f2fe", labelColor: "#075985" },
+        ],
+      })
+      expect(svg).toMatch(/<text[^>]*fill="#7f1d1d"[^>]*>Band<\/text>/)
+      expect(svg).toMatch(/<text[^>]*fill="#075985"[^>]*>Window<\/text>/)
+    })
+  })
+
+  describe("standalone paint", () => {
+    it("replaces a var() box fill with its literal fallback", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [{ type: "y-threshold", value: 50, label: "Limit", labelBackground: { type: "box", fill: "var(--chip-bg, #111827)", stroke: "var(--chip-edge)" } }],
+      })
+      expect(svg).not.toContain("var(")
+      expect(svg).toMatch(/<rect[^>]*fill="#111827"/)
+      expect(svg).toMatch(/<rect[^>]*stroke="#ccc"/)
+    })
+
+    it("uses the theme's secondary text color for enclosures, never a CSS variable", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        theme: DARK_THEME,
+        annotations: [
+          { type: "enclose", label: "Cluster", coordinates: [{ x: 10, y: 10 }, { x: 30, y: 30 }] },
+          { type: "rect-enclose", label: "Box", coordinates: [{ x: 50, y: 50 }, { x: 70, y: 70 }], labelBackground: "halo" },
+        ],
+      })
+      expect(svg).not.toContain("var(")
+      expect(svg).toContain(`stroke="${DARK_THEME.colors.textSecondary}"`)
+      expect(svg).toMatch(/<text[^>]*fill="#aaa"[^>]*>Cluster<\/text>/)
+    })
+
+    it("defaults unset band fills and labels to the theme primary, like the client", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        annotations: [
+          { type: "band", y0: 20, y1: 40, label: "Band" },
+          { type: "x-band", x0: 20, x1: 40, label: "Window" },
+        ],
+      })
+      const primary = LIGHT_THEME.colors.primary
+      expect(svg.match(new RegExp(`<rect[^>]*fill="${primary}"`, "g"))).toHaveLength(2)
+      expect(svg).toMatch(new RegExp(`<text[^>]*fill="${primary}"[^>]*>Band</text>`))
+      expect(svg).toMatch(new RegExp(`<text[^>]*fill="${primary}"[^>]*>Window</text>`))
+    })
+  })
+
   describe("x-threshold", () => {
     it("renders vertical dashed line at data value", () => {
       const svg = renderAnnotationsString({

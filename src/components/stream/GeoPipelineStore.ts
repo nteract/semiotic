@@ -49,7 +49,7 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
-import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
+import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 import {
   normalizeGeoPipelineConfigUpdate,
@@ -60,14 +60,11 @@ import {
 
 const DEFAULT_STREAM_WINDOW_SIZE = 500
 
-export class GeoPipelineStore implements UpdateResultStore {
-  declare getLastUpdateResult: () => UpdateResult
-  declare getUpdateSnapshot: () => UpdateResult
-  declare subscribeUpdateResult: (listener: () => void) => () => void
-  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
-  declare markStylePaintPending: () => void
-  declare consumeStylePaintPending: () => boolean
+// Module constant rather than a static class field: the es2020 build lowers
+// static fields to a post-class assignment that bundlers must retain.
+const QUADTREE_THRESHOLD = 500
 
+export class GeoPipelineStore extends UpdateResultStoreBase {
   config: GeoPipelineConfig
   protected updateResults = new GeoPipelineUpdateResults()
 
@@ -92,7 +89,6 @@ export class GeoPipelineStore implements UpdateResultStore {
   private _customLayoutFailedThisBuild = false
 
   // Spatial index for point hit testing (built when point count exceeds threshold)
-  private static readonly QUADTREE_THRESHOLD = 500
   private _quadtree: Quadtree<PointSceneNode> | null = null
   /** Largest visual point radius in the current scene; used to widen quadtree
    *  hit-test radius when points are larger than the default maxDistance. */
@@ -138,6 +134,7 @@ export class GeoPipelineStore implements UpdateResultStore {
   private _hasRenderedOnce = false
 
   constructor(config: GeoPipelineConfig) {
+    super()
     this.config = normalizeInitialGeoPipelineConfig(config)
   }
 
@@ -902,7 +899,7 @@ export class GeoPipelineStore implements UpdateResultStore {
     }
     this._maxPointRadius = maxR
 
-    if (pointCount <= GeoPipelineStore.QUADTREE_THRESHOLD) {
+    if (pointCount <= QUADTREE_THRESHOLD) {
       this._quadtree = null
       return
     }
@@ -1231,5 +1228,3 @@ export class GeoPipelineStore implements UpdateResultStore {
     return true
   }
 }
-
-attachUpdateResultStore(GeoPipelineStore)

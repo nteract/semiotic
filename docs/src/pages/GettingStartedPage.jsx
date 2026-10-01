@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 298,
+    "kb": 300,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -29,7 +29,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 122,
+    "kb": 123,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 141,
+    "kb": 143,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 180,
+    "kb": 182,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 133,
+    "kb": 135,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 175,
+    "kb": 176,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 180,
+    "kb": 182,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -69,17 +69,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 110,
+    "kb": 111,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 190,
+    "kb": 208,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 189,
+    "kb": 207,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -89,27 +89,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 262,
+    "kb": 263,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 262,
+    "kb": 263,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 272,
+    "kb": 271,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 103,
+    "kb": 104,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 95,
+    "kb": 96,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -124,7 +124,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 113,
+    "kb": 112,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -159,7 +159,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 169,
+    "kb": 170,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -174,17 +174,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 636,
+    "kb": 640,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 139,
+    "kb": 140,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
     "importPath": "semiotic/controls",
-    "kb": 17,
+    "kb": 18,
     "blurb": "DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer"
   },
   {
@@ -199,7 +199,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 415,
+    "kb": 419,
     "blurb": "Full chart API and shared utilities"
   }
 ])
@@ -820,9 +820,10 @@ import { BarChart } from "semiotic/ordinal"`}
 
       <div style={styles.note}>
         <strong>How to read these numbers:</strong> They measure Semiotic's generated first-party
-        artifacts, not a complete application bundle. Shared runtime and dependencies are
-        deduplicated by modern bundlers; consult the checked cold-consumer table in the README
-        before making a route-level size decision.
+        artifacts, including code an entry loads only on demand, not a complete application
+        bundle. Bundlers tree-shake each named import down to the chart it uses; the checked
+        cold-consumer table in the README reports that initial load (and the on-demand remainder)
+        per import, so consult it before making a route-level size decision.
       </div>
 
       {/* --------------------------------------------------------------- */}

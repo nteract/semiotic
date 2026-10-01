@@ -45,10 +45,11 @@ export function renderPhysicsFrame(
   // box here; title placement remains owned by the physics-specific chrome.
   const hasTitle = false
   const legendPosition = props.legendPosition ?? "right"
+  // The legend reservation below owns the top-legend floor, so its cap can
+  // shrink it in compact frames.
   const margin = reserveFrameChromeMargin(
     { ...DEFAULT_MARGIN, ...props.margin },
-    hasTitle,
-    Boolean(props.legend) && legendPosition === "top"
+    hasTitle
   )
   if (props.legend) {
     const baseline = { ...margin }

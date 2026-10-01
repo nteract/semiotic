@@ -101,7 +101,7 @@ export type PhysicsPileChartProps<TDatum extends Datum = Datum> =
  * />
  * ```
  */
-export const UnitPileChart = forwardRef(function UnitPileChart<
+export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
   TDatum extends Datum = Datum
 >(props: UnitPileChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {

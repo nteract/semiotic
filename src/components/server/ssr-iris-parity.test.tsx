@@ -515,6 +515,32 @@ describe("AreaChart — semanticGradient SSR parity", () => {
     expect(svg).not.toContain('stroke="#FF7077"')
   })
 
+  it("anchors the fill stops to the y-domain so they line up with the line bands", () => {
+    // Data tops out at 60 on a 0–100 domain. The fill used to stretch its
+    // stops over the area's own 0–60 extent, turning red near 48 while the
+    // line turned red at 80.
+    const svg = renderChart("AreaChart", {
+      data: [{ x: 0, y: 10 }, { x: 1, y: 60 }, { x: 2, y: 30 }],
+      xAccessor: "x",
+      yAccessor: "y",
+      yExtent: [0, 100],
+      width: 400,
+      height: 300,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      showAxes: false,
+      semanticGradient: [
+        { at: 0, color: "#22c55e" },
+        { at: 50, color: "#f59e0b" },
+        { at: 80, color: "#dc2626" },
+      ],
+    })
+    const gradient = svg.match(/<linearGradient id="area-0-gradient"[^>]*>/)?.[0] ?? ""
+    expect(gradient).toContain('y1="0"')
+    expect(gradient).toContain('y2="300"')
+    // The line's critical band starts at value 80, 60px from the top.
+    expect(svg).toMatch(/<clipPath id="area-0-stroke-band-2"><rect x="-2" y="0" width="404" height="59.99/)
+  })
+
   it("a plain AreaChart (no semanticGradient) emits no gradient", () => {
     const { semanticGradient, ...plain } = props
     void semanticGradient

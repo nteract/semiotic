@@ -20,6 +20,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -85,7 +86,7 @@ export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseCh
  * />
  * ```
  */
-export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const RidgelinePlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -247,8 +248,7 @@ export const RidgelinePlot = forwardRef(function RidgelinePlot<TDatum extends Da
   }
 
   return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "RidgelinePlot") as unknown as {
   <TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-RidgelinePlot.displayName = "RidgelinePlot"

@@ -767,13 +767,13 @@ const hatch = createHatchPattern({
             <td style={{ padding: 8 }}><code>spacing</code></td>
             <td style={{ padding: 8 }}>number</td>
             <td style={{ padding: 8 }}><code>6</code></td>
-            <td style={{ padding: 8 }}>Distance between lines in pixels</td>
+            <td style={{ padding: 8 }}>Perpendicular distance between line centers in pixels, at every angle</td>
           </tr>
           <tr style={{ borderBottom: "1px solid var(--surface-3, #e0e0e0)" }}>
             <td style={{ padding: 8 }}><code>angle</code></td>
             <td style={{ padding: 8 }}>number</td>
             <td style={{ padding: 8 }}><code>45</code></td>
-            <td style={{ padding: 8 }}>Line angle in degrees (0 = horizontal, 45 = diagonal, 90 = vertical)</td>
+            <td style={{ padding: 8 }}>Line angle in degrees. 0 is horizontal and 90 vertical; positive angles turn clockwise, so 45 draws <code>\</code> and -45 draws <code>/</code>. Canvas and SVG draw the same angle.</td>
           </tr>
         </tbody>
       </table>

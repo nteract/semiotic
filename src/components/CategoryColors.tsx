@@ -6,6 +6,7 @@ import {
   resolveCategoricalPalette,
   resolveExplicitColor
 } from "./charts/shared/colorUtils"
+import { withDisplayName } from "./charts/shared/withDisplayName"
 
 /**
  * Category→color mapping. Maps category values (like "North", "error", "active")
@@ -14,8 +15,8 @@ import {
  */
 export type CategoryColorMap = Record<string, string>
 
-const CategoryColorContext = createContext<CategoryColorMap | null>(null)
-const ExplicitCategoryColorContext = createContext<CategoryColorMap | null>(null)
+const CategoryColorContext = /* @__PURE__ */ createContext<CategoryColorMap | null>(null)
+const ExplicitCategoryColorContext = /* @__PURE__ */ createContext<CategoryColorMap | null>(null)
 
 /** Internal: publish linked defaults without promoting them to explicit overrides. */
 export function LinkedCategoryColorProvider({
@@ -74,7 +75,7 @@ export interface CategoryColorProviderProps {
  * </CategoryColorProvider>
  * ```
  */
-export function CategoryColorProvider({
+export const CategoryColorProvider = /* @__PURE__ */ withDisplayName(function CategoryColorProvider({
   colors,
   categories,
   colorScheme = "category10",
@@ -124,9 +125,8 @@ export function CategoryColorProvider({
       </CategoryColorContext.Provider>
     </ExplicitCategoryColorContext.Provider>
   )
-}
+}, "CategoryColorProvider")
 
-CategoryColorProvider.displayName = "CategoryColorProvider"
 
 /**
  * Hook to access the category color map from the nearest provider.

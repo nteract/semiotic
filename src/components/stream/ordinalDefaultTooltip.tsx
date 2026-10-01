@@ -8,6 +8,7 @@ import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import * as React from "react"
 import type { HoverData } from "./ordinalTypes"
 import { defaultTooltipStyle } from "../Tooltip/Tooltip"
+import { markTooltipChrome } from "../Tooltip/tooltipChrome"
 
 /** Render an ordinal datum smartly: a name/label title, a type, a value, then
  *  the rest — for swarm/point and custom-layout fallbacks. `skipPositional`
@@ -28,7 +29,8 @@ function smartOrdinalTooltip(d: Datum) {
   )
 }
 
-function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
+// Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultOrdinalTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
   const stats = hover.stats
   const hoverCategory = hover.category
@@ -105,8 +107,6 @@ function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
       {value !== "" && <div>{typeof value === "number" ? value.toLocaleString() : String(value)}</div>}
     </div>
   )
-}
-// Tell FlippingTooltip this component paints its own chrome.
-;(DefaultOrdinalTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+})
 
 export { DefaultOrdinalTooltip }

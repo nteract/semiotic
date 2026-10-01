@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
+import { FOCUS_REVEAL_STYLE } from "../screenReaderStyles"
 import type { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import {
   DATA_TABLE_HIDDEN_CLASS,
@@ -40,6 +41,9 @@ export function AccessibleTableShell({
     dismiss,
     announcement
   } = interaction
+  // The collapsed trigger is visually hidden until it has focus; revealing it
+  // then keeps the keyboard focus indicator visible (WCAG 2.4.7).
+  const [triggerFocused, setTriggerFocused] = React.useState(false)
   return (
     <div
       ref={containerRef}
@@ -48,7 +52,7 @@ export function AccessibleTableShell({
       tabIndex={-1}
       onFocus={isExpanded ? undefined : handleFocus}
       onBlur={isExpanded ? handleBlur : undefined}
-      style={isExpanded ? VISIBLE_PANEL_STYLE : SR_ONLY_STYLE}
+      style={isExpanded ? VISIBLE_PANEL_STYLE : triggerFocused ? FOCUS_REVEAL_STYLE : SR_ONLY_STYLE}
       role="region"
       aria-label={regionLabel}
     >
@@ -82,6 +86,8 @@ export function AccessibleTableShell({
           ref={triggerRef}
           type="button"
           onClick={open}
+          onFocus={() => setTriggerFocused(true)}
+          onBlur={() => setTriggerFocused(false)}
           style={HIDDEN_TRIGGER_STYLE}
         >
           View data summary ({countLabel})

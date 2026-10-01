@@ -536,6 +536,31 @@ describe("BumpChart shared styling in static SVG", () => {
       }
     })
 
+    it("assigns the same colors to several highlighted series from a palette array and theme", () => {
+      // The consumer pattern that looked like drift: a brand palette array as
+      // colorScheme, a themed categorical palette, and highlightTop > 1.
+      const theme = {
+        ...LIGHT_THEME,
+        colors: { ...LIGHT_THEME.colors, categorical: ["#111111", "#222222", "#333333"] },
+      }
+      const three = [
+        ...data,
+        { year: 2023, series: "Charlie", value: 3 },
+        { year: 2024, series: "Charlie", value: 4 },
+      ]
+      const props = { ...base, data: three, highlightTop: 2, colorScheme: ["#aa0000", "#00aa00", "#0000aa"] }
+      const fills = (svg: string) => Array.from(new Set(svg.match(/fill="#[0-9a-f]{6}"/g) ?? [])).sort()
+      const staticApi = renderChart("BumpChart", { ...props, theme })
+      const inFrame = renderToString(
+        <ThemeProvider theme={theme}>
+          <BumpChart {...props} />
+        </ThemeProvider>
+      )
+      expect(fills(staticApi)).toEqual(fills(inFrame))
+      expect(fills(staticApi)).toEqual(expect.arrayContaining(['fill="#aa0000"', 'fill="#00aa00"']))
+      expect(staticApi).not.toContain('fill="#0000aa"')
+    })
+
     it("colors highlighted series from a named colorScheme on both paths", () => {
       for (const svg of bothPaths({ highlightTop: 1, colorScheme: "tableau10" })) {
         expect(svg).toContain(`fill="${tableau10[0]}"`)

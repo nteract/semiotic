@@ -86,14 +86,19 @@ export function NetworkSSRFrame({
       ? data || (!Array.isArray(edges) ? edges : undefined)
       : undefined
 
+    // The SVG render (server and the hydration pass that must match it)
+    // paints final positions. A first layout with `animate` collapses nodes
+    // to the intro origin, which would otherwise serialize as empty marks.
     if (isHierarchical && hierarchyRoot) {
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
+      store.cancelIntroAnimation()
       store.buildScene([adjustedWidth, adjustedHeight])
     } else {
       const rawNodes = filterSparseArray(nodes)
       const rawEdges = Array.isArray(edges) ? filterSparseArray(edges) : []
       if (rawNodes.length > 0 || rawEdges.length > 0) {
         store.ingestBounded(rawNodes, rawEdges, [adjustedWidth, adjustedHeight])
+        store.cancelIntroAnimation()
         store.buildScene([adjustedWidth, adjustedHeight])
       }
     }

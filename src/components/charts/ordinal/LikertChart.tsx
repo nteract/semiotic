@@ -24,6 +24,7 @@ import {
 } from "../shared/useLikertAggregation"
 import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 import type { StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 // Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
 // LikertChart drives fill from `baseStyleExtras` (level-keyed
@@ -190,7 +191,7 @@ export interface LikertChartHandle extends RealtimeFrameHandle {
  * />
  * ```
  */
-export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum = Datum>(
+export const LikertChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function LikertChart<TDatum extends Datum = Datum>(
   props: LikertChartProps<TDatum>,
   ref: React.Ref<LikertChartHandle>
 ) {
@@ -572,10 +573,9 @@ export const LikertChart = forwardRef(function LikertChart<TDatum extends Datum 
       <StreamOrdinalFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "LikertChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>
   ): React.ReactElement | null
   displayName?: string
 }
-LikertChart.displayName = "LikertChart"

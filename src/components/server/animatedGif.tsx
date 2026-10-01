@@ -19,8 +19,13 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { registerServerXYPlugins } from "./registerServerXYPlugins"
+import { provideXYTransitionEngine } from "../stream/pipelineTransitionEngine"
+import { xyTransitionEngine } from "../stream/pipelineTransitions"
 
 registerServerXYPlugins()
+// GIF frames interpolate transitions synchronously; install the engine the
+// browser loads on demand.
+provideXYTransitionEngine(xyTransitionEngine)
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
 import { xySceneNodeToSVG } from "../stream/SceneToSVGXY"
@@ -171,8 +176,10 @@ export function generateFrameSVGs(
     { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
     props.title,
   )
-  const innerW = width - margin.left - margin.right
-  const innerH = height - margin.top - margin.bottom
+  // Keep the plot nondegenerate when margins exhaust the frame, like the
+  // static renderers.
+  const innerW = Math.max(1, width - margin.left - margin.right)
+  const innerH = Math.max(1, height - margin.top - margin.bottom)
 
   const svgFrames: string[] = []
 
@@ -470,7 +477,7 @@ function renderFrameAnnotations(
               x={labelPos === "left" ? 4 : labelPos === "center" ? innerWidth / 2 : innerWidth - 4}
               y={py < 20 ? Math.min(innerHeight - 4, py + 16) : py - 5}
               textAnchor={labelPos === "left" ? "start" : labelPos === "center" ? "middle" : "end"}
-              fontSize={s.tickSize} fill={color} fontFamily={s.fontFamily}>
+              fontSize={s.tickSize} fill={ann.labelColor ?? color} fontFamily={s.fontFamily}>
               {ann.label}
             </text>
           )}
@@ -496,8 +503,10 @@ function renderXYFrameSVG(
     { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
     props.title,
   )
-  const innerW = width - margin.left - margin.right
-  const innerH = height - margin.top - margin.bottom
+  // Keep the plot nondegenerate when margins exhaust the frame, like the
+  // static renderers.
+  const innerW = Math.max(1, width - margin.left - margin.right)
+  const innerH = Math.max(1, height - margin.top - margin.bottom)
   const bg = resolveBackground(props, theme)
 
   const renderMode = props.renderMode as SceneRenderMode<SceneNode> | undefined

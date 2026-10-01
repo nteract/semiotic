@@ -45,6 +45,7 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import { physicalFlowOverlay } from "./packetFlowOverlay"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface PacketFlowChartProps<
   TNode extends Datum = Datum,
@@ -360,7 +361,7 @@ function withPhysicalFlowObservation(
  * />
  * ```
  */
-export const PacketFlowChart = forwardRef(function PacketFlowChart<
+export const PacketFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PacketFlowChart<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
 >(
@@ -656,7 +657,7 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
     />,
     layoutMode
   )
-}) as unknown as {
+}), "PacketFlowChart") as unknown as {
   <TNode extends Datum = Datum, TLink extends Datum = Datum>(
     props: PacketFlowChartProps<TNode, TLink> &
       React.RefAttributes<PhysicsFrameHandle>
@@ -664,7 +665,6 @@ export const PacketFlowChart = forwardRef(function PacketFlowChart<
   displayName?: string
 }
 
-PacketFlowChart.displayName = "PacketFlowChart"
 
 /**
  * @deprecated Renamed to {@link PacketFlowChart} in 3.9.0. Sends discrete packets along authored routes; "Physical" named the substrate and told a reader nothing about the reading protocol.

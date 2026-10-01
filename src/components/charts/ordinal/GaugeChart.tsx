@@ -19,6 +19,7 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export interface GaugeChartProps extends BaseChartProps {
  * />
  * ```
  */
-export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
+export const GaugeChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
   // the mode default (context: 400×250, sparkline: 120×24). Primary-mode
   // default is 300×250 via the third arg — a gauge reads better compact.
@@ -570,8 +571,7 @@ export const GaugeChart = forwardRef(function GaugeChart(props: GaugeChartProps,
       <StreamOrdinalFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "GaugeChart") as unknown as {
   (props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-GaugeChart.displayName = "GaugeChart"

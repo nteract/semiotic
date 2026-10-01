@@ -29,9 +29,13 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("orbit", orbitLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureOrbitDiagramRegistrations(): void {
+  registerLayoutPlugin("orbit", orbitLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 // ── Orbit layout types (kept for API compatibility) ──────────────────
 
@@ -166,9 +170,10 @@ const DEPTH_COLORS = DEPTH_PALETTE_COLORS
  * />
  * ```
  */
-export function OrbitDiagram<TDatum extends Datum = Datum>(
+export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagram<TDatum extends Datum = Datum>(
   props: OrbitDiagramProps<TDatum>
 ) {
+  ensureOrbitDiagramRegistrations()
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -420,6 +425,5 @@ export function OrbitDiagram<TDatum extends Datum = Datum>(
       />
     </SafeRender>
   )
-}
+}, "OrbitDiagram")
 
-OrbitDiagram.displayName = "OrbitDiagram"

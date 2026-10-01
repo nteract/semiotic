@@ -19,6 +19,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 /**
  * FunnelChart component props
@@ -114,7 +115,7 @@ export interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChar
  * />
  * ```
  */
-export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const FunnelChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -361,8 +362,7 @@ export const FunnelChart = forwardRef(function FunnelChart<TDatum extends Datum 
   }
 
   return <SafeRender componentName="FunnelChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "FunnelChart") as unknown as {
   <TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-FunnelChart.displayName = "FunnelChart"

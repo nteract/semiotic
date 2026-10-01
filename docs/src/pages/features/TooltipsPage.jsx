@@ -616,6 +616,28 @@ hoverAnnotation={[
         nearest data point on hover, providing smooth and responsive tooltip
         behavior even when points are small.
       </p>
+      <p>
+        The tooltip sits to the right of and below the pointer, and flips to
+        the other side when it would run past the plot edge. The wrapper
+        (<code>.stream-frame-tooltip</code>) reports its placement in data
+        attributes: <code>data-placement</code> is <code>"pending"</code> until
+        the tooltip has been measured and <code>"placed"</code> after, and{" "}
+        <code>data-flip-x</code> / <code>data-flip-y</code> are{" "}
+        <code>"true"</code> while it sits left of or above the pointer.
+      </p>
+      <p>
+        To ease the tooltip between samples, put a CSS transition on{" "}
+        <code>left</code> and <code>top</code>. Only moves along the same side
+        animate. The first placement and every flip set an inline{" "}
+        <code>transition: none</code>, so the tooltip doesn't glide in from
+        the pointer or swing across it.
+      </p>
+      <CodeBlock
+        language="css"
+        code={`.stream-frame-tooltip {
+  transition: left 120ms ease-out, top 120ms ease-out;
+}`}
+      />
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}

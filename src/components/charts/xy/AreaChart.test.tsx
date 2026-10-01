@@ -128,7 +128,10 @@ describe("AreaChart", () => {
           />
         </TooltipProvider>
       )
+      // The fill is flipped to top-to-baseline and anchored to the y-domain,
+      // the same span the line bands use.
       expect(lastXYFrameProps.gradientFill).toEqual({
+        extent: "domain",
         stops: [
           { offset: 0, color: "#336699", opacity: 0.8 },
           { offset: 1, color: "#336699", opacity: 0.1 },

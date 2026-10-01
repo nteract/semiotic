@@ -38,15 +38,8 @@ import {
   buildDatumIndexMap
 } from "./pipelineDecay"
 import { applyPulse as applyPulseFn, hasActivePulses as hasActivePulsesFn } from "./pipelinePulse"
-import {
-  snapshotPositions as snapshotPositionsFn,
-  startTransition as startTransitionFn,
-  advanceTransition as advanceTransitionFn,
-  getNodeIdentity,
-  type PrevPosition,
-  type PrevPath,
-  type TransitionContext
-} from "./pipelineTransitions"
+import type { PrevPosition, PrevPath, TransitionContext } from "./pipelineTransitions"
+import { getXYTransitionEngine } from "./pipelineTransitionEngine"
 import type { XYSceneContext } from "./xySceneBuilders/types"
 import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
 import { getXYSceneBuilder, unwrapXYScene } from "./xyPlugins/registry"
@@ -92,7 +85,7 @@ import {
   pushWithTimestamp
 } from "./pipelineBufferUtils"
 import type { UpdateResult } from "./pipelineUpdateContract"
-import { attachUpdateResultStore, type UpdateResultStore } from "./pipelineUpdateStore"
+import { UpdateResultStoreBase } from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 import { snapXYIntroTargets } from "./pipelineIntroCancellation"
@@ -112,14 +105,11 @@ export {
 
 // ── PipelineStore config ───────────────────────────────────────────────
 
-export class PipelineStore implements UpdateResultStore {
-  declare getLastUpdateResult: () => UpdateResult
-  declare getUpdateSnapshot: () => UpdateResult
-  declare subscribeUpdateResult: (listener: () => void) => () => void
-  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
-  declare markStylePaintPending: () => void
-  declare consumeStylePaintPending: () => boolean
+// Module constant rather than a static class field: the es2020 build lowers
+// static fields to a post-class assignment that bundlers must retain.
+export const GROUP_COLOR_MAP_CAP = 1000
 
+export class PipelineStore extends UpdateResultStoreBase {
   private buffer: RingBuffer<Datum>
   private xExtent = new IncrementalExtent()
   private yExtent = new IncrementalExtent()
@@ -184,7 +174,6 @@ export class PipelineStore implements UpdateResultStore {
   /** Monotonic counter for group-color palette indexing. Decoupled from `_groupColorMap.size` so FIFO eviction
    *  doesn't cause new groups to collide with existing entries on a shrunk map. */
   private _groupColorCounter: number = 0
-  private static readonly GROUP_COLOR_MAP_CAP = 1000
   private _barCategoryCache: { key: string; order: string[] } | null = null
   /** Sorted bin boundary values from the last bar scene build (for data-driven brush snapping) */
   private _binBoundaries: number[] = []
@@ -244,6 +233,7 @@ export class PipelineStore implements UpdateResultStore {
   private spatialIndex = new PipelineSpatialIndex()
 
   constructor(config: PipelineConfig) {
+    super()
     this.config = config
     this.buffer = new RingBuffer(config.windowSize)
     this.growingCap = config.windowSize
@@ -655,7 +645,10 @@ export class PipelineStore implements UpdateResultStore {
     // Snapshot positions for transition animation only after a successful
     // layout attempt. A failed custom layout must leave the retained scene's
     // animation state untouched.
-    if (this.config.transition && this.scene.length > 0) {
+    // The engine loads on demand; StreamXYFrame holds an animated intro's
+    // first paint until it arrives, and a static render simply skips motion.
+    const transitionEngine = this.config.transition ? getXYTransitionEngine() : null
+    if (transitionEngine && this.scene.length > 0) {
       this.snapshotPositions()
     }
     this.scene = nextScene
@@ -672,14 +665,14 @@ export class PipelineStore implements UpdateResultStore {
 
     // Intro animation: synthesize zero-state on first render
     if (this.config.transition && !this._hasRenderedOnce && this.scene.length > 0) {
-      if (this.config.introAnimation) {
+      if (this.config.introAnimation && transitionEngine) {
         this.synthesizeIntroPositions()
       }
       this._hasRenderedOnce = true
     }
 
     // Start transition animation from old to new positions
-    if (this.config.transition && (this.prevPositionMap.size > 0 || this.prevPathMap.size > 0)) {
+    if (transitionEngine && (this.prevPositionMap.size > 0 || this.prevPathMap.size > 0)) {
       this.startTransition()
     }
 
@@ -898,8 +891,13 @@ export class PipelineStore implements UpdateResultStore {
     }
   }
 
+  /** Whether the first scene has been computed (and any intro set up). */
+  get hasRenderedOnce(): boolean {
+    return this._hasRenderedOnce
+  }
+
   private snapshotPositions(): void {
-    snapshotPositionsFn(this.transitionContext, this.scene, this.prevPositionMap, this.prevPathMap)
+    getXYTransitionEngine()?.snapshotPositions(this.transitionContext, this.scene, this.prevPositionMap, this.prevPathMap)
   }
 
   /** Synthesize a zero-state prevPositionMap/prevPathMap for animated intro (first render). */
@@ -907,10 +905,12 @@ export class PipelineStore implements UpdateResultStore {
     this.prevPositionMap.clear()
     this.prevPathMap.clear()
     const baseline = this.scales?.y(0) ?? 0
+    const engine = getXYTransitionEngine()
+    if (!engine) return
 
     for (let i = 0; i < this.scene.length; i++) {
       const node = this.scene[i]
-      const key = getNodeIdentity(this.transitionContext, node, i)
+      const key = engine.getNodeIdentity(this.transitionContext, node, i)
       if (!key) continue
 
       if (node.type === "point") {
@@ -945,8 +945,9 @@ export class PipelineStore implements UpdateResultStore {
   }
 
   private startTransition(): void {
-    if (!this.config.transition) return
-    const state = startTransitionFn(
+    const engine = getXYTransitionEngine()
+    if (!this.config.transition || !engine) return
+    const state = engine.startTransition(
       this.transitionContext, this.config.transition,
       { scene: this.scene, exitNodes: this.exitNodes, activeTransition: this.activeTransition },
       this.prevPositionMap, this.prevPathMap, this.currentTime()
@@ -957,9 +958,10 @@ export class PipelineStore implements UpdateResultStore {
   }
 
   advanceTransition(now: number): boolean {
-    if (!this.activeTransition || !this.config.transition) return false
+    const engine = getXYTransitionEngine()
+    if (!this.activeTransition || !this.config.transition || !engine) return false
     const state = { scene: this.scene, exitNodes: this.exitNodes, activeTransition: this.activeTransition }
-    const animating = advanceTransitionFn(now, this.config.transition, state, this.prevPositionMap, this.prevPathMap)
+    const animating = engine.advanceTransition(now, this.config.transition, state, this.prevPositionMap, this.prevPathMap)
     this.scene = state.scene
     this.exitNodes = state.exitNodes
     this.activeTransition = state.activeTransition
@@ -1057,7 +1059,7 @@ export class PipelineStore implements UpdateResultStore {
       colorMapCache: this._colorMapCache,
       groupColorMap: this._groupColorMap,
       groupColorCounter: this._groupColorCounter,
-      groupColorMapCap: PipelineStore.GROUP_COLOR_MAP_CAP,
+      groupColorMapCap: GROUP_COLOR_MAP_CAP,
       config: this.config
     })
     this._groupColorCounter = groupColorCounter
@@ -1096,7 +1098,7 @@ export class PipelineStore implements UpdateResultStore {
       throw new Error("remove() requires pointIdAccessor to be configured")
     }
     // Snapshot positions before mutation so the transition system can animate exits
-    if (this.config.transition && this.scene.length > 0) {
+    if (this.config.transition && this.scene.length > 0 && getXYTransitionEngine()) {
       this.snapshotPositions()
     }
     const ids = toIdSet(id)
@@ -1496,5 +1498,3 @@ export class PipelineStore implements UpdateResultStore {
     return this.updateResults.last
   }
 }
-
-attachUpdateResultStore(PipelineStore)

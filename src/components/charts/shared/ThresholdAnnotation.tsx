@@ -7,7 +7,12 @@ import {
 import { renderThresholdEndCap } from "./ThresholdEndCap"
 import { TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 
-/** Shared threshold geometry; callers retain their renderer-specific theme defaults. */
+/**
+ * Shared threshold geometry; callers retain their renderer-specific theme
+ * defaults. The label text uses `ann.labelColor` when set, otherwise the line
+ * `color`, so a light-on-dark label chip (`labelBackground: { type: "box" }`)
+ * can sit on a colored line.
+ */
 export function ThresholdAnnotation({
   ann,
   position,
@@ -84,7 +89,7 @@ export function ThresholdAnnotation({
           y={y}
           text={ann.label}
           textAnchor={anchor}
-          fill={color}
+          fill={ann.labelColor ?? color}
           fontSize={fontSize}
           fontFamily={fontFamily}
           fontWeight={bold ? "bold" : undefined}

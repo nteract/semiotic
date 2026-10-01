@@ -33,6 +33,7 @@ import {
   useAnnotationActivationOptions,
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
+import { withDisplayName } from "../charts/shared/withDisplayName"
 
 type AnnotationAnchorNode = NetworkAnnotationAnchorNode
 
@@ -95,7 +96,7 @@ export interface NetworkSVGOverlayProps {
  * Unlike XY/ordinal overlays, network charts don't have axes or grid lines.
  * The overlay is positioned absolutely over the canvas.
  */
-export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
+export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
   const {
     width,
     height,
@@ -273,6 +274,5 @@ export function NetworkSVGOverlay(props: NetworkSVGOverlayProps) {
     })}
     </>
   )
-}
+}, "NetworkSVGOverlay")
 
-NetworkSVGOverlay.displayName = "NetworkSVGOverlay"

@@ -22,8 +22,12 @@ import { normalizePartialMargin } from "../../types/marginType"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(candlestickXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureCandlestickChartRegistrations(): void {
+  registerXYPlugin(candlestickXYPlugin)
+}
 
 export interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {
   data?: TDatum[]
@@ -99,10 +103,11 @@ export interface CandlestickChartProps<TDatum extends Datum = Datum> extends Bas
  * />
  * ```
  */
-export const CandlestickChart = forwardRef(function CandlestickChart<TDatum extends Datum = Datum>(
+export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function CandlestickChart<TDatum extends Datum = Datum>(
   props: CandlestickChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
+  ensureCandlestickChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -302,8 +307,7 @@ export const CandlestickChart = forwardRef(function CandlestickChart<TDatum exte
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "CandlestickChart") as unknown as {
   <TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-CandlestickChart.displayName = "CandlestickChart"

@@ -429,3 +429,61 @@ describe("FlippingTooltip — plot bounds", () => {
     }
   })
 })
+
+describe("FlippingTooltip — placement state", () => {
+  const measure = () =>
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      width: 100, height: 40, x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 40, toJSON: () => ({})
+    } as DOMRect)
+
+  it("exposes flip state and lets a CSS transition ease only same-side moves", () => {
+    const rect = measure()
+    try {
+      const tooltip = (x: number) => (
+        <FlippingTooltip {...baseProps} x={x}>
+          <div>Value</div>
+        </FlippingTooltip>
+      )
+      const { container, rerender } = render(tooltip(100))
+      const wrapper = () => container.firstChild as HTMLElement
+
+      // First measured placement jumps into place.
+      expect(wrapper().dataset.placement).toBe("placed")
+      expect(wrapper().dataset.flipX).toBe("false")
+      expect(wrapper().style.transition).toBe("none")
+
+      // A move on the same side leaves the consumer's transition in charge.
+      rerender(tooltip(140))
+      expect(wrapper().style.transition).toBe("")
+
+      // Crossing to the other side of the pointer is a flip: instant.
+      rerender(tooltip(350))
+      expect(wrapper().dataset.flipX).toBe("true")
+      expect(wrapper().style.transition).toBe("none")
+      expect(wrapper().style.left).toBe(`${baseProps.margin.left + 350 - 100 - 12}px`)
+
+      rerender(tooltip(360))
+      expect(wrapper().dataset.flipX).toBe("true")
+      expect(wrapper().style.transition).toBe("")
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
+  it("remounts as a first placement", () => {
+    const rect = measure()
+    try {
+      const { container, unmount } = render(
+        <FlippingTooltip {...baseProps}><div>First</div></FlippingTooltip>
+      )
+      unmount()
+      const again = render(
+        <FlippingTooltip {...baseProps} x={120}><div>Again</div></FlippingTooltip>
+      )
+      expect(container.firstChild).toBeNull()
+      expect((again.container.firstChild as HTMLElement).style.transition).toBe("none")
+    } finally {
+      rect.mockRestore()
+    }
+  })
+})

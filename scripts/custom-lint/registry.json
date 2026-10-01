@@ -72,6 +72,29 @@
           "note": "Review limited grouped-chart and literal-pointer correlation to the same function scope."
         }
       ]
+    },
+    {
+      "id": "semiotic/no-module-side-effects",
+      "status": "unstable",
+      "score": 7,
+      "introducedAt": "2026-09-30",
+      "implementation": "scripts/custom-lint/rules/no-module-side-effects.mjs",
+      "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
+      "rationale": "Published ESM chunks merge many modules, so a module-scope statement a bundler cannot prove pure (displayName assignments, plugin registration, prototype mixins, un-annotated React factories) pins its component and everything it references into every consumer bundle that touches the chunk.",
+      "evidence": [
+        {
+          "kind": "confirmed_bug",
+          "date": "2026-09-30",
+          "reference": "src/components/charts/xy/Scatterplot.tsx",
+          "note": "Module-scope displayName, registerXYPlugin, and provideMarginalGraphics statements retained the chart for every consumer of its published chunk; pure initializers plus render-time registration cut the tree-shaken semiotic/xy Scatterplot import from 150 to 123 KB gzip (Rolldown with splitting)."
+        },
+        {
+          "kind": "confirmed_bug",
+          "date": "2026-09-30",
+          "reference": "src/components/stream/PipelineStore.ts",
+          "note": "The attachUpdateResultStore prototype mixin and a lowered static class field ran at module scope, so any import touching the XY frame chunk retained the whole store; replaced with a method-only base class and a module constant."
+        }
+      ]
     }
   ]
 }

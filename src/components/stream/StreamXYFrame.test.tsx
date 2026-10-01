@@ -119,6 +119,33 @@ describe("StreamXYFrame", () => {
       }
     })
 
+    it("gives both canvases the frame's CSS box when mounted paused", () => {
+      const { container } = render(
+        <StreamXYFrame
+          chartType="line"
+          data={[
+            { x: 0, y: 1 },
+            { x: 1, y: 2 }
+          ]}
+          xAccessor="x"
+          yAccessor="y"
+          size={[150, 24]}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          paused
+          maxDevicePixelRatio={1}
+        />
+      )
+
+      const canvases = Array.from(
+        container.querySelectorAll<HTMLCanvasElement>(".stream-xy-frame canvas")
+      )
+      expect(canvases).toHaveLength(2)
+      for (const canvas of canvases) {
+        expect(canvas.style.width).toBe("150px")
+        expect(canvas.style.height).toBe("24px")
+      }
+    })
+
     it("applies className prop", () => {
       const { container } = render(
         <StreamXYFrame chartType="line" className="my-chart" />

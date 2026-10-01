@@ -14,6 +14,10 @@
     "semiotic/interaction-test-layout-control": {
       "count": 1,
       "digest": "9f884acaa408eb21"
+    },
+    "semiotic/no-module-side-effects": {
+      "count": 2,
+      "digest": "3e8f5f46baf3cf82"
     }
   },
   "findings": {}

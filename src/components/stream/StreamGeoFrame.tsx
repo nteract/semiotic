@@ -39,7 +39,7 @@ import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
 import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
 import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
-import { prepareCanvas, getDevicePixelRatio } from "./canvasSetup"
+import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
 import { getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
@@ -69,11 +69,12 @@ import { createFrameGraphicsScaleTracker, resolveSubscribedFrameLayers, type Fra
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import { rehitGeoFrameCursor } from "./geoFrameCursorInteraction"
+import { withDisplayName } from "../charts/shared/withDisplayName"
 
 // ── StreamGeoFrame ─────────────────────────────────────────────────────
 
-const StreamGeoFrame = memo(
-  forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(function StreamGeoFrame(props, ref) {
+const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
+  /* @__PURE__ */ forwardRef<StreamGeoFrameHandle, StreamGeoFrameProps>(function StreamGeoFrame(props, ref) {
     const {
       // Projection
       projection,
@@ -339,6 +340,9 @@ const StreamGeoFrame = memo(
       if (points) store.setPoints(safePoints)
       if (lines) store.setLines(safeLines)
       store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+      // The SVG branch (server render and the hydration pass that must
+      // match it) paints the final state; an intro only runs on canvas.
+      store.cancelIntroAnimation()
     }
     const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveSubscribedFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: store.scales, background, themeBackgroundColor: currentTheme.colors.background, tracker: graphicsScaleTracker, readScales: () => store.scales })
 
@@ -690,6 +694,12 @@ const StreamGeoFrame = memo(
       sceneRevisionDiagnosticsRef.current.afterCompute(sceneRevisionCheck, computedSceneThisFrame, false)
 
       const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
+
+      // Canvas geometry is host lifecycle, not interaction-paint state. Size
+      // the idle interaction layer with the data layer so a chart that is
+      // never hovered doesn't keep the native 300x150 canvas box.
+      const interactionCanvas = interactionCanvasRef.current
+      if (interactionCanvas) syncCanvasSize(interactionCanvas, size, dpr)
 
       // Particles / transition / scene rebuild / rotation need a full data paint.
       // Hover-only scheduleRender skips the data canvas and only updates the
@@ -1276,17 +1286,21 @@ const StreamGeoFrame = memo(
                 position: "absolute",
                 left: 0,
                 top: 0,
+                width: size[0],
+                height: size[1],
                 pointerEvents: "none"
               }}
             />
           )}
-          <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")} style={{ position: "absolute", left: 0, top: 0 }} />
+          <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
           <canvas
             ref={interactionCanvasRef}
             style={{
               position: "absolute",
               left: 0,
               top: 0,
+              width: size[0],
+              height: size[1],
               pointerEvents: "none"
             }}
           />
@@ -1405,7 +1419,6 @@ const StreamGeoFrame = memo(
       </div>
     )
   })
-)
+), "StreamGeoFrame")
 
-StreamGeoFrame.displayName = "StreamGeoFrame"
 export default StreamGeoFrame

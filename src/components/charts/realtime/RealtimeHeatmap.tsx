@@ -60,8 +60,12 @@ import {
 } from "./realtimeChartRuntime"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(heatmapXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureRealtimeHeatmapRegistrations(): void {
+  registerXYPlugin(heatmapXYPlugin)
+}
 
 export interface RealtimeHeatmapProps<
   TDatum extends Datum = Datum
@@ -240,9 +244,10 @@ export interface RealtimeHeatmapProps<
  * />
  * ```
  */
-export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
+export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeHeatmap<
   TDatum extends Datum = Datum
 >(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
+  ensureRealtimeHeatmapRegistrations()
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -493,7 +498,7 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
       pointIdAccessor={props.pointIdAccessor}
     />
   )
-}) as unknown as {
+}), "RealtimeHeatmap") as unknown as {
   /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeHeatmapProps<TDatum> &
@@ -506,4 +511,3 @@ export const RealtimeHeatmap = forwardRef(function RealtimeHeatmap<
   ): React.ReactElement | null
   displayName?: string
 }
-RealtimeHeatmap.displayName = "RealtimeHeatmap"

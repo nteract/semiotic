@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react"
-import { DirectManipulationControl, SentenceFilter } from "semiotic/controls"
+import { DirectManipulationControl, DirectManipulationMarkers, SentenceFilter } from "semiotic/controls"
+import { BarChart } from "semiotic/ordinal"
 import { unwrapDatum } from "semiotic/recipes"
 import { XYCustomChart } from "semiotic/xy"
 import CodeBlock from "../../components/CodeBlock"
@@ -168,7 +169,7 @@ const sentenceFilterCustomizationCode = `const budgetDefinition = {
 
 const directControlCode = `import { DirectManipulationControl } from "semiotic/controls"
 
-function ThresholdOverlay({ scaleY, width, threshold, setThreshold }) {
+function ThresholdOverlay({ scaleY, width, threshold, setThreshold, saveThreshold }) {
   return (
     <DirectManipulationControl
       controlType="threshold"
@@ -180,15 +181,54 @@ function ThresholdOverlay({ scaleY, width, threshold, setThreshold }) {
       y={scaleY(threshold)}
       label="Priority threshold"
       valueText={\`Priority threshold: \${threshold}\`}
-      pointerToValue={(event) => scaleY.invert(pointerInOverlay(event).y)}
+      // The pointer arrives in the same coordinate space as x/y.
+      pointToValue={(point) => scaleY.invert(point.y)}
       onChange={setThreshold}
+      // Fires on pointer release and after each keyboard change.
+      onChangeEnd={saveThreshold}
       labelText="drag threshold"
     />
   )
 }
 
-// The chart owns its scales. The control owns focus, keyboard nudging,
-// pointer capture, clamping, and a stable data-viz-control semantic.`
+// The chart owns its scales. The control owns focus, keyboard nudging
+// (arrows, Shift/PageUp/PageDown, Home/End), pointer capture, clamping, and a
+// stable data-viz-control semantic.`
+
+const markersCode = `import { DirectManipulationMarkers } from "semiotic/controls"
+import { BarChart } from "semiotic/ordinal"
+
+function QuotaBar({ usage, quota, setQuota, saveQuota }) {
+  return (
+    <BarChart
+      data={usage}
+      categoryAccessor="team"
+      valueAccessor="used"
+      orientation="horizontal"
+      frameProps={{
+        // Rendered outside the chart's role="img", in plot coordinates.
+        interactiveGraphicsLabel: "Quota handles",
+        interactiveGraphics: ({ scales }) => scales && (
+          <DirectManipulationMarkers
+            label="Quota"
+            values={quota}                // [baseline, max], kept ascending
+            markers={[{ label: "Baseline" }, { label: "Max" }]}
+            min={0}
+            max={100}
+            valueToPoint={(value) => ({ x: scales.r(value), y: -10 })}
+            pointToValue={(point) => scales.r.invert(point.x)}
+            onChange={setQuota}
+            onChangeEnd={saveQuota}
+          />
+        ),
+      }}
+    />
+  )
+}
+
+// Each handle is its own slider bounded by its neighbor. When the two meet,
+// dragging toward lower values moves the baseline and toward higher values
+// moves the max, so neither handle can trap the other.`
 
 const controlsBundleCode = `// Frame-independent controls: no XY, ordinal, geo, network, or physics renderer.
 import {
@@ -264,13 +304,78 @@ function visibleRect({ x, y, w, h, fill, datum, id, group }) {
   }
 }
 
-function overlayPoint(event) {
-  const svg = event.currentTarget.ownerSVGElement
-  if (!svg?.createSVGPoint || !event.currentTarget.getScreenCTM()) return { x: 0, y: 0 }
-  const point = svg.createSVGPoint()
-  point.x = event.clientX
-  point.y = event.clientY
-  return point.matrixTransform(event.currentTarget.getScreenCTM().inverse())
+const QUOTA_USAGE = [
+  { team: "Search", used: 62 },
+  { team: "Ingest", used: 38 },
+  { team: "Billing", used: 81 },
+]
+
+function QuotaMarkersDemo() {
+  const [quota, setQuota] = useState([40, 75])
+  const [saved, setSaved] = useState([40, 75])
+  const [width, hostRef] = useResponsiveWidth(280, 800)
+  const chartWidth = Math.max(280, Math.floor(width))
+  return (
+    <div ref={hostRef} style={styles.demoShell}>
+      <BarChart
+        data={QUOTA_USAGE}
+        categoryAccessor="team"
+        valueAccessor="used"
+        orientation="horizontal"
+        width={chartWidth}
+        height={220}
+        margin={{ top: 60, left: 80, right: 24, bottom: 36 }}
+        valueExtent={[0, 100]}
+        title="Quota usage"
+        frameProps={{
+          interactiveGraphicsLabel: "Quota handles",
+          interactiveGraphics: ({ size, margin, scales }) => {
+            if (!scales) return null
+            const plotHeight = size[1] - margin.top - margin.bottom
+            return (
+              <g>
+                {quota.map((value, index) => (
+                  <line
+                    key={index}
+                    x1={scales.r(value)}
+                    x2={scales.r(value)}
+                    y1={-14}
+                    y2={plotHeight}
+                    stroke={index === 0 ? "var(--semiotic-text-secondary, #666)" : "var(--semiotic-danger, #c0392b)"}
+                    strokeDasharray="4 3"
+                    pointerEvents="none"
+                  />
+                ))}
+                <DirectManipulationMarkers
+                  label="Quota"
+                  values={quota}
+                  markers={[
+                    { label: "Baseline", labelText: `baseline ${quota[0]}`, stroke: "var(--semiotic-text-secondary, #666)" },
+                    { label: "Max", labelText: `max ${quota[1]}`, stroke: "var(--semiotic-danger, #c0392b)" },
+                  ]}
+                  min={0}
+                  max={100}
+                  radius={8}
+                  strokeWidth={3}
+                  labelDx={12}
+                  labelDy={4}
+                  labelClassName="controls-page__control-label"
+                  valueToPoint={(value) => ({ x: scales.r(value), y: -14 })}
+                  pointToValue={(point) => scales.r.invert(point.x)}
+                  onChange={setQuota}
+                  onChangeEnd={setSaved}
+                />
+              </g>
+            )
+          },
+        }}
+      />
+      <p style={styles.demoReadout}>
+        Baseline {quota[0]}, max {quota[1]}. Saved on release or after each key: {saved[0]}–{saved[1]}. Drag the
+        handles together, then pull either one back out.
+      </p>
+    </div>
+  )
 }
 
 function DirectControlDemo() {
@@ -313,7 +418,7 @@ function DirectControlDemo() {
               y={y(threshold)}
               label="Priority threshold"
               valueText={`Priority threshold: ${threshold}`}
-              pointerToValue={(event) => y.invert(overlayPoint(event).y)}
+              pointToValue={(point) => y.invert(point.y)}
               onChange={setThreshold}
               stroke={warning}
               labelText="drag threshold"
@@ -609,6 +714,21 @@ export default function VisualizationControlsPage() {
 
       <CodeBlock code={directControlCode} language="jsx" />
 
+      <h3 id="ordered-markers">Ordered markers in a frame's control layer</h3>
+      <p>
+        <code>DirectManipulationMarkers</code> draws several ordered handles, such as a baseline and a
+        maximum, as individual sliders bounded by their neighbors. Mount it in a frame's{" "}
+        <code>interactiveGraphics</code> (through <code>frameProps</code> on any XY or ordinal chart).
+        That layer receives the same <code>{"{ size, margin, scales }"}</code> as{" "}
+        <code>foregroundGraphics</code> plus <code>pointerToPlot</code>, and it sits outside the chart's{" "}
+        <code>role="img"</code> overlay in its own labelled <code>role="group"</code>, so screen readers reach
+        the sliders and no focusable element hides inside an image. It renders on the client only.
+      </p>
+
+      <QuotaMarkersDemo />
+
+      <CodeBlock code={markersCode} language="jsx" />
+
       <h2 id="linear-brush">Linear Brush</h2>
       <p>
         <code>LinearBrush</code> is a one-dimensional range brush for any track: an overview chart,
@@ -870,7 +990,7 @@ export default function VisualizationControlsPage() {
       <div style={styles.cardGrid}>
         <article style={styles.card}>
           <h3>Accessibility</h3>
-          <p>Controls use slider semantics, meaningful <code>aria-valuetext</code>, Arrow keys, Shift+Arrow, Home, End, and a visible focus state. Every drag needs an HTML or keyboard alternative.</p>
+          <p>Controls use slider semantics (announced as "slider"; set <code>ariaRoleDescription</code> only for a more specific spoken role), meaningful <code>aria-valuetext</code>, Arrow keys, Shift+Arrow, PageUp/PageDown, Home, End, and a visible focus state. <code>onChangeEnd</code> fires for keyboard changes as well as pointer releases. Every drag needs an HTML or keyboard alternative.</p>
         </article>
         <article style={styles.card}>
           <h3>Observability</h3>

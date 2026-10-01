@@ -15,7 +15,10 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
-registerXYPlugin(scatterXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureScatterplotMatrixCellsRegistrations(): void {
+  registerXYPlugin(scatterXYPlugin)
+}
 
 // Internal field used to identify datums across cells
 export const SPLOM_IDX = "__splomIdx"
@@ -74,6 +77,7 @@ export function ScatterplotCell({
   onPointHover,
   onPointClick
 }: CellProps) {
+  ensureScatterplotMatrixCellsRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
   const clientId = `splom-${xField}-${yField}`
 

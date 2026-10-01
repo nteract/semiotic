@@ -61,7 +61,8 @@ function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScat
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
 function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function DirectManipulationControl({ value, onChange, pointToValue, pointerToValue, min, max, step, stepOrigin, largeStep, x, y, controlType, controlId, label, ariaRoleDescription, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function DirectManipulationMarkers({ values, onChange, markers, valueToPoint, pointToValue, min, max, step, stepOrigin, largeStep, ordered, label, ariaRoleDescription, controlType, controlId, radius, fill, stroke, strokeWidth, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType }: DirectManipulationMarkersProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -168,6 +169,7 @@ function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: Styl
 function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
 function observedDatum<TDatum extends Datum = Datum>(observation: ChartObservation | null | undefined): TDatum | null
 function opacityFromAge(options: MotionAgeOpacityOptions): number
+function pointerToLocalPoint(event: ClientPointerEvent, element?: Element | null | undefined): ControlPoint | null
 function preloadNetworkPerspectiveExtras(): Promise<void>
 function rankBumpData<TDatum extends Datum = Datum>(input: TDatum[], options?: RankBumpDataOptions<TDatum> | undefined): RankedBumpData<TDatum>
 function registerBuiltInXYPlugins(): void
@@ -261,6 +263,7 @@ interface ControlAuditFinding
 interface ControlAuditResult
 interface ControlObservation
 interface ControlObservationAdapterOptions
+interface ControlPoint
 interface CrosshairStyle
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
@@ -268,6 +271,9 @@ interface DashboardIntentManifest
 interface DetailsPanelProps
 interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface DirectManipulationControlProps
+interface DirectManipulationMarker
+interface DirectManipulationMarkersChangeMeta
+interface DirectManipulationMarkersProps
 interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface FocusObservation extends ObservationBase
@@ -290,6 +296,7 @@ interface HoverData
 interface IntentManifest
 interface IntentManifestFromRecipeOptions
 interface IntentMarkProps
+interface InteractiveGraphicsContext<S = StreamScales> extends FrameGraphicsContext<S>
 interface InventoryAtTimeOptions
 interface InventoryEdge
 interface JSXProjectionResult
@@ -425,6 +432,7 @@ interface UseNavigationSyncResult
 interface UseSelectionActionsResult
 interface UseSelectionOptions
 interface UseSelectionResult
+interface ValueBand
 interface VegaLiteEncoding
 interface VegaLiteSpec
 interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChartProps
@@ -598,6 +606,7 @@ interface-member BarStyle::property::gap = optional gap: number | undefined
 interface-member BarStyle::property::opacity = optional opacity: number | undefined
 interface-member BarStyle::property::stroke = optional stroke: string | undefined
 interface-member BarStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member BarStyle::property::valueBands = optional valueBands: ValueBand[] | undefined
 interface-member BaseChartProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member BaseChartProps::property::animate = optional animate: AnimateProp | undefined
 interface-member BaseChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
@@ -938,6 +947,8 @@ interface-member ControlObservationAdapterOptions::property::chartType = optiona
 interface-member ControlObservationAdapterOptions::property::controlId = optional controlId: string | undefined
 interface-member ControlObservationAdapterOptions::property::controlType = required controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
 interface-member ControlObservationAdapterOptions::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member ControlPoint::property::x = required x: number
+interface-member ControlPoint::property::y = required y: number
 interface-member CrosshairStyle::property::stroke = optional stroke: string | undefined
 interface-member CrosshairStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member CrosshairStyle::property::strokeWidth = optional strokeWidth: number | undefined
@@ -998,6 +1009,7 @@ interface-member DifferenceChartProps::property::windowSize = optional windowSiz
 interface-member DifferenceChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member DifferenceChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member DifferenceChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member DirectManipulationControlProps::property::ariaRoleDescription = optional ariaRoleDescription: string | undefined
 interface-member DirectManipulationControlProps::property::chartId = optional chartId: string | undefined
 interface-member DirectManipulationControlProps::property::chartType = optional chartType: string | undefined
 interface-member DirectManipulationControlProps::property::className = optional className: string | undefined
@@ -1017,15 +1029,56 @@ interface-member DirectManipulationControlProps::property::onChange = required o
 interface-member DirectManipulationControlProps::property::onChangeEnd = optional onChangeEnd: ((value: number) => void) | undefined
 interface-member DirectManipulationControlProps::property::onChangeStart = optional onChangeStart: ((value: number) => void) | undefined
 interface-member DirectManipulationControlProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
-interface-member DirectManipulationControlProps::property::pointerToValue = required pointerToValue: (event: React.PointerEvent<SVGGElement>) => number | null | undefined
+interface-member DirectManipulationControlProps::property::pointToValue = optional pointToValue: ((point: ControlPoint) => number | null | undefined) | undefined
+interface-member DirectManipulationControlProps::property::pointerToValue = optional pointerToValue: ((event: React.PointerEvent<SVGGElement>) => number | null | undefined) | undefined
 interface-member DirectManipulationControlProps::property::radius = optional radius: number | undefined
 interface-member DirectManipulationControlProps::property::step = optional step: number | undefined
+interface-member DirectManipulationControlProps::property::stepOrigin = optional stepOrigin: number | undefined
 interface-member DirectManipulationControlProps::property::stroke = optional stroke: string | undefined
 interface-member DirectManipulationControlProps::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member DirectManipulationControlProps::property::value = required value: number
 interface-member DirectManipulationControlProps::property::valueText = optional valueText: string | undefined
 interface-member DirectManipulationControlProps::property::x = required x: number
 interface-member DirectManipulationControlProps::property::y = required y: number
+interface-member DirectManipulationMarker::property::className = optional className: string | undefined
+interface-member DirectManipulationMarker::property::controlId = optional controlId: string | undefined
+interface-member DirectManipulationMarker::property::fill = optional fill: string | undefined
+interface-member DirectManipulationMarker::property::label = required label: string
+interface-member DirectManipulationMarker::property::labelText = optional labelText: React.ReactNode
+interface-member DirectManipulationMarker::property::radius = optional radius: number | undefined
+interface-member DirectManipulationMarker::property::stroke = optional stroke: string | undefined
+interface-member DirectManipulationMarker::property::valueText = optional valueText: ((value: number) => string) | undefined
+interface-member DirectManipulationMarkersChangeMeta::property::index = required index: number
+interface-member DirectManipulationMarkersChangeMeta::property::source = required source: "keyboard" | "pointer"
+interface-member DirectManipulationMarkersProps::property::ariaRoleDescription = optional ariaRoleDescription: string | undefined
+interface-member DirectManipulationMarkersProps::property::chartId = optional chartId: string | undefined
+interface-member DirectManipulationMarkersProps::property::chartType = optional chartType: string | undefined
+interface-member DirectManipulationMarkersProps::property::className = optional className: string | undefined
+interface-member DirectManipulationMarkersProps::property::controlId = optional controlId: string | undefined
+interface-member DirectManipulationMarkersProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
+interface-member DirectManipulationMarkersProps::property::disabled = optional disabled: boolean | undefined
+interface-member DirectManipulationMarkersProps::property::fill = optional fill: string | undefined
+interface-member DirectManipulationMarkersProps::property::label = optional label: string | undefined
+interface-member DirectManipulationMarkersProps::property::labelClassName = optional labelClassName: string | undefined
+interface-member DirectManipulationMarkersProps::property::labelDx = optional labelDx: number | undefined
+interface-member DirectManipulationMarkersProps::property::labelDy = optional labelDy: number | undefined
+interface-member DirectManipulationMarkersProps::property::largeStep = optional largeStep: number | undefined
+interface-member DirectManipulationMarkersProps::property::markers = required markers: readonly DirectManipulationMarker[]
+interface-member DirectManipulationMarkersProps::property::max = required max: number
+interface-member DirectManipulationMarkersProps::property::min = required min: number
+interface-member DirectManipulationMarkersProps::property::onChange = required onChange: (values: number[], meta: DirectManipulationMarkersChangeMeta) => void
+interface-member DirectManipulationMarkersProps::property::onChangeEnd = optional onChangeEnd: ((values: number[], meta: DirectManipulationMarkersChangeMeta) => void) | undefined
+interface-member DirectManipulationMarkersProps::property::onChangeStart = optional onChangeStart: ((values: number[], meta: DirectManipulationMarkersChangeMeta) => void) | undefined
+interface-member DirectManipulationMarkersProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member DirectManipulationMarkersProps::property::ordered = optional ordered: boolean | undefined
+interface-member DirectManipulationMarkersProps::property::pointToValue = required pointToValue: (point: ControlPoint, index: number) => number | null | undefined
+interface-member DirectManipulationMarkersProps::property::radius = optional radius: number | undefined
+interface-member DirectManipulationMarkersProps::property::step = optional step: number | undefined
+interface-member DirectManipulationMarkersProps::property::stepOrigin = optional stepOrigin: number | undefined
+interface-member DirectManipulationMarkersProps::property::stroke = optional stroke: string | undefined
+interface-member DirectManipulationMarkersProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member DirectManipulationMarkersProps::property::valueToPoint = required valueToPoint: (value: number, index: number) => ControlPoint
+interface-member DirectManipulationMarkersProps::property::values = required values: readonly number[]
 interface-member DonutChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member DonutChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member DonutChartProps::property::centerContent = optional centerContent: React.ReactNode
@@ -1152,6 +1205,7 @@ interface-member GaugeChartProps::property::valueFormat = optional valueFormat: 
 interface-member GaugeThreshold::property::color = required color: string
 interface-member GaugeThreshold::property::label = optional label: string | undefined
 interface-member GaugeThreshold::property::value = required value: number
+interface-member GradientConfig::property::extent = optional extent: "area" | "domain" | undefined
 interface-member GradientConfig::property::stops = required stops: GradientStop[]
 interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
 interface-member GradientLegendConfig::property::domain = required domain: [number, number]
@@ -1200,6 +1254,7 @@ interface-member HatchFill::property::stroke = optional stroke: string | undefin
 interface-member HatchFill::property::type = required type: "hatch"
 interface-member HatchPatternOptions::property::angle = optional angle: number | undefined
 interface-member HatchPatternOptions::property::background = optional background: string | undefined
+interface-member HatchPatternOptions::property::lineOpacity = optional lineOpacity: number | undefined
 interface-member HatchPatternOptions::property::lineWidth = optional lineWidth: number | undefined
 interface-member HatchPatternOptions::property::spacing = optional spacing: number | undefined
 interface-member HatchPatternOptions::property::stroke = optional stroke: string | undefined
@@ -1296,6 +1351,7 @@ interface-member IntentMarkProps::property::className = optional className: stri
 interface-member IntentMarkProps::property::label = optional label: string | undefined
 interface-member IntentMarkProps::property::manifest = required manifest: IntentManifest
 interface-member IntentMarkProps::property::showSummary = optional showSummary: boolean | undefined
+interface-member InteractiveGraphicsContext::property::pointerToPlot = required pointerToPlot: (event: {clientX: number; clientY: number;}) => {x: number; y: number;} | null
 interface-member InventoryAtTimeOptions::property::inferOpeningStock = optional inferOpeningStock: boolean | undefined
 interface-member InventoryEdge::property::endTime = required endTime: number
 interface-member InventoryEdge::property::source = required source: string
@@ -1985,6 +2041,7 @@ interface-member RealtimeHistogramProps::property::tooltip = optional tooltip: R
 interface-member RealtimeHistogramProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member RealtimeHistogramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHistogramProps::property::valueBands = optional valueBands: ValueBand[] | undefined
 interface-member RealtimeHistogramProps::property::valueExtent = optional valueExtent: [number, number] | undefined
 interface-member RealtimeHistogramProps::property::width = optional width: number | undefined
 interface-member RealtimeHistogramProps::property::windowMode = optional windowMode: WindowMode | undefined
@@ -2615,6 +2672,8 @@ interface-member StreamOrdinalFrameProps::property::groupBy = optional groupBy: 
 interface-member StreamOrdinalFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamOrdinalFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
 interface-member StreamOrdinalFrameProps::property::innerRadius = optional innerRadius: number | undefined
+interface-member StreamOrdinalFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<OrdinalScales>
+interface-member StreamOrdinalFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamOrdinalFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamOrdinalFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
 interface-member StreamOrdinalFrameProps::property::legend = optional legend: LegendValue
@@ -2747,6 +2806,8 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<StreamScales>
+interface-member StreamXYFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined
 interface-member StreamXYFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamXYFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
@@ -3060,6 +3121,8 @@ interface-member UseSelectionResult::property::isActive = required isActive: boo
 interface-member UseSelectionResult::property::predicate = required predicate: (datum: Datum) => boolean
 interface-member UseSelectionResult::property::selectInterval = required selectInterval: (fieldRanges: Record<string, [number, number]>) => void
 interface-member UseSelectionResult::property::selectPoints = required selectPoints: (fieldValues: Record<string, unknown[]>) => void
+interface-member ValueBand::property::fill = required fill: HatchFill | string
+interface-member ValueBand::property::upTo = optional upTo: number | undefined
 interface-member VegaLiteEncoding::property::aggregate = optional aggregate: string | undefined
 interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}
 interface-member VegaLiteEncoding::property::bin = optional bin: boolean | undefined | {maxbins?: number;}
@@ -3201,6 +3264,7 @@ type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type ForceLayoutStatus = "error" | "pending" | "ready"
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
+type InteractiveGraphicsProp<S = StreamScales> = ((ctx: InteractiveGraphicsContext<S>) => ReactNode) | ReactNode
 type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
 type LegendInteractionMode = "highlight" | "isolate" | "none"
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode

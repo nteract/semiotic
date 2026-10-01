@@ -401,6 +401,7 @@ interface-member HatchFill::property::stroke = optional stroke: string | undefin
 interface-member HatchFill::property::type = required type: "hatch"
 interface-member HatchPatternOptions::property::angle = optional angle: number | undefined
 interface-member HatchPatternOptions::property::background = optional background: string | undefined
+interface-member HatchPatternOptions::property::lineOpacity = optional lineOpacity: number | undefined
 interface-member HatchPatternOptions::property::lineWidth = optional lineWidth: number | undefined
 interface-member HatchPatternOptions::property::spacing = optional spacing: number | undefined
 interface-member HatchPatternOptions::property::stroke = optional stroke: string | undefined

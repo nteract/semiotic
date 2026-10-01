@@ -8,6 +8,7 @@ import { smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import type { HoverData } from "./types"
 import { defaultTooltipStyle } from "../Tooltip/Tooltip"
+import { markTooltipChrome } from "../Tooltip/tooltipChrome"
 
 function formatTooltipValue(v: unknown): string {
   if (v == null) return ""
@@ -17,7 +18,8 @@ function formatTooltipValue(v: unknown): string {
   return String(v)
 }
 
-function DefaultTooltip({ hover }: { hover: HoverData }) {
+// Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultTooltip({ hover }: { hover: HoverData }) {
   // Read data-space values off the raw datum. The Stream Frame's
   // hover-build pipeline doesn't know the consumer's accessor names,
   // so the default tooltip displays the canonical-shape fields. HOCs
@@ -66,8 +68,6 @@ function DefaultTooltip({ hover }: { hover: HoverData }) {
       </div>
     </div>
   )
-}
-// Tell FlippingTooltip this component paints its own chrome.
-;(DefaultTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+})
 
 export { DefaultTooltip }

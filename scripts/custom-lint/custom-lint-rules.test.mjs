@@ -58,4 +58,37 @@ describe("Semiotic custom lint rules", () => {
     `
     assert.equal(lint(separateTests, "semiotic/interaction-test-layout-control", "src/example.test.tsx").length, 0)
   })
+  it("keeps library module scope free of tree-shaking side effects", () => {
+    const rule = "semiotic/no-module-side-effects"
+    const chart = "src/components/charts/xy/LineChart.tsx"
+    const clean = [
+      '"use client"',
+      'import { forwardRef, createContext } from "react"',
+      "void axisKeysComplete",
+      "const Ctx = /* @__PURE__ */ createContext(null)",
+      'export const Chart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Chart() { registerPlugins() }), "Chart")',
+      "function registerPlugins() { registerXYPlugin(plugin) }"
+    ].join("\n")
+    assert.equal(lint(clean, rule, chart).length, 0)
+
+    const findings = lint([
+      "registerXYPlugin(plugin)",
+      'Chart.displayName = "Chart"',
+      "const Ctx = createContext(null)",
+      "export const Wrapped = /* @__PURE__ */ withDisplayName(forwardRef(render), \"Wrapped\")",
+      "const Lazy = React.lazy(() => import(\"./x\"))"
+    ].join("\n"), rule, chart)
+    assert.deepEqual(findings.map(finding => finding.messageId), [
+      "sideEffectStatement",
+      "sideEffectStatement",
+      "unannotatedFactory",
+      "unannotatedFactory",
+      "unannotatedFactory"
+    ])
+
+    // Tests, the server graph, and entry modules may register at load.
+    for (const exempt of ["src/components/charts/xy/LineChart.test.tsx", "src/components/server/staticXY.tsx", "src/components/semiotic-ai.ts", "docs/src/components/BlocksView.jsx"]) {
+      assert.equal(lint("registerXYPlugin(plugin)", rule, exempt).length, 0, exempt)
+    }
+  })
 })

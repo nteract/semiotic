@@ -36,6 +36,20 @@ describe("AnnotationLabel", () => {
     expect(out).toContain("Fast-scaling · 10")
   })
 
+  it("resolves a var() box fill through style and keeps a literal attribute fallback", () => {
+    const out = svg(<AnnotationLabel x={10} y={10} text="Chip" fill="#fff" background={{ type: "box", stroke: "var(--edge, #444)" }} />)
+    expect(out).toMatch(/<rect[^>]*fill="#ffffff"/)
+    expect(out).toMatch(/<rect[^>]*stroke="#444"/)
+    expect(out).toContain("fill:var(--semiotic-bg, #ffffff)")
+    expect(out).toContain("stroke:var(--edge, #444)")
+  })
+
+  it("leaves literal box paints as plain attributes", () => {
+    const out = svg(<AnnotationLabel x={10} y={10} text="Chip" fill="#fff" background={{ type: "box", fill: "#111" }} />)
+    expect(out).toMatch(/<rect[^>]*fill="#111"/)
+    expect(out).not.toMatch(/<rect[^>]*style=/)
+  })
+
   it("honors a custom box config (fill, opacity, radius)", () => {
     const out = svg(
       <AnnotationLabel

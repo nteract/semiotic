@@ -181,7 +181,12 @@ export interface HatchFillOptions {
   id: string
   /** Line color. @default "currentColor" */
   color?: string
-  /** Hatch angle in degrees. @default 45 */
+  /**
+   * Hatch angle in degrees, measured from vertical: 0 draws vertical lines and
+   * 45 draws `/`, matching the {@link legendSwatches} hatch swatch. (The
+   * chart-level `HatchFill.angle` is measured from horizontal instead.)
+   * @default 45
+   */
   angle?: number
   /** Spacing between lines, px. @default 8 */
   spacing?: number

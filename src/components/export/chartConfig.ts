@@ -132,6 +132,7 @@ const ALWAYS_EXCLUDE = new Set([
   "onTopologyChange",
   "backgroundGraphics",
   "foregroundGraphics",
+  "interactiveGraphics",
   "legend",
   "recipe",
   "layout"

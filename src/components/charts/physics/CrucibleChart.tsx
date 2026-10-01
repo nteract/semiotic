@@ -78,6 +78,7 @@ import type {
   CrucibleChartProps
 } from "./crucibleChartProps"
 import type { CrucibleBodyDatum, CrucibleProjectionSpec } from "./crucibleTypes"
+import { withDisplayName } from "../shared/withDisplayName"
 
 // Public pure API (also consumed by SSR, evidence, and focused tests).
 export * from "./crucibleTypes"
@@ -174,7 +175,7 @@ export type {
  * />
  * ```
  */
-export const CrucibleChart = forwardRef(function CrucibleChart<
+export const CrucibleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function CrucibleChart<
   TDatum extends Datum = Datum
 >(
   props: CrucibleChartProps<TDatum>,
@@ -957,14 +958,12 @@ export const CrucibleChart = forwardRef(function CrucibleChart<
       />
     </div>
   )
-}) as unknown as {
+}), "CrucibleChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: CrucibleChartProps<TDatum> &
       React.RefAttributes<CrucibleChartHandle<TDatum>>
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(CrucibleChart as { displayName?: string }).displayName = "CrucibleChart"
 
 export default CrucibleChart

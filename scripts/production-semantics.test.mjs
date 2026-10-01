@@ -405,8 +405,13 @@ for (const entry of ["./ai", "./ai/core"]) {
     })
     const code = result.outputFiles[0].text
     // Network capability metadata must not keep the frame's React initializer
-    // alive merely because both occupy the same published shared chunk.
-    assert.doesNotMatch(code, /\.displayName\s*=\s*["']StreamNetworkFrame["']/)
+    // alive merely because both occupy the same published shared chunk. The
+    // frame is named through a pure `withDisplayName(frame, "…")` initializer,
+    // so a retained frame leaves its name as that call's final argument.
+    assert.doesNotMatch(
+      code,
+      /\.displayName\s*=\s*["']StreamNetworkFrame["']|["']StreamNetworkFrame["']\s*\)/
+    )
     const program = `${code}
       const assert = require("node:assert/strict")
       for (const [startTime, endTime, domain] of [

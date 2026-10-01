@@ -112,6 +112,8 @@ import {
 import { networkFrameDefaultMargin } from "./frameDefaultMargins"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { useNetworkPerspectiveExtrasReady, useStableNetworkPerspective, withNetworkPerspective } from "./networkPerspectiveContext"
+import { useEnsureNetworkLayouts } from "./useEnsureNetworkLayouts"
+import { withDisplayName } from "../charts/shared/withDisplayName"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 
@@ -119,7 +121,7 @@ const DEFAULT_SIZE: [number, number] = [800, 600]
 
 // ── StreamNetworkFrame ─────────────────────────────────────────────────
 
-const StreamNetworkFrame = memo(forwardRef<
+const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @__PURE__ */ forwardRef<
   StreamNetworkFrameHandle,
   StreamNetworkFrameProps
 >(function StreamNetworkFrame(props, ref) {
@@ -713,6 +715,11 @@ const StreamNetworkFrame = memo(forwardRef<
   // an input to topology replacement.
   const runLayoutRef = useRef(runLayout)
   runLayoutRef.current = runLayout
+
+  useEnsureNetworkLayouts(chartType, Boolean(customNetworkLayout), () => {
+    runLayoutRef.current()
+    scheduleRender()
+  })
 
   useEffect(() => () => {
     ++layoutRequestRef.current
@@ -1734,7 +1741,6 @@ const StreamNetworkFrame = memo(forwardRef<
       {/* end visual content */}
     </div>
   )
-}))
+})), "StreamNetworkFrame")
 
-StreamNetworkFrame.displayName = "StreamNetworkFrame"
 export default StreamNetworkFrame

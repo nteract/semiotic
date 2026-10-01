@@ -8,7 +8,6 @@ import {
   forceCollide
 } from "d3-force"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
-import { registerLayoutPlugin } from "./registry"
 import { resolveNodeSizeFn } from "./forceLayoutNodeSize"
 import { resolveForceEdgeWeight } from "./forceLayoutEdgeWeight"
 import { createSeededFrameRandom } from "../FrameRuntime"
@@ -553,5 +552,3 @@ function simpleHash(str: string): number {
 }
 
 export { resolveNodeSizeFn } from "./forceLayoutNodeSize"
-
-registerLayoutPlugin("force", forceLayoutPlugin)

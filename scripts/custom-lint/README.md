@@ -61,6 +61,21 @@ npm run lint:custom:sync-rule-change
 or revision evidence for every affected rule. Do not edit `baseline.json` by
 hand.
 
+## Adopting a new rule
+
+Register the rule (implementation, tests, `index.mjs`, `eslint.config.mjs`,
+and a `registry.json` entry at its evidence-derived score), then record it:
+
+```sh
+npm run lint:custom:adopt-rule -- semiotic/<rule-id>
+```
+
+Adoption writes the rule's evidence cursor and grandfathers its current
+findings. It refuses a rule that already has a cursor, an inactive or unknown
+rule, an official rule with findings, and any run where another rule's
+findings differ from the baseline. Prefer fixing findings before adoption so a
+new rule starts with no grandfathered debt.
+
 ## Prior art
 
 - Rust lint levels separate allowed, warning, denied, and forbidden policy and

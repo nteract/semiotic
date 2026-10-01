@@ -4,6 +4,7 @@ import { RealtimeHistogram, LineChart, AreaChart, LinkedCharts, useFilteredData 
 import TemporalHistogramLinkedExample from "../../examples/TemporalHistogramLinkedExample"
 import TemporalHistogramHoverExample, { temporalHistogramHoverCode } from "../../examples/TemporalHistogramHoverExample"
 import TemporalHistogramMultiTooltipExample, { temporalHistogramMultiTooltipCode } from "../../examples/TemporalHistogramMultiTooltipExample"
+import TemporalHistogramValueBandsExample, { temporalHistogramValueBandsCode } from "../../examples/TemporalHistogramValueBandsExample"
 
 import ComponentMeta from "../../components/ComponentMeta"
 import PropTable from "../../components/PropTable"
@@ -564,6 +565,7 @@ const RealtimeHistogramProps = [
   { name: "strokeWidth", type: "number", required: false, default: null, description: "Bar stroke width." },
   { name: "cursor", type: "CSS cursor", required: false, default: null, description: 'Presentation-only cursor for bars, such as "pointer". It does not add click or keyboard behavior and is also inherited by TemporalHistogram.' },
   { name: "gap", type: "number", required: false, default: null, description: "Gap between bars in pixels." },
+  { name: "valueBands", type: "Array<{ upTo?: number; fill: string | HatchFill }>", required: false, default: null, description: "Split each unstacked bar's fill at value edges. A last band without upTo covers every higher value; values no band covers keep the bar fill. Stacked bins ignore it." },
   { name: "responsiveWidth", type: "boolean", description: "Fit the container width before paint and on resize." },
   { name: "responsiveHeight", type: "boolean", description: "Fit a parent with a definite height." },
   { name: "showTimeAxis", type: "boolean", default: "true", description: "Hide the time axis with false; removes its default margin." },
@@ -715,6 +717,26 @@ function StreamingBars() {
         {" "}<code>color</code>, <code>datum</code>) and the bin's range and{" "}
         <code>categories</code>; <code>getSourceRows(datum)</code> returns the
         bin's authored rows.
+      </p>
+
+      <h3 id="value-bands">Value-banded fills</h3>
+      <p>
+        <code>valueBands</code> colors each bar by the value ranges it
+        crosses. Here a bar is solid up to the soft limit, amber-hatched up to
+        the hard limit, and red-hatched above it. Bands are ordered by{" "}
+        <code>upTo</code>, and a last band without <code>upTo</code> covers
+        every higher value. A band's <code>fill</code> is a color or a{" "}
+        <Link to="/features/style-rules">HatchFill</Link>.
+      </p>
+      <section aria-label="Histogram value bands example">
+        <TemporalHistogramValueBandsExample />
+        <CodeBlock code={temporalHistogramValueBandsCode} language="tsx" />
+      </section>
+      <p>
+        Each bar is still one mark with its bin's datum, so hover, selection,{" "}
+        <code>hoverHighlight</code>, and tooltips treat it as a single bin.
+        Values no band covers keep the bar's own <code>fill</code>. Stacked bins
+        (<code>categoryAccessor</code>) ignore <code>valueBands</code>.
       </p>
 
       <h3 id="stacked-bars">Stacked Bars by Category</h3>

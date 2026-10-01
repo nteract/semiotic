@@ -9,10 +9,12 @@ import * as React from "react"
 import type { HoverData } from "../realtime/types"
 import type { RealtimeNode, RealtimeEdge } from "./networkTypes"
 import { defaultTooltipStyle } from "../Tooltip/Tooltip"
+import { markTooltipChrome } from "../Tooltip/tooltipChrome"
 
 const VALUE_ROW_RE = /^(value|amount|total|count|weight|score)$/i
 
-function DefaultNetworkTooltip({ data }: { data: HoverData }) {
+// Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultNetworkTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultNetworkTooltip({ data }: { data: HoverData }) {
   if (data.nodeOrEdge === "edge") {
     const edge = data.data as RealtimeEdge | null
     if (!edge) return null
@@ -139,9 +141,6 @@ function DefaultNetworkTooltip({ data }: { data: HoverData }) {
       )}
     </div>
   )
-}
-// Tell FlippingTooltip's chrome detector that this component paints its
-// own chrome internally.
-;(DefaultNetworkTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+})
 
 export { DefaultNetworkTooltip }

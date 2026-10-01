@@ -63,8 +63,8 @@ export type {
  * When LinkedCharts renders its own legend, child charts should suppress theirs.
  * This context signals that suppression.
  */
-const LinkedLegendContext = createContext<boolean>(false)
-const LinkedChartsActiveContext = createContext<boolean>(false)
+const LinkedLegendContext = /* @__PURE__ */ createContext<boolean>(false)
+const LinkedChartsActiveContext = /* @__PURE__ */ createContext<boolean>(false)
 
 /** Hook: returns true when a parent LinkedCharts is handling the legend. */
 export function useLinkedLegendSuppression(): boolean {
@@ -87,7 +87,7 @@ interface LinkedCategoryRegistry {
 }
 
 const LinkedCategoryRegistryContext =
-  createContext<LinkedCategoryRegistry | null>(null)
+  /* @__PURE__ */ createContext<LinkedCategoryRegistry | null>(null)
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
 

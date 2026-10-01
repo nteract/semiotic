@@ -131,7 +131,7 @@ export interface ObservationStoreState {
   clearObservations: () => void
 }
 
-export const [ObservationProvider, useObservationSelector] = createStore<ObservationStoreState>(
+export const [ObservationProvider, useObservationSelector] = /* @__PURE__ */ createStore<ObservationStoreState>(
   (set) => ({
     observations: [],
     maxObservations: 100,

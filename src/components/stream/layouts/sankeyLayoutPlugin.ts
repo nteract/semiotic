@@ -24,7 +24,6 @@ import type {
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { CircularPathData } from "../networkTypes"
-import { registerLayoutPlugin } from "./registry"
 
 const sankeyOrientHash = {
   left: sankeyLeft,
@@ -472,5 +471,3 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
     return { sceneNodes, sceneEdges, labels }
   }
 }
-
-registerLayoutPlugin("sankey", sankeyLayoutPlugin)

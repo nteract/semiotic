@@ -37,7 +37,7 @@ export function resolveSceneRenderBackend<Node extends SceneLike>(
 }
 
 function warnFallback(backendId: string, nodeType: string): void {
-  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return
+  if (process.env.NODE_ENV === "production") return
   const warningKey = `${backendId}:${nodeType}`
   if (warnedFallbacks.has(warningKey)) return
   warnedFallbacks.add(warningKey)

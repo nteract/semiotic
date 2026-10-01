@@ -151,7 +151,7 @@ function eventDropSemanticItems(
  * />
  * ```
  */
-export const EventDropChart = forwardRef(function EventDropChart<
+export const EventDropChart = /* @__PURE__ */ forwardRef(function EventDropChart<
   TDatum extends Datum = Datum
 >(props: EventDropChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {

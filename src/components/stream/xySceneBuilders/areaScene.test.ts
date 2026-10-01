@@ -91,6 +91,40 @@ describe("buildAreaScene", () => {
   })
 })
 
+describe("domain-anchored fill gradients", () => {
+  const yScale = Object.assign((v: number) => 300 - v * 3, {
+    domain: () => [0, 100],
+    range: () => [300, 0],
+  })
+  const ctx = (gradientFill: XYSceneContext["config"]["gradientFill"]) =>
+    makeCtx({
+      scales: {
+        x: Object.assign((v: number) => v * 100, { domain: () => [0, 2], range: () => [0, 200] }),
+        y: yScale,
+      } as unknown as XYSceneContext["scales"],
+      config: { gradientFill },
+    })
+  const data = [
+    { x: 0, y: 10 },
+    { x: 1, y: 60 },
+    { x: 2, y: 30 },
+  ]
+
+  it("spans the y-domain for extent: domain, whatever the data extent", () => {
+    const [node] = buildAreaScene(ctx({ extent: "domain", stops: [{ offset: 0, color: "#f00" }, { offset: 1, color: "#0f0" }] }), data)
+    if (node.type !== "area") throw new Error("expected an area node")
+    // Offset 0 is the domain maximum (100 → 0px), offset 1 the minimum (0 → 300px).
+    expect(node.fillGradientSpan).toEqual([0, 300])
+  })
+
+  it("leaves the default per-area span to the renderers", () => {
+    const [node] = buildAreaScene(ctx({ stops: [{ offset: 0, opacity: 0.8 }, { offset: 1, opacity: 0 }] }), data)
+    if (node.type !== "area") throw new Error("expected an area node")
+    expect(node.fillGradient).toBeDefined()
+    expect(node.fillGradientSpan).toBeUndefined()
+  })
+})
+
 describe("buildStackedAreaScene", () => {
   const stackedData = [
     { x: 1, y: 10, group: "A" },

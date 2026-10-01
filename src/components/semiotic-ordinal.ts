@@ -68,6 +68,8 @@ export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
 export type {
   GlyphSceneNode,
+  InteractiveGraphicsContext,
+  InteractiveGraphicsProp,
   SceneAccessibilityMetadata,
   Style
 } from "./stream/types"

@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- XY and ordinal frames take `interactiveGraphics` (through `frameProps` on any
+  HOC): focusable SVG controls drawn in plot coordinates, in a labelled
+  `role="group"` layer outside the chart's `role="img"` overlay, so sliders stay
+  exposed to assistive technology. The function form receives
+  `{ size, margin, scales, pointerToPlot }`; `interactiveGraphicsLabel` names the
+  group. Client-only.
+- `DirectManipulationMarkers` (`semiotic/controls`): ordered draggable handles,
+  such as a baseline and a max, each a slider bounded by its neighbors.
+  Coincident handles resolve by drag direction, so neither can trap the other.
+  `pointerToLocalPoint` maps a pointer into an SVG element's coordinate space.
+- `DirectManipulationControl` takes `pointToValue` (the pointer already in the
+  handle's coordinate space, so `(point) => scales.y.invert(point.y)` replaces
+  hand-rolled screen-matrix math), `stepOrigin`, and `ariaRoleDescription`, and
+  handles PageUp/PageDown.
+- `diagnoseConfig` / `--doctor` warn with `ANNOTATION_UNKNOWN_FIELD` when an
+  annotation key looks like a misspelled field (`fil` → `fill`); keys naming a
+  data field or accessor are coordinates and are never flagged.
 - `perspective` on every network chart (ForceDirectedGraph, SankeyDiagram,
   ProcessSankey, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
   NetworkCustomChart, and StreamNetworkFrame) draws the finished layout in a
@@ -50,9 +67,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   emits solid shaped pieces and real edges under a perspective.
 - `diagnoseConfig` warns when a ProcessSankey (a time axis) is projected and
   when a network chart is given the geo-only `projection` prop.
+- Threshold (`y-threshold`, `x-threshold`), `band`, and `x-band` annotations
+  accept `labelColor` for the label text, which otherwise uses the annotation
+  `color`. With `labelBackground: { type: "box", fill }` it draws a
+  light-on-dark label chip on a colored line, in the browser and in
+  `renderChart` SVG.
+- `RealtimeHistogram` and `TemporalHistogram` accept `valueBands`
+  (`[{ upTo?, fill }]`, where `fill` is a color or `HatchFill`) to split each
+  unstacked bar's fill at value edges, e.g. solid up to 5, hatched up to 10, a
+  warning hatch above. Each bar stays one mark with its bin datum, so hover,
+  selection, `hoverHighlight`, tooltips, and `getSourceRows` are unchanged.
+  Stacked (`categoryAccessor`) bins ignore it.
+- The tooltip wrapper (`.stream-frame-tooltip`) reports its placement as
+  `data-placement` (`"pending"`, then `"placed"`) and `data-flip-x` /
+  `data-flip-y`. A CSS `transition` on `left`/`top` now eases only same-side
+  moves: the first placement and each flip set an inline `transition: none`,
+  so the tooltip no longer glides in from the pointer or swings across it.
+- `validateProps`, `diagnoseConfig`, and `npx semiotic-ai --doctor` report
+  axis config keys that no renderer reads, in `frameProps.axes` and the
+  histograms' top-level `axes`, with a "Did you mean" suggestion (for
+  example `tickCont` → `tickCount`, the alias of `ticks`). The check stays out
+  of the chart bundles, like the rest of prop validation.
+- `GradientConfig` accepts `extent: "domain"` for area fills, which anchors
+  the stops to the y-domain instead of each area's own top-to-baseline span.
+
+### Changed
+
+- `DirectManipulationControl` fires `onChangeStart`/`onChangeEnd` (and the
+  matching observations) for each keyboard change, not only for pointer drags,
+  so a consumer that commits on release also hears keyboard users. It no longer
+  sets `aria-roledescription="visualization control"` by default, so screen
+  readers announce the standard "slider" role.
+- **Importing one chart no longer ships its neighbors.** Published chunks merge
+  many modules, and module-scope side effects (`displayName` assignments, top-level
+  plugin/layout registration, un-annotated `forwardRef`/`memo`/`createContext`/`lazy`
+  calls, a prototype mixin on the pipeline stores) forced consumer bundlers to keep
+  every chart that shared a chunk. Components are now pure initializers
+  (`withDisplayName(forwardRef(...), "Name")`, so DevTools names survive
+  minification), charts register their plugins when they render, and the build
+  drops esbuild's side-effect-only cross-chunk imports when their targets are
+  inert. Initial-load gzip for one named import in a Vite (Rolldown) app, before →
+  after: `semiotic/ai` `suggestCharts` 227 → 40 KiB, `MotifBraidChart` 164 → 101,
+  `GaltonBoardChart` 145 → 85, `SankeyDiagram` 159 → 125, `Scatterplot` 150 → 123,
+  `RealtimeLineChart` 130 → 114, `BarChart` 116 → 100, `ChoroplethMap` 112 → 103,
+  `LineChart` 120 → 117. esbuild consumers see similar reductions.
+- XY transition interpolation (`animate`/`transition`) loads on demand. An
+  animated chart holds its first paint until the engine arrives, which is
+  invisible because the intro starts from a blank frame; `renderChart`, SSR, and
+  the animated GIF renderer are unchanged.
+- A bare `<StreamNetworkFrame chartType="force" />` (no chart component and no
+  `registerBuiltInNetworkLayouts()` call) now restores its built-in layout on the
+  client from a split chunk instead of rendering an empty scene. Server rendering
+  still requires the explicit registration and warns without it.
+- The README cold-consumer table bundles each named import with code splitting
+  through Rolldown (Vite's bundler, resolved from the `vite` devDependency) and
+  reports **initial load** and **on demand** gzip separately
+  (`benchmarks/setup/cold-consumer-imports.json` schema 2). The previous table
+  inlined lazily loaded code into every row. `npm run size` adds
+  `check:treeshake-isolation`, which fails when a representative named import
+  retains an unrelated chart, and the new `semiotic/no-module-side-effects`
+  custom lint keeps library module scope inert
+  (`npm run lint:custom:adopt-rule` records a new rule's baseline cursor).
+
+- `HatchFill` and `createHatchPattern` draw the same hatch on canvas and in
+  SVG. Positive angles turn clockwise from horizontal on both, so `angle: 45`
+  draws `\` and `-45` draws `/` (SVG used to draw them mirrored), and
+  `spacing` is the perpendicular gap between lines at every angle. Canvas
+  hatches at ±45° used to sit `spacing ÷ √2` apart, so they now read about 1.4×
+  sparser; divide `spacing` by 1.41 to keep the old density. Canvas also
+  honors `lineOpacity`, bakes the tile at device resolution, and tiles
+  without seams at any angle. Bar-funnel dropoff hatches use one pattern on
+  both backends. The recipe kit's SVG `hatchFill` helper keeps its own
+  convention (angle measured from vertical, matching `legendSwatches`).
 
 ### Fixed
 
+- The "Skip to data table" link and the collapsed "View data summary" trigger
+  are visible while keyboard-focused (they stayed clipped to 1px, hiding the
+  focus indicator).
+- Component SSR with `animate` serialized the first frame of the intro
+  animation: Scatterplot and BubbleChart points at `r="0"`, zero-height
+  WaterfallChart and BarChart bars, zero-sweep PieChart slices, and SankeyDiagram,
+  Treemap, and CirclePack with no marks at all. The server render and the
+  hydration pass that must match it now paint the final state; client-only mounts
+  still animate their intro.
 - `renderToStaticSVG`/`renderChart` paint `frameProps.background`, as the live
   chart does; an undefined top-level `background` no longer erases it.
 - Static ForceDirectedGraph `colorBy` colors follow category order, matching the
@@ -60,6 +158,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   different palette.
 - Filled `curved` network edges honor `fillOpacity` in SVG output (default
   0.1, as on canvas); they previously rendered opaque in SSR.
+- AreaChart `semanticGradient` fills anchor their stops to the y-domain, the
+  same span the semantic line bands use. When the data maximum sat below the
+  domain maximum (for example `yExtent: [0, 100]` with data topping out at
+  60), the fill stretched its stops over the area's own extent and changed
+  color at different values than the line. Below the lowest stop, the fill
+  and the line both keep that stop's color.
+- `StreamGeoFrame` sizes its interaction canvas on mount, so a map that is
+  never hovered no longer keeps the native 300×150 canvas box. XY and geo
+  canvases take their CSS size from the frame at commit, so a chart mounted
+  `paused` or in a hidden tab lays out at its real size before its first
+  paint.
+- A top legend in a compact frame keeps its capped reservation in the
+  browser. The frame used to raise the top margin back to the 34px
+  top-legend floor after the chart had capped it, collapsing the plot to 1px
+  where `renderChart` kept it. The physics static renderer had the same
+  floor.
+- `renderChart("ProcessSankey")` caps its legend reservation to the frame
+  like the browser chart. A compact frame no longer computes a negative plot
+  height, which drew the grid upward from the axis and a zero-thickness
+  ribbon. Animated GIF frames keep a plot of at least 1px.
+- Static SVG no longer writes CSS variables that standalone renderers can't
+  resolve: a `var()` box-background `fill` or `stroke` becomes its literal
+  fallback, and `enclose` / `rect-enclose` default to the theme's secondary
+  text color. In the browser, a `var()` box-background paint goes through
+  `style` (like the halo), with its fallback kept as the attribute.
+- `renderChart` `band` and `x-band` annotations without `fill` or `color`
+  default to the theme primary for the fill and the label, like the browser
+  chart, instead of the annotation text color. `layer: "under"` bands follow
+  suit.
+- AreaChart and the chart specs no longer describe the semantic line as
+  ignoring stop opacity; each band takes its stop's color and opacity.
 
 ## [3.11.2] - 2026-09-28
 

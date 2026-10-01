@@ -26,6 +26,7 @@ import {
   type DistanceCartogramOverlayLayout,
   type DistanceCartogramRingStyle
 } from "./cartogramOverlay"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -186,7 +187,7 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
  * />
  * ```
  */
-export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DistanceCartogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -523,8 +524,7 @@ export const DistanceCartogram = forwardRef(function DistanceCartogram<TDatum ex
       <StreamGeoFrame ref={geoRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "DistanceCartogram") as unknown as {
   <TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-DistanceCartogram.displayName = "DistanceCartogram"

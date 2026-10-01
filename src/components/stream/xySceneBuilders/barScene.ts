@@ -13,6 +13,8 @@ import type { RectSceneNode, Style } from "../types"
 import { computeBins } from "../../realtime/BinAccumulator"
 import { buildRectNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
+import { normalizeValueBands, valueBandSegments } from "./valueBands"
+import type { HatchFill } from "../../charts/shared/hatchFill"
 import { resolveExplicitColor } from "../../charts/shared/colorUtils"
 import {
   attachSelectionProvenance,
@@ -96,6 +98,7 @@ export function buildBarScene(
   if (typeof barStyle?.opacity === "number")
     strokeStyle.opacity = barStyle.opacity
   if (barStyle?.cursor) strokeStyle.cursor = barStyle.cursor
+  const valueBands = normalizeValueBands(barStyle?.valueBands)
 
   for (const bin of bins.values()) {
     const clampedStart = Math.max(bin.start, domainMin)
@@ -174,16 +177,32 @@ export function buildBarScene(
         bin.rows
       )
       const datumStyle = ctx.config.areaStyle?.(datum) ?? {}
-      nodes.push(
-        buildRectNode(
-          x0,
-          rectY,
-          barWidth,
-          rectH,
-          { fill, ...strokeStyle, ...datumStyle },
-          datum
-        )
+      const node = buildRectNode(
+        x0,
+        rectY,
+        barWidth,
+        rectH,
+        { fill, ...strokeStyle, ...datumStyle },
+        datum
       )
+      if (valueBands) {
+        // One mark per bin: the bands only change how its fill is painted.
+        // A CanvasPattern base can't be split; its bands fall back to `fill`.
+        const styleFill = node.style.fill
+        const baseFill = typeof styleFill === "string" ||
+          (typeof styleFill === "object" && styleFill !== null && (styleFill as { type?: unknown }).type === "hatch")
+          ? styleFill as string | HatchFill
+          : undefined
+        const segments = valueBandSegments(valueBands, 0, bin.total, baseFill)
+        if (segments.length > 0) {
+          node.fillBands = segments.map((segment) => ({
+            y0: scales.y(segment.from),
+            y1: scales.y(segment.to),
+            fill: segment.fill ?? fill,
+          }))
+        }
+      }
+      nodes.push(node)
     }
   }
 

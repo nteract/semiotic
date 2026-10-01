@@ -4,8 +4,6 @@ import type { Datum, DatumValue } from "./datumTypes"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
 
-const IS_DEV = typeof process !== "undefined" && process.env?.NODE_ENV !== "production"
-
 interface SafeRenderProps {
   componentName: string
   width: number
@@ -171,7 +169,8 @@ export function warnMissingField(
   accessorName: string,
   accessorValue: DatumValue
 ): void {
-  if (!IS_DEV) return
+  // Plain `process.env.NODE_ENV` so consumer bundlers can strip dev-only code.
+  if (process.env.NODE_ENV === "production") return
   if (!data || data.length === 0) return
   if (typeof accessorValue !== "string") return
 

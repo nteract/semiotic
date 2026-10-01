@@ -57,8 +57,9 @@ function parseHeatcellColor(color: string): [number, number, number] {
 /**
  * Build an area fill gradient using the same top-to-bottom geometry and
  * opacity semantics as `areaCanvasRenderer`. Area gradients span the visible
- * extrema rather than each datum's local segment, so the fill reads as one
- * continuous field in both SVG/SSR and canvas.
+ * extrema (or the y-domain, via `fillGradientSpan`) rather than each datum's
+ * local segment, so the fill reads as one continuous field in both SVG/SSR
+ * and canvas.
  */
 function buildAreaSVGGradient(
   n: AreaSceneNode,
@@ -68,9 +69,13 @@ function buildAreaSVGGradient(
   if (!fg || typeof fg !== "object") return null
 
   let topY = Infinity
-  for (const [, y] of n.topPath) topY = Math.min(topY, y)
   let bottomY = -Infinity
-  for (const [, y] of n.bottomPath) bottomY = Math.max(bottomY, y)
+  if (n.fillGradientSpan) {
+    [topY, bottomY] = n.fillGradientSpan
+  } else {
+    for (const [, y] of n.topPath) topY = Math.min(topY, y)
+    for (const [, y] of n.bottomPath) bottomY = Math.max(bottomY, y)
+  }
   if (!Number.isFinite(topY) || !Number.isFinite(bottomY)) return null
 
   const stops = colorStopElements(fg.stops, svgFill(n.style.fill))

@@ -164,6 +164,7 @@ interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<Real
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface ValueBand
 interface WaterfallStyle
 interface WindowAccumulatorConfig
 interface-member AggregateConfig::property::band = optional band: AggregateBand | undefined
@@ -218,6 +219,7 @@ interface-member BarStyle::property::gap = optional gap: number | undefined
 interface-member BarStyle::property::opacity = optional opacity: number | undefined
 interface-member BarStyle::property::stroke = optional stroke: string | undefined
 interface-member BarStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member BarStyle::property::valueBands = optional valueBands: ValueBand[] | undefined
 interface-member CategoricalLegendConfig::property::legendDistance = optional legendDistance: number | undefined
 interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
 interface-member CompileMotionEncodingOptions::property::data = required data: readonly TDatum[]
@@ -459,6 +461,7 @@ interface-member RealtimeHistogramProps::property::tooltip = optional tooltip: R
 interface-member RealtimeHistogramProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member RealtimeHistogramProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member RealtimeHistogramProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member RealtimeHistogramProps::property::valueBands = optional valueBands: ValueBand[] | undefined
 interface-member RealtimeHistogramProps::property::valueExtent = optional valueExtent: [number, number] | undefined
 interface-member RealtimeHistogramProps::property::width = optional width: number | undefined
 interface-member RealtimeHistogramProps::property::windowMode = optional windowMode: WindowMode | undefined
@@ -841,6 +844,8 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<StreamScales>
+interface-member StreamXYFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined
 interface-member StreamXYFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamXYFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
@@ -947,6 +952,8 @@ interface-member TooltipField::property::format = optional format: ((value: unkn
 interface-member TooltipField::property::key = optional key: Accessor | undefined
 interface-member TooltipField::property::label = optional label: string | undefined
 interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member ValueBand::property::fill = required fill: HatchFill | string
+interface-member ValueBand::property::upTo = optional upTo: number | undefined
 interface-member WaterfallStyle::property::connectorStroke = optional connectorStroke: string | undefined
 interface-member WaterfallStyle::property::connectorWidth = optional connectorWidth: number | undefined
 interface-member WaterfallStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined

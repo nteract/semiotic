@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 /**
  * PieChart component props
@@ -132,7 +133,7 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
  * Wraps {@link StreamOrdinalFrame} with pie-specific defaults. See
  * {@link https://semiotic.nteract.io/charts/pie-chart} for live demos.
  */
-export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width ?? 400,
     height: props.height ?? 400,
@@ -300,8 +301,7 @@ export const PieChart = forwardRef(function PieChart<TDatum extends Datum = Datu
   if (validationError) return <ChartError componentName="PieChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="PieChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "PieChart") as unknown as {
   <TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-PieChart.displayName = "PieChart"

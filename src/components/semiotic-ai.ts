@@ -3,6 +3,13 @@
 // Semiotic AI — curated chart and portable-recipe surface for AI code generation
 // Import: import { LineChart, BarChart, ... } from "semiotic/ai"
 
+import { registerBuiltInChartRecipeManifests } from "./ai/builtInChartRecipes"
+
+// Entry-level registration: importing this entry makes the built-in recipe
+// manifests part of the capability catalog. Keep it in the entry module, never
+// a shared one, so it cannot pin code in other entries' published chunks.
+registerBuiltInChartRecipeManifests()
+
 export { LineChart } from "./charts/xy/LineChart"
 export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
 export { AreaChart } from "./charts/xy/AreaChart"

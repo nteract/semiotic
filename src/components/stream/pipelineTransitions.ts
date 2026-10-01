@@ -594,3 +594,15 @@ export function advanceTransition(
 
   return true
 }
+
+/**
+ * The XY transition engine as one value, so `PipelineStore` can load it on
+ * demand (`pipelineTransitionEngine.ts`) instead of retaining it in every
+ * XY chart's bundle. Transitions only run when `transition`/`animate` is set.
+ */
+export const xyTransitionEngine = {
+  snapshotPositions,
+  startTransition,
+  advanceTransition,
+  getNodeIdentity
+}

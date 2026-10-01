@@ -622,9 +622,9 @@ export default function StyleRulesPage() {
   background?: string   // tile background (default "transparent")
   stroke?: string       // diagonal line color (default "#000")
   lineWidth?: number    // line width in px (default 1.5)
-  spacing?: number      // gap between lines in px (default 6)
-  angle?: number        // line angle in degrees (default 45)
-  lineOpacity?: number  // SVG line opacity (default 1)
+  spacing?: number      // perpendicular gap between lines in px (default 6)
+  angle?: number        // degrees; 0 = horizontal, 45 = "\\", -45 = "/" (default 45)
+  lineOpacity?: number  // line opacity, canvas and SVG (default 1)
 }`}
       />
       <LiveExample

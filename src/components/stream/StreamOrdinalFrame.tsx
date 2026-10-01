@@ -40,6 +40,7 @@ import { ordinalHitToHover, resolveOrdinalPointerHit } from "./ordinalFrameInter
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { OrdinalSVGOverlay, OrdinalSVGUnderlay } from "./OrdinalSVGOverlay"
+import { FrameInteractiveLayer } from "./FrameInteractiveLayer"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
 import { isServerEnvironment } from "./isServerEnvironment"
@@ -75,12 +76,13 @@ import { useOrdinalKeyboardNavigation } from "./frameKeyboardNavigation"
 import { normalizeGradient } from "../charts/shared/gradient"
 import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
 import { ordinalFrameLegendOptions } from "./frameLegendOptions"
+import { withDisplayName } from "../charts/shared/withDisplayName"
 
 const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // ── Component ──────────────────────────────────────────────────────────
 
-const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFrameProps>(
+const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @__PURE__ */ forwardRef<StreamOrdinalFrameHandle, StreamOrdinalFrameProps>(
   function StreamOrdinalFrame(props, ref) {
     const {
       chartType,
@@ -168,6 +170,8 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
+      interactiveGraphics,
+      interactiveGraphicsLabel,
       title,
       className,
       background,
@@ -851,6 +855,9 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
       if (store && data) {
         store.ingest({ inserts: safeData, bounded: true })
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        // The SVG branch (server render and the hydration pass that must
+        // match it) paints the final state; an intro only runs on canvas.
+        store.cancelIntroAnimation()
       }
 
       const scene = store?.scene ?? []
@@ -1108,10 +1115,17 @@ const StreamOrdinalFrame = memo(forwardRef<StreamOrdinalFrameHandle, StreamOrdin
         />
         {tooltipElement}
         </div>{/* end role="img" */}
+        {/* Controls stay outside role="img" so assistive technology reaches them. */}
+        <FrameInteractiveLayer
+          graphics={interactiveGraphics}
+          size={size}
+          margin={margin}
+          scales={currentScales}
+          label={interactiveGraphicsLabel}
+        />
       </div>
     )
   }
-))
+)), "StreamOrdinalFrame")
 
-StreamOrdinalFrame.displayName = "StreamOrdinalFrame"
 export default StreamOrdinalFrame

@@ -138,6 +138,7 @@ import {
   PhysicsSemanticDataTable,
   renderPhysicsAnnouncements
 } from "./physicsSemanticUI"
+import { withDisplayName } from "../../charts/shared/withDisplayName"
 
 const DEFAULT_SIZE: [number, number] = [640, 360]
 const EMPTY_REGION_EFFECTS: StreamPhysicsRegionEffect[] = []
@@ -152,8 +153,8 @@ const DEFAULT_SELECTED_BODY_STYLE = {
   opacity: 1
 }
 
-export const StreamPhysicsFrame = memo(
-  forwardRef<StreamPhysicsFrameHandle, StreamPhysicsFrameProps>(
+export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
+  /* @__PURE__ */ forwardRef<StreamPhysicsFrameHandle, StreamPhysicsFrameProps>(
     function StreamPhysicsFrame(props, ref) {
       const {
         accessibleTable = true,
@@ -1610,8 +1611,7 @@ export const StreamPhysicsFrame = memo(
       )
     }
   )
-)
+), "StreamPhysicsFrame")
 
-StreamPhysicsFrame.displayName = "StreamPhysicsFrame"
 
 export default StreamPhysicsFrame

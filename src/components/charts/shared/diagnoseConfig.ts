@@ -20,6 +20,7 @@ import {
 import {
   checkAnnotationConnectors,
   checkAnnotationDensity,
+  checkAnnotationFieldTypos,
   checkInteractiveAnnotationIds,
 } from "./diagnoseAnnotationChecks"
 import {
@@ -720,6 +721,7 @@ export function diagnoseConfig(
   checkTokenEncodingDiagnostics(componentName, props, diagnoses)
   checkAnnotationConnectors(componentName, props, diagnoses)
   checkAnnotationDensity(componentName, props, diagnoses)
+  checkAnnotationFieldTypos(componentName, props, diagnoses)
 
   checkInvertedAxis(componentName, props, diagnoses)
   checkNetworkPerspective(componentName, props, diagnoses)

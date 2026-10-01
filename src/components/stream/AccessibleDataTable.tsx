@@ -3,6 +3,7 @@ import * as React from "react"
 import { AccessibleTableShell } from "./AccessibleTableShell"
 import { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
+import { FOCUS_REVEAL_STYLE } from "../screenReaderStyles"
 import { useHydration } from "./useHydration"
 import type { AccessibleTableProp } from "./accessibleTableTypes"
 import {
@@ -14,8 +15,8 @@ export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
 export { AriaLiveTooltip, SR_ONLY_STYLE } from "./AriaLiveTooltip"
 
-const AccessibleTablePortalImpl = React.lazy(() => import("./AccessibleTablePortalImpl"))
-const Content = React.lazy(() => import("./AccessibleDataTableContent"))
+const AccessibleTablePortalImpl = /* @__PURE__ */ React.lazy(() => import("./AccessibleTablePortalImpl"))
+const Content = /* @__PURE__ */ React.lazy(() => import("./AccessibleDataTableContent"))
 
 /** Relocate the complete interactive accessible-table UI when a chart lives
  * inside a consumer-owned `role="img"`. The historical inline DOM remains
@@ -189,10 +190,12 @@ export function ScreenReaderSummary({ summary }: { summary?: string }) {
  * Only rendered when accessibleTable is enabled.
  */
 export function SkipToTableLink({ tableId }: { tableId: string }) {
+  // Visible only while focused, driven by state so a re-render cannot hide it.
+  const [focused, setFocused] = React.useState(false)
   return (
     <a
       href={`#${tableId}`}
-      style={SR_ONLY_STYLE}
+      style={focused ? FOCUS_REVEAL_STYLE : SR_ONLY_STYLE}
       onClick={(e) => {
         e.preventDefault()
         // Programmatically focus the target so it reliably expands via onFocus
@@ -201,32 +204,8 @@ export function SkipToTableLink({ tableId }: { tableId: string }) {
           requestAnimationFrame(() => target.focus())
         }
       }}
-      onFocus={(e) => {
-        // Briefly make visible on focus for sighted keyboard users
-        const el = e.currentTarget
-        Object.assign(el.style, {
-          position: "absolute",
-          width: "auto",
-          height: "auto",
-          overflow: "visible",
-          clip: "auto",
-          whiteSpace: "normal",
-          padding: "4px 8px",
-          background: "var(--semiotic-bg, #fff)",
-          color: "var(--semiotic-text, #000)",
-          border: "2px solid var(--semiotic-focus, #005fcc)",
-          borderRadius: "4px",
-          zIndex: "10",
-          fontSize: "12px",
-          top: "4px",
-          left: "4px"
-        })
-      }}
-      onBlur={(e) => {
-        const el = e.currentTarget
-        el.removeAttribute("style")
-        Object.assign(el.style, SR_ONLY_STYLE)
-      }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
       Skip to data table
     </a>

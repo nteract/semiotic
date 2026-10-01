@@ -210,7 +210,7 @@ function countObjectKeys(value: object): number {
 }
 
 export const [SelectionProvider, useSelectionSelector] =
-  createStore<SelectionStoreState>((set) => ({
+  /* @__PURE__ */ createStore<SelectionStoreState>((set) => ({
     selections: new Map<string, Selection>(),
 
     setClause(selectionName: string, clause: SelectionClause) {

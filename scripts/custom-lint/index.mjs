@@ -1,6 +1,7 @@
 import framePropsLast from "./rules/frame-props-last.mjs"
 import familySubpathImports from "./rules/family-subpath-imports.mjs"
 import interactionTestLayoutControl from "./rules/interaction-test-layout-control.mjs"
+import noModuleSideEffects from "./rules/no-module-side-effects.mjs"
 
 export default {
   meta: {
@@ -10,6 +11,7 @@ export default {
   rules: {
     "frame-props-last": framePropsLast,
     "family-subpath-imports": familySubpathImports,
-    "interaction-test-layout-control": interactionTestLayoutControl
+    "interaction-test-layout-control": interactionTestLayoutControl,
+    "no-module-side-effects": noModuleSideEffects
   }
 }

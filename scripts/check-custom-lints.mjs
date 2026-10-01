@@ -7,6 +7,7 @@ import { ESLint } from "eslint"
 import {
   ACTIVE_STATUSES,
   RULE_CHANGE_EVIDENCE,
+  adoptRuleIntoBaseline,
   validateEvidenceCursor,
   validateCustomLintRegistry
 } from "./lib/custom-lint-lifecycle.mjs"
@@ -18,6 +19,15 @@ const baselinePath = join(__dirname, "custom-lint/baseline.json")
 const configPath = join(__dirname, "custom-lint/eslint.config.mjs")
 const syncMode = process.argv.find(arg => arg.startsWith("--sync-baseline="))?.split("=")[1]
 const initialBaseline = process.argv.includes("--initial-baseline")
+// `--adopt-rule=<id>` or `npm run lint:custom:adopt-rule -- <id>`.
+const adoptFlagIndex = process.argv.indexOf("--adopt-rule")
+const adoptRuleId =
+  process.argv.find(arg => arg.startsWith("--adopt-rule="))?.split("=")[1] ??
+  (adoptFlagIndex >= 0 ? process.argv[adoptFlagIndex + 1] : undefined)
+if (adoptFlagIndex >= 0 && !adoptRuleId) {
+  console.error("Usage: npm run lint:custom:adopt-rule -- <rule-id>")
+  process.exit(1)
+}
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"))
@@ -148,7 +158,10 @@ for (const [key, count] of Object.entries(baseline.findings || {})) {
 }
 const registryErrors = [
   ...validateCustomLintRegistry(registry, { repoRoot, baselineCounts }),
-  ...validateEvidenceCursor(registry, baseline.evidenceCursor)
+  // A rule being adopted has no cursor yet; adoption records it below.
+  ...validateEvidenceCursor(registry, baseline.evidenceCursor).filter(
+    error => !adoptRuleId || error !== `${adoptRuleId}: evidence cursor is missing`
+  )
 ]
 if (registryErrors.length > 0) {
   console.error("CUSTOM LINT POLICY: INVALID")
@@ -174,6 +187,25 @@ if (!baseline.initialized) {
 const current = countFingerprints(findings)
 const diff = diffCounts(current, baseline.findings || {})
 const ruleById = new Map(registry.rules.map(rule => [rule.id, rule]))
+
+if (adoptRuleId) {
+  const adoption = adoptRuleIntoBaseline({
+    registry,
+    baseline,
+    ruleId: adoptRuleId,
+    currentFindings: current,
+    ruleIdOf: ruleIdFromFingerprint
+  })
+  if (adoption.errors.length > 0) {
+    console.error("Custom-lint rule adoption refused:")
+    for (const error of adoption.errors) console.error(`  - ${error}`)
+    process.exit(1)
+  }
+  writeFileSync(baselinePath, `${JSON.stringify(adoption.baseline, null, 2)}\n`)
+  const adopted = findings.filter(finding => finding.ruleId === adoptRuleId).length
+  console.log(`Adopted ${adoptRuleId} into the custom-lint baseline (${adopted} grandfathered findings).`)
+  process.exit(0)
+}
 
 if (syncMode) {
   if (syncMode === "bug-fix") {

@@ -22,6 +22,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -110,7 +111,7 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
  * />
  * ```
  */
-export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const GroupedBarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -296,8 +297,7 @@ export const GroupedBarChart = forwardRef(function GroupedBarChart<TDatum extend
   if (validationError) return <ChartError componentName="GroupedBarChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "GroupedBarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-GroupedBarChart.displayName = "GroupedBarChart"

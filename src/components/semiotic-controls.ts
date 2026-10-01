@@ -13,6 +13,14 @@ export {
 export type {
   DirectManipulationControlProps,
 } from "./DirectManipulationControl"
+export { DirectManipulationMarkers } from "./controls/DirectManipulationMarkers"
+export type {
+  DirectManipulationMarker,
+  DirectManipulationMarkersChangeMeta,
+  DirectManipulationMarkersProps,
+} from "./controls/DirectManipulationMarkers"
+export { pointerToLocalPoint } from "./controls/controlPointer"
+export type { ControlPoint } from "./controls/controlPointer"
 
 export { SentenceFilter } from "./controls/SentenceFilter"
 export type {

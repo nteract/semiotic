@@ -128,7 +128,7 @@ const areaChartProps = [
     required: false,
     default: "true with semanticGradient",
     description:
-      "Mirror semanticGradient on the top stroke as solid, hard-edged value bands. Set false to keep the normal stroke or lineGradient.",
+      "Mirror semanticGradient on the top stroke as hard-edged value bands in each stop's color and opacity; the lowest band reaches the y-domain minimum. Set false to keep the normal stroke or lineGradient.",
   },
   {
     name: "lineGradient",

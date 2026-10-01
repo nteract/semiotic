@@ -21,6 +21,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -91,7 +92,7 @@ export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ViolinPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -258,8 +259,7 @@ export const ViolinPlot = forwardRef(function ViolinPlot<TDatum extends Datum = 
   }
 
   return <SafeRender componentName="ViolinPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "ViolinPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-ViolinPlot.displayName = "ViolinPlot"

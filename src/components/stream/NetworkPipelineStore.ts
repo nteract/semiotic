@@ -51,7 +51,7 @@ import {
   snapshotEdgePositions, savePreviousEdgePositions, saveTargetEdgePosition,
   interpolateEdgePosition, restoreTargetEdgePosition, type EdgePositionSnapshots
 } from "./networkEdgeTransitions"
-import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
+import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { runNetworkCustomLayout } from "./networkCustomLayoutRunner"
 import { NetworkCustomLayoutCache } from "./networkCustomLayoutCache"
 import { applyNetworkCustomLayoutOutput, clearNetworkCustomLayoutOutput } from "./networkCustomLayoutOutput"
@@ -60,6 +60,10 @@ import {
   snapshotNetworkCustomStyles
 } from "./networkCustomRestyle"
 import { NetworkPerspectiveState } from "./networkPerspectiveState"
+
+// Module constant rather than a static class field: the es2020 build lowers
+// static fields to a post-class assignment that bundlers must retain.
+const QUADTREE_THRESHOLD = 500
 
 /**
  * NetworkPipelineStore — stateful store for the StreamNetworkFrame.
@@ -70,14 +74,7 @@ import { NetworkPerspectiveState } from "./networkPerspectiveState"
  * For bounded data: ingests nodes/edges arrays, runs layout once, builds scene.
  * For streaming data: ingests edge pushes, tracks tension, relayouts on threshold.
  */
-export class NetworkPipelineStore implements UpdateResultStore {
-  declare getLastUpdateResult: () => UpdateResult
-  declare getUpdateSnapshot: () => UpdateResult
-  declare subscribeUpdateResult: (listener: () => void) => () => void
-  declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
-  declare markStylePaintPending: () => void
-  declare consumeStylePaintPending: () => boolean
-
+export class NetworkPipelineStore extends UpdateResultStoreBase {
   // ── Topology ──────────────────────────────────────────────────────────
 
   nodes: Map<string, RealtimeNode> = new Map()
@@ -141,7 +138,6 @@ export class NetworkPipelineStore implements UpdateResultStore {
   /** Bumped whenever sceneNodes is rebuilt; keys the quadtree cache. */
   private _sceneNodesRevision = 0
   private _nodeQuadtreeRevision = -1
-  private static readonly QUADTREE_THRESHOLD = 500
 
   // ── Materialized array cache ────────────────────────────────────────────
   // buildScene, tickAnimation, and particle rendering each need the node/edge
@@ -245,6 +241,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
   _lastPositionSnapshot: Map<string, { x: number; y: number }> | null = null
 
   constructor(config: NetworkPipelineConfig) {
+    super()
     this.config = config
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
@@ -954,7 +951,7 @@ export class NetworkPipelineStore implements UpdateResultStore {
     }
     this._maxNodeRadius = maxR
 
-    if (exactOutlines || circleCount <= NetworkPipelineStore.QUADTREE_THRESHOLD) {
+    if (exactOutlines || circleCount <= QUADTREE_THRESHOLD) {
       this._nodeQuadtree = null
       return
     }
@@ -1515,5 +1512,3 @@ export class NetworkPipelineStore implements UpdateResultStore {
     this.updateResults.recordData("clear")
   }
 }
-
-attachUpdateResultStore(NetworkPipelineStore)

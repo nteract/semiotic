@@ -179,6 +179,24 @@ describe("Component SSR — Network Charts", () => {
     expect(svg).not.toContain("data invalid")
   })
 
+  it("renderChart('ProcessSankey', …) keeps a positive plot when a legend outgrows a compact frame", () => {
+    for (const legendPosition of ["top", "bottom", "right"] as const) {
+      const svg = renderChart("ProcessSankey", {
+        nodes: [{ id: "Queue", kind: "wait" }, { id: "Done", kind: "end" }],
+        edges: [{ source: "Queue", target: "Done", value: 4, startTime: 1, endTime: 3 }],
+        domain: [0, 4],
+        colorBy: "kind",
+        legendPosition,
+        width: legendPosition === "right" ? 120 : 400,
+        height: legendPosition === "right" ? 240 : 60,
+      })
+      // A negative plot height drew grid rules upward from the axis and
+      // collapsed the ribbon to zero thickness.
+      expect(svg).not.toMatch(/(?:width|height|x2|y2)="-/)
+      expect(svg).not.toContain("NaN")
+    }
+  })
+
   it("renderChart('ProcessSankey', …) projects its time axis vertically", () => {
     const svg = renderChart("ProcessSankey", {
       nodes: [{ id: "Queue" }, { id: "Done" }],

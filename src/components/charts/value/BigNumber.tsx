@@ -38,6 +38,7 @@ import type {
   BigNumberSlot,
   BigNumberSlotContext
 } from "./types"
+import { withDisplayName } from "../shared/withDisplayName"
 
 // ── Mode-specific defaults ───────────────────────────────────────────
 
@@ -1194,11 +1195,9 @@ const BigNumberInner = (
  * />
  * ```
  */
-const ForwardedBigNumber = forwardRef(BigNumberInner) as (
+const ForwardedBigNumber = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(BigNumberInner), "BigNumber") as (
   props: BigNumberProps & { ref?: React.ForwardedRef<BigNumberHandle> }
 ) => React.ReactElement | null
-
-;(ForwardedBigNumber as { displayName?: string }).displayName = "BigNumber"
 
 export const BigNumber = ForwardedBigNumber
 export default BigNumber
