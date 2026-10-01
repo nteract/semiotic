@@ -151,6 +151,21 @@ test("provider registry registers orcarouter as an OpenAI-compatible provider", 
   assert.equal(AI_EVAL_PROVIDERS.openai.hasPriceTable, true)
 })
 
+test("provider registry registers cheaperinference as an OpenAI-compatible provider", () => {
+  assert.ok(AI_EVAL_PROVIDERS.cheaperinference)
+  assert.equal(
+    AI_EVAL_PROVIDERS.cheaperinference.apiUrl,
+    "https://api.cheaperinference.com/v1/responses"
+  )
+  assert.equal(
+    AI_EVAL_PROVIDERS.cheaperinference.apiKeyEnv,
+    "CHEAPER_INFERENCE_API_KEY"
+  )
+  assert.equal(AI_EVAL_PROVIDERS.cheaperinference.projectEnv, null)
+  assert.ok(AI_EVAL_PROVIDERS.cheaperinference.defaultModels.includes("gpt-5.4-mini"))
+  assert.equal(AI_EVAL_PROVIDERS.cheaperinference.hasPriceTable, false)
+})
+
 test("providers without a price table report unknown (null) cost", () => {
   assert.equal(calculateResponseCost("orcarouter/auto", {}, null), null)
   assert.equal(requestUpperBoundCost("orcarouter/auto", {}, null), null)
@@ -215,6 +230,36 @@ test("runner requests omit reasoning for the orcarouter provider and need no pri
   assert.equal(calls.length, 1)
   assert.equal(calls[0].url, "https://api.orcarouter.ai/v1/responses")
   assert.equal(calls[0].body.model, "orcarouter/auto")
+  assert.equal(calls[0].body.reasoning, undefined)
+  const output = JSON.parse(stdoutChunks.join(""))
+  assert.equal(output.ok, true)
+  assert.equal(output.estimatedUsd, null)
+})
+
+test("runner requests omit reasoning for the cheaperinference provider and need no price table", async () => {
+  const calls = []
+  const fetchImpl = async (url, options) => {
+    calls.push({ url, body: JSON.parse(options.body) })
+    return jsonResponse("gpt-5.4-mini", "{\"ok\":true}")
+  }
+  const outputDirectory = await mkdtemp(join(tmpdir(), "cheaperinference-validate-"))
+  const stdoutChunks = []
+  await runEvalRun({
+    argv: [
+      "node",
+      "run-openai-ai-evals.mjs",
+      "--provider=cheaperinference",
+      "--models=gpt-5.4-mini",
+      "--validate-only",
+      `--output-dir=${outputDirectory}`,
+    ],
+    env: { CHEAPER_INFERENCE_API_KEY: "ci_live_test" },
+    fetchImpl,
+    stdout: { write: (chunk) => stdoutChunks.push(String(chunk)) },
+  })
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, "https://api.cheaperinference.com/v1/responses")
+  assert.equal(calls[0].body.model, "gpt-5.4-mini")
   assert.equal(calls[0].body.reasoning, undefined)
   const output = JSON.parse(stdoutChunks.join(""))
   assert.equal(output.ok, true)
