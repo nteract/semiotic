@@ -3,6 +3,7 @@ import React from "react"
 import { TemporalAccessorExample } from "./TemporalAccessorExample.jsx"
 import { MinimapControlledExample } from "./MinimapControlledExample.jsx"
 import { LinearBrushExample } from "./LinearBrushExample.jsx"
+import { LazyTransitionExample } from "./LazyTransitionExample"
 import { createRoot } from "react-dom/client"
 import { lineData, scatterData, areaData, colors } from "../test-data.js"
 
@@ -658,7 +659,9 @@ const examples = [
 const root = createRoot(document.getElementById("root"))
 const params = new URLSearchParams(location.search)
 root.render(
-  params.has("temporal-accessors")
+  params.has("lazy-transition")
+    ? React.createElement(LazyTransitionExample)
+    : params.has("temporal-accessors")
     ? React.createElement(TemporalAccessorExample)
     : params.has("minimap-controlled")
       ? React.createElement(MinimapControlledExample)

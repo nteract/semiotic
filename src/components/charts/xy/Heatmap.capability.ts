@@ -92,7 +92,7 @@ export const HeatmapCapability: ChartCapability = {
   // sequential color stops conveying useful difference. Sweet spot is the
   // wide band where individual cell color is legible AND there are enough
   // cells to read a pattern (Munzner ch. 10: sequential colormap density).
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [100, 10000], caveatBelow: 25, caveatAbove: 50000 },
   }),
 }

@@ -1,13 +1,13 @@
 "use client"
-import * as React from "react"
+import { Component, type ReactNode, type ErrorInfo } from "react"
 import ChartError from "./charts/shared/ChartError"
 
 export interface ChartErrorBoundaryProps {
-  children: React.ReactNode
+  children: ReactNode
   /** Custom fallback to show on error. Can be a ReactNode or render function. */
-  fallback?: React.ReactNode | ((error: Error) => React.ReactNode)
+  fallback?: ReactNode | ((error: Error) => ReactNode)
   /** Callback when an error is caught */
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 interface ChartErrorBoundaryState {
@@ -35,7 +35,7 @@ interface ChartErrorBoundaryState {
  * </ChartErrorBoundary>
  * ```
  */
-export class ChartErrorBoundary extends React.Component<
+export class ChartErrorBoundary extends Component<
   ChartErrorBoundaryProps,
   ChartErrorBoundaryState
 > {
@@ -48,11 +48,11 @@ export class ChartErrorBoundary extends React.Component<
     return { error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.props.onError?.(error, errorInfo)
   }
 
-  render(): React.ReactNode {
+  render(): ReactNode {
     if (this.state.error) {
       const { fallback } = this.props
       const error = this.state.error

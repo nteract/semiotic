@@ -35,7 +35,7 @@ interface Shape {
   open?: boolean
 }
 
-const TAN30 = Math.tan(Math.PI / 6)
+const TAN30 = /* @__PURE__ */ Math.tan(Math.PI / 6)
 const round = (v: number) => Math.round(v * 100) / 100
 
 function projector(ratio = TAN30) {
@@ -198,13 +198,13 @@ export function isoPin({ radius = 6, height = 16, ratio }: IsoGlyphOptions & { r
 
 /** Ready-made isometric pictograms (true 30° isometric). */
 export const isometricGlyphs = {
-  box: isoBox(),
-  server: isoStack(),
-  database: isoCylinder({ bands: 2 }),
-  cylinder: isoCylinder(),
-  tile: isoTile(),
-  cloud: isoCloud(),
-  pin: isoPin()
+  box: /* @__PURE__ */ isoBox(),
+  server: /* @__PURE__ */ isoStack(),
+  database: /* @__PURE__ */ isoCylinder({ bands: 2 }),
+  cylinder: /* @__PURE__ */ isoCylinder(),
+  tile: /* @__PURE__ */ isoTile(),
+  cloud: /* @__PURE__ */ isoCloud(),
+  pin: /* @__PURE__ */ isoPin()
 } as const satisfies Record<string, GlyphDef>
 
 export type IsometricGlyphName = keyof typeof isometricGlyphs

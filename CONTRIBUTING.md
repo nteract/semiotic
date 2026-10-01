@@ -323,6 +323,10 @@ that shares its chunk in consumer bundles. Library modules therefore keep module
 - Name components with a pure initializer:
   `export const Chart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(...), "Chart")`.
   Annotate module-scope `memo`, `createContext`, and `React.lazy` calls the same way.
+- The rule also checks ordinary calls and constructors, including nested
+  initializer expressions. Add `/* @__PURE__ */` only after confirming that
+  discarding the call is safe; its arguments still need to be inert. Move
+  registration and other observable work to first use instead.
 - Register plugins, layouts, and engines inside the component (an `ensure…Registrations()` call at
   the top of render), not at import. Server modules and entry files may register at load.
 - Prefer module constants to `static` class fields (the es2020 build lowers them to assignments) and

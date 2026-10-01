@@ -182,7 +182,7 @@ export const BumpChartCapability: ChartCapability = {
   // A bump chart reads well with a few series over a few columns; a handful of
   // rows is too little to rank, and thousands of series/columns collapse into
   // an unreadable tangle. Rows here are total observations (series × columns).
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [8, 200], caveatBelow: 4, caveatAbove: 1500 },
   }),
 }

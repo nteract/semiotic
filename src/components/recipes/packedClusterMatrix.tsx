@@ -195,7 +195,7 @@ interface Geom {
 // Geometry cache keyed by a content signature of layout-affecting inputs only
 // (NOT color/shade/symbol/highlight) — so interaction and a returning resize
 // reuse the packing instead of re-running the force sim. Bounded.
-const GEOM_CACHE = new LayoutCache<Geom>(12)
+const GEOM_CACHE = /* @__PURE__ */ new LayoutCache<Geom>(12)
 
 /** Coerce a value to a number, parsing dates (ISO strings / `Date`) to ms. */
 function toNumberOrDate(v: unknown): number {

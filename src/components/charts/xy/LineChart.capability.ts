@@ -122,7 +122,7 @@ export const LineChartCapability: ChartCapability = {
   // not so many that lines collapse into a band. Beyond ~10k points the line
   // becomes a solid band and you want Heatmap / Ridgeline / hexbin instead.
   // Below 4 points there isn't really a trend to draw.
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [25, 2000], caveatBelow: 4, caveatAbove: 10000 },
   }),
 }

@@ -28,7 +28,7 @@ const streamRows = [
 ]
 
 export const LINE_CHART_ACCESS_CONTRACT: ChartAccessContract =
-  createChartAccessContract({
+  /* @__PURE__ */ createChartAccessContract({
     component: "LineChart",
     props: {
       data: lineData,
@@ -44,7 +44,7 @@ export const LINE_CHART_ACCESS_CONTRACT: ChartAccessContract =
   })
 
 export const BAR_CHART_ACCESS_CONTRACT: ChartAccessContract =
-  createChartAccessContract({
+  /* @__PURE__ */ createChartAccessContract({
     component: "BarChart",
     props: {
       data: barData,
@@ -60,7 +60,7 @@ export const BAR_CHART_ACCESS_CONTRACT: ChartAccessContract =
   })
 
 export const REALTIME_LINE_CHART_ACCESS_CONTRACT: ChartAccessContract =
-  createChartAccessContract({
+  /* @__PURE__ */ createChartAccessContract({
     component: "RealtimeLineChart",
     props: {
       data: streamRows,

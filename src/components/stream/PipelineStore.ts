@@ -645,8 +645,8 @@ export class PipelineStore extends UpdateResultStoreBase {
     // Snapshot positions for transition animation only after a successful
     // layout attempt. A failed custom layout must leave the retained scene's
     // animation state untouched.
-    // The engine loads on demand; StreamXYFrame holds an animated intro's
-    // first paint until it arrives, and a static render simply skips motion.
+    // The engine loads on demand; StreamXYFrame holds scene updates until it
+    // arrives, and a static render simply skips motion.
     const transitionEngine = this.config.transition ? getXYTransitionEngine() : null
     if (transitionEngine && this.scene.length > 0) {
       this.snapshotPositions()

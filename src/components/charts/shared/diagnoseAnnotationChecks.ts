@@ -127,8 +127,12 @@ export function checkAnnotationFieldTypos(
   if (!Array.isArray(props.annotations) || props.annotations.length === 0) return
   const dataKeys = new Set<string>()
   for (const source of [props.data, props.nodes, props.edges, props.points, props.areas]) {
-    const first = Array.isArray(source) ? source.find((row) => row && typeof row === "object") : null
-    if (first) for (const key of Object.keys(first as Datum)) dataKeys.add(key)
+    if (!Array.isArray(source)) continue
+    for (const row of source) {
+      if (row && typeof row === "object") {
+        for (const key of Object.keys(row as Datum)) dataKeys.add(key)
+      }
+    }
   }
   const accessorFields = Object.entries(props)
     .filter(([name, value]) => /Accessor$|By$/.test(name) && typeof value === "string")

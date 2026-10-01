@@ -60,23 +60,23 @@ export interface CreateArtifactPacketOptions {
   maxClaims?: number
 }
 
-const FULL_FIDELITY_FORMATS = new Set<ArtifactTransferFormat>(
-  "semiotic-config html notebook static-package mcp".split(
+const FULL_FIDELITY_FORMATS = /* @__PURE__ */ new Set<ArtifactTransferFormat>(
+  /* @__PURE__ */ "semiotic-config html notebook static-package mcp".split(
     " "
   ) as ArtifactTransferFormat[]
 )
-const SUPPORTED_TRANSFER_FORMATS = new Set<string>(
-  "semiotic-config portable-recipe vega-lite html svg png-sidecar notebook static-package mcp".split(
+const SUPPORTED_TRANSFER_FORMATS = /* @__PURE__ */ new Set<string>(
+  /* @__PURE__ */ "semiotic-config portable-recipe vega-lite html svg png-sidecar notebook static-package mcp".split(
     " "
   )
 )
-const PRESERVATION_CLASSES = new Set<PreservationClass>(
-  "full-fidelity claim-evidence-preserved visual-only lossy unknown".split(
+const PRESERVATION_CLASSES = /* @__PURE__ */ new Set<PreservationClass>(
+  /* @__PURE__ */ "full-fidelity claim-evidence-preserved visual-only lossy unknown".split(
     " "
   ) as PreservationClass[]
 )
 const REQUIRED_CONTRACT_PATHS =
-  "contractVersion artifact.id artifact.kind purpose.intents claims[].id claims[].kind claims[].status claims[].evidenceIds evidence[].id evidence[].role".split(
+  /* @__PURE__ */ "contractVersion artifact.id artifact.kind purpose.intents claims[].id claims[].kind claims[].status claims[].evidenceIds evidence[].id evidence[].role".split(
     " "
   )
 

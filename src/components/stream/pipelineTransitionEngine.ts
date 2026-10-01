@@ -8,10 +8,9 @@ let loading: Promise<XYTransitionEngine> | null = null
 /**
  * The XY transition engine (snapshot → start → advance interpolation) is only
  * needed when a chart sets `animate` or `transition`, so it lives in a split
- * chunk. `StreamXYFrame` loads it and holds the first paint of an animated
- * intro until it arrives (the intro starts from a blank frame, so the wait is
- * invisible). Synchronous renderers that animate, such as the server GIF
- * renderer, provide it up front.
+ * chunk. `StreamXYFrame` holds transition-dependent scene updates until it
+ * arrives, preserving the previous scene (or a blank intro). Synchronous
+ * renderers that animate, such as the server GIF renderer, provide it up front.
  */
 export function provideXYTransitionEngine(value: XYTransitionEngine): void {
   engine = value

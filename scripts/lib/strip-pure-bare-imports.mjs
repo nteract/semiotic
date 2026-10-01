@@ -26,18 +26,68 @@ const INERT_BUILTIN_CALLEE =
  */
 export function chunkLoadEffect(code, filename = "chunk.js") {
   const source = ts.createSourceFile(filename, code, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS)
+  let symbolShadowed = false
+  const findSymbolBinding = (node) => {
+    if (node.name && ts.isIdentifier(node.name) && node.name.text === "Symbol") symbolShadowed = true
+    ts.forEachChild(node, findSymbolBinding)
+  }
+  findSymbolBinding(source)
   let effect = null
   const visit = (node) => {
     if (effect) return
-    // Function and class bodies do not run while the chunk loads.
-    if (ts.isFunctionLike(node)) return
+    // Both declarations and expressions evaluate class names, decorators and
+    // static members now; instance initializers and method bodies run later.
+    if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
+      if (ts.getDecorators(node)?.length) {
+        effect = "class decorator"
+        return
+      }
+      if (node.heritageClauses?.some((clause) => clause.types.some((type) => !ts.isIdentifier(type.expression)))) {
+        effect = "class extends an expression"
+        return
+      }
+      for (const member of node.members) {
+        if (ts.canHaveDecorators(member) && ts.getDecorators(member)?.length) {
+          effect = "class member decorator"
+          return
+        }
+        if (ts.isClassStaticBlockDeclaration(member) ||
+          (ts.isPropertyDeclaration(member) && member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))) {
+          effect = "class static initializer"
+          return
+        }
+        if (member.name && ts.isComputedPropertyName(member.name)) visit(member.name)
+      }
+      return
+    }
+    // Computed names also run for object methods/getters, despite their bodies
+    // being deferred. Even a bare key can invoke an observable ToPropertyKey.
+    if (ts.isComputedPropertyName(node)) {
+      // Native iterator names are already primitive symbols; they cannot run
+      // ToPropertyKey hooks. Do not extend this to arbitrary member reads.
+      if (!symbolShadowed && ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "Symbol" &&
+        ["iterator", "asyncIterator"].includes(node.expression.name.text)) return
+      if (!ts.isStringLiteral(node.expression) && !ts.isNumericLiteral(node.expression)) {
+        effect = "computed member name"
+      }
+      return
+    }
+    if (ts.isFunctionLike(node)) {
+      if (node.name && ts.isComputedPropertyName(node.name)) visit(node.name)
+      return
+    }
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
       if (INERT_BUILTIN_CALLEE.test(node.expression.getText(source))) {
         ts.forEachChild(node, visit)
         return
       }
       const before = code.slice(Math.max(0, node.getStart(source) - 32), node.getStart(source))
-      if (!PURE_ANNOTATION.test(before)) {
+      let hasAnnotatedParentCall = false
+      for (let parent = node.parent; parent && parent.getStart(source) === node.getStart(source); parent = parent.parent) {
+        if (ts.isCallExpression(parent) || ts.isNewExpression(parent)) hasAnnotatedParentCall = true
+      }
+      if (!PURE_ANNOTATION.test(before) || hasAnnotatedParentCall) {
         effect = `call ${node.getText(source).slice(0, 80)}`
         return
       }
@@ -66,18 +116,6 @@ export function chunkLoadEffect(code, filename = "chunk.js") {
     if (ts.isExpressionStatement(statement)) {
       if (ts.isStringLiteral(statement.expression)) continue // directive prologue
       return `statement ${statement.getText(source).slice(0, 80)}`
-    }
-    if (ts.isClassDeclaration(statement)) {
-      if (statement.heritageClauses?.some((clause) => clause.types.some((type) => !ts.isIdentifier(type.expression)))) {
-        return "class extends an expression"
-      }
-      if (statement.members.some((member) =>
-        ts.isClassStaticBlockDeclaration(member) ||
-        (ts.isPropertyDeclaration(member) && member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))
-      )) {
-        return "class static initializer"
-      }
-      continue
     }
     visit(statement)
     if (effect) return effect
@@ -117,7 +155,9 @@ export function stripPureBareChunkImports(dir) {
       }
     }
     stack.delete(chunk)
-    closureEffect.set(chunk, effect)
+    // A cycle can hide an ancestor's effect from a nested traversal. Cache
+    // only complete root traversals, never a partial result inside a cycle.
+    if (stack.size === 0) closureEffect.set(chunk, effect)
     return effect
   }
 

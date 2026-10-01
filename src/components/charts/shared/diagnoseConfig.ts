@@ -231,7 +231,7 @@ function checkDataGaps(
   if (typeof yAcc !== "string") return
 
   const hasGap = data.some((d: Datum) => {
-    const v = d[yAcc]
+    const v = d?.[yAcc]
     return v == null || Number.isNaN(v)
   })
 

@@ -50,7 +50,7 @@ export interface GofishIRExample {
   handWritten?: boolean
 }
 
-const baked: GofishIRExample[] = generatedExamples.map((e) => ({
+const baked: GofishIRExample[] = /* @__PURE__ */ generatedExamples.map((e) => ({
   key: e.key,
   label: e.label,
   doc: e.doc,
@@ -69,9 +69,9 @@ const bobaExample: GofishIRExample = {
 }
 
 /** All DisplayList examples, in gallery order — the hand-emitted boba sits among the baked set. */
-const bottleIdx = baked.findIndex((e) => e.key === "bottle")
+const bottleIdx = /* @__PURE__ */ baked.findIndex((e) => e.key === "bottle")
 export const gofishIRExamples: readonly GofishIRExample[] = [
-  ...baked.slice(0, bottleIdx + 1),
+  .../* @__PURE__ */ baked.slice(0, bottleIdx + 1),
   bobaExample,
-  ...baked.slice(bottleIdx + 1)
+  .../* @__PURE__ */ baked.slice(bottleIdx + 1)
 ]

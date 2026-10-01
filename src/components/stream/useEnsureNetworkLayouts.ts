@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import type { NetworkChartType } from "./networkTypes"
 import { getLayoutPlugin } from "./layouts/registry"
 import { isBuiltInNetworkLayout } from "./layouts/builtInLayoutTypes"
+import { loadFrameModule } from "./loadFrameModule"
 
 /**
  * Chart HOCs register only the layout they render, so a published chunk no
@@ -23,13 +24,12 @@ export function useEnsureNetworkLayouts(
     if (hasCustomLayout || !isBuiltInNetworkLayout(chartType) || getLayoutPlugin(chartType)) {
       return undefined
     }
-    let cancelled = false
-    void import("./layouts/registerBuiltIn").then((mod) => {
-      mod.registerBuiltInNetworkLayouts()
-      if (!cancelled) onReadyRef.current()
-    })
-    return () => {
-      cancelled = true
-    }
+    return loadFrameModule(
+      () => import("./layouts/registerBuiltIn").then((mod) => {
+        mod.registerBuiltInNetworkLayouts()
+      }),
+      () => onReadyRef.current(),
+      `StreamNetworkFrame layout "${chartType}"`
+    )
   }, [chartType, hasCustomLayout])
 }

@@ -12,6 +12,8 @@ async function freshModules() {
 
 describe("useEnsureNetworkLayouts", () => {
   afterEach(() => {
+    vi.doUnmock("./layouts/registerBuiltIn")
+    vi.restoreAllMocks()
     vi.resetModules()
   })
 
@@ -44,5 +46,21 @@ describe("useEnsureNetworkLayouts", () => {
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(onReady).not.toHaveBeenCalled()
     expect(getLayoutPlugin("force")).toBeUndefined()
+  })
+
+  it("reports failed chunk imports instead of leaving an unhandled rejection", async () => {
+    const failure = new Error("network layout chunk unavailable")
+    vi.doMock("./layouts/registerBuiltIn", () => { throw failure })
+    const { useEnsureNetworkLayouts } = await freshModules()
+    const error = vi.spyOn(console, "error").mockImplementation(() => {})
+    const onReady = vi.fn()
+    renderHook(() => useEnsureNetworkLayouts("force", false, onReady))
+    await waitFor(() => {
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining('StreamNetworkFrame layout "force"'),
+        expect.any(Error)
+      )
+    })
+    expect(onReady).not.toHaveBeenCalled()
   })
 })

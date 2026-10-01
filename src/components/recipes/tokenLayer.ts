@@ -315,7 +315,7 @@ function builtinGlyph(name: string | undefined): GlyphDef | undefined {
   return isotypeNetworkGlyphs[name as keyof typeof isotypeNetworkGlyphs]
 }
 
-const SYMBOL_NAMES = new Set<string>(SYMBOL_SEQUENCE)
+const SYMBOL_NAMES = /* @__PURE__ */ new Set<string>(SYMBOL_SEQUENCE)
 
 function namedSymbol(name: string | undefined): SymbolName | undefined {
   return name && SYMBOL_NAMES.has(name) ? (name as SymbolName) : undefined

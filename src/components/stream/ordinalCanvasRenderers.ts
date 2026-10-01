@@ -41,31 +41,31 @@ function adaptStreamRenderer(renderer: StreamRendererFn): OrdinalRendererFn {
   }
 }
 
-const ordinalBarCanvasRenderer = adaptStreamRenderer(barCanvasRenderer)
-const ordinalPointCanvasRenderer = adaptStreamRenderer(pointCanvasRenderer)
-const ordinalSymbolCanvasRenderer = adaptStreamRenderer(symbolCanvasRenderer)
-const ordinalGlyphCanvasRenderer = adaptStreamRenderer(glyphCanvasRenderer)
+const ordinalBarCanvasRenderer = /* @__PURE__ */ adaptStreamRenderer(barCanvasRenderer)
+const ordinalPointCanvasRenderer = /* @__PURE__ */ adaptStreamRenderer(pointCanvasRenderer)
+const ordinalSymbolCanvasRenderer = /* @__PURE__ */ adaptStreamRenderer(symbolCanvasRenderer)
+const ordinalGlyphCanvasRenderer = /* @__PURE__ */ adaptStreamRenderer(glyphCanvasRenderer)
 
 const withConnectors = (renderers: OrdinalAnyRendererFn[]): OrdinalAnyRendererFn[] =>
   [connectorCanvasRenderer, ...renderers]
 
 export const ORDINAL_CANVAS_RENDERERS: Record<OrdinalChartType, OrdinalAnyRendererFn[]> = {
-  bar: withConnectors([ordinalBarCanvasRenderer]),
-  clusterbar: withConnectors([ordinalBarCanvasRenderer]),
-  point: withConnectors([ordinalPointCanvasRenderer, ordinalSymbolCanvasRenderer]),
-  swarm: withConnectors([ordinalPointCanvasRenderer, ordinalSymbolCanvasRenderer]),
+  bar: /* @__PURE__ */ withConnectors([ordinalBarCanvasRenderer]),
+  clusterbar: /* @__PURE__ */ withConnectors([ordinalBarCanvasRenderer]),
+  point: /* @__PURE__ */ withConnectors([ordinalPointCanvasRenderer, ordinalSymbolCanvasRenderer]),
+  swarm: /* @__PURE__ */ withConnectors([ordinalPointCanvasRenderer, ordinalSymbolCanvasRenderer]),
   pie: [wedgeCanvasRenderer],
   donut: [wedgeCanvasRenderer],
-  boxplot: withConnectors([boxplotCanvasRenderer, ordinalPointCanvasRenderer]),
-  violin: withConnectors([violinCanvasRenderer]),
-  histogram: withConnectors([ordinalBarCanvasRenderer]),
-  ridgeline: withConnectors([violinCanvasRenderer]),
-  timeline: withConnectors([ordinalBarCanvasRenderer]),
+  boxplot: /* @__PURE__ */ withConnectors([boxplotCanvasRenderer, ordinalPointCanvasRenderer]),
+  violin: /* @__PURE__ */ withConnectors([violinCanvasRenderer]),
+  histogram: /* @__PURE__ */ withConnectors([ordinalBarCanvasRenderer]),
+  ridgeline: /* @__PURE__ */ withConnectors([violinCanvasRenderer]),
+  timeline: /* @__PURE__ */ withConnectors([ordinalBarCanvasRenderer]),
   funnel: [ordinalBarCanvasRenderer, trapezoidCanvasRenderer, funnelLabelRenderer],
   "bar-funnel": [ordinalBarCanvasRenderer, barFunnelHatchRenderer, barFunnelLabelRenderer],
-  swimlane: withConnectors([ordinalBarCanvasRenderer]),
+  swimlane: /* @__PURE__ */ withConnectors([ordinalBarCanvasRenderer]),
   // custom: any node type possible — each renderer self-filters to its type.
-  custom: withConnectors([
+  custom: /* @__PURE__ */ withConnectors([
     ordinalBarCanvasRenderer,
     ordinalPointCanvasRenderer,
     ordinalSymbolCanvasRenderer,

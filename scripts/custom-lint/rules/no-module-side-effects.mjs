@@ -61,7 +61,9 @@ export default {
       sideEffectStatement:
         "Module-scope statement runs on import. Consumer bundlers must keep it, and everything it references, for every bundle that shares its published chunk. Move it into a function called at render or first use (or into an entry module), or express it as a /* @__PURE__ */ initializer.",
       unannotatedFactory:
-        "Module-scope {{name}}(...) needs a /* @__PURE__ */ annotation so an unused component can be tree-shaken."
+        "Module-scope {{name}}(...) needs a /* @__PURE__ */ annotation so an unused component can be tree-shaken.",
+      unannotatedCall:
+        "Module-scope {{name}} runs on import. Move observable work to first use; annotate with /* @__PURE__ */ only if discarding this call or construction is safe."
     }
   },
   create(context) {
@@ -69,20 +71,88 @@ export default {
     if (isExemptFile(filename)) return {}
     const sourceCode = context.sourceCode
 
-    const isPureAnnotated = (call) =>
-      sourceCode.getCommentsBefore(call).some((comment) => PURE_COMMENT.test(comment.value))
+    const isPureAnnotated = (call) => {
+      for (let parent = call.parent; parent?.range[0] === call.range[0]; parent = parent.parent) {
+        if (parent.type === "CallExpression" || parent.type === "NewExpression") return false
+      }
+      const comment = sourceCode.getCommentsBefore(call).at(-1)
+      return comment && PURE_COMMENT.test(comment.value) &&
+        sourceCode.text.slice(comment.range[1], call.range[0]).trim() === ""
+    }
+
+    const isNative = (node, name) => {
+      for (let scope = sourceCode.getScope(node); scope; scope = scope.upper) {
+        const variable = scope.set.get(name)
+        if (variable) return variable.defs.length === 0
+      }
+      return true
+    }
+    const literalTree = (value) => {
+      const node = unwrap(value)
+      return node?.type === "Literal" ||
+        (node?.type === "ArrayExpression" && node.elements.every((item) => item == null || literalTree(item)))
+    }
+    const inertBuiltin = (node) => {
+      const callee = node.callee
+      if (callee.type === "Identifier" && isNative(node, callee.name)) {
+        // Literal arrays use native iteration; arbitrary iterables and
+        // shadowed constructors can execute user code and are not exempt.
+        if (node.type === "NewExpression" && /^(Set|Map|WeakSet|WeakMap)$/.test(callee.name)) {
+          return node.arguments.length === 0 ||
+            (node.arguments.length === 1 && unwrap(node.arguments[0])?.type === "ArrayExpression" && literalTree(node.arguments[0]))
+        }
+        if (callee.name === "Symbol" && node.type === "CallExpression") return node.arguments.every(literalTree)
+      }
+      if (node.type !== "CallExpression" || callee.type !== "MemberExpression" || callee.computed ||
+        callee.object.type !== "Identifier" || !isNative(node, callee.object.name)) return false
+      const name = `${callee.object.name}.${callee.property.name}`
+      if (name === "Symbol.for") return node.arguments.length === 1 && literalTree(node.arguments[0])
+      if (name === "Object.create") return node.arguments.length === 1 && node.arguments[0].type === "Literal" && node.arguments[0].value === null
+      // Freezing a fresh literal cannot mutate a shared object. Children are
+      // still checked below, including any calls that build its properties.
+      if (name === "Object.freeze" && node.arguments.length === 1) {
+        return ["ObjectExpression", "ArrayExpression"].includes(unwrap(node.arguments[0])?.type)
+      }
+      return false
+    }
 
     function checkInitializer(expression) {
       const node = unwrap(expression)
-      if (!node || node.type !== "CallExpression") return
-      const name = factoryName(node)
-      const pure = isPureAnnotated(node)
-      if (name && !pure) {
-        context.report({ node, messageId: "unannotatedFactory", data: { name } })
+      if (!node) return
+      if (["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(node.type)) return
+      if (["AssignmentExpression", "UpdateExpression", "AwaitExpression", "TaggedTemplateExpression"].includes(node.type) ||
+        (node.type === "UnaryExpression" && node.operator === "delete")) {
+        context.report({ node, messageId: "sideEffectStatement" })
       }
-      // A PURE call's arguments are still evaluated, so factories nested in a
-      // pure wrapper (withDisplayName(forwardRef(...))) need their own annotation.
-      if (name || pure) for (const argument of node.arguments) checkInitializer(argument)
+      if (node.type === "ClassDeclaration" || node.type === "ClassExpression") {
+        checkInitializer(node.superClass)
+        for (const decorator of node.decorators ?? []) checkInitializer(decorator.expression)
+        for (const member of node.body.body) {
+          if (member.computed) checkInitializer(member.key)
+          for (const decorator of member.decorators ?? []) checkInitializer(decorator.expression)
+          if (member.type === "StaticBlock") {
+            context.report({ node: member, messageId: "sideEffectStatement" })
+          } else if (member.static) checkInitializer(member.value)
+        }
+        return
+      }
+      if (node.type === "CallExpression" || node.type === "NewExpression") {
+        const name = factoryName(node)
+        if (!isPureAnnotated(node) && !inertBuiltin(node)) {
+          context.report({
+            node,
+            messageId: name ? "unannotatedFactory" : "unannotatedCall",
+            data: { name: name ?? sourceCode.getText(node.callee) }
+          })
+        }
+      }
+      // PURE only covers the call itself: callee expressions, arguments,
+      // object/array entries, conditional branches and TS wrappers still run.
+      for (const key of sourceCode.visitorKeys[node.type] ?? []) {
+        const child = node[key]
+        if (Array.isArray(child)) child.forEach(checkInitializer)
+        else if (child) checkInitializer(child)
+      }
     }
 
     function checkStatement(statement) {
@@ -97,6 +167,7 @@ export default {
       if (statement.type === "VariableDeclaration") {
         for (const declarator of statement.declarations) {
           if (declarator.init) checkInitializer(declarator.init)
+          checkInitializer(declarator.id)
         }
         return
       }
@@ -107,7 +178,9 @@ export default {
           return
         }
         context.report({ node: statement, messageId: "sideEffectStatement" })
+        return
       }
+      checkInitializer(statement)
     }
 
     return {

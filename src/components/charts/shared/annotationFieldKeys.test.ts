@@ -33,4 +33,14 @@ describe("annotation field typos", () => {
     expect(finding?.message).toContain('"colr"')
     expect(finding?.fix).toContain('"color"')
   })
+
+  it.each(["data", "nodes", "edges", "points", "areas"])("learns coordinate fields from every row of %s", (source) => {
+    const { diagnoses } = diagnoseConfig("LineChart", {
+      [source]: [null, 42, { x: 1 }, { x: 2, colr: "category", fil: 3 }],
+      annotations: [{ type: "label", x: 2, colr: "category", fil: 3, labelPositon: "right" }]
+    })
+    const findings = diagnoses.filter((diagnosis) => diagnosis.code === "ANNOTATION_UNKNOWN_FIELD")
+    expect(findings).toHaveLength(1)
+    expect(findings[0].message).toContain('"labelPositon"')
+  })
 })

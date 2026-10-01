@@ -144,9 +144,9 @@ const DEFAULT_SIZE: [number, number] = [640, 360]
 const EMPTY_REGION_EFFECTS: StreamPhysicsRegionEffect[] = []
 const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
 const CHART_TYPE = "StreamPhysicsFrame"
-const SETTLED_THEME_BACKGROUND = physicsCanvasThemeCSSValue("background")
-const SETTLED_THEME_PRIMARY = physicsCanvasThemeCSSValue("primary")
-const SETTLED_THEME_TEXT = physicsCanvasThemeCSSValue("text")
+const SETTLED_THEME_BACKGROUND = /* @__PURE__ */ physicsCanvasThemeCSSValue("background")
+const SETTLED_THEME_PRIMARY = /* @__PURE__ */ physicsCanvasThemeCSSValue("primary")
+const SETTLED_THEME_TEXT = /* @__PURE__ */ physicsCanvasThemeCSSValue("text")
 const DEFAULT_SELECTED_BODY_STYLE = {
   stroke: SETTLED_THEME_TEXT,
   strokeWidth: 2,

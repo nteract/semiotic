@@ -833,11 +833,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
       const store = storeRef.current
       if (!store) return
-      // An animated intro starts from a blank frame, so hold its first paint
-      // until the on-demand transition engine arrives; `dirtyRef` stays set
-      // and useXYTransitionEngine schedules the render. A hydrating chart
-      // cancels its intro, so it paints immediately.
-      if (transitionEnginePendingRef.current && !store.hasRenderedOnce && !wasHydratingFromSSR) return
+      // Preserve the previous scene until the engine can snapshot it, including
+      // when transitions are enabled after mount. Hydration's initial paint
+      // cancels its intro; subsequent updates must still wait for the engine.
+      if (transitionEnginePendingRef.current && !(wasHydratingFromSSR && lastSceneDimsRef.current.w === -1)) return
 
       const now = frameRuntime.now()
 

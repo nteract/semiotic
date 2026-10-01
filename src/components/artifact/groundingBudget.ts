@@ -22,7 +22,7 @@ export interface ArtifactGroundingBudget {
 export const MINIMUM_GROUNDING_TOKENS = 256
 
 const CHARACTERS_PER_TOKEN = 4
-const MAX_EFFECTIVE_TOKENS = Math.floor(
+const MAX_EFFECTIVE_TOKENS = /* @__PURE__ */ Math.floor(
   Number.MAX_SAFE_INTEGER / CHARACTERS_PER_TOKEN
 )
 const UNTRUSTED_CONTENT_BEGIN = "BEGIN UNTRUSTED ARTIFACT CONTENT"

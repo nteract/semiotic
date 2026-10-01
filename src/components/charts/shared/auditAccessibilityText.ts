@@ -14,7 +14,7 @@ const CUSTOM_TEXT_COMPONENTS = new Set([
   "PhysicsCustomChart"
 ])
 // ChartRecipe also routes these legacy family names through the same wrappers.
-const RECIPE_TEXT_FAMILIES = new Set([
+const RECIPE_TEXT_FAMILIES = /* @__PURE__ */ new Set([
   ...CUSTOM_TEXT_COMPONENTS,
   "XYFrame",
   "OrdinalFrame",

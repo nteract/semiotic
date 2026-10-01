@@ -23,8 +23,8 @@ const references = {
 
 export type OrdinalChartDefinitionId = keyof typeof references
 
-export const ORDINAL_CHART_DEFINITIONS = Object.fromEntries(
-  Object.entries(references).map(([name, [route, exportName]]) => {
+export const ORDINAL_CHART_DEFINITIONS = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(references)).map(([name, [route, exportName]]) => {
     const spec = ORDINAL_CHART_SPECS[name]
     if (!spec) throw new Error(`Missing ordinal chart spec: ${name}`)
     const section = name === "RidgelinePlot" ? "cookbook" : "charts"

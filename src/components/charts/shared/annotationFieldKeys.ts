@@ -23,7 +23,7 @@ export const KNOWN_ANNOTATION_FIELDS = [
   "anomalyColor", "anomalyRadius", "anomalyStyle", "cohesion", "depth", "defensive", "gradient"
 ] as const
 
-const KNOWN = new Set<string>(KNOWN_ANNOTATION_FIELDS)
+const KNOWN = /* @__PURE__ */ new Set<string>(KNOWN_ANNOTATION_FIELDS)
 
 export interface AnnotationFieldTypo {
   /** Position in the annotations array. */

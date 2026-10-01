@@ -1,6 +1,7 @@
 import { useEffect, type MutableRefObject, type RefObject } from "react"
 import type { StreamChartType } from "./types"
 import { getXYPlugin, registerXYPlugin } from "./xyPlugins/registry"
+import { loadFrameModule } from "./loadFrameModule"
 
 /**
  * Keep LineChart's static graph free of candlestick/heatmap/bar, while
@@ -25,37 +26,22 @@ export function useEnsureXYPlugins(
   storeRef: RefObject<{ markStylePaintPending(): void } | null>,
 ): void {
   useEffect(() => {
-    let cancelled = false
-    const loaders: Promise<void>[] = []
-
-    if (customLayout && !getXYPlugin("custom")?.canvasRenderers.length) {
-      loaders.push(
-        import("./xyPlugins/customPlugin").then((mod) => {
+    const type = customLayout ? "custom" : chartType
+    if (getXYPlugin(type)?.canvasRenderers.length || (!customLayout && type === "custom")) return
+    const load = customLayout
+      ? () => import("./xyPlugins/customPlugin").then((mod) => {
           registerXYPlugin(mod.customXYPlugin)
-        }),
-      )
-    }
-
-    if (!customLayout && chartType !== "custom" && !getXYPlugin(chartType)?.canvasRenderers.length) {
-      loaders.push(
-        import("./xyPlugins/registerBuiltIn").then((mod) => {
+        })
+      : () => import("./xyPlugins/registerBuiltIn").then((mod) => {
           mod.registerBuiltInXYPlugins()
-        }),
-      )
-    }
-
-    if (loaders.length === 0) return undefined
-    void Promise.all(loaders).then(() => {
-      if (cancelled) return
+        })
+    return loadFrameModule(load, () => {
       // Custom geometry was already produced before its painters loaded.
       // Repaint that retained scene; only a missing built-in builder needs
       // another geometry pass after registration.
       if (customLayout) storeRef.current?.markStylePaintPending()
       else dirtyRef.current = true
       scheduleRender()
-    })
-    return () => {
-      cancelled = true
-    }
+    }, `StreamXYFrame painters for "${chartType}"`)
   }, [chartType, customLayout, dirtyRef, scheduleRender, storeRef])
 }

@@ -451,8 +451,8 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   onObservation: { type: "function", omitFromSchema: true },
 }
 
-const realtimeStaticProps: Record<string, ChartPropSpec> = Object.fromEntries(
-  Object.entries(realtimeProps).filter(
+const realtimeStaticProps: Record<string, ChartPropSpec> = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(realtimeProps)).filter(
     ([propName]) =>
       propName !== "windowSize" &&
       propName !== "windowMode" &&

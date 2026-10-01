@@ -23,6 +23,32 @@ describe("chunkLoadEffect", () => {
     assert.match(chunkLoadEffect("class K{static z=make()}"), /static/)
     assert.match(chunkLoadEffect("class K extends mixin(B){}"), /extends/)
   })
+
+  it("checks definition-time work in classes and object methods without running instance bodies", () => {
+    for (const code of [
+      "class C { [register()]() {} }",
+      "class C { get [register()]() { return 1 } }",
+      "class C { [register()] = 1 }",
+      "class C { [key] = 1 }",
+      "const Symbol = custom; class C { [Symbol.iterator]() {} }",
+      "const C = class { [register()]() {} }",
+      "const C = class { static { register() } }",
+      "const C = class extends mixin(Base) {}",
+      "export default class { [register()]() {} }",
+      "const obj = { [register()]() {} }",
+      "@register class C {}",
+      "class C { @register method() {} }"
+    ]) assert.ok(chunkLoadEffect(code), code)
+    for (const code of [
+      "class C { field = register(); method() { register() } }",
+      'const C = class { ["literal"] = register() }',
+      "const obj = { method() { register() }, get value() { return register() } }",
+      "class C { *[Symbol.iterator]() { register() } }"
+    ]) assert.equal(chunkLoadEffect(code), null, code)
+    assert.ok(chunkLoadEffect("const x = /* @__PURE__ */ wrap(class { [register()]() {} })"))
+    assert.ok(chunkLoadEffect("const x = /* @__PURE__ */ factory()()"))
+    assert.equal(chunkLoadEffect("const x = /* @__PURE__ */ (/* @__PURE__ */ factory())()"), null)
+  })
 })
 
 describe("stripPureBareChunkImports", () => {
@@ -33,10 +59,16 @@ describe("stripPureBareChunkImports", () => {
       writeFileSync(join(dir, "c-LEAF.min.js"), "function a(){return 1}export{a};")
       writeFileSync(join(dir, "c-EFFECT.min.js"), "register(1);export{};")
       writeFileSync(join(dir, "c-VIA.min.js"), 'import"./c-EFFECT.min.js";var v=1;export{v as a};')
+      writeFileSync(join(dir, "c-CLASS.min.js"), "class C { [register()]() {} } export { C };")
+      writeFileSync(join(dir, "c-A.min.js"), 'import"./c-B.min.js";import"./c-EFFECT.min.js";')
+      writeFileSync(join(dir, "c-B.min.js"), 'import"./c-A.min.js";')
       writeFileSync(join(dir, "entry.module.min.js"), [
         'import"./c-PURE.min.js";',
         'import"./c-EFFECT.min.js";',
         'import"./c-VIA.min.js";',
+        'import"./c-CLASS.min.js";',
+        'import"./c-A.min.js";',
+        'import"./c-B.min.js";',
         'import{a as n}from"./c-LEAF.min.js";',
         "export{n as named};"
       ].join(""))
@@ -48,6 +80,9 @@ describe("stripPureBareChunkImports", () => {
       assert.match(entry, /import"\.\/c-VIA\.min\.js"/)
       assert.match(entry, /from"\.\/c-LEAF\.min\.js"/)
       assert.ok(result.kept.has("c-VIA.min.js"))
+      for (const chunk of ["CLASS", "A", "B"]) {
+        assert.ok(entry.includes(`import"./c-${chunk}.min.js"`))
+      }
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

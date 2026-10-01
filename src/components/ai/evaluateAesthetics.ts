@@ -90,9 +90,9 @@ export const DEFAULT_AESTHETIC_PROFILE: Readonly<AestheticProfile> =
 export const AESTHETICS_OFF_PROFILE: Readonly<AestheticProfile> = Object.freeze(
   {
     name: "Aesthetics off",
-    weights: Object.freeze(
-      Object.fromEntries(
-        Object.keys(DEFAULT_AESTHETIC_WEIGHTS).map((id) => [id, 0])
+    weights: /* @__PURE__ */ Object.freeze(
+      /* @__PURE__ */ Object.fromEntries(
+        /* @__PURE__ */ (/* @__PURE__ */ Object.keys(DEFAULT_AESTHETIC_WEIGHTS)).map((id) => [id, 0])
       ) as AestheticFeatureWeights
     ),
     minimumScore: 0

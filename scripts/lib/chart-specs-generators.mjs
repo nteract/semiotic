@@ -323,7 +323,7 @@ export function generateKnownChartComponentsModule(chartSpecs, validationMap) {
  */
 export const KNOWN_CHART_COMPONENTS = ${JSON.stringify(Object.keys(chartSpecs), null, 2)} as const
 
-const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = new Set(
+const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = /* @__PURE__ */ new Set(
   KNOWN_CHART_COMPONENTS,
 )
 

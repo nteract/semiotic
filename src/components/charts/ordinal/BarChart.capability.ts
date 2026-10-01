@@ -135,7 +135,7 @@ export const BarChartCapability: ChartCapability = {
   // Bars are about category totals, not row density. The decisive scale axis
   // is cardinality of the category field (Miller 1956: ~7 is the comfort zone;
   // ~25 is the legibility ceiling). Below 3 categories a bar chart feels thin.
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     cardinality: { sweetSpot: [3, 15], caveatAbove: 25 },
     rows: { sweetSpot: [3, 200] },
   }),

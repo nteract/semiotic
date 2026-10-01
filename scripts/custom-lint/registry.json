@@ -76,7 +76,7 @@
     {
       "id": "semiotic/no-module-side-effects",
       "status": "unstable",
-      "score": 7,
+      "score": 8,
       "introducedAt": "2026-09-30",
       "implementation": "scripts/custom-lint/rules/no-module-side-effects.mjs",
       "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
@@ -93,6 +93,18 @@
           "date": "2026-09-30",
           "reference": "src/components/stream/PipelineStore.ts",
           "note": "The attachUpdateResultStore prototype mixin and a lowered static class field ran at module scope, so any import touching the XY frame chunk retained the whole store; replaced with a method-only base class and a module constant."
+        },
+        {
+          "kind": "rule_revision",
+          "date": "2026-09-30",
+          "reference": "scripts/custom-lint/custom-lint-rules.test.mjs",
+          "note": "Inspect ordinary calls and constructions throughout module initializers, including nested arguments, callee expressions, exports, computed members and static initialization. Only unshadowed native collections over literal arrays, symbols, null-prototype objects and freezing fresh literals are exempt. Audited existing findings: schema builders, private caches, fixture calculations and renderer wrappers have no externally observable effects and now carry explicit PURE annotations; no findings are grandfathered."
+        },
+        {
+          "kind": "confirmed_bug",
+          "date": "2026-09-30",
+          "reference": "src/components/ai/semanticViabilityRegistry.test.ts",
+          "note": "Initializer traversal also found a globalThis registry assignment hidden inside a variable initializer. The registry now initializes on explicit registration, with tests proving inert imports/lookups and shared registration across module copies. Assignment/update/delete/await/tagged-template initializer work is now reported."
         }
       ]
     }

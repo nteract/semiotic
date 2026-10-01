@@ -38,8 +38,8 @@ const references = {
 
 export type NetworkChartDefinitionId = keyof typeof references
 
-export const NETWORK_CHART_DEFINITIONS = Object.fromEntries(
-  Object.entries(references).map(([name, [route, exportName, module]]) => {
+export const NETWORK_CHART_DEFINITIONS = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(references)).map(([name, [route, exportName, module]]) => {
     const spec = NETWORK_CHART_SPECS[name] ?? ATLAS_CHART_SPECS[name]
     if (!spec) throw new Error(`Missing network chart spec: ${name}`)
     const propDocs = {

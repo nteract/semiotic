@@ -54,8 +54,8 @@ const references = {
 
 export type XYChartDefinitionId = keyof typeof references
 
-export const XY_CHART_DEFINITIONS = Object.fromEntries(
-  Object.entries(references).map(([name, [route, exportName, module]]) => {
+export const XY_CHART_DEFINITIONS = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(references)).map(([name, [route, exportName, module]]) => {
     const spec = XY_CHART_SPECS[name]
     if (!spec) throw new Error(`Missing XY chart spec: ${name}`)
     const propDocs = {
