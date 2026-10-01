@@ -72,6 +72,7 @@ for (const width of [1280, 390]) {
 }
 
 const reviewedSlugs = [
+  "release-3-12-0",
   "release-3-11-0",
   "release-3-10-0",
   "release-3-9-0",
@@ -88,7 +89,7 @@ test("public blog archive exposes backdated posts and release bylines", async ({
 }, testInfo) => {
   await page.goto("/blog")
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Semiotic 3.11.0"
+    "Semiotic 3.12.0"
   )
   while (await page.getByRole("button", { name: "Show older posts" }).count()) {
     await page.getByRole("button", { name: "Show older posts" }).click()
@@ -103,7 +104,8 @@ test("public blog archive exposes backdated posts and release bylines", async ({
   for (const [slug, date] of [
     ["release-3-9-0", "2026-08-18"],
     ["release-3-10-0", "2026-09-10"],
-    ["release-3-11-0", "2026-09-27"]
+    ["release-3-11-0", "2026-09-27"],
+    ["release-3-12-0", "2026-09-30"]
   ]) {
     await page.goto(`/blog/${slug}`)
     await expect(page.locator("article time")).toHaveAttribute("datetime", date)

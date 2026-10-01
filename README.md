@@ -26,13 +26,15 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.11.2
+## What's New in 3.12.0
 
-3.11.2 adds under-layer XY bands, histogram bin selection matching, and richer
-brush controls. It also fixes reserve classification, fractional brush steps,
-time and numeric tooltip formatting, and label sizing across several charts.
+3.12.0 adds parallel perspectives for network charts and accessible direct
+manipulation controls inside XY and ordinal plots. Named chart imports ship less
+code, while server rendering, hatches, semantic gradients, and tooltip placement
+more closely match the live chart.
 
-See [the changelog](CHANGELOG.md#3112---2026-09-28) for the full list.
+See [the changelog](CHANGELOG.md#3120---2026-09-30) and
+[release post](https://semiotic.nteract.io/blog/release-3-12-0/) for the full list.
 
 ## Why Semiotic
 
@@ -49,7 +51,7 @@ Semiotic provides a workflow for generating, checking and repairing chart
 configurations. The [July 27, 2026 evaluation](evals/reports/openai-gpt-5.6-2026-07-27/README.md)
 reports model- and task-specific results; it does not guarantee first-try correctness.
 
-- **`semiotic/ai`** — a single import with the schema-backed chart capability catalog (XY, ordinal, network, realtime, geo, value, and portable recipes), optimized for LLM code generation. See `ai/surface-manifest.json` for the generated current inventory. Note: the published entry files are pre-bundled, so importing one chart from `semiotic/ai` still ships most of the bundle — treat it as a codegen/tooling surface and use family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code, at roughly half the single-chart cost.
+- **`semiotic/ai`** — a single import with the schema-backed chart capability catalog (XY, ordinal, network, realtime, geo, value, and portable recipes), optimized for LLM code generation. See `ai/surface-manifest.json` for the generated current inventory. Named imports now tree-shake across published chunks. Prefer family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code to keep the intended chart family explicit; the cold-consumer table below reports initial-load and on-demand costs.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
 - **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
 - **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
@@ -409,8 +411,8 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/network/zoom` | **182 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
 | `semiotic/network/perspective` | **2 KB** | Isometric pictograms and an accessible perspective toggle (the prop ships in ./network) |
 | `semiotic/geo` | **111 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/realtime` | **208 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **207 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime` | **209 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **208 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **1 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **263 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **263 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
@@ -429,7 +431,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/physics` | **170 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **640 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai` | **641 KB** | All schema-backed charts + validation — optimized for LLM code generation |
 | `semiotic/ai/core` | **140 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **18 KB** | DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |

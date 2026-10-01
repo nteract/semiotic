@@ -186,7 +186,7 @@ try {
       model: "externalized-runtime-dependencies",
       rationale:
         `Externalized d3 produced the smaller gzip payload in ${externalizedWebpackWins} of ${webpackCases.length} representative webpack builds and in the Next/webpack route. ` +
-        "The one bundled win was too small to justify larger common XY/ordinal/geo paths or a custom dependency contract.",
+        "Keeping d3 external also preserves consumer tree-shaking and deduplication.",
       exception:
         "None. Every directly imported d3 package remains a normal runtime dependency and a bare production-artifact import; consumer bundlers own final tree-shaking and deduplication."
     }

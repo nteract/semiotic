@@ -38,6 +38,7 @@
  *   - xy | network | geo | ordinal | realtime | hierarchy   chart-family tags
  */
 
+import Release3120 from "./entries/release-3-12-0.jsx"
 import NetworkPerspective from "./entries/network-perspective.jsx"
 import Release3110 from "./entries/release-3-11-0.jsx"
 import Release3100 from "./entries/release-3-10-0.jsx"
@@ -87,6 +88,7 @@ import AnInteroperabilityLayer from "./entries/an-interoperability-layer.jsx"
  * drafts (index listing, RSS, SEO prerender) read `blogEntries` below.
  */
 export const allBlogEntries = [
+  Release3120,
   NetworkPerspective,
   Release3110,
   Release3100,

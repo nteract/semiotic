@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-machine-baseline",
-  "capturedAt": "2026-10-01T02:26:06.456Z",
+  "capturedAt": "2026-10-01T03:51:35.476Z",
   "source": {
-    "gitCommit": "57aa315dc",
+    "gitCommit": "0c2cc7aa1",
     "artifact": "checkout npm pack --ignore-scripts",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 20
+      "changedPathCount": 38
     }
   },
   "referenceEnvironment": {
@@ -98,16 +98,16 @@
       "method": "npm pack --ignore-scripts followed by tar -xzf inspection",
       "package": {
         "name": "semiotic",
-        "version": "3.11.2"
+        "version": "3.12.0"
       },
       "archive": {
-        "fileName": "semiotic-3.11.2.tgz",
-        "bytes": 5988504,
-        "sha1": "ae17aa65446ef55461dcad9343cb142e71aca81f",
-        "integrity": "sha512-dhMnQim+8zKToBtVC78gxv3o+9chWqcytmsRjztvzm3MnMCKmmuVxQjqNLX2xLd1kDhMNQyiFQTud9kduudLFw=="
+        "fileName": "semiotic-3.12.0.tgz",
+        "bytes": 5988495,
+        "sha1": "1768cc5be467994a30382e039b67469fd1aa0ae9",
+        "integrity": "sha512-ol3tBJBiR10SNRMnM7WdybKtB42GXl+/3aKqz7n93UUCvRr1TS8DlarrAbAzSRBdpzg9VSP9Jl7FY+VMoZUapw=="
       },
       "unpacked": {
-        "bytes": 21808119,
+        "bytes": 21808219,
         "fileCount": 1597
       },
       "files": [
@@ -168,7 +168,7 @@
         },
         {
           "path": "ai/dist/mcp-server.js",
-          "size": 783250,
+          "size": 783278,
           "mode": 493
         },
         {
@@ -8018,7 +8018,7 @@
         },
         {
           "path": "README.md",
-          "size": 44845,
+          "size": 44917,
           "mode": 420
         },
         {
@@ -8105,28 +8105,28 @@
         "sourceBytes": 1556,
         "timing": {
           "samplesMs": [
-            0.273,
-            0.052,
-            0.035,
-            0.034,
+            0.242,
+            0.046,
             0.033,
-            0.035,
-            0.081,
             0.032,
-            0.08,
-            0.043,
-            0.032,
-            0.03,
+            0.031,
+            0.031,
+            0.075,
             0.029,
+            0.073,
+            0.039,
+            0.029,
+            0.028,
             0.027,
-            0.028
+            0.025,
+            0.025
           ],
-          "minMs": 0.027,
-          "p50Ms": 0.034,
-          "p95Ms": 0.139,
-          "p99Ms": 0.246,
-          "maxMs": 0.273,
-          "meanMs": 0.056
+          "minMs": 0.025,
+          "p50Ms": 0.031,
+          "p95Ms": 0.125,
+          "p99Ms": 0.219,
+          "maxMs": 0.242,
+          "meanMs": 0.051
         }
       },
       {
@@ -8135,28 +8135,28 @@
         "sourceBytes": 701871,
         "timing": {
           "samplesMs": [
-            8.911,
-            7.928,
-            8.444,
-            7.921,
-            8.064,
-            8.345,
-            8.319,
-            8.317,
-            8.367,
-            8.032,
-            7.865,
-            7.976,
-            8.819,
-            11.039,
-            8.545
+            8.356,
+            7.663,
+            7.655,
+            7.654,
+            7.74,
+            7.758,
+            8.303,
+            7.874,
+            7.817,
+            7.802,
+            7.731,
+            7.62,
+            7.599,
+            7.624,
+            7.647
           ],
-          "minMs": 7.865,
-          "p50Ms": 8.319,
-          "p95Ms": 9.549,
-          "p99Ms": 10.741,
-          "maxMs": 11.039,
-          "meanMs": 8.46
+          "minMs": 7.599,
+          "p50Ms": 7.731,
+          "p95Ms": 8.319,
+          "p99Ms": 8.348,
+          "maxMs": 8.356,
+          "meanMs": 7.789
         }
       },
       {
@@ -8165,28 +8165,28 @@
         "sourceBytes": 496523,
         "timing": {
           "samplesMs": [
-            5.565,
-            5.801,
-            6.673,
-            5.611,
-            7.8,
-            5.114,
-            5.612,
-            4.824,
-            4.979,
-            5.763,
-            4.785,
-            5.948,
-            5.054,
-            5.89,
-            5.521
+            4.895,
+            4.278,
+            4.308,
+            4.162,
+            4.22,
+            4.137,
+            4.26,
+            4.26,
+            4.305,
+            4.102,
+            4.162,
+            4.094,
+            4.158,
+            4.093,
+            4.161
           ],
-          "minMs": 4.785,
-          "p50Ms": 5.611,
-          "p95Ms": 7.011,
-          "p99Ms": 7.642,
-          "maxMs": 7.8,
-          "meanMs": 5.663
+          "minMs": 4.093,
+          "p50Ms": 4.162,
+          "p95Ms": 4.484,
+          "p99Ms": 4.813,
+          "maxMs": 4.895,
+          "meanMs": 4.24
         }
       }
     ],
@@ -8197,20 +8197,20 @@
         "exportCount": 44,
         "timing": {
           "samplesMs": [
-            55.575,
-            54.531,
-            103.729,
-            160.419,
-            62.638,
-            66.178,
-            57.367
+            55.562,
+            51.392,
+            50.928,
+            51.503,
+            51.796,
+            51.18,
+            51.754
           ],
-          "minMs": 54.531,
-          "p50Ms": 62.638,
-          "p95Ms": 143.412,
-          "p99Ms": 157.018,
-          "maxMs": 160.419,
-          "meanMs": 80.062
+          "minMs": 50.928,
+          "p50Ms": 51.503,
+          "p95Ms": 54.433,
+          "p99Ms": 55.337,
+          "maxMs": 55.562,
+          "meanMs": 52.017
         }
       },
       {
@@ -8219,20 +8219,20 @@
         "exportCount": 14,
         "timing": {
           "samplesMs": [
-            67.15,
-            66.107,
-            65.9,
-            64.873,
-            67.719,
-            71.477,
-            68.926
+            64.635,
+            61.204,
+            60.018,
+            60.228,
+            60.305,
+            60.885,
+            60.123
           ],
-          "minMs": 64.873,
-          "p50Ms": 67.15,
-          "p95Ms": 70.712,
-          "p99Ms": 71.324,
-          "maxMs": 71.477,
-          "meanMs": 67.45
+          "minMs": 60.018,
+          "p50Ms": 60.305,
+          "p95Ms": 63.606,
+          "p99Ms": 64.429,
+          "maxMs": 64.635,
+          "meanMs": 61.057
         }
       },
       {
@@ -8241,20 +8241,20 @@
         "exportCount": 121,
         "timing": {
           "samplesMs": [
-            21.422,
-            20.898,
-            40.429,
-            20.869,
-            21.575,
-            30.333,
-            20.758
+            19.061,
+            19.325,
+            19.146,
+            18.914,
+            18.97,
+            19.2,
+            19.554
           ],
-          "minMs": 20.758,
-          "p50Ms": 21.422,
-          "p95Ms": 37.401,
-          "p99Ms": 39.824,
-          "maxMs": 40.429,
-          "meanMs": 25.183
+          "minMs": 18.914,
+          "p50Ms": 19.146,
+          "p95Ms": 19.485,
+          "p99Ms": 19.54,
+          "maxMs": 19.554,
+          "meanMs": 19.167
         }
       }
     ],
@@ -8272,28 +8272,28 @@
       "svgSha256": "49c88f739517af77ae9b9a4a74356f5bf7f44bc824c0d740000103dde078e0e7",
       "timing": {
         "samplesMs": [
-          1.64,
-          2.059,
-          2.053,
-          1.163,
-          1.264,
-          0.999,
-          2.681,
-          1.596,
-          1.383,
-          1.287,
-          1.253,
-          1.746,
-          1.24,
-          1.152,
+          1.6,
+          1.757,
+          1.499,
+          1.04,
+          1.198,
+          0.953,
+          2.439,
+          1.474,
+          1.282,
+          1.223,
+          1.192,
+          1.489,
+          1.133,
+          1.098,
           0.975
         ],
-        "minMs": 0.975,
-        "p50Ms": 1.287,
-        "p95Ms": 2.245,
-        "p99Ms": 2.593,
-        "maxMs": 2.681,
-        "meanMs": 1.499
+        "minMs": 0.953,
+        "p50Ms": 1.223,
+        "p95Ms": 1.962,
+        "p99Ms": 2.344,
+        "maxMs": 2.439,
+        "meanMs": 1.357
       }
     },
     "workers": [
@@ -8303,20 +8303,20 @@
         "sourceBytes": 9034,
         "timing": {
           "samplesMs": [
-            38.722,
-            39.2,
-            40.268,
-            37.855,
-            48.086,
-            44.023,
-            39.576
+            39.565,
+            33.462,
+            32.455,
+            32.313,
+            32.351,
+            32.864,
+            32.482
           ],
-          "minMs": 37.855,
-          "p50Ms": 39.576,
-          "p95Ms": 46.867,
-          "p99Ms": 47.842,
-          "maxMs": 48.086,
-          "meanMs": 41.104
+          "minMs": 32.313,
+          "p50Ms": 32.482,
+          "p95Ms": 37.734,
+          "p99Ms": 39.199,
+          "maxMs": 39.565,
+          "meanMs": 33.642
         }
       },
       {
@@ -8325,20 +8325,20 @@
         "sourceBytes": 50042,
         "timing": {
           "samplesMs": [
-            20.232,
-            19.235,
-            18.756,
-            19.286,
-            17.991,
-            19.073,
-            19.231
+            18.242,
+            16.422,
+            16.317,
+            16.582,
+            16.63,
+            16.624,
+            15.944
           ],
-          "minMs": 17.991,
-          "p50Ms": 19.231,
-          "p95Ms": 19.948,
-          "p99Ms": 20.175,
-          "maxMs": 20.232,
-          "meanMs": 19.115
+          "minMs": 15.944,
+          "p50Ms": 16.582,
+          "p95Ms": 17.758,
+          "p99Ms": 18.145,
+          "maxMs": 18.242,
+          "meanMs": 16.68
         }
       }
     ],
@@ -8346,15 +8346,15 @@
       "root": "docs/build",
       "compression": "gzip level 9 applied independently to each emitted file",
       "total": {
-        "fileCount": 2053,
-        "rawBytes": 115087302,
-        "gzipBytes": 39433885
+        "fileCount": 2055,
+        "rawBytes": 115178270,
+        "gzipBytes": 39487691
       },
       "groups": {
         "javascript": {
           "fileCount": 1135,
-          "rawBytes": 21770856,
-          "gzipBytes": 6158399
+          "rawBytes": 21779120,
+          "gzipBytes": 6160326
         },
         "stylesheet": {
           "fileCount": 89,
@@ -8362,21 +8362,21 @@
           "gzipBytes": 233725
         },
         "html": {
-          "fileCount": 401,
-          "rawBytes": 12283186,
-          "gzipBytes": 2721652
+          "fileCount": 402,
+          "rawBytes": 12298941,
+          "gzipBytes": 2725828
         },
         "other": {
-          "fileCount": 428,
-          "rawBytes": 80013092,
-          "gzipBytes": 30320109
+          "fileCount": 429,
+          "rawBytes": 80080041,
+          "gzipBytes": 30367812
         }
       }
     },
     "mcp": {
       "entry": {
         "path": "ai/dist/mcp-server.js",
-        "sourceBytes": 783250
+        "sourceBytes": 783278
       },
       "profile": "public",
       "protocolVersion": "2025-06-18",
@@ -8384,35 +8384,35 @@
       "initialize": {
         "timing": {
           "samplesMs": [
-            586.114,
-            463.301,
-            458.387,
-            455.587,
-            438.046
+            584.042,
+            404.351,
+            408.01,
+            407.117,
+            406.465
           ],
-          "minMs": 438.046,
-          "p50Ms": 458.387,
-          "p95Ms": 561.551,
-          "p99Ms": 581.202,
-          "maxMs": 586.114,
-          "meanMs": 480.287
+          "minMs": 404.351,
+          "p50Ms": 407.117,
+          "p95Ms": 548.835,
+          "p99Ms": 577,
+          "maxMs": 584.042,
+          "meanMs": 441.997
         }
       },
       "toolsList": {
         "timing": {
           "samplesMs": [
-            3.134,
-            2.673,
-            2.675,
-            2.559,
-            3.224
+            2.662,
+            2.442,
+            2.366,
+            2.402,
+            2.397
           ],
-          "minMs": 2.559,
-          "p50Ms": 2.675,
-          "p95Ms": 3.206,
-          "p99Ms": 3.221,
-          "maxMs": 3.224,
-          "meanMs": 2.853
+          "minMs": 2.366,
+          "p50Ms": 2.402,
+          "p95Ms": 2.618,
+          "p99Ms": 2.653,
+          "maxMs": 2.662,
+          "meanMs": 2.454
         }
       }
     }
