@@ -188,7 +188,8 @@ const ENTRY_GRAPHS = [
   // a dev warning for unplaced decorations). Measures 164.7 KiB gzip.
   // Bumped 165.5→166.5: the shared hatch tile, var()-safe label boxes, and
   // tooltip flip state measure 165.8 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 166.5 },
+  // Shared lazy-module loading changes measure 166.7 KiB; retain narrow headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 167 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -365,7 +366,8 @@ const ENTRY_GRAPHS = [
   // place their decorations under a perspective (288.7 KiB measured).
   // Bumped 289.5→290.5: the shared hatch tile, var()-safe label boxes, and
   // tooltip flip state measure 289.8 KiB gzip.
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 290.5 },
+  // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 291 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

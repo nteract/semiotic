@@ -6,7 +6,7 @@ import { expectTooltipWithinPlot, waitForRafs } from "./helpers"
 // Discover the actual split artifact, keeping this test valid across hashes.
 const transitionChunks = readdirSync(resolve("dist")).filter(file =>
   /^c-.*\.min\.js$/.test(file) &&
-  /as xyTransitionEngine[},]/.test(readFileSync(resolve("dist", file), "utf8"))
+  /\bas\s+xyTransitionEngine\s*[},]/.test(readFileSync(resolve("dist", file), "utf8"))
 )
 
 async function pointCenter(canvas: Locator) {
