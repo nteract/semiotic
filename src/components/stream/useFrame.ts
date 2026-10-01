@@ -329,12 +329,14 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // ── Margin merge + adjusted dimensions ────────────────────────────────
   // Memoized so frames using `margin` as a useMemo dependency don't loop.
   const hasTitle = Boolean(input.title)
-  const hasTopLegend = Boolean(input.legend) && input.legendPosition === "top"
   const margin = useMemo<FrameMargin>(() => {
+    // The top-legend floor belongs to the legend reservation (here, or in the
+    // chart when `legendMarginReserved`), so the compact-frame cap below can
+    // shrink it like any other legend side. Flooring it here first would put
+    // it in the baseline the cap never goes below.
     const resolved = reserveFrameChromeMargin(
       { ...input.marginDefault, ...input.userMargin },
       hasTitle,
-      hasTopLegend,
     )
     if (input.legend && !input.legendMarginReserved) {
       const baseline = { ...resolved }
@@ -359,7 +361,6 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     input.axisChrome,
     input.legendMarginReserved,
     hasTitle,
-    hasTopLegend,
     legendSize,
   ])
   // Keep layouts nondegenerate when chrome consumes the available space.

@@ -21,8 +21,12 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(stackedAreaXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureStackedAreaChartRegistrations(): void {
+  registerXYPlugin(stackedAreaXYPlugin)
+}
 
 /**
  * StackedAreaChart component props
@@ -273,7 +277,8 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
  * />
  * ```
  */
-export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const StackedAreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function StackedAreaChart<TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureStackedAreaChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -463,8 +468,7 @@ export const StackedAreaChart = forwardRef(function StackedAreaChart<TDatum exte
   if (validationError) return <ChartError componentName="StackedAreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="StackedAreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "StackedAreaChart") as unknown as {
   <TDatum extends Datum = Datum>(props: StackedAreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-StackedAreaChart.displayName = "StackedAreaChart"

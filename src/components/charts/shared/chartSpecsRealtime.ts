@@ -1,6 +1,12 @@
 import type { ChartSpec } from "./chartSpecCore"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
+const VALUE_BANDS_PROP_SPEC = {
+  type: "array",
+  description:
+    "Split each unstacked bar's fill at value edges: [{ upTo?: number, fill: color | { type: \"hatch\", background?, stroke?, lineWidth?, spacing?, angle?, lineOpacity? } }]. Bands are ordered by upTo; a last band without upTo covers every higher value, and values no band covers keep the bar fill. Each bar stays one mark with its bin datum. Stacked (categoryAccessor) bins ignore it."
+} as const
+
 export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
   RealtimeLineChart: {
     name: "RealtimeLineChart",
@@ -75,6 +81,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
       axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them." },
       styleRules: STYLE_RULES_PROP_SPEC,
+      valueBands: VALUE_BANDS_PROP_SPEC,
       binSize: {
         type: "number",
         description: "Time bin size in milliseconds (required)"
@@ -159,6 +166,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       showValueAxis: { type: "boolean", description: "Show the value axis; false removes its default margin." },
       axes: { type: "array", description: "Shared XY axes config: orient, visible, label, ticks, tickValues, grid. Its entries override showTimeAxis/showValueAxis; an orientation it leaves out still follows them." },
       styleRules: STYLE_RULES_PROP_SPEC,
+      valueBands: VALUE_BANDS_PROP_SPEC,
       data: { type: "array", description: "Array of temporal observations" },
       binSize: {
         type: "number",

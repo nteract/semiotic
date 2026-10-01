@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
+  adoptRuleIntoBaseline,
   calculateRuleScore,
   evidenceDigest,
   validateEvidenceCursor,
@@ -111,5 +112,54 @@ describe("custom lint lifecycle", () => {
       validateEvidenceCursor(registry(removed), cursor).join("\n"),
       /evidence was removed/
     )
+  })
+})
+
+describe("custom lint rule adoption", () => {
+  const ruleIdOf = key => key.split(" :: ")[0]
+  const existing = candidate({ id: "semiotic/existing-rule" })
+  const adopted = candidate({ id: "semiotic/new-rule", evidence: [event("confirmed_bug", 1)], score: 6 })
+  const baseline = {
+    schemaVersion: 1,
+    initialized: true,
+    evidenceCursor: { [existing.id]: { count: 0, digest: evidenceDigest([]) } },
+    findings: { "semiotic/existing-rule :: a.ts :: m :: x": 1 }
+  }
+  const twoRules = { schemaVersion: 1, policy, rules: [existing, adopted] }
+
+  it("records the cursor and grandfathers only the adopted rule's findings", () => {
+    const result = adoptRuleIntoBaseline({
+      registry: twoRules,
+      baseline,
+      ruleId: adopted.id,
+      currentFindings: {
+        "semiotic/existing-rule :: a.ts :: m :: x": 1,
+        "semiotic/new-rule :: b.ts :: m :: y": 2
+      },
+      ruleIdOf
+    })
+    assert.deepEqual(result.errors, [])
+    assert.deepEqual(result.baseline.evidenceCursor[adopted.id], { count: 1, digest: evidenceDigest(adopted.evidence) })
+    assert.equal(result.baseline.findings["semiotic/new-rule :: b.ts :: m :: y"], 2)
+    assert.deepEqual(validateEvidenceCursor(twoRules, result.baseline.evidenceCursor), [])
+  })
+
+  it("refuses re-adoption, unknown rules, and drift in other rules", () => {
+    const adoptedOnce = { ...baseline, evidenceCursor: { ...baseline.evidenceCursor, [adopted.id]: { count: 1, digest: "x" } } }
+    assert.match(adoptRuleIntoBaseline({ registry: twoRules, baseline: adoptedOnce, ruleId: adopted.id, currentFindings: baseline.findings, ruleIdOf }).errors.join("\n"), /already adopted/)
+    assert.match(adoptRuleIntoBaseline({ registry: twoRules, baseline, ruleId: "semiotic/missing", currentFindings: baseline.findings, ruleIdOf }).errors.join("\n"), /not in the registry/)
+    assert.match(adoptRuleIntoBaseline({ registry: twoRules, baseline, ruleId: adopted.id, currentFindings: {}, ruleIdOf }).errors.join("\n"), /findings differ/)
+  })
+
+  it("refuses to grandfather findings for an official rule", () => {
+    const official = { ...adopted, status: "official" }
+    const result = adoptRuleIntoBaseline({
+      registry: { schemaVersion: 1, policy, rules: [existing, official] },
+      baseline,
+      ruleId: official.id,
+      currentFindings: { ...baseline.findings, "semiotic/new-rule :: b.ts :: m :: y": 1 },
+      ruleIdOf
+    })
+    assert.match(result.errors.join("\n"), /official rule cannot adopt/)
   })
 })

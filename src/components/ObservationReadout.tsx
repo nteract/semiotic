@@ -5,6 +5,7 @@ import type { Datum } from "./charts/shared/datumTypes"
 import { unwrapDatum } from "./recipes/recipeUtils"
 import type { ChartObservation } from "./store/ObservationStore"
 import { useChartObserver } from "./store/useObservation"
+import { withDisplayName } from "./charts/shared/withDisplayName"
 
 const DEFAULT_OBSERVATION_TYPES: ChartObservation["type"][] = [
   "hover",
@@ -64,7 +65,7 @@ export interface ObservationReadoutProps<TDatum extends Datum = Datum> {
  * animation. It can subscribe through `LinkedCharts`, or receive the latest
  * event directly from a chart's `onObservation` callback.
  */
-export function ObservationReadout<TDatum extends Datum = Datum>({
+export const ObservationReadout = /* @__PURE__ */ withDisplayName(function ObservationReadout<TDatum extends Datum = Datum>({
   children,
   observation: directObservation,
   chartId,
@@ -93,7 +94,7 @@ export function ObservationReadout<TDatum extends Datum = Datum>({
     },
     content
   )
-}
+}, "ObservationReadout")
 
 /** Return the user datum carried by an observation, or null for end events. */
 export function observedDatum<TDatum extends Datum = Datum>(
@@ -115,4 +116,3 @@ export function observedDatum<TDatum extends Datum = Datum>(
   return null
 }
 
-ObservationReadout.displayName = "ObservationReadout"

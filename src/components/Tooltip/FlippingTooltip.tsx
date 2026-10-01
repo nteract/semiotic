@@ -56,6 +56,12 @@ export const hasOwnChrome = hasOwnTooltipChrome
  * After measuring the actual tooltip size via ref, repositions precisely to
  * prevent clipping against container edges.
  *
+ * Placement is exposed on the wrapper as `data-placement` (`"pending"`
+ * before measurement, then `"placed"`) and `data-flip-x` / `data-flip-y`.
+ * A consumer CSS `transition` on `left`/`top` eases same-side moves only:
+ * the first placement and any flip set an inline `transition: none`, so the
+ * tooltip never glides in from the pointer or swings across it.
+ *
  * Defensive behaviors:
  *
  *   - **Empty content guard.** Null, false and other React-empty callback
@@ -129,19 +135,26 @@ export function FlippingTooltip({
     return () => observer.disconnect()
   }, [className, containerWidth, containerHeight, positionFinite, hasContent])
 
+  // The placement of the last committed render. Read during render and
+  // written after commit, so a StrictMode double render compares against the
+  // same value.
+  const committedPlacement = React.useRef<{ flipX: boolean; flipY: boolean } | null>(null)
+
   const offset = 12
 
   // Compute position
   let left = x
   let top = y
   let transform: string
+  let flipX = false
+  let flipY = false
   if (measured) {
     // Precise flip based on actual tooltip dimensions
     const spaceRight = containerWidth - x
     const spaceBelow = containerHeight - y
 
-    const flipX = spaceRight < measured.width + offset
-    const flipY = spaceBelow < measured.height + offset
+    flipX = spaceRight < measured.width + offset
+    flipY = spaceBelow < measured.height + offset
 
     // Flipping alone can overflow the opposite edge in a narrow chart, or
     // when a camera projects the hovered mark's center outside the viewport.
@@ -174,6 +187,16 @@ export function FlippingTooltip({
   // tooltip is never transparent. Prefer intrinsic width, capped to the plot
   // width so block content can wrap before placement is measured. Border-box
   // sizing includes the default chrome's padding in this cap.
+  const placement = measured ? { flipX, flipY } : null
+  const previous = committedPlacement.current
+  // A consumer's CSS transition should only ease moves along the same side.
+  // The first measured placement and every flip jump instead.
+  const instantMove = !placement || !previous ||
+    previous.flipX !== placement.flipX || previous.flipY !== placement.flipY
+  React.useLayoutEffect(() => {
+    committedPlacement.current = placement
+  })
+
   const ownsChrome = contentOwnsChrome || hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
   const compositeClassName = ownsChrome
@@ -189,12 +212,16 @@ export function FlippingTooltip({
     <div
       ref={ref}
       className={compositeClassName}
+      data-placement={placement ? "placed" : "pending"}
+      data-flip-x={flipX ? "true" : "false"}
+      data-flip-y={flipY ? "true" : "false"}
       style={{
         ...(chromeStyle || {}),
         position: "absolute",
         left: margin.left + left,
         top: margin.top + top,
         transform,
+        ...(instantMove && { transition: "none" }),
         pointerEvents: "none",
         zIndex,
         width: "max-content",

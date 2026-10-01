@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import * as React from "react"
+import { renderToString } from "react-dom/server"
 
 type ChartType =
   | "line"
@@ -104,6 +106,36 @@ const cases: Array<{
     has: ["swarm"],
     missing: ["line"],
   },
+  {
+    name: "RealtimeLineChart",
+    load: () => import("../../charts/realtime/RealtimeLineChart"),
+    has: ["line"],
+    missing: ["area", "bar"],
+  },
+  {
+    name: "RealtimeWaterfallChart",
+    load: () => import("../../charts/realtime/RealtimeWaterfallChart"),
+    has: ["waterfall"],
+    missing: ["line"],
+  },
+  {
+    name: "RealtimeHeatmap",
+    load: () => import("../../charts/realtime/RealtimeHeatmap"),
+    has: ["heatmap"],
+    missing: ["line"],
+  },
+  {
+    name: "QuadrantChart",
+    load: () => import("../../charts/xy/QuadrantChart"),
+    has: ["scatter"],
+    missing: ["line", "bubble"],
+  },
+  {
+    name: "ConnectedScatterplot",
+    load: () => import("../../charts/xy/ConnectedScatterplot"),
+    has: ["scatter"],
+    missing: ["line", "bubble"],
+  },
 ]
 
 describe("HOC module registration", () => {
@@ -112,7 +144,10 @@ describe("HOC module registration", () => {
     vi.doUnmock("../StreamXYFrame")
   })
 
-  it.each(cases)("$name import registers only its plugins", async ({ load, has, missing }) => {
+  // Registration runs when the chart renders, not when its module is
+  // imported: a module-scope call would be retained by consumer bundlers for
+  // every chart that shares a published chunk with this one.
+  it.each(cases)("$name registers only its plugins when it renders", async ({ name, load, has, missing }) => {
     vi.resetModules()
     vi.doMock("../StreamXYFrame", () => ({
       __esModule: true,
@@ -120,8 +155,16 @@ describe("HOC module registration", () => {
     }))
     const { getXYPlugin: before } = await import("./registry")
     expect(before(has[0])).toBeUndefined()
-    await load()
+    const mod = (await load()) as Record<string, React.ComponentType<Record<string, unknown>>>
     const { getXYPlugin } = await import("./registry")
+    for (const chartType of [...has, ...missing]) {
+      expect(getXYPlugin(chartType), `${chartType} must not register at import`).toBeUndefined()
+    }
+    try {
+      renderToString(React.createElement(mod[name], { width: 200, height: 120 }))
+    } catch {
+      // Registration precedes validation; a chart may reject empty props.
+    }
     for (const chartType of has) {
       expect(getXYPlugin(chartType), `${chartType} should be registered`).toBeTruthy()
     }

@@ -69,7 +69,7 @@ const CORE_RELATIONS: ArtifactRelation[] = [
   "abstention"
 ]
 
-const POLICY_RULE_KEYS = Object.keys(
+const POLICY_RULE_KEYS = /* @__PURE__ */ Object.keys(
   BASE_RULES
 ) as (keyof ArtifactPolicyRules)[]
 const POLICY_FIELDS = new Set([

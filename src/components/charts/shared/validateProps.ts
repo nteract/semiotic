@@ -16,6 +16,7 @@ import {
 import { VALIDATION_MAP } from "./validationMap"
 import type { PropType, DataShape } from "./chartSpecCore"
 import { closestMatch } from "./stringDistance"
+import { findUnknownAxisConfigKeys } from "../../stream/axisConfigKeys"
 
 // Re-export for external consumers (diagnoseConfig, chartConfig, etc.)
 export { VALIDATION_MAP }
@@ -139,7 +140,22 @@ function validateFrameProps(props: Datum): string[] {
     return []
   }
 
-  const legendLayout = (frameProps as Datum).legendLayout
+  return [
+    ...validateAxisConfigKeys((frameProps as Datum).axes, "frameProps.axes"),
+    ...validateLegendLayout(frameProps as Datum),
+  ]
+}
+
+/** Axis config objects silently ignore keys; flag the ones nothing reads. */
+function validateAxisConfigKeys(axes: unknown, path: string): string[] {
+  return findUnknownAxisConfigKeys(axes).map(({ index, key, suggestion }) =>
+    `Unknown "${path}[${index}]" key "${key}" is ignored.` +
+      (suggestion ? ` Did you mean "${suggestion}"?` : ""),
+  )
+}
+
+function validateLegendLayout(frameProps: Datum): string[] {
+  const legendLayout = frameProps.legendLayout
   if (
     legendLayout == null ||
     typeof legendLayout !== "object" ||
@@ -299,6 +315,9 @@ export function validateProps(
       errors.push(msg)
     }
   }
+
+  // Histogram charts take axis configs as a top-level prop.
+  if (knownProps.has("axes")) errors.push(...validateAxisConfigKeys(props.axes, "axes"))
 
   // 5. Data shape + accessor validation (delegate to existing helpers)
   if (spec.dataShape === "array") {

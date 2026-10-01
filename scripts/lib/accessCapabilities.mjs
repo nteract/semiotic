@@ -102,9 +102,9 @@ ${renderedRows}
 
 export const CHART_ACCESS_CAPABILITIES: Readonly<
   Record<string, GeneratedChartAccessCapabilities>
-> = Object.freeze(
-  Object.fromEntries(
-    CAPABILITY_ROWS.map(([name, flags, markNavigation = "unsupported"]) => [
+> = /* @__PURE__ */ Object.freeze(
+  /* @__PURE__ */ Object.fromEntries(
+    /* @__PURE__ */ CAPABILITY_ROWS.map(([name, flags, markNavigation = "unsupported"]) => [
       name,
       {
         supportsSSR: Boolean(flags & 1),

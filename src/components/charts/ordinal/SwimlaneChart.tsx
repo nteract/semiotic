@@ -22,6 +22,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Data array. Omit for push API mode. */
@@ -133,7 +134,7 @@ export interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseCh
  * />
  * ```
  */
-export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SwimlaneChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function SwimlaneChart<TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -360,8 +361,7 @@ export const SwimlaneChart = forwardRef(function SwimlaneChart<TDatum extends Da
   if (validationError) return <ChartError componentName="SwimlaneChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="SwimlaneChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "SwimlaneChart") as unknown as {
   <TDatum extends Datum = Datum>(props: SwimlaneChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-SwimlaneChart.displayName = "SwimlaneChart"

@@ -15,7 +15,6 @@ import type {
   RealtimeEdge
 } from "../networkTypes"
 import type { Style } from "../types"
-import { registerLayoutPlugin } from "./registry"
 
 const DEFAULT_PALETTE = schemeCategory10 as readonly string[]
 
@@ -347,8 +346,6 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
     return { sceneNodes, sceneEdges, labels }
   }
 }
-
-registerLayoutPlugin("chord", chordLayoutPlugin)
 
 /**
  * Translate all absolute coordinates in an SVG path string by (dx, dy).

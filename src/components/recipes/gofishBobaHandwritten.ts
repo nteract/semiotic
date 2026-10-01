@@ -130,4 +130,4 @@ function buildBobaDisplayList(): GofishDisplayListDocument {
 }
 
 /** The hand-emitted boba DisplayList document (computed once, deterministic). */
-export const bobaDisplayList: GofishDisplayListDocument = buildBobaDisplayList()
+export const bobaDisplayList: GofishDisplayListDocument = /* @__PURE__ */ buildBobaDisplayList()

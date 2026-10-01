@@ -23,8 +23,12 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureNetworkCustomChartRegistrations(): void {
+  registerNetworkPerspective()
+}
 
 export interface NetworkCustomChartProps<
   TNode extends Datum = Datum,
@@ -113,11 +117,12 @@ export interface NetworkCustomChartProps<
  * />
  * ```
  */
-export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
+export const NetworkCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function NetworkCustomChart<
   TNode extends Datum = Datum,
   TEdge extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: NetworkCustomChartProps<TNode, TEdge, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureNetworkCustomChartRegistrations()
   const {
     nodes,
     edges,
@@ -283,7 +288,7 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
       <StreamNetworkFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "NetworkCustomChart") as unknown as {
   <
     TNode extends Datum = Datum,
     TEdge extends Datum = Datum,
@@ -293,5 +298,3 @@ export const NetworkCustomChart = forwardRef(function NetworkCustomChart<
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(NetworkCustomChart as { displayName?: string }).displayName = "NetworkCustomChart"

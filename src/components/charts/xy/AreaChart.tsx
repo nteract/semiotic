@@ -28,15 +28,19 @@ import {
   normalizeColorGradient,
   normalizeGradient,
   normalizeSemanticGradient,
-  reverseGradient,
+  semanticAreaFillGradient,
   semanticLineStopsForGradient,
   type ColorGradientInput,
   type GradientInput,
   type SemanticGradientInput,
   type SemanticGradientStopInput,
 } from "../shared/gradient"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(areaXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureAreaChartRegistrations(): void {
+  registerXYPlugin(areaXYPlugin)
+}
 
 export type SemanticGradientStop = SemanticGradientStopInput
 
@@ -145,7 +149,8 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
 
   /**
    * Color the area's top-edge line with hard value bands derived from
-   * `semanticGradient`. Stop opacity is intentionally ignored for the line.
+   * `semanticGradient`. Each band takes its stop's color and opacity, and the
+   * lowest stop's band extends down to the y-domain minimum.
    * Set to `false` to retain the normal solid stroke (or `lineGradient`).
    * @default true when semanticGradient is set
    */
@@ -343,7 +348,8 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
  * return <AreaChart ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
  * ```
  */
-export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const AreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureAreaChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -425,7 +431,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   )
   const resolvedGradientFill = useMemo(() => {
     if (resolvedSemanticGradient?.stops.length) {
-      return reverseGradient(resolvedSemanticGradient)
+      return semanticAreaFillGradient(resolvedSemanticGradient)
     }
     return normalizeGradient(gradientFill)
   }, [resolvedSemanticGradient, gradientFill])
@@ -583,8 +589,7 @@ export const AreaChart = forwardRef(function AreaChart<TDatum extends Datum = Da
   if (validationError) return <ChartError componentName="AreaChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "AreaChart") as unknown as {
   <TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-AreaChart.displayName = "AreaChart"

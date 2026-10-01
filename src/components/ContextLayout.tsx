@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { withDisplayName } from "./charts/shared/withDisplayName"
 
 export interface ContextLayoutProps {
   /** The main chart (renders at full size in the primary slot) */
@@ -39,7 +40,7 @@ export interface ContextLayoutProps {
  * </ContextLayout>
  * ```
  */
-export function ContextLayout({
+export const ContextLayout = /* @__PURE__ */ withDisplayName(function ContextLayout({
   children,
   context,
   position = "right",
@@ -101,6 +102,5 @@ export function ContextLayout({
       </div>
     </>
   )
-}
+}, "ContextLayout")
 
-ContextLayout.displayName = "ContextLayout"

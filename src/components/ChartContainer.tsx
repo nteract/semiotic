@@ -638,7 +638,7 @@ function ErrorDisplay({ error }: { error: string | React.ReactNode }) {
   )
 }
 
-export const ChartContainer = React.forwardRef<
+export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   ChartContainerHandle,
   ChartContainerProps
 >(function ChartContainer(

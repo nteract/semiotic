@@ -77,6 +77,7 @@ import {
   gauntletSemanticItem
 } from "./gauntletChrome"
 import type { GauntletChartProps } from "./gauntletChartProps"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export * from "./gauntletPublic"
 
@@ -103,7 +104,7 @@ export * from "./gauntletPublic"
  * ```
  * Compose timed gates, capacity controls, staggered starts, and projections through the corresponding props.
  */
-export const GauntletChart = forwardRef(function GauntletChart<
+export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GauntletChart<
   TDatum extends Datum = Datum
 >(props: GauntletChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -774,14 +775,12 @@ export const GauntletChart = forwardRef(function GauntletChart<
     />,
     layoutMode
   )
-}) as unknown as {
+}), "GauntletChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }
-;(GauntletChart as { displayName?: string }).displayName = "GauntletChart"
-
 /** @deprecated Typo alias. Use {@link GauntletChart}; removed next major. */
 export const GuantletChart = GauntletChart
 export default GauntletChart

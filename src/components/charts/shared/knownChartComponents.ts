@@ -71,7 +71,7 @@ export const KNOWN_CHART_COMPONENTS = [
   "BigNumber"
 ] as const
 
-const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = new Set(
+const KNOWN_CHART_COMPONENT_SET: ReadonlySet<string> = /* @__PURE__ */ new Set(
   KNOWN_CHART_COMPONENTS,
 )
 

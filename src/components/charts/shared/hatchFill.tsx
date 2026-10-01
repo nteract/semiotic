@@ -26,7 +26,7 @@ import { fnv1a32 } from "../../utils/hash"
  * ```
  */
 import * as React from "react"
-import { createHatchPattern } from "./hatchPattern"
+import { createHatchPattern, hatchTileGeometry } from "./hatchPattern"
 import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 
 type AnnotationGradientDirection = "horizontal" | "vertical"
@@ -46,11 +46,15 @@ export interface HatchFill {
   stroke?: string
   /** Width of the diagonal lines in px. @default 1.5 */
   lineWidth?: number
-  /** Spacing between lines in px. @default 6 */
+  /** Perpendicular distance between line centers in px. @default 6 */
   spacing?: number
-  /** Angle of the lines in degrees (0 = horizontal, 45 = diagonal). @default 45 */
+  /**
+   * Angle of the lines in degrees. 0 is horizontal; positive angles turn
+   * clockwise on screen, so 45 draws `\` and -45 draws `/`. Canvas and SVG
+   * draw the same angle. @default 45
+   */
   angle?: number
-  /** Opacity applied to the hatch lines (SVG `<line>` stroke opacity). @default 1 */
+  /** Opacity of the hatch lines on canvas and SVG (the background stays opaque). @default 1 */
   lineOpacity?: number
 }
 
@@ -128,6 +132,7 @@ export function resolveHatchCanvasPattern(
       lineWidth: h.lineWidth,
       spacing: h.spacing,
       angle: h.angle,
+      lineOpacity: h.lineOpacity,
     },
     ctx,
   )
@@ -142,8 +147,9 @@ export function resolveHatchCanvasPattern(
 /**
  * Render a `HatchFill` descriptor as an SVG `<pattern>` element.
  * Place the returned element inside `<defs>` (or anywhere valid) and set
- * `fill="url(#id)"` on the target shape. Mirrors the canvas tile exactly:
- * parallel lines rotated by `angle` so the two backends read identically.
+ * `fill="url(#id)"` on the target shape. Draws the same tile as the canvas
+ * pattern (`hatchTileGeometry`): one horizontal line per `spacing`,
+ * rotated by `angle`, so the two backends read identically.
  */
 export function hatchPatternDef(h: HatchFill, id: string): React.ReactElement {
   const {
@@ -154,22 +160,28 @@ export function hatchPatternDef(h: HatchFill, id: string): React.ReactElement {
     angle = 45,
     lineOpacity = 1,
   } = h
-  const size = Math.max(8, Math.ceil(spacing * 2))
+  const tile = hatchTileGeometry(spacing)
   return (
     <pattern
       key={id}
       id={id}
-      width={size}
-      height={size}
+      width={tile.width}
+      height={tile.height}
       patternUnits="userSpaceOnUse"
       patternTransform={angle !== 0 ? `rotate(${angle})` : undefined}
     >
-      {background && background !== "transparent" && (
-        <rect width={size} height={size} fill={background} />
+      {background && background !== "transparent" && background !== "none" && (
+        <rect width={tile.width} height={tile.height} fill={background} />
       )}
-      {/* Parallel vertical lines; patternTransform rotates them to `angle`. */}
-      <line x1={0} y1={0} x2={0} y2={size} stroke={stroke} strokeWidth={lineWidth} strokeOpacity={lineOpacity} />
-      <line x1={spacing} y1={0} x2={spacing} y2={size} stroke={stroke} strokeWidth={lineWidth} strokeOpacity={lineOpacity} />
+      <line
+        x1={0}
+        y1={tile.lineY}
+        x2={tile.width}
+        y2={tile.lineY}
+        stroke={stroke}
+        strokeWidth={lineWidth}
+        {...(lineOpacity !== 1 ? { strokeOpacity: lineOpacity } : {})}
+      />
     </pattern>
   )
 }

@@ -24,6 +24,7 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { getMinMax } from "../shared/minMax"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
+import { withDisplayName } from "../shared/withDisplayName"
 
 const DEFAULT_SIZE_RANGE: [number, number] = [3, 30]
 const SPARKLINE_SIZE_RANGE: [number, number] = [1, 4]
@@ -150,7 +151,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
  * />
  * ```
  */
-export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ProportionalSymbolMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "geo-points", frameRef })
 
@@ -394,8 +395,7 @@ export const ProportionalSymbolMap = forwardRef(function ProportionalSymbolMap<T
       <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "ProportionalSymbolMap") as unknown as {
   <TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-ProportionalSymbolMap.displayName = "ProportionalSymbolMap"

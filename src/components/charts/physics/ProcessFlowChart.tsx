@@ -59,6 +59,7 @@ import {
   processFlowChrome,
   processFlowProjectionOverlay
 } from "./processFlowOverlays"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export type { ProcessFlowStageDef, ProcessFlowProjectionMetadata }
 
@@ -188,7 +189,7 @@ function capacitySnapshotsEqual(
  * ref.current?.push({ id: "pr-42", stage: "review", work: 2 })
  * ```
  */
-export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
+export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProcessFlowChart<
   TDatum extends Datum = Datum
 >(props: ProcessFlowChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -578,8 +579,6 @@ export const ProcessFlowChart = forwardRef(function ProcessFlowChart<
     />,
     layoutMode
   )
-})
-
-;(ProcessFlowChart as { displayName?: string }).displayName = "ProcessFlowChart"
+}), "ProcessFlowChart")
 
 export default ProcessFlowChart

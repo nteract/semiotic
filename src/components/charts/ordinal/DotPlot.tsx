@@ -21,6 +21,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -99,7 +100,7 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DotPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -269,8 +270,7 @@ export const DotPlot = forwardRef(function DotPlot<TDatum extends Datum = Datum>
   }
 
   return <SafeRender componentName="DotPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "DotPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-DotPlot.displayName = "DotPlot"

@@ -18,6 +18,7 @@ import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface GeoCustomChartProps<
   TDatum extends Datum = Datum,
@@ -72,7 +73,7 @@ export interface GeoCustomChartProps<
  * polygon/point/line hit-testing, accessibility, tooltips, selection, and SSR.
  * The supplied layout owns only the scene geometry and SVG overlays.
  */
-export const GeoCustomChart = forwardRef(function GeoCustomChart<
+export const GeoCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GeoCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(
@@ -239,7 +240,7 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
       <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "GeoCustomChart") as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>
@@ -249,5 +250,3 @@ export const GeoCustomChart = forwardRef(function GeoCustomChart<
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(GeoCustomChart as { displayName?: string }).displayName = "GeoCustomChart"

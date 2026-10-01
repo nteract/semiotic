@@ -50,6 +50,8 @@ interface ParityCase {
   containedSelector?: { selector: string; count: number }
   dependencyEvidence?: DependencyXRayEvidence
   circuitEvidence?: FlowCircuitEvidence
+  /** The bottom axis must show the same tick labels on both paths. */
+  compareXTickLabels?: boolean
 }
 
 interface RenderEvidence {
@@ -741,6 +743,14 @@ test.describe("SSR / CSR parity", () => {
         for (const visual of [ssrVisual, csrVisual]) {
           await assertFlowCircuitSurface(visual, c.circuitEvidence)
         }
+      }
+      if (c.compareXTickLabels) {
+        // Tick labels only: the axis title sits directly in the axis group.
+        const tickLabels = (visual: typeof ssrVisual) =>
+          visual.locator(".semiotic-axis-bottom > g > text").allTextContents()
+        const ssrTicks = await tickLabels(ssrVisual)
+        expect(ssrTicks.length).toBeGreaterThan(2)
+        expect(await tickLabels(csrVisual)).toEqual(ssrTicks)
       }
       if (c.dependencyEvidence) {
         for (const visual of [ssrVisual, csrVisual]) {

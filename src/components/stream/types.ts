@@ -207,6 +207,11 @@ export interface AreaSceneNode {
   clipRect?: { x: number; y: number; width: number; height: number }
   /** Gradient fill from top edge to baseline. */
   fillGradient?: GradientConfig
+  /**
+   * Plot-relative y of the fill gradient's offsets 0 and 1 when it doesn't
+   * span the area's own top-to-baseline extent (`extent: "domain"`).
+   */
+  fillGradientSpan?: [number, number]
   /** Horizontal gradient for the line stroke */
   strokeGradient?: GradientConfig
   /** When false, skip hit testing (used for decorative bounds areas) */
@@ -397,6 +402,10 @@ export interface RectSceneNode {
   /** Gradient fill — same shape as the area-scene version. Runs tip → base
    *  along the bar axis (inferred from `roundedEdge`). */
   fillGradient?: GradientConfig
+  /** Value-banded fill (square vertical bars): plot-relative y extents, each
+   *  painted with its own fill in place of `style.fill`. Renderers clip each
+   *  extent to the rect, so an intro that grows the bar reveals the bands. */
+  fillBands?: Array<{ y0: number; y1: number; fill: string | HatchFill }>
   style: Style
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
@@ -554,6 +563,20 @@ export interface FrameGraphicsContext<S = StreamScales> {
 /** A foreground/background graphics value: static SVG, or a function of the
  *  frame's geometry + resolved scales. */
 export type FrameGraphicsProp<S = StreamScales> = ReactNode | ((ctx: FrameGraphicsContext<S>) => ReactNode)
+
+/**
+ * Context handed to an `interactiveGraphics` callback: the same `size`,
+ * `margin`, and resolved `scales` a `foregroundGraphics` callback receives, plus `pointerToPlot`, which
+ * maps a pointer event into plot coordinates (origin at the plot's top-left,
+ * the space the callback draws in) so a control can invert a scale directly.
+ */
+export interface InteractiveGraphicsContext<S = StreamScales> extends FrameGraphicsContext<S> {
+  pointerToPlot: (event: { clientX: number; clientY: number }) => { x: number; y: number } | null
+}
+
+/** Interactive SVG (sliders, draggable markers) layered above the chart:
+ *  static SVG, or a function of {@link InteractiveGraphicsContext}. */
+export type InteractiveGraphicsProp<S = StreamScales> = ReactNode | ((ctx: InteractiveGraphicsContext<S>) => ReactNode)
 
 export interface StreamLayout {
   width: number
@@ -884,6 +907,18 @@ export interface StreamXYFrameProps<T = Datum>
   backgroundGraphics?: FrameGraphicsProp
   /** SVG elements rendered on top of everything (in SVG overlay) */
   foregroundGraphics?: FrameGraphicsProp
+  /**
+   * Focusable SVG controls drawn over the plot (for example
+   * `DirectManipulationControl` or `DirectManipulationMarkers` from
+   * `semiotic/controls`). Unlike `foregroundGraphics`, this layer sits outside
+   * the chart's `role="img"` overlay in its own `role="group"`, so sliders stay
+   * exposed to assistive technology. Content is drawn in plot coordinates; the
+   * function form adds `pointerToPlot`. Client-only: it renders after
+   * hydration, not in server markup.
+   */
+  interactiveGraphics?: InteractiveGraphicsProp
+  /** Accessible name for the `interactiveGraphics` group. @default "Chart controls" */
+  interactiveGraphicsLabel?: string
 
   // ── Custom canvas renderers ───────────────────
   /** Canvas renderers executed before the chart-type renderers (e.g. connecting lines under points) */

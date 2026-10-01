@@ -1,6 +1,8 @@
 import * as React from "react"
 import { useRef } from "react"
 import { createControlObservationAdapter } from "./controls/controlContract"
+import { pointerToLocalPoint, type ControlPoint } from "./controls/controlPointer"
+import { keyboardSliderTarget, snapToStep } from "./controls/directManipulationMath"
 import type {
   ControlObservationCallback,
   VisualizationControlType,
@@ -21,14 +23,31 @@ export interface DirectManipulationControlProps {
   value: number
   /** Called on pointer drag or keyboard nudge. */
   onChange: (value: number) => void
-  /** Convert a pointer event in the control's frame coordinate space to a value. */
-  pointerToValue: (event: React.PointerEvent<SVGGElement>) => number | null | undefined
+  /**
+   * Convert the pointer, already mapped into the coordinate space the handle
+   * is drawn in (the same space as `x`/`y`), to a value — usually an inverted
+   * chart scale: `pointToValue={(point) => scales.y.invert(point.y)}`.
+   */
+  pointToValue?: (point: ControlPoint) => number | null | undefined
+  /**
+   * Convert a raw pointer event to a value. Use when the value depends on
+   * something other than the handle's own coordinate space; prefer
+   * `pointToValue` otherwise. One of the two is required.
+   */
+  pointerToValue?: (event: React.PointerEvent<SVGGElement>) => number | null | undefined
   /** Inclusive value domain. */
   min: number
   max: number
   /** Keyboard and pointer quantization step. @default 1 */
   step?: number
-  /** Shift+arrow nudge. @default step * 5 */
+  /**
+   * Value the step grid passes through. The default anchors it at `min`;
+   * `stepOrigin={0}` keeps absolute multiples of `step` when `min` is a
+   * moving, non-grid bound such as a neighboring handle's value.
+   * @default min
+   */
+  stepOrigin?: number
+  /** Shift+arrow and PageUp/PageDown step. @default step * 5 */
   largeStep?: number
   /** Position in the shared SVG/frame coordinate space. */
   x: number
@@ -39,6 +58,12 @@ export interface DirectManipulationControlProps {
   controlId?: string
   /** Accessible label. */
   label: string
+  /**
+   * Optional `aria-roledescription`. Leave unset so assistive technology
+   * announces the standard "slider" role, which tells users the arrow keys
+   * work; set it only when a more specific spoken role helps.
+   */
+  ariaRoleDescription?: string
   /** Optional human-readable current value. */
   valueText?: string
   /** Handle radius in CSS/SVG pixels. @default 12 */
@@ -55,7 +80,13 @@ export interface DirectManipulationControlProps {
   labelClassName?: string
   className?: string
   disabled?: boolean
+  /** A pointer drag began, or a keyboard change is about to apply. */
   onChangeStart?: (value: number) => void
+  /**
+   * The value to commit: fires on pointer release and once after each
+   * keyboard change, so a consumer that saves on release also hears
+   * keyboard users.
+   */
   onChangeEnd?: (value: number) => void
   /** Optional adapter to the same onObservation stream used by frames. */
   onObservation?: ControlObservationCallback
@@ -65,17 +96,11 @@ export interface DirectManipulationControlProps {
   chartType?: string
 }
 
-function clampAndSnap(value: number, min: number, max: number, step: number): number {
-  const clamped = Math.min(max, Math.max(min, value))
-  const snapped = min + Math.round((clamped - min) / step) * step
-  return Math.min(max, Math.max(min, Number(snapped.toFixed(12))))
-}
-
 /**
  * A small SVG-native control surface for a chart that owns its own scales.
  *
  * `DirectManipulationControl` does not know about a particular
- * Semiotic frame. The chart supplies `pointerToValue`, making this usable in
+ * Semiotic frame. The chart supplies `pointToValue` (or `pointerToValue`), making this usable in
  * XY, ordinal, geographic, radial, and custom-layout overlays without the
  * control reaching into frame internals. It contributes the repeated parts
  * every visualization control needs: pointer capture, data-domain clamping,
@@ -84,16 +109,19 @@ function clampAndSnap(value: number, min: number, max: number, step: number): nu
 export function DirectManipulationControl({
   value,
   onChange,
+  pointToValue,
   pointerToValue,
   min,
   max,
   step = 1,
+  stepOrigin = min,
   largeStep = step * 5,
   x,
   y,
   controlType = "value",
   controlId,
   label,
+  ariaRoleDescription,
   valueText,
   radius = 12,
   fill = "var(--semiotic-bg, #ffffff)",
@@ -125,11 +153,19 @@ export function DirectManipulationControl({
     [chartId, chartType, controlId, controlType, onObservation],
   )
 
+  const valueFromPointer = (event: React.PointerEvent<SVGGElement>) => {
+    if (pointToValue) {
+      const point = pointerToLocalPoint(event)
+      return point ? pointToValue(point) : null
+    }
+    return pointerToValue?.(event)
+  }
+
   const updateFromPointer = (event: React.PointerEvent<SVGGElement>) => {
     if (disabled) return
-    const next = pointerToValue(event)
+    const next = valueFromPointer(event)
     if (next == null || !Number.isFinite(next)) return
-    const snapped = clampAndSnap(next, min, max, step)
+    const snapped = snapToStep(next, min, max, step, stepOrigin)
     currentValue.current = snapped
     onChange(snapped)
     emitObservation("control-change", snapped, "pointer")
@@ -168,19 +204,21 @@ export function DirectManipulationControl({
 
   const onKeyDown = (event: React.KeyboardEvent<SVGGElement>) => {
     if (disabled) return
-    const increment = event.shiftKey ? largeStep : step
     const base = currentValue.current
-    let next: number | null = null
-    if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = base - increment
-    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = base + increment
-    if (event.key === "Home") next = min
-    if (event.key === "End") next = max
+    const next = keyboardSliderTarget(event.key, event.shiftKey, base, { min, max, step, largeStep })
     if (next === null) return
     event.preventDefault()
-    const snapped = clampAndSnap(next, min, max, step)
+    const snapped = snapToStep(next, min, max, step, stepOrigin)
+    if (snapped === base) return
+    // Each keyboard change is a complete gesture: start, change, and a
+    // commit-ready end, matching LinearBrush.
+    onChangeStart?.(base)
+    emitObservation("control-start", base, "keyboard")
     currentValue.current = snapped
     onChange(snapped)
     emitObservation("control-change", snapped, "keyboard")
+    onChangeEnd?.(snapped)
+    emitObservation("control-end", snapped, "keyboard")
   }
 
   const classes = ["semiotic-direct-manipulation-control", className].filter(Boolean).join(" ")
@@ -196,7 +234,7 @@ export function DirectManipulationControl({
       aria-valuemax={max}
       aria-valuenow={value}
       aria-valuetext={valueText ?? `${label}: ${value}`}
-      aria-roledescription="visualization control"
+      aria-roledescription={ariaRoleDescription}
       data-viz-control={controlType}
       data-viz-control-id={controlId}
       data-viz-control-state="controlled"

@@ -19,7 +19,8 @@ export default [
     rules: {
       "semiotic/frame-props-last": "error",
       "semiotic/family-subpath-imports": "error",
-      "semiotic/interaction-test-layout-control": "error"
+      "semiotic/interaction-test-layout-control": "error",
+      "semiotic/no-module-side-effects": "error"
     }
   }
 ]

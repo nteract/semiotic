@@ -28,9 +28,13 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureCirclePackRegistrations(): void {
+  registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 /**
  * CirclePack component props
@@ -105,7 +109,8 @@ export interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartP
  * />
  * ```
  */
-export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>) {
+export const CirclePack = /* @__PURE__ */ withDisplayName(function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>) {
+  ensureCirclePackRegistrations()
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -292,5 +297,4 @@ export function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<T
       {...frameProps}
     />
   </SafeRender>)
-}
-CirclePack.displayName = "CirclePack"
+}, "CirclePack")

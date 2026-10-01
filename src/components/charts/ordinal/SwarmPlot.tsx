@@ -24,6 +24,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { getMinMax } from "../shared/minMax"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -105,7 +106,7 @@ export interface SwarmPlotProps<TDatum extends Datum = Datum> extends BaseChartP
  * />
  * ```
  */
-export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SwarmPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function SwarmPlot<TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -287,8 +288,7 @@ export const SwarmPlot = forwardRef(function SwarmPlot<TDatum extends Datum = Da
   }
 
   return <SafeRender componentName="SwarmPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "SwarmPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: SwarmPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-SwarmPlot.displayName = "SwarmPlot"

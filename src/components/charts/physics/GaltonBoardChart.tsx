@@ -119,7 +119,7 @@ function normalizeValueExtent(
  * />
  * ```
  */
-export const GaltonBoardChart = forwardRef(function GaltonBoardChart<
+export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardChart<
   TDatum extends Datum = Datum
 >(props: GaltonBoardChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {

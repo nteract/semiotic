@@ -74,7 +74,7 @@ export const StackedAreaChartCapability: ChartCapability = {
   // High series counts produce a striped band where individual layers blur —
   // the `streamgraph` variant is the workaround at the upper end. Few series
   // and few rows produce too little signal to stack.
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [30, 1500], caveatBelow: 12, caveatAbove: 10000 },
   }),
 }

@@ -2,6 +2,18 @@
   "schemaVersion": 1,
   "changes": [
     {
+      "against": "v3.11.2",
+      "entry": "semiotic",
+      "symbol": "ChartErrorBoundary",
+      "previous": [
+        "class ChartErrorBoundary extends React.Component<ChartErrorBoundaryProps, ChartErrorBoundaryState>"
+      ],
+      "current": [
+        "class ChartErrorBoundary extends Component<ChartErrorBoundaryProps, ChartErrorBoundaryState>"
+      ],
+      "reason": "Equivalent React import spelling: Component is imported directly from react instead of accessed through the React namespace. The superclass, generic arguments, props and public members retain the same types; the compatibility gate's declaration text comparison treats the alias spelling as a change."
+    },
+    {
       "against": "v3.10.4",
       "entry": "semiotic",
       "symbol": "interface-member StreamXYFrameProps::property::timeAccessor",

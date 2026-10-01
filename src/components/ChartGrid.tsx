@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { withDisplayName } from "./charts/shared/withDisplayName"
 
 export type ChartEmphasis = "primary" | "secondary"
 
@@ -47,7 +48,7 @@ export interface ChartGridProps {
  * </ChartGrid>
  * ```
  */
-export function ChartGrid({
+export const ChartGrid = /* @__PURE__ */ withDisplayName(function ChartGrid({
   children,
   columns = "auto",
   minCellWidth = 300,
@@ -129,6 +130,5 @@ export function ChartGrid({
       </div>
     </>
   )
-}
+}, "ChartGrid")
 
-ChartGrid.displayName = "ChartGrid"

@@ -21,6 +21,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -88,7 +89,7 @@ export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = Datum>(
+export const RadarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RadarChart<TDatum extends Datum = Datum>(
   props: RadarChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
@@ -299,8 +300,7 @@ export const RadarChart = forwardRef(function RadarChart<TDatum extends Datum = 
       <StreamOrdinalFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "RadarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-RadarChart.displayName = "RadarChart"

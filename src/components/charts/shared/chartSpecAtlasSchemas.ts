@@ -19,7 +19,7 @@ const dictionary = (values: Schema): Schema => ({
 const text = { type: "string" }
 const number = { type: "number" }
 const boolean = { type: "boolean" }
-const strings = array(text)
+const strings = /* @__PURE__ */ array(text)
 const nullableNumber = { type: ["number", "null"], minimum: 0 }
 const evidenceStatus = { enum: ["exact", "estimated", "unknown", "incomplete"] }
 const completenessStatus = {
@@ -40,29 +40,29 @@ const motifTemplate = {
     "connector-bypass"
   ]
 }
-const roles = dictionary({ anyOf: [text, strings] })
-const node = object(
+const roles = /* @__PURE__ */ dictionary({ anyOf: [text, strings] })
+const node = /* @__PURE__ */ object(
   { id: text },
   {
     sectionId: text,
     completeness: completenessStatus
   }
 )
-const edge = object({ id: text, source: text, target: text })
-const sceneSeeds = object({ nodes: array(node), edges: array(edge) })
-const requiredPathsSpec = object({
+const edge = /* @__PURE__ */ object({ id: text, source: text, target: text })
+const sceneSeeds = /* @__PURE__ */ object({ nodes: /* @__PURE__ */ array(node), edges: /* @__PURE__ */ array(edge) })
+const requiredPathsSpec = /* @__PURE__ */ object({
   roots: strings,
   relationScopeId: { const: "directed-admitted" }
 })
-const forest = object({
+const forest = /* @__PURE__ */ object({
   kind: { const: "rooted-backbone" },
   roots: strings,
   rankingPolicyId: text,
   backboneEdgeIds: strings,
-  primaryParentEdgeIdByNode: dictionary(text)
+  primaryParentEdgeIdByNode: /* @__PURE__ */ dictionary(text)
 })
-const residual = object({ residualEdgeIds: strings, originalEdgeIds: strings })
-const match = object(
+const residual = /* @__PURE__ */ object({ residualEdgeIds: strings, originalEdgeIds: strings })
+const match = /* @__PURE__ */ object(
   {
     id: text,
     template: motifTemplate,
@@ -71,9 +71,9 @@ const match = object(
     edgeIds: strings,
     intersectSectionIds: strings,
     entityIds: strings,
-    entityWeights: dictionary(number),
+    entityWeights: /* @__PURE__ */ dictionary(number),
     entityCount: number,
-    flags: object({
+    flags: /* @__PURE__ */ object({
       occurrence: boolean,
       temporal: boolean,
       trajectorySupported: boolean,
@@ -83,7 +83,7 @@ const match = object(
   {
     startSectionId: text,
     completionSectionId: text,
-    truncation: object({
+    truncation: /* @__PURE__ */ object({
       disclosed: { const: true },
       omitted: number,
       fullCount: number
@@ -91,29 +91,29 @@ const match = object(
   }
 )
 
-export const preparedAtlasSchema = object(
+export const preparedAtlasSchema = /* @__PURE__ */ object(
   {
     sourceGraphRef: { type: "string", minLength: 1 },
     analysisRevision: { type: "string", minLength: 1 },
-    spec: object(
+    spec: /* @__PURE__ */ object(
       {
         schemaVersion: { const: "0.2" },
         dataRevision: text,
         coordinate: {
           oneOf: [
-            object({ kind: { const: "ordinal" }, sectionIds: strings }),
-            object({ kind: { const: "numeric" }, field: text, unit: text })
+            /* @__PURE__ */ object({ kind: { const: "ordinal" }, sectionIds: strings }),
+            /* @__PURE__ */ object({ kind: { const: "numeric" }, field: text, unit: text })
           ]
         },
-        relations: object({
+        relations: /* @__PURE__ */ object({
           directed: { const: true },
           edgeIdRequired: { const: true },
           parallelEdges: { const: "keep-by-id" },
           selfLoops: { const: "keep-by-id" }
         }),
         evidencePolicyId: text,
-        measures: dictionary(
-          object(
+        measures: /* @__PURE__ */ dictionary(
+          /* @__PURE__ */ object(
             { unitKind, countUnit },
             {
               timeDenominator: text,
@@ -121,7 +121,7 @@ export const preparedAtlasSchema = object(
             }
           )
         ),
-        motifs: object(
+        motifs: /* @__PURE__ */ object(
           {
             catalogId: text,
             catalogVersion: text,
@@ -130,16 +130,16 @@ export const preparedAtlasSchema = object(
           },
           { denominatorRef: text, timeWindowMs: number, matchBudget: number }
         ),
-        forest: object(
+        forest: /* @__PURE__ */ object(
           {
             display: {
               oneOf: [
-                object({
+                /* @__PURE__ */ object({
                   kind: { const: "rooted-backbone" },
                   roots: strings,
                   rankingPolicyId: text
                 }),
-                object(
+                /* @__PURE__ */ object(
                   { kind: { const: "observed-prefix" } },
                   {
                     roots: strings,
@@ -154,13 +154,13 @@ export const preparedAtlasSchema = object(
         ),
         temporal: {
           oneOf: [
-            object({ kind: { const: "snapshot" } }),
-            object({ kind: { const: "window" }, start: number, end: number })
+            /* @__PURE__ */ object({ kind: { const: "snapshot" } }),
+            /* @__PURE__ */ object({ kind: { const: "window" }, start: number, end: number })
           ]
         }
       },
       {
-        comparison: object(
+        comparison: /* @__PURE__ */ object(
           { partitions: strings, denominatorMeasureId: text },
           {
             referencePartition: text
@@ -168,14 +168,14 @@ export const preparedAtlasSchema = object(
         )
       }
     ),
-    source: object(
+    source: /* @__PURE__ */ object(
       {
         graphRef: text,
         revision: text,
-        nodes: array(node),
-        edges: array(edge),
-        measureValues: array(
-          object({
+        nodes: /* @__PURE__ */ array(node),
+        edges: /* @__PURE__ */ array(edge),
+        measureValues: /* @__PURE__ */ array(
+          /* @__PURE__ */ object({
             measureId: text,
             subjectId: text,
             value: number,
@@ -184,8 +184,8 @@ export const preparedAtlasSchema = object(
         )
       },
       {
-        occurrences: array(
-          object(
+        occurrences: /* @__PURE__ */ array(
+          /* @__PURE__ */ object(
             {
               id: text,
               entityId: text,
@@ -194,46 +194,46 @@ export const preparedAtlasSchema = object(
             },
             {
               entityCount: number,
-              stepEntityCounts: array(number),
+              stepEntityCounts: /* @__PURE__ */ array(number),
               missingPrehistory: boolean,
               partition: text,
-              groupKeys: dictionary(text)
+              groupKeys: /* @__PURE__ */ dictionary(text)
             }
           )
         )
       }
     ),
-    sections: object({
+    sections: /* @__PURE__ */ object({
       kind: { const: "ordinal" },
       sectionIds: strings,
-      nodeIdsBySection: dictionary(strings)
+      nodeIdsBySection: /* @__PURE__ */ dictionary(strings)
     }),
-    motifs: object({
+    motifs: /* @__PURE__ */ object({
       catalogId: text,
       catalogVersion: text,
-      matches: array(match),
-      incompleteCandidates: array(
-        object({
+      matches: /* @__PURE__ */ array(match),
+      incompleteCandidates: /* @__PURE__ */ array(
+        /* @__PURE__ */ object({
           template: motifTemplate,
           occurrenceId: text,
           reason: { const: "missing-prehistory" }
         })
       ),
-      unsupportedTemplates: array(motifTemplate)
+      unsupportedTemplates: /* @__PURE__ */ array(motifTemplate)
     }),
     forest,
     residualEdges: residual,
-    ports: object({
-      hops: array(
-        object({ from: text, to: text, occurrenceIds: strings }, { via: text })
+    ports: /* @__PURE__ */ object({
+      hops: /* @__PURE__ */ array(
+        /* @__PURE__ */ object({ from: text, to: text, occurrenceIds: strings }, { via: text })
       ),
-      graphAdjacency: array(
-        object({ source: text, target: text, edgeId: text })
+      graphAdjacency: /* @__PURE__ */ array(
+        /* @__PURE__ */ object({ source: text, target: text, edgeId: text })
       )
     }),
-    ledger: object({
-      entries: array(
-        object(
+    ledger: /* @__PURE__ */ object({
+      entries: /* @__PURE__ */ array(
+        /* @__PURE__ */ object(
           {
             measureId: text,
             subjectId: text,
@@ -247,21 +247,21 @@ export const preparedAtlasSchema = object(
         )
       )
     }),
-    completeness: object(
+    completeness: /* @__PURE__ */ object(
       {
-        nodes: dictionary(completenessStatus),
-        motifs: dictionary(completenessStatus),
+        nodes: /* @__PURE__ */ dictionary(completenessStatus),
+        motifs: /* @__PURE__ */ dictionary(completenessStatus),
         traces: completenessStatus
       },
       {
-        truncation: object({
+        truncation: /* @__PURE__ */ object({
           disclosed: { const: true },
           template: motifTemplate,
           omitted: number
         })
       }
     ),
-    provenance: object({
+    provenance: /* @__PURE__ */ object({
       sourceRevision: text,
       analysisRevision: text,
       generation: number,
@@ -276,13 +276,13 @@ export const preparedAtlasSchema = object(
     })
   },
   {
-    prefixForest: object(
+    prefixForest: /* @__PURE__ */ object(
       {
         kind: { const: "observed-prefix" },
         rootIds: strings,
         order: strings,
-        nodes: array(
-          object({
+        nodes: /* @__PURE__ */ array(
+          /* @__PURE__ */ object({
             id: text,
             stateId: text,
             prefix: strings,
@@ -290,55 +290,55 @@ export const preparedAtlasSchema = object(
             childIds: strings,
             entityCount: number,
             occurrenceIds: strings,
-            partitionCounts: dictionary(number)
+            partitionCounts: /* @__PURE__ */ dictionary(number)
           })
         )
       },
       { referencePartition: text }
     ),
-    comparison: object(
+    comparison: /* @__PURE__ */ object(
       {
         partitions: strings,
         denominatorMeasureId: text,
-        rows: array(
-          object({
+        rows: /* @__PURE__ */ array(
+          /* @__PURE__ */ object({
             partition: text,
             assigned: number,
-            motifUsers: dictionary(number),
-            outcomes: dictionary(number)
+            motifUsers: /* @__PURE__ */ dictionary(number),
+            outcomes: /* @__PURE__ */ dictionary(number)
           })
         )
       },
       { referencePartition: text }
     ),
-    requiredPaths: object({
+    requiredPaths: /* @__PURE__ */ object({
       roots: strings,
       relationScopeId: { const: "directed-admitted" },
       status: { enum: ["exact", "incomplete"] },
-      immediateDominatorByNode: dictionary({ type: ["string", "null"] }),
+      immediateDominatorByNode: /* @__PURE__ */ dictionary({ type: ["string", "null"] }),
       reachableNodeIds: strings,
       unreachableNodeIds: strings
     })
   }
 )
 
-export const dependencyProjectionSchema = object({
+export const dependencyProjectionSchema = /* @__PURE__ */ object({
   atlas: preparedAtlasSchema,
   order: strings,
-  children: dictionary(strings),
-  components: array(strings),
-  requiredChildren: dictionary(strings),
+  children: /* @__PURE__ */ dictionary(strings),
+  components: /* @__PURE__ */ array(strings),
+  requiredChildren: /* @__PURE__ */ dictionary(strings),
   sceneSeeds,
   forest,
   residual
 })
 
-export const circuitProjectionSchema = object({
+export const circuitProjectionSchema = /* @__PURE__ */ object({
   atlas: preparedAtlasSchema,
   order: strings,
   overlapPolicy: { const: "role-priority:id-asc" },
-  modules: array(
-    object(
+  modules: /* @__PURE__ */ array(
+    /* @__PURE__ */ object(
       {
         id: text,
         nodeId: text,
@@ -354,13 +354,13 @@ export const circuitProjectionSchema = object({
             "junction"
           ]
         },
-        semantics: object(
+        semantics: /* @__PURE__ */ object(
           { nodeId: text, label: text, unit: circuitUnit },
           {
             routing: text,
             queueDiscipline: { const: "fifo" },
             retryPolicy: text,
-            join: object({
+            join: /* @__PURE__ */ object({
               kind: { enum: ["all", "first-success"] },
               memberNodeIds: strings
             }),
@@ -369,8 +369,8 @@ export const circuitProjectionSchema = object({
         ),
         relatedMatchIds: strings,
         roles,
-        ports: array(
-          object({
+        ports: /* @__PURE__ */ array(
+          /* @__PURE__ */ object({
             edgeId: text,
             direction: { enum: ["in", "out"] },
             endpointId: text
@@ -380,7 +380,7 @@ export const circuitProjectionSchema = object({
       { selectedMatchId: text }
     )
   ),
-  matches: array(match),
+  matches: /* @__PURE__ */ array(match),
   backboneEdgeIds: strings,
   residualEdgeIds: strings
 })
@@ -391,14 +391,14 @@ const nodeMeasurements = {
   capacity: nullableNumber,
   queued: nullableNumber
 }
-const tapeEntry = object({
+const tapeEntry = /* @__PURE__ */ object({
   id: { type: "string", minLength: 1 },
   at: { type: "number", minimum: 0 },
-  nodes: dictionary(object({ ...nodeMeasurements, status: evidenceStatus })),
-  flows: array(
-    object({ edgeId: text, perSecond: nullableNumber, unit: circuitUnit })
+  nodes: /* @__PURE__ */ dictionary(/* @__PURE__ */ object({ ...nodeMeasurements, status: evidenceStatus })),
+  flows: /* @__PURE__ */ array(
+    /* @__PURE__ */ object({ edgeId: text, perSecond: nullableNumber, unit: circuitUnit })
   ),
-  totals: object({
+  totals: /* @__PURE__ */ object({
     ...nodeMeasurements,
     roots: nullableNumber,
     attempts: nullableNumber,
@@ -408,7 +408,7 @@ const tapeEntry = object({
   })
 })
 
-export const circuitEditionSchema = object(
+export const circuitEditionSchema = /* @__PURE__ */ object(
   {
     id: { type: "string", minLength: 1 },
     synthetic: boolean,
@@ -419,18 +419,18 @@ export const circuitEditionSchema = object(
     unit: circuitUnit,
     timing: { enum: ["aggregate-intervals", "incomplete"] },
     individualTimings: { const: "unavailable" },
-    entries: { ...array(tapeEntry), minItems: 1 },
+    entries: { .../* @__PURE__ */ array(tapeEntry), minItems: 1 },
     assumptions: { ...strings, minItems: 1 },
     evidenceRefs: strings
   },
   {
-    model: object({
+    model: /* @__PURE__ */ object({
       id: text,
       observedEditionId: text,
-      assumptions: dictionary({ type: ["number", "string"] }),
+      assumptions: /* @__PURE__ */ dictionary({ type: ["number", "string"] }),
       guardrails: {
-        ...array(
-          object({
+        .../* @__PURE__ */ array(
+          /* @__PURE__ */ object({
             label: text,
             status: { enum: ["pass", "fail", "unverified"] },
             detail: text
@@ -442,7 +442,7 @@ export const circuitEditionSchema = object(
   }
 )
 
-export const circuitReadingSchema = object({
+export const circuitReadingSchema = /* @__PURE__ */ object({
   editionId: text,
   kind: editionKind,
   mode: { enum: ["observed-snapshot", "observed-replay", "modeled-scenario"] },

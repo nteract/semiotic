@@ -63,7 +63,16 @@ const analyze = process.argv.includes("--analyze")
 // (406.0 KiB measured on the same union).
 // Bumped 407→408.5: that engine now draws perspective pieces with thickness
 // (tokens, slab walls, edge shadows) on first paint (407.6 KiB measured).
-const MULTI_IMPORT_GZIP_BUDGET = 408.5 * 1024
+// Bumped 408.5→410: one hatch tile for canvas and SVG, value-banded
+// histogram fills, var()-safe label paints, and tooltip flip state measure
+// 409.6 KiB on the same union.
+// Lowered 410→308 (2026-09-30): component definitions became pure
+// initializers, chart registration moved to render, and inert side-effect-only
+// chunk imports are dropped, so this union no longer retains every chart that
+// shares a published chunk (306.0 KiB measured). The note above about a
+// "non-splitting" build was inaccurate: this check has always split and
+// counted only the static graph.
+const MULTI_IMPORT_GZIP_BUDGET = 308 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

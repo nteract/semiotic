@@ -29,13 +29,17 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("tree", hierarchyLayoutPlugin)
-registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
-registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
-registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
-registerLayoutPlugin("partition", hierarchyLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureTreeDiagramRegistrations(): void {
+  registerLayoutPlugin("tree", hierarchyLayoutPlugin)
+  registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
+  registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
+  registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+  registerLayoutPlugin("partition", hierarchyLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 const defaultEdgeStyle = () => ({ stroke: "#999", strokeWidth: 1, fill: "none" })
 
@@ -114,7 +118,8 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
+export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
+  ensureTreeDiagramRegistrations()
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -314,5 +319,4 @@ export function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps
       {...frameProps}
     />
   </SafeRender>)
-}
-TreeDiagram.displayName = "TreeDiagram"
+}, "TreeDiagram")

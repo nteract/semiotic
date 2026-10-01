@@ -416,3 +416,33 @@ describe("barCanvasRenderer", () => {
     })
   })
 })
+
+describe("barCanvasRenderer value bands", () => {
+  it("fills each band extent, clipped to the rect, then strokes the outline once", () => {
+    const ctx = createMockCanvasContext()
+    const fills: Array<{ style: unknown; args: number[] }> = []
+    ;(ctx.fillRect as ReturnType<typeof vi.fn>).mockImplementation((...args: number[]) => {
+      fills.push({ style: ctx.fillStyle, args })
+    })
+    // Mid-intro: the rect has grown to y=60 of a bar whose bands reach y=20.
+    const node = makeRectNode({
+      x: 10,
+      y: 60,
+      w: 50,
+      h: 60,
+      style: { fill: "#base", stroke: "#111", strokeWidth: 1 },
+      fillBands: [
+        { y0: 120, y1: 90, fill: "#00f" },
+        { y0: 90, y1: 50, fill: "#0f0" },
+        { y0: 50, y1: 20, fill: "#f00" },
+      ],
+    })
+    barCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+    expect(fills).toEqual([
+      { style: "#00f", args: [10, 90, 50, 30] },
+      { style: "#0f0", args: [10, 60, 50, 30] },
+    ])
+    expect(ctx.strokeRect).toHaveBeenCalledTimes(1)
+    expect(ctx.strokeRect).toHaveBeenCalledWith(10, 60, 50, 60)
+  })
+})

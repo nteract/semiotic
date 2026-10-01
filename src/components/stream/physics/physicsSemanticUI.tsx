@@ -11,7 +11,7 @@ import { AccessibleTableShell } from "../AccessibleTableShell"
 import { SAMPLE_SIZE as PHYSICS_TABLE_SAMPLE_SIZE, PAGE_SIZE as PHYSICS_TABLE_PAGE_SIZE, VISIBLE_TABLE_STYLE as TABLE_STYLE, VISIBLE_TH_STYLE as TABLE_TH_STYLE, VISIBLE_TD_STYLE as TABLE_TD_STYLE, CAPTION_STYLE as TABLE_CAPTION_STYLE } from "../accessibleTableStyles"
 import { useAccessibleTableInteraction } from "../useAccessibleTableInteraction"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
-import { hasOwnTooltipChrome, hasTooltipContent } from "../../Tooltip/tooltipChrome"
+import { hasOwnTooltipChrome, hasTooltipContent, markTooltipChrome } from "../../Tooltip/tooltipChrome"
 import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { PhysicsBodyState } from "./PhysicsKernel"
@@ -217,7 +217,8 @@ export function renderPhysicsTooltip({
   )
 }
 
-function DefaultPhysicsTooltip({
+// Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultPhysicsTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultPhysicsTooltip({
   hover
 }: {
   hover: PhysicsHoverData
@@ -236,9 +237,7 @@ function DefaultPhysicsTooltip({
       ))}
     </div>
   )
-}
-;(DefaultPhysicsTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
-
+})
 
 function semanticItemDataText(item: PhysicsSemanticItem): string {
   if (!item.datum || typeof item.datum !== "object") return ""
@@ -297,7 +296,6 @@ function PhysicsSemanticDataTable(props: {
 
   const shell = { interaction, tableId, regionLabel, countLabel: `${items.length} semantic items` }
   if (!isExpanded) return <AccessibleTableShell {...shell} />
-
 
   const shownCount = Math.min(visibleCount, items.length)
   const sampleItems = items.slice(0, shownCount)
@@ -362,7 +360,6 @@ function PhysicsSemanticDataTable(props: {
     </AccessibleTableShell>
   )
 }
-
 
 export {
   physicsHoverData,

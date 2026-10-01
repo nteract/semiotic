@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import type { NetworkZoomState } from "./types"
 import { DEFAULT_ZOOM } from "./geometry"
 
-export const NetworkZoomContext = createContext<NetworkZoomState>({
+export const NetworkZoomContext = /* @__PURE__ */ createContext<NetworkZoomState>({
   zoom: DEFAULT_ZOOM,
   settledZoom: DEFAULT_ZOOM,
   isInteracting: false,

@@ -47,8 +47,8 @@ export const PART_TO_WHOLE_ACCESSORS: Record<string, string> = {
   FunnelChart: "valueAccessor"
 }
 
-export const PART_TO_WHOLE_CHARTS = new Set(
-  Object.keys(PART_TO_WHOLE_ACCESSORS)
+export const PART_TO_WHOLE_CHARTS = /* @__PURE__ */ new Set(
+  /* @__PURE__ */ Object.keys(PART_TO_WHOLE_ACCESSORS)
 )
 
 export const NORMALIZED_STACK_ACCESSORS: Record<string, string> = {
@@ -100,7 +100,7 @@ export const PHYSICS_MOTION_CHARTS = new Set([
   "PhysicsCustomChart"
 ])
 
-export const CONTINUOUS_MOTION_CHARTS = new Set([
+export const CONTINUOUS_MOTION_CHARTS = /* @__PURE__ */ new Set([
   "OrbitDiagram",
   ...PHYSICS_MOTION_CHARTS
 ])

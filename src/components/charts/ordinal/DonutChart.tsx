@@ -19,6 +19,7 @@ import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -81,7 +82,7 @@ export interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DonutChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
   // the mode default (context: 400×250, sparkline: 120×24). Primary-mode
   // default is 400×400 via the third arg — a donut looks square.
@@ -260,8 +261,7 @@ export const DonutChart = forwardRef(function DonutChart<TDatum extends Datum = 
   if (validationError) return <ChartError componentName="DonutChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="DonutChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "DonutChart") as unknown as {
   <TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-DonutChart.displayName = "DonutChart"

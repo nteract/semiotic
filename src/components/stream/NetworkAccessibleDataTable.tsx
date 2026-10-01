@@ -8,7 +8,7 @@ import { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { countNetworkTableRows } from "./networkTableCounts"
 import type { NetworkTableElement } from "./networkAccessibleDataTableModel"
 
-const Content = React.lazy(() => import("./NetworkAccessibleDataTableContent"))
+const Content = /* @__PURE__ */ React.lazy(() => import("./NetworkAccessibleDataTableContent"))
 
 export interface NetworkAccessibleDataTableProps {
   nodes: NetworkTableElement[]

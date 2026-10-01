@@ -4,6 +4,7 @@ import * as React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useChartObserver } from "./store/useObservation"
 import type { ChartObservation, ClickObservation } from "./store/ObservationStore"
+import { withDisplayName } from "./charts/shared/withDisplayName"
 
 export interface DetailsPanelProps {
   /**
@@ -52,7 +53,7 @@ export interface DetailsPanelProps {
 
 const ANIMATION_DURATION = 200
 
-export function DetailsPanel({
+export const DetailsPanel = /* @__PURE__ */ withDisplayName(function DetailsPanel({
   children,
   position = "right",
   size = 300,
@@ -157,7 +158,7 @@ export function DetailsPanel({
       </div>
     </div>
   )
-}
+}, "DetailsPanel")
 
 function getPanelStyle(
   position: "right" | "bottom" | "overlay",
@@ -240,4 +241,3 @@ const closeButtonStyle: React.CSSProperties = {
   zIndex: 1,
 }
 
-DetailsPanel.displayName = "DetailsPanel"

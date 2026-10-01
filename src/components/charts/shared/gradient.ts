@@ -9,6 +9,13 @@ export interface GradientStop {
 
 export interface GradientConfig {
   stops: GradientStop[]
+  /**
+   * Area fills only: the vertical span the stops cover. `"area"` (default)
+   * runs from each area's highest point to its baseline; `"domain"` runs
+   * from the y-domain maximum to its minimum, so a stop marks the same value
+   * on every area whatever its data extent.
+   */
+  extent?: "area" | "domain"
 }
 
 interface ColorStopsConfig {
@@ -126,8 +133,18 @@ export function semanticLineStopsForGradient(
 
 export function reverseGradient(gradient: GradientConfig): GradientConfig {
   return {
+    ...(gradient.extent && { extent: gradient.extent }),
     stops: gradient.stops
       .map((stop) => ({ ...stop, offset: 1 - stop.offset }))
       .sort((a, b) => a.offset - b.offset),
   }
+}
+
+/**
+ * The area fill for a `semanticGradient`: stops flipped to the fill's
+ * top-to-baseline orientation and anchored to the y-domain, so the fill
+ * changes color at the same values as the semantic line bands.
+ */
+export function semanticAreaFillGradient(gradient: GradientConfig): GradientConfig {
+  return { ...reverseGradient(gradient), extent: "domain" }
 }

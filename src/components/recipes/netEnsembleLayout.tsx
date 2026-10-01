@@ -511,7 +511,7 @@ function analyzeComponents(
   return components
 }
 
-const ANALYSIS_CACHE = new LayoutCache<{
+const ANALYSIS_CACHE = /* @__PURE__ */ new LayoutCache<{
   outAdj: Map<string, Set<string>>
   inAdj: Map<string, Set<string>>
   components: ComponentInfo[]
@@ -561,7 +561,7 @@ function cachedAnalysis(
 }
 
 // Module-scope geometry cache — signed by content, never array identity.
-const GEOM_CACHE = new LayoutCache<Geom>(8)
+const GEOM_CACHE = /* @__PURE__ */ new LayoutCache<Geom>(8)
 
 export const netEnsembleLayout: NetworkCustomLayout<NetEnsembleConfig> = (
   ctx

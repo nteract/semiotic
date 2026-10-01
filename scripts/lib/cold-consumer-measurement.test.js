@@ -14,6 +14,7 @@ import {
   renderReadmeBlock,
   replaceMarkerBlock,
   reportForMeasurements,
+  splitChunkSizes,
   stableModuleExportKeys,
   validateColdConsumerReport,
   validateNamedImportCases
@@ -68,8 +69,32 @@ describe("cold-consumer named import manifest", () => {
       expect(block).toContain("npm pack --ignore-scripts")
       expect(block).toContain(expectedImport)
       expect(block).toContain("0.5 KiB")
+      expect(block).toContain("gzip initial load")
+      expect(block).toContain("code splitting")
     }
   )
+
+  it("splits the eager graph from dynamically imported chunks", () => {
+    const sizes = splitChunkSizes([
+      { fileName: "entry.js", code: "a".repeat(40), imports: ["chunk-A.js", "react"], isEntry: true },
+      { fileName: "chunk-A.js", code: "b".repeat(30), imports: ["chunk-B.js"], isEntry: false },
+      { fileName: "chunk-B.js", code: "c".repeat(20), imports: [], isEntry: false },
+      { fileName: "chunk-L.js", code: "d".repeat(10), imports: ["chunk-B.js"], isEntry: false }
+    ])
+    expect(sizes.eager.rawBytes).toBe(90)
+    expect(sizes.lazy.rawBytes).toBe(10)
+    expect(sizes.eager.gzipBytes).toBeGreaterThan(0)
+  })
+
+  it("reports lazily loaded chunks separately from the initial load", () => {
+    const block = renderReadmeBlock(sampleReport())
+    expect(block).toMatch(/\*\*0\.5 KiB\*\* \| 0\.1 KiB \|/)
+    const report = sampleReport()
+    report.measurements[0].lazyGzipBytes = -1
+    expect(validateColdConsumerReport(report, "baseline")).toContain(
+      "baseline.measurements[0].lazyGzipBytes must be a non-negative integer"
+    )
+  })
 
   it("explains when line and XY named imports converge after tree-shaking", () => {
     const lineCases = NAMED_IMPORT_CASES.filter((entry) =>
@@ -79,6 +104,8 @@ describe("cold-consumer named import manifest", () => {
       importPath: importPathFor(entry.exportKey),
       rawBytes: 431129,
       gzipBytes: index === 0 ? 142504 : 142349,
+      lazyRawBytes: 0,
+      lazyGzipBytes: 0,
       packedPackageInputFiles: 50 - index
     }))
     const block = renderReadmeBlock(
@@ -267,13 +294,13 @@ describe("cold-consumer named import manifest", () => {
     const methodChanged = copy(baseline)
     methodChanged.method.bundler.version = "different"
     const wrongSchema = copy(baseline)
-    wrongSchema.schemaVersion = 2
+    wrongSchema.schemaVersion = 1
 
     expect(
       compareColdConsumerReports(baseline, methodChanged).structuralErrors
     ).toContain("measurement method differs")
     expect(validateColdConsumerReport(wrongSchema, "baseline")).toContain(
-      "baseline.schemaVersion must be 1"
+      "baseline.schemaVersion must be 2"
     )
   })
 
@@ -331,6 +358,8 @@ function sampleReport(exportKey = ".") {
       importPath: importPathFor(entry.exportKey),
       rawBytes: 1024,
       gzipBytes: 512,
+      lazyRawBytes: 256,
+      lazyGzipBytes: 128,
       packedPackageInputFiles: 1
     }
   ])

@@ -64,8 +64,12 @@ import {
   makeXYRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(waterfallXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureRealtimeWaterfallChartRegistrations(): void {
+  registerXYPlugin(waterfallXYPlugin)
+}
 
 export interface RealtimeWaterfallChartProps<
   TDatum extends Datum = Datum
@@ -226,11 +230,12 @@ export interface RealtimeWaterfallChartProps<
  * </ThemeProvider>
  * ```
  */
-export const RealtimeWaterfallChart = forwardRef(
+export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(
   function RealtimeWaterfallChart<TDatum extends Datum = Datum>(
     props: RealtimeWaterfallChartProps<TDatum>,
     ref: React.Ref<RealtimeFrameHandle<TDatum>>
   ) {
+    ensureRealtimeWaterfallChartRegistrations()
     const resolved = useRealtimeChartMode(props)
 
     const {
@@ -504,7 +509,7 @@ export const RealtimeWaterfallChart = forwardRef(
       />
     )
   }
-) as unknown as {
+), "RealtimeWaterfallChart") as unknown as {
   /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeWaterfallChartProps<TDatum> &
@@ -517,4 +522,3 @@ export const RealtimeWaterfallChart = forwardRef(
   ): React.ReactElement | null
   displayName?: string
 }
-RealtimeWaterfallChart.displayName = "RealtimeWaterfallChart"

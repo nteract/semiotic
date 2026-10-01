@@ -3,6 +3,7 @@ import { readRealtimeNumber, readRealtimeTime } from "./realtimeAccessors"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
+import type { ValueBand } from "../../realtime/types"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { barXYPlugin } from "../../stream/xyPlugins/barPlugin"
 import type {
@@ -71,8 +72,12 @@ import {
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHistogramRuleContext } from "./realtimeStyleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(barXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureRealtimeHistogramRegistrations(): void {
+  registerXYPlugin(barXYPlugin)
+}
 
 export type RealtimeHistogramDirection = "up" | "down"
 
@@ -164,6 +169,15 @@ export interface RealtimeHistogramProps<
    * stacked segment or `total` for an unstacked bin; `x` is the bin center.
    */
   styleRules?: StyleRule[]
+  /**
+   * Split each bar's fill at value edges, e.g. solid up to 5, hatched up to
+   * 10, a warning hatch above: `[{ upTo: 5, fill: "#4e79a7" }, { upTo: 10,
+   * fill: hatch }, { fill: warningHatch }]`. Each bar stays one mark with its
+   * bin datum, so hover, selection, `hoverHighlight`, and tooltips are
+   * unchanged. Values no band covers keep the bar's own fill. Applies to
+   * unstacked bins; stacked (`categoryAccessor`) bins ignore it.
+   */
+  valueBands?: ValueBand[]
   /** Gap between bars in pixels */
   gap?: number
   /** Show axis baselines, ticks, and labels */
@@ -289,9 +303,10 @@ export interface RealtimeHistogramProps<
  * />
  * ```
  */
-export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
+export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeHistogram<
   TDatum extends Datum = Datum
 >(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
+  ensureRealtimeHistogramRegistrations()
   // Thread mode-aware dimensions and axes through so `sparkline` and
   // `context` strip the appropriate chrome.
   const resolved = useRealtimeChartMode(props)
@@ -321,6 +336,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
     opacity,
     cursor,
     styleRules,
+    valueBands,
     gap,
     background,
     tooltipContent,
@@ -538,6 +554,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   if (opacity != null) barStyle.opacity = opacity
   if (cursor != null) barStyle.cursor = cursor
   if (gap != null) barStyle.gap = gap
+  if (valueBands != null) barStyle.valueBands = valueBands
   const categoricalBarStyle = useMemo<
     ((datum: Datum) => Style) | undefined
   >(() => {
@@ -660,7 +677,7 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
       onBrush={normalizedBrush || linkedBrush ? brushStreamProps.onBrush : undefined}
     />
   )
-}) as unknown as {
+}), "RealtimeHistogram") as unknown as {
   /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeHistogramProps<TDatum> &
@@ -673,7 +690,6 @@ export const RealtimeHistogram = forwardRef(function RealtimeHistogram<
   ): React.ReactElement | null
   displayName?: string
 }
-RealtimeHistogram.displayName = "RealtimeHistogram"
 
 export interface TemporalHistogramProps<
   TDatum extends Datum = Datum
@@ -690,7 +706,7 @@ export interface TemporalHistogramProps<
  * bounded array rather than a ref-driven stream; the realtime push API is not
  * part of this public surface.
  */
-export function TemporalHistogram<TDatum extends Datum = Datum>(
+export const TemporalHistogram = /* @__PURE__ */ withDisplayName(function TemporalHistogram<TDatum extends Datum = Datum>(
   props: TemporalHistogramProps<TDatum>
 ) {
   return (
@@ -699,8 +715,7 @@ export function TemporalHistogram<TDatum extends Datum = Datum>(
       windowMode="growing"
     />
   )
-}
-TemporalHistogram.displayName = "TemporalHistogram"
+}, "TemporalHistogram")
 
 /** @deprecated Use `RealtimeHistogram` (the canonical public name) instead. The
  *  `RealtimeTemporalHistogram` alias is preserved for back-compat with code

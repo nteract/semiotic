@@ -38,8 +38,12 @@ import {
 } from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLineFamilyXYPlugins()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureLineChartRegistrations(): void {
+  registerLineFamilyXYPlugins()
+}
 
 // Line-object input needs a group key after its coordinate arrays are
 // flattened for StreamXYFrame. Keep the field internal so parent metadata can
@@ -391,8 +395,9 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
  * @param props - LineChart configuration
  * @returns Rendered line chart
  */
-export const LineChart = forwardRef(
+export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(
   function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureLineChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -986,8 +991,7 @@ export const LineChart = forwardRef(
   if (validationError) return <ChartError componentName="LineChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "LineChart") as unknown as {
   <TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-LineChart.displayName = "LineChart"

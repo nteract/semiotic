@@ -27,8 +27,12 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(heatmapXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureHeatmapRegistrations(): void {
+  registerXYPlugin(heatmapXYPlugin)
+}
 
 /**
  * Heatmap component props
@@ -253,7 +257,8 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Heatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureHeatmapRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   useFrameImperativeHandle(ref, { variant: "xy", frameRef })
@@ -535,8 +540,7 @@ export const Heatmap = forwardRef(function Heatmap<TDatum extends Datum = Datum>
   if (validationError) return <ChartError componentName="Heatmap" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "Heatmap") as unknown as {
   <TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-Heatmap.displayName = "Heatmap"

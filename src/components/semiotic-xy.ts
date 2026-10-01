@@ -92,7 +92,9 @@ export type {
 // Stream Frame types
 export type {
   StreamXYFrameProps,
-  StreamXYFrameHandle
+  StreamXYFrameHandle,
+  InteractiveGraphicsContext,
+  InteractiveGraphicsProp
 } from "./stream/types"
 export type { RealtimeFrameHandle } from "./realtime/types"
 

@@ -115,32 +115,32 @@ export const schemeSet3: readonly string[] = [
 
 // ── Sequential single-hue (ColorBrewer 9-stop) ────────────────────────
 
-export const interpolateBlues = rgbInterpolator([
+export const interpolateBlues = /* @__PURE__ */ rgbInterpolator([
   "#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6",
   "#4292c6", "#2171b5", "#08519c", "#08306b",
 ])
 
-export const interpolateReds = rgbInterpolator([
+export const interpolateReds = /* @__PURE__ */ rgbInterpolator([
   "#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a",
   "#ef3b2c", "#cb181d", "#a50f15", "#67000d",
 ])
 
-export const interpolateGreens = rgbInterpolator([
+export const interpolateGreens = /* @__PURE__ */ rgbInterpolator([
   "#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476",
   "#41ab5d", "#238b45", "#006d2c", "#00441b",
 ])
 
-export const interpolateOranges = rgbInterpolator([
+export const interpolateOranges = /* @__PURE__ */ rgbInterpolator([
   "#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c",
   "#f16913", "#d94801", "#a63603", "#7f2704",
 ])
 
-export const interpolatePurples = rgbInterpolator([
+export const interpolatePurples = /* @__PURE__ */ rgbInterpolator([
   "#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8",
   "#807dba", "#6a51a3", "#54278f", "#3f007d",
 ])
 
-export const interpolateGreys = rgbInterpolator([
+export const interpolateGreys = /* @__PURE__ */ rgbInterpolator([
   "#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696",
   "#737373", "#525252", "#252525", "#000000",
 ])
@@ -152,32 +152,32 @@ export const interpolateGreys = rgbInterpolator([
 // at typical bin counts (≤ ΔE 1 across the curve). The stops here are
 // every-other-25% subsamples of the d3 palette plus endpoints.
 
-export const interpolateViridis = rgbInterpolator([
+export const interpolateViridis = /* @__PURE__ */ rgbInterpolator([
   "#440154", "#482878", "#3e4989", "#31688e", "#26828e",
   "#1f9e89", "#35b779", "#6ece58", "#b5de2b", "#fde725",
 ])
 
-export const interpolatePlasma = rgbInterpolator([
+export const interpolatePlasma = /* @__PURE__ */ rgbInterpolator([
   "#0d0887", "#41049d", "#6a00a8", "#8f0da4", "#b12a90",
   "#cb4679", "#e16462", "#f1844b", "#fca636", "#fcce25", "#f0f921",
 ])
 
-export const interpolateInferno = rgbInterpolator([
+export const interpolateInferno = /* @__PURE__ */ rgbInterpolator([
   "#000004", "#160b39", "#420a68", "#6a176e", "#932667",
   "#bc3754", "#dd513a", "#f3771a", "#fca50a", "#f6d746", "#fcffa4",
 ])
 
-export const interpolateMagma = rgbInterpolator([
+export const interpolateMagma = /* @__PURE__ */ rgbInterpolator([
   "#000004", "#140e36", "#3b0f70", "#641a80", "#8c2981",
   "#b73779", "#de4968", "#f7705c", "#fe9f6d", "#fecf92", "#fcfdbf",
 ])
 
-export const interpolateCividis = rgbInterpolator([
+export const interpolateCividis = /* @__PURE__ */ rgbInterpolator([
   "#00224e", "#123570", "#3b496c", "#575d6d", "#707173",
   "#8a8678", "#a59c74", "#c3b369", "#e1cc55", "#fee838", "#ffea46",
 ])
 
-export const interpolateTurbo = rgbInterpolator([
+export const interpolateTurbo = /* @__PURE__ */ rgbInterpolator([
   "#23171b", "#4a58dd", "#3f9ee9", "#46c7af", "#7eed5a",
   "#cdf134", "#fbb91f", "#f56918", "#c52f06", "#7a0403",
 ])
@@ -205,37 +205,37 @@ export function getSequentialInterpolator(scheme: string | undefined): (t: numbe
 
 // ── Diverging (ColorBrewer 11-stop) ───────────────────────────────────
 
-export const interpolateRdBu = rgbInterpolator([
+export const interpolateRdBu = /* @__PURE__ */ rgbInterpolator([
   "#67001f", "#b2182b", "#d6604d", "#f4a582", "#fddbc7",
   "#f7f7f7", "#d1e5f0", "#92c5de", "#4393c3", "#2166ac", "#053061",
 ])
 
-export const interpolatePiYG = rgbInterpolator([
+export const interpolatePiYG = /* @__PURE__ */ rgbInterpolator([
   "#8e0152", "#c51b7d", "#de77ae", "#f1b6da", "#fde0ef",
   "#f7f7f7", "#e6f5d0", "#b8e186", "#7fbc41", "#4d9221", "#276419",
 ])
 
-export const interpolatePRGn = rgbInterpolator([
+export const interpolatePRGn = /* @__PURE__ */ rgbInterpolator([
   "#40004b", "#762a83", "#9970ab", "#c2a5cf", "#e7d4e8",
   "#f7f7f7", "#d9f0d3", "#a6dba0", "#5aae61", "#1b7837", "#00441b",
 ])
 
-export const interpolateBrBG = rgbInterpolator([
+export const interpolateBrBG = /* @__PURE__ */ rgbInterpolator([
   "#543005", "#8c510a", "#bf812d", "#dfc27d", "#f6e8c3",
   "#f5f5f5", "#c7eae5", "#80cdc1", "#35978f", "#01665e", "#003c30",
 ])
 
-export const interpolateRdYlBu = rgbInterpolator([
+export const interpolateRdYlBu = /* @__PURE__ */ rgbInterpolator([
   "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090",
   "#ffffbf", "#e0f3f8", "#abd9e9", "#74add1", "#4575b4", "#313695",
 ])
 
-export const interpolateRdYlGn = rgbInterpolator([
+export const interpolateRdYlGn = /* @__PURE__ */ rgbInterpolator([
   "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee08b",
   "#ffffbf", "#d9ef8b", "#a6d96a", "#66bd63", "#1a9850", "#006837",
 ])
 
-export const interpolateSpectral = rgbInterpolator([
+export const interpolateSpectral = /* @__PURE__ */ rgbInterpolator([
   "#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b",
   "#ffffbf", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2",
 ])

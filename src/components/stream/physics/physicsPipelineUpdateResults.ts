@@ -70,24 +70,24 @@ const NOOP: readonly Invalidation[] = []
 export const PHYSICS_CONFIG_PATCH_DEPENDENCIES: Readonly<
   Record<string, PhysicsConfigPatchDependency>
 > = {
-  engine: dependency("rebuild", ENGINE_REBUILD),
-  kernel: dependency("preserve", GEOMETRY),
-  colliders: dependency("preserve", GEOMETRY),
-  sediment: dependency("preserve", GEOMETRY),
+  engine: /* @__PURE__ */ dependency("rebuild", ENGINE_REBUILD),
+  kernel: /* @__PURE__ */ dependency("preserve", GEOMETRY),
+  colliders: /* @__PURE__ */ dependency("preserve", GEOMETRY),
+  sediment: /* @__PURE__ */ dependency("preserve", GEOMETRY),
 
-  bodyBudget: dependency("preserve", LAYOUT),
-  bodyLimit: dependency("preserve", LAYOUT),
-  eviction: dependency("preserve", LAYOUT),
+  bodyBudget: /* @__PURE__ */ dependency("preserve", LAYOUT),
+  bodyLimit: /* @__PURE__ */ dependency("preserve", LAYOUT),
+  eviction: /* @__PURE__ */ dependency("preserve", LAYOUT),
 
-  fixedDt: dependency("preserve", NOOP),
-  maxDeltaSeconds: dependency("preserve", NOOP),
-  maxSubsteps: dependency("preserve", NOOP),
-  settleStepLimit: dependency("preserve", NOOP),
-  timeScale: dependency("preserve", NOOP),
-  observation: dependency("preserve", NOOP)
+  fixedDt: /* @__PURE__ */ dependency("preserve", NOOP),
+  maxDeltaSeconds: /* @__PURE__ */ dependency("preserve", NOOP),
+  maxSubsteps: /* @__PURE__ */ dependency("preserve", NOOP),
+  settleStepLimit: /* @__PURE__ */ dependency("preserve", NOOP),
+  timeScale: /* @__PURE__ */ dependency("preserve", NOOP),
+  observation: /* @__PURE__ */ dependency("preserve", NOOP)
 }
 
-const DEFAULT_CONFIG_PATCH_DEPENDENCY = dependency("preserve", LAYOUT)
+const DEFAULT_CONFIG_PATCH_DEPENDENCY = /* @__PURE__ */ dependency("preserve", LAYOUT)
 
 export interface PhysicsConfigPatchClassification {
   readonly retainedData: PhysicsRetainedDataEffect

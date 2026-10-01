@@ -13,7 +13,7 @@ import type { SceneNode } from "../types"
 import { buildLineNode, buildAreaNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
-import { resolveAreaGradient } from "./areaGradient"
+import { resolveAreaGradient, resolveAreaGradientSpan } from "./areaGradient"
 import { buildAggregateRibbons, buildPerSeriesRibbons, partitionRibbons } from "./ribbonScene"
 
 export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
@@ -62,6 +62,8 @@ export function buildMixedScene(ctx: XYSceneContext, data: Datum[]): SceneNode[]
       const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
       if (fillGradient) {
         node.fillGradient = fillGradient
+        const span = resolveAreaGradientSpan(fillGradient, ctx.scales.y)
+        if (span) node.fillGradientSpan = span
       }
       if (ctx.config.curve && ctx.config.curve !== "linear") {
         node.curve = ctx.config.curve

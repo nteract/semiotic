@@ -56,3 +56,31 @@ describe("areaCanvasRenderer semantic top stroke", () => {
     expect(ctx.rect).toHaveBeenCalledWith(-3, 30, 106, 30)
   })
 })
+
+describe("areaCanvasRenderer fill gradient span", () => {
+  const baseNode = (): AreaSceneNode => ({
+    type: "area",
+    topPath: [[0, 90], [50, 40], [100, 60]],
+    bottomPath: [[0, 100], [50, 100], [100, 100]],
+    fillGradient: {
+      stops: [
+        { offset: 0, color: "#dc2626" },
+        { offset: 1, color: "#22c55e" },
+      ],
+    },
+    style: { fill: "#base" },
+    datum: [],
+  })
+
+  it("spans the area's own top edge to its baseline by default", () => {
+    const ctx = createMockCanvasContext() as unknown as CanvasRenderingContext2D
+    areaCanvasRenderer(ctx, [baseNode()], scales, layout)
+    expect(ctx.createLinearGradient).toHaveBeenCalledWith(0, 40, 0, 100)
+  })
+
+  it("uses the scene's domain span when the gradient is domain-anchored", () => {
+    const ctx = createMockCanvasContext() as unknown as CanvasRenderingContext2D
+    areaCanvasRenderer(ctx, [{ ...baseNode(), fillGradientSpan: [0, 100] }], scales, layout)
+    expect(ctx.createLinearGradient).toHaveBeenCalledWith(0, 0, 0, 100)
+  })
+})

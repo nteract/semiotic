@@ -20,6 +20,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 /**
  * Default categoryAccessor — hoisted to module scope so it stays
@@ -169,7 +170,7 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
  * For streaming distributions (window-based binning over a live data
  * stream), use {@link RealtimeHistogram} from `semiotic/realtime` instead.
  */
-export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Histogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -379,8 +380,7 @@ export const Histogram = forwardRef(function Histogram<TDatum extends Datum = Da
   }
 
   return <SafeRender componentName="Histogram" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "Histogram") as unknown as {
   <TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-Histogram.displayName = "Histogram"

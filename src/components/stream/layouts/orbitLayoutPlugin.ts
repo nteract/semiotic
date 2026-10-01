@@ -15,7 +15,6 @@ import type {
 } from "../networkTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
-import { registerLayoutPlugin } from "./registry"
 
 // ── Orbit-specific node metadata ──────────────────────────────────────
 
@@ -445,5 +444,3 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     return true // always rebuild scene
   }
 }
-
-registerLayoutPlugin("orbit", orbitLayoutPlugin)

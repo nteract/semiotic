@@ -16,8 +16,8 @@ const preparedAtlas: ChartPropSpec = {
 
 // Atlas readers expose only these common props, rather than silently accepting
 // unrelated axes, arbitrary data accessors or simulation controls.
-const common = Object.fromEntries(
-  [
+const common = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ [
     "width",
     "height",
     "className",

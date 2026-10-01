@@ -15,8 +15,8 @@ const references = {
 
 export type RealtimeChartDefinitionId = keyof typeof references
 
-export const REALTIME_CHART_DEFINITIONS = Object.fromEntries(
-  Object.entries(references).map(([name, [route, exportName]]) => {
+export const REALTIME_CHART_DEFINITIONS = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(references)).map(([name, [route, exportName]]) => {
     const spec = REALTIME_CHART_SPECS[name]
     if (!spec) throw new Error(`Missing realtime chart spec: ${name}`)
     const isTemporal = name === "TemporalHistogram"

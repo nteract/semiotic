@@ -53,6 +53,32 @@ describe("StreamGeoFrame", () => {
     expect(html).toContain(`fill="${expectedFill}"`)
   })
 
+  it("sizes the idle interaction canvas on mount without waiting for hover", () => {
+    const { container } = render(
+      <StreamGeoFrame
+        projection="mercator"
+        points={[{ lon: -122, lat: 37 }]}
+        xAccessor="lon"
+        yAccessor="lat"
+        size={[150, 24]}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        maxDevicePixelRatio={1}
+        accessibleTable={false}
+      />
+    )
+
+    const canvases = Array.from(
+      container.querySelectorAll<HTMLCanvasElement>(".stream-geo-frame canvas")
+    )
+    expect(canvases).toHaveLength(2)
+    for (const canvas of canvases) {
+      expect(canvas.width).toBe(150)
+      expect(canvas.height).toBe(24)
+      expect(canvas.style.width).toBe("150px")
+      expect(canvas.style.height).toBe("24px")
+    }
+  })
+
   // ── Regression: every declared *Style prop reaches pipelineConfig ──────
   //
   // Mirrors the guard on StreamXYFrame / StreamOrdinalFrame / StreamNetworkFrame:

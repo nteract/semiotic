@@ -24,8 +24,11 @@ const DIST = join(REPO_ROOT, "dist")
 const printOnly = process.argv.includes("--print")
 
 /**
- * Budgets are gzip totals for entry + reachable static ESM chunks.
- * Aligned loosely with Claude.md subpath gz sizes (+ headroom for d3 noise).
+ * Budgets are gzip totals for entry + reachable static ESM chunks. They guard
+ * whole-facade cold loads (a CDN or unbundled `import * from "semiotic/xy"`).
+ * What an application actually ships for one named import is gated by
+ * `npm run check:cold-consumer` (code-split, eager graph) and
+ * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
   // Bumped 360→375: CrucibleChart + netEnsemble/wordTrails recipe growth
@@ -57,7 +60,14 @@ const ENTRY_GRAPHS = [
   // 1.8 KiB gzip to the canonical facade (398.8 KiB measured).
   // Bumped 399→400: production gzip can vary by a few hundred bytes around
   // the rounded 399.0 KiB measurement; retain a full KiB of guard headroom.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 400 },
+  // Lowered 400→385 (2026-09-30): the facade measures 383.7 KiB gzip after
+  // XY transitions moved to an on-demand chunk; keep a narrow guard band
+  // instead of 16 KiB of unreviewed headroom.
+  // Bumped 385→387 (2026-09-30): the facade exports DirectManipulationMarkers
+  // and pointerToLocalPoint, XY/ordinal frames gain the interactiveGraphics
+  // control layer, and diagnoseConfig gains the annotation field-typo check;
+  // measures 385.5 KiB gzip.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 387 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -77,7 +87,12 @@ const ENTRY_GRAPHS = [
   // Bumped 163→164: BumpChart's UTC Date x labels (locale/time-zone-free, so
   // browser and renderChart agree) and time-aware default tooltip dates
   // measure 163.02 KiB gzip after trimming both helpers.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 164 },
+  // Bumped 164→165: one hatch tile for canvas and SVG (device-resolution
+  // canvas tile, lineOpacity), value-banded bar fills, domain-anchored
+  // semantic area fills, and tooltip flip state measure 164.5 KiB gzip.
+  // Lowered 165→163.5 (2026-09-30): the XY transition engine loads on demand
+  // (only `animate`/`transition` charts fetch it); measures 162.3 KiB gzip.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 163.5 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -86,7 +101,11 @@ const ENTRY_GRAPHS = [
   // 121.24 KiB gzip.
   // Bumped 122→123: under-layer band fills (canvas and SVG pre-render pass,
   // shared by every StreamXYFrame chart) measure 122.02 KiB gzip.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 123 },
+  // Bumped 123→124: the shared hatch tile, var()-safe label boxes, and
+  // tooltip flip state (all shared by every StreamXYFrame chart) measure
+  // 123.2 KiB gzip.
+  // Lowered 124→122 (2026-09-30): on-demand transitions measure 121.0 KiB gzip.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 122 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -127,14 +146,18 @@ const ENTRY_GRAPHS = [
     label: "artifact",
     // NA5 binds prepared Atlas payloads as data and registers three chart
     // identities. The published contract graph now measures 121.6 KiB gzip.
-    limitKb: 122
+    // Bumped 122→123: histogram valueBands and annotation labelColor in the
+    // chart specs measure 122.2 KiB gzip.
+    limitKb: 123
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
     label: "artifact/react",
     limitKb: 8
   },
-  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 130 },
+  // Bumped 130→131: the shared hatch tile, var()-safe label boxes, and
+  // tooltip flip state measure 130.0 KiB gzip, level with the old limit.
+  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 131 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
   // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling
@@ -163,7 +186,10 @@ const ENTRY_GRAPHS = [
   // (exported NetworkPerspectiveGround/Billboard, a realm-shared lazy context
   // so recipes and frames in separate bundles meet, invisible-fill wall guards,
   // a dev warning for unplaced decorations). Measures 164.7 KiB gzip.
-  { entry: "network.module.min.js", label: "network", limitKb: 165.5 },
+  // Bumped 165.5→166.5: the shared hatch tile, var()-safe label boxes, and
+  // tooltip flip state measure 165.8 KiB gzip.
+  // Shared lazy-module loading changes measure 166.7 KiB; retain narrow headroom.
+  { entry: "network.module.min.js", label: "network", limitKb: 167 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -182,6 +208,10 @@ const ENTRY_GRAPHS = [
   // across bundles, guards walls on invisible fills and warns in development
   // about unplaced layout decorations (168.1 KiB measured). The placement
   // components themselves stay out of this graph.
+  // Bumped 168.5→170: histogram value-banded fills (canvas and SVG), the
+  // shared hatch tile, and tooltip flip state measure 169.3 KiB gzip.
+  // Lowered 170→168.5 (2026-09-30): on-demand XY transitions measure
+  // 167.4 KiB gzip.
   { entry: "realtime.module.min.js", label: "realtime", limitKb: 168.5 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
@@ -195,7 +225,9 @@ const ENTRY_GRAPHS = [
   // theme/placement contract across rendering families. The common client
   // graph measures 164.3 KiB gzip; retain a narrow release headroom.
   // The shared StreamXYFrame custom-layout bridge measures 166.8 KiB here.
-  { entry: "physics.module.min.js", label: "physics", limitKb: 168 },
+  // Bumped 168→169: the shared hatch tile and tooltip flip state measure
+  // 167.9 KiB gzip.
+  { entry: "physics.module.min.js", label: "physics", limitKb: 169 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -213,7 +245,10 @@ const ENTRY_GRAPHS = [
   // (259.3 KiB measured).
   // Bumped 260→261.5: perspective thickness (tokens, slab walls, edge
   // shadows) in the same engine (260.8 KiB measured).
-  { entry: "server.module.min.js", label: "server", limitKb: 261.5 },
+  // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
+  // (var()-free) annotation label paints, and the shared hatch tile measure
+  // 261.8 KiB gzip.
+  { entry: "server.module.min.js", label: "server", limitKb: 262.5 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -299,7 +334,9 @@ const ENTRY_GRAPHS = [
   // Bumped 600→610: the AI graph carries the network charts' perspective
   // engine and the static renderer's extras (609.5 KiB measured).
   // Bumped 610→612: perspective thickness in that engine (611.2 KiB measured).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 612 },
+  // Bumped 612→614: axis-config key validation, value-banded histogram
+  // fills, and the shared hatch tile measure 613.5 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 614 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -327,7 +364,10 @@ const ENTRY_GRAPHS = [
   // Bumped 286.5→288: perspective thickness in that engine (287.4 KiB measured).
   // Bumped 288→289.5: Atlas layouts (dependency forest) and NetworkCustomChart
   // place their decorations under a perspective (288.7 KiB measured).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 289.5 },
+  // Bumped 289.5→290.5: the shared hatch tile, var()-safe label boxes, and
+  // tooltip flip state measure 289.8 KiB gzip.
+  // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 291 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

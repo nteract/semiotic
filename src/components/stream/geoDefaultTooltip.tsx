@@ -8,10 +8,12 @@ import { smartTooltipEntries, formatVal } from "../charts/shared/tooltipUtils"
 import * as React from "react"
 import type { HoverData } from "../realtime/types"
 import { defaultTooltipStyle } from "../Tooltip/Tooltip"
+import { markTooltipChrome } from "../Tooltip/tooltipChrome"
 
 type GeoTooltipData = HoverData | null
 
-function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
+// Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultGeoTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
   if (!data) return null
   // GeoJSON features: show properties (lifted to top-level on the hover wrapper)
   if (data.properties) {
@@ -45,8 +47,6 @@ function DefaultGeoTooltip({ data }: { data: GeoTooltipData }) {
       ))}
     </div>
   )
-}
-// Tell FlippingTooltip this component paints its own chrome.
-;(DefaultGeoTooltip as unknown as { ownsChrome: boolean }).ownsChrome = true
+})
 
 export { DefaultGeoTooltip }

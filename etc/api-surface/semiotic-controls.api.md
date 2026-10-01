@@ -6,13 +6,15 @@ _Edit dist/semiotic-controls.d.ts's sources, then re-run `npm run docs:api-surfa
 ```
 const VISUALIZATION_CONTROL_TYPES: readonly ["value", "threshold", "partition-boundary", "time-window", "range-boundary"]
 function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, onObservation, controlType, controlId, chartId, chartType, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function DirectManipulationControl({ value, onChange, pointerToValue, min, max, step, largeStep, x, y, controlType, controlId, label, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function DirectManipulationControl({ value, onChange, pointToValue, pointerToValue, min, max, step, stepOrigin, largeStep, x, y, controlType, controlId, label, ariaRoleDescription, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function DirectManipulationMarkers({ values, onChange, markers, valueToPoint, pointToValue, min, max, step, stepOrigin, largeStep, ordered, label, ariaRoleDescription, controlType, controlId, radius, fill, stroke, strokeWidth, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType }: DirectManipulationMarkersProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function LinearBrush(props: LinearBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, onObservation, chartId, chartType, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
+function pointerToLocalPoint(event: ClientPointerEvent, element?: Element | null | undefined): ControlPoint | null
 function useMobileRangeControls(options: UseMobileRangeControlsOptions): UseMobileRangeControlsResult
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
 interface AuditVisualizationControlsOptions
@@ -22,7 +24,11 @@ interface ControlAuditFinding
 interface ControlAuditResult
 interface ControlObservation
 interface ControlObservationAdapterOptions
+interface ControlPoint
 interface DirectManipulationControlProps
+interface DirectManipulationMarker
+interface DirectManipulationMarkersChangeMeta
+interface DirectManipulationMarkersProps
 interface LinearBrushChangeMeta
 interface LinearBrushHandleRenderContext
 interface LinearBrushLabelRenderContext
@@ -91,6 +97,9 @@ interface-member ControlObservationAdapterOptions::property::chartType = optiona
 interface-member ControlObservationAdapterOptions::property::controlId = optional controlId: string | undefined
 interface-member ControlObservationAdapterOptions::property::controlType = required controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value"
 interface-member ControlObservationAdapterOptions::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member ControlPoint::property::x = required x: number
+interface-member ControlPoint::property::y = required y: number
+interface-member DirectManipulationControlProps::property::ariaRoleDescription = optional ariaRoleDescription: string | undefined
 interface-member DirectManipulationControlProps::property::chartId = optional chartId: string | undefined
 interface-member DirectManipulationControlProps::property::chartType = optional chartType: string | undefined
 interface-member DirectManipulationControlProps::property::className = optional className: string | undefined
@@ -110,15 +119,56 @@ interface-member DirectManipulationControlProps::property::onChange = required o
 interface-member DirectManipulationControlProps::property::onChangeEnd = optional onChangeEnd: ((value: number) => void) | undefined
 interface-member DirectManipulationControlProps::property::onChangeStart = optional onChangeStart: ((value: number) => void) | undefined
 interface-member DirectManipulationControlProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
-interface-member DirectManipulationControlProps::property::pointerToValue = required pointerToValue: (event: React.PointerEvent<SVGGElement>) => number | null | undefined
+interface-member DirectManipulationControlProps::property::pointToValue = optional pointToValue: ((point: ControlPoint) => number | null | undefined) | undefined
+interface-member DirectManipulationControlProps::property::pointerToValue = optional pointerToValue: ((event: React.PointerEvent<SVGGElement>) => number | null | undefined) | undefined
 interface-member DirectManipulationControlProps::property::radius = optional radius: number | undefined
 interface-member DirectManipulationControlProps::property::step = optional step: number | undefined
+interface-member DirectManipulationControlProps::property::stepOrigin = optional stepOrigin: number | undefined
 interface-member DirectManipulationControlProps::property::stroke = optional stroke: string | undefined
 interface-member DirectManipulationControlProps::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member DirectManipulationControlProps::property::value = required value: number
 interface-member DirectManipulationControlProps::property::valueText = optional valueText: string | undefined
 interface-member DirectManipulationControlProps::property::x = required x: number
 interface-member DirectManipulationControlProps::property::y = required y: number
+interface-member DirectManipulationMarker::property::className = optional className: string | undefined
+interface-member DirectManipulationMarker::property::controlId = optional controlId: string | undefined
+interface-member DirectManipulationMarker::property::fill = optional fill: string | undefined
+interface-member DirectManipulationMarker::property::label = required label: string
+interface-member DirectManipulationMarker::property::labelText = optional labelText: React.ReactNode
+interface-member DirectManipulationMarker::property::radius = optional radius: number | undefined
+interface-member DirectManipulationMarker::property::stroke = optional stroke: string | undefined
+interface-member DirectManipulationMarker::property::valueText = optional valueText: ((value: number) => string) | undefined
+interface-member DirectManipulationMarkersChangeMeta::property::index = required index: number
+interface-member DirectManipulationMarkersChangeMeta::property::source = required source: "keyboard" | "pointer"
+interface-member DirectManipulationMarkersProps::property::ariaRoleDescription = optional ariaRoleDescription: string | undefined
+interface-member DirectManipulationMarkersProps::property::chartId = optional chartId: string | undefined
+interface-member DirectManipulationMarkersProps::property::chartType = optional chartType: string | undefined
+interface-member DirectManipulationMarkersProps::property::className = optional className: string | undefined
+interface-member DirectManipulationMarkersProps::property::controlId = optional controlId: string | undefined
+interface-member DirectManipulationMarkersProps::property::controlType = optional controlType: "partition-boundary" | "range-boundary" | "threshold" | "time-window" | "value" | undefined
+interface-member DirectManipulationMarkersProps::property::disabled = optional disabled: boolean | undefined
+interface-member DirectManipulationMarkersProps::property::fill = optional fill: string | undefined
+interface-member DirectManipulationMarkersProps::property::label = optional label: string | undefined
+interface-member DirectManipulationMarkersProps::property::labelClassName = optional labelClassName: string | undefined
+interface-member DirectManipulationMarkersProps::property::labelDx = optional labelDx: number | undefined
+interface-member DirectManipulationMarkersProps::property::labelDy = optional labelDy: number | undefined
+interface-member DirectManipulationMarkersProps::property::largeStep = optional largeStep: number | undefined
+interface-member DirectManipulationMarkersProps::property::markers = required markers: readonly DirectManipulationMarker[]
+interface-member DirectManipulationMarkersProps::property::max = required max: number
+interface-member DirectManipulationMarkersProps::property::min = required min: number
+interface-member DirectManipulationMarkersProps::property::onChange = required onChange: (values: number[], meta: DirectManipulationMarkersChangeMeta) => void
+interface-member DirectManipulationMarkersProps::property::onChangeEnd = optional onChangeEnd: ((values: number[], meta: DirectManipulationMarkersChangeMeta) => void) | undefined
+interface-member DirectManipulationMarkersProps::property::onChangeStart = optional onChangeStart: ((values: number[], meta: DirectManipulationMarkersChangeMeta) => void) | undefined
+interface-member DirectManipulationMarkersProps::property::onObservation = optional onObservation: ControlObservationCallback | undefined
+interface-member DirectManipulationMarkersProps::property::ordered = optional ordered: boolean | undefined
+interface-member DirectManipulationMarkersProps::property::pointToValue = required pointToValue: (point: ControlPoint, index: number) => number | null | undefined
+interface-member DirectManipulationMarkersProps::property::radius = optional radius: number | undefined
+interface-member DirectManipulationMarkersProps::property::step = optional step: number | undefined
+interface-member DirectManipulationMarkersProps::property::stepOrigin = optional stepOrigin: number | undefined
+interface-member DirectManipulationMarkersProps::property::stroke = optional stroke: string | undefined
+interface-member DirectManipulationMarkersProps::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member DirectManipulationMarkersProps::property::valueToPoint = required valueToPoint: (value: number, index: number) => ControlPoint
+interface-member DirectManipulationMarkersProps::property::values = required values: readonly number[]
 interface-member LinearBrushChangeMeta::property::atDomainEnd = required atDomainEnd: boolean
 interface-member LinearBrushChangeMeta::property::atDomainStart = required atDomainStart: boolean
 interface-member LinearBrushChangeMeta::property::changed = required changed: boolean

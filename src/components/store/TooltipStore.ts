@@ -6,7 +6,7 @@ interface TooltipStoreState {
   changeTooltip: (tooltip: unknown) => void
 }
 
-const [TooltipProvider, useTooltip] = createStore<TooltipStoreState>((set) => ({
+const [TooltipProvider, useTooltip] = /* @__PURE__ */ createStore<TooltipStoreState>((set) => ({
   tooltip: null,
   changeTooltip(tooltip: unknown) {
     set(() => ({ tooltip }))

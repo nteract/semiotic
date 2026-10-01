@@ -31,6 +31,7 @@
  * accurate enough for a padded backdrop and identical on both backends.
  */
 import * as React from "react"
+import { cssVarFallback, isCssVarPaint } from "./cssVarFallback"
 
 export interface AnnotationLabelBackgroundConfig {
   /** Backdrop treatment. @default "halo" */
@@ -190,6 +191,14 @@ export function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement
     rectY = y - fontSize * 0.8 - padY
   }
 
+  // Same reasoning as the halo: a var() paint goes in `style`, where the CSS
+  // cascade resolves it. The attribute keeps the literal fallback for
+  // renderers that don't evaluate CSS.
+  const boxFill = bg.fill ?? DEFAULT_HALO_COLOR
+  const boxStyle: React.CSSProperties = {}
+  if (isCssVarPaint(boxFill)) boxStyle.fill = boxFill
+  if (isCssVarPaint(bg.stroke)) boxStyle.stroke = bg.stroke
+
   return (
     <g className={className}>
       <rect
@@ -199,10 +208,11 @@ export function AnnotationLabel(props: AnnotationLabelProps): React.ReactElement
         height={boxH}
         rx={bg.radius ?? 3}
         ry={bg.radius ?? 3}
-        fill={bg.fill ?? DEFAULT_HALO_COLOR}
+        fill={isCssVarPaint(boxFill) ? cssVarFallback(boxFill) : boxFill}
         fillOpacity={bg.opacity ?? DEFAULT_BOX_OPACITY}
-        stroke={bg.stroke}
+        stroke={isCssVarPaint(bg.stroke) ? cssVarFallback(bg.stroke) : bg.stroke}
         strokeWidth={bg.strokeWidth}
+        {...(boxStyle.fill || boxStyle.stroke ? { style: boxStyle } : {})}
       />
       {textEl()}
     </g>

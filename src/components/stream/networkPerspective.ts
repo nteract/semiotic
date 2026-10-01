@@ -235,7 +235,7 @@ export interface NetworkPerspectiveFrame {
 }
 
 const DEG = Math.PI / 180
-const TRUE_ISOMETRIC_TILT = Math.asin(Math.tan(30 * DEG)) / DEG // 35.264°
+const TRUE_ISOMETRIC_TILT = /* @__PURE__ */ Math.asin(/* @__PURE__ */ Math.tan(30 * DEG)) / DEG // 35.264°
 
 const PRESETS: Record<
   Exclude<NetworkPerspectiveName, "flat">,
@@ -347,7 +347,7 @@ export function buildNetworkPerspectiveFrame(
 }
 
 /** Identity frame (flat). */
-export const FLAT_NETWORK_PERSPECTIVE_FRAME = buildNetworkPerspectiveFrame(
+export const FLAT_NETWORK_PERSPECTIVE_FRAME = /* @__PURE__ */ buildNetworkPerspectiveFrame(
   "flat",
   [1, 0, 0, 1, 0, 0],
   0

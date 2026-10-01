@@ -51,7 +51,7 @@ export const PieChartCapability: ChartCapability = {
   // Pie comparison via angle is perceptually weak above ~7 slices (Cleveland-McGill
   // rank position vs angle); the descriptor `fits()` caps at 8 already, but in
   // the 5–8 range we still bias against to nudge toward bar-style alternatives.
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     cardinality: { sweetSpot: [2, 5], caveatAbove: 6 },
   }),
 }

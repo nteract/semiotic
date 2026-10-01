@@ -9,7 +9,7 @@ export interface PipelineUpdateResultSource {
   subscribe(listener: () => void): () => void
 }
 
-/** Public lifecycle surface installed on each stream store prototype. */
+/** Public lifecycle surface shared by every stream store. */
 export interface UpdateResultStore {
   getLastUpdateResult(): UpdateResult
   getUpdateSnapshot(): UpdateResult
@@ -21,50 +21,42 @@ export interface UpdateResultStore {
 
 const stylePaintPending = new WeakMap<object, boolean>()
 
-function getLastUpdateResult(
-  this: { updateResults: PipelineUpdateResultSource }
-): UpdateResult {
-  return this.updateResults.last
-}
+/**
+ * Shared lifecycle methods for every stream store.
+ *
+ * A method-only base class (no fields, no constructor work) instead of a
+ * prototype mixin: a module-scope `Object.assign(Store.prototype, ...)` call is
+ * a side effect that consumer bundlers must retain, which pinned each store
+ * (and everything it references) into any bundle that touched its chunk.
+ */
+export abstract class UpdateResultStoreBase implements UpdateResultStore {
+  protected abstract updateResults: PipelineUpdateResultSource
 
-function getUpdateSnapshot(
-  this: { updateResults: PipelineUpdateResultSource }
-): UpdateResult {
-  return this.updateResults.last
-}
+  getLastUpdateResult(): UpdateResult {
+    return this.updateResults.last
+  }
 
-function subscribeUpdateResult(
-  this: { updateResults: PipelineUpdateResultSource },
-  listener: () => void
-): () => void {
-  return this.updateResults.subscribe(listener)
-}
+  getUpdateSnapshot(): UpdateResult {
+    return this.updateResults.last
+  }
 
-function setLayoutSelection(
-  this: { config: { layoutSelection?: CustomLayoutSelection | null } },
-  selection: CustomLayoutSelection | null
-): void {
-  this.config.layoutSelection = selection
-}
+  subscribeUpdateResult(listener: () => void): () => void {
+    return this.updateResults.subscribe(listener)
+  }
 
-function markStylePaintPending(this: object): void {
-  stylePaintPending.set(this, true)
-}
+  setLayoutSelection(selection: CustomLayoutSelection | null): void {
+    // Each store keeps its config private; the selection slot is the only
+    // shared field this lifecycle writes.
+    ;(this as unknown as { config: { layoutSelection?: CustomLayoutSelection | null } }).config.layoutSelection = selection
+  }
 
-function consumeStylePaintPending(this: object): boolean {
-  const pending = stylePaintPending.get(this) === true
-  stylePaintPending.delete(this)
-  return pending
-}
+  markStylePaintPending(): void {
+    stylePaintPending.set(this, true)
+  }
 
-/** Adds the shared lifecycle methods without imposing a base-class constructor. */
-export function attachUpdateResultStore(target: { prototype: object }): void {
-  Object.assign(target.prototype, {
-    getLastUpdateResult,
-    getUpdateSnapshot,
-    subscribeUpdateResult,
-    setLayoutSelection,
-    markStylePaintPending,
-    consumeStylePaintPending
-  })
+  consumeStylePaintPending(): boolean {
+    const pending = stylePaintPending.get(this) === true
+    stylePaintPending.delete(this)
+    return pending
+  }
 }

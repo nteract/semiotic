@@ -14,8 +14,8 @@ const metricMap = {
 const selector = {
   type: "object",
   properties: {
-    ids: stringArray(),
-    categories: stringArray(),
+    ids: /* @__PURE__ */ stringArray(),
+    categories: /* @__PURE__ */ stringArray(),
     statuses: {
       type: "array",
       items: {
@@ -33,7 +33,7 @@ const selector = {
       },
       minItems: 1
     },
-    outletIds: stringArray(),
+    outletIds: /* @__PURE__ */ stringArray(),
     count: { type: "integer", minimum: 0 }
   },
   additionalProperties: false
@@ -53,7 +53,7 @@ const relation = {
   type: "object",
   properties: {
     id: { type: "string" },
-    sourceIds: stringArray(2),
+    sourceIds: /* @__PURE__ */ stringArray(2),
     label: { type: "string" },
     category: { type: "string" },
     strength: { type: "number" },
@@ -116,7 +116,7 @@ const effect = {
       description: "Resolve previously authored relations.",
       properties: {
         type: { const: "resolve-relation" },
-        relationIds: stringArray(),
+        relationIds: /* @__PURE__ */ stringArray(),
         resolution: {
           type: "string",
           enum: ["combined", "rejected", "expired"]
@@ -132,9 +132,9 @@ const effect = {
         "Combine named sources into a declared product. Set complete=false before later contribute effects.",
       properties: {
         type: { const: "combine" },
-        sourceIds: stringArray(),
+        sourceIds: /* @__PURE__ */ stringArray(),
         productId: { type: "string" },
-        basisRelationIds: stringArray(),
+        basisRelationIds: /* @__PURE__ */ stringArray(),
         loss,
         complete: { type: "boolean", default: true }
       },
@@ -146,9 +146,9 @@ const effect = {
       description: "Add named sources to an explicitly forming product.",
       properties: {
         type: { const: "contribute" },
-        sourceIds: stringArray(),
+        sourceIds: /* @__PURE__ */ stringArray(),
         productId: { type: "string" },
-        basisRelationIds: stringArray(),
+        basisRelationIds: /* @__PURE__ */ stringArray(),
         loss
       },
       required: ["type", "sourceIds", "productId"],
@@ -210,7 +210,7 @@ const effect = {
             },
             {
               type: "object",
-              properties: { productIds: stringArray() },
+              properties: { productIds: /* @__PURE__ */ stringArray() },
               required: ["productIds"],
               additionalProperties: false
             }

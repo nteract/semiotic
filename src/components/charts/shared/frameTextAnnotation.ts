@@ -56,7 +56,7 @@ export interface FrameTextStyleDefaults {
   fontFamily: string
 }
 
-const POSITION_SET = new Set<string>(FRAME_TEXT_POSITIONS)
+const POSITION_SET = /* @__PURE__ */ new Set<string>(FRAME_TEXT_POSITIONS)
 
 /** Resolve a `frame-text` annotation without consulting data scales. */
 export function resolveFrameTextPosition(

@@ -20,7 +20,7 @@ function deterministicUnit(index: number, seed: number): number {
  * agreement.
  */
 
-const monthlyRevenueMultiSeries = (() => {
+const monthlyRevenueMultiSeries = /* @__PURE__ */ (() => {
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
   const regions = ["EU", "NA", "APAC"]
   return regions.flatMap((region, regionIdx) =>
@@ -32,7 +32,7 @@ const monthlyRevenueMultiSeries = (() => {
   )
 })()
 
-const monthlyRevenueOneSeries = Array.from({ length: 12 }, (_, i) => ({
+const monthlyRevenueOneSeries = /* @__PURE__ */ Array.from({ length: 12 }, (_, i) => ({
   month: i + 1,
   revenue: 1000 + i * 150 + Math.sin(i / 2) * 100
 }))
@@ -45,7 +45,7 @@ const productSales = [
   { product: "Doohickey", units: 410 }
 ]
 
-const surveySatisfaction = Array.from({ length: 150 }, (_, i) => ({
+const surveySatisfaction = /* @__PURE__ */ Array.from({ length: 150 }, (_, i) => ({
   respondent_id: i + 1,
   satisfaction: Math.max(
     1,
@@ -54,7 +54,7 @@ const surveySatisfaction = Array.from({ length: 150 }, (_, i) => ({
   cohort: ["Beta", "GA", "Enterprise"][i % 3]
 }))
 
-const studyHoursVsGrade = Array.from({ length: 80 }, (_, i) => {
+const studyHoursVsGrade = /* @__PURE__ */ Array.from({ length: 80 }, (_, i) => {
   const hours = deterministicUnit(i, 23) * 40
   return {
     student_id: `s${i + 1}`,
@@ -167,7 +167,7 @@ const usGeoFeatures = {
   ]
 }
 
-const flatSingleColumn = Array.from({ length: 50 }, (_, i) => ({
+const flatSingleColumn = /* @__PURE__ */ Array.from({ length: 50 }, (_, i) => ({
   observation: 50 + Math.sin(i / 4) * 12 + deterministicUnit(i, 41) * 6
 }))
 
@@ -236,7 +236,7 @@ const economiesByCountry = [
 ]
 
 // Multi-measure time series for MultiAxisLineChart
-const websiteMetrics = Array.from({ length: 24 }, (_, i) => ({
+const websiteMetrics = /* @__PURE__ */ Array.from({ length: 24 }, (_, i) => ({
   month: i + 1,
   page_views: Math.round(50000 + i * 1200 + Math.sin(i / 3) * 8000),
   conversion_rate: 2.5 + Math.sin(i / 4) * 0.8 + i * 0.05,
@@ -261,12 +261,12 @@ const salesByRegionAndProduct = [
 
 // Coerce to exactly-two-series shape by partitioning evenly
 const revenueVsExpensesTwoSeries = [
-  ...Array.from({ length: 24 }, (_, i) => ({
+  .../* @__PURE__ */ Array.from({ length: 24 }, (_, i) => ({
     month: i + 1,
     amount: 100 + i * 8 + Math.sin(i / 3) * 25,
     series: "revenue"
   })),
-  ...Array.from({ length: 24 }, (_, i) => ({
+  .../* @__PURE__ */ Array.from({ length: 24 }, (_, i) => ({
     month: i + 1,
     amount: 80 + i * 6 + Math.cos(i / 4) * 15,
     series: "expenses"
@@ -274,7 +274,7 @@ const revenueVsExpensesTwoSeries = [
 ]
 
 // OHLC time series for CandlestickChart
-const stockPrices = Array.from({ length: 30 }, (_, i) => {
+const stockPrices = /* @__PURE__ */ Array.from({ length: 30 }, (_, i) => {
   const base = 100 + i * 1.2 + Math.sin(i / 4) * 8
   const open = base + (deterministicUnit(i, 53) - 0.5) * 4
   const close = base + (deterministicUnit(i, 59) - 0.5) * 4
@@ -284,7 +284,7 @@ const stockPrices = Array.from({ length: 30 }, (_, i) => {
 })
 
 // Ordered-sequence scatter for ConnectedScatterplot
-const usaUnemploymentVsInflation = Array.from({ length: 20 }, (_, i) => ({
+const usaUnemploymentVsInflation = /* @__PURE__ */ Array.from({ length: 20 }, (_, i) => ({
   year: 2005 + i,
   unemployment: 5 + Math.sin(i / 2) * 2 + (i > 4 && i < 10 ? 3 : 0),
   inflation: 2 + Math.cos(i / 3) * 1.5
@@ -383,7 +383,7 @@ const transitionEvents = [
 // Category × category matrix with a numeric value — fixture for Heatmap.
 // Dense enough (8 services × 7 weekdays = 56 cells) that a matrix is the
 // honest expert answer over grouped bars.
-const incidentsByServiceAndDay = (() => {
+const incidentsByServiceAndDay = /* @__PURE__ */ (() => {
   const services = [
     "auth",
     "billing",

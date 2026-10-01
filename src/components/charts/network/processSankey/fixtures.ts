@@ -14,11 +14,11 @@ export const processLineageFixture: {
   nodes: ProcessSankeyNode[]
   edges: ProcessSankeyEdge[]
 } = {
-  nodes: [
+  nodes: /* @__PURE__ */ [
     "topic-a", "topic-b", "parse-a", "parse-b", "join",
     "repartition", "aggregate", "sink-a", "sink-b",
   ].map((id) => ({ id })),
-  edges: edgesFromTuples([
+  edges: /* @__PURE__ */ edgesFromTuples([
     ["ta-pa", "topic-a", "parse-a", 8, 0, 10],
     ["tb-pb", "topic-b", "parse-b", 5, 0, 10],
     ["pa-j", "parse-a", "join", 8, 14, 24],
@@ -36,11 +36,11 @@ export const processHospitalFixture: {
   nodes: ProcessSankeyNode[]
   edges: ProcessSankeyEdge[]
 } = {
-  nodes: [
+  nodes: /* @__PURE__ */ [
     "ER", "Clinic", "Referral", "ICU", "Surgery", "Ward", "Imaging",
     "Lab", "Rehab", "Skilled", "Home", "Hospice",
   ].map((id) => ({ id, xExtent: [0, 100] })),
-  edges: edgesFromTuples([
+  edges: /* @__PURE__ */ edgesFromTuples([
     ["er-icu", "ER", "ICU", 18, 5, 38],
     ["er-ward", "ER", "Ward", 12, 8, 45],
     ["er-imaging", "ER", "Imaging", 7, 10, 55],

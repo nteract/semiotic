@@ -34,8 +34,12 @@ import {
   makeMultiAxisRuleContext,
   resolveMultiAxisSeriesColors,
 } from "./multiAxisFields"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(lineXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureMultiAxisLineChartRegistrations(): void {
+  registerXYPlugin(lineXYPlugin)
+}
 
 /**
  * Configuration for a single series in a MultiAxisLineChart.
@@ -168,10 +172,11 @@ function invertUnitized(unitized: number, extent: [number, number]): number {
  * />
  * ```
  */
-export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
+export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
   props: MultiAxisLineChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
+  ensureMultiAxisLineChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
   const extentsRef = useRef<[number, number][]>([])
   // `seriesRef` lets the imperative handle read the LATEST series prop
@@ -312,7 +317,7 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
   }, [frameProps.legendLayout, isDualAxis])
 
   // Warn in dev mode if not exactly 2 series
-  if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production" && !isDualAxis) {
+  if (process.env.NODE_ENV !== "production" && !isDualAxis) {
 
     console.warn(
       `[MultiAxisLineChart] Expected exactly 2 series for dual-axis mode, got ${series.length}. ` +
@@ -678,10 +683,9 @@ export const MultiAxisLineChart = forwardRef(function MultiAxisLineChart<TDatum 
       <StreamXYFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "MultiAxisLineChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }
-MultiAxisLineChart.displayName = "MultiAxisLineChart"

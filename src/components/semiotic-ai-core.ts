@@ -9,6 +9,9 @@
 
 import { registerBuiltInChartRecipeManifests } from "./ai/builtInChartRecipes"
 
+// Entry-level registration: importing this entry makes the built-in recipe
+// manifests part of the capability catalog. Keep it in the entry module, never
+// a shared one, so it cannot pin code in other entries' published chunks.
 registerBuiltInChartRecipeManifests()
 
 export { validateProps } from "./charts/shared/validateProps"

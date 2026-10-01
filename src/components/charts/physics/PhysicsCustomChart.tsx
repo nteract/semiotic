@@ -50,6 +50,7 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import { resolveCustomLayout } from "./physicsCustomLayout"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export { resolveCustomLayout } from "./physicsCustomLayout"
 
@@ -190,7 +191,7 @@ function normalizeSpawnDatumResult(
   }
 }
 
-export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
+export const PhysicsCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PhysicsCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(
@@ -495,7 +496,7 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
     />,
     layoutMode
   )
-}) as unknown as {
+}), "PhysicsCustomChart") as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>
@@ -505,8 +506,5 @@ export const PhysicsCustomChart = forwardRef(function PhysicsCustomChart<
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(PhysicsCustomChart as { displayName?: string }).displayName =
-  "PhysicsCustomChart"
 
 export default PhysicsCustomChart

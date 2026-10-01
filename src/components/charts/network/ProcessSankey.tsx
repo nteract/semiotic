@@ -41,8 +41,12 @@ import type { LegendGroup } from "../../types/legendTypes"
 import { clampLegendReservation, reserveLegendMargin } from "../../legendLayout"
 import type { ProcessSankeyProps } from "./ProcessSankeyProps"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureProcessSankeyRegistrations(): void {
+  registerNetworkPerspective()
+}
 
 export type {
   ProcessSankeyProps,
@@ -101,13 +105,14 @@ type TimeLike = ProcessSankeyTimeLike
  * />
  * ```
  */
-export const ProcessSankey = forwardRef(function ProcessSankey<
+export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProcessSankey<
   TNode extends Datum = Datum,
   TEdge extends Datum = Datum
 >(
   props: ProcessSankeyProps<TNode, TEdge>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
+  ensureProcessSankeyRegistrations()
   const {
     nodes: rawNodesProp,
     edges: rawEdgesProp,
@@ -698,15 +703,12 @@ export const ProcessSankey = forwardRef(function ProcessSankey<
       />
     </div>
   )
-}) as unknown as {
+}), "ProcessSankey") as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(
     props: ProcessSankeyProps<TNode, TEdge> &
       React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(ProcessSankey as unknown as { displayName?: string }).displayName =
-  "ProcessSankey"
 
 export default ProcessSankey

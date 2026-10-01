@@ -1,4 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import "../../test-utils/provideXYTransitionEngine"
 import * as React from "react"
 import { act, fireEvent, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"

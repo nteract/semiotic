@@ -12,6 +12,7 @@ import ts from "typescript"
 import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
 import { libraryTerserOptions as terserOptions } from "./lib/library-minification-options.mjs"
+import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
@@ -96,7 +97,10 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }
   return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
-    // helpers (optional chaining, nullish coalescing, class fields stay native).
+    // helpers (optional chaining and nullish coalescing stay native). Class
+    // fields are ES2022, so esbuild lowers them: a `static` field becomes a
+    // post-class assignment that consumer bundlers must retain. Prefer
+    // module-level constants for library classes.
     target: "es2020",
     platform: serverOnly ? "node" : "neutral",
     dts: false,
@@ -1563,6 +1567,15 @@ async function build() {
     esbuildPlugins: [nodeStaticMarkupSourcePlugin()]
   })
   writeNodeExperimentalFacade()
+  // esbuild links chunks with side-effect-only imports to preserve evaluation
+  // order. Consumer bundlers that honor them hoist the target into the eager
+  // graph even when only a lazy chunk needs it; drop them when the target's
+  // whole static closure has no load-time effects.
+  const bareImports = stripPureBareChunkImports("dist")
+  console.log(
+    `\u2705 dropped ${bareImports.stripped} inert side-effect-only chunk imports ` +
+      `(kept ${bareImports.kept.size} targets with load-time effects)`
+  )
 
   // ── CJS: one client namespace graph + independent non-client entries ─────
   // CommonJS cannot split chunks. Building every browser subpath separately

@@ -148,7 +148,7 @@ export function runSceneBuild(
  * host effects, so a useSyncExternalStore subscription here could feed those
  * diagnostics back into the host's render cycle.
  */
-export const SceneRevisionDiagnosticsObserver = memo(
+export const SceneRevisionDiagnosticsObserver = /* @__PURE__ */ memo(
   function SceneRevisionDiagnosticsObserver({
     store,
     diagnostics

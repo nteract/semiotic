@@ -58,4 +58,82 @@ describe("Semiotic custom lint rules", () => {
     `
     assert.equal(lint(separateTests, "semiotic/interaction-test-layout-control", "src/example.test.tsx").length, 0)
   })
+  it("keeps library module scope free of tree-shaking side effects", () => {
+    const rule = "semiotic/no-module-side-effects"
+    const chart = "src/components/charts/xy/LineChart.tsx"
+    const clean = [
+      '"use client"',
+      'import { forwardRef, createContext } from "react"',
+      "void axisKeysComplete",
+      "const Ctx = /* @__PURE__ */ createContext(null)",
+      'export const Chart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Chart() { registerPlugins() }), "Chart")',
+      "function registerPlugins() { registerXYPlugin(plugin) }"
+    ].join("\n")
+    assert.equal(lint(clean, rule, chart).length, 0)
+
+    const findings = lint([
+      "registerXYPlugin(plugin)",
+      'Chart.displayName = "Chart"',
+      "const Ctx = createContext(null)",
+      "export const Wrapped = /* @__PURE__ */ withDisplayName(forwardRef(render), \"Wrapped\")",
+      "const Lazy = React.lazy(() => import(\"./x\"))"
+    ].join("\n"), rule, chart)
+    assert.deepEqual(findings.map(finding => finding.messageId), [
+      "sideEffectStatement",
+      "sideEffectStatement",
+      "unannotatedFactory",
+      "unannotatedFactory",
+      "unannotatedFactory"
+    ])
+
+    // Tests, the server graph, and entry modules may register at load.
+    for (const exempt of ["src/components/charts/xy/LineChart.test.tsx", "src/components/server/staticXY.tsx", "src/components/semiotic-ai.ts", "docs/src/components/BlocksView.jsx"]) {
+      assert.equal(lint("registerXYPlugin(plugin)", rule, exempt).length, 0, exempt)
+    }
+  })
+
+  it("checks all calls and constructors throughout module initializers", () => {
+    const rule = "semiotic/no-module-side-effects"
+    const file = "src/components/example.ts"
+    for (const code of [
+      "const registration = registerPlugin(plugin)",
+      "const cache = new SideEffectfulCache()",
+      "const x = { value: enabled ? register() : 0 }",
+      "const x = [register()] satisfies unknown[]",
+      "const x = /* @__PURE__ */ wrap({ value: register() })",
+      "const x = /* @__PURE__ */ wrap(new SideEffectfulCache())",
+      "const x = /* @__PURE__ */ factory()()",
+      "const x = condition && (register() as unknown)",
+      "export default register()",
+      "const { x = register() } = config",
+      "class C { [register()]() {} }",
+      "const C = class extends mixin(Base) {}",
+      "const x = new Set(iterable)",
+      "const x = Object.freeze(sharedObject)",
+      "const x = Array.from([], register)",
+      "const Set = SideEffectfulCache; const x = new Set()",
+      "const Object = custom; const x = Object.freeze({})",
+      "const x = /* @__PURE__ */ (0, register())"
+    ]) assert.ok(lint(code, rule, file).some((finding) => finding.messageId === "unannotatedCall"), code)
+
+    for (const code of [
+      "const cache = /* @__PURE__ */ new PrivateCache()",
+      "const x = /* @__PURE__ */ wrap({ value: /* @__PURE__ */ calculate() })",
+      "const x = new Set(['a', 'b']); const y = new Map(); const z = new WeakMap()",
+      "const x = Object.freeze({ a: 1 }); const y = Symbol.for('key')",
+      "class C { field = register(); method() { register() } }",
+      "const C = class { field = new SideEffectfulCache() }",
+      "const obj = { method() { register() }, get value() { return register() } }",
+      "const run = () => register()"
+    ]) assert.deepEqual(lint(code, rule, file), [], code)
+
+    for (const code of [
+      "const x = (globalThis.registry ??= new Map())",
+      "const x = counter++",
+      "const x = delete shared.key",
+      "const x = await pending",
+      "const x = tag`template`",
+      "const x = /* @__PURE__ */ wrap(shared.value = 1)"
+    ]) assert.ok(lint(code, rule, file).some((finding) => finding.messageId === "sideEffectStatement"), code)
+  })
 })

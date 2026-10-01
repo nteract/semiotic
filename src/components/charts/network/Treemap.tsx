@@ -29,10 +29,13 @@ import {
   type StyleRule,
 } from "../shared/styleRules"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerNetworkPerspective()
-
-registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureTreemapRegistrations(): void {
+  registerNetworkPerspective()
+  registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
+}
 
 /**
  * Treemap component props
@@ -115,7 +118,8 @@ export interface TreemapProps<TNode extends Datum = Datum> extends BaseChartProp
  * />
  * ```
  */
-export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>) {
+export const Treemap = /* @__PURE__ */ withDisplayName(function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>) {
+  ensureTreemapRegistrations()
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -352,5 +356,4 @@ export function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>)
       {...framePropsRest}
     />
   </SafeRender>)
-}
-Treemap.displayName = "Treemap"
+}, "Treemap")

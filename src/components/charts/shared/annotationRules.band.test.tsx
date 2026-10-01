@@ -201,3 +201,36 @@ describe("under-layer bands", () => {
     }
   })
 })
+
+describe("labelColor", () => {
+  const render = (ann: Record<string, unknown>) =>
+    renderToStaticMarkup(rules(ann, 0, context) as React.ReactElement)
+
+  it("paints threshold label text independently of the line color", () => {
+    for (const type of ["y-threshold", "x-threshold"]) {
+      const svg = render({
+        type,
+        value: 50,
+        label: "Limit",
+        color: "#dc2626",
+        labelColor: "#ffffff",
+        labelBackground: { type: "box", fill: "#1f2937" },
+      })
+      expect(svg).toMatch(/<line[^>]*stroke="#dc2626"/)
+      expect(svg).toMatch(/<text[^>]*fill="#ffffff"[^>]*>Limit<\/text>/)
+      expect(svg).toMatch(/<rect[^>]*fill="#1f2937"/)
+    }
+  })
+
+  it("keeps the line color on the label without labelColor", () => {
+    const svg = render({ type: "y-threshold", value: 50, label: "Limit", color: "#dc2626" })
+    expect(svg).toMatch(/<text[^>]*fill="#dc2626"[^>]*>Limit<\/text>/)
+  })
+
+  it("applies to band and x-band labels", () => {
+    const band = render({ type: "band", y0: 20, y1: 40, label: "Band", color: "#fee2e2", labelColor: "#7f1d1d" })
+    const xBand = render({ type: "x-band", x0: 20, x1: 40, label: "Window", color: "#e0f2fe", labelColor: "#075985" })
+    expect(band).toMatch(/<text[^>]*fill="#7f1d1d"[^>]*>Band<\/text>/)
+    expect(xBand).toMatch(/<text[^>]*fill="#075985"[^>]*>Window<\/text>/)
+  })
+})

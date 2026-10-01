@@ -13,7 +13,7 @@ export interface ThemeStoreState {
   setTheme: (theme: ThemeStoreUpdate) => void
 }
 
-export const [ThemeProvider, useThemeSelector] = createStore<ThemeStoreState>(
+export const [ThemeProvider, useThemeSelector] = /* @__PURE__ */ createStore<ThemeStoreState>(
   (set) => ({
     theme: LIGHT_THEME,
 

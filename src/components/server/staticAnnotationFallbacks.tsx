@@ -20,6 +20,8 @@ import type { CurveType } from "../stream/types"
 import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
 import { annotationActivationProps } from "../charts/shared/annotationActivation"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { SemioticTheme } from "../store/themeCore"
+import { ssrLabelBackground } from "./ssrLabelBackground"
 import { forecastModel } from "../charts/shared/forecastModel"
 import { trendGeometry } from "../charts/shared/statisticalAnnotationGeometry"
 import {
@@ -60,7 +62,12 @@ export function renderStaticAnnotationFallback(
   ann: Datum,
   index: number,
   context: AnnotationContext,
+  theme?: SemioticTheme,
 ): React.ReactNode | null {
+  // Standalone SVG can't resolve CSS variables, so enclosures default to the
+  // theme's literal secondary text color.
+  const encloseColor = ann.color || theme?.colors.textSecondary || "#666"
+  const encloseLabelBackground = theme ? ssrLabelBackground(ann, theme, "none") : (ann.labelBackground ?? "none")
   switch (ann.type) {
     case "enclose": {
       const coords = (ann.coordinates || [])
@@ -84,7 +91,7 @@ export function renderStaticAnnotationFallback(
             r={enclosure.r + padding}
             fill={ann.fill || "none"}
             fillOpacity={ann.fillOpacity ?? 0.1}
-            stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
+            stroke={encloseColor}
             strokeWidth={1.5}
             strokeDasharray="4,2"
           />
@@ -93,10 +100,10 @@ export function renderStaticAnnotationFallback(
               x={enclosure.x}
               y={enclosure.y - enclosure.r - padding - 4}
               textAnchor="middle"
-              fill={ann.color || "var(--semiotic-text-secondary, #666)"}
+              fill={encloseColor}
               fontSize={12}
               text={ann.label}
-              background={ann.labelBackground ?? "none"}
+              background={encloseLabelBackground}
             />
           )}
         </g>
@@ -130,7 +137,7 @@ export function renderStaticAnnotationFallback(
             height={maxY - minY}
             fill={ann.fill || "none"}
             fillOpacity={ann.fillOpacity ?? 0.1}
-            stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
+            stroke={encloseColor}
             strokeWidth={1.5}
             strokeDasharray="4,2"
           />
@@ -139,10 +146,10 @@ export function renderStaticAnnotationFallback(
               x={(minX + maxX) / 2}
               y={minY - 4}
               textAnchor="middle"
-              fill={ann.color || "var(--semiotic-text-secondary, #666)"}
+              fill={encloseColor}
               fontSize={12}
               text={ann.label}
-              background={ann.labelBackground ?? "none"}
+              background={encloseLabelBackground}
             />
           )}
         </g>

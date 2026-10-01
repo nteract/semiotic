@@ -59,7 +59,10 @@ export interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement> {
  * )}
  * ```
  */
-export function TooltipRoot({
+// FlippingTooltip inspects the immediate React element before function
+// components render. The static flag lets <TooltipRoot /> declare ownership at
+// that point, just like the built-in frame tooltip components do.
+export const TooltipRoot = /* @__PURE__ */ markTooltipChrome(function TooltipRoot({
   chrome = "default",
   className = "",
   style,
@@ -80,7 +83,7 @@ export function TooltipRoot({
       {children}
     </div>
   )
-}
+})
 
 /**
  * Mark a component or tooltip renderer as owning its tooltip chrome. Marking
@@ -93,11 +96,6 @@ export function markTooltipChrome<T>(component: T): T {
   ;(component as T & { ownsChrome: boolean }).ownsChrome = true
   return component
 }
-
-// FlippingTooltip inspects the immediate React element before function
-// components render. The static flag lets <TooltipRoot /> declare ownership at
-// that point, just like the built-in frame tooltip components do.
-markTooltipChrome(TooltipRoot)
 
 function paintsInlineBackground(value: unknown): boolean {
   if (typeof value !== "string") return value != null

@@ -78,7 +78,7 @@ export const CALENDAR_HEATMAP_CONFIG_SCHEMA: SerializableSchema = {
   }
 }
 
-export const parallelCoordinatesRecipe = defineChartRecipe({
+export const parallelCoordinatesRecipe = /* @__PURE__ */ defineChartRecipe({
   id: PARALLEL_COORDINATES_RECIPE_ID,
   name: "Parallel Coordinates",
   version: "1",
@@ -241,7 +241,7 @@ export const parallelCoordinatesRecipe = defineChartRecipe({
   ]
 })
 
-export const calendarHeatmapRecipe = defineChartRecipe({
+export const calendarHeatmapRecipe = /* @__PURE__ */ defineChartRecipe({
   id: CALENDAR_HEATMAP_RECIPE_ID,
   name: "Calendar Heatmap",
   version: "1",

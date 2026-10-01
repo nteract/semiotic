@@ -49,6 +49,22 @@ const bumpLongNames = {
   West: "Western Plains",
 }
 
+// Minute bins on epoch-millisecond times, labeled by an index-aware format
+// (a full first label, short ones after it) the way `adaptiveTimeTicks` does.
+// The server used to thin these ticks more densely than the browser.
+const epochHistogramStart = 1_700_000_000_000
+const epochHistogramData = Array.from({ length: 20 }, (_value, i) => ({
+  timestamp: epochHistogramStart + i * 60000,
+  value: 50 + Math.round(Math.sin(i / 3) * 30),
+}))
+function contextTimeTickFormat(value, index) {
+  const date = new Date(Number(value))
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0")
+  return index === 0
+    ? `${date.toISOString().slice(0, 10)} ${String(date.getUTCHours()).padStart(2, "0")}:${minutes}`
+    : `:${minutes}`
+}
+
 const temporalHistogramData = [
   { time: 0, value: 5, kind: "Errors" },
   { time: 350, value: 7, kind: "Warnings" },
@@ -1480,6 +1496,20 @@ function makeSsrParityCases(React, recipes = {}) {
         height: 240,
       },
       visibleLegendLabel: "Errors",
+    },
+    {
+      id: "temporal-histogram-time-axis",
+      component: "TemporalHistogram",
+      props: {
+        data: epochHistogramData,
+        binSize: 60000,
+        timeAccessor: "timestamp",
+        valueAccessor: "value",
+        tickFormatTime: contextTimeTickFormat,
+        width: 560,
+        height: 240,
+      },
+      compareXTickLabels: true,
     },
     {
       // `layer: "under"` bands fill beneath the bars (labels stay on top), so

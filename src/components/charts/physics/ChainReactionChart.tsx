@@ -55,6 +55,7 @@ import {
 import { ChainReactionOverlay } from "./chainReactionOverlay"
 import { ChainReactionAccessibleTable } from "./chainReactionAccessibleTable"
 import { AccessibleTablePortal } from "../../stream/AccessibleDataTable"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export type * from "./chainReactionTypes"
 
@@ -87,7 +88,7 @@ export type * from "./chainReactionTypes"
  *   insight="blocker-amplification"
  * />
  */
-export const ChainReactionChart = forwardRef(function ChainReactionChart<
+export const ChainReactionChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ChainReactionChart<
   TDatum extends Datum = Datum
 >(
   props: ChainReactionChartProps<TDatum>,
@@ -782,7 +783,7 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
       )}
     </div>
   )
-}) as unknown as {
+}), "ChainReactionChart") as unknown as {
   <TDatum extends Datum = Datum>(
     props: ChainReactionChartProps<TDatum> &
       React.RefAttributes<ChainReactionChartHandle>
@@ -790,6 +791,5 @@ export const ChainReactionChart = forwardRef(function ChainReactionChart<
   displayName?: string
 }
 
-ChainReactionChart.displayName = "ChainReactionChart"
 
 export default ChainReactionChart

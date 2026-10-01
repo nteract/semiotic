@@ -151,9 +151,13 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     if (useGradient && node.fillGradient) {
       let topY = Infinity
-      for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
       let bottomY = -Infinity
-      for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
+      if (node.fillGradientSpan) {
+        [topY, bottomY] = node.fillGradientSpan
+      } else {
+        for (const p of node.topPath) { if (p[1] < topY) topY = p[1] }
+        for (const p of node.bottomPath) { if (p[1] > bottomY) bottomY = p[1] }
+      }
       const baseFill = typeof fillColor === "string" ? fillColor : "#4e79a7"
       const grad = buildLinearFillGradient(ctx, node.fillGradient, baseFill, 0, topY, 0, bottomY)
       if (grad) ctx.fillStyle = grad

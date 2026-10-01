@@ -33,6 +33,7 @@ import {
   type StaticAnnotationRenderResult,
 } from "./staticAnnotations"
 import { createSVGHatchPattern } from "./svgHatchPattern"
+import { BAR_FUNNEL_DROPOFF_HATCH } from "../charts/shared/barFunnelDropoffHatch"
 import type { SemioticTheme } from "../store/themeCore"
 import type { ThemeAwareProps } from "./staticSVGChrome"
 import {
@@ -395,12 +396,9 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     }
     hatchDefs = Array.from(dropoffColors).map((color, i) =>
       createSVGHatchPattern({
+        ...BAR_FUNNEL_DROPOFF_HATCH,
         id: `funnel-hatch-${uid}-${i}`,
         background: color,
-        stroke: theme.colors.background === "transparent" ? "#fff" : theme.colors.background,
-        lineWidth: 1.5,
-        spacing: 5,
-        angle: 45,
       })
     )
     // Replace dropoff bar fills with pattern references

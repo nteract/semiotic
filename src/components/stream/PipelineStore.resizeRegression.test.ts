@@ -1,4 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import "../../test-utils/provideXYTransitionEngine"
 import { describe, expect, it } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import type { Datum } from "../charts/shared/datumTypes"

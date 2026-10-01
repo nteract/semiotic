@@ -97,7 +97,7 @@ if (stale.length > 0) {
     console.error("\nREADME.md does not match the committed cold-consumer baseline.")
   }
   console.error(
-    `\nCurrent runner: ${process.platform}/${process.arch}; Node ${process.version}; esbuild ${report.method.bundler.version}`,
+    `\nCurrent runner: ${process.platform}/${process.arch}; Node ${process.version}; ${report.method.bundler.name} ${report.method.bundler.version}`,
   )
   console.error("\nFor an intentional contract or size change, rebuild and regenerate with:")
   console.error("  npm run dist:prod && npm run docs:cold-consumer")
@@ -117,7 +117,7 @@ if (comparison.sizeWarnings.length > 0) {
     "For an intentional, reviewed size change, rebuild and regenerate with:\n  npm run dist:prod && npm run docs:cold-consumer",
   )
   console.warn(
-    `\nCurrent runner: ${process.platform}/${process.arch}; Node ${process.version}; esbuild ${report.method.bundler.version}`,
+    `\nCurrent runner: ${process.platform}/${process.arch}; Node ${process.version}; ${report.method.bundler.name} ${report.method.bundler.version}`,
   )
   process.exit(0)
 }

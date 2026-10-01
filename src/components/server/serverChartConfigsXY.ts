@@ -15,7 +15,7 @@ import {
 import {
   normalizeGradient,
   normalizeSemanticGradient,
-  reverseGradient,
+  semanticAreaFillGradient,
   semanticLineStopsForGradient,
   type SemanticGradientInput,
 } from "../charts/shared/gradient"
@@ -283,6 +283,7 @@ export const temporalHistogram: ChartConfig = {
       ...strokeStyle,
       ...(rest.fill !== undefined && { fill: rest.fill }),
       ...(rest.gap !== undefined && { gap: rest.gap }),
+      ...(Array.isArray(rest.valueBands) && { valueBands: rest.valueBands }),
     }
     const ruledBarStyle = composeStyleRules(
       undefined,
@@ -347,7 +348,7 @@ export const areaChart: ChartConfig = {
       rest.semanticGradient as SemanticGradientInput | undefined,
     )
     const resolvedGradientFill = semanticGradient?.stops.length
-      ? reverseGradient(semanticGradient)
+      ? semanticAreaFillGradient(semanticGradient)
       : normalizeGradient(
           common.gradientFill as Parameters<typeof normalizeGradient>[0],
         )

@@ -147,6 +147,9 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       ctx.fill()
 
       if (prepareBarStroke(ctx, node)) ctx.stroke()
+    } else if (node.fillBands && node.fillBands.length > 0) {
+      fillValueBands(ctx, node, node.fillBands)
+      if (prepareBarStroke(ctx, node)) ctx.strokeRect(node.x, node.y, node.w, node.h)
     } else {
       // Standard solid fill — or gradient when fillGradient is set.
       ctx.fillStyle = resolveBarFill(ctx, node)
@@ -159,6 +162,27 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
     renderRectPulse(ctx, node)
 
     ctx.globalAlpha = 1
+  }
+}
+
+/**
+ * Paint a value-banded bar: each band's extent, clipped to the rect's current
+ * geometry (an intro grows the rect through fixed bands), in its own fill.
+ */
+function fillValueBands(
+  ctx: CanvasRenderingContext2D,
+  node: RectSceneNode,
+  bands: NonNullable<RectSceneNode["fillBands"]>
+): void {
+  const fallback = resolveCSSColor(ctx, "var(--semiotic-primary, #007bff)")!
+  const top = node.y
+  const bottom = node.y + node.h
+  for (const band of bands) {
+    const y0 = Math.max(Math.min(band.y0, band.y1), top)
+    const y1 = Math.min(Math.max(band.y0, band.y1), bottom)
+    if (!(y1 > y0)) continue
+    ctx.fillStyle = resolveCanvasFill(ctx, band.fill, fallback)
+    ctx.fillRect(node.x, y0, node.w, y1 - y0)
   }
 }
 

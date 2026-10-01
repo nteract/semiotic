@@ -60,10 +60,14 @@ import {
 } from "./realtimeChartRuntime"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeXYRuleContext } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export type { RealtimeLineChartHandle, RealtimeLineChartProps }
 
-registerXYPlugin(lineXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureRealtimeLineChartRegistrations(): void {
+  registerXYPlugin(lineXYPlugin)
+}
 
 /**
  * RealtimeLineChart - Simplified wrapper for streaming line charts.
@@ -105,12 +109,13 @@ registerXYPlugin(lineXYPlugin)
  * />
  * ```
  */
-export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
+export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeLineChart<
   TDatum extends Datum = Datum
 >(
   props: RealtimeLineChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle<TDatum, Datum>>
 ) {
+  ensureRealtimeLineChartRegistrations()
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -625,7 +630,7 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
       pointIdAccessor={props.pointIdAccessor}
     />
   )
-}) as unknown as {
+}), "RealtimeLineChart") as unknown as {
   /** Compatibility overload for refs authored against the shared 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeLineChartProps<TDatum> &
@@ -647,4 +652,3 @@ export const RealtimeLineChart = forwardRef(function RealtimeLineChart<
   ): React.ReactElement | null
   displayName?: string
 }
-RealtimeLineChart.displayName = "RealtimeLineChart"

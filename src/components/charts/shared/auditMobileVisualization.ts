@@ -105,14 +105,14 @@ const REFERENCE =
 
 // XY_WITH_AXES_CHARTS plus the two realtime charts that share its axis-driven
 // interaction model (mobile audit treats them the same as their static kin).
-const XY_CHARTS = new Set([
+const XY_CHARTS = /* @__PURE__ */ new Set([
   ...XY_WITH_AXES_CHARTS,
   "RealtimeLineChart",
   "RealtimeHeatmap",
 ])
 
-const POINT_RADIUS_PROPS: Record<string, string[]> = Object.fromEntries(
-  Object.entries(POINT_TARGET_RADIUS_PROP).map(([component, prop]) => [component, [prop, "hoverRadius"]])
+const POINT_RADIUS_PROPS: Record<string, string[]> = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(POINT_TARGET_RADIUS_PROP)).map(([component, prop]) => [component, [prop, "hoverRadius"]])
 )
 
 function isObject(value: unknown): value is Datum {

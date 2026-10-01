@@ -1,4 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import "../../test-utils/provideXYTransitionEngine"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 

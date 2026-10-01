@@ -911,7 +911,7 @@ export function SentenceFilter({
   const baseId = id ?? `sentence-filter-${reactId}`
 
   React.useEffect(() => {
-    if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return
+    if (process.env.NODE_ENV === "production") return
     for (const segment of segments) {
       if (segment.type !== "filter") continue
       let warning: string | null = null

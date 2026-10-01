@@ -28,9 +28,13 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("sankey", sankeyLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureSankeyDiagramRegistrations(): void {
+  registerLayoutPlugin("sankey", sankeyLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 /**
  * SankeyDiagram component props
@@ -130,7 +134,8 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
  * />
  * ```
  */
-export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureSankeyDiagramRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   // Sankey's `getData` returns edges (the chart's primary data shape)
   // rather than nodes — override the helper's node-default with the
@@ -383,8 +388,7 @@ export const SankeyDiagram = forwardRef(function SankeyDiagram<TNode extends Dat
       {...frameProps}
     />
   </SafeRender>)
-}) as unknown as {
+}), "SankeyDiagram") as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-SankeyDiagram.displayName = "SankeyDiagram"

@@ -11,6 +11,7 @@ import type {
   StreamXYFrameProps
 } from "./types"
 import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
+import { FrameInteractiveLayer } from "./FrameInteractiveLayer"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/themeCore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
@@ -30,6 +31,7 @@ import { collectMarginalValues } from "./MarginalGraphicsLazy"
 import { useMarginalValues } from "./useMarginalValues"
 import { xySceneNodeToSVG } from "./SceneToSVGXY"
 import { isServerEnvironment } from "./isServerEnvironment"
+import { useXYTransitionEngine } from "./useXYTransitionEngine"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasPreRenderers, useUnderLayerBandRenderers } from "./underLayerBands"
@@ -70,6 +72,7 @@ import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import { rehitXYFrameCursor } from "./xyFrameCursorInteraction"
 import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
 import { xyFrameLegendOptions } from "./frameLegendOptions"
+import { withDisplayName } from "../charts/shared/withDisplayName"
 
 // ── Defaults ───────────────────────────────────────────────────────────
 const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
@@ -86,7 +89,7 @@ function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperti
 
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
-const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
+const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @__PURE__ */ forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
   function StreamXYFrame(props, ref) {
     const {
       chartType,
@@ -186,6 +189,8 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
       onCategoriesChange,
       backgroundGraphics,
       foregroundGraphics,
+      interactiveGraphics,
+      interactiveGraphicsLabel,
       canvasPreRenderers: authoredCanvasPreRenderers,
       svgPreRenderers: authoredSvgPreRenderers,
       title,
@@ -518,6 +523,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
     useEnsureXYPlugins(chartType, customLayout, dirtyRef, scheduleRender, storeRef)
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
+    const transitionEnginePendingRef = useXYTransitionEngine(Boolean(transition), () => {
+      dirtyRef.current = true
+      scheduleRender()
+    })
 
     // Bridge the resolved custom-layout selection into the scene store +
     // repaint. See useLayoutSelectionSync for why this is a legitimate
@@ -824,6 +833,10 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
 
       const store = storeRef.current
       if (!store) return
+      // Preserve the previous scene until the engine can snapshot it, including
+      // when transitions are enabled after mount. Hydration's initial paint
+      // cancels its intro; subsequent updates must still wait for the engine.
+      if (transitionEnginePendingRef.current && !(wasHydratingFromSSR && lastSceneDimsRef.current.w === -1)) return
 
       const now = frameRuntime.now()
 
@@ -1176,6 +1189,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           bounded: true
         })
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
+        // The SVG branch (server render and the hydration pass that must
+        // match it) paints the final state; an intro only runs on canvas.
+        store.cancelIntroAnimation()
       }
 
       const scene = store?.scene ?? []
@@ -1360,24 +1376,9 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
           yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
           axisExtent={axisExtent}
         />
-        <canvas
-          ref={canvasRef}
-          aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0
-          }}
-        />
-        <canvas
-          ref={interactionCanvasRef}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            pointerEvents: "none"
-          }}
-        />
+        {/* CSS box from the frame size at commit, so paused or hidden-tab mounts lay out before their first paint. */}
+        <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
+        <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
         <SVGOverlay
           width={adjustedWidth}
           height={adjustedHeight}
@@ -1467,10 +1468,17 @@ const StreamXYFrame = memo(forwardRef<StreamXYFrameHandle, StreamXYFrameProps>(
         {focusRing}
         {tooltipElement}
         </div>{/* end role="img" */}
+        {/* Controls stay outside role="img" so assistive technology reaches them. */}
+        <FrameInteractiveLayer
+          graphics={interactiveGraphics}
+          size={size}
+          margin={margin}
+          scales={currentScales}
+          label={interactiveGraphicsLabel}
+        />
       </div>
     )
   }
-))
+)), "StreamXYFrame")
 
-StreamXYFrame.displayName = "StreamXYFrame"
 export default StreamXYFrame

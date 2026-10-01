@@ -37,6 +37,7 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 import { type StyleRule } from "../shared/styleRules"
 import { buildFlowMapLineStyle } from "./flowMapLineStyle"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
@@ -182,7 +183,7 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>(
+export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function FlowMap<TDatum extends Datum = Datum>(
   props: FlowMapProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>,
 ) {
@@ -660,10 +661,9 @@ export const FlowMap = forwardRef(function FlowMap<TDatum extends Datum = Datum>
       <StreamGeoFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "FlowMap") as unknown as {
   <TDatum extends Datum = Datum>(
     props: FlowMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>,
   ): React.ReactElement | null
   displayName?: string
 }
-FlowMap.displayName = "FlowMap"

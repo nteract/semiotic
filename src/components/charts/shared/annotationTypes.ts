@@ -24,8 +24,8 @@ export const CONNECTOR_ANNOTATION_TYPES = [
   "callout-rect",
 ] as const
 
-const NOTE_TYPE_SET = new Set<string>(NOTE_ANNOTATION_TYPES)
-const CONNECTOR_TYPE_SET = new Set<string>(CONNECTOR_ANNOTATION_TYPES)
+const NOTE_TYPE_SET = /* @__PURE__ */ new Set<string>(NOTE_ANNOTATION_TYPES)
+const CONNECTOR_TYPE_SET = /* @__PURE__ */ new Set<string>(CONNECTOR_ANNOTATION_TYPES)
 
 export function annotationType(annotation: Datum): string {
   return typeof annotation?.type === "string" ? annotation.type : ""

@@ -114,7 +114,7 @@ function collisionSwarmSemanticItems(
  * />
  * ```
  */
-export const CollisionSwarmChart = forwardRef(function CollisionSwarmChart<
+export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function CollisionSwarmChart<
   TDatum extends Datum = Datum
 >(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {

@@ -11,8 +11,6 @@ import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } 
 import type { DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
-
-provideMarginalGraphics(MarginalGraphics)
 import type { SymbolName } from "../../stream/symbolPath"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { getSize } from "../shared/colorUtils"
@@ -34,8 +32,13 @@ import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(scatterXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureScatterplotRegistrations(): void {
+  provideMarginalGraphics(MarginalGraphics)
+  registerXYPlugin(scatterXYPlugin)
+}
 
 /**
  * Scatterplot component props
@@ -192,7 +195,8 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
  * />
  * ```
  */
-export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Scatterplot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureScatterplotRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
   const resolved = useChartMode(props.mode, {
@@ -517,8 +521,7 @@ export const Scatterplot = forwardRef(function Scatterplot<TDatum extends Datum 
   }
 
   return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "Scatterplot") as unknown as {
   <TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-Scatterplot.displayName = "Scatterplot"

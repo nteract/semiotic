@@ -92,7 +92,7 @@ export const ScatterplotCapability: ChartCapability = {
   // Scatter benefits from many points (visual density reveals clusters), but
   // overdraw past ~10k points hides structure unless paired with alpha or
   // hexbin treatment. Below 20 points patterns are anecdotes, not signal.
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [50, 5000], caveatBelow: 20, caveatAbove: 10000 },
   }),
 }

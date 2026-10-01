@@ -211,7 +211,7 @@ export interface WordTrailsLayoutResult extends OrdinalLayoutResult {
 // Placement keyed by a content signature of the layout-affecting inputs, so a
 // color/opacity change (wordOpacity, progressive reveal) or a re-run with the
 // same rows reuses it. See LayoutCache for why the key is content, not identity.
-const GEOMETRY_CACHE = new LayoutCache<WordTrailsGeometry>(12)
+const GEOMETRY_CACHE = /* @__PURE__ */ new LayoutCache<WordTrailsGeometry>(12)
 
 export function wordTrailsLayout(
   ctx: OrdinalLayoutContext<WordTrailsConfig>

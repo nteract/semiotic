@@ -26,9 +26,13 @@ import {
   wrapNetworkEdgeStyleWithSelection,
   wrapNetworkNodeStyleWithSelection,
 } from "../shared/networkUtils"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("force", forceLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureForceDirectedGraphRegistrations(): void {
+  registerLayoutPlugin("force", forceLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 /**
  * ForceDirectedGraph component props
@@ -252,7 +256,8 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
  * a reasonable frame budget. Hover, click, and selection wiring follow
  * the same patterns as the rest of the library.
  */
-export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureForceDirectedGraphRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "network", frameRef })
 
@@ -535,8 +540,7 @@ export const ForceDirectedGraph = forwardRef(function ForceDirectedGraph<TNode e
       {...frameProps}
     />
   </SafeRender>)
-}) as unknown as {
+}), "ForceDirectedGraph") as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-ForceDirectedGraph.displayName = "ForceDirectedGraph"

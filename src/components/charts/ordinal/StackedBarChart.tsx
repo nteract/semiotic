@@ -22,6 +22,7 @@ import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface StackedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -111,7 +112,7 @@ export interface StackedBarChartProps<TDatum extends Datum = Datum> extends Base
  * />
  * ```
  */
-export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const StackedBarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function StackedBarChart<TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -298,8 +299,7 @@ export const StackedBarChart = forwardRef(function StackedBarChart<TDatum extend
   if (validationError) return <ChartError componentName="StackedBarChart" message={validationError} width={width} height={height} />
 
   return <SafeRender componentName="StackedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}) as unknown as {
+}), "StackedBarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: StackedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-StackedBarChart.displayName = "StackedBarChart"

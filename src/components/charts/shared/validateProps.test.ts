@@ -166,3 +166,32 @@ describe("validateProps — BigNumber wire contract", () => {
     expect(result.errors.join(" ")).toContain('"accessibleTable"')
   })
 })
+
+describe("validateProps — axis config keys", () => {
+  it("flags axis keys nothing reads, with a suggestion", () => {
+    const result = validateProps("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      frameProps: { axes: [{ orient: "bottom", tickCont: 4 }, { orient: "left", ticks: 3 }] },
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('Unknown "frameProps.axes[0]" key "tickCont" is ignored. Did you mean "tickCount"?')
+    expect(result.errors.some((error) => error.includes("frameProps.axes[1]"))).toBe(false)
+  })
+
+  it("accepts tickCount as the alias of ticks", () => {
+    const result = validateProps("LineChart", {
+      data: [{ x: 1, y: 2 }],
+      frameProps: { axes: [{ orient: "bottom", tickCount: 4 }] },
+    })
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it("checks a histogram's top-level axes", () => {
+    const result = validateProps("TemporalHistogram", {
+      data: [{ time: 1, value: 2 }],
+      binSize: 1,
+      axes: [{ orient: "bottom", format: "%H:%M" }],
+    })
+    expect(result.errors.some((error) => error.includes('"axes[0]" key "format"'))).toBe(true)
+  })
+})

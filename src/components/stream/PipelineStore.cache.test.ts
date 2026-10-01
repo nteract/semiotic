@@ -1,4 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import "../../test-utils/provideXYTransitionEngine"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Cache invalidation tests for PipelineStore.
@@ -9,17 +10,13 @@ import type { Datum } from "../charts/shared/datumTypes"
  * the chart renders, but the numbers are stale.
  */
 
-import { PipelineStore } from "./PipelineStore"
+import { GROUP_COLOR_MAP_CAP, PipelineStore } from "./PipelineStore"
 import type { HeatcellSceneNode, PointSceneNode, RectSceneNode } from "./types"
 
 type PipelineStoreColorCacheInternals = {
   _groupColorMap: Map<string, string>
   resolveGroupColor(group: string): string | null
 }
-type PipelineStoreClassInternals = {
-  GROUP_COLOR_MAP_CAP: number
-}
-
 function resolveGroupColor(store: PipelineStore, group: string): string | null {
   return (store as unknown as PipelineStoreColorCacheInternals).resolveGroupColor(group)
 }
@@ -137,7 +134,7 @@ describe("resolveGroupColor after data changes", () => {
     const store = makeStore({
       colorScheme: ["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9"],
     })
-    const cap = (PipelineStore as unknown as PipelineStoreClassInternals).GROUP_COLOR_MAP_CAP
+    const cap = GROUP_COLOR_MAP_CAP
     const total = cap + Math.floor(cap / 2)
     // Push well past the configured cap — prevents unbounded growth on streams with unique group IDs.
     for (let i = 0; i < total; i++) {

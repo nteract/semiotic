@@ -1,7 +1,3 @@
-import { registerBuiltInChartRecipeManifests } from "./builtInChartRecipes"
-
-registerBuiltInChartRecipeManifests()
-
 export { ChartRecipe } from "./ChartRecipe"
 export type { ChartRecipeProps } from "./ChartRecipe"
 export {

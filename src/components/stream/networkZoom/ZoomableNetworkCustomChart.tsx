@@ -57,7 +57,7 @@ export interface ZoomableNetworkCustomChartProps<
 
 /** Opt-in virtual network viewport with Pointer Events gestures, bounded
  * camera controls and projected-size/settled-state hooks for HTML content. */
-export const ZoomableNetworkCustomChart = React.forwardRef(
+export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
   function ZoomableNetworkCustomChart<
     TNode extends Datum,
     TEdge extends Datum,

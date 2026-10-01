@@ -56,7 +56,7 @@ import {
   ensureRingBufferCapacity,
   pushWithTimestamp
 } from "./pipelineBufferUtils"
-import { attachUpdateResultStore, type UpdateResult, type UpdateResultStore } from "./pipelineUpdateStore"
+import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
@@ -64,10 +64,7 @@ import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
 import { snapOrdinalIntroTargets } from "./pipelineIntroCancellation"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
-export class OrdinalPipelineStore implements UpdateResultStore {
-  declare getLastUpdateResult: () => UpdateResult; declare getUpdateSnapshot: () => UpdateResult
-  declare subscribeUpdateResult: (listener: () => void) => () => void; declare setLayoutSelection: (selection: CustomLayoutSelection | null) => void
-  declare markStylePaintPending: () => void; declare consumeStylePaintPending: () => boolean
+export class OrdinalPipelineStore extends UpdateResultStoreBase {
   private buffer: RingBuffer<Datum>
   private rExtent = new IncrementalExtent()
   /** Per-accessor extents for multiAxis mode */
@@ -144,6 +141,7 @@ export class OrdinalPipelineStore implements UpdateResultStore {
   private _hasRenderedOnce = false
 
   constructor(config: OrdinalPipelineConfig) {
+    super()
     this.config = config
     this.buffer = new RingBuffer(config.windowSize)
 
@@ -1586,5 +1584,3 @@ export class OrdinalPipelineStore implements UpdateResultStore {
     return this.updateResults.last
   }
 }
-
-attachUpdateResultStore(OrdinalPipelineStore)

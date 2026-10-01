@@ -688,7 +688,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   // which single-mode ordinal/network/geo/physics frames do not provide.
   if (isMultiTooltipConfig(tooltip)) {
     if (typeof tooltip.content === "function") {
-      if (!warnedMultiContent && typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+      if (!warnedMultiContent && process.env.NODE_ENV !== "production") {
         warnedMultiContent = true
         console.warn(
           '[semiotic] tooltip={{ mode: "multi", content }} reached a chart without multi-series hover. content receives one datum and no allSeries.',
@@ -696,7 +696,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       }
       return normalizeTooltip(tooltip.content)
     }
-    if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(
         '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Use a line/area-family chart with multi support, or pass frameProps.tooltipMode: "multi" to StreamXYFrame.',
       )
@@ -722,7 +722,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   // content function so callers still get a useful multi tooltip, and warn
   // in development when a chart does not declare multi-tooltip mode.
   if (tooltip === "multi") {
-    if (typeof process !== "undefined" && process.env?.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(
         '[semiotic] tooltip="multi" reached normalizeTooltip on a single-tooltip chart. Rendering multi-field content as a backward-compatible fallback.',
       )

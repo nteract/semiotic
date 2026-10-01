@@ -58,8 +58,8 @@ const references = {
 
 export type PhysicsChartDefinitionId = keyof typeof references
 
-export const PHYSICS_CHART_DEFINITIONS = Object.fromEntries(
-  Object.entries(references).map(([name, [route, exportName, module]]) => {
+export const PHYSICS_CHART_DEFINITIONS = /* @__PURE__ */ Object.fromEntries(
+  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(references)).map(([name, [route, exportName, module]]) => {
     const spec = PHYSICS_CHART_SPECS[name] ?? ATLAS_CHART_SPECS[name]
     if (!spec) throw new Error(`Missing physics chart spec: ${name}`)
     const propDocs = {

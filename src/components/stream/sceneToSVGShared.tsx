@@ -252,6 +252,41 @@ export function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: s
   )
 }
 
+/**
+ * A value-banded bar: one rect per band extent (clipped to the bar, like the
+ * canvas renderer), then the bar's outline on top so a stroke isn't striped.
+ */
+function rectValueBandsToSVG(n: RectSceneNode, i: number, hatchIdBase: string): React.ReactNode {
+  const top = n.y
+  const bottom = n.y + n.h
+  const defs: React.ReactElement[] = []
+  const rects: React.ReactNode[] = []
+  n.fillBands!.forEach((band, bandIndex) => {
+    const y0 = Math.max(Math.min(band.y0, band.y1), top)
+    const y1 = Math.min(Math.max(band.y0, band.y1), bottom)
+    if (!(y1 > y0)) return
+    let fill: string | undefined
+    if (isHatchFill(band.fill)) {
+      const id = `${hatchIdBase}-band-${bandIndex}`
+      defs.push(hatchPatternDef(band.fill, id))
+      fill = `url(#${id})`
+    } else {
+      fill = svgFill(band.fill)
+    }
+    rects.push(<rect key={bandIndex} x={n.x} y={y0} width={n.w} height={y1 - y0} fill={fill} />)
+  })
+  const stroked = n.style.stroke && n.style.stroke !== "none"
+  return (
+    <g key={`rect-${i}`} opacity={n.style.opacity}>
+      {defs.length > 0 && <defs>{defs}</defs>}
+      {rects}
+      {stroked && (
+        <rect x={n.x} y={n.y} width={n.w} height={n.h} fill="none" stroke={n.style.stroke} strokeWidth={n.style.strokeWidth} />
+      )}
+    </g>
+  )
+}
+
 // Circle and rectangle marks shared with the physics SVG fallback.
 
 export function pointOrRectSceneNodeToSVG(
@@ -266,6 +301,9 @@ export function pointOrRectSceneNodeToSVG(
     : { x: n.x, y: n.y, width: n.w, height: n.h }
   // Keep the established XY/physics pattern IDs and opacity defaults.
   const hatchId = `${idPrefix ? `${idPrefix}-` : ""}${point ? "point" : "xyrect"}-${i}-hatch`
+  if (!point && n.fillBands && n.fillBands.length > 0) {
+    return rectValueBandsToSVG(n, i, hatchId)
+  }
   const hatch = isHatchFill(n.style.fill)
     ? hatchPatternDef(n.style.fill, hatchId)
     : undefined

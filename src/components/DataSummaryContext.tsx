@@ -8,7 +8,7 @@ interface DataSummaryState {
   toggle: () => void
 }
 
-const DataSummaryContext = React.createContext<DataSummaryState | null>(null)
+const DataSummaryContext = /* @__PURE__ */ React.createContext<DataSummaryState | null>(null)
 
 export function DataSummaryProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = React.useState(false)

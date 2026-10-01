@@ -104,6 +104,8 @@ import {
   DirectManipulationControl,
   VISUALIZATION_CONTROL_TYPES
 } from "./DirectManipulationControl"
+import { DirectManipulationMarkers } from "./controls/DirectManipulationMarkers"
+import { pointerToLocalPoint } from "./controls/controlPointer"
 
 // ── Details panel ────────────────────────────────────────────────────
 import { DetailsPanel } from "./DetailsPanel"
@@ -225,8 +227,10 @@ export {
   ContextLayout,
   // Cyclical range brush control
   CircularBrush,
-  // Direct chart-overlay control
+  // Direct chart-overlay controls
   DirectManipulationControl,
+  DirectManipulationMarkers,
+  pointerToLocalPoint,
   VISUALIZATION_CONTROL_TYPES,
   // Details panel
   DetailsPanel,
@@ -278,6 +282,12 @@ export type {
   DirectManipulationControlProps,
   VisualizationControlType
 } from "./DirectManipulationControl"
+export type {
+  DirectManipulationMarker,
+  DirectManipulationMarkersChangeMeta,
+  DirectManipulationMarkersProps
+} from "./controls/DirectManipulationMarkers"
+export type { ControlPoint } from "./controls/controlPointer"
 export { createControlObservationAdapter } from "./controls/controlContract"
 export { auditVisualizationControls } from "./controls/controlAudit"
 export type {
@@ -393,7 +403,9 @@ export type {
   CurveType,
   CanvasRendererFn,
   XYFrameAxisConfig,
-  BandConfig
+  BandConfig,
+  InteractiveGraphicsContext,
+  InteractiveGraphicsProp
 } from "./stream/types"
 
 export type { StreamRendererFn } from "./stream/renderers/types"

@@ -481,6 +481,48 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
+      <p>
+        A threshold label is drawn in the line's <code>color</code> by default.
+        Set <code>labelColor</code> to color the text on its own. Pair it with a
+        box background for a light-on-dark label chip on a colored line. Band and
+        x-band labels accept <code>labelColor</code> too.
+      </p>
+
+      <LiveExample
+        frameProps={{
+          data: lineData,
+          xAccessor: "week",
+          yAccessor: "score",
+          xLabel: "Week",
+          yLabel: "Score",
+          annotations: [
+            {
+              type: "y-threshold",
+              y: 30,
+              label: "Limit 30",
+              color: "#dc2626",
+              labelColor: "#ffffff",
+              labelBackground: { type: "box", fill: "#1f2937", opacity: 1, radius: 4, padding: { x: 6, y: 3 } },
+            },
+          ],
+        }}
+        type={LineChart}
+        startHidden={true}
+        overrideProps={{
+          annotations: `[
+  {
+    type: "y-threshold",
+    y: 30,
+    label: "Limit 30",
+    color: "#dc2626",
+    labelColor: "#ffffff",
+    labelBackground: { type: "box", fill: "#1f2937", opacity: 1, radius: 4, padding: { x: 6, y: 3 } }
+  }
+]`,
+        }}
+        hiddenProps={{}}
+      />
+
       {/* ----------------------------------------------------------------- */}
       {/* Labels & Callouts */}
       {/* ----------------------------------------------------------------- */}
@@ -1557,8 +1599,8 @@ export default function AnnotationsPage() {
         </thead>
         <tbody>
           {[
-            ["y-threshold", "All", "y, label, color", "Horizontal reference line at a value"],
-            ["x-threshold", "XY", "x (or data key), label, color", "Vertical reference line at a data point"],
+            ["y-threshold", "All", "y, label, color, labelColor", "Horizontal reference line at a value"],
+            ["x-threshold", "XY", "x (or data key), label, color, labelColor", "Vertical reference line at a data point"],
             ["label", "All", "x, y (or pointId), label, dx, dy", "Text annotation with connector line"],
             ["callout", "All", "x, y (or pointId), label, radius", "Callout with circular subject highlight"],
             ["callout-circle", "All", "x, y, label, radius", "Same as callout with explicit circle subject"],

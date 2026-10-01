@@ -41,7 +41,7 @@ export const BubbleChartCapability: ChartCapability = {
   // is legible — that means medium density (4–500 rows). Past ~1500 rows the
   // size circles overlap into solid color and the third dimension becomes
   // noise; at that point fall back to position-only (Scatterplot).
-  scaleFit: scaleHints({
+  scaleFit: /* @__PURE__ */ scaleHints({
     rows: { sweetSpot: [10, 500], caveatAbove: 1500 },
   }),
 }

@@ -73,6 +73,7 @@ interface HatchFill
 interface HatchPatternOptions
 interface HitTargetPointProps
 interface HitTargetRectProps
+interface InteractiveGraphicsContext<S = StreamScales> extends FrameGraphicsContext<S>
 interface LegendGroup
 interface LegendItem
 interface LegendLayout
@@ -265,6 +266,7 @@ interface-member GlyphSceneNode::property::style = required style: Style
 interface-member GlyphSceneNode::property::type = required type: "glyph"
 interface-member GlyphSceneNode::property::x = required x: number
 interface-member GlyphSceneNode::property::y = required y: number
+interface-member GradientConfig::property::extent = optional extent: "area" | "domain" | undefined
 interface-member GradientConfig::property::stops = required stops: GradientStop[]
 interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
 interface-member GradientLegendConfig::property::domain = required domain: [number, number]
@@ -313,6 +315,7 @@ interface-member HatchFill::property::stroke = optional stroke: string | undefin
 interface-member HatchFill::property::type = required type: "hatch"
 interface-member HatchPatternOptions::property::angle = optional angle: number | undefined
 interface-member HatchPatternOptions::property::background = optional background: string | undefined
+interface-member HatchPatternOptions::property::lineOpacity = optional lineOpacity: number | undefined
 interface-member HatchPatternOptions::property::lineWidth = optional lineWidth: number | undefined
 interface-member HatchPatternOptions::property::spacing = optional spacing: number | undefined
 interface-member HatchPatternOptions::property::stroke = optional stroke: string | undefined
@@ -330,6 +333,7 @@ interface-member HitTargetRectProps::property::id = optional id: number | string
 interface-member HitTargetRectProps::property::width = required width: number
 interface-member HitTargetRectProps::property::x = required x: number
 interface-member HitTargetRectProps::property::y = required y: number
+interface-member InteractiveGraphicsContext::property::pointerToPlot = required pointerToPlot: (event: {clientX: number; clientY: number;}) => {x: number; y: number;} | null
 interface-member LegendGroup::property::items = required items: LegendItem[]
 interface-member LegendGroup::property::label = required label: string
 interface-member LegendGroup::property::styleFn = required styleFn: (item: LegendItem, index: number) => CSSProperties
@@ -548,6 +552,8 @@ interface-member StreamOrdinalFrameProps::property::groupBy = optional groupBy: 
 interface-member StreamOrdinalFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamOrdinalFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
 interface-member StreamOrdinalFrameProps::property::innerRadius = optional innerRadius: number | undefined
+interface-member StreamOrdinalFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<OrdinalScales>
+interface-member StreamOrdinalFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamOrdinalFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamOrdinalFrameProps::property::layoutSelection = optional layoutSelection: import("./customLayoutSelection").CustomLayoutSelection | null | undefined
 interface-member StreamOrdinalFrameProps::property::legend = optional legend: LegendValue
@@ -703,6 +709,7 @@ type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
+type InteractiveGraphicsProp<S = StreamScales> = ((ctx: InteractiveGraphicsContext<S>) => ReactNode) | ReactNode
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
 type OrdinalChartType = "bar" | "bar-funnel" | "boxplot" | "clusterbar" | "custom" | "donut" | "funnel" | "histogram" | "pie" | "point" | "ridgeline" | "swarm" | "swimlane" | "timeline" | "violin"
 type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: OrdinalLayoutContext<C>) => OrdinalLayoutResult

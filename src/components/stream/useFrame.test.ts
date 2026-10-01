@@ -155,6 +155,39 @@ describe("useFrame — margin merge", () => {
     expect(result.current.adjustedHeight).toBe(600 - MIN_TITLE_TOP_LEGEND_MARGIN - 40)
   })
 
+  it("keeps a chart-reserved top legend margin in a compact frame", () => {
+    // The chart already reserved and capped the legend side; the frame must
+    // not raise it back to the 34px top-legend floor (the server doesn't).
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        sizeProp: [150, 24],
+        legend: React.createElement("g"),
+        legendPosition: "top",
+        legendMarginReserved: true,
+        marginDefault: { top: 14, right: 0, bottom: 2, left: 0 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(14)
+    expect(result.current.adjustedHeight).toBe(8)
+  })
+
+  it("caps a frame-reserved top legend so a compact frame keeps a plot", () => {
+    const { result } = renderHook(
+      () => useFrame({
+        ...DEFAULT_INPUT,
+        sizeProp: [150, 24],
+        legend: React.createElement("g"),
+        legendPosition: "top",
+        marginDefault: { top: 0, right: 0, bottom: 2, left: 0 },
+      }),
+      { wrapper },
+    )
+    expect(result.current.margin.top).toBe(14)
+    expect(result.current.adjustedHeight).toBe(8)
+  })
+
   it("returns the same margin object across renders when inputs are referentially stable", () => {
     const userMargin = { top: 100 }
     const marginDefault = { top: 20, right: 30, bottom: 40, left: 50 }

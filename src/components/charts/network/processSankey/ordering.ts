@@ -78,7 +78,7 @@ const permutationCount = (count: number): number => {
 // forty routed edges, and every possible edge pair participating in the
 // crossing proxy. Measuring the arrays the evaluator actually visits admits
 // dense small layouts when their temporal/shared-endpoint structure is cheap.
-const BRUTE_FORCE_WORK_MAX = permutationCount(BRUTE_FORCE_MAX) * (
+const BRUTE_FORCE_WORK_MAX = /* @__PURE__ */ permutationCount(BRUTE_FORCE_MAX) * (
   BRUTE_FORCE_MAX +
   LEGACY_BRUTE_FORCE_EDGE_MAX +
   LEGACY_BRUTE_FORCE_EDGE_MAX * (LEGACY_BRUTE_FORCE_EDGE_MAX - 1) / 2

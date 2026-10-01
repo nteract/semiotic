@@ -1,4 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
+import "../../test-utils/provideXYTransitionEngine"
 /**
  * Phase 4 — `cancelIntroAnimation` regression for the three pipeline
  * stores. After a `computeScene` call that installs an intro animation

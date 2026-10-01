@@ -27,9 +27,13 @@ import ChartError from "../shared/ChartError"
 import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerLayoutPlugin("chord", chordLayoutPlugin)
-registerNetworkPerspective()
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureChordDiagramRegistrations(): void {
+  registerLayoutPlugin("chord", chordLayoutPlugin)
+  registerNetworkPerspective()
+}
 
 /**
  * ChordDiagram component props
@@ -110,7 +114,8 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
  * />
  * ```
  */
-export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+  ensureChordDiagramRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   // Chord's `getData` returns edges (the chart's primary data shape)
   // rather than nodes — override the helper's node-default. Returns
@@ -374,8 +379,7 @@ export const ChordDiagram = forwardRef(function ChordDiagram<TNode extends Datum
       {...frameProps}
     />
   </SafeRender>)
-}) as unknown as {
+}), "ChordDiagram") as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
-ChordDiagram.displayName = "ChordDiagram"

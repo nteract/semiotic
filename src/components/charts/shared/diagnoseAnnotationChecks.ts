@@ -7,6 +7,7 @@ import {
 import type { Datum } from "./datumTypes"
 import type { Diagnosis } from "./diagnoseTypes"
 import { annotationStableId } from "./annotationIdentity"
+import { findAnnotationFieldTypos } from "./annotationFieldKeys"
 
 /** Interactive widgets need durable identity for replay and normalized events. */
 export function checkInteractiveAnnotationIds(
@@ -111,4 +112,38 @@ export function checkAnnotationDensity(
     message: `${noteCount} note annotations on a ${width}×${height} chart exceed the ~${budget} notes the plot area carries comfortably — the chart may read as cluttered.`,
     fix: `Mark the essential notes emphasis: "primary" and let density management shed the rest (autoPlaceAnnotations: { density: true }), enable progressive disclosure to reveal secondary notes on hover, or give the chart more room.`,
   })
+}
+
+/**
+ * Annotation objects ignore keys no renderer reads, so a typo (`fil`,
+ * `labelPositon`) silently drops the styling. Keys matching a data field or an
+ * accessor are coordinates and never reported.
+ */
+export function checkAnnotationFieldTypos(
+  _component: string,
+  props: Datum,
+  out: Diagnosis[]
+): void {
+  if (!Array.isArray(props.annotations) || props.annotations.length === 0) return
+  const dataKeys = new Set<string>()
+  for (const source of [props.data, props.nodes, props.edges, props.points, props.areas]) {
+    if (!Array.isArray(source)) continue
+    for (const row of source) {
+      if (row && typeof row === "object") {
+        for (const key of Object.keys(row as Datum)) dataKeys.add(key)
+      }
+    }
+  }
+  const accessorFields = Object.entries(props)
+    .filter(([name, value]) => /Accessor$|By$/.test(name) && typeof value === "string")
+    .map(([, value]) => value as string)
+  for (const typo of findAnnotationFieldTypos(props.annotations, { dataKeys, accessorFields })) {
+    const kind = typo.type ? ` ${typo.type}` : ""
+    out.push({
+      severity: "warning",
+      code: "ANNOTATION_UNKNOWN_FIELD",
+      message: `annotations[${typo.index}]${kind} has an unknown field "${typo.key}", which no renderer reads.`,
+      fix: `Did you mean "${typo.suggestion}"? Rename the field; unknown annotation fields are ignored.`
+    })
+  }
 }

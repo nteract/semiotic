@@ -67,8 +67,12 @@ import {
   makeXYRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
+import { withDisplayName } from "../shared/withDisplayName"
 
-registerXYPlugin(swarmXYPlugin)
+// Registered at render (not import) so unused charts stay tree-shakeable.
+function ensureRealtimeSwarmChartRegistrations(): void {
+  registerXYPlugin(swarmXYPlugin)
+}
 
 const EMPTY_LEGEND_DATA: Datum[] = []
 
@@ -234,9 +238,10 @@ export interface RealtimeSwarmChartProps<
  * />
  * ```
  */
-export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
+export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeSwarmChart<
   TDatum extends Datum = Datum
 >(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
+  ensureRealtimeSwarmChartRegistrations()
   const resolved = useRealtimeChartMode(props)
 
   const {
@@ -531,7 +536,7 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
       pointIdAccessor={props.pointIdAccessor}
     />
   )
-}) as unknown as {
+}), "RealtimeSwarmChart") as unknown as {
   /** Compatibility overload for refs authored against the loose 3.x handle. */
   <TDatum extends Datum = Datum>(
     props: RealtimeSwarmChartProps<TDatum> &
@@ -544,4 +549,3 @@ export const RealtimeSwarmChart = forwardRef(function RealtimeSwarmChart<
   ): React.ReactElement | null
   displayName?: string
 }
-RealtimeSwarmChart.displayName = "RealtimeSwarmChart"

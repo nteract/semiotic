@@ -1,5 +1,6 @@
 import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { createHatchPattern } from "../../charts/shared/hatchPattern"
+import { BAR_FUNNEL_DROPOFF_HATCH } from "../../charts/shared/barFunnelDropoffHatch"
 import { isHatchFill } from "../../charts/shared/hatchFill"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
@@ -24,16 +25,7 @@ function getHatchForColor(
   const key = `${baseColor}@${dpr}`
   const cached = hatchCache.get(key)
   if (cached !== undefined) return cached
-  const result = createHatchPattern(
-    {
-      background: baseColor,
-      stroke: "rgba(255,255,255,0.5)",
-      lineWidth: 1.5,
-      spacing: 6,
-      angle: 45,
-    },
-    ctx
-  )
+  const result = createHatchPattern({ ...BAR_FUNNEL_DROPOFF_HATCH, background: baseColor }, ctx)
   // This renderer only runs on canvas, so `result` is a CanvasPattern; the
   // SSR descriptor branch is unreachable. Coerce it away to keep the cache
   // typed as CanvasPattern | null.

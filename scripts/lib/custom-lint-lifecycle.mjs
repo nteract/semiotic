@@ -155,3 +155,57 @@ export function validateCustomLintRegistry(registry, options = {}) {
   }
   return errors
 }
+
+/**
+ * Record a newly registered rule in the baseline without editing it by hand.
+ *
+ * Adoption is the only path that may add an evidence cursor. It refuses when
+ * the rule is unknown, inactive, or already adopted, and when any other rule's
+ * findings differ from the recorded baseline (those need their own
+ * disposition). Current findings for the adopted rule are grandfathered, which
+ * only an unstable rule may carry.
+ *
+ * @param {object} options
+ * @param {object} options.registry
+ * @param {object} options.baseline
+ * @param {string} options.ruleId
+ * @param {Record<string, number>} options.currentFindings fingerprint → count
+ * @param {(key: string) => string} options.ruleIdOf fingerprint → rule id
+ * @returns {{ errors: string[], baseline?: object }}
+ */
+export function adoptRuleIntoBaseline({ registry, baseline, ruleId, currentFindings, ruleIdOf }) {
+  const errors = []
+  const rule = (registry.rules || []).find(candidate => candidate.id === ruleId)
+  if (!rule) errors.push(`${ruleId}: not in the registry`)
+  else if (!ACTIVE_STATUSES.has(rule.status)) errors.push(`${ruleId}: only an active rule can be adopted`)
+  if (baseline.evidenceCursor?.[ruleId]) errors.push(`${ruleId}: already adopted; use an evidence-backed sync mode instead`)
+
+  const recorded = baseline.findings || {}
+  const keys = new Set([...Object.keys(recorded), ...Object.keys(currentFindings)])
+  for (const key of keys) {
+    if (ruleIdOf(key) === ruleId) continue
+    if ((recorded[key] || 0) !== (currentFindings[key] || 0)) {
+      errors.push(`${ruleIdOf(key)}: findings differ from the baseline; resolve them before adopting ${ruleId}`)
+      break
+    }
+  }
+  const adoptedFindings = Object.entries(currentFindings).filter(([key]) => ruleIdOf(key) === ruleId)
+  if (rule?.status === "official" && adoptedFindings.length > 0) {
+    errors.push(`${ruleId}: an official rule cannot adopt grandfathered findings`)
+  }
+  if (errors.length > 0) return { errors }
+
+  const findings = { ...recorded }
+  for (const [key, count] of adoptedFindings) findings[key] = count
+  return {
+    errors,
+    baseline: {
+      ...baseline,
+      evidenceCursor: {
+        ...baseline.evidenceCursor,
+        [ruleId]: { count: (rule.evidence || []).length, digest: evidenceDigest(rule.evidence || []) }
+      },
+      findings: Object.fromEntries(Object.entries(findings).sort(([a], [b]) => a.localeCompare(b)))
+    }
+  }
+}

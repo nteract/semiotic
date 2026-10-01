@@ -32,6 +32,7 @@ import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GradientLegendConfig } from "../../types/legendTypes"
+import { withDisplayName } from "../shared/withDisplayName"
 
 function flattenFeatureProperties(datum: Datum): Datum {
   return datum.properties && typeof datum.properties === "object"
@@ -196,7 +197,7 @@ export interface ChoroplethMapProps<
  * `colorScheme`. For diverging data (positive/negative around zero), use
  * a diverging scheme name and pass `frameProps={{ colorDomain: [-max, max] }}`.
  */
-export function ChoroplethMap<TDatum extends Datum = Datum>(
+export const ChoroplethMap = /* @__PURE__ */ withDisplayName(function ChoroplethMap<TDatum extends Datum = Datum>(
   props: ChoroplethMapProps<TDatum>
 ) {
   const resolved = useChartMode(props.mode, {
@@ -572,5 +573,4 @@ export function ChoroplethMap<TDatum extends Datum = Datum>(
       <StreamGeoFrame {...streamProps} />
     </SafeRender>
   )
-}
-ChoroplethMap.displayName = "ChoroplethMap"
+}, "ChoroplethMap")

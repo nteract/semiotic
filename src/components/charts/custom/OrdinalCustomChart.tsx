@@ -15,6 +15,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
+import { withDisplayName } from "../shared/withDisplayName"
 
 export interface OrdinalCustomChartProps<
   TDatum extends Datum = Datum,
@@ -90,7 +91,7 @@ export interface OrdinalCustomChartProps<
  * />
  * ```
  */
-export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
+export const OrdinalCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function OrdinalCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: OrdinalCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
@@ -228,7 +229,7 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
       <StreamOrdinalFrame ref={frameRef} {...streamProps} />
     </SafeRender>
   )
-}) as unknown as {
+}), "OrdinalCustomChart") as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>
@@ -237,5 +238,3 @@ export const OrdinalCustomChart = forwardRef(function OrdinalCustomChart<
   ): React.ReactElement | null
   displayName?: string
 }
-
-;(OrdinalCustomChart as { displayName?: string }).displayName = "OrdinalCustomChart"

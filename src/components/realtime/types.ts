@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react"
 import type { ScaleBand, ScaleLinear } from "d3-scale"
 import type { CoercibleNumber } from "../stream/accessorUtils"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { HatchFill } from "../charts/shared/hatchFill"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 
 /**
@@ -146,6 +147,18 @@ export interface HoverData {
   properties?: Datum
 }
 
+/**
+ * One band of a value-banded bar fill. Bands are ordered by `upTo`; each
+ * covers the values from the previous band's `upTo` (or the lowest value)
+ * up to its own. A last band without `upTo` reaches every value above.
+ */
+export interface ValueBand {
+  /** Upper value edge of the band. Omit on the last band to cover all higher values. */
+  upTo?: number
+  /** Solid color or `HatchFill` for the part of each bar inside the band. */
+  fill: string | HatchFill
+}
+
 export interface BarStyle {
   fill?: string
   stroke?: string
@@ -153,6 +166,13 @@ export interface BarStyle {
   opacity?: number
   gap?: number
   cursor?: CSSProperties["cursor"]
+  /**
+   * Split each unstacked bar's fill at these value edges. The bar stays one
+   * mark with one datum, so hover, selection, and tooltips are unchanged.
+   * Values the bands don't cover keep the bar's own fill. Ignored for
+   * stacked (category) bins.
+   */
+  valueBands?: ValueBand[]
 }
 
 export interface WaterfallStyle {

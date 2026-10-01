@@ -30,7 +30,7 @@ interface ThemeProviderProps {
 }
 
 // Track the active preset name for the data-semiotic-theme attribute.
-const ThemeNameContext = React.createContext<string | undefined>(undefined)
+const ThemeNameContext = /* @__PURE__ */ React.createContext<string | undefined>(undefined)
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect

@@ -346,7 +346,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? underBandSVGRenderer(
         underBands,
         `${chartUID(props)}-under-band`,
-        theme.colors.annotation || theme.colors.text
+        theme.colors.primary || theme.colors.annotation || theme.colors.text
       )(store.scene, store.scales, { width, height })
     : null
 

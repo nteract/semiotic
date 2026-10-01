@@ -18,7 +18,7 @@ export const CHART_DEFINITIONS: Readonly<Record<string, ChartDefinition>> = {
   ...NETWORK_CHART_DEFINITIONS,
   ...PHYSICS_CHART_DEFINITIONS,
   ...REALTIME_CHART_DEFINITIONS,
-  FlowMap: createChartDefinition(CHART_SPECS.FlowMap, {
+  FlowMap: /* @__PURE__ */ createChartDefinition(CHART_SPECS.FlowMap, {
     implementation: { module: "semiotic/geo", exportName: "FlowMap" },
     capabilityModule: "src/components/charts/geo/FlowMap.capability.ts",
     propDocs: {
@@ -34,7 +34,7 @@ export const CHART_DEFINITIONS: Readonly<Record<string, ChartDefinition>> = {
       }
     ]
   }),
-  BigNumber: createChartDefinition(CHART_SPECS.BigNumber, {
+  BigNumber: /* @__PURE__ */ createChartDefinition(CHART_SPECS.BigNumber, {
     implementation: { module: "semiotic/value", exportName: "BigNumber" },
     capabilityModule: "src/components/charts/value/BigNumber.capability.ts",
     propDocs: {
@@ -55,7 +55,7 @@ export const CHART_DEFINITIONS: Readonly<Record<string, ChartDefinition>> = {
   })
 }
 
-export const CHART_DEFINITION_IDS = Object.keys(CHART_DEFINITIONS)
+export const CHART_DEFINITION_IDS = /* @__PURE__ */ Object.keys(CHART_DEFINITIONS)
 
 /**
  * Pure generation hook for future schema/docs/registry emitters. Its output is

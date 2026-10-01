@@ -334,7 +334,7 @@ export function createDefaultAnnotationRules(
                 x={(context.width || 0) - 4}
                 y={bandLabelY(y0px, y1px)}
                 textAnchor="end"
-                fill={ann.color || "var(--semiotic-primary, #6366f1)"}
+                fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
                 fontSize={11}
                 fontWeight="bold"
                 text={ann.label}
@@ -374,7 +374,7 @@ export function createDefaultAnnotationRules(
                 x={Math.min(x0px, x1px) + 4}
                 y={TOP_LABEL_BASELINE}
                 textAnchor="start"
-                fill={ann.color || "var(--semiotic-primary, #6366f1)"}
+                fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
                 fontSize={11}
                 fontWeight="bold"
                 text={ann.label}

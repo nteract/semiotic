@@ -64,6 +64,8 @@ benchmarks/       # vitest bench suites
 - **esbuild** (via `scripts/build-mcp.mjs`) for the bundled MCP server.
 - **Chunk-aware cold-consumer checks** for bundle budgets; facade files are
   intentionally tiny re-export shells and are not a useful size signal.
+  Consumer checks bundle one named import with code splitting and count the
+  initial-load (eager) graph separately from on-demand chunks.
 
 ## Common Commands
 
@@ -298,6 +300,11 @@ npm run check:file-size -- --update-allowlist
 
 ### Cold-consumer bundle ratchet
 
+Each row bundles one public named import from the packed tarball with esbuild code splitting, as an
+application would ship it. `gzipBytes` is the initial load (the entry plus statically imported
+chunks, gzipped per file); `lazyGzipBytes` is code fetched only when a feature needs it. The ratchet
+gates the initial load.
+
 `npm run check:cold-consumer` keeps package exports and the measurement method exact, so structural
 contract drift still fails immediately. Byte measurements use two levels: changes inside the
 supported runner variance pass silently; changes outside that variance warn without failing until
@@ -307,6 +314,29 @@ baseline refresh but never fail solely for making a consumer bundle smaller.
 **Take cold-consumer warnings seriously.** Inspect the affected named import and its reachable graph
 before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
 intentional, acceptable part of that public import—not simply to make CI quiet.
+
+### Keeping published chunks tree-shakeable
+
+Published ESM chunks merge many modules, so one module-scope side effect retains every component
+that shares its chunk in consumer bundles. Library modules therefore keep module scope inert:
+
+- Name components with a pure initializer:
+  `export const Chart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(...), "Chart")`.
+  Annotate module-scope `memo`, `createContext`, and `React.lazy` calls the same way.
+- The rule also checks ordinary calls and constructors, including nested
+  initializer expressions. Add `/* @__PURE__ */` only after confirming that
+  discarding the call is safe; its arguments still need to be inert. Move
+  registration and other observable work to first use instead.
+- Register plugins, layouts, and engines inside the component (an `ensure…Registrations()` call at
+  the top of render), not at import. Server modules and entry files may register at load.
+- Prefer module constants to `static` class fields (the es2020 build lowers them to assignments) and
+  base classes to prototype mixins.
+
+`semiotic/no-module-side-effects` (`npm run check:custom-lints`) enforces this in `src/components`,
+and `npm run check:treeshake-isolation` (part of `npm run size`) bundles representative named
+imports from `dist` and fails when one retains an unrelated chart. The build also drops esbuild's
+side-effect-only cross-chunk imports when their targets are inert
+(`scripts/lib/strip-pure-bare-imports.mjs`), so an on-demand chunk's shared code stays on demand.
 
 ### Benchmark baselines
 

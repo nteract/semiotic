@@ -19,46 +19,18 @@ import { renderAnnotationPassWithResult } from "../charts/shared/annotationDispa
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
 import type { AnnotationContext } from "../realtime/types"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
-import { AnnotationLabel, type AnnotationLabelBackground } from "../charts/shared/AnnotationLabel"
+import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
+import { ssrLabelBackground } from "./ssrLabelBackground"
 
 const TOP_LABEL_BASELINE = 16
 
 /** Resolve annotation color: explicit > theme annotation > theme text */
 function resolveAnnotationColor(ann: Datum, theme: SemioticTheme): string {
   return ann.color || theme.colors.annotation || theme.colors.text
-}
-
-/**
- * Resolve an annotation's `labelBackground` into an {@link AnnotationLabel}
- * `background` for the server path. Server SVG is standalone, so CSS vars
- * won't resolve — bake the theme's resolved background color into the halo /
- * box fill (unless the caller overrode `fill`). `defaultType` is the
- * per-annotation-type default when `labelBackground` is unset.
- */
-function ssrLabelBackground(
-  ann: Datum,
-  theme: SemioticTheme,
-  defaultType: "halo" | "none",
-): AnnotationLabelBackground {
-  const lb = ann.labelBackground as AnnotationLabelBackground | undefined
-  // A halo/box only aids legibility if it actually paints. The default light
-  // theme's background is "transparent" (so charts compose over any page), but
-  // baking that verbatim yields an invisible halo — a threshold label drawn
-  // over a same-colored area (e.g. a semanticGradient fill) then vanishes. On
-  // the client the halo is a CSS var that resolves to the real page background;
-  // SSR is standalone, so fall back to the theme's opaque `surface` (the "paper"
-  // behind the plot) whenever the background is transparent/unset.
-  const rawBg = theme.colors.background
-  const bg = rawBg && rawBg !== "transparent" ? rawBg : (theme.colors.surface || rawBg)
-  if (lb === undefined) return defaultType === "none" ? "none" : { type: "halo", fill: bg }
-  if (lb === false || lb === "none") return "none"
-  if (lb === true || lb === "halo") return { type: "halo", fill: bg }
-  if (lb === "box") return { type: "box", fill: bg }
-  return { fill: bg, ...lb }
 }
 
 interface AnnotationScales {
@@ -317,7 +289,7 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
   const pass = renderAnnotationPassWithResult(
     layoutAnnotations,
     (ann, i, context) => renderAnnotation(ann, i, config, context)
-      ?? renderStaticAnnotationFallback(ann, i, context),
+      ?? renderStaticAnnotationFallback(ann, i, context, config.theme),
     config.svgAnnotationRules,
     annotationContext,
   )
@@ -400,7 +372,7 @@ function renderAnnotation(
             {renderThresholdEndCap(ann.endCap, [px, 0], color)}
             {label && (
               <AnnotationLabel x={px + 4} y={TOP_LABEL_BASELINE} textAnchor="start"
-                fontSize={theme.typography.tickSize} fill={color} fontFamily={theme.typography.fontFamily}
+                fontSize={theme.typography.tickSize} fill={ann.labelColor ?? color} fontFamily={theme.typography.fontFamily}
                 text={label} background={ssrLabelBackground(ann, theme, "halo")} />
             )}
           </g>
@@ -450,11 +422,12 @@ function renderAnnotation(
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
       // Region fill may be a declarative HatchFill → inline <pattern>.
+      // Unset fill/color defaults to the theme primary, like the client band.
       const bandFill = resolveAnnotationBandFill(
         ann,
         `ssr-band-${index}`,
         "vertical",
-        resolveAnnotationColor(ann, theme),
+        theme.colors.primary || resolveAnnotationColor(ann, theme),
       )
       // Base fill alpha from `fillOpacity` (matches the client renderer);
       // `opacity` is the group/decay alpha so freshness dimming composes.
@@ -473,7 +446,7 @@ function renderAnnotation(
               x={layout.width - 4} y={Math.max(top, 0) + TOP_LABEL_BASELINE}
               textAnchor="end"
               fontSize={theme.typography.tickSize}
-              fill={ann.color || resolveAnnotationColor(ann, theme)}
+              fill={ann.labelColor ?? (ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme))}
               fontFamily={theme.typography.fontFamily}
               fontWeight="bold"
               text={ann.label}
@@ -499,7 +472,7 @@ function renderAnnotation(
         ann,
         `ssr-xband-${index}`,
         "horizontal",
-        resolveAnnotationColor(ann, theme),
+        theme.colors.primary || resolveAnnotationColor(ann, theme),
       )
       const fillOpacity = ann.fillOpacity ?? 0.1
       const fillUnderMarks = config.underLayerBands === true && ann.layer === "under"
@@ -518,7 +491,7 @@ function renderAnnotation(
               // Match the client x-band label default (`--semiotic-primary`),
               // not the generic annotation text color — otherwise an unlabeled-
               // color x-band reads dark in SSR but primary-tinted on canvas.
-              fill={ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme)}
+              fill={ann.labelColor ?? (ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme))}
               fontFamily={theme.typography.fontFamily}
               fontWeight="bold"
               text={ann.label}
