@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
+import { waitForRafs } from "./helpers"
 
 /**
  * The isometric infrastructure example hit-tests projected marks: real
@@ -23,6 +24,8 @@ async function hoverUntil(page: Page, around: { x: number; y: number }, text: Re
     for (let dx = -r; dx <= r; dx += step) {
       for (const dy of r === 0 ? [0] : [-r, r]) {
         await page.mouse.move(around.x + dx, around.y + dy)
+        // Wait for the current move's coalesced hit test and React render.
+        await waitForRafs(page)
         if (await tooltip(page).filter({ hasText: text }).isVisible()) {
           return { x: around.x + dx, y: around.y + dy }
         }
@@ -54,12 +57,18 @@ test("hover, resize, perspective switch and dismissal follow projected marks", a
   // the pointer crosses one (routes follow the ground axes, so no fixed point).
   const area = (await chart.boundingBox())!
   let edgeHit = false
-  sweep: for (let y = area.y + 20; y < area.y + area.height - 20; y += 6) {
-    for (let x = area.x + 20; x < area.x + area.width - 20; x += 6) {
-      await page.mouse.move(x, y)
-      if (await tooltip(page).filter({ hasText: /→/ }).isVisible()) {
-        edgeHit = true
-        break sweep
+  // Start at the center where routes cluster, then sweep outward. Waiting
+  // for every hit test makes scanning the empty top rows needlessly slow.
+  sweep: for (let offset = 0; offset < area.height / 2 - 20; offset += 6) {
+    for (const dy of offset === 0 ? [0] : [-offset, offset]) {
+      const y = area.y + area.height / 2 + dy
+      for (let x = area.x + 20; x < area.x + area.width - 20; x += 6) {
+        await page.mouse.move(x, y)
+        await waitForRafs(page)
+        if (await tooltip(page).filter({ hasText: /→/ }).isVisible()) {
+          edgeHit = true
+          break sweep
+        }
       }
     }
   }

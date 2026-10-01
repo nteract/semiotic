@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
+import { waitForRafs } from "./helpers"
 
 /**
  * Perspective pieces on the feature page: tokens (tree nodes) and slabs
@@ -16,6 +17,9 @@ async function hoverUntil(page: Page, around: { x: number; y: number }, text: Re
     for (let dx = -r; dx <= r; dx += step) {
       for (const dy of r === 0 ? [0] : [-r, r]) {
         await page.mouse.move(around.x + dx, around.y + dy)
+        // Hit testing is coalesced into rAF. Read the tooltip only after
+        // this move and its React render, rather than the previous hit.
+        await waitForRafs(page)
         const tip = tooltip(page).filter({ hasText: text })
         if (await tip.isVisible()) return { x: around.x + dx, y: around.y + dy }
       }
