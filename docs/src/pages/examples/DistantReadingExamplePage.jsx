@@ -118,7 +118,7 @@ export default function DistantReadingExamplePage() {
           <div className="dr-section-head">
             <span>01</span>
             <div>
-              <h2>The book as a signal field</h2>
+              <h2>Where the pattern changes</h2>
               <p>
                 Pick a signal, then scan the chapter map. A tall mark identifies a chapter where
                 that signal is concentrated and gives you a place to ask what changed.
@@ -188,8 +188,8 @@ export default function DistantReadingExamplePage() {
               <span>03</span>
               <h2>Where that signal lives</h2>
               <p>
-                The same chapter scores are collapsed into narrative phases, trading local detail
-                for a quicker structural read.
+                Group the chapter scores into narrative phases to compare larger sections of the
+                book.
               </p>
             </div>
             <div className="dr-chart-host" ref={barHostRef}>
@@ -221,8 +221,8 @@ export default function DistantReadingExamplePage() {
             <div>
               <h2>A distant reading still has characters</h2>
               <p>
-                The Sankey traces who frames whom, which forces mediate action, and which places
-                organize the book. It summarizes modeled relationships rather than plot events.
+                The network maps the modeled relationships among characters, forces and places.
+                Follow a connection to consider how one part of the novel shapes another.
               </p>
             </div>
           </div>
@@ -267,8 +267,8 @@ export default function DistantReadingExamplePage() {
               <span>05</span>
               <h2>Corpus fingerprints</h2>
               <p>
-                Each dot is a chapter. The books keep their color, so clustering shows when
-                different novels briefly occupy the same signal territory.
+                Each dot represents a chapter, colored by novel. Nearby dots have similar scores
+                on the selected signals, giving you passages from different books to compare.
               </p>
             </div>
             <div className="dr-chart-host" ref={scatterHostRef}>
@@ -324,9 +324,9 @@ export default function DistantReadingExamplePage() {
             <div>
               <h2>Visualization changes the first question</h2>
               <p>
-                The data model is intentionally small: four local signal arrays, phase summaries,
-                and a network per book. These views prepare questions for close reading; they do
-                not interpret a passage or settle what a novel means.
+                These four books use a small set of modeled chapter scores and relationships. A
+                peak or unexpected similarity gives you somewhere to begin: return to the passage
+                and see whether the pattern helps explain what you read.
               </p>
             </div>
           </div>

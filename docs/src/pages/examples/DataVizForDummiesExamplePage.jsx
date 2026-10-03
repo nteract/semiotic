@@ -264,11 +264,9 @@ export default function DataVizForDummiesExamplePage() {
       <div className="dvd" ref={pageRef}>
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
-            <p className="dvd-kicker">The no-cap, all-context scouting report</p>
+            <p className="dvd-kicker">A guide to choosing a chart</p>
             <h2>
-              Charts are players.
-              <br />
-              Your question is the game.
+              Start with the question you want to answer.
             </h2>
             <p className="dvd-hero__lede">
               A chart choice starts with a question: who leads, what changed, how spread out are
@@ -327,8 +325,8 @@ export default function DataVizForDummiesExamplePage() {
               number="00"
               eyebrow="Taxonomy · the pregame show"
               title="Do not ask ‘which chart?’ Ask what kind of truth is trying to get out."
-              lead="The same roster can be sorted two ways: by the material in its locker or by the job you need done before the buzzer. Toggle the scouting lens. Notice that chart families overlap; the borders are useful, not holy."
-              avoid="A taxonomy is a trail map, not a personality test. If the data cannot support the task, no chart has enough rizz to save it."
+              lead="The same data can suggest several charts. Sort this guide by the kind of data you have or by the task you want to do. Some chart families appear in both groups because they support more than one task."
+              avoid="Use the map to narrow your choices, then check whether the data supports the comparison you want to make."
               stats={CHAPTER_STATS["field-guide"]}
             >
               <ChartPanel
@@ -390,8 +388,8 @@ export default function DataVizForDummiesExamplePage() {
               number="01"
               eyebrow="Bar chart · point guard"
               title="Behold the bar: clean-cut nepo baby of position, still earning the minutes."
-              lead="Bars turn magnitude into length along a common baseline, which human vision reads with frankly suspicious competence. For ranking, the chart does not merely answer who leads; sorted order turns every neighbor into an instant matchup."
-              avoid="Do not truncate the value axis when length carries the claim. A bar beginning at 24 can make 31 look like a celestial event. That is not emphasis; that is fan fiction."
+              lead="Bars compare values by length from a common baseline. Sorting them makes the ranking easy to read and lets you compare neighboring players at a glance."
+              avoid="Start the value axis at zero when bar length represents the total. A cropped baseline can make small differences look much larger."
               stats={CHAPTER_STATS.ranking}
             >
               <ChartPanel
@@ -429,8 +427,8 @@ export default function DataVizForDummiesExamplePage() {
               number="02"
               eyebrow="Grouped bar · wing defender"
               title="Comparison is ranking after it acquires subplots, lore, and a shared calendar."
-              lead="When each player owns several measures, grouping keeps like with like: paint beside paint, three beside three. You can compare within a player or across the roster, but every extra color levies a tiny tax on working memory."
-              avoid="If groups exceed a handful, the chart becomes a supermarket aisle at closing time. Consider small multiples, a dot plot, or filtering to the comparisons the reader actually came for."
+              lead="Grouped bars put each player’s measures together. Compare shot locations within a player, or follow the same color across players. A small number of series is easiest to keep track of."
+              avoid="When there are too many groups or colors to follow, try separate small charts, a dot plot or a filter for the comparison that matters."
               stats={CHAPTER_STATS.comparison}
             >
               <ChartPanel
@@ -467,14 +465,14 @@ export default function DataVizForDummiesExamplePage() {
               number="03"
               eyebrow="Line chart · transition offense"
               title="Time enters the gym and suddenly every point has a before and an after."
-              lead="A line joins ordered moments into motion. The slope is not a decoration between dots; it is the change itself, a little sentence conjugating the data from was to is to perhaps. Use it when continuity is defensible and sequence matters."
-              avoid="Do not connect categories that lack an order, and do not make a smooth curve imply measurements you never observed. The line remembers; it also invents between points."
+              lead="A line connects observations in order. It makes changes and trends easy to follow, which is useful when comparing performance across a season or any other sequence of measurements."
+              avoid="Connect values only when their order matters. Use straight segments or clearly explain smoothing so readers can distinguish observations from the path drawn between them."
               stats={CHAPTER_STATS.change}
             >
               <ChartPanel
                 eyebrow="Ten-game arc · two team signals"
                 title="The season found a second gear in week six"
-                note="Points and team assists climb together after week five. The annotation names the hinge instead of asking the reader to perform archaeology."
+                note="Points and team assists rise together after week five. The annotation directs attention to that change."
                 feature="Use anchored, provenanced annotations"
                 featureCopy="Semiotic annotations can stay attached to stable data targets and carry author, source, and lifecycle metadata beyond what appears on the plot."
               >
@@ -521,14 +519,14 @@ export default function DataVizForDummiesExamplePage() {
               number="04"
               eyebrow="Histogram · sixth player"
               title="The average arrives late, says ‘my bad,’ and misses the shape of the whole party."
-              lead="A distribution shows where values gather, spread, split, and go feral. Bins trade detail for legibility: too few and the story becomes oatmeal; too many and random noise cosplays as structure. Try several boundaries before publishing."
-              avoid="The tallest bin is not automatically the most important fact. Report bin rules, show the sample size, and resist diagnosing two populations from one charming bump."
+              lead="A histogram groups values into ranges and counts how many fall in each. It shows where possession lengths cluster and how widely they vary. Try different bin widths to check whether a pattern depends on the grouping."
+              avoid="Read the distribution as a whole. Include the sample size and bin widths, and inspect the observations before explaining an unexpected peak."
               stats={CHAPTER_STATS.distribution}
             >
               <ChartPanel
                 eyebrow="Possession clock · 32 trips"
                 title="Most possessions resolve in the middle; a long tail burns clock"
-                note="The team’s median-ish rhythm lives around 14–18 seconds, while a few late-clock possessions stretch the right edge."
+                note="Most possessions fall around 14–18 seconds, with a few longer ones stretching the right side of the distribution."
                 feature="Use SSR for durable first paint"
                 featureCopy="Histogram is registered for Semiotic’s server renderer, so the evidence can arrive as SVG before client JavaScript hydrates—useful for reports, sharing, and slower devices."
               >
@@ -556,8 +554,8 @@ export default function DataVizForDummiesExamplePage() {
               number="05"
               eyebrow="Scatterplot · two-way playmaker"
               title="Two variables meet. Correlation enters the chat. Causation remains on read."
-              lead="Position reveals relationship: up together, apart together, clustered, curved, or magnificently indifferent. Size can add a third measure, but each new encoding must earn its keep like a rookie on a ten-day contract."
-              avoid="A fitted line is a summary of association under assumptions, not a permission slip for causal verbs. Show uncertainty, inspect outliers, and ask what selection process put these points in the room."
+              lead="A scatterplot compares two measurements for each observation. Look for clusters, trends and outliers. Bubble size can add a third measure when that extra comparison is useful."
+              avoid="A trend shows how values vary together. To explain why, you will need to consider other factors and how the observations were selected."
               stats={CHAPTER_STATS.relationship}
             >
               <ChartPanel
@@ -606,8 +604,8 @@ export default function DataVizForDummiesExamplePage() {
               number="06"
               eyebrow="Sankey · floor general"
               title="A total becomes a journey: where it came from, where it went, what got lost."
-              lead="Flows are not just categories with ribbons. They are conservation claims. A Sankey makes volume legible across stages, ideal for funnels, budgets, journeys, and possessions—provided the edges mean the same kind of stuff all the way through."
-              avoid="If ribbons cross like headphone cables from 2009, reduce the network. If values do not balance, disclose why. And never let a dramatic thick stream imply moral importance by width alone."
+              lead="A Sankey follows quantities through stages. Ribbon width shows how much takes each route, making it useful for budgets, journeys and possessions. Use consistent units so readers can follow the amounts from start to finish."
+              avoid="If too many ribbons cross, filter or group the routes. Explain any gains or losses between stages so the totals remain understandable."
               stats={CHAPTER_STATS.flow}
             >
               <ChartPanel
@@ -647,8 +645,8 @@ export default function DataVizForDummiesExamplePage() {
               number="07"
               eyebrow="Treemap · roster depth"
               title="Hierarchy is a house of rooms; area tells you which rooms consume the rent."
-              lead="Treemaps compress parent, child, and magnitude into one rectangle. They are excellent for overview and locating large branches, less excellent for exact comparison because area is a slippery witness. Use labels and hierarchy together; never make color carry ancestry alone."
-              avoid="If the question is a precise ranking, bars will clear. If the structure matters more than size, use a tree. A treemap is the hybrid athlete: powerful, compact, occasionally asked to play out of position."
+              lead="A treemap fits a hierarchy into nested rectangles. Larger rectangles represent larger values, making it easy to locate the main branches. Labels and nesting explain how each part belongs to the whole."
+              avoid="For an exact ranking, use bars. For parent-child relationships with little emphasis on values, use a tree. A treemap is useful when both structure and relative size matter."
               stats={CHAPTER_STATS.hierarchy}
             >
               <ChartPanel
@@ -656,7 +654,7 @@ export default function DataVizForDummiesExamplePage() {
                 title="Attack owns the binder; every rectangle keeps its family name"
                 note="Area estimates use frequency; nesting reveals strategic family. The chart helps locate dominant plays, not read a box score to the decimal."
                 feature="Use hierarchy-aware navigation"
-                featureCopy="Semiotic can expose hierarchy as a navigable tree alongside the canvas, preserving parent-child structure that a flat tab order would absolutely fumble."
+                featureCopy="Semiotic can expose the hierarchy as a navigable tree, so readers can follow parent-child relationships with a keyboard or assistive technology."
               >
                 <Treemap
                   data={PLAYBOOK_TREE}
@@ -683,10 +681,11 @@ export default function DataVizForDummiesExamplePage() {
 
         <section id="overtime" className="dvd-overtime">
           <div className="dvd-overtime__head">
-            <p className="dvd-kicker">Overtime · the actual cheat sheet</p>
-            <h2>Choose the sentence before you choose its geometry.</h2>
+            <p className="dvd-kicker">Choosing a chart</p>
+            <h2>Name the task, then choose the form.</h2>
             <p>
-              If you can complete “I need my reader to…”, the chart shortlist mostly drafts itself.
+              Complete the sentence “I need my reader to…” and use the tasks below to choose a
+              starting point.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -732,8 +731,7 @@ export default function DataVizForDummiesExamplePage() {
             />
           </div>
           <blockquote>
-            “The chart is not the answer,” said the data, adjusting its tiny spectacles. “I am the
-            question made inspectable.” And reader, that absolutely ate.
+            A useful chart makes the comparison you care about easier to see.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE GOLDEN RULE</span>

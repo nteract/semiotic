@@ -200,7 +200,11 @@ export default function ChainReactionExamplePage() {
         <section className="release-machine__question">
           <span>One analytical question</span>
           <h2>Which blocker prevents the most downstream work from becoming possible?</h2>
-          <p>Blocker amplification counts unfinished work reachable from a blocker. It does not estimate days saved or predict a launch date.</p>
+          <p>
+            Count the unfinished tasks that depend on each blocker. That identifies how widely a
+            delay reaches; estimating a launch date would also require task durations and
+            capacity.
+          </p>
         </section>
 
         <section className="release-machine__comparison" aria-label="Blocker amplification comparison">
@@ -223,7 +227,10 @@ export default function ChainReactionExamplePage() {
           <div className="release-machine__section-heading">
             <span>View 1 / temporal position</span>
             <h2 id="release-timeline-title">The schedule looks busy and nearly ready.</h2>
-            <p>Precise dates, duration, progress, and team ownership belong to the conventional interval swimlane.</p>
+            <p>
+              Use the schedule to compare planned dates, task duration, progress and team
+              ownership.
+            </p>
           </div>
           <ChartContainer
             title="City Pulse Live project swimlane"
@@ -253,7 +260,10 @@ export default function ChainReactionExamplePage() {
           <div className="release-machine__section-heading">
             <span>View 2 / dependency position</span>
             <h2 id="release-machine-title">The machine stalls at a decision.</h2>
-            <p>Task tiles tip only for recorded or explicit completion. A ball means one prerequisite was delivered; it never completes downstream work.</p>
+            <p>
+              A completed task tips its tile and releases a ball for each dependency. Follow
+              those balls to see which tasks have all their prerequisites and can begin.
+            </p>
           </div>
 
           <div className="release-machine__controls" aria-label="Release machine controls">

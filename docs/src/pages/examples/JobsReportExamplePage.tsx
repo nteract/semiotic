@@ -34,8 +34,9 @@ export default function JobsReportExamplePage() {
               <br />a <em>second draft.</em>
             </h1>
             <p className="jobs-deck">
-              A month’s jobs number gets a headline on release day. It also gets later drafts.
-              Sometimes they sharpen the picture. Sometimes they change what the picture says.
+              The first jobs estimate arrives while employers are still reporting. Later releases
+              fill in the picture—and sometimes turn a month of apparent growth into a month of
+              losses.
             </p>
             <p className="jobs-dateline">
               U.S. nonfarm payrolls · January 2024–December 2025
@@ -51,10 +52,7 @@ export default function JobsReportExamplePage() {
               the decline at 20,000.
             </p>
             <p>
-              Those are three readings of the <em>same employment month</em>. The difference
-              matters: “payrolls grew” and “payrolls shrank” are different descriptions of June.
-              Neither, on its own, can tell us why the change happened—or settle whether a recession
-              was underway.
+              All three describe the <em>same month</em>. A reader following only the first headline would remember June as a month of job growth. By September, the estimate showed a loss.
             </p>
           </div>
           <figure className="jobs-hero">
@@ -86,33 +84,23 @@ export default function JobsReportExamplePage() {
               ))}
             </div>
             <figcaption>
-              <strong>Read the steps, then the endpoint.</strong> The blue bar starts with the first
-              estimate. Red bars subtract later revisions. Their lengths show how much the estimate
-              changed; the final endpoint shows where it landed. These are jobs, not percentages.
+              The blue bar shows the first estimate. Each red bar subtracts a later revision.
+              Follow the steps to see how an estimated gain became a loss. Values are numbers of
+              jobs.
             </figcaption>
           </figure>
           <div className="jobs-prose">
-            <h2>A fast answer, with more evidence to come</h2>
+            <h2>Why the number changes</h2>
             <p>
-              The jobs report solves an awkward problem. People need to know what is happening
-              before every employer has reported it. The first payroll estimate gives a timely
-              reading from the information available. Later responses, corrections and another pass
-              through seasonal adjustment can change that reading. It is useful precisely because it
-              arrives early—and that makes its publication date part of its meaning.
+              Waiting for every employer to report would leave us with a clearer picture of an
+              older economy. The first estimate offers an early reading. Later responses,
+              corrections and seasonal adjustments improve it. To compare jobs numbers fairly, we
+              need to know when each was published.
             </p>
             <p>
-              There is another, broader revision. Each year, BLS benchmarks the payroll survey
-              against more comprehensive employment records, principally unemployment-insurance tax
-              records. Seasonal adjustments can change earlier months as well. A revision that
-              crosses that update cannot be explained simply as “late surveys came in.” The chart
-              above describes the arithmetic between releases; it does not divide responsibility
-              among those processes.
-              <a href="https://www.bls.gov/opub/hom/ces/presentation.htm#revisions">
-                {" "}
-                BLS explains the revision process.
-              </a>
+              BLS also makes an annual revision using more comprehensive employment records, mainly unemployment-insurance tax records. That update and revised seasonal adjustments can change earlier months. The chart combines these changes; it does not separate their causes. <a href="https://www.bls.gov/opub/hom/ces/presentation.htm#revisions">Read how BLS revises the estimates.</a>
             </p>
-            <h2>Most useful is the contrast</h2>
+            <h2>Some revisions barely change the story</h2>
             <p>
               June is worth noticing. So is the month after it. <strong>July 2025</strong> began at
               73,000 added jobs and reached 72,000 at the third estimate: a difference of just
@@ -120,14 +108,7 @@ export default function JobsReportExamplePage() {
               direction.
             </p>
             <p>
-              Revisions also move upward. <strong>March 2024</strong> went from 303,000 added jobs
-              to 310,000 at the third estimate. Its March 6, 2026 reading is lower, at 228,000. “The
-              next estimate” and “a much later estimate” are different comparisons. A revision has
-              both a starting point and a destination.
-              <a href="https://www.bls.gov/web/empsit/cesnaicsrev.htm">
-                {" "}
-                Check the BLS first and third estimates.
-              </a>
+              Revisions can also move upward. <strong>March 2024</strong> went from 303,000 added jobs to 310,000 at the third estimate. By March 6, 2026, it was down to 228,000. A small early revision can be followed by a much larger annual update. <a href="https://www.bls.gov/web/empsit/cesnaicsrev.htm">Compare the BLS first and third estimates.</a>
             </p>
           </div>
           <section className="jobs-comparison" aria-labelledby="jobs-comparison-title">
@@ -189,29 +170,12 @@ export default function JobsReportExamplePage() {
             </details>
           </section>
           <div className="jobs-prose">
-            <h2>The blank is part of the story</h2>
+            <h2>Why October has no first estimate</h2>
             <p>
-              October 2025 has no blue dot. The lapse in federal appropriations disrupted
-              publication. BLS lists no first preliminary estimate for that month. October data
-              first appeared in the December 16 release, but BLS classifies that estimate as{" "}
-              <em>second preliminary</em>. Calling it “first” here would make a tidy chart and a
-              misleading comparison.
+              October 2025 has no blue dot because the lapse in federal appropriations disrupted publication. Its data first appeared in the December 16 release. BLS labels that estimate <em>second preliminary</em>, so there is no first estimate to plot here.
             </p>
             <p>
-              The interruption also delayed August’s third estimate until December 16. Normally, the
-              third estimate arrives two months after the first; the dates here show when it
-              actually arrived. A blank is not zero, and a regular-looking calendar is not evidence
-              of a regular release schedule.
-              <a href="https://www.bls.gov/bls/news-release/empsit.htm">
-                {" "}
-                See the release archive
-              </a>{" "}
-              and
-              <a href="https://www.bls.gov/news.release/archives/empsit_12162025.htm">
-                {" "}
-                the December 16 explanation
-              </a>
-              .
+              The interruption also delayed August’s third estimate until December 16. The dates in this article follow the actual releases, including that delay. See the <a href="https://www.bls.gov/bls/news-release/empsit.htm">release archive</a> and the <a href="https://www.bls.gov/news.release/archives/empsit_12162025.htm">December 16 explanation</a>.
             </p>
             <h2>A year is more than twelve headlines</h2>
             <p>
@@ -220,24 +184,12 @@ export default function JobsReportExamplePage() {
               revised December again, the March 6 vintage showed 116,000.
             </p>
             <p>
-              Those totals each subtract December’s employment level from the previous December’s
-              level in <em>one</em> dated edition. Adding twelve first-release changes would stitch
-              together twelve different versions of history. It would answer a different question.
-              <a href="https://www.bls.gov/news.release/archives/empsit_02112026.htm">
-                {" "}
-                The benchmark release
-              </a>{" "}
-              and
-              <a href="https://www.bls.gov/news.release/archives/empsit_03062026.htm">
-                {" "}
-                March 6 release
-              </a>{" "}
-              show the changes.
+              Each annual total compares December with the previous December using figures from a single release. Adding twelve first estimates would mix figures published at different stages of revision. The <a href="https://www.bls.gov/news.release/archives/empsit_02112026.htm">benchmark release</a> and <a href="https://www.bls.gov/news.release/archives/empsit_03062026.htm">March 6 release</a> show how the annual total changed.
             </p>
             <p>
-              The practical habit is small: keep the date attached. Read the first estimate for its
-              timely information. Return for the later draft. And when the draft changes, let the
-              explanation change with it—without pretending the earlier reading never existed.
+              Read the first estimate to learn what is happening now, and check later releases to
+              see how that account holds up. Keep the publication date with the number: it tells
+              the next reader which version of the month you mean.
             </p>
           </div>
           <aside className="jobs-source" aria-labelledby="jobs-source-title">

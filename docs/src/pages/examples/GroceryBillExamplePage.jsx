@@ -260,8 +260,8 @@ export default function GroceryBillExamplePage() {
             has a <em>memory.</em>
           </h1>
           <p className="grocery-deck">
-            The receipt remembers prices you no longer see on the shelf. Put the same few things in
-            the basket, and see where the difference comes from.
+            You can buy the same groceries and leave with a very different bill. Fill a small
+            basket at two dates to see which items account for the increase.
           </p>
           <p className="grocery-opening-fact">
             Our illustrative basket went from <b>{money(authored.beforeUSD)}</b> in June 2019 to{" "}
@@ -280,10 +280,10 @@ export default function GroceryBillExamplePage() {
           <p className="grocery-chapter">01 / SAME BASKET, TWO DATES</p>
           <h2 id="basket-heading">What stayed in the bag?</h2>
           <p>
-            Two pounds of bananas. Two pounds of white bread. A dozen eggs, a gallon of milk, four
-            pounds of whole chicken, and a pound of ground chuck. This is a small shopping
-            selection, not a weekly meal plan. Keeping it fixed lets us ask a narrow question: what
-            changed when the prices changed?
+            Two pounds of bananas. Two pounds of white bread. A dozen eggs, a gallon of milk,
+            four pounds of whole chicken, and a pound of ground chuck. Keep those quantities
+            fixed and the difference between the receipts comes entirely from prices. Then adjust
+            the basket to see how the comparison changes.
           </p>
           {selection.error ? (
             <div role="alert" className="grocery-notice">
@@ -434,10 +434,10 @@ export default function GroceryBillExamplePage() {
               <h2 id="contribution-heading">The difference has ingredients.</h2>
               <p>{contributionSummary(receipt)}</p>
               <p>
-                An expensive item does not necessarily explain the biggest increase. Each
-                contribution multiplies the change in a unit price by the quantity in the bag. Four
-                pounds of chicken give a modest change per pound four chances to affect the total;
-                setting its quantity to zero removes its contribution entirely.
+                What you buy matters as much as the change in price. A small increase per pound
+                adds up when you buy four pounds of chicken. Each row below multiplies an item’s
+                price change by its quantity to show how much it adds to—or subtracts from—the
+                bill.
               </p>
               <Suspense fallback={<p>The item contributions are listed below.</p>}>
                 <ContributionChart receipt={receipt} />
@@ -526,18 +526,15 @@ export default function GroceryBillExamplePage() {
                 </p>
               )}
               <p>
-                That shorter comparison offers a useful counterexample to the idea of an
-                uninterrupted climb. A price can fall from a recent peak while remaining above its
-                earlier level. In the authored basket, a dozen eggs cost $6.227 in March 2025,
-                $3.775 in June 2025, and $1.203 in June 2019. Those statements describe different
-                comparisons, and all three can be true.
+                Eggs show why a falling price can still feel expensive. A dozen cost $6.227 in
+                March 2025, $3.775 in June 2025, and $1.203 in June 2019. June’s price was well
+                below the recent peak and still more than three times the earlier price.
               </p>
               <p>
-                The connected scatterplot puts the basket’s cost and its annual change in the same
-                view, then traces the months in order. The annual baseline moves every month. A
-                smaller positive percentage means prices rose more slowly; only a negative
-                percentage means this basket costs less than a year before. Neither says it returned
-                to the 2019 price.
+                The next chart follows both the basket’s cost and its yearly rate of change. When
+                that rate falls but stays positive, the bill is still rising, just more slowly. A
+                negative rate means the basket costs less than a year earlier. Follow the monthly
+                path to see how far that leaves it from 2019.
               </p>
               <Suspense
                 fallback={
@@ -559,36 +556,24 @@ export default function GroceryBillExamplePage() {
 
             <section className="grocery-section grocery-limits" aria-labelledby="limits-heading">
               <p className="grocery-chapter">04 / WHAT THIS RECEIPT CAN REMEMBER</p>
-              <h2 id="limits-heading">A national average is not your corner store.</h2>
+              <h2 id="limits-heading">Build a basket closer to yours.</h2>
               <p>
-                You may buy different bread, find a sale, switch brands, or shop somewhere with
-                quite different prices. The BLS series describe selected product categories across
-                the U.S. city average. They do not describe a particular store, package, brand, or
-                household. A pound of white pan bread is a weight, not a promise about the size of a
-                loaf.
+                Your bill depends on where you shop, which brands you choose and what is on sale.
+                These BLS prices are national averages for broad product categories. Use the
+                quantities to explore your mix of purchases, keeping the listed units in mind:
+                bread is priced by the pound, for example.
               </p>
               <p>
-                Changing the quantities changes the question. Removing meat tells us what this
-                smaller selection would have cost at the listed average prices. It does not
-                establish what a household saved, what it bought instead, or whether the basket
-                meets anyone's dietary needs. Holding quantities fixed makes the arithmetic
-                interpretable, but it deliberately leaves those shopping decisions outside the
-                comparison.
+                Removing meat or buying more milk changes how much each price matters to the
+                total. The comparison holds your new quantities fixed at both dates. It shows the
+                cost of that basket at average prices, leaving choices such as switching brands
+                or shopping for sales up to you.
               </p>
               <p>
-                The{" "}
-                <a href="https://www.bls.gov/opub/hom/cpi/concepts.htm">
-                  official Consumer Price Index
-                </a>{" "}
-                has a broader measurement framework. This six-item calculation does not reproduce
-                that index or its treatment of changing products and quality. These data also do not
-                establish why prices changed. A contribution explains the arithmetic of this
-                receipt, not the cause of a price increase.
+                This six-item basket is a way to examine a grocery bill. The <a href="https://www.bls.gov/opub/hom/cpi/concepts.htm">official Consumer Price Index</a> covers a much broader range of purchases and accounts for product and quality changes. For this receipt, the item totals explain where the extra dollars went; explaining why prices rose would require other evidence.
               </p>
               <p>
-                The answer is narrower, and useful on its own: <b>{summary(receipt)}</b> You can
-                inspect every ingredient of that difference, change the selection, and keep the
-                comparison you actually made.
+                <b>{summary(receipt)}</b> Each item’s contribution is visible above. Change the basket, compare another pair of dates, or save this receipt to return to later.
               </p>
             </section>
 
@@ -719,9 +704,8 @@ export default function GroceryBillExamplePage() {
               <a href={`${editionPath}/raw/prices.json`}>Inspect the original API response</a>.
             </p>
             <p>
-              This is the first implementation of E01. Real-phone performance measurements,
-              assistive-technology reader sessions, the five-reader study, and the full shared
-              acceptance gates remain open. This page does not claim to have passed them.
+              The source files include automated checks and a record of the reader, accessibility
+              and phone testing still to be completed.
             </p>
             <p>
               The independent consumer uses <code>semiotic/artifact</code> and{" "}

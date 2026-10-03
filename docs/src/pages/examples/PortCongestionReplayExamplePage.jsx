@@ -258,8 +258,9 @@ export default function PortCongestionReplayExamplePage() {
               way around
             </h2>
             <p>
-              A quiet spring, a canal sealed shut by a single ship, and a crisis that pushed a trade
-              lane around a continent. Every count below is an AIS-observed container-ship transit.
+              Compare a quiet spring, the Ever Given blockage and the Red Sea disruption. The
+              counts show container ships passing measured chokepoints, making it possible to see
+              the difference between a temporary stop and a sustained detour around Africa.
             </p>
           </div>
           <div
@@ -646,13 +647,11 @@ export default function PortCongestionReplayExamplePage() {
       </div>
 
       <section className="port-replay__implementation">
-        <h2>Four frame families</h2>
+        <h2>One replay, four views</h2>
         <p>
-          ProcessSankey and FlowMap receive declaratively derived snapshots of the selected
-          scenario. RealtimeWaterfallChart is synchronized through its imperative changeset API,
-          while ScatterplotMatrix holds every day of all three scenarios at once for a clock-free
-          comparison and doubles as a navigation surface. A shared corridor identifier coordinates
-          observation and selection across the time-bound views.
+          The map shows routes, the flow chart follows traffic through chokepoints, and the daily
+          bars compare it with the earlier pace. The matrix puts all three periods side by side.
+          Select a corridor or a day to carry the same comparison across views.
         </p>
         <CodeBlock code={implementationCode} language="jsx" />
       </section>

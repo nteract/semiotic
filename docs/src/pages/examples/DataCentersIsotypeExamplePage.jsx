@@ -159,10 +159,10 @@ export default function DataCentersIsotypeExamplePage() {
   return (
     <ExamplePageLayout title="The Buildings Behind AI">
       <p className="dc-isotype__lede">
-        Data centers did not begin with generative AI. This explainer separates the installed cloud
-        base from facilities opened after ChatGPT, active construction, and announcements—and
-        refuses to turn an announced gigawatt into an operating one. Every number names its
-        denominator; every missing disclosure stays missing.
+        AI runs in buildings that need electricity, cooling and connections to the grid. Compare
+        their scale with the data centers already serving the internet, then follow the resources
+        they use. The views distinguish operating facilities, construction and announced projects
+        so you can see how much is running and how much is still planned.
       </p>
 
       <div className="dc-isotype" ref={pageRef}>
@@ -250,11 +250,10 @@ export default function DataCentersIsotypeExamplePage() {
           />
 
           <p className="dc-isotype__map-caption">
-            Don&apos;t be deceived by this map of the United States—the five dark strips are
-            schematic relief sections, drawn only to give an idea of the lie of the land and where
-            the buildings stand on it. The signs mark selected, sourced sites; the terrain is
-            generalized; nothing here is a navigational map. But you&apos;ve heard of the Virginia
-            internet corridor and the Texas build-out. Well, here they are.
+            The five strips place selected data-center sites across the United States, including
+            the Virginia internet corridor and new Texas projects. They simplify the terrain to
+            make the locations and symbols easy to compare. Select a site for its reported status
+            and capacity.
           </p>
 
           <SiteInspection site={activeSite} />
@@ -283,9 +282,9 @@ export default function DataCentersIsotypeExamplePage() {
               frameProps={{ background: "transparent" }}
             />
             <p className="dc-isotype__method-note">
-              Synergy reports the U.S. share directly and describes Europe and China as each roughly
-              one-third of the remaining balance. The underlying worldwide MW denominator is
-              proprietary, so this graphic does not invent it.
+              Synergy reports the U.S. share directly and describes Europe and China as each
+              roughly one-third of the remainder. It does not publish the worldwide megawatt
+              total behind those shares.
             </p>
           </section>
 
@@ -451,20 +450,20 @@ export default function DataCentersIsotypeExamplePage() {
           <div className="dc-isotype__compute-warning">
             <strong>Do not read this as a clean production function.</strong>
             <p>
-              MMLU evaluation settings differ, the benchmark contains known errors and possible
-              contamination, and training is only one demand source. Inference serves users
-              continuously; research runs and failed experiments are not represented by a final
-              model’s training FLOP.
+              The model comparison puts training compute beside MMLU scores. Evaluation settings
+              vary, so treat it as a comparison of reported figures. Serving users, research runs
+              and unsuccessful experiments also consume compute beyond the final training run
+              shown here.
             </p>
           </div>
         </section>
 
         <section className="dc-isotype__ledger">
-          <h3>Disclosure ledger</h3>
+          <h3>What each project has disclosed</h3>
           <p>
-            “Not disclosed” is a result. It prevents planned capacity, utility service, accelerator
-            count, cooling-loop volume, and permanent employment from collapsing into one
-            unsupported story.
+            Check the source and definition for each figure. Some projects report capacity,
+            others a utility commitment or a chip count. Blank entries identify information the
+            cited source does not disclose.
           </p>
           <div className="dc-isotype__ledger-table">
             <table>
@@ -530,14 +529,11 @@ export default function DataCentersIsotypeExamplePage() {
       </div>
 
       <section className="dc-isotype__editorial">
-        <h2>Graphics can carry epistemic status</h2>
+        <h2>How the symbols preserve the quantities</h2>
         <p>
-          The shared ISOTYPE signs are deliberately simple; the data contract is not. Each map
-          record carries status, date language, denominator, source, and caveat. Every repeated
-          sign is a <code>glyph</code> scene node allocated by <code>tokenLayer</code> as a{" "}
-          <code>unitized-measure</code> — canvas-painted pictograms whose partial fills preserve the reported amounts — so the
-          rich poster stays observable, keyboard-navigable, and accessible without a parallel
-          bookkeeping layer.
+          Each repeated sign represents a fixed unit, with partial fills for the remainder. The
+          records also carry a project’s status, date and source. Semiotic uses those same
+          records for the marks, tooltips, keyboard navigation and accessible table.
         </p>
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
       </section>

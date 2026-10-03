@@ -127,16 +127,11 @@ export default function UrineWheelExamplePage() {
   return (
     <ExamplePageLayout title="The Wheel of Urines">
       <p style={styles.lede}>
-        Before laboratories, a physician read disease from the color of urine. The medieval{" "}
-        <em>rota urinarum</em> ringed twenty named colors around a chart and tied each to a stage of{" "}
-        <em>digestio</em> — the body&apos;s &ldquo;cooking&rdquo; of the humors. Drawn here as a
-        circular diagram: every flask and roundel is a real mark you can hover, keyboard-navigate,
-        and open in a data table.
+        Medieval physicians used urine color to judge health. The <em>rota urinarum</em> arranged twenty named colors around a wheel and linked them to stages of <em>digestio</em>, the supposed “cooking” of the body’s humors. Explore this reconstruction to see how that historical system connected an observation with a diagnosis.
       </p>
       <p style={styles.recipeContract}>
-        Inspectable recipe contract: <code>{urineWheelRecipeManifest.id}</code>. This is a{" "}
-        <strong>situated explanatory chart</strong>: the wheel preserves the historical worldview
-        that organized colors into diagnoses.
+        The wheel presents the historical theory in its own arrangement. Select a color or
+        diagnosis to follow the relationship and read its description.
       </p>
       <IntentMark
         manifest={intentManifestFromRecipe(urineWheelRecipeManifest, {
@@ -242,30 +237,19 @@ export default function UrineWheelExamplePage() {
 
         <h2>A network drawn in a ring</h2>
         <p>
-          The twenty flasks are placed at even angles around the rim. Each of the seven diagnosis
-          roundels is positioned at the <em>unit-vector mean angle</em> of the colors that connect
-          to it — so &ldquo;perfect digestion,&rdquo; fed by the golds clustered near the top,
-          settles at the crown, while &ldquo;mortification,&rdquo; fed by the dark urines, settles
-          near the bottom. Nothing is hand-placed; move a color to a different diagnosis and its
-          roundel drifts to follow. The spokes leave each flask radially and fan apart by how far a
-          color sits from its diagnosis&apos;s center, echoing the original&apos;s sweeping
-          connectors.
+          The twenty flasks sit evenly around the rim. Each diagnosis sits near the colors linked
+          to it: the golds place “perfect digestion” toward the top, while the darkest colors
+          place “mortification” near the bottom. The layout calculates those positions from the
+          connections.
         </p>
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
 
         <h2>What the custom layout inherits</h2>
         <p>
-          Because every flask and roundel is emitted as a <code>networkHitTarget</code>, this
-          hand-drawn diagram is a first-class Semiotic chart. It is fully keyboard navigable (Tab
-          into the wheel, then arrow between marks); it carries a screen-reader data table and a
-          layered description; the physician&apos;s notes are real <code>annotations</code> anchored
-          to nodes by id and carrying provenance as a sourced human gloss; and the
-          toolbar&apos;s export button writes the whole wheel to SVG or PNG. The Latin/English
-          toggle rides the cheap <code>layoutConfig</code> path (the layout re-runs without
-          re-ingesting the graph), while the highlight interaction is cheaper still: it flows
-          through the shared selection store and the overlay restyles via{" "}
-          <code>useCustomLayoutSelection</code>, updating styles without running the layout again.
+          Use a pointer or keyboard to move between flasks and diagnoses, or open the data table
+          to read their relationships. The Latin/English control changes the labels, and the
+          export control saves the wheel as SVG or PNG.
         </p>
 
         <p style={styles.sourceNote}>

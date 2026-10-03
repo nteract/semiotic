@@ -218,8 +218,8 @@ export default function PlaneDayExamplePage() {
             has had <em>a day.</em>
           </h1>
           <p className="plane-deck">
-            One aircraft left San Francisco two and a half hours late. Its next departure was only
-            eleven minutes late. Follow the plane, and a delay becomes a sequence.
+            One aircraft left San Francisco two and a half hours late. Its next departure was
+            only eleven minutes late. What happened between those flights?
           </p>
           <div
             className="plane-opening-numbers"
@@ -256,20 +256,19 @@ export default function PlaneDayExamplePage() {
         </header>
 
         <section className="plane-section plane-introduction">
-          <p className="plane-chapter">01 / A DELAY IS NOT A DESTINY</p>
+          <p className="plane-chapter">01 / BEFORE YOUR FLIGHT</p>
           <h2>There is another timetable behind your boarding pass.</h2>
           <p>
-            The plane at your gate may already have made several trips. But tracing those trips does
-            not mean adding every late minute together. Each flight has its own scheduled departure,
-            its own arrival, and a planned interval on the ground. The useful question is how the
-            difference from that schedule changes as the aircraft moves.
+            The plane at your gate may already have made several trips. Every stop gives it a
+            chance to lose time or catch up: a late arrival might use up a long layover, or leave
+            the next flight waiting. Following the aircraft shows how its delay changes through
+            the day.
           </p>
           <p>
-            Here are three real sequences reported under Hawaiian’s HA carrier code to the Bureau of
-            Transportation Statistics. They come from a frozen July 2025 extract, not a live flight
-            tracker. The journeys are deliberately short enough to follow: within each pattern, we
-            selected the eligible day with the fewest legs, then the earliest date and tail
-            identifier to break ties.
+            These three journeys come from Hawaiian’s July 2025 flight records, reported to the
+            Bureau of Transportation Statistics. Each illustrates a pattern: staying near
+            schedule, recovering from a delay, or remaining late. We chose short journeys so you
+            can follow every leg; the full comparison appears below.
           </p>
           <div className="plane-cases">
             {snapshot.cases.map((example, index) => (
@@ -290,9 +289,8 @@ export default function PlaneDayExamplePage() {
             ))}
           </div>
           <p>
-            Recovery and persistence can coexist. In the third story, the last departure was 27
-            minutes less late than the one before it. It still left 35 minutes behind schedule. A
-            useful description keeps both facts.
+            The third aircraft recovered 27 minutes between departures and still left 35 minutes
+            late. Catching up can take more than one stop.
           </p>
         </section>
 
@@ -387,12 +385,12 @@ export default function PlaneDayExamplePage() {
                 data-testid="pinned-flight"
                 data-event-id={selectedFlight.id}
               >
-                <p className="plane-chapter">PINNED FLIGHT / COMPUTED OBSERVATION</p>
+                <p className="plane-chapter">SELECTED FLIGHT</p>
                 <h3 id="pinned-heading">{flightName(selectedFlight)}</h3>
                 <p>{legObservation(day, selectedFlight)}</p>
                 <p className="plane-caption">
-                  The observation is calculated from signed BTS departure delays. It does not
-                  attribute the change to weather, a crew, air traffic control, or the prior flight.
+                  This comparison uses the reported departure delays. The flight details below
+                  include BTS delay categories where available.
                 </p>
                 <label htmlFor="plane-note">Your local note about this flight</label>
                 <textarea
@@ -456,13 +454,10 @@ export default function PlaneDayExamplePage() {
         </section>
 
         <section className="plane-section" aria-labelledby="cohort-heading">
-          <p className="plane-chapter">03 / THREE DAYS ARE NOT THE WHOLE MONTH</p>
+          <p className="plane-chapter">03 / THE REST OF THE MONTH</p>
           <h2 id="cohort-heading">How often did these patterns appear?</h2>
           <p>
-            Among <b>660 eligible aircraft-days</b>, 334 stayed near schedule, 11 met the recovery
-            rule, and 24 met the persistence rule. The remaining 291 eligible days followed other
-            patterns. These are descriptions of this selected cohort, not Hawaiian’s official
-            on-time performance rate.
+            Of <b>660 aircraft-days with at least three connected flights</b>, 334 stayed near schedule, 11 met our recovery rule, and 24 met our persistence rule. The other 291 followed different patterns. Use the controls to explore the journeys behind those counts.
           </p>
           <div className="plane-pattern-counts">
             {(["near", "recovered", "persisted", "other"] as Pattern[]).map((key) => (
@@ -479,12 +474,10 @@ export default function PlaneDayExamplePage() {
             ))}
           </div>
           <p>
-            The denominator matters. The July 2–30 window contains 1,627 aircraft-days with a tail
-            number. We exclude 967: 941 have fewer than three reported flights, 48 have a reporting
-            or continuity break, and 22 are in both groups. Short mainland journeys and unreported
-            activity therefore affect who enters this comparison. The featured three-leg days are
-            not a random sample of the eligible days, many of which have much longer inter-island
-            itineraries.
+            The July 2–30 records contain 1,627 aircraft-days with a tail number. Of these, 941
+            have fewer than three flights and 48 have a reporting or continuity break; 22 fall
+            into both groups. Excluding them leaves 660 days. This favors longer itineraries, so
+            the counts describe that group rather than Hawaiian’s overall on-time performance.
           </p>
           <label className="plane-cohort-filter">
             Comparison pattern
@@ -564,46 +557,39 @@ export default function PlaneDayExamplePage() {
         </section>
 
         <section className="plane-section plane-limits">
-          <p className="plane-chapter">04 / THE PART THE TIMETABLE CANNOT TELL</p>
-          <h2>A sequence is evidence. A cause needs more.</h2>
+          <p className="plane-chapter">04 / TIME TO CATCH UP</p>
+          <h2>A long layover can absorb a late arrival.</h2>
           <p>
-            In the recovery story, the first arrival was 154 minutes late. There was a scheduled
-            270-minute gap before the next departure. The actual gap was 127 minutes. That
-            arithmetic helps explain how the later departure could be much closer to schedule. It
-            does not tell us what people did during that interval or why the first flight was
-            delayed.
+            The recovery flight arrived 154 minutes late. But its schedule allowed 270 minutes on
+            the ground before the next departure. The plane actually spent 127 minutes there and
+            left just 11 minutes late. Most of the delay had used up time between flights.
           </p>
           <p>
-            BTS does publish carrier-reported delay categories. You can inspect the values under
-            each flight. A blank category remains blank; we do not replace it with a story about
-            weather or a late inbound plane. Even a reported late-aircraft value describes that
-            reporting category for a particular flight. It cannot identify every earlier event that
-            contributed to the day.
+            That timetable explains where the aircraft caught up. For reported causes of delay,
+            look at the BTS categories under each flight. Those entries cover individual flights;
+            the sequence alone cannot tell us why the first flight was late or what happened
+            during a stop.
           </p>
           <p>
-            A repeated tail number is also a limited kind of evidence. The adapter checks airport
-            continuity and chronology, and stops at unresolved records or a gap longer than twelve
-            hours. Reporting omissions, positioning flights, international activity, and aircraft
-            changes can still be outside the extract. “No break detected” means the available rows
-            fit the checks; it is not proof that nothing else happened.
+            We connect records when the tail number, airports and times agree, stopping at an
+            unresolved record or a gap longer than twelve hours. Flights outside this reporting
+            extract may be missing from the sequence.
           </p>
           <p>
-            What can you take away? Delay is a changing distance from a series of schedules. An
-            aircraft can start late and come close to schedule, or recover time and still remain
-            late. Following a reported sequence makes those distinctions visible. It cannot tell you
-            when your next flight will leave.
+            A delay belongs to a flight’s schedule, and the next flight has a schedule of its
+            own. The time between them can determine whether a late arrival becomes another late
+            departure. That is why the aircraft’s earlier journey is worth a look when you are
+            waiting at the gate.
           </p>
         </section>
 
         <section className="plane-section plane-save">
           <p className="plane-chapter">05 / TAKE THE FLIGHT WITH YOU</p>
-          <h2 id="plane-save">Same flight. Your note. Another screen.</h2>
+          <h2 id="plane-save">Save a flight and your notes.</h2>
           <p>
-            Pin a flight, attach a note, then reopen its link or import its packet in another
-            browser session. Notes stay attached to the flight’s identity and edition. They remain
-            your unreviewed text, separate from the computed observations. Nothing is submitted to a
-            comment service. The link contains your notes, so share it only with the people you
-            intend to read them.
+            Pin a flight and add a note. Its link or downloaded packet will reopen the same
+            flight and notes in another session. Notes are stored in the link or file, so anyone
+            you share it with can read them.
           </p>
           <div className="plane-downloads">
             {state && day && !resolvedIssue && (
@@ -701,23 +687,17 @@ export default function PlaneDayExamplePage() {
               connections are visible breaks.
             </p>
             <p>
-              Pure example adapters supply the itinerary, chart data, sheet and packet. Semiotic’s
-              high-level charts and custom layout components render the ribbon, network and
-              comparison, with Artifact Contracts for the exported evidence. The host owns file/URL
-              storage. These helpers stay example-local until another materially different story
-              establishes a reusable public API.
+              The itinerary, charts and downloads use the same prepared flight records. Semiotic
+              draws the timelines, routes and comparisons; the example code handles selections
+              and saved notes. Open Full Code to see how the pieces fit together.
             </p>
             <p>
-              Automated checks compare the nine featured source rows with an independent time
-              calculation and test flight identity, cross-session notes, chart evidence, keyboard
-              controls and four viewport widths. A reproducible production-route measurement uses a
-              throttled desktop phone viewport; it does not establish performance on a phone.
+              Automated checks compare the nine featured flights with an independent time
+              calculation and check saved notes, keyboard controls and layouts at four widths.
             </p>
             <p>
-              This is E02’s first implementation. Editorial review, real Android performance,
-              assistive-technology sessions, five-reader acceptance, and the full shared gates
-              remain open. The strategy brief records automated checks and remaining work; this page
-              does not claim those human or device gates have passed.
+              The source files include the automated checks and a record of the reader,
+              accessibility and device testing still to be completed.
             </p>
           </details>
         </footer>

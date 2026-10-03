@@ -421,8 +421,8 @@ export default function DataVizForDummiesSixExamplePage() {
       <div className="dvd dvd--sixth" ref={pageRef}>
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
-            <p className="dvd-kicker">The basement laboratory · please secure loose scarves</p>
-            <h2>Physics earns its CPU when the mechanism is part of the evidence.</h2>
+            <p className="dvd-kicker">Motion and process</p>
+            <h2>Show how the result takes shape.</h2>
             <p className="dvd-hero__lede">
               Motion can explain an arrival, a queue, or a dependency when its behavior matches
               the data. Try these physics charts, then pause and read the counts or settled
@@ -477,14 +477,14 @@ export default function DataVizForDummiesSixExamplePage() {
               number="00"
               eyebrow="Lab safety · define the semantic contract first"
               title="The simulation may explain the process; it may not fabricate the result."
-              lead="A physics chart has two layers. The semantic layer states the measured values, rules, and outcomes. The physical layer enacts those rules so accumulation, congestion, transfer, or dependency becomes perceptible over time."
-              avoid="If changing gravity, friction, or the random seed changes the reported conclusion, you have built a small video game. Charming! Put the data back in charge."
+              lead="A physics chart combines values and process rules with moving marks. The motion can show a queue growing, a transfer arriving or work waiting on a dependency. Counts and labels let readers check the result."
+              avoid="Keep reported values tied to the data and declared rules. Changing the animation’s gravity or friction should not change those values."
               stats={CHAPTER_STATS["lab-safety"]}
             >
               <ChartPanel
                 eyebrow="Physics instruments · defensible physical verbs"
                 title="Settle, arrive, queue, transform, unlock."
-                note="Start with the verb the data actually contains. Motion without a semantic verb is merely a screensaver with tenure."
+                note="Start with the process you need to explain: something arriving, accumulating, moving or waiting."
                 feature="Keep a static projection beside the simulation"
                 featureCopy="Physics HOCs expose semantic items, accessible tables, and projection overlays so readers can inspect the answer without tracking every body."
               >
@@ -513,7 +513,7 @@ export default function DataVizForDummiesSixExamplePage() {
               <ChartPanel
                 eyebrow="Shot quality · observed sample or branching model"
                 title={galtonMode === "sample" ? "Two hundred seventy shots settle into their measured score bins" : "Two hundred seventy branching outcomes form a reference distribution"}
-                note="Sample mode maps 270 real rows to bins. Mechanical mode generates 270 outcomes from peg rows and branch probability. They answer different questions despite wearing the same tiny hard hats."
+                note="Sample mode places 270 supplied rows into bins. Mechanical mode generates 270 outcomes from peg rows and a branch probability. Switch modes to compare a measured sample with a simulated process."
                 feature="Separate simulationMode from display mode"
                 featureCopy="GaltonBoardChart distinguishes supplied observations from a seeded mechanical demonstration and overlays the exact bin counts in both."
               >
@@ -648,7 +648,7 @@ export default function DataVizForDummiesSixExamplePage() {
               eyebrow="Physical flow + process flow · traffic is not the same as capacity"
               title="Packets explain routes; queues explain service constraints."
               lead="PacketFlowChart sends particles along authored links whose widths carry throughput. ProcessFlowChart goes further: stage controllers can enforce finite work-per-second capacity, so congestion is computed rather than decorated."
-              avoid="Particles are samples of a rate, not individual people unless you explicitly make them so. And a bottleneck created only by a strong force is force theater; use a capacity controller for a capacity claim."
+              avoid="State what a particle represents: a sampled rate or an individual item. When showing a bottleneck, use an explicit processing limit so the queue reflects that limit."
               stats={CHAPTER_STATS.throughput}
             >
               <ChartPanel
@@ -724,13 +724,13 @@ export default function DataVizForDummiesSixExamplePage() {
               eyebrow="Gauntlet · an entity drags its properties through review"
               title="Use a compound body when the bundle must survive the process together."
               lead="GauntletChart represents each project as a core with attached benefits and burdens. Authored gates can add, remove, delay, or transform properties while a settled projection reports viability and outcome."
-              avoid="Buoyancy is not benefit and mass is not cost until your model explicitly says so. Keep those mappings visible, disclose gate effects, and never ask the audience to infer the final score from wobble."
+              avoid="Define how benefits and burdens affect the model, and show what each gate changes. Use the final values to explain the outcome."
               stats={CHAPTER_STATS.ordeal}
             >
               <ChartPanel
                 eyebrow="Arena proposals · design, finance, permit"
                 title={gauntletMode === "balanced" ? "Benefits and burdens travel together through three reviews" : "Strict review adds drag without rewriting the input projects"}
-                note="The spectacle explains retention and loss across gates. The projection strip carries the inspectable viability result; nobody needs to diagnose policy from orbital mechanics."
+                note="The moving project shows which properties it gains or loses at each gate. The result strip reports its final viability."
                 feature="Use tethers and projection to preserve compound identity"
                 featureCopy="GauntletChart keeps each property visibly attached to its project while the settled projection states the outcome independently of motion."
               >
@@ -772,7 +772,7 @@ export default function DataVizForDummiesSixExamplePage() {
               eyebrow="Crucible · the least subtle possible provenance diagram"
               title="Mix sources only when the authored record says what became what."
               lead="CrucibleChart runs a bounded batch through declared phases and semantic events. It can show sources binding into a product, contributions joining later, rejection to outlets, and conservation of amount—without letting collisions decide the finding."
-              avoid="The animation must not perform analysis by vibes. Products, source IDs, event times, outlets, and completion are authored facts; physics explains co-presence and transformation."
+              avoid="Define the sources, event times and results in the data. The animation then helps readers follow when contributions join and where rejected material goes."
               stats={CHAPTER_STATS.transformation}
             >
               <ChartPanel
@@ -813,7 +813,7 @@ export default function DataVizForDummiesSixExamplePage() {
               eyebrow="Chain reaction · prerequisite delivery, not project-management pachinko"
               title="Make dependency logic move when reachability is the question."
               lead="ChainReactionChart compiles a dependency graph into lanes, sockets, blockers, and delivery tokens. A completed task releases one token per outgoing dependency; a downstream task arms only when every required token arrives."
-              avoid="A delivered ball means one prerequisite is satisfied. It does not complete the target task, predict a date, or absolve the steering committee."
+              avoid="Each delivered ball means one prerequisite is satisfied. The target becomes ready when all prerequisites arrive; it still needs to be completed."
               stats={CHAPTER_STATS.dependency}
             >
               <ChartPanel
@@ -872,7 +872,7 @@ export default function DataVizForDummiesSixExamplePage() {
               eyebrow="Physics custom · you have declined all sensible presets"
               title="Build an apparatus only when the custom mechanism can be audited."
               lead="PhysicsCustomChart supplies dimensions, scales, theme, a deterministic world, rendering, interaction, and accessibility. A layout function returns bodies, colliders, sensors, forces, overlays, and semantic items."
-              avoid="Custom physics is a power tool, not a chart recommendation. Draw the boundaries, label the forces, seed the randomness, expose semantic regions, and document what would make the mechanism produce a different result."
+              avoid="For a custom simulation, label its forces, boundaries and rules. Give readers a way to inspect its values and understand how changing an assumption affects the result."
               stats={CHAPTER_STATS["custom-lab"]}
             >
               <ChartPanel
@@ -904,12 +904,12 @@ export default function DataVizForDummiesSixExamplePage() {
 
         <section id="lab-review" className="dvd-overtime">
           <div className="dvd-overtime__head">
-            <p className="dvd-kicker">Lab review · the apparatus must earn its electricity</p>
+            <p className="dvd-kicker">Choosing a physics chart</p>
             <h2>Choose physics from the mechanism the reader must understand.</h2>
             <p>
-              Motion is valuable when it makes emergence, lateness, accumulation, congestion,
-              transformation, or dependency legible. Otherwise, turn off the fog machine and draw
-              the simpler chart.
+              Use motion when watching arrivals, queues, transformations or dependencies helps
+              explain the process. Check that the counts and settled view also make sense when
+              the animation is paused.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -927,7 +927,7 @@ export default function DataVizForDummiesSixExamplePage() {
             <Decision verb="Support reduced motion" chart="Static projection" note="The conclusion must survive the pause button." />
           </div>
           <blockquote>
-            Let physics explain how the answer forms—never decide what the answer is.
+            Readers should be able to follow the process and check the result.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE SIXTH RULE</span>

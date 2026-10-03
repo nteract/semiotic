@@ -245,7 +245,7 @@ export default function DataVizForDummiesFiveExamplePage() {
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
             <p className="dvd-kicker">The road season · geography joins the scouting report</p>
-            <h2>A map is a chart only when location changes the answer.</h2>
+            <h2>Use a map when location helps explain the answer.</h2>
             <p className="dvd-hero__lede">
               The season goes on the road. Now the questions involve nearby places, distance,
               routes, and regional totals. Compare six geographic views and watch what each
@@ -300,14 +300,14 @@ export default function DataVizForDummiesFiveExamplePage() {
               number="00"
               eyebrow="Map room · location must do analytical work"
               title="Before choosing a map, name the geographic relationship the reader needs."
-              lead="Geo charts encode more than coordinates. Regions imply adjacency, symbols preserve exact locations, flows add direction, cartograms redefine distance, tiles provide navigational context, and custom layouts preserve projection while changing the visible grammar."
+              lead="Different maps answer different spatial questions. Regions show neighbors, symbols locate individual sites, flows connect origins and destinations, and cartograms compare travel time or cost."
               avoid="If the conclusion would survive after replacing every place name with A, B, and C, geography may not be carrying the argument. Try a bar chart before reaching for an atlas."
               stats={CHAPTER_STATS["map-room"]}
             >
               <ChartPanel
                 eyebrow="Six-map travel roster"
                 title="Every formation answers a different version of ‘where?’"
-                note="Read the data contract before the chart name. Area, point, edge, cost, street, and custom geometry are not interchangeable geographic ingredients."
+                note="Start with what each row describes: a region, a site, a route or a journey cost. That determines which map forms can represent it."
                 feature="Import geography from its dedicated entry point"
                 featureCopy="Geo charts live in semiotic/geo, keeping projections and bundled reference geography out of applications that never draw a map."
               >
@@ -423,7 +423,7 @@ export default function DataVizForDummiesFiveExamplePage() {
               number="03"
               eyebrow="Flow map · talent has a direction"
               title="Two places become a geographic story when an edge explains movement."
-              lead="Flow maps connect known locations and encode volume with line width. Great-circle paths respect the globe; arc and offset styles separate overlapping or reciprocal routes. Direction, not mere connection, is the sentence."
+              lead="Flow maps connect locations and use line width to show volume. Arcs can separate overlapping routes, while direction shows where the flow begins and ends."
               avoid="A bright animated particle can imply live movement even when the data is a historical total. Motion should describe motion; otherwise a static line is more honest and easier to read."
               stats={CHAPTER_STATS["geographic-flow"]}
             >
@@ -475,7 +475,7 @@ export default function DataVizForDummiesFiveExamplePage() {
               number="04"
               eyebrow="Distance cartogram · the schedule as experienced"
               title="A flight hour can move a city farther than a thousand miles."
-              lead="Distance cartograms distort location so radial distance from one origin represents travel time, fare, or another cost. The familiar map becomes a before-image; the cartogram shows the geography the team actually experiences."
+              lead="A distance cartogram moves places so their distance from one origin represents travel time, fare or another cost. Compare it with the geographic map to see which places become relatively nearer or farther away."
               avoid="Once strength rises, compass direction may survive but literal position does not. Label the cost, show reference rings, and give readers a geographic comparison when orientation matters."
               stats={CHAPTER_STATS["felt-distance"]}
             >
@@ -647,10 +647,10 @@ export default function DataVizForDummiesFiveExamplePage() {
         <section id="atlas-review" className="dvd-overtime">
           <div className="dvd-overtime__head">
             <p className="dvd-kicker">Atlas review · location earns its ink</p>
-            <h2>Choose the map from the geographic relationship, not the backdrop.</h2>
+            <h2>Match the map to the spatial question.</h2>
             <p>
-              A map should reveal adjacency, location, movement, experienced distance, navigation,
-              or projected custom geometry. If none of those changes the answer, bench the map.
+              Choose the view that helps readers compare locations, neighbors, routes or travel
+              costs. For a ranking that does not depend on location, bars may be easier to read.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -664,7 +664,8 @@ export default function DataVizForDummiesFiveExamplePage() {
             <Decision verb="The geography is uncertain" chart="Show that uncertainty" note="Precision is part of the claim." />
           </div>
           <blockquote>
-            The map is not the territory—and it is not automatically the chart, either.
+            A map is useful when the arrangement of places tells you something the values alone
+            cannot.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE FIFTH RULE</span>

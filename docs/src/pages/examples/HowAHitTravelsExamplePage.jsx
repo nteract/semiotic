@@ -32,7 +32,7 @@ const STORY_SCENES = [
     id: "hat-next-weeks",
     act: "Act 0 · the observable sequence",
     title: "A ranking footprint accumulates.",
-    copy: "By its seventh observed week, the series was present in twenty-five country charts. A lit point records a first Top 10 appearance—not a release, a view, or a handoff from another country.",
+    copy: "By its seventh observed week, the series appeared in twenty-five country charts. Each new point marks the first week it reached that country’s published Top 10.",
     stage: "constellation",
     patch: { titleId: HERO_TITLE_ID, layoutMode: "map", weightMode: "distinctive-rank", cursor: 6 },
   },
@@ -53,7 +53,7 @@ const STORY_SCENES = [
     id: "hat-neighborhoods",
     act: "Act 2 · the map stops being enough",
     title: "Keep the countries. Change the question.",
-    copy: "Countries now sit near one another when they repeatedly ranked many of the same titles in the same weeks. Ubiquitous title-weeks count less. The lines describe similarity, never influence.",
+    copy: "Countries sit near one another when they often rank the same titles in the same weeks. The weighting gives less importance to titles that appear almost everywhere. Look for groups with similar rankings.",
     stage: "constellation",
     patch: {
       titleId: HERO_TITLE_ID,
@@ -66,7 +66,7 @@ const STORY_SCENES = [
     id: "hat-fingerprints",
     act: "Act 3 · four observed shapes",
     title: "Hits do not share one itinerary.",
-    copy: "The diagnostic strips align five measures: weekly reach, first arrivals, regional reach, local persistence, and separate active runs. Their differences are visible without hovering.",
+    copy: "Compare five features of each title’s run: weekly reach, new countries, regional reach, weeks in each local chart and separate returns to the rankings.",
     stage: "fingerprints",
     patch: {
       titleId: HERO_TITLE_ID,
@@ -79,7 +79,7 @@ const STORY_SCENES = [
     id: "hat-bridge-start",
     act: "Act 4 · a bridge is observed",
     title: "Begin with sequence, not a cause.",
-    copy: "At elapsed week one, the four observed country appearances form a small starting footprint. The fixed constellation lets us describe what appeared next without pretending to know what made it happen.",
+    copy: "The series starts with four countries in its first observed week. Step forward to see where its Top 10 presence expands next, using the same country positions throughout.",
     stage: "constellation",
     patch: {
       titleId: HERO_TITLE_ID,
@@ -92,7 +92,7 @@ const STORY_SCENES = [
     id: "hat-bridge-end",
     act: "Act 4 · the accumulated footprint",
     title: "Thirty-four countries eventually ranked it.",
-    copy: "The later footprint crosses several parts of the similarity field. That is a descriptive sequence. Catalog availability, promotion, language, and distribution are all plausible context and unmeasured here.",
+    copy: "The later run reaches several groups of countries with different viewing rankings. That broad spread is visible in the lists; explaining it would also require information about availability, promotion and distribution.",
     stage: "constellation",
     patch: {
       titleId: HERO_TITLE_ID,
@@ -118,7 +118,7 @@ const STORY_SCENES = [
     id: "hat-specification",
     act: "Act 6 · are the neighborhoods real?",
     title: "The answer depends on what counts as similar.",
-    copy: "Equal presence rewards any shared Top 10 appearance. Distinctive rank weighting rewards stronger ranks and discounts observations found almost everywhere. We publish both fixed specifications.",
+    copy: "The two layouts define similarity differently. Equal presence counts every shared appearance equally. Distinctive rank gives stronger ranks more weight and reduces the effect of widely shared hits. Switch between them to see which relationships persist.",
     stage: "stability",
     patch: {
       titleId: HERO_TITLE_ID,
@@ -407,9 +407,9 @@ export default function HowAHitTravelsExamplePage() {
             </p>
             <h2>One global audience—or overlapping ones?</h2>
             <p className="hat-hero__lede">
-              LCD Soundsystem put the demand plainly: <cite>“You Wanted a Hit.”</cite> Netflix’s
-              weekly lists are full of them. The harder question is what a hit looks like as it
-              appears—and reappears—across national rankings.
+              A series can reach many countries at once, build an audience across successive
+              weeks, or return to the charts long after its first run. Netflix’s national Top 10
+              lists let us follow those different paths to becoming a hit.
             </p>
             <p>
               We followed {HIT_TRAVELS_DATA.manifest.titleCount.toLocaleString()} title and season
@@ -451,8 +451,8 @@ export default function HowAHitTravelsExamplePage() {
         <section className="hat-source-note" aria-label="What this data can show">
           <strong>The reporting unit is an appearance in a published weekly Top 10.</strong>
           <p>
-            Rank can show order inside a country list. It cannot reveal country-level audience size,
-            catalog availability, exposure in the interface, or why a title succeeded.
+            These lists report rank within each country. Use them to compare where and when a
+            title appeared; country-level audience totals are not provided.
           </p>
           <a href="#hat-method">Read the measurement notes</a>
         </section>
@@ -558,11 +558,11 @@ export default function HowAHitTravelsExamplePage() {
 
         <section className="hat-fingerprint-section" aria-labelledby="hat-fingerprint-title">
           <div className="hat-section-heading">
-            <p className="hat-kicker">Four evidence-selected contrasts</p>
+            <p className="hat-kicker">Four different journeys</p>
             <h2 id="hat-fingerprint-title">A hit leaves more than one kind of trace</h2>
             <p>
-              These labels summarize measured shapes. They are not genres, predictions, or claims
-              about the mechanism behind a title’s success.
+              Compare how quickly each title spread, how long it stayed and where it returned.
+              The labels describe those patterns in the rankings.
             </p>
           </div>
           <div className="hat-fingerprint-grid">
@@ -581,10 +581,10 @@ export default function HowAHitTravelsExamplePage() {
           <header className="hat-explorer__header">
             <div>
               <p className="hat-kicker">Open-ended explorer · ten illustrative profiles</p>
-              <h2 id="hat-explorer-title">Find a title. Test the shape.</h2>
+              <h2 id="hat-explorer-title">Choose a title and follow its run.</h2>
               <p>
-                The published article ships ten complete journeys selected after profiling the full
-                snapshot. Every control below updates the same title, country, and week identities.
+                Explore ten journeys selected from the full snapshot. Choose a title, country or
+                week to follow its appearances across the linked views.
               </p>
             </div>
             <div className="hat-explorer__utility">
@@ -747,7 +747,7 @@ export default function HowAHitTravelsExamplePage() {
 
           <div className="hat-reach-panel">
             <div>
-              <p className="hat-kicker">Ordinary encoding · exact complement</p>
+              <p className="hat-kicker">Weekly comparison</p>
               <h3>Weekly observed country reach</h3>
               <p>
                 Numerator: country charts containing the title. Denominator: country charts
@@ -786,7 +786,7 @@ export default function HowAHitTravelsExamplePage() {
           <section className="hat-compare" aria-labelledby="hat-compare-title">
             <header>
               <div>
-                <p className="hat-kicker">Aligned comparison · maximum three</p>
+                <p className="hat-kicker">Compare up to three titles</p>
                 <h3 id="hat-compare-title">Compare journey fingerprints</h3>
               </div>
               <button type="button" onClick={() => toggleCompare(titleId)}>
@@ -836,7 +836,7 @@ export default function HowAHitTravelsExamplePage() {
         <section className="hat-sensitivity" aria-labelledby="hat-sensitivity-title">
           <div className="hat-section-heading">
             <p className="hat-kicker">Specification check</p>
-            <h2 id="hat-sensitivity-title">The constellation is an argument with settings</h2>
+            <h2 id="hat-sensitivity-title">How the definition changes the map</h2>
             <p>
               {layoutOverlapSummary(HIT_TRAVELS_DATA.similarityLayouts)} The full set of coordinates
               is frozen in the snapshot so toggling the definition produces a reproducible
@@ -866,9 +866,9 @@ export default function HowAHitTravelsExamplePage() {
             <p className="hat-kicker">Method · evidence · limits</p>
             <h2 id="hat-method-title">How the atlas was built</h2>
             <p>
-              Static derived data makes every narrative claim inspectable and every chart
-              replayable. The builder is included with the example; the source downloads are
-              identified by hash.
+              The charts use a saved copy of the weekly rankings. The included build script shows
+              how those files become the measures and layouts used here. Source file hashes
+              identify the exact downloads.
             </p>
           </div>
           <div className="hat-method__grid">
@@ -1358,10 +1358,10 @@ function GlobalBoundary({ threshold, titles, onThresholdChange, onEvidenceOpen }
     <section className="hat-global-boundary" aria-labelledby="hat-global-title">
       <div className="hat-section-heading">
         <p className="hat-kicker">The titles the global list leaves out</p>
-        <h2 id="hat-global-title">Substantial locally does not guarantee visible globally</h2>
+        <h2 id="hat-global-title">A title can travel widely without reaching the global Top 10.</h2>
         <p>
-          These title identities have no matching global Top 10 row in the snapshot. Change the
-          country-week floor to test whether the pattern survives.
+          These titles appeared in national lists without a matching entry in the global Top 10.
+          Raise the minimum number of country-weeks to see how widespread that pattern can be.
         </p>
       </div>
       <OmissionShelf threshold={threshold} titles={titles} onThresholdChange={onThresholdChange} />

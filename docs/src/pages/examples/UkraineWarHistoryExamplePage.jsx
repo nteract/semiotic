@@ -246,9 +246,10 @@ export default function UkraineWarHistoryExamplePage() {
             <p className="uwh-kicker">A Semiotic evidence atlas · 2022–2026</p>
             <h1>The war has more than one clock.</h1>
             <p className="uwh-hero__lede">
-              Territory changes by the day. Photographs enter a ledger later. Aid moves through
-              appropriations and allocations. Economies and coalitions turn by the year. This
-              dashboard keeps those clocks separate, then lets you read their rhythms together.
+              Military aid, documented equipment losses, economic change and diplomatic votes
+              tell different parts of the war’s history. Compare them here at the pace each
+              source records: monthly reports for aid and losses, annual figures for economies
+              and selected votes for diplomacy.
             </p>
           </div>
           <dl className="uwh-snapshot">
@@ -289,10 +290,9 @@ export default function UkraineWarHistoryExamplePage() {
               <p className="uwh-section-number">01 · geography and support</p>
               <h2 id="uwh-atlas-title">Aid crosses borders on a political timetable</h2>
               <p>
-                Every arc terminates in Kyiv; width and a viridis color scale both encode the value
-                of dated allocations, with color normalized to the largest flow in view. Change the
-                aid definition and year to see the coalition’s weight shift between North America, EU
-                institutions, and European states.
+                The arcs show dated aid allocations to Ukraine. Wider arcs and stronger colors
+                indicate larger values. Change the aid category and year to compare contributions
+                from North America, EU institutions and European states.
               </p>
             </div>
             <div className="uwh-chapter-readout" aria-live="polite">
@@ -622,7 +622,7 @@ export default function UkraineWarHistoryExamplePage() {
             <div>
               <p className="uwh-section-number">03 · economic and political aftershocks</p>
               <h2 id="uwh-context-title">
-                Annual indicators move more slowly—and still break sharply
+                Economic shocks and changing votes
               </h2>
               <p>
                 GDP growth records the asymmetric 2022 shock and partial recovery. UN votes show a
@@ -669,8 +669,8 @@ export default function UkraineWarHistoryExamplePage() {
                 />
               </ThemeProvider>
               <p className="uwh-card-note">
-                Growth rates describe the whole economy, not living standards, reconstruction need,
-                sanctions effectiveness, or the counterfactual path without war.
+                Read these as annual growth rates for the whole economy. Positive growth after a
+                large contraction does not mean the earlier level has been restored.
               </p>
             </article>
 
@@ -730,7 +730,7 @@ export default function UkraineWarHistoryExamplePage() {
         <section className="uwh-section uwh-method" aria-labelledby="uwh-method-title">
           <div>
             <p className="uwh-section-number">04 · source ledger</p>
-            <h2 id="uwh-method-title">What each layer can—and cannot—say</h2>
+            <h2 id="uwh-method-title">Sources and definitions</h2>
           </div>
           <div className="uwh-source-grid">
             <article>

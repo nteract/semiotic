@@ -1008,7 +1008,10 @@ export default function NimbyExamplePage() {
           <div>
             <span className="nimby-example__kicker">A process simulator for cumulative burden</span>
             <p className="nimby-example__lede">
-              A housing plan enters as a package of lift balloons and drag particles. Great projects start with many positives and no drag; normal projects carry some friction; bad projects begin with too little lift and too much Cost, Ugly, Fatigue, and Slowdown.
+              A housing proposal enters review with benefits that help it succeed and burdens
+              that hold it back. Follow it through each gate as features are removed and cost or
+              delay accumulates. Compare proposals to see how a plan can win approval yet become
+              too difficult to build.
             </p>
           </div>
           <div className="nimby-example__formula">
@@ -1168,7 +1171,7 @@ export default function NimbyExamplePage() {
         <section className="nimby-example__explanation">
           <div>
             <span className="nimby-example__kicker">Mechanic</span>
-            <h2>The example is now a declarative gauntlet.</h2>
+            <h2>How the model represents a proposal</h2>
           </div>
           <p>
             The page supplies <code>data</code>, positive and negative property definitions, gate definitions, and gate events. From those declarations, <code>GauntletChart</code> builds the bodies, forces, gates, routes, and event state.

@@ -81,14 +81,14 @@ describe("HowAHitTravelsExamplePage", () => {
     renderPage()
 
     expect(screen.getByRole("heading", { level: 1, name: "How a Hit Travels" })).toBeTruthy()
-    expect(screen.getByText(/You Wanted a Hit/i)).toBeTruthy()
+    expect(screen.getByText(/A series can reach many countries at once/i)).toBeTruthy()
 
     const sourceBoundary = screen.getByRole("region", {
       name: "What this data can show",
     })
     expect(within(sourceBoundary).getByText(/published weekly Top 10/i)).toBeTruthy()
     expect(
-      within(sourceBoundary).getByText(/cannot reveal country-level audience size/i),
+      within(sourceBoundary).getByText(/country-level audience totals are not provided/i),
     ).toBeTruthy()
 
     expect(screen.getByRole("heading", { name: "How the atlas was built" })).toBeTruthy()

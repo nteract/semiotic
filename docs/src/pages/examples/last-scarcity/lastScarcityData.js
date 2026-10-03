@@ -204,12 +204,12 @@ export const CLAIM_LEDGER = Object.freeze([
   {
     id: "claim-necessary-city",
     wording:
-      "Giving people free time is considered a good thing, because we think people will use free time for good things.",
+      "Free time gives people more room to pursue what matters to them. Whether they use it well remains an open question.",
     claimClass: "philosophical-interpretation",
     sourceIds: [],
     chapters: ["prologue", "commons"],
     supports: [
-      "Everyone intuitively knows that you cannot pursue the transcendent when constrained by material conditions.",
+      "Relief from material pressure can make time for care, study, art and public life.",
     ],
     contradicts: ["Dystopian literature is riddled with examples of people misusing free time."],
     weakenedBy: "Reminders of great art made in times of great struggle.",
@@ -280,7 +280,7 @@ export const CLAIM_LEDGER = Object.freeze([
   {
     id: "claim-migration-model",
     wording:
-      "When copies get cheap, a fixed pot of social competition does not vanish. It moves toward attention, status, exclusivity, relationships, and power.",
+      "This scenario shifts a fixed amount of competition from copyable goods toward attention, status, relationships and power.",
     claimClass: "transparent-model",
     sourceIds: [],
     chapters: ["last-scarcity"],
@@ -383,7 +383,7 @@ export const CLAIM_LEDGER = Object.freeze([
   {
     id: "claim-formation-constitution",
     wording:
-      "After abundance, two jobs remain: how people learn what to want, and who owns the systems that deliver it. Fixing one does not fix the other.",
+      "The essay considers two questions: how people learn what to want, and who controls the systems that provide it.",
     claimClass: "philosophical-interpretation",
     sourceIds: ["atus-2025", "wvs-7", "wir-2026", "sppa-2022"],
     chapters: ["commons"],
@@ -454,7 +454,7 @@ export const CHAPTERS = Object.freeze([
     room: "Machine room",
     kicker: "The flood",
     title: "The tools got better",
-    thesis: "Capability rose quickly, with reliability gaps, under ownership that is not neutral.",
+    thesis: "AI capabilities improved rapidly while most leading models came from industry.",
     intent:
       "Establish magnitude and acceleration without mistaking benchmarks for general intelligence.",
     alternative:
@@ -470,7 +470,7 @@ export const CHAPTERS = Object.freeze([
     kicker: "Unallocated freedom",
     title: "What is free time for",
     thesis:
-      "Free time is raw material. Habits, apps, institutions, and other people still shape what it becomes.",
+      "How people use free time depends on their habits, households and the opportunities around them.",
     intent: "Expose allocation and counterfactual uncertainty through a manipulable day.",
     alternative:
       "A stacked bar compares duration more precisely; the wheel preserves sequence because the lived object is a day.",
@@ -483,9 +483,9 @@ export const CHAPTERS = Object.freeze([
     numeral: "III",
     room: "Hall of mirrors",
     kicker: "The last scarcity",
-    title: "When goods become cheap, people can become expensive",
+    title: "What remains hard to get",
     thesis:
-      "When copies get cheap, competition does not vanish. It crowds into attention, rank, exclusivity, relationships, and power.",
+      "When goods become cheaper, people may compete more for attention, status and influence.",
     intent: "Show before→after migration of a conserved competition budget as copies get cheaper.",
     alternative:
       "A single end-state pie hides movement; a multi-stage ProcessSankey makes the reallocation visible.",
@@ -500,7 +500,7 @@ export const CHAPTERS = Object.freeze([
     kicker: "Desire after satisfaction",
     title: "When flattery is free",
     thesis:
-      "Desire is social. We copy attention, chase rank, and can automate flattery without producing recognition.",
+      "Other people’s desires influence our own. Cheap automated praise adds another force to that process.",
     intent: "Reveal feedback and emergent concentration without a force-directed hairball.",
     alternative:
       "A node-link default would obscure rank; the court layout makes visibility and invitation spatial.",
@@ -515,7 +515,7 @@ export const CHAPTERS = Object.freeze([
     kicker: "The companion who cannot refuse",
     title: "Companions who cannot refuse",
     thesis:
-      "A bot can sound like love. The hard part of love is another free person, who might say no.",
+      "Human affection matters partly because the other person chooses to give it.",
     intent: "Distinguish association, simulation, and philosophical inference.",
     alternative:
       "A causal DAG was rejected because the cited study does not identify causal direction.",
@@ -545,7 +545,7 @@ export const CHAPTERS = Object.freeze([
     kicker: "Formation and constitution",
     title: "Character and ownership",
     thesis:
-      "Training desire and governing infrastructure are different jobs. Neither substitutes for the other.",
+      "How we use our freedom and how we share control of technology both shape the outcome.",
     intent: "Compare possibilities and support deliberation without ranking the reader.",
     alternative:
       "A single policy score would collapse independent levers; the field preserves two axes and four imperfect archetypes.",
@@ -560,7 +560,7 @@ export const CHAPTERS = Object.freeze([
     kicker: "A mirror, not a score",
     title: "What you chose here",
     thesis:
-      "Your choices and attention can pull in different directions. That tension is the point, not a grade.",
+      "Compare your choices with where you spent time, and consider what drew your interest.",
     intent: "Prompt self-reflection without classification.",
     alternative: "A virtue score was rejected because attention is neither assent nor diagnosis.",
     risk: "Telemetry can feel extractive; it is off by default, local, ephemeral, disclosed, and deletable.",
@@ -1093,7 +1093,7 @@ export const COMPANION_ASSOCIATIONS = Object.freeze([
     high: -0.14,
     sample: "1,131 people surveyed",
     detail:
-      "High disclosure plus companionship use also tracked with lower self-reported well-being. Opening up did not look like a free emotional boost.",
+      "Among people using AI for companionship, greater disclosure was associated with lower self-reported well-being. The study does not establish which caused which.",
     reading: "Left of zero: more intimate disclosure linked with worse self-reported well-being.",
   },
 ])

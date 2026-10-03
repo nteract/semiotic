@@ -820,7 +820,7 @@ function AppliedExample({ charts, dataset }) {
       <div className="ss-use-head">
         <div>
           <span className="ss-section-code">PLATE C / FIELD DEPLOYMENT</span>
-          <h2 id="ss-field-use-title">A REPORT, NOT A GALLERY</h2>
+          <h2 id="ss-field-use-title">ONE DATASET IN A REPORT</h2>
         </div>
         <p>
           One live dataset moves through prose, a figure, and a table. Change the channel above;
@@ -973,7 +973,7 @@ export default function SemioticStandardExamplePage() {
           <section className="ss-intro">
             <div>
               <span className="ss-section-code">READ BEFORE DEPLOYMENT</span>
-              <h2>The chart is not the data. It is the sign system.</h2>
+              <h2>The same data can support different readings.</h2>
             </div>
             <p>
               The same incoming signal can be a full chart or a small status mark. Change the
@@ -1094,9 +1094,9 @@ export default function SemioticStandardExamplePage() {
               <span className="ss-section-code">FINAL OPERATING RULE</span>
               <h2>Compact does not mean context-free.</h2>
               <p>
-                When axes, legends, labels, and hover fall away, the surrounding sentence must name
-                the measure, unit, population, and time. A sparkline can indicate; it cannot testify
-                alone.
+                When a small chart omits axes and labels, the surrounding sentence needs to name
+                the measure, unit, population and time. Read the sentence and sparkline together
+                to check whether the comparison is clear.
               </p>
             </div>
           </section>

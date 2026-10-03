@@ -626,9 +626,9 @@ export default function WorldOfFunnelsExamplePage() {
           <div>
             <Kicker>Precision, accuracy, and the paths we erase</Kicker>
             <p className="wof-lede">
-              You think you are reading an essay. You are moving through a funnel. The
-              trick is deciding when the clean shape is a useful instrument and when it
-              starts hiding the actual system.
+              A funnel turns a journey into a sequence of stages: arrive, look, choose, finish.
+              That makes losses easy to compare. But people also go back, try again and leave for
+              reasons a narrowing shape cannot show.
             </p>
           </div>
           <div className="wof-hero-strip" aria-hidden="true">
@@ -655,7 +655,7 @@ export default function WorldOfFunnelsExamplePage() {
             onSelect={setSelectedCaseId}
           />
           <p>
-            The funnel is excellent at comparison. The flow view admits that behavior has loops.
+            Compare totals in the funnel, then follow the returns and detours in the flow view.
           </p>
         </div>
 
@@ -664,9 +664,9 @@ export default function WorldOfFunnelsExamplePage() {
         <div ref={chartRef} className="wof-chart-host">
           <PopPanel label="01" title={`${selectedCase.label}: the funnel as evidence`} variant="lead">
             <p>
-              A simple funnel compares each stage of a process by width. It is direct,
-              boardroom-friendly, and useful for a first pass. It is also a decision to
-              treat all off-path behavior as loss.
+              A funnel uses width to compare how many people reach each stage. It is a useful
+              first view when stages follow a clear order. To understand what happens between
+              them, we need to inspect the paths people take.
             </p>
             <ModeNote mode={mode} note={modePanelNotes.evidence[mode]} />
             <StageStrip data={selectedCase.funnel} />
@@ -685,9 +685,9 @@ export default function WorldOfFunnelsExamplePage() {
 
           <PopPanel label="02" title="A/B funnels reward the intervention that moves the line">
             <p>
-              Product funnels are often used this way: compare cohorts, color the
-              winners, ship the design that carries more people deeper. The vertical
-              view makes drop-off legible as retained value plus lost opportunity.
+              Teams use funnels to compare cohorts and test designs. The vertical view shows how
+              many people continue and how many leave at each step, helping locate the largest
+              difference between versions.
             </p>
             <ModeNote mode={mode} note={modePanelNotes.experiment[mode]} />
             <FunnelChart
@@ -721,9 +721,9 @@ export default function WorldOfFunnelsExamplePage() {
             variant={mode}
           >
             <p>
-              Toggle the argument, not the case file. The precise view emphasizes ordered
-              loss. The accurate view reveals repair, rereading, searching, and exits
-              that create design questions a single funnel cannot ask.
+              Switch views to examine the same case. The funnel emphasizes losses between ordered
+              stages. The flow view adds repair, rereading, searching and exits, giving you more
+              specific questions about where the design could improve.
             </p>
             <ModeNote mode={mode} note={modePanelNotes.argument[mode]} />
             {mode === "precise" ? (
@@ -763,9 +763,9 @@ export default function WorldOfFunnelsExamplePage() {
 
           <PopPanel label="04" title="Motifs are paths with names">
             <p>
-              Teams already talk about happy paths and bad paths. A temporal process
-              sankey makes those motifs explicit: repair loops, comparison loops, and
-              exits all occupy time and capacity even when they are not the goal.
+              A process Sankey adds the time spent on each route. Repair and comparison loops
+              occupy time and capacity even when people eventually reach the intended
+              destination.
             </p>
             <ModeNote mode={mode} note={modePanelNotes.motifs[mode]} />
             <MotifFocusControls activeMotif={activeMotif} onChange={setActiveMotif} />
@@ -790,10 +790,9 @@ export default function WorldOfFunnelsExamplePage() {
           <Kicker>The Semiotic point</Kicker>
           <ModeNote mode={mode} note={modePanelNotes.close[mode]} />
           <p>
-            The danger is not that funnel charts are wrong. The danger is letting the
-            chart&apos;s clean shape become the system&apos;s design brief. Semiotic&apos;s value here
-            is the ability to move between precise ordinal views and more accurate flow
-            views without leaving the same React data-visualization surface.
+            Use the funnel to find where journeys differ, then inspect the routes that explain
+            the difference. The two views help answer related questions: how many people
+            continued, and what they did along the way.
           </p>
         </section>
       </div>

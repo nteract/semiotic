@@ -272,8 +272,7 @@ export default function ScrollYoureTellingExamplePage() {
 
                 <figure className="scroll-tell-chart">
                   <figcaption>
-                    <span>Where your attention pooled</span>
-                    <small>seconds spent in each chapter · live</small>
+                    <span>Time in each chapter</span> <small>seconds with the chapter in view · live</small>
                   </figcaption>
                   <BarChart
                     data={dwellDisplay}
@@ -336,17 +335,17 @@ export default function ScrollYoureTellingExamplePage() {
           <span className="scroll-tell-kicker">Why this is the realtime case</span>
           <h2>A stream preserves the order of reading</h2>
           <p>
-            “You read {summary.percentRead || 80}% of this” omits rereads, stalls, and skims. The
-            live signal retains those changes through a rolling window, signed direction, and
-            arrival order.
+            A single completion percentage leaves out returns to earlier sections and quick
+            passes through later ones. The live charts show those movements as they happen.
           </p>
         </div>
         <div className="scroll-tell-thesis-block">
           <span className="scroll-tell-kicker">Reader as data source</span>
-          <h2>Scrollytelling reacts to you. This reads you.</h2>
+          <h2>Your scrolling supplies the data.</h2>
           <p>
-            “Snow Fall” used the scrollbar to reveal frames authored in advance. Here the reader's
-            behavior supplies the chart data itself: every pause and movement changes the views.
+            In “Snow Fall,” scrolling revealed a sequence prepared by the authors. Here each
+            pause and movement adds a new observation to the charts. Position records where the
+            page was; it leaves you to explain what you were doing there.
           </p>
         </div>
       </section>

@@ -55,12 +55,12 @@ describe("ModelEvaluationReadingRoom", () => {
   it("keeps failures, scorer corrections, and provenance readable without the charts", () => {
     renderRoom()
 
-    expect(screen.getByText(/revised contracts changed the result/i)).toBeTruthy()
+    expect(screen.getByText(/Clearer source facts improved the repeated tests/i)).toBeTruthy()
     expect(screen.getByText(/6 of 7 repaired fixtures held/i)).toBeTruthy()
     expect(screen.getByText("Failures by fixture family")).toBeTruthy()
     expect(screen.getByRole("columnheader", { name: "Later trials" })).toBeTruthy()
     expect(screen.getAllByText("7/9")).not.toHaveLength(0)
-    expect(screen.getByText(/later renderer fix resolved that baseline seam/i)).toBeTruthy()
+    expect(screen.getByText(/A later fix resolved it/i)).toBeTruthy()
     expect(screen.getAllByText(/corrected:/i)).toHaveLength(3)
     expect(screen.getByText("Methods, provenance, and limits")).toBeTruthy()
     expect(screen.getByRole("link", { name: "What the Machine Sees" })).toHaveAttribute(

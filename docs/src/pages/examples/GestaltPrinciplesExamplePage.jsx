@@ -79,10 +79,10 @@ export default function GestaltPrinciplesExamplePage() {
         <div className="gz-hero">
           <span className="gz-kicker">Perception Lab</span>
           <p className="gz-lede">
-            Gestalt is a <em>pragmatic</em> part of building charts—necessary the moment you do
-            more than a plain bar or line. This is a working remake of a 2015 essay series. Each
-            principle is shown where it actually lives: the encoding it powers, or the chart it
-            quietly sabotages.
+            We see groups, paths and shapes before we read individual values. Those habits of
+            perception help charts communicate—and sometimes suggest relationships the data does
+            not contain. This interactive version of a 2015 essay series shows five principles at
+            work. Change each view to see what your eye groups together.
           </p>
         </div>
 
@@ -652,11 +652,9 @@ function ChapterPastExperience() {
       </Exhibit>
 
       <p className="gz-aside">
-        The same tension haunts circle-packing, dendrograms, and Sankey
-        diagrams: a reader expects identical inputs to produce an identical
-        picture, and expects nearness to mean kinship. A curated, deterministic
-        layout — one that fixes rotation and the placement of loose pieces — is
-        the real fix.
+        Circle packs, trees and Sankeys can pose the same problem: rearranging the same data may
+        look like a change in the data itself. Stable positions and a consistent orientation help
+        readers compare views without having to learn the layout again.
       </p>
     </section>
   )
@@ -959,14 +957,11 @@ function GestaltGaze() {
   return (
     <section className="gz-gaze">
       <span className="gz-kicker">The Gestalt Gaze</span>
-      <h2>The whole is other than the sum of its parts</h2>
+      <h2>Check the relationships your design suggests.</h2>
       <p>
-        Every chart sends signals you did not author: marks that fall near each
-        other, a more saturated hue, a transition that implies cause. When that
-        signal is just a byproduct of a palette or a layout, it is a failure on
-        the part of the person who made the chart. The fix is not to retreat to
-        bare bars and lines — it is to see the gestalt your graphics are
-        sending, and to bend it on purpose.
+        Nearby marks look related. A strong color draws attention. A transition can make two
+        events seem connected. Look for those signals when reviewing a chart, then adjust the
+        grouping, emphasis and movement to support the comparison you want readers to make.
       </p>
     </section>
   )

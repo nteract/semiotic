@@ -299,7 +299,7 @@ export default function DataVizForDummiesFourExamplePage() {
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
             <p className="dvd-kicker">Special teams · complete the core chart roster</p>
-            <h2>The last charts are not obscure. They are specific.</h2>
+            <h2>Charts for more specific questions.</h2>
             <p className="dvd-hero__lede">
               Some questions need a specialist: a rating scale, progress toward a threshold,
               several measurements at once, or a process moving through time. This guide
@@ -354,8 +354,8 @@ export default function DataVizForDummiesFourExamplePage() {
               number="00"
               eyebrow="Completion board · specialist rotations"
               title="Specialists make sense when the question arrives before the chart."
-              lead="The remaining roster is easiest to remember in rotations, not alphabetically. Each group protects one kind of structure: a whole, a judgment scale, a population, a multivariate decision, layered time, navigation, or a moving system."
-              avoid="Do not treat this page as permission to use the most elaborate available chart. Specific charts have narrow winning conditions—and unusually clear reasons to stay seated."
+              lead="These charts are grouped by the questions they answer: parts of a whole, ratings, individual observations, several variables, changes over time and moving systems."
+              avoid="Start with the example closest to your question. Compare it with a simpler form to see whether the extra structure helps."
               stats={CHAPTER_STATS["last-roster"]}
             >
               <ChartPanel
@@ -445,7 +445,7 @@ export default function DataVizForDummiesFourExamplePage() {
               eyebrow="Gauge + Likert · judgment made visible"
               title="A value becomes a verdict only after the standard enters the picture."
               lead="A gauge locates one current value inside named performance zones. A Likert chart aggregates ordered responses around a neutral center. One summarizes status; the other preserves disagreement."
-              avoid="A gauge without a consequential threshold is decorative speedometer chrome. A Likert chart without ordered, balanced response levels is just a badly labeled stacked bar."
+              avoid="A gauge needs meaningful thresholds. A Likert chart needs ordered response levels that make the direction and strength of agreement clear."
               stats={CHAPTER_STATS.verdict}
             >
               <ChartPanel
@@ -506,8 +506,8 @@ export default function DataVizForDummiesFourExamplePage() {
               number="03"
               eyebrow="Swarm + bubble · every body counts"
               title="Show every observation, then decide whether size deserves a voice."
-              lead="A swarm exposes individual values while packing overlaps aside. A bubble chart moves observations onto two quantitative axes and gives a third measure to area. The first protects the crowd; the second promotes multivariate magnitude."
-              avoid="Bubble area is not a precision channel, and swarm packing is not a second measurement. Treat both as readable displacement, never as a hidden axis."
+              lead="A swarm shows individual observations without letting them overlap. A bubble chart compares two measurements by position and a third by area. Choose between them according to how many measurements you need to compare."
+              avoid="Read swarm values along the measured axis; the other direction only separates overlapping points. Bubble area represents a value, but exact comparisons are easier in the tooltip or table."
               stats={CHAPTER_STATS.population}
             >
               <ChartPanel
@@ -875,10 +875,11 @@ export default function DataVizForDummiesFourExamplePage() {
         <section id="final-whistle" className="dvd-overtime">
           <div className="dvd-overtime__head">
             <p className="dvd-kicker">Final whistle · the complete roster</p>
-            <h2>The rare chart is ordinary when its question is precise.</h2>
+            <h2>Keep a guide to the questions each chart answers.</h2>
             <p>
-              Parts I–IV now cover every named core XY, ordinal, and network chart in Semiotic.
-              Keep the question, data contract, and reading cost on the same scouting report.
+              Parts I–IV cover Semiotic’s core XY, ordinal and network charts. Use the examples
+              to match your question with a data structure and a form your readers can
+              understand.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -892,8 +893,7 @@ export default function DataVizForDummiesFourExamplePage() {
             <Decision verb="The contract is unclear" chart="Return to the question" note="Specificity is the entry fee." />
           </div>
           <blockquote>
-            Completion does not mean using every chart. It means knowing why every chart might earn
-            its one perfect possession.
+            Knowing a chart includes knowing when another form would be easier to read.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE FOURTH RULE</span>

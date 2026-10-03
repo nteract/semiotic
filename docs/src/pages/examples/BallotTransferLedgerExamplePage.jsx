@@ -228,14 +228,17 @@ export default function BallotTransferLedgerExamplePage() {
           <div>
             <h3 id="ballot-question-title">How can a six-figure lead nearly vanish without changing hands?</h3>
             <p>
-              A round-by-round scoreboard shows the narrowing margin. The transfer ledger shows its mechanism:
-              which eliminated tally released each batch, where that batch landed, and how many ballots stopped
-              participating before the final comparison.
+              When a candidate was eliminated, ballots moved to the next continuing choice or
+              became inactive. Follow those transfers to see how Garcia gained on Adams and why
+              the remaining gap was just large enough to keep him ahead.
             </p>
           </div>
           <aside>
             <span>Reading rule</span>
-            <p>Band width is the account balance. A ribbon is a certified transfer. Every ballot has one destination in each elimination.</p>
+            <p>
+              Band width shows the ballot count. Ribbons show where ballots went when a candidate
+              was eliminated.
+            </p>
           </aside>
         </section>
 
@@ -325,14 +328,17 @@ export default function BallotTransferLedgerExamplePage() {
         <section className="ballot-ledger__findings" aria-labelledby="ballot-findings-title">
           <div className="ballot-ledger__findings-heading">
             <span>03 / What moved the margin</span>
-            <h3 id="ballot-findings-title">The largest pool was also the most directional.</h3>
+            <h3 id="ballot-findings-title">Wiley’s transfer brought Garcia within reach.</h3>
           </div>
           <div className="ballot-ledger__finding-grid">
             <article>
               <span>Consistent direction</span>
               <strong>3 of 3</strong>
               <h4>Every late pool sent more ballots to Garcia.</h4>
-              <p>That pattern is small in the first two transfers, then becomes decisive when Wiley’s tally is redistributed.</p>
+              <p>
+                Garcia gained more than Adams in all three transfers. Wiley’s much larger pool
+                accounted for most of the change.
+              </p>
               <button type="button" onClick={() => setSelectedPoolId("field")}>Inspect the first pool</button>
             </article>
             <article className="is-emphasis">
@@ -345,7 +351,7 @@ export default function BallotTransferLedgerExamplePage() {
             <article>
               <span>Third destination</span>
               <strong>140,202</strong>
-              <h4>Inactive ballots became a major final account.</h4>
+              <h4>Many ballots had no continuing choice.</h4>
               <p>The inactive lane grows at every transfer. It records ballots without a continuing valid choice, not support for either finalist.</p>
               <button type="button" onClick={() => setSelectedPoolId("yang")}>Inspect Yang’s pool</button>
             </article>
@@ -355,7 +361,7 @@ export default function BallotTransferLedgerExamplePage() {
         <section className="ballot-ledger__scoreboard" aria-labelledby="ballot-scoreboard-title">
           <div>
             <span>04 / The endpoints</span>
-            <h3 id="ballot-scoreboard-title">The scoreboard is accurate. It is simply missing the middle.</h3>
+            <h3 id="ballot-scoreboard-title">The starting lead still mattered.</h3>
             <p>
               Garcia added nearly twice as many late-round ballots as Adams. That extraordinary gain still fell
               7,197 votes short because the transfer sequence began with Adams more than 100,000 ahead.
@@ -385,8 +391,9 @@ export default function BallotTransferLedgerExamplePage() {
               Garcia (397,316), and inactive ballots (140,202) sum back to all 942,031 ballots in the opening ledger.
             </p>
             <p>
-              The recap reports McGuire, Morales, and Stringer as one joint transfer. Keeping them together is an
-              evidentiary boundary: their combined destinations are known, but candidate-specific paths inside that pool are not.
+              The official recap combines McGuire, Morales and Stringer in one transfer. We keep
+              that group together because it does not report the three candidates’ destinations
+              separately.
             </p>
           </div>
           <a href={NYC_RCV_SOURCE.href} target="_blank" rel="noreferrer">
@@ -398,10 +405,11 @@ export default function BallotTransferLedgerExamplePage() {
 
         <section className="blocks-example ballot-ledger__code" aria-labelledby="ballot-code-title">
           <span>06 / Rebuild the view</span>
-          <h3 id="ballot-code-title">The ledger is encoded as timed, conserved transfers</h3>
+          <h3 id="ballot-code-title">How the chart follows a transfer</h3>
           <p>
-            Reusable lanes keep each round compact after an eliminated account closes. Temporal pairing and crossing-aware
-            ordering keep the source and destination edges aligned while the ballot values determine ribbon width.
+            Each band holds a candidate’s tally until elimination. The outgoing ribbons then
+            divide that tally among the continuing candidates and inactive ballots. Their widths
+            let you follow the same votes through successive rounds.
           </p>
           <CodeBlock code={implementationCode} language="jsx" showCopyButton wrap />
         </section>
@@ -409,7 +417,10 @@ export default function BallotTransferLedgerExamplePage() {
         <footer className="ballot-ledger__footer">
           <span>NYC / JUNE 2021 DEMOCRATIC PRIMARY / CERTIFIED COUNT</span>
           <strong>Garcia won every late transfer. Adams won the corridor.</strong>
-          <p>The result is the accumulation of both facts.</p>
+          <p>
+            Garcia won more of the late transfers. Adams had enough of an earlier lead to finish
+            ahead.
+          </p>
         </footer>
       </div>
     </ExamplePageLayout>

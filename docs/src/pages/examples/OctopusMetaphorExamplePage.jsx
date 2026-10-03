@@ -84,11 +84,10 @@ export default function OctopusMetaphorExamplePage() {
     <ExamplePageLayout title="The Octopus: It has its tentacles in everything">
       <section className="octo-hero">
         <p>
-          The octopus is one of the oldest system diagrams that refuses to admit it is a
-          diagram. A head names the actor, each arm names a channel of influence, and the
-          viewer is asked to read reach as responsibility. That makes it a useful historical
-          metaphor for information visualization, and a risky one: the same grammar that clarifies
-          a system can also make every remote event look controlled by a single hidden body.
+          An octopus makes a strong claim about a system: one central actor reaches into many
+          places. The head identifies the actor and the arms connect it to its targets. These
+          historical examples show why the metaphor is memorable—and why it can imply more
+          control than the connections establish.
         </p>
         <p>
           This example reconstructs that metaphor with Semiotic data. It begins with the moral
@@ -106,10 +105,9 @@ export default function OctopusMetaphorExamplePage() {
           <span className="octo-kicker">Network metaphor</span>
           <h2 id="waste-heading">A small system with a body</h2>
           <p>
-            The first source image is not really a picture of an animal. It is a network:
-            five named targets connected to one central cause. The custom layout keeps those
-            targets as data nodes, draws the visible arms in SVG, and emits invisible hit targets
-            so the sketch remains hoverable, keyboard navigable, and exportable.
+            The national-waste image connects five named targets to one central cause. Reading it
+            as a network reveals the argument the animal makes: each arm places another target
+            within the same system. Select a target to inspect it.
           </p>
         </div>
 
@@ -147,11 +145,9 @@ export default function OctopusMetaphorExamplePage() {
           <span className="octo-kicker">Geographic metaphor</span>
           <h2 id="map-heading">The octopus map as persuasive cartography</h2>
           <p>
-            Octopus maps use geography as an indictment: distance reads as reach and routes as
-            grasp, and the map&apos;s empty water is filled with red arms. Recent visualization
-            research describes the genre as a visual argument. This
-            remake uses a <code>GeoCustomChart</code>: Natural Earth countries are projected by
-            GeoFrame, while the red routes are generated from the dated possession list below.
+            On a map, the arms turn distant possessions and ports into a picture of imperial
+            reach. The red routes below follow a dated list of those places. Compare the
+            geographic connections with the suggestion of a single grasping body.
           </p>
           <p className="octo-source-note">
             For a current research treatment, see{" "}
@@ -203,11 +199,9 @@ export default function OctopusMetaphorExamplePage() {
           <span className="octo-kicker">System portrait</span>
           <h2 id="semiotic-heading">Semiotic is an octopus</h2>
           <p>
-            The closing diagram flips the metaphor. The central body is not a villainous power
-            but a library with five frame arms. The new physics arm holds process-driven chart
-            HOCs beside XY, Ordinal, Network, and Geo. Each arm holds a smaller frame-octopus,
-            and each small octopus holds bars for the chart HOCs built on that frame. The data
-            comes from the same architecture table used elsewhere in the examples section.
+            The final diagram uses the octopus playfully to organize Semiotic. Five arms lead to
+            the XY, Ordinal, Network, Geo and Physics frames. Each smaller octopus holds the
+            charts built from its frame, using the same data as the architecture example.
           </p>
         </div>
 

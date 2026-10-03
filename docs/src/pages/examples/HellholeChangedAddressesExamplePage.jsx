@@ -181,20 +181,19 @@ export default function HellholeChangedAddressesExamplePage() {
         <header className="hellhole-hero">
           <div className="hellhole-hero__copy">
             <p className="hellhole-kicker">
-              Cities, suburbs, and the relocation of dread · 1945–2026
+              How America pictured city and suburban life · 1945–2026
             </p>
             <h2>
-              The nightmare
-              <span>commuted.</span>
+              The place we wanted to <span>escape.</span>
             </h2>
             <p className="hellhole-hero__lede">
-              If you&apos;re Gen X, you knew the city was filled with predators, sirens, and ruin.
-              And you needed to escape. For Millennials, though, the city was the escape from the
-              smiling captivity, poisoned families, and consumerist hypocrisy of the suburb.
+              In one familiar American story, the city is dangerous and the suburbs offer a way
+              out. In another, suburban life is stifling and the city promises freedom. The films
+              and books we grow up with help make one of those stories feel more convincing.
             </p>
             <p className="hellhole-hero__thesis">
-              First America made downtown fail. Then it shipped the germ of that failure down the
-              commuter corridors and into the garage.
+              This essay follows that change in setting, then compares it with where people lived
+              and what they said they wanted.
             </p>
             <a className="hellhole-hero__action" href="#hellhole-evidence-spine">
               Move the label <span aria-hidden="true">↓</span>
@@ -206,15 +205,15 @@ export default function HellholeChangedAddressesExamplePage() {
 
         <section className="hellhole-correction" aria-labelledby="hellhole-correction-title">
           <div>
-            <p className="hellhole-kicker">The charge</p>
-            <h2 id="hellhole-correction-title">First the city was hell. Then hell got a lawn.</h2>
+            <p className="hellhole-kicker">Two versions of escape</p>
+            <h2 id="hellhole-correction-title">The threat moves from downtown to the cul-de-sac.</h2>
           </div>
           <div>
             <p>
-              For twenty years America poured its panic into downtown: crime, abandonment, fiscal
-              collapse, the subway as the throat of the beast. By the late 1990s the cul-de-sac had
-              inherited the curse—perfect siding, poisoned families, hidden violence, smiling
-              captivity.
+              Stories of urban crime, abandonment and fiscal collapse gave the city a powerful
+              image of danger. By the late 1990s, familiar suburban settings supplied another
+              kind of menace: troubled families, conformity and violence behind well-kept doors.
+              The examples below trace that shift.
             </p>
             <button type="button" onClick={() => state.update({ lens: "all" })}>
               Show me the whole indictment
@@ -225,7 +224,7 @@ export default function HellholeChangedAddressesExamplePage() {
         <section id="hellhole-evidence-spine" className="hellhole-reading-field">
           <aside className="hellhole-controller" aria-labelledby="hellhole-controller-title">
             <header className="hellhole-controller__heading">
-              <p className="hellhole-kicker">Sticky argument desk</p>
+              <p className="hellhole-kicker">Follow the comparison</p>
               <div>
                 <h2 id="hellhole-controller-title">What the moving “HELL” means</h2>
                 <span>{activeLens.mapMeaning}</span>
@@ -343,15 +342,13 @@ export default function HellholeChangedAddressesExamplePage() {
               <div className="hellhole-prose-grid">
                 <div>
                   <p>
-                    The postwar sales pitch was a two-headed American dream: find money, glamour,
-                    and adulthood downtown; retreat each evening to ownership and safe family utopia
-                    in a cozy little suburb.
+                    The postwar suburban promise depended on the city. People could seek work and
+                    opportunity downtown, then return to a home, yard and family life outside it.
                   </p>
                   <p>
-                    This ignored, of course, the truth: Redlining, discriminatory lending,
-                    covenants, and public subsidy decided who got the lawn and who paid for it.
-                    Suburban opportunity and city fiscal weakening were the same machine,
-                    photographed from opposite windows.
+                    Access to that promise was unequal. Redlining, discriminatory lending,
+                    restrictive covenants and public subsidies shaped who could buy a suburban
+                    home. Those policies also shaped investment in the cities people left behind.
                   </p>
                 </div>
                 <BargainDiagram />
@@ -388,10 +385,9 @@ export default function HellholeChangedAddressesExamplePage() {
                 </EvidenceFact>
               </div>
               <blockquote>
-                The crisis was real. So was the racket built from it. A handful of battered cities
-                became the costume every American city was forced to wear: siren, ruin, predator,
-                escape. Downtown was not merely troubled. It was drafted to play Satan on
-                television.
+                Urban hardship was real. Repeated images of crime and ruin made it stand for the
+                whole city, giving audiences a much narrower picture than residents’ lives could
+                support.
               </blockquote>
             </article>
 
@@ -420,9 +416,9 @@ export default function HellholeChangedAddressesExamplePage() {
                   />
                 </div>
                 <figcaption>
-                  The top lane is the indictment; the lower lanes are the material and resident
-                  record. They share a clock, not a verdict—and that disagreement is the blood in
-                  the story.
+                  Compare the cultural examples with local conditions and residents’ responses.
+                  Sharing a timeline makes it easier to see where those accounts agree and where
+                  they diverge.
                 </figcaption>
               </figure>
               <ChartMethodDisclosure
@@ -460,8 +456,8 @@ export default function HellholeChangedAddressesExamplePage() {
                     />
                   </div>
                   <figcaption>
-                    Birth year plus age is the trapdoor. Slide it and the monster changes address
-                    before the observer moves an inch.
+                    Change the birth year to see which stories appeared at different ages in an
+                    observer’s life.
                   </figcaption>
                 </figure>
 
@@ -482,8 +478,9 @@ export default function HellholeChangedAddressesExamplePage() {
                       A generation inherits the order in which America taught it to be afraid.
                     </strong>
                     <p>
-                      Hold age, year, or birth cohort still and the same history throws a different
-                      shadow. Move the birth year. Watch the address change.
+                      Move the birth year while holding age fixed, then try holding the calendar
+                      year fixed. The comparison shows how different generations could encounter
+                      different versions of the same place.
                     </p>
                     <SourcePill sourceId="R19" label="Pew cohort method" />
                   </aside>
@@ -517,8 +514,8 @@ export default function HellholeChangedAddressesExamplePage() {
                   />
                 </div>
                 <figcaption>
-                  Four old urban terrors cross the property line and reappear in suburban costume.
-                  The ribbons are equal because this is an indictment, not a popularity contest.
+                  The links pair urban fears with suburban versions of them. Equal widths mark
+                  four comparisons; they do not measure how popular each theme was.
                 </figcaption>
               </figure>
               <WindowArchive works={CULTURAL_WORKS} />
@@ -540,19 +537,18 @@ export default function HellholeChangedAddressesExamplePage() {
               <SurveyEpisodeCharts width={chartWidth} height={300} />
               <div className="hellhole-resident-reading">
                 <p>
-                  Gallup, 2001: 53 percent of city residents preferred the city; 67 percent of
-                  suburban residents preferred suburbia. Astonishing—people often liked the place
-                  where they had built a life. Pew, January 2026: 55 percent chose larger,
-                  farther-apart houses; 44 percent chose smaller homes near services. America
-                  remains split between the lawn and the coffee shop, both sides convinced the other
-                  has lost its mind.
+                  Residents often preferred the places where they lived. In Gallup’s 2001 survey,
+                  53 percent of city residents preferred city life and 67 percent of suburban
+                  residents preferred suburbia. In January 2026, Pew found 55 percent preferred
+                  larger, farther-apart homes, while 44 percent preferred smaller homes near
+                  services. Both kinds of place continued to appeal.
                 </p>
                 <p>
-                  A California Gen X–Millennial study found a measurable but small current pro-urban
-                  gap, and older Millennials resembled Gen X on its longer-term construct. Census-
-                  based work then found Millennials shifting toward suburban neighborhoods from 2011
-                  to 2021. The body moves toward the yard while the imagination curses it.
-                  Beautiful.
+                  A California study found a small current preference for urban living among
+                  Millennials compared with Gen X, but older Millennials resembled Gen X on its
+                  longer-term measure. Census-based research also found Millennials moving toward
+                  suburban neighborhoods from 2011 to 2021. A cultural preference and a housing
+                  decision can point in different directions.
                 </p>
                 <div className="hellhole-source-row">
                   <SourcePill sourceId="R9" label="Gallup 2001 / 2020" />
@@ -592,9 +588,9 @@ export default function HellholeChangedAddressesExamplePage() {
                   <span>Selected at the sticky argument desk</span>
                   <strong>{activeMetric.label}</strong>
                   <p>
-                    This final chart obeys the metric selected above. Change it there and watch the
-                    villain change: same metropolis, fresh denominator, brand-new sermon delivered
-                    with the confidence of a man selling gold after midnight.
+                    Change the measure above to compare another aspect of the same metropolis.
+                    Migration, local conditions and stated preferences answer different questions
+                    about why people stay or leave.
                   </p>
                 </div>
                 <figure className="hellhole-chart-shell hellhole-chart-shell--metric">
@@ -625,9 +621,11 @@ export default function HellholeChangedAddressesExamplePage() {
               </div>
 
               <p className="hellhole-final-line">
-                The hellhole never vanished. It migrated through our stories while the metropolis
-                redistributed injury underneath them. First downtown wore the horns. Then suburbia
-                did. Your birth year decided which costume felt like truth.
+                The setting of the escape story changed more neatly than people’s lives did.
+                Cities and suburbs both offered opportunity, imposed costs and inspired
+                attachment. The stories people encountered while growing up help explain their
+                expectations; the resident and migration records show how much those stories
+                leave out.
               </p>
             </article>
           </div>
@@ -641,9 +639,9 @@ export default function HellholeChangedAddressesExamplePage() {
             First the city was hell. Then hell got a lawn. Your birth year chose the monster.
           </strong>
           <p>
-            The cultural layer is an unscored illustrative seed list; it is not a sample of public
-            opinion or evidence of prevalence. Citations join the ledger through their R-codes, and
-            unlike survey instruments are never joined. No runtime network request is required.
+            The cultural examples were selected to illustrate the argument. They do not measure
+            public opinion or the popularity of a theme. Survey results and local measures retain
+            their own sources and definitions in the notes below.
           </p>
         </footer>
       </div>
@@ -808,7 +806,7 @@ function ObserverCard({ evidence, windowSummary, birthYear }) {
     <article className="hellhole-observer-card">
       <span>Age 15 in {year}</span>
       <strong>Born {birthYear}</strong>
-      <p>{direction}. This is the cultural weather blowing through the window.</p>
+      <p>{direction}. Compare this pattern with the other evidence on the timeline.</p>
       <dl>
         <div>
           <dt>Window</dt>
@@ -851,9 +849,7 @@ function WindowArchive({ works }) {
         ))}
       </div>
       <p>
-        Even the cheerful windows belong in the evidence locker: the seed list retains{" "}
-        {positiveCounterexamples.length} positive or ordinary counterexamples. Paradise is always
-        called as a character witness for itself.
+        The selection also includes {positiveCounterexamples.length} examples of positive or ordinary life. Read them alongside the escape stories to see other ways these places were portrayed.
       </p>
     </details>
   )
@@ -864,13 +860,12 @@ function EvidenceLedger({ sources }) {
   return (
     <section className="hellhole-evidence-ledger" aria-labelledby="hellhole-ledger-title">
       <div>
-        <p className="hellhole-kicker">Receipts, alibis, and paperwork</p>
-        <h2 id="hellhole-ledger-title">The sermon is loud. The numbers remain real.</h2>
+        <p className="hellhole-kicker">Sources and reading notes</p>
+        <h2 id="hellhole-ledger-title">Compare the stories with the records.</h2>
         <p>
-          Here are the receipts. Cultural artifacts show which nightmares circulated. Surveys report
-          what residents said when somebody finally bothered to ask. Material measures count the
-          damage under their stated denominators. The rhetoric may be foaming at the mouth; the
-          figures do not get to lie.
+          Films and books show ways of imagining a place. Surveys record stated preferences, and
+          local measures describe conditions under particular definitions. The sources below let
+          you follow each part of the comparison.
         </p>
       </div>
       <div className="hellhole-evidence-ledger__sources">
