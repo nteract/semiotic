@@ -114,8 +114,9 @@ export default function HotDogContestVariationsExamplePage() {
   return (
     <ExamplePageLayout title="Nathan's Hot Dog Contest, Recounted">
       <p className="hotdog-page__lede">
-        The same source-audited Nathan&apos;s record, recounted as annual winners, five-HDB units,
-        rule changes, and eating pace adjusted for contest duration.
+        Winning totals have risen over Nathan&apos;s contest history, but the time allowed has
+        changed too. Compare annual winners, count the hot dogs in repeated symbols, then adjust
+        for contest length to compare eating pace.
       </p>
 
       <div className="hotdog" ref={pageRef}>
@@ -157,7 +158,7 @@ export default function HotDogContestVariationsExamplePage() {
           number="01"
           eyebrow="Streaming replay · TemporalHistogram"
           title="Let the record arrive one contest at a time"
-          note="A bounded TemporalHistogram is progressively fed the documented rows. The bars keep the original temporal premise while avoiding the false precision of a smoothed stroke."
+          note="The bars add each documented winner in year order. Gaps remain visible where the record has no result."
         >
           <div className="hotdog__stream-controls">
             <button type="button" onClick={toggleReplay}>
@@ -192,7 +193,7 @@ export default function HotDogContestVariationsExamplePage() {
           number="03"
           eyebrow="Audited remake · line plus event bands"
           title="Clean up the evidence in the reference chart"
-          note="This version preserves the familiar upward trace, adds the documented gaps and rule events, and labels the 2010 source discrepancy directly."
+          note="Follow the winning totals over time, with rule changes, gaps and the 2010 source discrepancy labeled alongside them."
         >
           <TrajectoryChart />
         </VariationSection>

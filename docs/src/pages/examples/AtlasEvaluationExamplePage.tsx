@@ -418,18 +418,16 @@ export default function AtlasEvaluationExamplePage() {
                 />
               </>
             )}
-            <h2>What this run establishes</h2>
+            <h2>What to check in the result</h2>
             <p>
-              The controls exercise edge accounting, declared-root reachability, disclosed witness
-              truncation and cancellation. Display backbone changes retain the original graph and
-              stock. Motif matches overlap and do not partition that stock. These measurements
-              describe this fixture on this browser and device.
+              Open a node to inspect its original connections and required predecessors. Change
+              the overview to see how it groups the same source graph. The export retains that
+              graph, including connections hidden in the drawing.
             </p>
             <p>
-              The separate reader-benefit target needs comparisons with well-designed conventional
-              charts, matched information and training. The plan calls for task-level accuracy,
-              unsupported claims and diagnosis time; faster preparation does not establish that
-              benefit.
+              The timing controls measure this browser’s response. To learn whether the overview
+              helps people understand a network, we would also need to compare their accuracy and
+              diagnosis time with other charts.
             </p>
             <p>
               Read the public <a href="/charts/motif-braid-chart">Motif Braid</a>,{" "}

@@ -454,9 +454,9 @@ export default function SentenceStructureExplorer() {
       data-corpus-sentence-id={activeSentence?.id ?? "none"}
     >
       <p className="sentence-explorer__lede">
-        Written language arrives one word after another. Grammar does not. Choose a Shakespeare
-        scope, then follow one canonical sentence through all nine structures while corpus-level
-        paths and phrases remain grounded in the same filtered rows.
+        Words arrive in order, but their relationships reach across a sentence. Choose a
+        Shakespeare passage and follow it through nine views of grammar, meaning and variation.
+        Select a word to keep track of it as the view changes.
       </p>
 
       <section className="sentence-hero" aria-labelledby="sentence-thesis">
@@ -464,9 +464,9 @@ export default function SentenceStructureExplorer() {
           WORDS / PHRASES / CLAIMS / PATHS
         </div>
         <div className="sentence-hero__content">
-          <p className="sentence-kicker">A field guide to invisible structure</p>
+          <p className="sentence-kicker">Nine ways to examine a sentence</p>
           <h2 id="sentence-thesis">
-            The words are visible. The sentence is the structure between them.
+            Follow the connections between the words.
           </h2>
           <div className="sentence-hero__rule" aria-hidden="true" />
           <p className="sentence-hero__hint">
@@ -751,11 +751,11 @@ export default function SentenceStructureExplorer() {
         <header>
           <div>
             <p className="sentence-kicker">The active Shakespeare intersection</p>
-            <h2 id="specimen-title">Choose the canonical sentence shared by every view.</h2>
+            <h2 id="specimen-title">Choose a sentence to follow.</h2>
           </div>
           <p>
-            The subject and work filters define this list. Word paths and phrase relationships use
-            every row; the other views follow the one canonical row you choose here.
+            The subject and work filters narrow this list. Choose one sentence for the detailed
+            views; word paths and phrase relationships compare all the filtered passages.
           </p>
         </header>
         <div className="sentence-specimens__grid">
@@ -780,11 +780,11 @@ export default function SentenceStructureExplorer() {
 
       <section className="sentence-lab" aria-labelledby="rewrite-title">
         <div className="sentence-lab__intro">
-          <p className="sentence-kicker">Signature interaction</p>
-          <h2 id="rewrite-title">Rewrite one word. Audit the consequences.</h2>
+          <p className="sentence-kicker">Try a revision</p>
+          <h2 id="rewrite-title">Change one word and follow the result.</h2>
           <p>
-            Select a word, choose a replacement, and the new wording becomes a variant route. Stable
-            IDs keep everything else in place so the diagram can say what changed and what did not.
+            Select a word and choose a replacement. The diagram adds a variant alongside the
+            original so you can compare the two routes.
           </p>
         </div>
         <div className="sentence-rewrite">
@@ -843,7 +843,7 @@ export default function SentenceStructureExplorer() {
         <blockquote className="sentence-challenge__diagram">“{specimen?.text}”</blockquote>
         <div>
           <p className="sentence-kicker">Ambiguity comparison · active corpus sentence</p>
-          <h2 id="ambiguity-challenge-title">One string, two structural hypotheses.</h2>
+          <h2 id="ambiguity-challenge-title">The same words can support two readings.</h2>
           <div className="sentence-challenge__answers">
             {(specimen?.alternateDependencies ?? []).map((parse) => (
               <button
@@ -866,9 +866,9 @@ export default function SentenceStructureExplorer() {
 
       <section className="sentence-implementation" aria-labelledby="implementation-title">
         <div>
-          <p className="sentence-kicker">How this example stays honest</p>
+          <p className="sentence-kicker">How the views connect</p>
           <h2 id="implementation-title">
-            One corpus sentence. Two frame families. Stable semantic IDs.
+            One sentence across the charts.
           </h2>
         </div>
         <div className="sentence-implementation__grid">

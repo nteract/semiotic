@@ -465,33 +465,32 @@ export default function EqualPlacesAtlasExamplePage() {
         </section>
 
         <section className="epa-reading">
-          <p className="epa-overline">How to read a map that is not a map</p>
+          <p className="epa-overline">Two ways to organize places</p>
           <div className="epa-reading-grid">
             <article>
               <span className="epa-mark epa-mark--dots" />
-              <h2>Dots turn polygons into signal</h2>
+              <h2>Dots preserve the shape of the land</h2>
               <p>
-                A dot field still carries projected area and coastline, but its
-                visible unit is the sample cell. More columns reveal finer
-                edges; fewer columns make the raster construction explicit.
+                Each dot marks a grid cell that falls on land. Add columns to reveal more
+                coastline detail, or reduce them to see how the sampling works.
               </p>
             </article>
             <article>
               <span className="epa-mark epa-mark--square" />
-              <h2>Squares make a table geographic</h2>
+              <h2>Tiles make places easier to compare</h2>
               <p>
-                A tile cartogram is a table with a spatial memory. It keeps broad
-                direction and familiar neighbors while making alignment and
-                label scanning unusually strong.
+                A tile map gives each place a regular slot. The arrangement keeps approximate
+                direction and some familiar neighbors while making labels and values easier to
+                scan.
               </p>
             </article>
             <article>
               <span className="epa-mark epa-mark--circle" />
-              <h2>Circles can refuse territory</h2>
+              <h2>Equal circles give each place equal space</h2>
               <p>
-                Switch to place tiles and equal circles give every state or
-                country one visual voice. That is a different question from
-                sampling land, so the interface names the representation.
+                In place mode, every state or country gets one circle. Small places become as
+                visible as large ones, so you can compare their values without land area
+                dominating the view.
               </p>
             </article>
           </div>
@@ -500,7 +499,7 @@ export default function EqualPlacesAtlasExamplePage() {
         <section className="epa-method">
           <div>
             <p className="epa-overline">Method</p>
-            <h2>Two grid contracts, one geographic scene</h2>
+            <h2>How the two grids are built</h2>
           </div>
           <div className="epa-method-copy">
             <p>

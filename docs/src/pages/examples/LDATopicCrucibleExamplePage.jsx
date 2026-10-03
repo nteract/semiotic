@@ -142,9 +142,9 @@ function SpecimenStrip({ model }) {
         ))}
       </div>
       <p>
-        <strong>Preprocessing docket:</strong> purpose-written corpus; lowercase word tokens with
-        internal apostrophes retained; explicit stoplist; no stemming; systematic document-and-token
-        scan order. These are model decisions, not clerical preliminaries.
+        The examples use a purpose-written corpus. The model lowercases words, retains internal
+        apostrophes, removes a listed set of common words and scans documents in a fixed order.
+        These choices determine which patterns it can find.
       </p>
     </aside>
   )
@@ -589,8 +589,8 @@ export default function LDATopicCrucibleExamplePage() {
             <span>LAB NOTE / READ FIRST</span>
             <strong>Topics do not lurk in the corpus like ore.</strong>
             <p>
-              They are fitted statistical components. Their names are ours; their uncertainty is the
-              model’s; their usefulness remains an argument.
+              Inspect each topic’s words before giving it a name. The model groups usage
+              patterns; readers decide how to interpret them.
             </p>
           </aside>
         </header>
@@ -797,11 +797,10 @@ export default function LDATopicCrucibleExamplePage() {
               <span className="ltc-plot-label">RECORDED SAMPLER TRACE / TOP-WORD SLICE</span>
             </div>
             <p className="ltc-caption">
-              A word type may appear in several columns because topics are distributions over a
-              shared vocabulary. Repetition is not a bug to tidy away; it is the model. Unreached
-              checkpoints reserve layout space but emit no glyph or hit target, so earlier words do
-              not jump when the next R appears. Tint compares the same word across topics; size
-              remains its within-topic probability.
+              A word can appear in several topics because each topic assigns probabilities to the
+              same vocabulary. Font size shows its probability within a topic, and tint helps
+              compare that word across topics. New checkpoints fill the reserved rows as the
+              sampler advances.
             </p>
           </section>
 

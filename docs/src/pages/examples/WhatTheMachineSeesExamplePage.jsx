@@ -277,11 +277,10 @@ export default function WhatTheMachineSeesExamplePage() {
       title="What the Machine Sees"
     >
       <p className="machine-lede">
-        In <em>The Scroll You’re Telling</em>, a chart watched a person read. Turn it around.
-        Hand Semiotic a real table and watch it choose a chart form, say why, describe what it
-        shows, check whether you could perceive it, and build a path for a screen reader.{" "}
-        <strong>No language model is called.</strong> Every panel is a deterministic function of
-        the data.
+        Give Semiotic a table and a question. It compares chart forms, explains its
+        recommendation, describes the result and checks accessibility. Follow each step below,
+        then choose a different chart to compare. These calculations run in your browser without
+        a language model.
       </p>
 
       <section className="machine-questions" aria-label="Choose a question">
@@ -418,9 +417,9 @@ export default function WhatTheMachineSeesExamplePage() {
               <h2>What it says</h2>
             </div>
             <p className="machine-panel-note">
-              The Lundgard four-level description, generated from the config
-              alone. L4 — the chart’s communicative act — comes from the same
-              intent scores the ranking used.
+              The generated description moves from the chart’s form and values to patterns and
+              its intended message. The last level uses the same task scores that informed the
+              chart recommendation.
             </p>
             <div className="machine-narration">
               {description
@@ -449,10 +448,9 @@ export default function WhatTheMachineSeesExamplePage() {
             <h2>What it checked</h2>
           </div>
           <p className="machine-panel-note">
-            The same chart, graded against Chartability. The description it just
-            wrote — attached as the chart’s title and summary — is what clears
-            the blocking failures. The warnings that remain are judgment calls a
-            human still owns.
+            The accessibility audit uses Chartability checks. Adding a title and summary resolves
+            the missing-text findings; the remaining warnings point to decisions that need
+            review.
           </p>
           {audit && <Audit audit={audit} />}
         </section>
@@ -550,8 +548,9 @@ export default function WhatTheMachineSeesExamplePage() {
               <strong>Recipe B · high flavor</strong>
               <Link to="/examples/urine-wheel">{urineWheelRecipeManifest.name}</Link>
               <p>
-                A bar chart would erase the historical spectrum, the color-to-diagnosis
-                relationships, and the situated act of reading the wheel.
+                The wheel connects colors with historical diagnoses. Keeping its circular form
+                helps readers follow those relationships and understand how it was meant to be
+                read.
               </p>
               <code>{urineWheelRecipeManifest.id}</code>
             </div>
@@ -573,7 +572,7 @@ export default function WhatTheMachineSeesExamplePage() {
               <h2>Recipe manifest</h2>
             </div>
             <p className="machine-panel-note">
-              Meaning that cannot be recovered from rectangles alone.
+              The recipe records what the marks represent and how readers should navigate them.
             </p>
             <pre className="machine-manifest-json">
               {JSON.stringify(manifestForDisplay(waffleRecipeManifest, WAFFLE_CONFIG), null, 2)}
@@ -630,27 +629,22 @@ export default function WhatTheMachineSeesExamplePage() {
       <section className="machine-thesis">
         <div className="machine-thesis-block">
           <span className="machine-kicker">Why determinism is the point</span>
-          <h2>A chart that can explain itself is a chart you can trust an agent with</h2>
+          <h2>Inspect the recommendation, then make your choice.</h2>
           <p>
-            Generative tools are eager to draw charts and careless about whether
-            the chart is right, readable, or honest. Semiotic moves that judgment
-            into deterministic code that ships beside each component. The engine
-            can be wrong — it sometimes ties, or makes a defensible pick you’d
-            overrule — but it is never <em>opaque</em>. The reasons, the rubric,
-            and the caveats are all inspectable, and identical inputs always
-            yield identical output.
+            The recommendation engine makes its reasoning available for review. You can see the
+            rules, compare candidates and select another chart when it better serves your
+            purpose. Repeating the same input gives the same result, so changes are easier to
+            investigate.
           </p>
         </div>
         <div className="machine-thesis-block">
           <span className="machine-kicker">It knows its own limits</span>
-          <h2>The caveats are the most important thing on the page</h2>
+          <h2>Use the tradeoffs to compare candidates.</h2>
           <p>
-            “Only 16 rows — may feel sparse.” “Bubble area is harder to compare
-            than length.” “Smoothing hides individual outliers.” A system that
-            volunteers what’s wrong with its own recommendation is one an LLM or
-            an analyst can build on without re-deriving the rules of good
-            visualization — or hallucinating them. This is the trust layer
-            underneath generated dataviz, not a replacement for the human on top.
+            One chart may show a small sample clearly; another may summarize it too aggressively.
+            Bubble area may be harder to compare than length, and smoothing may hide outliers.
+            The notes beside each recommendation help you decide which tradeoff matters for your
+            question.
           </p>
         </div>
       </section>

@@ -455,10 +455,10 @@ export default function YellowstoneExamplePage() {
           <div>
             <span className="yellowstone__kicker">A field-guide mobile of ecological constraints</span>
             <p>
-              Restore wolves and watch the web of dependencies settle into a new balance. The
-              springy motion is there to keep who depends on whom legible—not to simulate a
-              literal ecosystem. Each plate keeps its identity while the index, evidence, and
-              constraints change by chapter.
+              Follow the relationships around wolves in Yellowstone: effects on elk, coyotes and
+              scavengers, and slower changes involving plants and beavers. Move through the
+              chapters to compare the evidence and other influences. The moving diagram helps you
+              follow the connections; its springs are a drawing aid.
             </p>
           </div>
           <div className="yellowstone__legend-note">
@@ -600,20 +600,26 @@ export default function YellowstoneExamplePage() {
         <section className="yellowstone__reading" aria-labelledby="yellowstone-reading-title">
           <div>
             <span className="yellowstone__kicker">How to read the mobile</span>
-            <h2 id="yellowstone-reading-title">Motion shows the topology settling after a change.</h2>
+            <h2 id="yellowstone-reading-title">Follow a change through the network.</h2>
           </div>
           <div className="yellowstone__reading-grid">
-            <article><strong>Value</strong><p>Repeated glyphs and printed index expose quantity. Collision envelopes stay fixed.</p></article>
-            <article><strong>Relation</strong><p>Green plus and rust minus wires expose curated topology. Stiffness controls legibility only.</p></article>
-            <article><strong>Scenario</strong><p>Stable IDs reheat from their prior positions. New glyphs bud locally instead of becoming new flying objects.</p></article>
-            <article><strong>Uncertainty</strong><p>Dashed wires, evidence notes, lags, and caveats stay visible in the static reading.</p></article>
+            <article><strong>Value</strong><p>
+              Repeated symbols and printed values show the quantity assigned to each part of the
+              example.
+            </p></article>
+            <article><strong>Relation</strong><p>Green plus and rust minus links mark the direction of the proposed effects.</p></article>
+            <article><strong>Scenario</strong><p>
+              As chapters change, the marks keep their places so you can follow the same species
+              and conditions.
+            </p></article>
+            <article><strong>Uncertainty</strong><p>Dashed links and notes identify uncertain relationships and delayed effects.</p></article>
           </div>
         </section>
 
         <section className="yellowstone__tables" aria-labelledby="yellowstone-data-title">
           <div>
             <span className="yellowstone__kicker">Accessible static projection</span>
-            <h2 id="yellowstone-data-title">The topology still reads with motion removed.</h2>
+            <h2 id="yellowstone-data-title">Pause to inspect the same relationships.</h2>
           </div>
           <details open>
             <summary>Node values and evidence</summary>

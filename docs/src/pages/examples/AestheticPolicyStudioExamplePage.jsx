@@ -132,7 +132,7 @@ export default function AestheticPolicyStudioExamplePage() {
         <header className="policy-hero">
           <div>
             <span className="policy-kicker">SEMIOTIC · DESIGN GOVERNANCE BRIEFING</span>
-            <h2>Taste becomes governable when the judgment is named.</h2>
+            <h2>What should a chart look like here?</h2>
             <p>
               How should the same numbers look in a civic report and an editorial feature? This
               studio keeps the data fixed and changes the visual priorities: restrained
@@ -152,7 +152,7 @@ export default function AestheticPolicyStudioExamplePage() {
         <section className="policy-default" aria-labelledby="default-policy-title">
           <div className="policy-section-heading">
             <span>01 · OUT OF THE BOX</span>
-            <h3 id="default-policy-title">A capable baseline, not borrowed identity.</h3>
+            <h3 id="default-policy-title">Start with a readable baseline.</h3>
             <p>
               Begin with the balanced profile, which gives the most weight to legibility and
               hierarchy. Then try each organization’s policy. The scores describe how the design
@@ -194,7 +194,7 @@ export default function AestheticPolicyStudioExamplePage() {
         <section className="policy-invariants" aria-labelledby="policy-invariants-title">
           <div>
             <span>THE NON-NEGOTIABLE FLOOR</span>
-            <h3 id="policy-invariants-title">Aesthetic disagreement begins after comprehension.</h3>
+            <h3 id="policy-invariants-title">Keep the data easy to see.</h3>
           </div>
           <div className="policy-invariant-grid">
             {showcase.invariants.map((invariant, index) => (
@@ -206,22 +206,19 @@ export default function AestheticPolicyStudioExamplePage() {
             ))}
           </div>
           <p className="policy-invariant-explainer">
-            The receding grid is the clearest example. Stone and Bartram’s guidance supports a
-            boundary—reference structure should remain visible without competing with the data—not a
-            single fashionable grid color. Semiotic measures that relationship. Both organizations
-            may choose radically different voices, but neither gets to make the apparatus louder
-            than the evidence.
+            The grid should help readers judge values without competing with the marks. Stone and
+            Bartram’s guidance supports that relationship while leaving room for different colors
+            and styles. Compare how the two policies achieve it.
           </p>
         </section>
 
         <section className="policy-opposition" aria-labelledby="policy-opposition-title">
           <div className="policy-section-heading policy-section-heading--centered">
             <span>02 · TWO LEGITIMATE INSTITUTIONS</span>
-            <h3 id="policy-opposition-title">Opposing weights. Different outputs. Same facts.</h3>
+            <h3 id="policy-opposition-title">Different priorities choose different treatments.</h3>
             <p>
-              Each profile scores the same two candidate treatments. The higher-scoring treatment is
-              emitted. This is not a model guessing which chart looks expensive; it is a
-              reconstructable weighted decision over named, machine-visible evidence.
+              Each profile scores the same two chart treatments and selects the higher-scoring
+              one. Inspect the measurements and weights to see why it made that choice.
             </p>
           </div>
           <div className="policy-organization-grid">
@@ -238,12 +235,11 @@ export default function AestheticPolicyStudioExamplePage() {
         <section className="policy-matrix" aria-labelledby="policy-matrix-title">
           <div>
             <span>THE DECISION RECORD</span>
-            <h3 id="policy-matrix-title">Every selection remains auditable.</h3>
+            <h3 id="policy-matrix-title">See what drove the choice.</h3>
             <p>
-              Northstar rewards one-color economy and estate-wide coherence; it assigns no score to
-              editorial emphasis. Fieldnote heavily rewards authored palette, typographic hierarchy,
-              and a selective focal accent. Neither policy alters the underlying feature
-              measurements.
+              Northstar favors a limited palette and consistency across its publications.
+              Fieldnote gives more weight to palette, type hierarchy and a focal accent. The
+              measurements stay fixed; each organization assigns them different importance.
             </p>
           </div>
           <div className="policy-matrix-table" role="table" aria-label="Candidate policy scores">
@@ -278,13 +274,12 @@ export default function AestheticPolicyStudioExamplePage() {
         <footer className="policy-method">
           <div>
             <span>WHY THIS IS DEFENSIBLE</span>
-            <h3>Boundary research, explicit policy, separate human judgment.</h3>
+            <h3>Use the score to explain a preference.</h3>
           </div>
           <p>
-            The aggregate follows a weighted quality-function model: formulas, weights, composition,
-            and interpretation stay visible. Professional style-guide practice supports
-            organization-owned palette and emphasis rules. Human appeal is not inferred from the
-            machine score; teams can validate it separately with BeauVis.
+            The score combines visible features using the chosen weights. It explains how a
+            design fits a policy. To learn whether people find the result appealing, a team can
+            also ask readers using the BeauVis evaluation method.
           </p>
           <nav aria-label="Aesthetic policy research">
             <a

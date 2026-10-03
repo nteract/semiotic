@@ -82,9 +82,8 @@ function ReservoirGuideStory() {
           observations for this calendar date in water years 1991–2020. Rounded for this opening.
         </p>
         <p>
-          A lake can look reassuringly blue while a water chart asks a more precise question. How
-          much space is left? How does this date compare with other years? And what can one
-          reservoir tell us about drought?
+          A reservoir can be above average and still have plenty of room to fill. These three
+          measures explain how: each compares the same water with a different reference.
         </p>
         <p className="reservoir-edition-label">
           Historical edition · observations through September 30, 2025 · retrieved September 5,
@@ -93,7 +92,7 @@ function ReservoirGuideStory() {
       </header>
 
       <section className="reservoir-reading" aria-labelledby="reservoir-first-finding">
-        <p className="reservoir-section-number">01 / A denominator changes the story</p>
+        <p className="reservoir-section-number">01 / THREE WAYS TO READ THE WATER</p>
         <h2 id="reservoir-first-finding">Above average does not mean almost full.</h2>
         <p>
           On July 30, 2025, Shasta held 3.26 million acre-feet. Divide that by its documented
@@ -101,19 +100,20 @@ function ReservoirGuideStory() {
           reservoir.
         </p>
         <p>
-          Divide the same water by the mean for July 30 in our fixed historical window—3.12 million
-          acre-feet—and you get 104.6%. That second number describes a seasonal comparison. Neither
-          denominator cancels the other.
+          The historical mean for July 30 is 3.12 million acre-feet. Shasta held 104.6% of that
+          amount—slightly more water than average for the date, even with more than a quarter of
+          its capacity unfilled.
         </p>
         <p>
-          The third number asks about order, not size. Fifteen of the 30 eligible historical values
-          were lower, and none tied: a 50th-percentile reading. A few particularly low years can
-          pull down a mean. Being above that mean does not automatically put a reading high in the
-          historical ranking.
+          The percentile puts that reading in order among earlier years. Fifteen of the 30
+          historical values were lower and none tied, placing it at the 50th percentile. A few
+          very dry years pulled the mean down, so Shasta could be above average and still sit in
+          the middle of the historical range.
         </p>
         <p>
-          That is why “above average” is a useful observation, but a poor substitute for naming the
-          question.
+          Capacity tells you how much room remains. The seasonal mean and percentile tell you how
+          this date compares with earlier years. Choose a reservoir below to read all three
+          together.
         </p>
       </section>
 
@@ -384,9 +384,9 @@ function ReservoirGuideStory() {
           must include exactly the same members.
         </p>
         <p>
-          A missing reading changes what the collection represents. In the guide below, an excluded
-          reservoir leaves both sums and is named. An absent observation never contributes a
-          reassuring zero—or an invented full reservoir.
+          If a reservoir has no usable reading, we leave both its storage and capacity out of the
+          calculation. The guide names each exclusion so you can see which reservoirs contribute
+          to the total.
         </p>
       </section>
       {guide && (
@@ -449,24 +449,19 @@ function ReservoirGuideStory() {
           alongside them.
         </p>
         <p>
-          That is a limitation of this comparison, not evidence that the reservoir has no water. Don
-          Pedro poses another limit: 1,122 daily readings are missing in the downloaded history. For
-          July 30, only 26 of the 30 baseline years qualify. An uninterrupted-looking line would
-          hide that uncertainty.
+          Don Pedro’s history has another gap: 1,122 daily readings are missing. Only 26 of the
+          30 baseline years have usable July 30 values. Breaks in the line show where
+          observations are unavailable.
         </p>
         <h2>And is the drought over?</h2>
         <p>
-          These storage numbers cannot settle that question. A reservoir is one store in a larger
-          water system. Snowpack, groundwater, runoff and local supplies have different observation
-          systems and coverage, as{" "}
-          <a href="https://cww.water.ca.gov/about-the-data">DWR’s Water Watch guide</a> explains.
+          Reservoir storage is one part of that answer. Snowpack, groundwater, runoff and local supplies can tell different stories, as <a href="https://cww.water.ca.gov/about-the-data">DWR’s Water Watch guide</a> explains. A reservoir comparison is a useful place to start, especially when you know which measure you are reading.
         </p>
         <p>
-          The useful conclusion is smaller and more precise: Shasta’s July 30 reading was above this
-          seasonal mean, around the middle of the historical ordering, and about 72% of its
-          documented capacity. All three statements can be true. The next time a headline calls a
-          reservoir “above average,” look for the date, the denominator and the missing part of the
-          picture.
+          Shasta’s July 30 reading was about 72% of capacity, slightly above its seasonal mean
+          and near the middle of its historical range. A headline saying “above average” gives
+          you just one of those views. Read it alongside fullness and the range of earlier years
+          to get a better sense of the water available.
         </p>
       </section>
 

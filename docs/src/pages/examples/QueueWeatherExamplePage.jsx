@@ -486,7 +486,12 @@ export default function QueueWeatherExamplePage() {
       <div className="queue-weather" ref={hostRef}>
         <header className="queue-weather__intro">
           <div><span>Planned operations · finite service resources</span><h2>Player support when demand and recovery do not align</h2></div>
-          <p>Choose the known operating condition and commit a response plan before calls begin. Agents can resolve serviceable work; platform-dependent cases remain physically held until recovery. Credits protect a player from the unhappy outcome, but do not resolve the underlying request.</p>
+          <p>
+            Choose a staffing plan before the calls arrive. More agents can help with requests
+            they are able to resolve, but connection problems must wait for the platform to
+            recover. Try care credits to see how they affect waiting players while the underlying
+            request remains open.
+          </p>
         </header>
 
         <section className="queue-weather__lab" aria-label="Player support operations simulation">
@@ -573,10 +578,9 @@ export default function QueueWeatherExamplePage() {
             <h2 id="player-support-method-heading">How the queue behaves</h2>
           </div>
           <p>
-            Finite staff can only handle so many cases at once. Deadlines and care credits mark who
-            is near late and who is protected. An outage gate holds blocked work until recovery opens.
-            The code below wires those rules as separate controllers on a shared queue—skip it if you
-            came for the ops story.
+            Agents handle a limited amount of work at once. Deadlines track which players are
+            waiting too long, credits protect some near-deadline cases, and the recovery gate
+            holds requests that depend on the platform. The code below defines those rules.
           </p>
         </section>
         <CodeBlock language="jsx" code={implementationCode} />

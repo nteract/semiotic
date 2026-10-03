@@ -94,11 +94,7 @@ export default function EuropaLanguagesExamplePage() {
     <ExamplePageLayout title="Europa nach den lebenden Sprachen">
       <div className="europa-page">
         <p className="europa-lede">
-          A rough-ink remake of Karl von Ausfeld&apos;s 1840 plate{" "}
-          <em>Europa nach den lebenden Sprachen</em> — Europe tinted by living language families.
-          The countries are still real map shapes you can hover, keyboard-navigate, and read in a
-          data table. Only the ink is rough: hand-tinted hachure in the spirit of a copperplate,
-          without inventing new borders.
+          Karl von Ausfeld&apos;s 1840 <em>Europa nach den lebenden Sprachen</em> colored Europe by language family. This reconstruction borrows its palette and rough ink while using modern country shapes. Select a country to explore the assigned family, or use the keyboard and data table to compare them.
         </p>
 
         <div className="europa-plate" aria-label="Historical language map of Europe">

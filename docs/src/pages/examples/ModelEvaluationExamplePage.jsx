@@ -125,9 +125,9 @@ export function ModelEvaluationReadingRoom() {
           </p>
           <h2>The benchmark is a chart, too.</h2>
           <p>
-            A scorecard has encodings, denominators, and failure modes—just like the charts it
-            judges. This page preserves the complete baseline, then shows what happened when revised
-            grounding and generation contracts were tested in three later trials.
+            A benchmark score can improve for different reasons. A model might read more values
+            correctly, or it might get better at declining questions the chart cannot answer.
+            Compare the original tests with three later trials to see which changed here.
           </p>
         </div>
         <div className="benchmark-chart__stamp" aria-label="Run completed">
@@ -142,7 +142,7 @@ export function ModelEvaluationReadingRoom() {
       <section className="benchmark-chart__chapter" aria-labelledby="follow-up-heading">
         <div className="benchmark-chart__chapter-heading">
           <p>Later repeated trials</p>
-          <h3 id="follow-up-heading">The revised contracts changed the result.</h3>
+          <h3 id="follow-up-heading">Clearer source facts improved the repeated tests.</h3>
           <span>
             The follow-up repeated every previously failing generation fixture and every answerable
             grounding question across Sol, Terra, and Luna. PNG-only remained unchanged as the
@@ -241,7 +241,7 @@ export function ModelEvaluationReadingRoom() {
         <div className="benchmark-chart__chapter-heading">
           <p>Original baseline · reader grounding</p>
           <h3 id="grounding-heading">
-            The original payload improved restraint, not chart reading.
+            The original context helped models decline unsupported answers.
           </h3>
           <span>
             Compare correct answers with correct restraint instead of compressing both into the same
@@ -318,9 +318,9 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note">
           <strong>What survived the comparison</strong>
           <p>
-            Structured grounding can help a model refuse unsupported claims. This baseline did not
-            show that its original payload helped models recover more labels or values from a chart;
-            that defect motivated the source-fact revision tested above.
+            The original context helped models avoid some unsupported answers but did not improve
+            their recovery of chart labels or values. That prompted a revision to the source
+            facts supplied with the chart, tested in the later trials above.
           </p>
         </aside>
       </section>
@@ -328,7 +328,7 @@ export function ModelEvaluationReadingRoom() {
       <section className="benchmark-chart__chapter" aria-labelledby="first-try-heading">
         <div className="benchmark-chart__chapter-heading">
           <p>Original baseline · first-attempt generation</p>
-          <h3 id="first-try-heading">Plausible chart choices still failed their contracts.</h3>
+          <h3 id="first-try-heading">Choosing a valid chart was only part of the task.</h3>
           <span>
             Every proposal had one chance to validate, render visible marks, and avoid error
             diagnostics. There was no repair pass.
@@ -452,10 +452,7 @@ export function ModelEvaluationReadingRoom() {
         <aside className="benchmark-chart__margin-note benchmark-chart__margin-note--blue">
           <strong>The oracle was part of the system under test</strong>
           <p>
-            Sol’s `BigNumber` choice was not imaginary—it is a real Semiotic component documented in
-            the supplied context. The later renderer fix resolved that baseline seam. The remaining
-            Luna failures are different: they cross the value-component boundary with an unsupported
-            chart-HOC prop.
+            Sol selected <code>BigNumber</code>, a real Semiotic component included in its instructions, but the renderer did not support that path correctly. A later fix resolved it. Luna’s remaining failures involved a different problem: adding <code>accessibleTable</code>, a prop that BigNumber does not accept.
           </p>
         </aside>
       </section>
@@ -491,12 +488,13 @@ export function ModelEvaluationReadingRoom() {
 
       <section className="benchmark-chart__conclusion">
         <p>THE READING</p>
-        <h3>The repeat separates repaired contracts from residual risk.</h3>
+        <h3>What improved, and what still failed</h3>
         <div>
           <p>
-            The revised grounding payload held across every repeated answerable outcome that
-            received grounding. Six generation fixtures also held everywhere. Luna’s remaining
-            BigNumber HOC-prop confusion stays visible as the next narrow contract problem.
+            With revised source facts, models passed all repeated answerable questions that
+            received that context. Six generation examples also passed throughout. Luna still
+            added an unsupported prop to BigNumber in two trials, giving the next revision a
+            specific problem to address.
           </p>
           <p>
             For the deterministic intelligence layer that generated the grounding payload, continue

@@ -22,10 +22,10 @@ const STAGES = [
 ]
 
 const STAGE_COPY = [
-  "The chart looks decisive. Atlas seems to tower over Ember, and the bright bars feel emphatic. A successful render makes it easy to stop asking questions.",
-  "Semiotic checks the configuration, data contracts, deceptive encodings, and accessibility together. Rendering is necessary, but it is not the verdict.",
-  "The renderer confirms five real bars were drawn. That proves the chart is not empty. It does not excuse the cropped baseline, invisible color, or missing reader context.",
-  "The repair keeps every datum but changes the chart. A dot plot can magnify this narrow range through position without pretending the values are bars measured from 96. Explicit text makes that comparison window part of the claim.",
+  "Atlas looks far ahead of Ember. Look closely at the axis, though: the bars start at 96, making a small difference appear much larger.",
+  "Check the data, scale, colors and reading aids together. The chart can use valid numbers and still present them poorly.",
+  "The renderer drew all five bars. The audit then finds the problems a mark count cannot catch: the cropped baseline, low contrast and missing context.",
+  "The repair keeps the data and switches to dots. Position can show this narrow range clearly without using bar lengths that exaggerate the difference. The labels explain the comparison window.",
 ]
 
 function Verdict({ report, repaired = false }) {
@@ -116,9 +116,8 @@ export default function BadChartAutopsyExamplePage() {
           <p className="autopsy-kicker">FORENSIC VISUALIZATION UNIT · CASE 24-08</p>
           <h2>A chart can render perfectly and still fail its reader.</h2>
           <p>
-            This benchmark chart arrived with a confident headline and valid data. We will preserve
-            the evidence, identify the visual tricks, choose a better chart, and ask Semiotic to
-            prove the replacement before it leaves the lab.
+            Atlas appears to dominate this benchmark. Follow the audit to see how the chart
+            creates that impression, then compare a repaired version using the same values.
           </p>
           <div className="autopsy-claim">
             <span>Submitted claim</span>
@@ -183,9 +182,8 @@ export default function BadChartAutopsyExamplePage() {
                 <small>{autopsy.suspect.evidence?.status ?? "not rendered"} scene status</small>
               </div>
               <p>
-                Paint evidence answers “did the marks draw?” Semantic and accessibility checks
-                answer different questions. Semiotic keeps those verdicts separate so a non-empty
-                SVG cannot masquerade as a trustworthy chart.
+                The rendering check confirms that the marks appeared. The other checks examine
+                what those marks mean and whether readers can use them.
               </p>
             </section>
           ) : null}
@@ -195,7 +193,7 @@ export default function BadChartAutopsyExamplePage() {
               <div className="autopsy-repair__heading">
                 <div>
                   <span>REPAIR LEDGER</span>
-                  <h3 id="repair-ledger-title">Same data. Defensible reading.</h3>
+                  <h3 id="repair-ledger-title">A clearer comparison of the same values</h3>
                 </div>
                 <Verdict report={autopsy.repaired} repaired />
               </div>
@@ -211,9 +209,7 @@ export default function BadChartAutopsyExamplePage() {
                 ))}
               </div>
               <p className="autopsy-release-note">
-                Released with {autopsy.repaired.evidence?.markCount ?? 0} observed marks, zero
-                blocking findings, an accessible data table, and manual checks still named instead
-                of silently converted into passes.
+                The repaired chart has {autopsy.repaired.evidence?.markCount ?? 0} observed marks, an accessible data table and no blocking automated findings. The audit also lists checks that need a human reader.
               </p>
               <section className="autopsy-aesthetic-gate" aria-labelledby="aesthetic-gate-title">
                 <div>
@@ -226,10 +222,10 @@ export default function BadChartAutopsyExamplePage() {
                   </b>
                 </div>
                 <p>
-                  Not a beauty score. This check asks two defensible questions: do the data marks
-                  lead, and which visible, named features matter to this organization? Every score
-                  below separates the measurement from its weight. Set all weights to zero and taste
-                  leaves the publication gate entirely.
+                  The style check asks whether the marks stand out and how well the chart fits an
+                  organization’s preferences. Inspect each measurement and its weight below.
+                  Setting every weight to zero removes style scoring from the publication
+                  decision.
                 </p>
                 <small>
                   Stone &amp; Bartram supply the hierarchy boundary; Grace supplies the weighted
@@ -303,8 +299,7 @@ export default function BadChartAutopsyExamplePage() {
         <footer className="autopsy-close">
           <span>THE TRUST LOOP</span>
           <p>
-            Validate the shape. Audit the data. Diagnose the design. Prove the scene. Name what
-            remains manual.
+            A useful audit checks the data, the drawing and the reading experience.
           </p>
           <code>
             evaluateChart("BarChart", suspectProps) → evaluateChart("

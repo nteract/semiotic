@@ -158,7 +158,7 @@ export default function TransitDiagramExamplePage() {
           <div className="transit-story__plate-header">
             <div>
               <span className="transit-story__kicker">Approach one · art-directed</span>
-              <h2 id="authored-title">The diagram you can defend station by station</h2>
+              <h2 id="authored-title">Follow a route through the shared stations</h2>
             </div>
             <div className="transit-story__mode-buttons" role="group" aria-label="Layout geometry">
               <ModeButton active={layoutMode === "authored"} onClick={() => setLayoutMode("authored")}>
@@ -223,10 +223,10 @@ export default function TransitDiagramExamplePage() {
           <div className="transit-story__comparison">
             <div>
               <p>
-                Headwaters behave like origins, confluences like interchanges, and the reservoir
-                like a shared trunk. Each colored line follows water from one source after streams
-                merge. The metaphor reveals provenance and convergence; it intentionally does not
-                claim geographic distance, direction, or stream volume.
+                Headwaters become origins, confluences become interchanges, and the reservoir
+                carries the merged routes. Follow each color to see where the water came from.
+                The diagram emphasizes connections; use a geographic map for distances and
+                directions.
               </p>
               <div ref={watershedHostRef} className="transit-story__chart-host">
                 <NetworkCustomChart
@@ -277,11 +277,11 @@ export default function TransitDiagramExamplePage() {
 
         <section className="transit-story__decision" aria-labelledby="transit-options-title">
           <span className="transit-story__kicker">The contract</span>
-          <h2 id="transit-options-title">Experiment freely; art-direct deliberately</h2>
+          <h2 id="transit-options-title">Start automatically, then refine the route</h2>
           <p>
-            Automatic layout is an invitation, not a certification. It gives an unfamiliar graph a
-            stable first diagram so you can decide whether the metaphor has explanatory power. If it
-            does, add coordinates, waypoints, and line ordering where editorial judgment matters.
+            Automatic layout gives a new graph a consistent starting arrangement. Try it to see
+            whether routes and junctions help explain the network, then add positions, waypoints
+            or line ordering where they improve the reading.
           </p>
           <div className="transit-story__options">
             <Option title="Geometry">

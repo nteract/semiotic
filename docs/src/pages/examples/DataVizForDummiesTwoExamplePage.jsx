@@ -227,7 +227,7 @@ export default function DataVizForDummiesTwoExamplePage() {
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
             <p className="dvd-kicker">The second unit · more shapes, same film room</p>
-            <h2>The starters cannot play every question.</h2>
+            <h2>More questions, more ways to compare.</h2>
             <p className="dvd-hero__lede">
               The first guide introduced bars, lines, scatterplots, histograms, Sankeys, and
               treemaps. This second guide keeps the fictional sports setting and asks harder
@@ -288,7 +288,7 @@ export default function DataVizForDummiesTwoExamplePage() {
               number="00"
               eyebrow="Roster check · seven specialists"
               title="A chart earns the call-up by matching the structure of the question."
-              lead="These are not upgrades from the first seven and they are not decorative difficulty settings. Each trades some general readability for one specific superpower: composition, density, stage loss, reciprocity, or topology."
+              lead="These charts emphasize composition, distributions, losses between stages, exchange or network structure. Each is useful for a different reason; the examples show when that difference matters."
               avoid="Complex-looking data does not automatically require a complex-looking chart. Start with the plainest view that preserves the claim; call a specialist when the simpler chart drops something essential."
               stats={CHAPTER_STATS["second-unit"]}
             >
@@ -301,7 +301,7 @@ export default function DataVizForDummiesTwoExamplePage() {
                 }
                 note="Toggle the lens. The chart names stay put; what changes is the reason each one deserves a roster spot."
                 feature="Use the chart contract as a preflight check"
-                featureCopy="Every Semiotic chart exposes an opinionated data shape. Matching your rows to that contract before styling catches a surprising number of analytical fouls."
+                featureCopy="Check which fields a chart expects before styling it. Matching the data to the chart is the first step toward a useful comparison."
               >
                 <div className="dvd-segmented" aria-label="Organize second chart roster">
                   <button
@@ -341,7 +341,7 @@ export default function DataVizForDummiesTwoExamplePage() {
               eyebrow="Stacked bar · combo guard"
               title="The total has a group chat, and every segment brought receipts."
               lead="A stacked bar carries two readings at once: overall magnitude and the parts that compose it. Normalize every bar to 100% when the mix matters more than the crowd size; keep raw totals when both scale and composition deserve the floor."
-              avoid="Only the first segment enjoys a common baseline. If readers must compare every component precisely, grouped bars or small multiples are more honest teammates."
+              avoid="Only the first segment shares a baseline across bars. For precise comparisons of every component, try grouped bars or small multiples."
               stats={CHAPTER_STATS.composition}
             >
               <ChartPanel
@@ -388,7 +388,7 @@ export default function DataVizForDummiesTwoExamplePage() {
                 title="A wobbling climb becomes a genuinely fuller arena"
                 note="The fill makes the season-long rise legible as volume, while points preserve the fact that these are twelve measured games—not a continuous sensor feed."
                 feature="Use semantic gradients to give the fill a job"
-                featureCopy="AreaChart can fade toward the baseline or use value-anchored color stops. Gradients should clarify direction or threshold, never cosplay as atmospheric lighting."
+                featureCopy="AreaChart supports fades and value-based color stops. Use them to explain a threshold or direction of change."
               >
                 <AreaChart
                   data={SEASON_ATTENDANCE}
@@ -424,14 +424,14 @@ export default function DataVizForDummiesTwoExamplePage() {
               number="03"
               eyebrow="Box plot · defensive specialist"
               title="The median is only one player; the box plot brings the entire rotation."
-              lead="Box plots compare distributions compactly: median, middle half, whiskers, and unusual observations. They excel when several groups need the same statistical x-ray and individual dots would become a pollen storm."
-              avoid="A box can conceal bimodality, sample size, and every charming wrinkle of shape. For small datasets, show the raw points too; for full density, consider a violin or ridgeline plot."
+              lead="Box plots compare medians, the middle half of values, whiskers and outliers in a small space. They are useful for comparing several groups on the same scale."
+              avoid="A box summarizes the distribution but hides its shape and sample size. Add the individual points for a small dataset, or use a violin plot to show where values cluster."
               stats={CHAPTER_STATS["comparison-spread"]}
             >
               <ChartPanel
                 eyebrow="Concession waits · twelve checks per stand"
                 title="East pizza is steady; north grill has one cursed possession"
-                note="Compare medians first, then box height, then whiskers. The lone 17-minute dot is an incident, not the north stand’s typical identity."
+                note="Compare the medians, then the boxes and whiskers. The north grill’s 17-minute wait stands apart from its other observations."
                 feature="Use outliers as investigation links"
                 featureCopy="BoxPlot can retain outlier marks and tooltips, letting a compact statistical summary lead back to the exceptional source observation."
               >
@@ -460,14 +460,14 @@ export default function DataVizForDummiesTwoExamplePage() {
               number="04"
               eyebrow="Heatmap · zone defense"
               title="When two categorical axes collide, color patrols the entire floor."
-              lead="A heatmap turns repeated comparisons into a visual field. Instead of reading 24 numbers one by one, the eye spots hot columns, quiet rows, and suspicious intersections. Order both axes with intent; adjacency is doing analytical work."
+              lead="A heatmap uses color to show values across rows and columns. Look for a busy time across several zones or a single zone that stays busy. Row and column order can make those patterns easier to see."
               avoid="Color supports pattern detection, not precision. Include a legend, use a perceptually ordered scale, and do not let a rainbow manufacture boundaries the data never had."
               stats={CHAPTER_STATS.matrix}
             >
               <ChartPanel
                 eyebrow="Arena traffic · zone × game moment"
                 title="Halftime is the boss battle, especially in the south"
-                note="The fifth column lights up across every zone. South’s value of 92 is the operational hotspot that deserves staffing, signage, and perhaps nacho diplomacy."
+                note="Every zone is busy in the fifth time slot. The south zone reaches 92, making it a useful place to investigate staffing needs."
                 feature="Use a continuous gradient legend"
                 featureCopy="Heatmap maps values through a sequential scale and can expose that scale as a legend, keeping intensity comparable across every cell."
               >
@@ -564,7 +564,7 @@ export default function DataVizForDummiesTwoExamplePage() {
               eyebrow="Chord diagram · passing savant"
               title="A circle of categories starts swapping volume across the lane."
               lead="Chord diagrams summarize many-to-many exchange among a small cast. Arc size shows each category’s total involvement; ribbons reveal who trades with whom. They favor the overview—dominant participants, reciprocal pairs, surprising connections—over exact route lookup."
-              avoid="The readable category limit arrives early. If labels crowd or ribbons braid into upholstery, filter, aggregate, or switch to an adjacency matrix."
+              avoid="Chord diagrams get crowded quickly. If routes are hard to trace, show fewer categories or switch to an adjacency matrix."
               stats={CHAPTER_STATS.exchange}
             >
               <ChartPanel
@@ -602,14 +602,14 @@ export default function DataVizForDummiesTwoExamplePage() {
               number="07"
               eyebrow="Force-directed graph · connective tissue"
               title="Relationships pull together; clusters emerge without assigned seats."
-              lead="A force graph treats connections as springs and nodes as repelling bodies. Dense neighborhoods gather, bridges sit between groups, and isolates drift. It is exploratory topology: useful for seeing structure you did not already encode as a hierarchy."
-              avoid="Coordinates are an outcome of the simulation, not measured values. Do not say one node is north of another as though geography happened. Layouts can also vary, so preserve stable identity and explain the forces."
+              lead="A force-directed graph places connected nodes near one another. Dense groups, bridges and isolated nodes can become easier to spot when you do not already have a hierarchy to organize them."
+              avoid="The layout calculates positions from connections. Distance and direction on the page have no separate measured meaning."
               stats={CHAPTER_STATS.topology}
             >
               <ChartPanel
                 eyebrow="Game-night staff · handoff network"
                 title="Game ops is the hub; broadcast and guest care bridge worlds"
-                note="Department colors reveal local clusters. Cross-color edges identify the people whose coordination keeps a small arena problem from becoming a large arena anecdote."
+                note="Colors identify departments. Connections across colors show the roles that coordinate work between them."
                 feature="Use worker layout when the roster gets large"
                 featureCopy="ForceDirectedGraph can choose synchronous or worker execution. The worker path keeps expensive settling away from the interface thread while stable node IDs preserve interaction."
               >
@@ -651,8 +651,8 @@ export default function DataVizForDummiesTwoExamplePage() {
             <p className="dvd-kicker">Film room · matchup notes</p>
             <h2>A specialist earns its place by answering a narrow question.</h2>
             <p>
-              Call the chart whose tradeoffs preserve the thing your reader must notice. Then tell
-              them what the geometry cannot prove.
+              Choose the form that makes the needed comparison clear, and explain any unfamiliar
+              marks.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -698,8 +698,7 @@ export default function DataVizForDummiesTwoExamplePage() {
             />
           </div>
           <blockquote>
-            The bench is not where lesser charts wait. It is where specific questions find the exact
-            strange geometry they deserve.
+            A specialized chart helps when it makes an important feature easier to see.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE SECOND RULE</span>

@@ -184,11 +184,11 @@ export default function MobileDataVisualizationExamplePage() {
         <section className="mv-hero" aria-labelledby="mv-title">
           <div className="mv-hero-copy">
             <div className="mv-kicker">Phone-first charts that still work</div>
-            <h2 id="mv-title">A field guide to charts that survive a thumb, a train, and a narrow screen.</h2>
+            <h2 id="mv-title">Charts you can read and use on a phone.</h2>
             <p>
-              Mobile visualization is not a smaller desktop dashboard. The best work redesigns the
-              chart for the phone: cut low-value furniture, keep the task, treat text as part of
-              the interface, and make every exploratory move possible with a single visible tap.
+              A narrow screen changes what readers can see and how they interact. Keep the main
+              question in view, make text readable and put common actions behind visible touch
+              controls. The examples below compare ways to do that.
             </p>
           </div>
           <PhoneTeaser />
@@ -252,7 +252,7 @@ export default function MobileDataVisualizationExamplePage() {
           defaultLabel="Default technique"
           defaultText="Shrink the desktop chart, keep every axis tick, legend, series, hover, and label."
           betterLabel="Mobile technique"
-          betterText="Rank the task, compress the evidence, direct-label the few live categories, and keep the full chart only when it still passes legibility constraints."
+          betterText="Lead with the main task, label the important categories directly and keep the full chart when it remains readable."
           basedOn={["mobilevisfixer", "cicero", "breakpoints"]}
         >
           <DensityBudgetDemo />
@@ -419,8 +419,8 @@ function DensityBudgetDemo() {
           }}
         />
         <p>
-          Three series, 32 weeks, full axes, hover-only details. It fits, but it
-          spends the phone on scaffolding.
+          Three series and 32 weeks fit on the screen, but the axes take up space and the details
+          require hover. Try the redesign to compare what remains useful on a phone.
         </p>
       </div>
       <div className="mv-demo-panel mv-demo-panel-good">
@@ -454,8 +454,8 @@ function DensityBudgetDemo() {
           oLabel={true}
         />
         <p>
-          The redesign leads with a ranked summary, then shows the failure audit.
-          It keeps fewer marks but more decision value.
+          The redesign puts a ranked summary first. It reduces the marks while keeping the main
+          comparison and a way to inspect the details.
         </p>
       </div>
     </div>

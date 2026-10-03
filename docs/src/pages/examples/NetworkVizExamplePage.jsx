@@ -325,9 +325,9 @@ function useAnimatedNetworkPositions(target, duration = 700) {
 // ===========================================================================
 const TYPE_STEPS = ["Hierarchy", "Directed acyclic", "General graph"]
 const TYPE_CAPTIONS = {
-  0: "A hierarchy is the friendliest network: every node has one parent, so a tidy tree reads top-to-bottom with no ambiguity.",
+  0: "In a hierarchy, every node below the root has one parent. A tree makes those levels and relationships easy to follow.",
   1: "A directed acyclic graph (DAG) lets a node have several parents but never loops back — a flow you can still read left-to-right. Here, characters flow to the community they anchor.",
-  2: "Most interesting networks are neither. Connections loop, cross, and double back, and no single reading order survives — which is the whole problem this primer is about.",
+  2: "Other networks contain loops and connections across groups. The following views offer different ways to read that more complicated structure.",
 }
 
 function ChapterWhat() {
@@ -340,7 +340,7 @@ function ChapterWhat() {
       <ChapterHead
         num="1"
         title="What a Network Is"
-        lead="We visualize networks to reason about systems and relationships, not because they look cool — and the kind of network decides how hard the picture will be to read. The chapters begin with the common families, arranged in rising order of difficulty."
+        lead="Start by identifying the relationships you want to understand. The chapters compare common network structures and the layouts that help explain them."
       />
       <p>
         Networks also vary along three axes worth naming before you draw one:
@@ -415,7 +415,7 @@ const STATIC_STEPS = ["Arc diagram", "Adjacency matrix", "Circular (avoid)"]
 const STATIC_CAPTIONS = {
   0: "An arc diagram lines the nodes up and draws each connection as an arc. Order the line well — here by community — and clusters surface as nested bundles of arcs.",
   1: "An adjacency matrix never overlaps an edge: every connection is a filled cell. It scales to dense graphs that would be hopeless as node-link, at the cost of reading practice.",
-  2: "A circular layout looks orderly but earns nothing — position carries no meaning and every edge crosses the interior. It is the layout to reach for last, not first.",
+  2: "A circular layout gives each node a place around the rim. Without a useful ordering, connections can cross densely in the center and become hard to follow.",
 }
 
 function ChapterStatic() {
@@ -440,7 +440,7 @@ function ChapterStatic() {
       <ChapterHead
         num="2"
         title="Drawing Without Physics"
-        lead="Before the force-directed layout took over, networks were drawn deterministically — the same data always producing the same picture. Two of those static forms are still the most readable network charts you can make."
+        lead="Arc diagrams and matrices use a fixed order instead of a force simulation. Try them when you want a stable arrangement for comparing connections."
       />
       <Plate
         fig="2.1"
@@ -497,7 +497,7 @@ function ChapterHairball() {
   const pos = step === 1 ? posStrong : posFull
   const captions = {
     0: `All ${N.LESMIS_NODES.length} characters and every co-appearance at once. Color marks the communities the algorithm found, but the picture is still a hairball — no amount of palette fixes an over-full node-link diagram.`,
-    1: "Keep only the strong ties (three or more scenes together) and the cast falls into legible groups. Filtering, not styling, is usually what rescues a network.",
+    1: "Keep ties representing three or more shared scenes to see the strongest groups. Filtering makes the remaining relationships easier to trace.",
     2: `The force layout also lies. The marks in red sit close together on screen yet are ${problem?.minHops ?? "several"}+ steps apart in the graph — proximity pretending to be kinship. (More on this in the gestalt primer.)`,
   }
 
@@ -506,7 +506,7 @@ function ChapterHairball() {
       <ChapterHead
         num="3"
         title="The Hairball, and How It Lies"
-        lead="Drop a whole edge list into a force-directed layout and you get the chart everyone pictures when they hear 'network': a dense, twitching hairball. It is the default, and it is almost never the answer."
+        lead="A force-directed layout is a useful starting view, but a dense graph can overwhelm it. Try filtering the connections or focusing on one neighborhood to see what the full view hides."
       />
       <Plate
         fig="3.1"
@@ -693,7 +693,7 @@ function ChapterStructure() {
   )
 
   const captions = {
-    0: "Community detection (here, the novel's own books) breaks the abstract whole into nameable chunks. Coloring by community is the single most useful thing you can do to a tangled graph.",
+    0: "The novel’s books provide named groups for this view. Color helps you follow those groups through the network.",
     1: "Pull each community into its own cell and color gains a spatial counterpart. Intrapartition links recede while interpartition links retain their emphasis, making connections between communities easier to trace.",
   }
 
@@ -702,7 +702,7 @@ function ChapterStructure() {
       <ChapterHead
         num="6"
         title="Finding Structure"
-        lead="A network is hard precisely because it is one undifferentiated whole. The fix is to decompose it: detect communities, name them after a prominent member, and give each one a place of its own."
+        lead="Breaking a large network into groups gives readers places to start. Name the groups and compare the connections within and between them."
       />
       <Plate
         fig="6.1"
@@ -743,7 +743,7 @@ function ChapterStructure() {
 // ===========================================================================
 const BEYOND_STEPS = ["Chord", "Sankey"]
 const BEYOND_CAPTIONS = {
-  0: "A chord diagram drops the nodes entirely and shows only the flow between communities — every ribbon a count of shared scenes. It answers 'which groups touch?' far better than any hairball.",
+  0: "A chord diagram groups the characters and shows the connections between those groups. Each ribbon counts shared scenes, making the larger relationships easier to compare.",
   1: "In the Sankey, each character flows as a ribbon into its community and ribbon width records degree. The same relationships can now be read left to right.",
 }
 
@@ -922,7 +922,7 @@ function ChapterToy() {
       <ChapterHead
         num="8"
         title="The Network Toy"
-        lead="Every technique in this primer, gathered into one sandbox. The toy that taught its author network analysis — pathfinding, centrality, ego networks, the spatial problem — rebuilt with Semiotic's custom-layout escape hatch. Play."
+        lead="Try the techniques together in this playground. Select two nodes to find a path, compare centrality measures, or inspect a node’s immediate neighbors. Delete a node to see how the network changes."
       />
 
       <div className="nv-toy-controls">

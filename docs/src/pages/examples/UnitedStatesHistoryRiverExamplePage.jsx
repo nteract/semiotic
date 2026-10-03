@@ -252,8 +252,9 @@ export default function UnitedStatesHistoryRiverExamplePage() {
         title: <h2>HOW<br />THE UNION<br />HELD &amp; CHANGED</h2>,
         copy: (
           <p>
-            Follow named jurisdiction routes as they enter, wait inside, leave, and sometimes return to three
-            persistent institutions: the United States, United States Territories, and United States Colonies.
+            The United States grew through several kinds of political change. Follow places
+            through acquisition, territorial government, statehood, secession and return.
+            Separate routes show administrations that ended without becoming states.
           </p>
         ),
         tagline: "Time falls. Institutions persist. Jurisdictions move.",
@@ -336,8 +337,8 @@ export default function UnitedStatesHistoryRiverExamplePage() {
         title: "Some administrations end instead of becoming states.",
         intro: (
           <p>
-            The light-blue band uses lifecycle exits: its color holds from entry to the recorded end of U.S.
-            administration, then fades away. No invented “former colony” endpoint is needed to keep the ribbon on screen.
+            Light-blue routes show the duration of U.S. administration. Each holds its color
+            until that administration ends, then fades.
           </p>
         ),
         note: (
@@ -362,13 +363,14 @@ export default function UnitedStatesHistoryRiverExamplePage() {
           <>
             <p>{US_RIVER_METADATA.width_definition}</p>
             <p>
-              Acquisition cohorts use each modern jurisdiction’s primary route from the source ledger. Mixed present-state
-              geographies remain in provenance notes rather than being split into unsupported fractions.
+              Each modern jurisdiction follows its main acquisition route in the source records.
+              Where today’s state includes land acquired in several ways, the notes explain the
+              additional history.
             </p>
             <p className="process-river__warning">{US_RIVER_METADATA.civil_war_caveat}</p>
             <p className="process-river__warning">
-              Colonial administration is not one legal category: occupation, possession, international trusteeship,
-              treaty control, unincorporated territory, and sovereign free association remain distinct in labels and tooltips.
+              The labels distinguish occupation, possession, trusteeship, treaty control and
+              other arrangements. Open a tooltip to read the status of a particular route.
             </p>
           </>
         ),

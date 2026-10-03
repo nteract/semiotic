@@ -58,11 +58,11 @@ const SABOTAGES = [
 
 const SABOTAGE_NOTES = {
   none: null,
-  raw: "Every recorded morning at once. The distribution is in there somewhere, but nothing is countable anymore — unitize, sample, or take quantiles.",
+  raw: "Showing every recorded morning crowds the chart. Try grouping the values, sampling them or using equally likely quantiles to make the distribution easier to read.",
   "icon-only":
-    "The pictograms stayed, the words left. Without labels the signs are a rebus, not a chart — icons supplement text, they never replace it.",
+    "Without labels, readers have to guess what the signs mean. Keep the words beside the pictograms.",
   decorative:
-    "Same tokens, meaning-free inks, a jaunty rotation. Decoration that does not clarify the data actively harms recall and speed.",
+    "Arbitrary colors and rotation make the same values harder to compare. Use those features when they communicate a difference in the data.",
 }
 
 const RECOMMENDATION_LABELS = {
@@ -993,7 +993,7 @@ function HopPanel({ threshold, compact, chartWidth, tooltip, className }) {
     <ChartPanel
       eyebrow="04 · Hypothetical outcomes"
       title="One possible morning at a time"
-      note="Hullman's HOPs show uncertainty as single possible worlds in sequence. Watch the remembered mornings pile up into the quantile dotplot from panel 02 — a distribution is just many mornings, remembered."
+      note="Hypothetical outcome plots show one possible result at a time. Watch the simulated mornings accumulate, then compare them with the quantile dotplot in panel 02."
       metric={`morning ${morning}`}
       className={className}
       actions={
@@ -1135,7 +1135,7 @@ function SometimesDiscreteExamplePage() {
   const outcomeNote =
     SABOTAGE_NOTES[sabotage] ??
     (tokenStyle === "icons"
-      ? "The same quantile tokens as bus signs: the distribution survives, and each token now says what it is. Count the buses left of the line."
+      ? "Each bus sign represents an equally likely arrival, just like a dot. Count those to the left of the threshold."
       : "Kay and Hullman's quantile dotplot: each dot is one equally likely arrival, stacked so interval probability becomes literal counting.")
 
   return (
@@ -1383,12 +1383,11 @@ function SometimesDiscreteExamplePage() {
                   <span className="discrete-example__pick">Suggested</span>
                 ) : null}
               </div>
-              <h2>Keep precision where it matters, tokenize where it helps.</h2>
+              <h2>Combine a precise scale with countable signs.</h2>
               <p>
-                The expected wait remains a measurable bar; <code>tokenLayer</code> stamps one bus
-                sign per two minutes on top of it, partial final sign included. The ledger under the
-                axis comes from the token records, so <em>total</em> versus <em>shown</em> stays
-                honest even when a sign is fractional.
+                The bar gives the expected wait a measurable length. Each bus sign on top
+                represents two minutes, including a partial sign at the end. The values under the
+                axis show the total represented.
               </p>
             </div>
             <div className="discrete-example__chart-shell">

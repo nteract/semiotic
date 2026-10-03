@@ -42,9 +42,9 @@ export default function SuperpersuasionExamplePage() {
               <em>worth choosing.</em>
             </h1>
             <p className="sp-deck">
-              An AI can make a recommendation in a sentence. Earning that recommendation takes a
-              longer story—one that survives a wrong turn, a changed fact and the next person to
-              pick up the work.
+              When an assistant recommends a tool, someone has to live with the choice. Good
+              examples, clear instructions and a way to fix mistakes give that recommendation
+              something to stand on.
             </p>
             <div className="sp-opening-rule" aria-hidden="true">
               <span>The promise</span>
@@ -67,10 +67,7 @@ export default function SuperpersuasionExamplePage() {
               you have to take on faith.
             </p>
             <p>
-              <em>Superpersuasion</em> sounds like the name of a technique for winning any argument.
-              Here, it names a more useful ambition: make a well-supported next step unusually easy
-              to recognize and complete. For software, that means the explanation, the example, the
-              checks and the repair instructions all help with the same job.
+              For software, persuasion starts with helping someone finish a job. This essay calls that approach <em>superpersuasion</em>: make the right next step easy to find, try and check. A useful example and a repair guide can make a stronger case than another promise about the product.
             </p>
           </div>
 
@@ -97,10 +94,9 @@ export default function SuperpersuasionExamplePage() {
                 assignment? Did the answer fit the environment? Could the person finish their work?
               </p>
               <p>
-                The map below takes 24 scenarios from Semiotic’s new development test bank. Some ask
-                for a chart. Others ask for a repair, a later revision, or something that needs no
-                chart at all. Follow their paths and a useful complication appears: success has
-                several destinations.
+                The map below follows 24 scenarios from Semiotic’s development tests. Some ask
+                for a chart, others for a repair or a revision. Several are best answered without
+                adding a chart at all. Follow a path to see what a useful response would do.
               </p>
             </div>
             <DecisionFlow />
@@ -112,8 +108,9 @@ export default function SuperpersuasionExamplePage() {
                 recommendation should never get a veto over a new requirement.
               </p>
               <p className="sp-small-note">
-                These are authored test scenarios and acceptable responses, not observed decisions
-                by AI agents. Their proportions describe this test bank, not the world outside it.
+                The paths show expected responses to written test cases. They let us examine the
+                choices we want an assistant to make; they do not report how assistants
+                performed.
               </p>
             </div>
           </section>
@@ -121,7 +118,7 @@ export default function SuperpersuasionExamplePage() {
           <section className="sp-chapter" aria-labelledby="sp-reading-title">
             <div className="sp-prose">
               <p className="sp-section-number">02 / The way in</p>
-              <h2 id="sp-reading-title">Leave the next reader a smaller mystery.</h2>
+              <h2 id="sp-reading-title">Help the reader finish one job.</h2>
               <p>
                 Good documentation has something in common with a good city map. It helps you find
                 the street you need without requiring you to memorize the city. A catalog describes
@@ -137,18 +134,16 @@ export default function SuperpersuasionExamplePage() {
             <FieldGuide />
             <div className="sp-prose">
               <p>
-                That last detail is easy to overlook. A tutorial can sound sensible while leaving
-                its crucial assumptions between the lines. Giving those assumptions a place to live
-                makes them easier to question. It also gives a successful check an expiry condition:
-                when the relevant source changes, the old result needs another look.
+                Each guide states its assumptions so the next reader can check whether they still
+                apply. If the data source changes, for example, a check that passed yesterday may
+                need to run again. Keeping that condition with the instructions makes it harder
+                to overlook.
               </p>
             </div>
           </section>
 
           <blockquote className="sp-pullquote">
-            A recommendation earns its keep
-            <br />
-            when the facts stop standing still.
+            A useful recommendation includes a way to recover when something changes.
           </blockquote>
 
           <section className="sp-chapter" aria-labelledby="sp-revision-title">
@@ -186,9 +181,7 @@ export default function SuperpersuasionExamplePage() {
           <section className="sp-ending" aria-labelledby="sp-ending-title">
             <p className="sp-section-number">04 / What would count as success?</p>
             <h2 id="sp-ending-title">
-              The work gets easier.
-              <br />
-              The judgment stays yours.
+              Test whether the guides help.
             </h2>
             <p>
               There is a test still to run. Give fresh assistants comparable jobs and see whether
@@ -197,15 +190,14 @@ export default function SuperpersuasionExamplePage() {
               the work to someone new and see what survives.
             </p>
             <p>
-              The working examples establish something smaller: the instructions can lead to
-              inspectable charts, corrections can preserve their history, and a future reader can
-              receive more than the final image. They do not yet establish that any of this makes an
-              AI more likely to choose well.
+              The examples show how to check a chart, keep a correction history and hand the work
+              to someone else. The next step is to find out whether those tools improve the
+              decisions assistants make.
             </p>
             <p>
-              That is an appealing standard for persuasion. Let the product make its case in the
-              course of helping. Leave enough evidence for the next person to disagree. And when the
-              assignment is just to make the bars green, make the bars green.
+              Helping someone finish their work gives them a reason to choose a product again.
+              That begins with taking the request seriously. When the assignment is to make the
+              bars green, make the bars green.
             </p>
           </section>
 
@@ -245,9 +237,8 @@ export default function SuperpersuasionExamplePage() {
               </li>
             </ul>
             <p className="sp-small-note">
-              No model is contacted as you read. Selections stay in this page; files are saved only
-              when you request them. Automated chart and accessibility checks leave manual
-              assistive-technology reception unassessed.
+              The examples run locally without contacting a model. Selections stay on this page,
+              and downloads begin when you request them.
             </p>
           </footer>
         </article>

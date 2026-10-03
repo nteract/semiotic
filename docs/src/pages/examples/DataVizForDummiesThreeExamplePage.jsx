@@ -246,7 +246,7 @@ export default function DataVizForDummiesThreeExamplePage() {
         <header className="dvd-hero">
           <div className="dvd-hero__copy">
             <p className="dvd-kicker">The matchup lab · same questions, sharper substitutions</p>
-            <h2>Every good chart has a good reason to sit down.</h2>
+            <h2>Try another view of the same question.</h2>
             <p className="dvd-hero__lede">
               Keep the question and try a different chart. A dot can make ranking easier to
               scan; a violin can reveal a distribution that a box summarizes; a path through a
@@ -303,8 +303,8 @@ export default function DataVizForDummiesThreeExamplePage() {
               number="00"
               eyebrow="Substitution matrix · fit over fame"
               title="The alternative chart must reveal enough to pay for its extra reading cost."
-              lead="Every challenger in this guide has a familiar starter behind it. The substitution succeeds when the new geometry protects a feature the old chart compresses: shape, sequence, ancestry, or enclosure."
-              avoid="Novelty is not a matchup advantage. If the alternative needs three paragraphs of explanation and changes no conclusion, put the starter back in."
+              lead="Each alternative reveals a feature a familiar chart can compress: distribution shape, sequence, ancestry or grouping. Compare the views to decide whether that added detail helps."
+              avoid="Keep the familiar form when the alternative takes more explanation without improving the comparison."
               stats={CHAPTER_STATS["matchup-lab"]}
             >
               <ChartPanel
@@ -357,7 +357,7 @@ export default function DataVizForDummiesThreeExamplePage() {
               eyebrow="Dot plot · low-usage sniper"
               title="A bar loses its body and the value stops shouting."
               lead="Dot plots rank categories with less ink than bars. Position on a common scale still supports accurate comparison, while the empty baseline makes room for negative values, reference lines, and compact dashboards."
-              avoid="Dots do not communicate magnitude as viscerally as lengths. If the audience needs to feel how much larger the leader is, the bar may still own the matchup."
+              avoid="Bars can make the size of a difference more immediately apparent. Compare both forms when the gap between players is the main point."
               stats={CHAPTER_STATS["light-ranking"]}
             >
               <ChartPanel
@@ -394,14 +394,14 @@ export default function DataVizForDummiesThreeExamplePage() {
               number="02"
               eyebrow="Violin plot · film-room x-ray"
               title="The box plot opens its coat and reveals where the observations actually gather."
-              lead="A violin mirrors an estimated density around each category. Width shows where values are common; the IQR overlay keeps median and middle spread available. It answers not only ‘how variable?’ but ‘what kind of variable?’"
-              avoid="The silhouette is a model built from the sample. Sparse data can produce an authoritative-looking blob with very little authority. Report n and inspect the bandwidth or bin choice."
+              lead="A violin plot shows the estimated distribution for each group. Wide sections mark common values. The inner summary shows the median and middle half, so you can compare both shape and spread."
+              avoid="The shape depends on the sample and the smoothing settings. Show the sample size and check how much the outline changes with those settings."
               stats={CHAPTER_STATS["full-shape"]}
             >
               <ChartPanel
                 eyebrow="Shot mechanics · release time by attempt"
                 title="At-rim attempts snap quickly; pull-ups spread and linger"
-                note="Each violin contains 24 attempts. The broad parts locate common release times; the inner summary prevents the shape from becoming pure interpretive dance."
+                note="Each violin contains 24 attempts. Its broad sections show common release times; the inner summary locates the middle of the sample."
                 feature="Use showIQR to pair shape with summary"
                 featureCopy="ViolinPlot can layer the familiar interquartile range onto the density, preserving a statistical anchor while adding distribution detail."
               >
@@ -438,7 +438,7 @@ export default function DataVizForDummiesThreeExamplePage() {
               <ChartPanel
                 eyebrow="Shot distance · period by period"
                 title="The offense drifts outward after halftime"
-                note="Q1 mixes rim pressure and perimeter attempts. Q3, Q4, and overtime build larger shoulders in the twenties—the three-point line announcing itself by silhouette."
+                note="Q1 includes shots near the rim and farther out. Later quarters and overtime have more attempts in the twenties, near the three-point line."
                 feature="Use amplitude to control overlap honestly"
                 featureCopy="RidgelinePlot exposes amplitude directly. Tune it for legible comparison, then keep the same setting across every category."
               >
@@ -560,7 +560,7 @@ export default function DataVizForDummiesThreeExamplePage() {
               <ChartPanel
                 eyebrow="Offensive playbook · family to action"
                 title="Clock state branches into sets, then into the final call"
-                note="The half-court branch needs an extra level because sets mediate actions. The tree shows that difference in grammar immediately."
+                note="The half-court branch has an extra level for sets between the family and its individual actions."
                 feature="Use orientation to fit the hierarchy, not fashion"
                 featureCopy="TreeDiagram can lay the same nested object horizontally, vertically, or radially. Choose based on depth, breadth, and label length."
               >
@@ -617,7 +617,7 @@ export default function DataVizForDummiesThreeExamplePage() {
               <ChartPanel
                 eyebrow="Roster allocation · 240 player-minutes"
                 title="Position families contain the rotation they consume"
-                note="The enclosing circles make guards, wings, and bigs visually undeniable. Leaf area approximates minutes; labels recover identity."
+                note="The outer circles group guards, wings and bigs. Inner circle area represents minutes, and labels identify each player."
                 feature="Use hierarchy-aware accessible navigation"
                 featureCopy="CirclePack preserves the parent-child model behind the geometry, allowing assistive navigation to expose family, child, and value without relying on circle area."
               >
@@ -648,10 +648,10 @@ export default function DataVizForDummiesThreeExamplePage() {
         <section id="postgame" className="dvd-overtime">
           <div className="dvd-overtime__head">
             <p className="dvd-kicker">Postgame · substitution review</p>
-            <h2>Change the chart only when the analytical sentence changes with it.</h2>
+            <h2>Be clear about what the new view adds.</h2>
             <p>
-              The challenger earns the minutes by preserving a feature the starter compresses. Name
-              that feature before the switch.
+              Name the feature you want readers to see, then compare how the two charts present
+              it.
             </p>
           </div>
           <div className="dvd-decisions">
@@ -697,8 +697,8 @@ export default function DataVizForDummiesThreeExamplePage() {
             />
           </div>
           <blockquote>
-            A chart choice is not a personality reveal. It is a matchup decision with evidence on
-            the line.
+            The best substitution earns the reader’s effort by answering the question more
+            clearly.
           </blockquote>
           <div className="dvd-final-rule">
             <span>THE THIRD RULE</span>
