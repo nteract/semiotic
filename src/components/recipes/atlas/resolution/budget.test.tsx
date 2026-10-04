@@ -132,10 +132,18 @@ describe("resolution display budgets", () => {
         scene.sceneEdges!.filter((e) => e.datum!.kind === "rail")
       ).toHaveLength(collapseGroups ? 0 : 80)
       expect(projection.edges).toHaveLength(collapseGroups ? 0 : 79)
+      expect(projection.disclosure.displayedRails).toBe(collapseGroups ? 0 : 80)
+      expect(projection.disclosure.totalRails).toBe(collapseGroups ? 1 : 84)
       expect(projection.edgeCoverageByPage.at(-1)!.literalEdgeIds).toHaveLength(
         collapseGroups ? 0 : 79
       )
       expect(JSON.stringify(scene)).not.toMatch(/NaN|Infinity/)
     }
+    const collapsed = projectResolutionView(resolution, {
+      ...view,
+      collapseGroups: true
+    })
+    expect(collapsed.disclosure.displayedRails).toBe(1)
+    expect(collapsed.caption).toContain("1 of 1 rails")
   })
 })

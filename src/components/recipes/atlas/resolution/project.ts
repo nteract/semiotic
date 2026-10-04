@@ -354,8 +354,14 @@ export function projectResolutionView(
     displayedGroups: groups.length,
     totalEdges: candidates.length,
     displayedEdges: edges.length,
-    totalRails: allRows.length,
-    displayedRails: rowOrder.length
+    totalRails:
+      view.mode === "boundary-loom" && view.collapseGroups
+        ? selectedPage.groupIds.length
+        : allRows.length,
+    displayedRails:
+      view.mode === "boundary-loom" && view.collapseGroups
+        ? selectedOwners.size
+        : rowOrder.length
   }
   const projectedEdges = new Set(edges.flatMap((edge) => edge.edgeIds))
   const edgeCoverageByPage = pages.map((page) => {
@@ -404,6 +410,6 @@ export function projectResolutionView(
     memberships,
     disclosure,
     edgeCoverageByPage,
-    caption: `${resolution.source.nodes.length} original nodes; ${resolution.source.edges.length} original edge records. Projected ${edges.length} of ${candidates.length} edge columns/records, ${groups.length} of ${allGroupCount} page groups, ${rowOrder.length} of ${allRows.length} rails. Cycle rank uses the undirected multigraph retaining edge IDs. Pages are representations, not time. Stop: ${resolution.stoppedBecause}. Analysis coverage: ${selectedPage.coverage.status}. Source revision: ${resolution.revision.sourceRevision}.`
+    caption: `${resolution.source.nodes.length} original nodes; ${resolution.source.edges.length} original edge records. Projected ${edges.length} of ${candidates.length} edge columns/records, ${groups.length} of ${allGroupCount} page groups, ${disclosure.displayedRails} of ${disclosure.totalRails} rails. Cycle rank uses the undirected multigraph retaining edge IDs. Pages are representations, not time. Stop: ${resolution.stoppedBecause}. Analysis coverage: ${selectedPage.coverage.status}. Source revision: ${resolution.revision.sourceRevision}.`
   }
 }
