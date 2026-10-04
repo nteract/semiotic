@@ -2077,7 +2077,7 @@ const EXAMPLE_REGISTRY_METADATA = [
     description: "Compare connectivity, volume, journeys, dependencies, and grouping using the same synthetic manuscript ledger.",
     preview: "novel-network-lab",
     badges: ["Eight views", "Linked inspection", "Shared evidence"],
-    frames: ["network", "custom", "physics"],
+    frames: ["network", "custom", "stream-physics"],
     topics: ["process", "design", "accessibility"],
   },
   {
