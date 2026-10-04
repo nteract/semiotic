@@ -4,6 +4,7 @@ import { EXAMPLES } from "../docs/src/pages/examples/examplesManifest.js"
 type BrowserProblem = {
   kind: "console" | "pageerror"
   message: string
+  url?: string
 }
 
 /**
@@ -49,10 +50,37 @@ function isExpectedLiveDataNetworkProblem(
   allowedHosts: string[],
   failedRequestHosts: string[],
 ): boolean {
+  // HTTP error responses complete normally, so requestfailed never sees them.
+  // Correlate the browser's resource error with its exact URL; same-origin
+  // assets and application exceptions must still fail this route contract.
+  if (problem.kind === "console" && /^Failed to load resource: the server responded with a status of [45]\d\d/.test(problem.message)) {
+    try {
+      return allowedHosts.includes(new URL(problem.url ?? "").host)
+    } catch {
+      return false
+    }
+  }
   if (problem.kind !== "console" || !NATIVE_NETWORK_FAILURE.test(problem.message)) return false
   if (allowedHosts.some((host) => problem.message.includes(host))) return true
   return failedRequestHosts.some((host) => allowedHosts.includes(host))
 }
+
+test("live-data HTTP handling rejects asset failures and application exceptions", () => {
+  const message = "Failed to load resource: the server responded with a status of 400 ()"
+  const allowedHosts = ["datasets-server.huggingface.co"]
+  expect(isExpectedLiveDataNetworkProblem({
+    kind: "console", message, url: "https://datasets-server.huggingface.co/filter"
+  }, allowedHosts, [])).toBe(true)
+  for (const url of ["http://127.0.0.1:3000/missing.js", "https://unrelated.example/asset", ""]) {
+    expect(isExpectedLiveDataNetworkProblem({ kind: "console", message, url }, allowedHosts, allowedHosts)).toBe(false)
+  }
+  expect(isExpectedLiveDataNetworkProblem({
+    kind: "pageerror", message, url: "https://datasets-server.huggingface.co/filter"
+  }, allowedHosts, allowedHosts)).toBe(false)
+  expect(isExpectedLiveDataNetworkProblem({
+    kind: "console", message: "Uncaught TypeError: cannot read property", url: "https://datasets-server.huggingface.co/filter"
+  }, allowedHosts, allowedHosts)).toBe(false)
+})
 
 // A cold Vite process transforms many large lazy route modules on first use.
 // Keep each assertion batch small enough to localize a slow page while
@@ -89,7 +117,7 @@ test.describe("docs example source route smoke", () => {
 
         page.on("console", (message) => {
           if (message.type() === "error") {
-            problems.push({ kind: "console", message: message.text() })
+            problems.push({ kind: "console", message: message.text(), url: message.location().url })
           }
         })
         page.on("pageerror", (error) => {

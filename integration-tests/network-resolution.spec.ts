@@ -95,7 +95,7 @@ for (const [mode, kind, text] of [
       "Alternative structural path"
     )
     await expect(
-      page.getByRole("table").filter({ hasText: "Exact endpoint support" })
+      page.getByRole("table", { name: /^Entry-to-exit support\./ })
     ).toContainText("no")
     expect(errors).toEqual([])
   })

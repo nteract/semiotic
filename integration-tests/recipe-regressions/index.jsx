@@ -40,7 +40,7 @@ const physicsConfig = {
 function RegionChart({ width }) {
   // Use the frame here to inspect per-body region state and worker execution.
   const ref = useRef(null)
-  const [execution, setExecution] = useState("pending")
+  const [execution, setExecution] = useState({ execution: "pending" })
   const [entries, setEntries] = useState({})
   const regions = useMemo(
     () => [
@@ -79,7 +79,7 @@ function RegionChart({ width }) {
       >
         Push parcel
       </button>
-      <output data-testid="execution">{execution}</output>
+      <output data-testid="execution" data-reason={execution.reason}>{execution.execution}</output>
       <output data-testid="region-entries">{JSON.stringify(entries)}</output>
       <StreamPhysicsFrame
         ref={ref}
@@ -91,7 +91,7 @@ function RegionChart({ width }) {
         simulationExecution={
           new URLSearchParams(location.search).get("execution") ?? "sync"
         }
-        onSimulationExecutionChange={(state) => setExecution(state.execution)}
+        onSimulationExecutionChange={(state) => setExecution(state)}
         title="Parcel gate"
         description="Parcels retain their per-body region attributes."
         bodyStyle={{ fill: "#146a8a" }}
