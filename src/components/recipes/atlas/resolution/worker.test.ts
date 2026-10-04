@@ -11,6 +11,8 @@ import {
   publishResolutionResponse,
   type ResolutionPublication
 } from "./worker"
+import { prepareNetworkResolution } from "./prepare"
+import { resolutionRowOrder } from "./project"
 
 describe("resolution worker publication", () => {
   const atlas = atlasFor(["a", "b"], [["ab", "a", "b"]]),
@@ -48,5 +50,58 @@ describe("resolution worker publication", () => {
     expect(() =>
       handleResolutionRequest({ ...newer, baseRevision: "stale" })
     ).toThrow("Incoherent")
+  })
+
+  it("binds section order to both the worker identity and the prepared analysis", () => {
+    const input = atlasFor(["a", "b"], [["ab", "a", "b"]])
+    input.source.nodes[0].sectionId = "left"
+    input.source.nodes[1].sectionId = "right"
+    input.sections.sectionIds = ["left", "right"]
+    const request = createResolutionRequest(input, spec, bindings, "order", 1)
+    const first = handleResolutionRequest(request).result
+    request.atlas.sections.sectionIds.reverse()
+    expect(input.sections.sectionIds).toEqual(["left", "right"])
+    expect(() => handleResolutionRequest(request)).toThrow("Incoherent")
+    const reordered = createResolutionRequest(
+      request.atlas,
+      spec,
+      bindings,
+      "order",
+      1
+    )
+    expect(reordered.inputHash).not.toBe(request.inputHash)
+    const second = handleResolutionRequest(reordered).result
+    if (!first.ok || !second.ok) throw new Error("preparation failed")
+    expect(second.value.analysisRevision).not.toBe(first.value.analysisRevision)
+    expect(second.value.sourceFingerprint).toBe(first.value.sourceFingerprint)
+    expect(resolutionRowOrder(first.value)).toEqual(["a", "b"])
+    expect(resolutionRowOrder(second.value)).toEqual(["b", "a"])
+    expect(prepareNetworkResolution(reordered.atlas, spec, bindings)).toEqual(
+      second
+    )
+    const store: ResolutionPublication = { generation: -1 }
+    beginResolutionRequest(store, reordered)
+    expect(
+      publishResolutionResponse(store, {
+        ...request,
+        kind: "prepared-resolution/v1",
+        result: first
+      })
+    ).toBe(false)
+    expect(
+      publishResolutionResponse(store, handleResolutionRequest(reordered))
+    ).toBe(true)
+  })
+
+  it("also binds atlas contract validation inputs to the snapshot", () => {
+    const request = createResolutionRequest(
+      atlas,
+      spec,
+      bindings,
+      "contract",
+      1
+    )
+    request.atlas.provenance.evidencePolicyId = "changed"
+    expect(() => handleResolutionRequest(request)).toThrow("Incoherent")
   })
 })

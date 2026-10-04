@@ -304,6 +304,7 @@ export type SemanticTarget =
   | { kind: "membership"; transitionEventId: Id }
   | { kind: "annotation"; featureId: Id }
 export interface ViewBudget {
+  /** Total group marks shared across visible pages; newer pages receive remainder slots. */
   maxGroups: number
   maxLiteralEdges: number
   maxRails: number

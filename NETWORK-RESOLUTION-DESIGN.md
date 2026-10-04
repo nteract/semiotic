@@ -188,6 +188,8 @@ Each rule declares candidate scope, required feature indexes, guard predicates, 
 
 Process rules in authored order. Within a rule, prefer greater eligible node-count reduction, then a stable bytewise ID order. Accept nonoverlapping candidates; reject or defer others with a recorded reason. This greedy policy is a reproducible presentation choice, not an optimal compression algorithm.
 
+For authored hierarchies, process disjoint levels from children to parents within the configured page. Infer nesting from strict membership containment when `parentId` is omitted. Retain each intermediate child's ownership and explanation events before constructing its parent. A parent's connected part can have the same members as a child; their distinct authored identities and provenance remain available. Candidate limits count all levels and disclose unexamined candidates.
+
 Later candidates must be exact unions of existing blocks. Never expand a candidate to include unrelated members and continue calling it an exact motif or SCC. A crossing candidate remains an annotation or requires a different sequence branch. Respect anticipated authored boundaries during early folding so the default preset remains useful.
 
 Existing motif matches remain intact whether or not selected for grouping. Match counts do not change when their glyph loses a packing conflict. Pins have distinct meanings: `keep-visible` prevents ownership merging; `keep-label` preserves a labelled portal but permits grouping. Neither changes source topology.
@@ -371,6 +373,8 @@ On the flagship fixture, a reader should identify where the feedback structure w
 
 The mode should abstain from a full multi-page overview when the active groups exceed its readable budget. Use a selected branch/transition plus exact summary counts instead of a wall of illegible capsules.
 
+`maxGroups` is a total display limit shared across the selected pages. Allocate slots round-robin, starting with the newest page, and redistribute unused slots from smaller pages. Every nonempty page receives a mark when the budget permits. With fewer slots than pages, newer pages take priority. Expanded Loom rails use their own rail budget; collapsed rails and their edges require a displayed group.
+
 ## 7. Chart mode two: Boundary Loom
 
 ### 7.1 Reader promise
@@ -470,6 +474,8 @@ Use three unmistakable states: a filled mark for a supported path, a crossed mar
 Compute cells lazily and cache by revision, group, endpoint pair, basis, and evidence policy. Start with at most 8 by 8 exact ports in the compact inspector; paginate or group above that. Do not eagerly create an all-pairs reachability matrix for a huge component.
 
 Selecting a positive cell reveals its original path. For observed support, show the occurrence and offsets and maintain the contiguous context. Selecting a negative cell explains the exhaustive scope. Selecting an unknown cell states what evidence or budget is missing.
+
+Draw reciprocal outside neighbors once under Incoming and once under Outgoing, routing each boundary edge to its directional instance. Both marks retain the same original-node selection and count as one source node.
 
 Below the matrix, show source member/edge counts and internal cycle rank. A structural SCC should generally have positive structural connectivity between all its boundary endpoint pairs, while its observed matrix may remain sparse. This contrast is a useful demonstration of possibility versus observation. A one-node structural path of length zero is allowed when ingress and egress attach to the same internal node; observed continuation still requires the complete boundary-context observation. Exact edge identity remains unknown when the occurrence records only nodes and several parallel edges fit.
 
@@ -601,6 +607,8 @@ A reduced-motion reader gets immediate state changes plus the full transition ex
 ### 10.4 Resource and revision behavior
 
 All asynchronous messages include request ID, generation, base revision, spec hash, and evidence-policy ID. A superseded worker result cannot publish. Cancelled or budget-exhausted analysis publishes either no new revision or a coherent partial revision with explicit coverage; never mix new groups with old witnesses.
+
+The request input hash covers the complete atlas, spec, and bindings snapshot, including section order and validation inputs. Section order also contributes to the prepared analysis revision, since it changes reader row order.
 
 For a snapshot change, the MVP recomputes relevant global indexes. Incremental SCCs, dominance, and historical matching are not prerequisites. A single edge deletion can change a global structural claim; do not pretend every update is local to the nearest drawn group.
 

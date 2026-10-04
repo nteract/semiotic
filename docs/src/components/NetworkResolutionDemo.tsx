@@ -29,6 +29,7 @@ const cutawayExamples = {
   single: cutawayFixture("single"),
   multi: cutawayFixture("multi"),
   missing: cutawayFixture("missing"),
+  reciprocal: cutawayFixture("reciprocal"),
 }
 
 function download(filename: string, content: string, type: string) {
@@ -200,6 +201,7 @@ export function NetworkResolutionDemo({ mode }: { mode: ResolutionReaderMode }) 
             <option value="multi">Two entries, two exits</option>
             <option value="single">Single pair: reversed internal edge</option>
             <option value="missing">Two entries, two exits: missing journeys</option>
+            <option value="reciprocal">Reciprocal outside neighbor</option>
           </select>
         </label>
         <p>
@@ -207,7 +209,9 @@ export function NetworkResolutionDemo({ mode }: { mode: ResolutionReaderMode }) 
             ? "A → x1 and x2 → D cross the group boundary, but the internal edge points x2 → x1. Entry x1 cannot reach exit x2."
             : example === "multi"
               ? "Three of four pairs have a structural path. Only A → x1 → y1 → B and C → x2 → y2 → D were recorded. Switch to Observed journeys: x1 → y2 changes from yes to no."
-              : "This graph has the same connections but no journey records. Observed support is unknown for every pair."}
+              : example === "reciprocal"
+                ? "A → x1 → x2 → A is a recorded journey. A appears under both Incoming and Outgoing; both marks select the same original node."
+                : "This graph has the same connections but no journey records. Observed support is unknown for every pair."}
         </p>
         <div
           className="network-resolution-demo__paper network-resolution-demo__scroll"

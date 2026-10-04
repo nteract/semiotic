@@ -177,8 +177,15 @@ const { svg } = renderChartWithEvidence("NetworkCustomChart", {
         <h2>Props</h2>
         <PropTable componentName={component} props={props} />
         <p>
+          The view&apos;s <code>maxGroups</code> budget is shared across displayed pages.
+          Each page receives a share; newer pages receive remainder slots. Display limits
+          do not change the prepared groups, source counts, or query results.
+        </p>
+        <p>
           Component Cutaway can also be rendered independently. It draws original nodes, directed
-          internal edges, and outside neighbors. A single pair gets a compact verdict; multiple
+          internal edges, and outside neighbors. A neighbor with connections in both directions
+          appears under both Incoming and Outgoing; both marks select the same original node.
+          A single pair gets a compact verdict; multiple
           pairs get a bounded matrix. Select a cell or an Inspect button to highlight its entry,
           exit, and supporting path. The Path evidence control switches between structural
           reachability and observed contiguous journeys with boundary context. The{" "}

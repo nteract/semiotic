@@ -18,7 +18,9 @@ export const boundaryLoomLayout: NetworkCustomLayout<ResolutionLayoutConfig> = (
     (width - left - 15) / Math.max(1, p.edges.length)
   )
   const rows = p.view.collapseGroups
-    ? [...new Set(p.rowOrder.map((id) => page.nodeOwner[id]))]
+    ? [...new Set(p.rowOrder.map((id) => page.nodeOwner[id]))].filter((id) =>
+        p.groups.some((g) => g.pageId === page.id && g.groupId === id)
+      )
     : p.rowOrder
   const rowHeight = (height - top - 25) / Math.max(1, rows.length)
   const rowIndex = new Map(rows.map((id, i) => [id, i]))
@@ -53,13 +55,12 @@ export const boundaryLoomLayout: NetworkCustomLayout<ResolutionLayoutConfig> = (
         g.pageId === page.id &&
         (p.view.collapseGroups ? g.groupId === key : g.nodeIds.includes(key))
     )
-    if (!group) continue
     scene.label(
       left - 12,
       py + 3,
       shortLabel(
         p.view.collapseGroups
-          ? `${group.label} [component, ${group.nodeIds.length}]`
+          ? `${group!.label} [component, ${group!.nodeIds.length}]`
           : key,
         23
       ),

@@ -42,15 +42,28 @@ export function drawCutawayGraph(
       target: { kind: "source-set", set }
     }
   })
-  const columns = [0, 1, 2, 3, 4].map(() => [] as typeof context.nodes)
-  for (const node of context.nodes) {
+  type NodeInstance = (typeof context.nodes)[number] & {
+    side: "inside" | "incoming" | "outgoing"
+  }
+  const instances = context.nodes.flatMap<NodeInstance>((node) => {
+    if (node.inside) return [{ ...node, side: "inside" as const }]
+    const incoming = context.edges.some((e) => e.source === node.id)
+    const outgoing = context.edges.some((e) => e.target === node.id)
+    return [
+      ...(incoming ? [{ ...node, side: "incoming" as const }] : []),
+      ...(outgoing || !incoming ? [{ ...node, side: "outgoing" as const }] : [])
+    ]
+  })
+  const instanceId = (id: string, side: string) => JSON.stringify([id, side])
+  const columns = [0, 1, 2, 3, 4].map(() => [] as typeof instances)
+  for (const node of instances) {
     const column = node.inside
       ? node.entry && !node.exit
         ? 1
         : node.exit && !node.entry
           ? 3
           : 2
-      : context.edges.some((e) => e.source === node.id)
+      : node.side === "incoming"
         ? 0
         : 4
     columns[column].push(node)
@@ -59,7 +72,7 @@ export function drawCutawayGraph(
   const x = [32, width * 0.28, width * 0.5, width * 0.72, width - 32]
   columns.forEach((nodes, column) =>
     nodes.forEach((node, row) => {
-      positions.set(node.id, {
+      positions.set(instanceId(node.id, node.side), {
         x: x[column],
         y: 45 + ((row + 0.5) * (height - 70)) / Math.max(1, nodes.length)
       })
@@ -92,8 +105,10 @@ export function drawCutawayGraph(
   scene.label(width - 4, 16, "Outgoing", "end", 10)
   const parallelCounts = new Map<string, number>()
   for (const edge of context.edges) {
-    const a = positions.get(edge.source)!,
-      b = positions.get(edge.target)!
+    const a = (positions.get(instanceId(edge.source, "inside")) ??
+        positions.get(instanceId(edge.source, "incoming")))!,
+      b = (positions.get(instanceId(edge.target, "inside")) ??
+        positions.get(instanceId(edge.target, "outgoing")))!
     const key = JSON.stringify([edge.source, edge.target])
     const parallel = parallelCounts.get(key) ?? 0
     parallelCounts.set(key, parallel + 1)
@@ -137,11 +152,19 @@ export function drawCutawayGraph(
       highlighted ? "cutawayWitness" : "edge"
     )
   }
-  for (const node of context.nodes) {
-    const p = positions.get(node.id)!
+  for (const node of instances) {
+    const p = positions.get(instanceId(node.id, node.side))!
     const isEntry = node.id === entry,
       isExit = node.id === exit
-    const onPath = witnessNodes.has(node.id)
+    const onPath = node.inside
+      ? witnessNodes.has(node.id)
+      : context.edges.some(
+          (edge) =>
+            witnessEdges.has(edge.id) &&
+            (node.side === "incoming"
+              ? edge.source === node.id
+              : edge.target === node.id)
+        )
     const role = isEntry
       ? "cutawayEntry"
       : isExit
@@ -156,10 +179,10 @@ export function drawCutawayGraph(
         : onPath
           ? scene.colors.success
           : scene.colors.border
-    const description = `${node.id}; ${node.inside ? "inside component" : "outside neighbor"}${isEntry ? "; selected entry" : ""}${isExit ? "; selected exit" : ""}${onPath ? "; supporting path" : ""}`
+    const description = `${node.id}; ${node.inside ? "inside component" : `outside neighbor; ${node.side} connection`}${isEntry ? "; selected entry" : ""}${isExit ? "; selected exit" : ""}${onPath ? "; supporting path" : ""}`
     scene.rect(
       mark(
-        `cutaway:node:${node.id}`,
+        `cutaway:node:${instanceId(node.id, node.side)}`,
         { kind: "original-node", nodeId: node.id },
         node.sourceSet,
         description,

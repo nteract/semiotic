@@ -19,12 +19,12 @@ export interface Candidate {
 }
 
 /** Source features are independent of the current partition and capsule packing. */
-export function ruleCandidates(
+export function ruleCandidateBatches(
   graph: GraphIndex,
   rule: RuleSpec,
   spec: ResolutionSpec,
   bindings: ResolutionBindings
-): Candidate[] {
+): Candidate[][] {
   const result: Candidate[] = []
   const add = (
     kind: Candidate["kind"],
@@ -138,7 +138,32 @@ export function ruleCandidates(
       }
     }
   }
-  return result
+  if (rule.kind !== "group-authored") return [result]
+  const hierarchy = bindings.authoredHierarchies.find(
+    (h) => h.id === rule.hierarchyRef
+  )!
+  const memberships = hierarchy.groups.map((group) => ({
+    id: group.id,
+    nodes: new Set(group.sourceNodeIds)
+  }))
+  // Validated memberships are nested or disjoint. Count strict ancestors even
+  // when parentId is omitted, and plan disjoint levels from children to parents.
+  const depth = new Map(
+    memberships.map((group) => [
+      group.id,
+      memberships.filter(
+        (parent) =>
+          parent.nodes.size > group.nodes.size &&
+          [...group.nodes].every((id) => parent.nodes.has(id))
+      ).length
+    ])
+  )
+  const levels = [...new Set(depth.values())].sort((a, b) => b - a)
+  return levels.length
+    ? levels.map((level) =>
+        result.filter((c) => depth.get(c.authoredId!) === level)
+      )
+    : [[]]
 }
 
 export function authoredSignature(

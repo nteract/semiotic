@@ -4,7 +4,7 @@ import { contentId, compareIds } from "./identity"
 import { indexGraph } from "./indexGraph"
 import { OwnershipBuilder, type GroupSeed } from "./ownership"
 import { planCandidates } from "./plan"
-import { ruleCandidates } from "./rules"
+import { ruleCandidateBatches } from "./rules"
 import { validateResolution } from "./validate"
 import type {
   PrepareResult,
@@ -61,7 +61,8 @@ export function prepareNetworkResolution(
     sourceFingerprint,
     spec,
     bindings,
-    atlas.completeness
+    atlas.completeness,
+    atlas.sections.sectionIds
   ])
   const context = contentId("context", [
     sourceFingerprint,
@@ -152,43 +153,52 @@ export function prepareNetworkResolution(
         }
         continue
       }
-      const plan = planCandidates(
-        ruleCandidates(graph, rule, spec, bindings),
-        current,
-        builder,
-        rule,
-        ruleIndex,
-        spec,
-        bindings,
-        from.id,
-        toId,
-        Math.max(0, spec.limits.maxCandidates - examined)
+      const candidateBatches = ruleCandidateBatches(graph, rule, spec, bindings)
+      let unexamined = candidateBatches.reduce(
+        (sum, batch) => sum + batch.length,
+        0
       )
-      current = plan.groups
-      examined += plan.examined
-      truncated ||= plan.truncated
-      value.features.push(
-        ...plan.features.filter(
-          (f) => !value.features.some((prior) => prior.id === f.id)
+      for (const candidates of candidateBatches) {
+        const plan = planCandidates(
+          candidates,
+          current,
+          builder,
+          rule,
+          ruleIndex,
+          spec,
+          bindings,
+          from.id,
+          toId,
+          Math.max(0, spec.limits.maxCandidates - examined)
         )
-      )
-      value.events.push(...plan.events)
-      batchEvents.push(...plan.events.map((e) => e.id))
-      // Materialize intermediate children when several rules share one displayed page.
-      page = builder.page(
-        toId,
-        ordinal,
-        labels.join(" + "),
-        current,
-        truncated
-          ? {
-              status: "truncated",
-              reason: "candidate-budget",
-              examined,
-              total: examined + plan.total - plan.examined
-            }
-          : priorCoverage
-      )
+        current = plan.groups
+        examined += plan.examined
+        unexamined -= plan.examined
+        truncated ||= plan.truncated
+        value.features.push(
+          ...plan.features.filter(
+            (f) => !value.features.some((prior) => prior.id === f.id)
+          )
+        )
+        value.events.push(...plan.events)
+        batchEvents.push(...plan.events.map((e) => e.id))
+        // Retain children from earlier rules and authored levels on this page.
+        page = builder.page(
+          toId,
+          ordinal,
+          labels.join(" + "),
+          current,
+          truncated
+            ? {
+                status: "truncated",
+                reason: "candidate-budget",
+                examined,
+                total: examined + unexamined
+              }
+            : priorCoverage
+        )
+        if (truncated) break
+      }
       if (truncated) {
         ruleIndex++
         break

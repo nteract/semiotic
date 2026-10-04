@@ -3,16 +3,76 @@ import { test, expect, type Locator, type Page } from "@playwright/test"
 const tooltip = (page: Page) =>
   page.locator(".stream-network-tooltip").filter({ visible: true })
 
-async function nodePoint(cutaway: Locator, id: string) {
+async function nodePoint(cutaway: Locator, id: string, index = 0) {
   const label = cutaway
     .locator("svg text")
     .filter({ hasText: new RegExp(`^${id}$`) })
-    .first()
+    .nth(index)
   const box = (await label.boundingBox())!
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 + 18 }
 }
 
 for (const chart of ["resolution-atlas-chart", "boundary-loom-chart"]) {
+  test(`${chart} cutaway places reciprocal boundary edges on the correct sides`, async ({
+    page
+  }) => {
+    const errors: string[] = []
+    page.on("pageerror", (e) => errors.push(e.message))
+    await page.goto(`/charts/${chart}`)
+    await page.getByLabel("Cutaway example").selectOption("reciprocal")
+    const cutaway = page.getByTestId("resolution-cutaway")
+    await cutaway.getByLabel("Path evidence").selectOption("observed")
+    await expect(cutaway).toContainText(
+      "1 supported / 1 queried / 1 total pairs"
+    )
+    await expect(
+      cutaway.locator("svg text").filter({ hasText: /^A$/ })
+    ).toHaveCount(2)
+    for (const width of [1440, 1024]) {
+      await page.setViewportSize({ width, height: 1000 })
+      await cutaway.locator("canvas").scrollIntoViewIfNeeded()
+      await cutaway.locator(".stream-network-frame").focus()
+      const incoming = await nodePoint(cutaway, "A", 0)
+      const outgoing = await nodePoint(cutaway, "A", 1)
+      const entry = await nodePoint(cutaway, "x1")
+      const exit = await nodePoint(cutaway, "x2")
+      expect(incoming.x).toBeLessThan(entry.x)
+      expect(outgoing.x).toBeGreaterThan(exit.x)
+      for (const [point, side] of [
+        [incoming, "incoming"],
+        [outgoing, "outgoing"]
+      ] as const) {
+        await page.mouse.move(point.x, point.y)
+        await expect(tooltip(page)).toContainText(
+          `A; outside neighbor; ${side} connection; supporting path`
+        )
+        const box = (await tooltip(page).boundingBox())!
+        expect(box.x).toBeGreaterThanOrEqual(0)
+        expect(box.x + box.width).toBeLessThanOrEqual(width)
+        expect(box.y).toBeGreaterThanOrEqual(0)
+        expect(box.y + box.height).toBeLessThanOrEqual(1000)
+        await page.keyboard.press("Escape")
+        await expect(tooltip(page)).toHaveCount(0)
+      }
+      for (const [a, b, text] of [
+        [incoming, entry, "ax1: A → x1"],
+        [exit, outgoing, "x2a: x2 → A"]
+      ] as const) {
+        const distance = Math.hypot(b.x - a.x, b.y - a.y)
+        await page.mouse.move(
+          (a.x + b.x) / 2 - ((b.y - a.y) / distance) * 6,
+          (a.y + b.y) / 2 + ((b.x - a.x) / distance) * 6
+        )
+        await expect(tooltip(page)).toContainText(
+          `${text}; boundary connection; supporting path`
+        )
+        await page.mouse.move(2, 2)
+        await expect(tooltip(page)).toHaveCount(0)
+      }
+    }
+    expect(errors).toEqual([])
+  })
+
   test(`${chart} cutaway selects support cells and inspects original marks and edges`, async ({
     page
   }) => {

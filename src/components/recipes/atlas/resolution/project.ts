@@ -157,15 +157,38 @@ export function projectResolutionView(
     (count, page) => count + page.groupIds.length,
     0
   )
-  for (const page of pages)
-    for (const id of page.groupIds) {
+  const allocations = pages.map((page) => ({
+    page,
+    ids: page.groupIds.filter((id) =>
+      sourceSetValues(resolution.sets, byGroup.get(id)!.sourceNodes).some(
+        (node) => row.has(node)
+      )
+    ),
+    count: 0
+  }))
+  // Share the total budget across visible pages. Give remainder slots to newer
+  // pages and reuse slots from pages with fewer eligible groups.
+  const newestFirst = [...allocations].reverse()
+  let remaining = view.budget.maxGroups
+  while (remaining > 0) {
+    let allocated = false
+    for (const allocation of newestFirst) {
+      if (remaining === 0) break
+      if (allocation.count >= allocation.ids.length) continue
+      allocation.count++
+      remaining--
+      allocated = true
+    }
+    if (!allocated) break
+  }
+  for (const { page, ids, count } of allocations)
+    for (const id of ids.slice(0, count)) {
       const group = byGroup.get(id)!,
         nodeIds = sourceSetValues(resolution.sets, group.sourceNodes)
       const rows = nodeIds
         .filter((n) => row.has(n))
         .map((n) => row.get(n)!)
         .sort((a, b) => a - b)
-      if (!rows.length || groups.length >= view.budget.maxGroups) continue
       const edgeIds = sourceSetValues(resolution.sets, group.internalEdges)
       const boundaryEdges = resolution.ports
         .filter((p) => p.groupId === id)
@@ -199,6 +222,9 @@ export function projectResolutionView(
       })
     }
   const selectedPage = pages.at(-1)!
+  const selectedOwners = new Set(
+    groups.filter((g) => g.pageId === selectedPage.id).map((g) => g.groupId)
+  )
   if (
     view.selectedGroupId &&
     !selectedPage.groupIds.includes(view.selectedGroupId)
@@ -229,7 +255,15 @@ export function projectResolutionView(
         compareIds(a.edge.id, b.edge.id)
     )
   const edges: ProjectedEdge[] = candidates
-    .filter(({ edge }) => row.has(edge.source) && row.has(edge.target))
+    .filter(
+      ({ edge }) =>
+        row.has(edge.source) &&
+        row.has(edge.target) &&
+        (view.mode !== "boundary-loom" ||
+          !view.collapseGroups ||
+          (selectedOwners.has(selectedPage.nodeOwner[edge.source]) &&
+            selectedOwners.has(selectedPage.nodeOwner[edge.target])))
+    )
     .slice(
       edgeOffset,
       edgeOffset +

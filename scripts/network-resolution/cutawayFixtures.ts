@@ -1,8 +1,41 @@
 import { resolveFixture } from "./fixtures"
 
 export function cutawayFixture(
-  example: "single" | "multi" | "missing" = "multi"
+  example: "single" | "multi" | "missing" | "reciprocal" = "multi"
 ) {
+  if (example === "reciprocal")
+    return resolveFixture(
+      ["A", "x1", "x2"],
+      [
+        ["ax1", "A", "x1"],
+        ["x1x2", "x1", "x2"],
+        ["x2a", "x2", "A"]
+      ],
+      { rules: [{ kind: "group-authored", version: "1", hierarchyRef: "h" }] },
+      {
+        edgeSemantics: [],
+        authoredHierarchies: [
+          {
+            id: "h",
+            groups: [
+              {
+                id: "x",
+                label: "Reciprocal neighbor",
+                sourceNodeIds: ["x1", "x2"]
+              }
+            ]
+          }
+        ]
+      },
+      [
+        {
+          id: "round-trip",
+          entityId: "1",
+          nodePath: ["A", "x1", "x2", "A"],
+          complete: true
+        }
+      ]
+    )
   const single = example === "single"
   return resolveFixture(
     single

@@ -72,6 +72,12 @@ export function planCandidates(
       coverage: { status: "complete" },
       scopeId: spec.relationScopeId
     })
+    const groupId = contentId("group", [
+      builder.contextId,
+      rule,
+      candidate.members,
+      candidate.authoredId ?? null
+    ])
     let reason = ""
     if (candidate.members.some((node) => claimed.has(node)))
       reason = "overlapping-candidate"
@@ -81,7 +87,7 @@ export function planCandidates(
       reason = "crosses-current-block"
     else if (
       before.length < 2 &&
-      (rule.kind !== "group-authored" || before[0].kind === "authored-group")
+      (rule.kind !== "group-authored" || before[0].id === groupId)
     )
       reason = "already-contained"
     else if (candidate.members.some((node) => visible.has(node)))
@@ -94,12 +100,6 @@ export function planCandidates(
     )
       reason = "anticipated-authored-boundary"
     const eventId = contentId("event", [toPageId, ruleIndex, candidate.key])
-    const groupId = contentId("group", [
-      builder.contextId,
-      rule,
-      candidate.members,
-      candidate.authoredId ?? null
-    ])
     const accepted = !reason
     if (accepted) {
       for (const node of candidate.members) claimed.add(node)

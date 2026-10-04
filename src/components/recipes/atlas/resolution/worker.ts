@@ -34,6 +34,15 @@ export interface ResolutionPublication {
   generation: number
 }
 
+// Bind the complete snapshot, including section order and atlas validation inputs.
+function requestInputHash(
+  atlas: PreparedNetworkAtlas,
+  spec: ResolutionSpec,
+  bindings: ResolutionBindings
+): string {
+  return contentId("request-input", [spec, bindings, atlas])
+}
+
 export function createResolutionRequest(
   atlas: PreparedNetworkAtlas,
   spec: ResolutionSpec,
@@ -55,12 +64,7 @@ export function createResolutionRequest(
       sourceRevision: atlas.source.revision,
       graphRef: atlas.source.graphRef,
       specHash: contentId("spec", spec),
-      inputHash: contentId("request-input", [
-        spec,
-        bindings,
-        atlas.source,
-        atlas.completeness
-      ]),
+      inputHash: requestInputHash(atlas, spec, bindings),
       evidencePolicyId: atlas.spec.evidencePolicyId
     })
   )
@@ -78,13 +82,7 @@ export function handleResolutionRequest(
     identity.graphRef !== atlas.source.graphRef ||
     identity.evidencePolicyId !== atlas.spec.evidencePolicyId ||
     identity.specHash !== contentId("spec", spec) ||
-    identity.inputHash !==
-      contentId("request-input", [
-        spec,
-        bindings,
-        atlas.source,
-        atlas.completeness
-      ])
+    identity.inputHash !== requestInputHash(atlas, spec, bindings)
   )
     throw new Error("Incoherent resolution worker request")
   return {

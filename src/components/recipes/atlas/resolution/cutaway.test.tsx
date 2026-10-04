@@ -11,7 +11,10 @@ import {
 import { projectComponentCutaway } from "./ports"
 import { sourceSetValues } from "./sets"
 
-function projection(example: "single" | "multi" | "missing", observed = false) {
+function projection(
+  example: "single" | "multi" | "missing" | "reciprocal",
+  observed = false
+) {
   const resolution = cutawayFixture(example)
   const page = resolution.pages[1]
   return projectComponentCutaway(resolution, page.id, page.nodeOwner.x1, {
@@ -35,6 +38,98 @@ function draw(
 }
 
 describe("Component Cutaway", () => {
+  it("places a reciprocal neighbor at both boundary directions with one canonical selection", () => {
+    const cutaway = projection("reciprocal", true)
+    const scene = draw(cutaway)
+    const copies = scene
+      .sceneNodes!.filter((n) => n.type === "rect")
+      .filter((n) => n.datum!.nodeId === "A")
+    expect(copies).toHaveLength(2)
+    expect(new Set(copies.map((n) => n.id)).size).toBe(2)
+    expect(copies.map((n) => n.x).sort((a, b) => a - b)).toEqual([26, 562])
+    expect(copies[0].datum!.canonicalSelection).toEqual(
+      copies[1].datum!.canonicalSelection
+    )
+    expect(copies.map((n) => n.datum!.description)).toEqual([
+      "A; outside neighbor; incoming connection; supporting path",
+      "A; outside neighbor; outgoing connection; supporting path"
+    ])
+    expect(cutaway.value.context.totalNodes).toBe(3)
+    expect(cutaway.value.context.nodes).toHaveLength(3)
+    expect(
+      scene.sceneEdges!.filter(
+        (e) => e.datum!.resolutionRole === "cutawayWitness"
+      )
+    ).toHaveLength(3)
+    const incoming = scene.sceneEdges!.find((e) =>
+      e.datum!.edgeIds?.includes("ax1")
+    )!
+    const outgoing = scene.sceneEdges!.find((e) =>
+      e.datum!.edgeIds?.includes("x2a")
+    )!
+    if (incoming.type !== "curved" || outgoing.type !== "curved")
+      throw new Error("Expected directed curves")
+    expect(incoming.pathD).toMatch(/^M42,/)
+    expect(outgoing.pathD).toContain(" L557,")
+    const { svg, evidence } = renderChartWithEvidence("NetworkCustomChart", {
+      nodes: [{ id: "seed" }],
+      edges: [],
+      layout: componentCutawayLayout,
+      layoutConfig: { cutaway },
+      width: 600,
+      height: 400,
+      title: "Reciprocal boundary",
+      description: "One neighbor in both directions",
+      accessibleTable: true
+    })
+    expect(evidence.markCountByType["node:rect"]).toBe(5)
+    expect(svg).not.toMatch(/NaN|Infinity/)
+  })
+
+  it("highlights only the directional instance used by an observed witness", () => {
+    const resolution = resolveFixture(
+      ["A", "D", "x1", "x2"],
+      [
+        ["in", "A", "x1"],
+        ["internal", "x1", "x2"],
+        ["back", "x2", "A"],
+        ["out", "x2", "D"]
+      ],
+      { rules: [{ kind: "group-authored", version: "1", hierarchyRef: "h" }] },
+      {
+        edgeSemantics: [],
+        authoredHierarchies: [
+          {
+            id: "h",
+            groups: [{ id: "g", label: "Group", sourceNodeIds: ["x1", "x2"] }]
+          }
+        ]
+      },
+      [
+        {
+          id: "journey",
+          entityId: "1",
+          nodePath: ["A", "x1", "x2", "D"],
+          complete: true
+        }
+      ]
+    )
+    const page = resolution.pages[1]
+    const cutaway = projectComponentCutaway(
+      resolution,
+      page.id,
+      page.nodeOwner.x1,
+      { basis: "observed" }
+    )
+    const copies = draw(cutaway).sceneNodes!.filter(
+      (n) => n.datum!.nodeId === "A"
+    )
+    expect(copies.map((n) => n.datum!.resolutionRole)).toEqual([
+      "cutawayWitness",
+      "cutawayNode"
+    ])
+  })
+
   it("draws the reversed internal edge, real neighbors and a compact negative verdict", () => {
     const cutaway = projection("single")
     const small = draw(cutaway),
