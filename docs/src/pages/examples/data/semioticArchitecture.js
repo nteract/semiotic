@@ -1681,6 +1681,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
   },
   {
+    id: "novel-network-lab",
+    shortLabel: "Novel Network Lab",
+    note: "Eight network readers derive connectivity, flow, journey, dependency and grouping views from one manuscript ledger. Guided comparisons, shared canonical stage selection and exact source tables expose the different encodings and their limits.",
+    uses: ["input-static", "hoc-force", "hoc-network-flow", "hoc-network-custom", "hoc-physics-custom", "feature-custom-layout", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
     id: "dependency-xray",
     shortLabel: "Dependency X-Ray",
     note: "A prepared dependency atlas feeds a sectioned NetworkCustomChart, original-edge cross-links, required-path overlays, an accessible adjacency matrix, and static SVG/evidence exports.",

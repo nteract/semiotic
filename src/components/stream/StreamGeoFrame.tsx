@@ -594,6 +594,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // ── Keyboard navigation ───────────────────────────────────────────
 
     const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } = useGeoKeyboardNavigation({
+      clearPointerHover: onPointerLeave,
       storeRef,
       hoverRef,
       hoveredNodeRef,

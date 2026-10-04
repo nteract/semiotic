@@ -40,7 +40,9 @@ export const circuitNumber = (value: number | null) =>
       ? `${Number((value / 1000000).toFixed(2))}m`
       : value >= 1000
         ? `${Number((value / 1000).toFixed(1))}k`
-        : String(value)
+        : Number.isInteger(value)
+          ? String(value)
+          : String(Number(value.toPrecision(3)))
 
 const symbols: Record<CircuitModuleKind, string> = {
   stage: "M-5,0 H5",

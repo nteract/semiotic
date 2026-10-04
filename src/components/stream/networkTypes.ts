@@ -395,6 +395,8 @@ export interface NetworkPipelineConfig {
   colorScheme?: string | string[] | Record<string, string>
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
   themeCategorical?: string[]
+  themeSequential?: string
+  themeSelectionOpacity?: number
   /** Theme-resolved semantic role colors — default fallback before hardcoded hex. See `ThemeSemanticColors` in ./types. */
   themeSemantic?: ThemeSemanticColors
   edgeColorBy?: "source" | "target" | "gradient" | ((d: Datum) => string)

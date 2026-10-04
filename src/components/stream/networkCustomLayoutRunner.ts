@@ -65,6 +65,8 @@ export function runNetworkCustomLayout({
     },
     theme: {
       semantic: config.themeSemantic ?? {},
+      sequential: config.themeSequential,
+      selectionOpacity: config.themeSelectionOpacity,
       categorical: [...palette]
     },
     resolveColor: buildResolveColor(palette, config.colorScheme),

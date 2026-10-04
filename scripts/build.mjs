@@ -269,6 +269,7 @@ function externalizeNetworkZoomHostPlugin(cjs = false) {
 /** Atlas is an opt-in reader graph over the canonical frame/store instances. */
 function externalizeAtlasHostsPlugin() {
   const hosts = {
+    "ThemeProvider": "semiotic-themes-react.module.min.js",
     "charts/custom/NetworkCustomChart": "network.module.min.js",
     "charts/physics/PhysicsCustomChart": "physics.module.min.js",
     "store/useSelection": "semiotic-atlas-selection.module.min.js"
@@ -395,6 +396,7 @@ async function createCjsBundlesWithConcurrency(bundles, concurrency) {
 
 const clientCjsNamespaces = {
   "semiotic-atlas": "atlas",
+  "semiotic-experimental-network-resolution-react": "networkResolution",
   semiotic: "semiotic",
   xy: "xy",
   "semiotic-line": "line",
@@ -741,6 +743,14 @@ const generatedBundleMetadata = {
     "native": false,
     "stability": "stable",
     "loading": "eager"
+  },
+  "semiotic-experimental-network-resolution": {
+    platform: "neutral", rsc: true, edge: true, native: false,
+    stability: "experimental", loading: "eager"
+  },
+  "semiotic-experimental-network-resolution-react": {
+    platform: "browser", rsc: false, edge: false, native: false,
+    stability: "experimental", loading: "eager"
   },
   "semiotic-recipes": {
     platform: "browser",
@@ -1151,6 +1161,8 @@ async function build() {
     },
     { input: "src/components/semiotic-atlas.ts", name: "semiotic-atlas", minify, serverOnly: false, clientOnly: true },
     { input: "src/components/semiotic-atlas-core.ts", name: "semiotic-atlas-core", minify, serverOnly: false, clientOnly: false },
+    { input: "src/components/semiotic-experimental-network-resolution.ts", name: "semiotic-experimental-network-resolution", minify, clientOnly: false },
+    { input: "src/components/semiotic-experimental-network-resolution-react.ts", name: "semiotic-experimental-network-resolution-react", minify, clientOnly: true },
     {
       input: "src/components/semiotic-network.ts",
       name: "network",
@@ -1401,6 +1413,7 @@ async function build() {
   )
   const isolatedNeutralEntryNames = new Set([
     "semiotic-atlas-core",
+    "semiotic-experimental-network-resolution",
     "semiotic-artifact",
     "semiotic-evidence",
     "semiotic-utils-core"
@@ -1450,6 +1463,7 @@ async function build() {
     Object.entries(clientEntries).filter(
       ([name]) =>
         name !== "semiotic-atlas" &&
+        name !== "semiotic-experimental-network-resolution-react" &&
         !auxiliaryClientEntryNames.has(name) &&
         !passThroughClientEntryNames.has(name)
     )
@@ -1496,6 +1510,11 @@ async function build() {
     minify,
     clientOnly: true,
     groupName: "client-atlas",
+    esbuildPlugins: [externalizeAtlasHostsPlugin()]
+  })
+  await createSharedEsmGroup({
+    entries: { "semiotic-experimental-network-resolution-react": clientEntries["semiotic-experimental-network-resolution-react"] },
+    minify, clientOnly: true, groupName: "client-network-resolution",
     esbuildPlugins: [externalizeAtlasHostsPlugin()]
   })
   await createSharedEsmGroup({

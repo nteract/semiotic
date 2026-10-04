@@ -17,6 +17,37 @@ describe("public chart keyboard mark access", () => {
   beforeEach(() => { restore = setupCanvasMock() })
   afterEach(() => { restore() })
 
+  it("dismisses an ordinal pointer tooltip with Escape before keyboard navigation", async () => {
+    const customHoverBehavior = vi.fn()
+    const { container } = render(<BarChart
+      data={[{ category: "Alpha", value: 50 }]} width={400} height={300}
+      margin={{ left: 40, right: 40, top: 40, bottom: 40 }}
+      frameProps={{ customHoverBehavior }}
+    />)
+    const frame = container.querySelector<HTMLElement>(".stream-ordinal-frame")!
+    fireEvent.mouseMove(frame.querySelector("canvas")!, { clientX: 200, clientY: 150 })
+    await waitFor(() => expect(frame.querySelector(".stream-ordinal-tooltip")).toHaveTextContent("Alpha"))
+    fireEvent.keyDown(frame, { key: "Escape" })
+    expect(frame.querySelector(".stream-ordinal-tooltip")).toBeNull()
+    expect(customHoverBehavior.mock.lastCall?.[0]).toBeNull()
+  })
+
+  it("dismisses an XY pointer tooltip with Escape before keyboard navigation", async () => {
+    const customHoverBehavior = vi.fn()
+    const { container } = render(<CandlestickChart
+      data={[{ x: 1, open: 20, close: 30, high: 40, low: 10 }]}
+      openAccessor="open" closeAccessor="close" width={400} height={300}
+      margin={{ left: 40, right: 40, top: 40, bottom: 40 }}
+      frameProps={{ customHoverBehavior }}
+    />)
+    const frame = container.querySelector<HTMLElement>(".stream-xy-frame")!
+    fireEvent.mouseMove(frame.querySelector("canvas")!, { clientX: 200, clientY: 150 })
+    await waitFor(() => expect(frame.querySelector(".stream-frame-tooltip")).toHaveTextContent("Open"))
+    fireEvent.keyDown(frame, { key: "Escape" })
+    expect(frame.querySelector(".stream-frame-tooltip")).toBeNull()
+    expect(customHoverBehavior.mock.lastCall?.[0]).toBeNull()
+  })
+
   for (const Component of [BoxPlot, ViolinPlot, RidgelinePlot]) {
     it(`${Component.displayName} exposes category statistics and a focus ring`, async () => {
       const onClick = vi.fn()

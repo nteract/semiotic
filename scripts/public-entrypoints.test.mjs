@@ -40,7 +40,9 @@ test("only the experimental namespace is excluded, not similarly named stable en
 
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
-  assert.equal(entries.length, 41)
+  assert.equal(entries.length, 43)
+  assert.equal(entries.find((entry) => entry.subpath === "./experimental/network-resolution")?.stableApi, false)
+  assert.equal(entries.find((entry) => entry.subpath === "./experimental/network-resolution/react")?.sourcePath, "src/components/semiotic-experimental-network-resolution-react.ts")
   assert.equal(
     entries.find((entry) => entry.subpath === "./network/zoom")?.sourcePath,
     "src/components/semiotic-network-zoom.ts"

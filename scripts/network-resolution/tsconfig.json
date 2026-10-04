@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "types": ["node", "vitest/globals", "vite/client"]
+  },
+  "include": [
+    "./*.ts",
+    "../../src/components/recipes/atlas/resolution/**/*.test.ts",
+    "../../src/components/recipes/atlas/resolution/**/*.test.tsx",
+    "../../integration-tests/network-resolution.spec.ts",
+    "../../integration-tests/network-resolution-examples/index.tsx"
+  ],
+  "exclude": []
+}

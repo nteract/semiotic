@@ -1,0 +1,153 @@
+{
+  "status": "pass",
+  "namedChecks": 16,
+  "tests": [
+    {
+      "name": "All five graph fixtures have valid IDs and endpoints",
+      "passed": true
+    },
+    {
+      "name": "F01 exact page ledgers and cycle identity",
+      "passed": true,
+      "detail": [
+        {
+          "page": "p0",
+          "blocks": 14,
+          "internalEdges": 1,
+          "boundaryEdges": 17,
+          "internalRank": 1,
+          "boundaryRank": 4
+        },
+        {
+          "page": "p1",
+          "blocks": 9,
+          "internalEdges": 6,
+          "boundaryEdges": 12,
+          "internalRank": 1,
+          "boundaryRank": 4
+        },
+        {
+          "page": "p2",
+          "blocks": 7,
+          "internalEdges": 9,
+          "boundaryEdges": 9,
+          "internalRank": 2,
+          "boundaryRank": 3
+        },
+        {
+          "page": "p3",
+          "blocks": 5,
+          "internalEdges": 11,
+          "boundaryEdges": 7,
+          "internalRank": 2,
+          "boundaryRank": 3
+        }
+      ]
+    },
+    {
+      "name": "F01 all transitions are nested coarsenings",
+      "passed": true
+    },
+    {
+      "name": "F01 self-loop, early, late, and unabsorbed edge histories",
+      "passed": true,
+      "detail": {
+        "e01": null,
+        "e02": 1,
+        "e03": 1,
+        "e04": 3,
+        "e05": 1,
+        "e06": 1,
+        "e07": 1,
+        "e08": null,
+        "e09": null,
+        "e10": 2,
+        "e11": 2,
+        "e12": 2,
+        "e13": null,
+        "e14": null,
+        "e15": 3,
+        "e16": null,
+        "e17": null,
+        "e18": 0
+      }
+    },
+    {
+      "name": "F01 seven boundary records form six endpoint bundles",
+      "passed": true
+    },
+    {
+      "name": "F01 edge-excluding alternative witness replays",
+      "passed": true,
+      "detail": {
+        "nodes": [
+          "r",
+          "x",
+          "y",
+          "z"
+        ],
+        "edges": [
+          "e14",
+          "e15",
+          "e16"
+        ]
+      }
+    },
+    {
+      "name": "F01 authored cyclic component is strongly connected",
+      "passed": true
+    },
+    {
+      "name": "F02 connected quotient can invent directed reachability",
+      "passed": true
+    },
+    {
+      "name": "F03 structural possibility differs from a contiguous observed journey",
+      "passed": true
+    },
+    {
+      "name": "Repeated visits preserve contiguous offsets rather than shared-state shortcuts",
+      "passed": true
+    },
+    {
+      "name": "F04 independent alternative tests cannot justify deleting all candidates",
+      "passed": true
+    },
+    {
+      "name": "F05 overlapping annotations are not a valid owning partition",
+      "passed": true
+    },
+    {
+      "name": "Invalid ownership, disconnected grouping, and reverse splitting are rejected",
+      "passed": true
+    },
+    {
+      "name": "Source/group ordering does not change page metrics",
+      "passed": true
+    },
+    {
+      "name": "Exhaustive small simple-graph/connected-partition cycle accounts",
+      "passed": true,
+      "detail": {
+        "graphs": 76,
+        "validPartitions": 499,
+        "maxNodes": 4
+      }
+    },
+    {
+      "name": "Seeded directed multigraphs preserve cycle accounts through connected merges",
+      "passed": true,
+      "detail": {
+        "graphs": 200,
+        "partitionCases": 715,
+        "seed": 20261002
+      }
+    }
+  ],
+  "limitations": [
+    "Authored partitions, not automatic motif/planner output.",
+    "No Semiotic runtime or chart renderer was executed.",
+    "F06 async, disclosure, and UI states remain implementation acceptance tests.",
+    "No performance claims follow from these checks."
+  ]
+}

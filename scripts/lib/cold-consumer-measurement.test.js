@@ -30,6 +30,8 @@ describe("cold-consumer named import manifest", () => {
     )
     expect(EXCLUDED_EXPORTS).toContain("./experimental")
     expect(EXCLUDED_EXPORTS).toContain("./experimental/vacp")
+    expect(EXCLUDED_EXPORTS).toContain("./experimental/network-resolution")
+    expect(EXCLUDED_EXPORTS).toContain("./experimental/network-resolution/react")
     expect(EXCLUDED_EXPORTS).toContain("./spec/*")
   })
 
