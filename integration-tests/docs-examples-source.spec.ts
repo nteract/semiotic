@@ -111,52 +111,75 @@ test.describe("docs example source route smoke", () => {
 
     test(
       `mounts example source routes ${batchIndex + 1}/${EXAMPLE_ROUTE_BATCHES.length} (${firstPath} through ${lastPath})`,
-      async ({ page }) => {
-        const problems: BrowserProblem[] = []
-        const failedRequestHosts: string[] = []
-
-        page.on("console", (message) => {
-          if (message.type() === "error") {
-            problems.push({ kind: "console", message: message.text(), url: message.location().url })
-          }
-        })
-        page.on("pageerror", (error) => {
-          problems.push({ kind: "pageerror", message: error.message })
-        })
-        page.on("requestfailed", (request) => {
-          try {
-            failedRequestHosts.push(new URL(request.url()).host)
-          } catch {
-            // Malformed/opaque request URL — nothing to correlate against.
-          }
-        })
-
+      async ({ context }) => {
         for (const example of examples) {
-          const before = problems.length
-          const hostsBefore = failedRequestHosts.length
-          await test.step(example.path, async () => {
-            await page.goto(example.path, { waitUntil: "domcontentloaded" })
+          // Late responses from a live service must stay attached to the page
+          // that requested them, rather than the next route in this batch.
+          const page = await context.newPage()
+          const problems: BrowserProblem[] = []
+          const failedRequestHosts: string[] = []
 
-            // Most examples use ExamplePageLayout's manifest-titled H1. Editorial
-            // stories may intentionally replace that header with an authored H1;
-            // requiring a visible page-level H1 still proves the lazy route module
-            // loaded and completed its first React commit, rather than merely
-            // receiving the SPA shell.
-            await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({
-              timeout: 60_000,
-            })
-            await page.evaluate(async () => {
-              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-            })
+          page.on("console", (message) => {
+            if (message.type() === "error") {
+              problems.push({
+                kind: "console",
+                message: message.text(),
+                url: message.location().url
+              })
+            }
+          })
+          page.on("pageerror", (error) => {
+            problems.push({ kind: "pageerror", message: error.message })
+          })
+          page.on("requestfailed", (request) => {
+            try {
+              failedRequestHosts.push(new URL(request.url()).host)
+            } catch {
+              // Malformed/opaque request URL — nothing to correlate against.
+            }
           })
 
-          const allowedHosts = LIVE_EXTERNAL_DATA_HOSTS_BY_ROUTE[example.path] ?? []
-          const routeFailedHosts = failedRequestHosts.slice(hostsBefore)
-          const routeProblems = problems
-            .slice(before)
-            .filter((problem) => !isExpectedLiveDataNetworkProblem(problem, allowedHosts, routeFailedHosts))
-          expect(routeProblems, `source route ${example.path} emitted browser errors`).toEqual([])
+          try {
+            await test.step(example.path, async () => {
+              await page.goto(example.path, { waitUntil: "domcontentloaded" })
+
+              // Most examples use ExamplePageLayout's manifest-titled H1. Editorial
+              // stories may intentionally replace that header with an authored H1;
+              // requiring a visible page-level H1 still proves the lazy route module
+              // loaded and completed its first React commit, rather than merely
+              // receiving the SPA shell.
+              await expect(
+                page.getByRole("heading", { level: 1 }).first()
+              ).toBeVisible({
+                timeout: 60_000
+              })
+              await page.evaluate(async () => {
+                await new Promise<void>((resolve) =>
+                  requestAnimationFrame(() => resolve())
+                )
+                await new Promise<void>((resolve) =>
+                  requestAnimationFrame(() => resolve())
+                )
+              })
+            })
+
+            const allowedHosts =
+              LIVE_EXTERNAL_DATA_HOSTS_BY_ROUTE[example.path] ?? []
+            const routeProblems = problems.filter(
+              (problem) =>
+                !isExpectedLiveDataNetworkProblem(
+                  problem,
+                  allowedHosts,
+                  failedRequestHosts
+                )
+            )
+            expect(
+              routeProblems,
+              `source route ${example.path} emitted browser errors`
+            ).toEqual([])
+          } finally {
+            await page.close()
+          }
         }
       },
     )

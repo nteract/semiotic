@@ -9,11 +9,39 @@ const tooltip = (page: Page) =>
     .filter({ visible: true })
 
 async function moveToNode(page: Page, pane: Locator, view: string) {
+  // Expansion and view changes resize the host before the chart catches up.
+  // Wait for its measured width before locating a mark in the rendered output.
+  const minimum =
+    view === "circuit"
+      ? 1080
+      : ["braid", "atlas", "loom"].includes(view)
+        ? 820
+        : view === "sankey"
+          ? 760
+          : 520
+  await expect
+    .poll(() =>
+      pane.locator(".novel-plot").evaluate((host, minimum) => {
+        const canvas = host.querySelector("canvas")
+        const width = Math.max(
+          minimum,
+          Math.min(1600, Math.floor(host.getBoundingClientRect().width))
+        )
+        return canvas?.getBoundingClientRect().width === width
+      }, minimum)
+    )
+    .toBe(true)
   const label = pane
     .locator("svg text")
     .filter({ hasText: /^Copy$/ })
     .first()
   await label.scrollIntoViewIfNeeded()
+  // Scroll before sampling the canvas: scrolling can update responsive layout,
+  // and the sampled pixel must be in the current viewport coordinate system.
+  await label.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    window.scrollBy(0, box.y + box.height / 2 - innerHeight / 2)
+  })
   await page.evaluate(
     () =>
       new Promise((resolve) =>
@@ -75,12 +103,6 @@ async function moveToNode(page: Page, pane: Locator, view: string) {
     x += ((cx - x) * 28) / length
     y += ((cy - y) * 28) / length
   }
-  const scrolled = await page.evaluate((y) => {
-    const before = window.scrollY
-    window.scrollBy(0, y - innerHeight / 2)
-    return window.scrollY - before
-  }, y)
-  y -= scrolled
   await page.mouse.move(x, y)
   return { x, y }
 }
@@ -159,7 +181,9 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
     .selectOption("circuit")
   const circuit = page.locator('.novel-pane[data-view="circuit"]')
   await moveToNode(page, circuit, "circuit")
-  await expect(tooltip(page).first()).toContainText("Queue and capacity: unmeasured")
+  await expect(tooltip(page).first()).toContainText(
+    "Queue and capacity: unmeasured"
+  )
   await page.keyboard.press("Escape")
   await expect(tooltip(page)).toHaveCount(0)
   const pipe = circuit
