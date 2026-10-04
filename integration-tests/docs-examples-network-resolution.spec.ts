@@ -5,6 +5,7 @@ import AxeBuilder from "@axe-core/playwright"
 import { flagship } from "../scripts/network-resolution/fixtures"
 import { resolutionChartProps } from "../src/components/recipes/atlas/resolution/chartProps"
 import { defaultResolutionView } from "../src/components/recipes/atlas/resolution/project"
+import { expectCanvasPainted } from "./helpers"
 
 const resolution = flagship()
 
@@ -235,7 +236,7 @@ test("Atlas highlights source membership across generations and follows palette 
   await page.goto("/charts/resolution-atlas-chart")
   const reader = page.getByTestId("resolution-reader")
   const canvas = reader.locator("canvas").first()
-  await expect(canvas).toBeVisible()
+  await expectCanvasPainted(canvas)
   const width = Number(await reader.getAttribute("data-reader-width"))
   const props = resolutionChartProps(
     {
@@ -353,7 +354,7 @@ test("Boundary Loom colors intra-group and inter-group edges for the selected pa
   await page.goto("/charts/boundary-loom-chart")
   const reader = page.getByTestId("resolution-reader")
   const canvas = reader.locator("canvas").first()
-  await expect(canvas).toBeVisible()
+  await expectCanvasPainted(canvas)
   const { LIGHT_THEME, DARK_THEME } =
     await import("../src/components/store/themeCore")
   for (const theme of [LIGHT_THEME, DARK_THEME]) {

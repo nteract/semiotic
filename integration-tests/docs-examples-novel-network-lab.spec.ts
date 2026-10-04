@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test"
 import AxeBuilder from "@axe-core/playwright"
+import { expectCanvasPainted } from "./helpers"
 
 const route = "/examples/novel-network-lab"
 const tooltip = (page: Page) =>
@@ -104,7 +105,7 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
       .getByRole("combobox", { name: "View A", exact: true })
       .selectOption(view)
     const pane = page.locator(`.novel-pane[data-view="${view}"]`)
-    await expect(pane.locator("canvas").first()).toBeVisible()
+    await expectCanvasPainted(pane.locator("canvas").first())
     await moveToNode(page, pane, view)
     await expect(tooltip(page).first(), view).toContainText("Copy")
     if (view !== "atlas")
@@ -119,7 +120,7 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
     .getByRole("combobox", { name: "View A", exact: true })
     .selectOption("loom")
   const loom = page.locator('.novel-pane[data-view="loom"]')
-  await expect(loom.locator("canvas")).toBeVisible()
+  await expectCanvasPainted(loom.locator("canvas").first())
   // A Copy → Proof column is located by its label; the original endpoint row
   // provides the vertical position. Hover the actual column below that endpoint.
   const column = loom
@@ -248,9 +249,9 @@ test("phone layout, keyboard controls, and accessible alternatives", async ({
   await control.focus()
   await expect(control).toBeFocused()
   await control.selectOption("atlas")
-  await expect(
+  await expectCanvasPainted(
     page.locator('.novel-pane[data-view="atlas"] canvas').first()
-  ).toBeVisible()
+  )
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth
