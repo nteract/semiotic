@@ -64,10 +64,22 @@ npm run eval:ai:orcarouter -- \
   --confirm-spend
 ```
 
+The `cheaperinference` provider points the same queue at the Cheaper Inference
+AI gateway (`CHEAPER_INFERENCE_API_KEY`, no project ID, no per-model price
+table). Model ids have no lab prefix, and cost is also recorded as `null` USD:
+
+```sh
+npm run eval:ai:cheaperinference -- \
+  --models=gpt-5.4-mini \
+  --suites=first-try \
+  --output-dir=evals/reports/cheaperinference/trial-a \
+  --confirm-spend
+```
+
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
-positive `--max-usd`; the `orcarouter` gateway has no price table, so no spend
-ceiling is enforced and `--max-usd` is optional. The runner never writes the
+positive `--max-usd`; the `orcarouter` and `cheaperinference` gateways have no
+price table, so no spend ceiling is enforced and `--max-usd` is optional. The runner never writes the
 credential, project ID, raw prompts, or raw API response bodies to its reports.
 Scoring inputs necessarily retain parsed chart proposals and grounding answer
 strings.
