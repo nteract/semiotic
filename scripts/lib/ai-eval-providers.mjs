@@ -10,7 +10,10 @@
  * zero-markup, so cost is treated as unknown (reported as `null`, never a
  * zero-dollar estimate) and no spend ceiling is enforced. The `reasoning`
  * request field is omitted because its upstream models reject it when combined
- * with a strict JSON-schema output format.
+ * with a strict JSON-schema output format. `cheaperinference` is another
+ * OpenAI-compatible AI gateway on the same terms: `/v1/responses`, bare model
+ * ids, no price table (cost is `null`), and no `reasoning` field, because one
+ * key serves models from several labs.
  */
 export const AI_EVAL_PROVIDERS = {
   openai: {
@@ -68,6 +71,24 @@ export const AI_EVAL_PROVIDERS = {
     reportPrefix: "orcarouter",
     requestReasoning: false,
     credentialCheckMaxTokens: 512,
+    pricesPerMillion: null,
+  },
+  cheaperinference: {
+    id: "cheaperinference",
+    label: "Cheaper Inference",
+    apiUrl: "https://api.cheaperinference.com/v1/responses",
+    apiKeyEnv: "CHEAPER_INFERENCE_API_KEY",
+    projectEnv: null,
+    keychainService: "semiotic-cheaperinference-evals",
+    clientVersion: "semiotic-cheaperinference-eval/1",
+    defaultModels: [
+      "gpt-5.4-mini",
+    ],
+    hasPriceTable: false,
+    priceRevision: null,
+    reportPrefix: "cheaperinference",
+    requestReasoning: false,
+    credentialCheckMaxTokens: 64,
     pricesPerMillion: null,
   },
 }
