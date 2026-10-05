@@ -18,7 +18,9 @@ test("LineChart docs teach direct labels with working controls and copyable code
   const original = await positions()
   await demo.getByLabel("Numeric units").selectOption("1000000000")
   await expect(demo.locator("svg > desc")).toContainText("50000000000")
-  expect(await positions()).toEqual(original)
+  // The description updates before the frame publishes its rescaled layout.
+  // Compare the settled label positions, including on slower CI runners.
+  await expect.poll(positions).toEqual(original)
 
   await demo.getByLabel("Label position").selectOption("start")
   await expect.poll(async () => Number(await labels.locator("text").first().getAttribute("x"))).toBeLessThan(0)

@@ -106,3 +106,20 @@ The Vite 7 test uses a separately cached Vite 7.3.2 installation via
 Browser runs used isolated local ports because an existing docs server had stale
 module URLs. Initial sandbox attempts could not bind a port or install temporary
 consumer dependencies; the corresponding checks were rerun with those permissions.
+
+### CI follow-up
+
+The full browser matrix found stale SSR/CSR baselines for lineage hulls, Mermaid,
+and packed clusters after preserving the ground transform's full precision.
+Reviewed the CI captures, regenerated all nine browser baselines in the pinned
+Playwright 1.61.1 Noble image, and verified them against a production build with
+snapshot updates disabled. All nine passed, including current SSR/CSR parity
+assertions. The related-surface audit found the same three cases in Chromium,
+Firefox, and WebKit; the other 643–644 tests in each CI browser passed.
+
+The docs direct-label test also read positions before the updated frame scales
+were published. It now polls for the same exact position array after changing
+numeric units, retaining the original assertion. Ten consecutive runs passed in
+the pinned Linux image. The projected-tooltip visibility assertion has an inline
+test-quality annotation because content, placement, selection, and dismissal are
+checked immediately afterward; no assertions or gate limits were removed.
