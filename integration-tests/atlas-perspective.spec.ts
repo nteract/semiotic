@@ -24,7 +24,7 @@ for (const id of [
       await waitForRafs(page, 4)
       const box = (await anchor.boundingBox())!
       await page.mouse.move(box.x + 4, box.y + 4)
-      await expect(tooltip).toBeVisible()
+      await expect(tooltip).toBeVisible() // test-quality-gate: allow-mount-only — content, placement, selection and dismissal are asserted below
       await expect(tooltip).toContainText(
         id.includes("motif")
           ? /home/
