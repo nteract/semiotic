@@ -543,7 +543,7 @@
     "@eslint/js": "^9.39.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@playwright/test": "1.61.1",
-    "@size-limit/file": "^12.1.0",
+    "@size-limit/file": "^14.1.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
