@@ -118,6 +118,30 @@ describe("chart placeholder sizing", () => {
   })
   afterEach(() => restoreCanvas())
 
+  for (const name of names.filter(name => name.startsWith("Realtime") || name === "TemporalHistogram")) {
+    const Chart = charts[name] as React.ComponentType<Record<string, unknown>>
+    for (const mode of ["primary", "context", "sparkline", "mobile"] as const) {
+      it(`${name} keeps the explicit size tuple after ${mode} responsive rules`, () => {
+        const props = {
+          ...emptyInputs,
+          mode,
+          size: [300, 180] as [number, number],
+          width: 700,
+          height: 600,
+          responsiveRules: [{ when: { maxWidth: 800 }, transform: { width: 200, height: 100 } }]
+        }
+        const size = resolveChartSize(name, props)
+        expect(size).toEqual({ width: 300, height: 180 })
+        const { container, getByText, rerender } = render(<Chart {...props} emptyContent={<span>No rows</span>} />)
+        expect(getByText("No rows").parentElement).toHaveStyle({ width: `${size.width}px`, height: `${size.height}px` })
+        rerender(<Chart {...props} loading loadingContent={<span>Fetching rows</span>} />)
+        expect(getByText("Fetching rows").parentElement).toHaveStyle({ width: `${size.width}px`, height: `${size.height}px` })
+        rerender(<Chart {...props} data={[{ time: 0, value: 4 }, { time: 10, value: 6 }]} />)
+        expect(container.querySelector(".stream-xy-frame")).toHaveStyle({ width: `${size.width}px`, height: `${size.height}px` })
+      })
+    }
+  }
+
   for (const name of names) {
     const Chart = charts[name] as React.ComponentType<Record<string, unknown>>
     for (const mode of ["primary", "context", "sparkline", "mobile"] as const) {

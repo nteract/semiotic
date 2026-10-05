@@ -50,7 +50,7 @@ import { refreshIdlePulse } from "./pulseFrameRefresh"
 import { resolveFrameGraphics } from "./frameGraphics"
 
 import { prepareCanvas, getDevicePixelRatio, syncCanvasSize, subscribeToCanvasFontInvalidation } from "./canvasSetup"
-import { buildHoverData, getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
+import { buildHoverData, getPointerHitRadius, resolveHistogramHoverXValue, type HoverPointerCoords } from "./hoverUtils"
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
@@ -683,7 +683,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
         : {}
       const xInvert = store.scales?.x?.invert
-      const xValue = typeof xInvert === "function" ? xInvert(posX) : undefined
+      const invertedX = typeof xInvert === "function" ? xInvert(posX) : undefined
+      const xValue = chartType === "bar"
+        ? resolveHistogramHoverXValue(hitDatum, invertedX)
+        : invertedX
       let hover: HoverData = buildHoverData(
         hitDatum,
         posX,
@@ -760,7 +763,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
       const xInvert = store.scales?.x?.invert
-      const xValue = typeof xInvert === "function" ? xInvert(hit.x) : undefined
+      const invertedX = typeof xInvert === "function" ? xInvert(hit.x) : undefined
+      const xValue = chartType === "bar"
+        ? resolveHistogramHoverXValue(rawDatum, invertedX)
+        : invertedX
       customClickBehavior(buildHoverData(
         rawDatum,
         hit.x,
@@ -788,14 +794,25 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         customHoverBehavior,
         customClickBehavior,
         scheduleRender,
-        decorateHover: tooltipMode === "multi"
-          ? (hover, store) => attachMultiHover(hover, store, hover.x, {
-              chartType,
-              xAccessor,
-              fallbackColor: themePrimaryRef.current,
-              maxXDistance: adjustedWidth,
-              hasHit: true,
-            })
+        decorateHover: tooltipMode === "multi" || chartType === "bar"
+          ? (hover, store) => {
+              if (chartType === "bar") {
+                hover = {
+                  ...hover,
+                  xValue: resolveHistogramHoverXValue(hover.data, store.scales?.x.invert?.(hover.x)),
+                  xPx: hover.x
+                }
+              }
+              return tooltipMode === "multi"
+                ? attachMultiHover(hover, store, hover.x, {
+                    chartType,
+                    xAccessor,
+                    fallbackColor: themePrimaryRef.current,
+                    maxXDistance: adjustedWidth,
+                    hasHit: true,
+                  })
+                : hover
+            }
           : undefined
       })
 

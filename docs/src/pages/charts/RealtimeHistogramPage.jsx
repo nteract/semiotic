@@ -1056,14 +1056,23 @@ import { TemporalHistogram } from "semiotic/realtime"
         <code>{"{ xValue: timestamp, locked: true }"}</code> to lock from a table,
         or <code>null</code> to clear. Click and Escape update the same lock.
       </p>
-      <CodeBlock language="tsx" code={`const [position, setPosition] = useState(null)
-const linkedHover = { name: "time", mode: "x-position", xField: "time" }
+      <CodeBlock language="tsx" code={`import { useState } from "react"
+import { LinkedCharts, type CrosshairPosition } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
+import { TemporalHistogram } from "semiotic/realtime"
 
-<LinkedCharts crosshair={{ name: "time", position, onPositionChange: setPosition }}>
-  <LineChart data={rows} xAccessor="time" yAccessor="value" linkedHover={linkedHover} />
-  <TemporalHistogram data={rows} binSize={10} binAlign="center" linkedHover={linkedHover} />
-  <HealthTable position={position} onPositionChange={setPosition} />
-</LinkedCharts>`} />
+function HealthCharts({ rows }: { rows: { time: number; value: number }[] }) {
+  const [position, setPosition] = useState<CrosshairPosition | null>(null)
+  const linkedHover = { name: "time", mode: "x-position" as const, xField: "time" }
+
+  return (
+    <LinkedCharts crosshair={{ name: "time", position, onPositionChange: setPosition }}>
+      <LineChart data={rows} xAccessor="time" yAccessor="value" linkedHover={linkedHover} />
+      <TemporalHistogram data={rows} binSize={10} binAlign="center" linkedHover={linkedHover} />
+      <HealthTable position={position} onPositionChange={setPosition} />
+    </LinkedCharts>
+  )
+}`} />
       <p>
         Passing <code>position</code> makes the named crosshair controlled:
         <code>null</code> hides it and <code>undefined</code> uses internal state.

@@ -71,6 +71,10 @@ describe("public chart size resolution", () => {
     for (const chart of [
       "RealtimeHistogram",
       "TemporalHistogram",
+      "RealtimeHeatmap",
+      "RealtimeLineChart",
+      "RealtimeSwarmChart",
+      "RealtimeWaterfallChart",
       "PhysicsCustomChart",
       "GaltonBoardChart"
     ] as const) {
@@ -78,7 +82,8 @@ describe("public chart size resolution", () => {
         resolveChartSize(chart, {
           mode: "sparkline",
           size: [300, 180],
-          width: 700
+          width: 700,
+          responsiveRules: [{ when: { maxWidth: 800 }, transform: { width: 200, height: 100 } }]
         })
       ).toEqual({ width: 300, height: 180 })
     }

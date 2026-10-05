@@ -133,8 +133,8 @@ export function resolveChartSize(
     },
     CHART_PRIMARY_SIZES[chart]
   )
-  let width = physics && tuple ? tuple[0] : resolved.width
-  let height = physics && tuple ? tuple[1] : resolved.height
+  let width = tuple ? tuple[0] : resolved.width
+  let height = tuple ? tuple[1] : resolved.height
   if (p.responsiveWidth && p.containerSize?.width !== undefined)
     width = resolveResponsiveDimension(p.containerSize.width)
   if (p.responsiveHeight && p.containerSize?.height !== undefined)

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildHoverData, getPointerHitRadius } from "./hoverUtils"
+import { buildHoverData, getPointerHitRadius, resolveHistogramHoverXValue } from "./hoverUtils"
 
 describe("getPointerHitRadius", () => {
   it("expands touch targets without changing mouse precision", () => {
@@ -57,10 +57,16 @@ describe("buildHoverData", () => {
   })
 })
 
-it("reports exact bin centers for pointer, click, and keyboard hover producers", () => {
+it("preserves authored coordinates even when ordinary data has bin fields", () => {
+  const datum = { binStart: 0, binEnd: 10, total: 4 }
+  expect(buildHoverData(datum, 50, 60, { xValue: 0 }).xValue).toBe(0)
+  expect(buildHoverData(datum, 50, 60).xValue).toBeUndefined()
+})
+
+it("resolves temporal histogram centers independently of clipped or rounded pixels", () => {
   const datum = { binStart: -5, binEnd: 5, total: 4 }
-  expect(buildHoverData(datum, 110, 155, { xValue: -8.881784197001252e-16 }).xValue).toBe(0)
+  expect(resolveHistogramHoverXValue(datum, -8.881784197001252e-16)).toBe(0)
   // Clipping changes the visual bar center, but not the bin's timestamp.
-  expect(buildHoverData(datum, 25, 50, { xValue: 2.5 }).xValue).toBe(0)
-  expect(buildHoverData(datum, 25, 50, { xValue: new Date(2) }).xValue).toEqual(new Date(0))
+  expect(resolveHistogramHoverXValue(datum, 2.5)).toBe(0)
+  expect(resolveHistogramHoverXValue(datum, new Date(2))).toEqual(new Date(0))
 })

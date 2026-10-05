@@ -1,6 +1,32 @@
 import { expect, test } from "@playwright/test"
 
 for (const mode of ["bounded", "push", "uncontrolled"]) {
+  test(`${mode} keyboard focus and activation share histogram timestamps`, async ({ page }) => {
+    await page.goto(`/chart-features-examples/?linked-crosshair-control&${mode}`)
+    const histogram = page.getByTestId("linked-histogram")
+    const line = page.getByTestId("linked-line")
+    const state = page.getByTestId("crosshair-state")
+    const frame = histogram.locator(".stream-xy-frame")
+    await frame.focus()
+    await page.keyboard.press("ArrowRight")
+    await expect(state).toHaveText("0:false")
+    await expect(histogram.locator(".stream-frame-tooltip")).toHaveText("Total 4")
+    await expect(line.locator('[data-semiotic-crosshair="hover"]')).toHaveAttribute("x1", "110")
+    await page.keyboard.press("ArrowRight")
+    await expect(state).toHaveText("10:false")
+    await expect(line.locator('[data-semiotic-crosshair="hover"]')).toHaveAttribute("x1", "330")
+    await page.keyboard.press("Enter")
+    await expect(state).toHaveText("10:true")
+    await expect(line.locator('[data-semiotic-crosshair="locked"]')).toHaveAttribute("x1", "330")
+    await expect(histogram.locator('[data-semiotic-crosshair="locked"]')).toHaveAttribute("x1", "330")
+    await page.keyboard.press("ArrowRight")
+    await expect(state).toHaveText("10:true")
+    await page.keyboard.press("Escape")
+    await expect(state).toHaveText("none")
+    await expect(histogram.locator(".stream-frame-tooltip")).toHaveCount(0)
+    await expect(line.locator("[data-semiotic-crosshair]")).toHaveCount(0)
+  })
+
   test(`${mode} centered bins coordinate hover and locks with tables`, async ({
     page
   }) => {

@@ -94,7 +94,8 @@ describe("CandlestickChart", () => {
 
   it("preserves push mode and emptyContent opt-out", () => {
     const { container, rerender } = render(<CandlestickChart />)
-    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    expect(lastXYFrameProps.data).toBeUndefined()
+    expect(lastXYFrameProps.size).toEqual([600, 400])
     rerender(<CandlestickChart data={[]} emptyContent={false} />)
     expect(container.textContent).not.toContain("No data available")
   })

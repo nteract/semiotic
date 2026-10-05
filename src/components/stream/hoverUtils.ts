@@ -49,18 +49,19 @@ export function buildHoverData(
   extra?: Partial<HoverData>
 ): HoverData {
   const datum = normalizeHoverDatum(rawDatum)
-  const xValue = resolveHistogramHoverXValue(datum, extra?.xValue)
   return {
     data: datum,
     x,
     y,
     __semioticHoverData: true,
     ...extra,
-    ...(xValue !== undefined ? { xValue } : {}),
   }
 }
 
-/** Histogram timestamps come from bin boundaries, independent of clipping or pixel-rounding. */
+/**
+ * Temporal histogram producers use bin boundaries, independent of clipping or
+ * pixel-rounding. Other charts may author these fields and must keep their x.
+ */
 export function resolveHistogramHoverXValue(
   datum: Datum | null | undefined,
   fallback: HoverData["xValue"]
