@@ -1,9 +1,12 @@
 "use client"
 import * as React from "react"
 import { PhysicsCustomChart } from "../../charts/physics/PhysicsCustomChart"
+import { NetworkCustomChart } from "../../charts/custom/NetworkCustomChart"
+import { resolveNetworkPerspective } from "../../stream/networkPerspective"
 import { useSelection } from "../../store/useSelection"
 import {
   flowCircuitChartProps,
+  flowCircuitNetworkChartProps,
   type FlowCircuitChartProps
 } from "./flowCircuitChartProps"
 
@@ -41,6 +44,12 @@ export function FlowCircuitChart(props: FlowCircuitChartProps) {
       props.circuit.modules.some((module) => module.nodeId === id)
     )
       props.onSelectNode?.(id)
+  }
+  if (resolveNetworkPerspective(props.perspective)) {
+    return <NetworkCustomChart
+      {...flowCircuitNetworkChartProps({ ...props, layoutSelection: chartProps.layoutConfig.layoutSelection })}
+      onClick={(datum) => selectNode(datum?.id)}
+    />
   }
   return (
     <PhysicsCustomChart

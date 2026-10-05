@@ -13,6 +13,15 @@ const tooltip = (page: Page) => page.locator(".stream-network-tooltip")
 async function hostPoint(page: Page, label: RegExp) {
   const badge = page.locator("div").filter({ hasText: label }).last()
   await expect(badge).toBeVisible()
+  // Extras can start the initial projection tween after labels first appear.
+  // Read the settled anchor before targeting a mark; the hover assertions below
+  // still exercise real projected node and edge hit tests.
+  await expect.poll(async () => {
+    const before = (await badge.boundingBox())!
+    await page.waitForTimeout(100)
+    const after = (await badge.boundingBox())!
+    return Math.hypot(after.x - before.x, after.y - before.y)
+  }).toBeLessThan(0.05)
   const box = (await badge.boundingBox())!
   // Badges sit 58px right of and 34px above the ground point; the
   // pictogram's body is ~20px above that point.

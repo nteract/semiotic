@@ -144,7 +144,7 @@ async function createCjsBundle(options = {}) {
     name: `${name}:cjs`,
     format: "cjs",
     splitting: false,
-    esbuildPlugins: [nodeStaticMarkupSourcePlugin(), ...esbuildPlugins],
+    esbuildPlugins: [nodeStaticMarkupSourcePlugin(), externalizePerspectivePlacementPlugin(true), ...esbuildPlugins],
     noExternal: esbuildPlugins.length > 0 ? ["d3-geo"] : undefined,
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
@@ -193,6 +193,7 @@ async function createSharedEsmGroup({
     metafile: analyze,
     esbuildPlugins: [
       ...(serverOnly ? [nodeStaticMarkupSourcePlugin()] : []),
+      externalizePerspectivePlacementPlugin(),
       ...esbuildPlugins
     ],
     // Public ESM entries retain the package's historical `.module.min.js`
@@ -228,6 +229,19 @@ async function createSharedEsmGroup({
   )
   if (analyze) {
     console.log("\ud83d\udcca Bundle metafile saved under dist/ (tsup default)")
+  }
+}
+
+/** Recipes and public placement exports must retain component type identity. */
+function externalizePerspectivePlacementPlugin(cjs = false) {
+  return {
+    name: "externalize-perspective-placement",
+    setup(build) {
+      build.onResolve({ filter: /\/networkPerspectivePlacement$/ }, () => ({
+        path: cjs ? "./semiotic-network-placement.min.js" : "./semiotic-network-placement.module.min.js",
+        external: true
+      }))
+    }
   }
 }
 
@@ -1386,6 +1400,16 @@ async function build() {
       name: "semiotic-evidence",
       analyze: false,
       minify
+    },
+    {
+      input: "src/components/semiotic-network-perspective-core.ts",
+      name: "semiotic-network-perspective-core",
+      minify
+    },
+    {
+      input: "src/components/semiotic-vite.ts",
+      name: "semiotic-vite",
+      minify
     }
   ]
 
@@ -1394,6 +1418,20 @@ async function build() {
   const bundledEntries = bundles.map(applyGeneratedMetadata)
 
   buildDeclarations()
+
+  // Private, inert placement module shared by browser, server and recipes.
+  // The entry path has an extension, so the externalization hook only catches
+  // imports from other modules, never this entry itself.
+  await createSharedEsmGroup({
+    entries: { "semiotic-network-placement": "src/components/stream/networkPerspectivePlacement.tsx" },
+    minify,
+    groupName: "network-placement"
+  })
+  await createCjsBundle({
+    input: "src/components/stream/networkPerspectivePlacement.tsx",
+    name: "semiotic-network-placement",
+    minify
+  })
 
   // ── ESM: multi-entry groups with shared chunks ─────────────────────────
   // Client chart/AI entries share Stream frames; server entries share SSR

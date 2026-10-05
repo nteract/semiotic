@@ -152,6 +152,8 @@ export interface NetworkPerspectiveConfig {
    * cast a shadow. `0` draws flat pieces. @default 6
    */
   thickness?: number
+  /** Token side walls: shaded facets or a single flat rim for compact SVG exports. @default "faceted" */
+  tokenRim?: "faceted" | "flat"
   /** Shadow under every edge, `thickness` below it. @default true when `thickness` > 0 */
   edgeShadow?: boolean | { color?: string; opacity?: number }
   /**
@@ -338,7 +340,9 @@ export function buildNetworkPerspectiveFrame(
       return [(d * px - c * py) / det, (a * py - b * px) / det]
     },
     depth: (x, y, z = 0) => b * x + d * y + f + z * 1e-3,
-    groundTransform: `matrix(${matrix.map(round).join(" ")})`,
+    // Coefficient error grows with distance from the origin. Keep the same
+    // affine map used by project(), including for very wide custom layouts.
+    groundTransform: `matrix(${matrix.join(" ")})`,
     billboardTransform(x, y, z = 0) {
       const [px, py] = project(x, y, z)
       return `translate(${round(px)},${round(py)})`
@@ -372,4 +376,3 @@ export function blendNetworkPerspectiveFrames(
     to.bounds
   )
 }
-

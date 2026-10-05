@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 300,
+    "kb": 303,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 143,
+    "kb": 145,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 182,
+    "kb": 184,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 135,
+    "kb": 136,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 176,
+    "kb": 178,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 182,
+    "kb": 184,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -68,48 +68,58 @@ const bundleSizeRows = Object.freeze([
     "blurb": "Isometric pictograms and an accessible perspective toggle (the prop ships in ./network)"
   },
   {
+    "importPath": "semiotic/network/perspective/core",
+    "kb": 3,
+    "blurb": "Projection sizing, resolution, and SVG placement helpers"
+  },
+  {
+    "importPath": "semiotic/vite",
+    "kb": 1,
+    "blurb": "Build plugin for unused Semiotic worker assets"
+  },
+  {
     "importPath": "semiotic/geo",
-    "kb": 111,
+    "kb": 112,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 209,
+    "kb": 211,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 208,
+    "kb": 210,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
     "importPath": "semiotic/realtime/react",
-    "kb": 1,
+    "kb": 2,
     "blurb": "Stream status and synced push hooks"
   },
   {
     "importPath": "semiotic/server",
-    "kb": 263,
+    "kb": 265,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 263,
+    "kb": 265,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 271,
+    "kb": 273,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 104,
+    "kb": 107,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 96,
+    "kb": 98,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -124,7 +134,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 112,
+    "kb": 113,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -144,7 +154,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes/react",
-    "kb": 7,
+    "kb": 8,
     "blurb": "ThemeProvider/useTheme and hooks"
   },
   {
@@ -159,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 170,
+    "kb": 172,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -174,7 +184,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 641,
+    "kb": 643,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -199,7 +209,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 419,
+    "kb": 422,
     "blurb": "Full chart API and shared utilities"
   }
 ])

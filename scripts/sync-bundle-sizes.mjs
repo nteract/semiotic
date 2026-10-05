@@ -73,6 +73,8 @@ const BLURBS = {
     "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more",
   "./network/zoom":
     "Optional virtual network viewport, camera controls and consumer-owned LOD",
+  "./network/perspective/core": "Projection sizing, resolution, and SVG placement helpers",
+  "./vite": "Build plugin for unused Semiotic worker assets",
   "./network/perspective":
     "Isometric pictograms and an accessible perspective toggle (the prop ships in ./network)",
   "./geo": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
@@ -134,6 +136,8 @@ const ORDER = [
   "./network",
   "./network/zoom",
   "./network/perspective",
+  "./network/perspective/core",
+  "./vite",
   "./geo",
   "./realtime",
   "./realtime/core",

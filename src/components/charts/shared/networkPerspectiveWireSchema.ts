@@ -35,6 +35,7 @@ const CONFIG_SCHEMA = {
     elevationGuides: FLAG_OR_OBJECT,
     depthSort: BOOLEAN,
     thickness: NUMBER,
+    tokenRim: { enum: ["faceted", "flat"] },
     edgeShadow: FLAG_OR_OBJECT,
     marks: { enum: ["token", "billboard", "ground", "extrude"] },
     anchor: { enum: ["center", "feet"] },

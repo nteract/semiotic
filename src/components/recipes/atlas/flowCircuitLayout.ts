@@ -1,5 +1,9 @@
 import * as React from "react"
-import type { PhysicsCustomLayout } from "../../charts/physics/PhysicsCustomChart"
+import type { Datum } from "../../charts/shared/datumTypes"
+import type { PhysicsCustomLayout, PhysicsCustomLayoutContext, PhysicsCustomLayoutResult } from "../../charts/physics/PhysicsCustomChart"
+import type { NetworkCustomLayout, NetworkLayoutResult } from "../../stream/networkCustomLayout"
+import type { NetworkSceneEdge } from "../../stream/networkTypes"
+import { NetworkPerspectiveGround } from "../../stream/networkPerspectivePlacement"
 import { processLaneWalls } from "../processPhysics"
 import { mulberry32 as seededRandom } from "../random"
 import { layoutFlowCircuit, circuitRoutePoint } from "./flowCircuitGeometry"
@@ -41,7 +45,15 @@ const h = React.createElement
 export const flowCircuitLayout: PhysicsCustomLayout<
   { id: string },
   FlowCircuitLayoutConfig
-> = (ctx) => {
+> = (ctx) => buildCircuit(ctx, false)
+
+/** The same fixed apparatus through the network projection and hit-test stage. */
+export const flowCircuitNetworkLayout: NetworkCustomLayout<FlowCircuitLayoutConfig> = (ctx) => buildCircuit(ctx, true)
+
+type CircuitContext = Pick<PhysicsCustomLayoutContext<{ id: string }, FlowCircuitLayoutConfig>, "config" | "dimensions" | "theme">
+function buildCircuit(ctx: CircuitContext, network: true): NetworkLayoutResult
+function buildCircuit(ctx: CircuitContext, network: false): PhysicsCustomLayoutResult
+function buildCircuit(ctx: CircuitContext, network: boolean): NetworkLayoutResult | PhysicsCustomLayoutResult {
   const { circuit, edition, reading, selection } = ctx.config
   if (
     reading.editionId !== edition.id ||
@@ -142,7 +154,10 @@ export const flowCircuitLayout: PhysicsCustomLayout<
     bodyCollisions: false,
     datum: circuitModuleDatum(circuit, edition, reading, region.module)
   }))
-  return {
+  const sceneEdges: NetworkSceneEdge[] = []
+  const semanticItems = circuitSemanticItems(circuit, geometry, edition, reading)
+  const semanticById = network ? new Map(semanticItems.map((item) => [item.id, item])) : null
+  const result: PhysicsCustomLayoutResult = {
     bodies,
     config: {
       kernel: {
@@ -183,7 +198,7 @@ export const flowCircuitLayout: PhysicsCustomLayout<
         height: region.sensor.height
       }
     })),
-    semanticItems: circuitSemanticItems(circuit, geometry, edition, reading),
+    semanticItems,
     backgroundOverlays: h(
       "svg",
       overlayProps,
@@ -223,6 +238,21 @@ export const flowCircuitLayout: PhysicsCustomLayout<
             : flow.unit === "attempts"
               ? "att"
               : "roots"
+        if (network) {
+          const semantic = semanticById!.get(`pipe:${route.edgeId}`)!
+          sceneEdges.push({
+            type: "curved", pathD: route.pathD, datum: semantic.datum as Datum,
+            id: route.edgeId, label: semantic.label,
+            accessibility: { label: `${semantic.label}. ${semantic.description}` },
+            style: {
+              stroke,
+              strokeWidth: flow.perSecond === null ? 1.5 : 1 + (flow.perSecond / maxFlow) * 7,
+              strokeDasharray: flow.perSecond === null ? "4 3" : undefined,
+              fill: "none",
+              opacity: (flow.perSecond === 0 ? 0.35 : 0.75) * Math.max(nodeOpacity(route.source), nodeOpacity(route.target))
+            }
+          })
+        }
         return h(
           "g",
           {
@@ -243,7 +273,7 @@ export const flowCircuitLayout: PhysicsCustomLayout<
             null,
             `${route.edgeId}: ${route.source} → ${route.target}; ${flow.perSecond ?? "unmeasured"} ${flow.unit}/s`
           ),
-          h("path", {
+          !network && h("path", {
             d: route.pathD,
             stroke,
             strokeWidth:
@@ -319,5 +349,23 @@ export const flowCircuitLayout: PhysicsCustomLayout<
         `${edition.kind === "modeled" ? "Modeled" : "Observed"} · ${reading.observedAt}s · pipe width = transferred volume/s · individual timings unavailable`
       )
     )
+  }
+  if (!network) return result
+  // Physics overlays own SVG shells; the network host already owns its SVG.
+  const contents = (node: React.ReactNode) => (node as React.ReactElement<{ children: React.ReactNode }>).props.children
+  return {
+    sceneNodes: bodies.map((body) => {
+      const semantic = semanticById!.get(body.id)!
+      return {
+        type: "rect", id: body.id, x: body.x - body.shape.width / 2, y: body.y - body.shape.height / 2,
+        w: body.shape.width, h: body.shape.height, datum: body.datum,
+        label: semantic.label, accessibility: { label: `${semantic.label}. ${semantic.description}` },
+        style: { fill: surface, stroke: circuitColors.muted, strokeWidth: 1, opacity: nodeOpacity(body.id) }
+      }
+    }),
+    sceneEdges,
+    overlays: h(NetworkPerspectiveGround, { z: "top" }, contents(result.backgroundOverlays), contents(result.overlays)),
+    perspective: "manual",
+    perspectiveBounds: [{ x: 0, y: 0, width: geometry.width, height: geometry.height, z: "top" }]
   }
 }

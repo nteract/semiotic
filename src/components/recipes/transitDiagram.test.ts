@@ -1,4 +1,5 @@
 import { createElement } from "react"
+import * as recipeUtils from "./recipeUtils"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 import type {
@@ -57,7 +58,7 @@ describe("computeTransitDiagramPositions", () => {
       id: `station-${i}`,
       data: { i }
     }))
-    const comparisons = vi.spyOn(String.prototype, "localeCompare")
+    const comparisons = vi.spyOn(recipeUtils, "compareRecipeIds")
     let result: ReturnType<typeof computeTransitDiagramPositions>
     let count: number
     try {
@@ -68,6 +69,7 @@ describe("computeTransitDiagramPositions", () => {
     } finally {
       comparisons.mockRestore()
     }
+    expect(count!).toBeGreaterThan(0)
     expect(count!).toBeLessThan(100000)
     expect(result!.positions.size).toBe(nodes.length)
     for (const position of result!.positions.values()) {
@@ -82,6 +84,22 @@ describe("computeTransitDiagramPositions", () => {
       { layoutMode: "automatic" }
     )
     expect([...reversed.positions]).toEqual([...result!.positions])
+  })
+
+  it("breaks automatic-layout ties by code point without locale dependence", () => {
+    const ids = ["é", "z", "a", "Z", "ä", "A"]
+    const nodes = ids.map((id) => ({ id, data: { id } }))
+    const locale = vi.spyOn(String.prototype, "localeCompare").mockImplementation(() => {
+      throw new Error("Layout must not use locale-dependent ordering")
+    })
+    try {
+      const first = computeTransitDiagramPositions(nodes, [], plot, { layoutMode: "automatic" })
+      const second = computeTransitDiagramPositions([...nodes].reverse(), [], plot, { layoutMode: "automatic" })
+      expect([...first.positions]).toEqual([...second.positions])
+      expect([...first.positions.keys()]).toEqual([...ids].sort(recipeUtils.compareRecipeIds))
+    } finally {
+      locale.mockRestore()
+    }
   })
 
   it("fits complete authored coordinates into the plot", () => {

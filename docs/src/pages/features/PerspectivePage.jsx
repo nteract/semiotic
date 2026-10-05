@@ -607,6 +607,82 @@ function Beacon({ x, y }) {
 }`}
       />
 
+      <h2 id="canvas-size">Size the canvas for the projection</h2>
+      <p>
+        <code>getNetworkPerspectiveSize(perspective, [groundWidth, groundHeight], bounds?)</code>
+        returns the screen plot size needed at scale 1, including thickness, declared decoration
+        bounds and fit padding. Add chart margins to obtain the outer width and height.
+        <code>fit: "contain"</code> still only shrinks: keep your layout's ground dimensions
+        fixed when using the returned screen dimensions. The helper cannot infer node elevations,
+        token radii or custom chrome; include those in the bounds argument. Upright extents are
+        screen pixels; ground boxes are projected.
+      </p>
+      <CodeBlock language="jsx" code={`import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"
+import { lineageDagLayout } from "semiotic/recipes"
+
+const groundSize = [1600, 400]
+const perspective = { type: "isometric", fitPadding: 12 }
+const groundLayout = (ctx) => lineageDagLayout({
+  ...ctx,
+  dimensions: {
+    ...ctx.dimensions,
+    width: groundSize[0], height: groundSize[1],
+    plot: { x: 0, y: 0, width: groundSize[0], height: groundSize[1] }
+  }
+})
+const [width, height] = getNetworkPerspectiveSize(perspective, groundSize)
+// Pass width, height, margin={0}, layout={groundLayout}, and perspective
+// to NetworkCustomChart. Include layout bounds for any overhanging chrome.`} />
+      <p>
+        <code>lineageDagLayout</code> and <code>transitDiagramLayout</code> accept
+        <code>chromePlacement: "ground"</code> to print their card or station content on the
+        projected top surface. The default <code>"upright"</code> keeps it readable at a constant
+        pixel size. Lineage includes its card bounds automatically. For a custom transit station
+        larger than its radius, supply <code>stationBounds(info)</code> returning
+        <code>[left, right, top, bottom]</code>. Lineage also accepts
+        <code>showArrowheads: false</code> when the host supplies its own terminators.
+      </p>
+      <p>
+        <code>MotifBraidChart</code>, <code>DependencyForestChart</code> and
+        <code>FlowCircuitChart</code> from <code>semiotic/atlas</code> accept the same
+        <code>perspective</code> prop in React and static rendering. Flow Circuit projects the
+        fixed apparatus and tape readings through a network frame; use its
+        <code>networkFrameProps</code> for projected view options such as zoom. Its existing
+        <code>frameProps</code> configures the flat physics view.
+      </p>
+
+      <h2 id="svg-export">SVG export and build integration</h2>
+      <p>
+        Set <code>perspective.tokenRim: "flat"</code> for one uniformly shaded rim per token
+        instead of a faceted rim. A circular token then uses two paths (rim and top), which is
+        easier to edit in design tools. The default remains <code>"faceted"</code>.
+        Projected geometry carries <code>data-perspective-part</code>: <code>edge</code>,
+        <code>edge-shadow</code>, <code>node-shadow</code>, <code>elevation-guide</code>,
+        <code>slab-top</code>, <code>slab-face</code>, <code>token-top</code>,
+        <code>token-rim</code>, <code>ground-grid</code>, and the <code>plate-</code> or
+        <code>region-</code> roles <code>top</code>, <code>face</code> and <code>outline</code>.
+        Node facets also carry <code>data-perspective-face</code>. Select by these roles and parse
+        standard SVG path commands: spacing and comma choices in path strings are not an API.
+      </p>
+      <p>
+        Placement matrices retain full coefficient precision. Static SVG coordinate precision
+        still rounds positions, but keeps at least eight decimals in matrix coefficients and
+        transform angles so wide charts stay registered. Placement components share identity
+        across the network, perspective and recipe entry points within ESM or CommonJS.
+      </p>
+      <p>
+        Import helpers alone from <code>semiotic/network/perspective/core</code> for a narrow bundle.
+        Vite 7 emits some worker assets before tree shaking; add <code>semioticVite()</code> to
+        remove unreferenced Semiotic worker files. Used workers keep their external URLs.
+        Vite 8 already removes these unused workers. The plugin recognizes Semiotic's standard
+        worker filenames, with or without Vite's content hashes; preserve their names if you
+        customize asset naming.
+      </p>
+      <CodeBlock language="js" code={`import { defineConfig } from "vite"
+import { semioticVite } from "semiotic/vite"
+
+export default defineConfig({ plugins: [semioticVite()] })`} />
+
       <h2 id="rendering">Server rendering and loading</h2>
       <p>
         <code>renderToStaticSVG</code>, <code>renderChart</code> and MCP render every perspective

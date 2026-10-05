@@ -81,6 +81,12 @@
       "require": "./dist/semiotic-network-perspective.min.js",
       "default": "./dist/semiotic-network-perspective.module.min.js"
     },
+    "./network/perspective/core": {
+      "types": "./dist/semiotic-network-perspective-core.d.ts",
+      "import": "./dist/semiotic-network-perspective-core.module.min.js",
+      "require": "./dist/semiotic-network-perspective-core.min.js",
+      "default": "./dist/semiotic-network-perspective-core.module.min.js"
+    },
     "./realtime": {
       "types": "./dist/semiotic-realtime.d.ts",
       "import": "./dist/realtime.module.min.js",
@@ -281,6 +287,12 @@
       "require": "./dist/semiotic-value.min.js",
       "default": "./dist/semiotic-value.module.min.js"
     },
+    "./vite": {
+      "types": "./dist/semiotic-vite.d.ts",
+      "import": "./dist/semiotic-vite.module.min.js",
+      "require": "./dist/semiotic-vite.min.js",
+      "default": "./dist/semiotic-vite.module.min.js"
+    },
     "./spec/*": "./spec/*",
     "./package.json": "./package.json"
   },
@@ -397,7 +409,7 @@
     "typescript:tests": "node scripts/check-test-types.mjs",
     "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "size": "node --test scripts/lib/minify-library-chunk.test.mjs scripts/lib/strip-pure-bare-imports.test.mjs scripts/network-zoom-bundle.test.mjs scripts/treeshake-isolation.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "size": "node --test scripts/lib/minify-library-chunk.test.mjs scripts/lib/strip-pure-bare-imports.test.mjs scripts/network-zoom-bundle.test.mjs scripts/treeshake-isolation.test.mjs scripts/network-perspective-package.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
     "check:network-zoom-bundle": "node --test scripts/network-zoom-bundle.test.mjs",
     "check:treeshake-isolation": "node --test scripts/treeshake-isolation.test.mjs",
     "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",

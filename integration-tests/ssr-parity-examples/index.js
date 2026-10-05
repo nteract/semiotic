@@ -1,6 +1,7 @@
 import * as Semiotic from "../../dist/semiotic.module.min.js"
 import * as SemioticGeo from "../../dist/geo.module.min.js"
 import { MotifBraidChart, DependencyForestChart, FlowCircuitChart } from "semiotic/atlas"
+import { prepareMotifBraid } from "semiotic/atlas/core"
 import { LinkedCharts } from "semiotic/ai"
 import * as SemioticPhysics from "../../dist/physics.module.min.js"
 import * as SemioticRecipes from "../../dist/semiotic-recipes.module.min.js"
@@ -40,6 +41,32 @@ if (requestedCase && selectedCases.length === 0) {
   throw new Error(`Unknown SSR/CSR parity fixture: ${requestedCase}`)
 }
 
+function ProjectedAtlasCase({ Component, fixture }) {
+  const [width, setWidth] = React.useState(1100)
+  const [camera, setCamera] = React.useState({ x: 0, y: 0, k: 1 })
+  const [selected, setSelected] = React.useState("")
+  const props = fixture.props
+  const nodeId = fixture.component === "MotifBraidChart"
+    ? (() => { const first = prepareMotifBraid(props.atlas).groups[0]; return `vertex:${first.partition ?? "all"}:${first.signature.split(">")[0]}` })()
+    : fixture.component === "DependencyForestChart" ? "X" : "inventory"
+  const frameProps = { viewTransform: camera }
+  return React.createElement(React.Fragment, null,
+    React.createElement("button", { onClick: () => setWidth(900) }, "Resize projected chart"),
+    React.createElement("button", { onClick: () => setCamera({ x: -40, y: -20, k: 1.15 }) }, "Pan and zoom projected chart"),
+    React.createElement("output", { "data-testid": "projected-selection" }, selected),
+    React.createElement(Component, {
+      ...props, width, perspective: "isometric",
+      ...(fixture.component === "FlowCircuitChart" ? { networkFrameProps: frameProps } : { frameProps }),
+      ...(fixture.component === "MotifBraidChart"
+        ? { onClick: (datum) => setSelected(String(datum.id)) }
+        : { onSelectNode: setSelected }),
+      annotations: [{ type: "widget", nodeId, dx: 0, dy: 0, width: 1, height: 1,
+        content: React.createElement("span", { "data-testid": "projected-node-anchor", style: { pointerEvents: "none" } }) }]
+    })
+  )
+}
+
+const projected = new URLSearchParams(window.location.search).has("projected")
 const examples = selectedCases.map((c) => {
   const Component = COMPONENTS[c.component]
   if (!Component) {
@@ -50,7 +77,7 @@ const examples = selectedCases.map((c) => {
   // Apply the same explicit animation setting to every CSR fixture; the
   // server renderer receives it from the spec as well.
   const linkedHover = linkedNode ? { name: "atlas-hover", fields: ["nodeId"] } : undefined
-  const chart = React.createElement(Component, {
+  const chart = projected ? React.createElement(ProjectedAtlasCase, { Component, fixture: c }) : React.createElement(Component, {
     ...c.props, animate: false,
     ...(linkedHover && {
       linkedHover,

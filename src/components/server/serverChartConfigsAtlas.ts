@@ -3,7 +3,10 @@ import { networkCustomChart } from "./serverChartConfigsCustom"
 import { physicsCustomChart } from "./serverChartConfigsPhysics"
 import { motifBraidChartProps } from "../recipes/atlas/motifBraidChartProps"
 import { dependencyForestChartProps } from "../recipes/atlas/dependencyForestChartProps"
-import { flowCircuitChartProps } from "../recipes/atlas/flowCircuitChartProps"
+import { flowCircuitChartProps, flowCircuitNetworkChartProps } from "../recipes/atlas/flowCircuitChartProps"
+import { resolveNetworkPerspective } from "../stream/networkPerspective"
+import { renderNetworkFrame } from "./staticNetwork"
+import { renderPhysicsFrame } from "./staticPhysics"
 
 /** Delegate to the same prepared reader props and custom layouts as React. */
 function atlasConfig<P>(
@@ -26,6 +29,7 @@ function atlasConfig<P>(
         colorScheme,
         {
           ...common,
+          ...props.frameProps as Record<string, unknown>,
           title: props.title,
           description: props.description,
           summary: props.summary,
@@ -46,7 +50,19 @@ export const dependencyForestChart = atlasConfig(
   dependencyForestChartProps,
   { top: 12, right: 24, bottom: 12, left: 12 }
 )
-export const flowCircuitChart = atlasConfig(
+const flatFlowCircuit = atlasConfig(
   physicsCustomChart,
   flowCircuitChartProps
 )
+const projectedFlowCircuit = atlasConfig(networkCustomChart, flowCircuitNetworkChartProps)
+export const flowCircuitChart: ChartConfig = {
+  ...flatFlowCircuit,
+  resolveFrameType: (props) => props._projectedCircuit ? "network" : "physics",
+  buildProps: (...args) => {
+    const projected = resolveNetworkPerspective(args[4].perspective)
+    return { ...(projected ? projectedFlowCircuit : flatFlowCircuit).buildProps(...args), _projectedCircuit: Boolean(projected) }
+  },
+  renderStatic: (props, sink) => props._projectedCircuit
+    ? renderNetworkFrame(props as Parameters<typeof renderNetworkFrame>[0], sink)
+    : renderPhysicsFrame(props as Parameters<typeof renderPhysicsFrame>[0], sink)
+}

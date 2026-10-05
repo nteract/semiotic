@@ -9,6 +9,7 @@ import {
   FLAT_NETWORK_PERSPECTIVE_FRAME,
   resolveNetworkPerspective,
   type NetworkPerspective,
+  type NetworkPerspectiveBound,
   type NetworkPerspectiveAccessor,
   type NetworkPerspectiveFrame,
   type ResolvedNetworkPerspective
@@ -142,6 +143,40 @@ export function createNetworkPerspectiveFrame(
   return fitNetworkPerspectiveFrame(resolved, size, samples)
 }
 
+/**
+ * Screen size needed to project a ground rectangle at scale 1, including piece
+ * thickness, fitPadding and optional decoration bounds. Use the returned size
+ * for the canvas while keeping the layout's ground dimensions unchanged.
+ * Declare token radii/custom chrome as fixed `extent` bounds; this helper does
+ * not infer mark geometry, elevation accessors, labels, or regions from data.
+ */
+export function getNetworkPerspectiveSize(
+  perspective: NetworkPerspective | null | undefined,
+  groundSize: readonly [number, number],
+  bounds: readonly NetworkPerspectiveBound[] = []
+): [number, number] {
+  const [width, height] = groundSize
+  if (![width, height].every((n) => Number.isFinite(n) && n >= 0)) {
+    throw new RangeError("Ground dimensions must be finite, non-negative numbers")
+  }
+  const resolved = resolveNetworkPerspective(perspective)
+  if (!resolved) return [width, height]
+  const samples = new PerspectiveFitSamples(resolved)
+  const thickness = Math.max(0, Number.isFinite(resolved.config.thickness) ? resolved.config.thickness! : 6)
+  for (const x of [0, width]) for (const y of [0, height]) {
+    samples.add(x, y)
+    samples.add(x, y, thickness)
+  }
+  for (const bound of bounds) {
+    const z = bound.z === "top" || ("extent" in bound && bound.z == null) ? thickness : bound.z ?? 0
+    if ("extent" in bound) samples.add(bound.x, bound.y, z, ...bound.extent)
+    else for (const x of [bound.x, bound.x + bound.width]) for (const y of [bound.y, bound.y + bound.height]) samples.add(x, y, z)
+  }
+  const [x0, x1] = span(samples.sx, samples.left, samples.right, 1)
+  const [y0, y1] = span(samples.sy, samples.top, samples.bottom, 1)
+  return [Math.ceil(x1 - x0 + 2 * resolved.fitPadding), Math.ceil(y1 - y0 + 2 * resolved.fitPadding)]
+}
+
 /** The raw user datum behind a scene datum (`node.data ?? node`). */
 export function rawPerspectiveDatum(datum: unknown): Record<string, unknown> | null {
   if (!datum || typeof datum !== "object") return null
@@ -169,4 +204,3 @@ export function readPerspectiveAccessor(
   const n = typeof value === "number" ? value : Number(value)
   return Number.isFinite(n) ? n : NaN
 }
-

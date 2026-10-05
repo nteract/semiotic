@@ -32,7 +32,8 @@ import { shadeColor } from "./colorShade"
 /** Side walls of a perspective piece, shaded from its fill, painted first. */
 function perspectiveFacesToSVG(
   n: { style: NetworkSceneNode["style"]; faces?: ReadonlyArray<{ pathD: string; shade: number }> },
-  fill: string | undefined
+  fill: string | undefined,
+  part = "slab-face"
 ): React.ReactNode {
   // Invisible pieces (hit targets) have no walls.
   const f = n.style.fill
@@ -46,6 +47,8 @@ function perspectiveFacesToSVG(
   return n.faces?.map((face, faceIndex) => (
     <path
       key={`face-${faceIndex}`}
+      data-perspective-part={part}
+      data-perspective-face={faceIndex}
       d={face.pathD}
       fill={typeof n.style.fill === "string" ? shadeColor(n.style.fill, face.shade) : fill}
       fillOpacity={n.style.fillOpacity}
@@ -80,9 +83,9 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
         <React.Fragment key={`net-circle-${i}`}>
           {hatch && <defs>{hatch}</defs>}
           {/* Perspective circles carry a projected ellipse outline and a rim. */}
-          {n.pathD && perspectiveFacesToSVG(n, paint.fill)}
+          {n.pathD && perspectiveFacesToSVG(n, paint.fill, n._perspectiveToken ? "token-rim" : "slab-face")}
           {n.pathD
-            ? <path d={n.pathD} {...paint} />
+            ? <path data-perspective-part={n._perspectiveToken ? "token-top" : "slab-top"} d={n.pathD} {...paint} />
             : <circle cx={n.cx} cy={n.cy} r={n.r} {...paint} />}
         </React.Fragment>
       )
@@ -104,7 +107,7 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
           {/* Perspective marks: extruded faces first, then the projected outline. */}
           {n.pathD && perspectiveFacesToSVG(n, paint.fill)}
           {n.pathD
-            ? <path d={n.pathD} {...paint} />
+            ? <path data-perspective-part="slab-top" d={n.pathD} {...paint} />
             : <rect x={n.x} y={n.y} width={n.w} height={n.h} {...paint} />}
         </React.Fragment>
       )
@@ -125,6 +128,7 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
           {n.pathD && perspectiveFacesToSVG(n, hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill))}
           <path
             d={n.pathD ?? arcPath}
+            data-perspective-part={n.pathD ? "slab-top" : undefined}
             transform={n.pathD ? undefined : `translate(${n.cx},${n.cy})`}
             fill={hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill)}
             stroke={n.style.stroke}
@@ -145,6 +149,7 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
       const mark = (
         <path
           key={`net-symbol-${i}`}
+          data-perspective-part={n._perspectiveToken ? "token-top" : undefined}
           d={d}
           transform={transform}
           fill={n.style.fill ? svgFill(n.style.fill) : "none"}
@@ -159,7 +164,7 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
       return n.faces?.length
         ? (
             <React.Fragment key={`net-symbol-${i}`}>
-              {perspectiveFacesToSVG(n, n.style.fill ? svgFill(n.style.fill) : undefined)}
+              {perspectiveFacesToSVG(n, n.style.fill ? svgFill(n.style.fill) : undefined, "token-rim")}
               {mark}
             </React.Fragment>
           )
@@ -189,6 +194,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
       return (
         <line
           key={`net-edge-${i}`}
+          data-perspective-part={e._perspectivePart}
           x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
           stroke={e.style.stroke || "#999"}
           strokeOpacity={e.style.strokeOpacity}
@@ -208,6 +214,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           {hatch && <defs>{hatch}</defs>}
           <path
             d={e.pathD}
+            data-perspective-part={e._perspectivePart}
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
@@ -229,6 +236,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
           {hatch && <defs>{hatch}</defs>}
           <path
             d={e.pathD}
+            data-perspective-part={e._perspectivePart}
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
             fillOpacity={e.style.fillOpacity}
             stroke={e.style.stroke || "none"}
@@ -247,6 +255,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
+          data-perspective-part={e._perspectivePart}
           fill={svgFill(e.style.fill, "none")}
           // Mirror the canvas renderer, which fills curved edges at
           // `fillOpacity ?? 0.1`; without this, SSR painted fills opaque.

@@ -13,6 +13,7 @@ export type MotifBraidChartProps = AtlasChartOptions & {
   onClick?: NetworkCustomChartProps["onClick"]
   annotations?: NetworkCustomChartProps["annotations"]
   frameProps?: NetworkCustomChartProps["frameProps"]
+  perspective?: NetworkCustomChartProps["perspective"]
 }
 
 /** Shared client/static reader contract; atlas analysis precedes rendering. */

@@ -133,6 +133,8 @@ export interface NetworkSymbolNode {
   _pulseGlowRadius?: number
   /** Visible side walls of a perspective token, painted before the symbol. */
   faces?: NetworkPerspectiveFace[]
+  /** @internal Projected token outline, including tokens with no side walls. */
+  _perspectiveToken?: boolean
 }
 
 /**
@@ -182,6 +184,8 @@ export interface NetworkGlyphNode {
  * hit testing with `interactive: false`.
  */
 interface NetworkEdgeMetadata extends SceneAccessibilityMetadata {
+  /** @internal Semantic SVG export role assigned by the perspective stage. */
+  _perspectivePart?: string
   id?: string
   label?: string
   interactive?: boolean
@@ -275,4 +279,3 @@ export interface NetworkLabel {
   /** Rotation in radians around (`x`, `y`), e.g. ground-aligned perspective text. */
   rotate?: number
 }
-

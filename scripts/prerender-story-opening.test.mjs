@@ -45,6 +45,15 @@ describe("readable story openings before enhancements", () => {
     )
   })
 
+  it("makes example prose and code readable outside noscript without an explicit opening", () => {
+    const doc = sanitizeRouteHtml('<main class="container"><h1>Isometric Infrastructure</h1><p>Hosts stand on projected zones.</p><pre>perspective="isometric"</pre></main>', "examples/isometric-infrastructure")
+    const page = new JSDOM(generatePage(shell, "examples/isometric-infrastructure", null, doc)).window.document
+    const opening = page.querySelector("#docs-server-opening")
+    assert.ok(opening.textContent.includes("Hosts stand on projected zones"))
+    assert.ok(opening.querySelector("pre"))
+    assert.equal(opening.closest("noscript, #root"), null)
+  })
+
   it("extracts factual openings from both implemented story routes", async () => {
     const renderRoute = await createStaticRouteRenderer()
     for (const [route, fact] of [

@@ -35,6 +35,8 @@ export interface ServerChartOverlayContext {
 
 export interface ChartConfig {
   frameType: FrameType
+  /** Effective renderer for compositions that choose a frame from their props. */
+  resolveFrameType?: (frameProps: Datum) => FrameType
   layout?: ServerChartLayoutDefaults
   /** Build frame props from HOC-level props */
   buildProps: (data: ServerChartData, colorBy: ServerAccessor | undefined, colorScheme: ServerColorScheme, common: Datum, rest: Datum) => Datum

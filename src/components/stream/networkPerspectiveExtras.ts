@@ -134,8 +134,8 @@ export const networkPerspectiveExtras: NetworkPerspectiveExtras = {
       underlay(frame) {
         const edges: NetworkSceneEdge[] = []
         const labels: NetworkLabel[] = []
-        const chrome = (pathD: string, style: Style) =>
-          edges.push({ type: "curved", pathD, style, datum: null, interactive: false })
+        const chrome = (pathD: string, style: Style, part: string) =>
+          edges.push({ type: "curved", pathD, style, datum: null, interactive: false, _perspectivePart: part })
 
         if (gridConfig) {
           const opts = typeof gridConfig === "object" ? gridConfig : {}
@@ -167,12 +167,12 @@ export const networkPerspectiveExtras: NetworkPerspectiveExtras = {
                 strokeWidth: opts.strokeWidth ?? 1,
                 // Dense lines read as texture; keep them behind the data.
                 opacity: opts.opacity ?? 0.55
-              })
+              }, "ground-grid")
             }
           }
         }
 
-        const slab = (s: Slab, fallback: string, opacity: number) => {
+        const slab = (s: Slab, fallback: string, opacity: number, part = "region") => {
           const explicit = s.region.fill != null
           const fill = s.region.fill ?? fallback
           const shape = prism(frame, s.box, s.base, s.top)
@@ -181,19 +181,19 @@ export const networkPerspectiveExtras: NetworkPerspectiveExtras = {
               fill: shadeColor(fill, face.shade),
               fillOpacity: explicit ? 1 : Math.min(1, opacity * 2.2),
               stroke: "none"
-            })
+            }, `${part}-face`)
           }
           const top = polygonPath(shape.up)
-          chrome(top, { fill, fillOpacity: explicit ? 1 : opacity, stroke: "none" })
+          chrome(top, { fill, fillOpacity: explicit ? 1 : opacity, stroke: "none" }, `${part}-top`)
           chrome(top, {
             fill: "none",
             stroke: s.region.stroke ?? (explicit ? shadeColor(fill, 0.25) : fallback),
             strokeWidth: 1,
             opacity: explicit ? 1 : 0.6
-          })
+          }, `${part}-outline`)
           return shape.up
         }
-        if (plate) slab(plate, theme.textSecondary ?? "rgb(128,128,128)", 0.08)
+        if (plate) slab(plate, theme.textSecondary ?? "rgb(128,128,128)", 0.08, "plate")
         for (const s of [...slabs].sort((p, q) => p.top - q.top)) {
           const top = slab(s, theme.primary ?? "#4e79a7", 0.14)
           if (!s.region.label) continue

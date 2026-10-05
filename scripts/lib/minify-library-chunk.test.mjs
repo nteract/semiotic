@@ -3,8 +3,31 @@ import { test } from "node:test"
 import { gzipSync } from "node:zlib"
 import { minify } from "terser"
 import { build } from "esbuild"
+import { rollup } from "rollup"
 import { minifyLibraryChunk } from "./minify-library-chunk.mjs"
 import { libraryTerserOptions as options } from "./library-minification-options.mjs"
+
+test("folded and returned calls do not leave invalid Rollup purity hints", async () => {
+  const source = `
+    import { makeOptional } from "optional-host"
+    export const optional = /* @__PURE__ */ makeOptional()
+    export function render() { return /* @__PURE__ */ makeOptional() }
+    export const root = /* @__PURE__ */ Math.sqrt(8)
+    export const text = "/* @__PURE__ */ return untouched"
+  `
+  const result = await minifyLibraryChunk(source, { format: "esm", filename: "fixture.js", options })
+  const warnings = []
+  const bundle = await rollup({
+    input: "fixture", external: ["optional-host"], onwarn: (warning) => warnings.push(warning),
+    plugins: [{ name: "fixture", resolveId: (id) => id === "fixture" ? id : null, load: () => result.code }]
+  })
+  try {
+    const output = await bundle.generate({ format: "esm" })
+    assert.deepEqual(warnings, [])
+    assert.match(output.output[0].code, /\/\* @__PURE__ \*\/ return untouched/)
+    assert.match(result.code, /\/\*\s*@__PURE__\s*\*\/\s*\w+\(\)/)
+  } finally { await bundle.close() }
+})
 
 test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
   const source = `

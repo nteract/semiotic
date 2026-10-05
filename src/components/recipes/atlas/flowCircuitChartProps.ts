@@ -1,12 +1,14 @@
 import { FLOW_CIRCUIT_CHART_SIZE } from "../../charts/shared/chartSizeDefaultsAtlas"
 import {
   flowCircuitLayout,
+  flowCircuitNetworkLayout,
   type FlowCircuitLayoutConfig
 } from "./flowCircuitLayout"
 import { atlasLinkedHover, type AtlasChartOptions } from "./atlasChartOptions"
 import type { PhysicsCustomChartProps } from "../../charts/physics/PhysicsCustomChart"
 import { circuitModuleDatum } from "./flowCircuitSemantics"
 import type { BaseChartProps } from "../../charts/shared/types"
+import type { NetworkCustomChartProps } from "../../charts/custom/NetworkCustomChart"
 
 const noTooltip = () => null
 
@@ -15,7 +17,12 @@ export type FlowCircuitChartProps = FlowCircuitLayoutConfig &
     width?: number
     height?: number
     annotations?: PhysicsCustomChartProps["annotations"]
+    /** Physics frame options for the flat view. */
     frameProps?: PhysicsCustomChartProps["frameProps"]
+    /** Network frame options for a projected view, including zoom and SVG rendering. */
+    networkFrameProps?: NetworkCustomChartProps["frameProps"]
+    /** Project the fixed circuit apparatus through the network renderer. */
+    perspective?: NetworkCustomChartProps["perspective"]
     /** Named linked-view selection, separate from the local graph selection. */
     linkedSelection?: Pick<NonNullable<BaseChartProps["selection"]>, "name">
     onSelectNode?: (id: string) => void
@@ -34,6 +41,8 @@ export function flowCircuitChartProps({
   linkedHover,
   annotations,
   frameProps,
+  perspective: _perspective,
+  networkFrameProps: _networkFrameProps,
   linkedSelection: _linkedSelection,
   onSelectNode: _onSelectNode,
   ...config
@@ -69,5 +78,27 @@ export function flowCircuitChartProps({
     accessibleTable,
     tooltip:
       chartId || linkedHover || onObservation ? noTooltip : (false as const)
+  }
+}
+
+/** Network rendering uses the same tape, layout geometry and semantic datums. */
+export function flowCircuitNetworkChartProps(props: FlowCircuitChartProps) {
+  const { key: _key, data, layout: _layout, paused: _paused, frameProps: _frameProps, ...common } = flowCircuitChartProps(props)
+  return {
+    ...common,
+    nodes: data,
+    edges: props.circuit.atlas.source.edges,
+    layout: flowCircuitNetworkLayout,
+    perspective: props.perspective,
+    margin: 0,
+    frameProps: {
+      ...(props.frameProps && {
+        background: props.frameProps.background,
+        backgroundGraphics: props.frameProps.backgroundGraphics,
+        foregroundGraphics: props.frameProps.foregroundGraphics
+      }),
+      ...props.networkFrameProps
+    },
+    tooltip: (datum: Record<string, unknown>) => `${datum.label ?? datum.id ?? "Circuit"}: ${datum.kind === "circuit-pipe" ? `${datum.perSecond ?? "unmeasured"} ${datum.unit}/s` : `${datum.completions ?? "unmeasured"} ${datum.unit ?? "units"}/s completed; queue ${datum.queued ?? "unmeasured"}`}`
   }
 }
