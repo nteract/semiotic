@@ -1,4 +1,5 @@
 "use client"
+import { ORBIT_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
@@ -187,7 +188,7 @@ export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagra
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, ORBIT_DIAGRAM_SIZE)
 
   const {
     data,
@@ -239,6 +240,7 @@ export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagra
   // defaults — pass them through so the hook's margin reservation
   // honors the legacy spacing instead of the standard chart-grid one.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,

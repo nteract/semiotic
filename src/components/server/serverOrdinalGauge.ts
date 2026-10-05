@@ -17,7 +17,6 @@ import { renderServerGaugeOverlay } from "./serverGaugeOverlay"
 /** GaugeChart's partial-arc model, needle overlay, and centered scene. */
 export const gaugeChart: ChartConfig = {
   frameType: "ordinal",
-  layout: { primarySize: { width: 300, height: 250 } },
   renderOverlay: renderServerGaugeOverlay,
   buildProps: (data, _colorBy, _colorScheme, common, rest) => {
     const gMin = rest.min ?? 0

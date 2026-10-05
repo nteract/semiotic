@@ -20,6 +20,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useLegendInteraction
 } from "../shared/hooks"
 import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
@@ -245,7 +246,8 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   const {
     activeSelectionHook,
     customHoverBehavior: linkedHoverBehavior,
-    customClickBehavior
+    customClickBehavior,
+    crosshairSourceId
   } = useChartSelection({
     selection,
     linkedHover,
@@ -486,8 +488,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     loading,
     resolvedSize[0],
     resolvedSize[1],
-    loadingContent
-  )
+    loadingContent, props)
   // In aggregate mode the chart is push-driven (data arrives via ref), so
   // skip the static empty state just as a plain streaming chart does.
   const emptyEl = !loadingEl
@@ -495,8 +496,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
         aggEnabled ? undefined : data,
         resolvedSize[0],
         resolvedSize[1],
-        emptyContent
-      )
+        emptyContent, props)
     : null
 
   const baseLineStyle = useMemo(
@@ -577,6 +577,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   return (
     <StreamXYFrame
       ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
       chartType="line"
       runtimeMode="streaming"
       size={resolvedSize}

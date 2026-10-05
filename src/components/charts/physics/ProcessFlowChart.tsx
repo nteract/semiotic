@@ -1,4 +1,5 @@
 "use client"
+import { PROCESS_FLOW_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import {
@@ -228,7 +229,7 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
     workAccessor
   } = props
 
-  const layoutMode = usePhysicsChartMode(props, [900, 420])
+  const layoutMode = usePhysicsChartMode(props, PROCESS_FLOW_CHART_SIZE)
   const {
     chartSize,
     showProjection,
@@ -473,6 +474,7 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data,
     emptyContent,
     loading,

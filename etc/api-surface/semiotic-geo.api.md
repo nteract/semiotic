@@ -43,6 +43,7 @@ function sampleGeographicDotGrid(areas: import("geojson").Feature<import("geojso
 interface CategoricalLegendConfig
 interface ChoroplethMapProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface CustomLayoutFailureDiagnostic
+interface CustomTooltipConfig
 interface DistanceCartogramConfig
 interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps
@@ -125,6 +126,8 @@ interface-member CustomLayoutFailureDiagnostic::property::preservedLastGoodScene
 interface-member CustomLayoutFailureDiagnostic::property::recovery = required recovery: CustomLayoutFailureRecovery
 interface-member CustomLayoutFailureDiagnostic::property::severity = required severity: "error"
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DistanceCartogramConfig::property::center = required center: string
 interface-member DistanceCartogramConfig::property::centerAccessor = optional centerAccessor: ((d: Datum) => string) | string | undefined
 interface-member DistanceCartogramConfig::property::costAccessor = required costAccessor: ((d: Datum) => number) | string
@@ -434,6 +437,7 @@ interface-member LegendLayout::property::sideGutter = optional sideGutter: numbe
 interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member ProportionalSymbolMapProps::property::annotations = optional annotations: Datum[] | undefined
@@ -625,6 +629,7 @@ interface-member StyleRuleThreshold::property::lte = optional lte: number | unde
 interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
 interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
 interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -652,6 +657,6 @@ type ProjectionProp = GeoProjection | ProjectionConfig | ProjectionName
 type ReferenceGeography = "land-110m" | "land-50m" | "world-110m" | "world-50m"
 type ResponsiveOrientation = "landscape" | "portrait"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

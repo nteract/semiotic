@@ -273,6 +273,7 @@ export const DistanceCartogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   // ── All hooks must be called unconditionally (before any early returns) ──
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: points,
     colorBy,

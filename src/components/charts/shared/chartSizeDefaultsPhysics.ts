@@ -1,0 +1,11 @@
+/** Shared by the chart components and the public size resolver. */
+export const GALTON_BOARD_CHART_SIZE = { width: 700, height: 420 } as const
+export const UNIT_PILE_CHART_SIZE = { width: 700, height: 380 } as const
+export const COLLISION_SWARM_CHART_SIZE = { width: 700, height: 360 } as const
+export const EVENT_DROP_CHART_SIZE = { width: 760, height: 360 } as const
+export const PACKET_FLOW_CHART_SIZE = { width: 760, height: 420 } as const
+export const PROCESS_FLOW_CHART_SIZE = { width: 900, height: 420 } as const
+export const PHYSICS_CUSTOM_CHART_SIZE = { width: 700, height: 380 } as const
+export const GAUNTLET_CHART_SIZE = { width: 900, height: 520 } as const
+export const CRUCIBLE_CHART_SIZE = { width: 900, height: 520 } as const
+export const CHAIN_REACTION_CHART_SIZE = { width: 920, height: 620 } as const

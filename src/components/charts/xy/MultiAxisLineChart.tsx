@@ -1,4 +1,5 @@
 "use client"
+import { MULTI_AXIS_LINE_CHART_SIZE } from "../shared/chartSizeDefaultsXY"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
@@ -258,7 +259,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 800, height: 400 })
+}, MULTI_AXIS_LINE_CHART_SIZE)
 
   const {
     data,
@@ -326,8 +327,8 @@ export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   }
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent, props)
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent, props) : null
 
   // ── Resolve colors from theme ─────────────────────────────────────────
   const themeCategorical = useThemeCategorical()
@@ -422,6 +423,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
   // ── Chart setup (legend, selection, margin) ───────────────────────────
   const setup = useChartSetup({
+    responsive: props,
     data: legendData,
     rawData: data,
     colorBy: MULTI_AXIS_SERIES_FIELD,

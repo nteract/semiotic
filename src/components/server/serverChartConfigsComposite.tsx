@@ -439,7 +439,6 @@ export const scatterplotMatrix: ChartConfig = {
 
 export const chainReactionChart: ChartConfig = {
   frameType: "physics",
-  layout: { primarySize: { width: 920, height: 620 } },
   buildProps: payload,
   renderStatic: renderChainReaction
 }

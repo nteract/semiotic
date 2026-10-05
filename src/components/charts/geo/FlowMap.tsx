@@ -274,6 +274,7 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   // store fires — `nodeFlowLookup` is a chart-specific concern that
   // doesn't belong inside the shared hook.
   const setup = useChartSetup({
+    responsive: props,
     // Stable empty fallback for push mode (`flows === undefined`) — see
     // matching note on ProportionalSymbolMap. Avoids fresh-array
     // churn on every parent render.

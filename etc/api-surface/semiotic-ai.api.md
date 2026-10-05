@@ -105,7 +105,7 @@ function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> &
 function IntentMark({ manifest, label, className, showSummary, }: IntentMarkProps): React.JSX.Element
 function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function LinkedCharts({ children, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
+function LinkedCharts({ children, crosshair, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MobileAnnotationCalloutList({ items, title, empty, ordered, renderItem, className, style, }: MobileAnnotationCalloutListProps): React.JSX.Element | null
 function MobileChartContainer({ children, controls, mobile, breakpoint, chartMode, mobileInteraction, mobileSemantics, mobileSummary, chips, activeChip, onChipChange, detail, detailTitle, detailMode, initialDetailOpen, allowHorizontalScroll, hideToolbar, chartDefaults, ...containerProps }: MobileChartContainerProps): React.JSX.Element
@@ -353,8 +353,10 @@ function useChartInterrogation(options: UseChartInterrogationOptions): UseChartI
 function useChartObserver(options?: UseChartObserverOptions | undefined): UseChartObserverResult
 function useChartSuggestions(data: null | readonly Datum[] | undefined, options?: UseChartSuggestionsOptions | undefined): UseChartSuggestionsResult
 function useConversationArc(options?: UseConversationArcOptions | undefined): UseConversationArcResult
+function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
 function useFilteredData<T extends Datum>(data: T[], selectionName: string, clientId?: string | undefined): T[]
 function useLinkedChartsActive(): boolean
+function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult
 function useMobileRangeControls(options: UseMobileRangeControlsOptions): UseMobileRangeControlsResult
 function useNavigationSync(options: UseNavigationSyncOptions): UseNavigationSyncResult
@@ -496,6 +498,7 @@ interface ConversationArcStore
 interface ConversationArcSummary
 interface CorrectionRecord
 interface CreateArtifactPacketOptions
+interface CrosshairPosition
 interface DashboardIntentManifest
 interface DashboardLayoutPolicy
 interface DashboardPanel
@@ -570,6 +573,7 @@ interface JSXProjectionResult
 interface JsonObject
 interface LifecycleBandThresholds
 interface LinkedChartsProps
+interface LinkedCrosshairConfig
 interface LiteracyTargetDefinition
 interface LoadConversationArcOptions
 interface LocalStorageConversationArcSinkOptions
@@ -738,6 +742,7 @@ interface UseChartSuggestionsOptions extends SuggestChartsOptions, ProfileDataOp
 interface UseChartSuggestionsResult
 interface UseConversationArcOptions extends EnableConversationArcOptions
 interface UseConversationArcResult
+interface UseLinkedCrosshairResult
 interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
 interface UseNavigationSyncOptions
@@ -1493,6 +1498,9 @@ interface-member CreateArtifactPacketOptions::property::format = optional format
 interface-member CreateArtifactPacketOptions::property::includeEvidenceSamples = optional includeEvidenceSamples: boolean | undefined
 interface-member CreateArtifactPacketOptions::property::maxClaims = optional maxClaims: number | undefined
 interface-member CreateArtifactPacketOptions::property::maxEvidenceRecords = optional maxEvidenceRecords: number | undefined
+interface-member CrosshairPosition::property::locked = optional locked: boolean | undefined
+interface-member CrosshairPosition::property::sourceId = required sourceId: string
+interface-member CrosshairPosition::property::xValue = required xValue: number
 interface-member DashboardIntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
 interface-member DashboardIntentManifest::property::dashboardId = required dashboardId: string
 interface-member DashboardIntentManifest::property::ididVersion = required ididVersion: string
@@ -1886,12 +1894,16 @@ interface-member LifecycleBandThresholds::property::aging = optional aging: numb
 interface-member LifecycleBandThresholds::property::fresh = optional fresh: number | undefined
 interface-member LifecycleBandThresholds::property::stale = optional stale: number | undefined
 interface-member LinkedChartsProps::property::children = required children: React.ReactNode
+interface-member LinkedChartsProps::property::crosshair = optional crosshair: LinkedCrosshairConfig | undefined
 interface-member LinkedChartsProps::property::legendField = optional legendField: string | undefined
 interface-member LinkedChartsProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member LinkedChartsProps::property::legendPosition = optional legendPosition: "bottom" | "top" | undefined
 interface-member LinkedChartsProps::property::legendSelectionName = optional legendSelectionName: string | undefined
 interface-member LinkedChartsProps::property::selections = optional selections: Record<string, {resolution?: ResolutionMode;}> | undefined
 interface-member LinkedChartsProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LinkedCrosshairConfig::property::name = required name: string
+interface-member LinkedCrosshairConfig::property::onPositionChange = optional onPositionChange: ((null | position: CrosshairPosition) => void) | undefined
+interface-member LinkedCrosshairConfig::property::position = optional position: CrosshairPositionInput | null | undefined
 interface-member LiteracyTargetDefinition::property::concept = required concept: string
 interface-member LiteracyTargetDefinition::property::rationale = required rationale: string
 interface-member LoadConversationArcOptions::property::append = optional append: boolean | undefined
@@ -2825,6 +2837,8 @@ interface-member UseConversationArcResult::property::history = required history:
 interface-member UseConversationArcResult::property::record = required record: (input: ConversationArcEventInput) => ConversationArcEvent | null
 interface-member UseConversationArcResult::property::sessionId = required sessionId: null | string
 interface-member UseConversationArcResult::property::summary = required summary: ConversationArcSummary
+interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
+interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
 interface-member UseMobileRangeControlsOptions::property::domain = required domain: [number, number]
 interface-member UseMobileRangeControlsOptions::property::formatValue = optional formatValue: ((value: number) => React.ReactNode) | undefined
 interface-member UseMobileRangeControlsOptions::property::initialValue = optional initialValue: [number, number] | undefined
@@ -2996,6 +3010,7 @@ type ConversationArcEventType = "annotation-status-changed" | "audience-set" | "
 type ConversationArcListener = (event: ConversationArcEvent) => void
 type ConversationArcWebhookFetch = (input: string, init?: RequestInit) => Promise<unknown>
 type CopyFormat = "json" | "jsx"
+type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: string;}
 type CustomLayoutFunction<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (CustomLayout<TConfig> | GeoCustomLayout<TConfig> | NetworkCustomLayout<TConfig> | OrdinalCustomLayout<TConfig>) & RecipeDatumMarker<TDatum>
 type DataQualityCheckKind = "accepted-values" | "custom" | "freshness" | "max" | "min" | "not-null" | "range" | "row-condition" | "threshold" | "unique"
 type DataQualityStatus = "error" | "fail" | "pass" | "warn"

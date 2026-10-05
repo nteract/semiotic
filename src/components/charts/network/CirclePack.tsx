@@ -1,4 +1,5 @@
 "use client"
+import { CIRCLE_PACK_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
@@ -125,7 +126,7 @@ export const CirclePack = /* @__PURE__ */ withDisplayName(function CirclePack<TN
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, CIRCLE_PACK_SIZE)
 
   const {
     data,
@@ -168,6 +169,7 @@ export const CirclePack = /* @__PURE__ */ withDisplayName(function CirclePack<TN
   // node inference off, so colorScale / categories / legend state /
   // selection wiring all funnel through one call.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,

@@ -717,6 +717,7 @@ export type {
   TooltipField,
   MultiLineTooltipConfig,
   MultiTooltipConfig,
+  CustomTooltipConfig,
   TooltipRootProps,
   TooltipChromeMode
 } from "./Tooltip/Tooltip"
@@ -784,3 +785,6 @@ export type {
   MotionPoint,
   ResolvedMotionVector
 } from "./charts/shared/motionEncoding"
+
+export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
+export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"

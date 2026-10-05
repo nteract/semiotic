@@ -1246,6 +1246,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const clickHandlerRef = useRef<(e: React.MouseEvent) => void>(() => {})
 
   clickHandlerRef.current = (e: React.MouseEvent) => {
+    frame.flushPointerMove()
     if (isAnnotationActivationTarget(e.target)) return
     if (!customClickBehaviorProp && !onObservation) return
     const canvas = canvasRef.current

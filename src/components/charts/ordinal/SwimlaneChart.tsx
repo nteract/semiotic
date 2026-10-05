@@ -219,6 +219,7 @@ export const SwimlaneChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   }, [userBarPadding, resolved.mode, safeData, categoryAccessor, orientation, width, height])
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

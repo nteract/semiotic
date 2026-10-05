@@ -1,3 +1,4 @@
+import { CRUCIBLE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 import { mulberry32 as seededRandom } from "../../recipes/random"
 import { fnv1a32 as hashText } from "../../utils/hash"
 /** Deterministic compilation, replay, geometry, and bodies for CrucibleChart. */
@@ -31,8 +32,8 @@ import type {
   CrucibleRunState
 } from "./crucibleTypes"
 
-export const DEFAULT_CRUCIBLE_WIDTH = 900
-export const DEFAULT_CRUCIBLE_HEIGHT = 520
+export const DEFAULT_CRUCIBLE_WIDTH = CRUCIBLE_CHART_SIZE.width
+export const DEFAULT_CRUCIBLE_HEIGHT = CRUCIBLE_CHART_SIZE.height
 export const DEFAULT_CRUCIBLE_SIZE: [number, number] = [
   DEFAULT_CRUCIBLE_WIDTH,
   DEFAULT_CRUCIBLE_HEIGHT

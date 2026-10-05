@@ -1,4 +1,5 @@
 "use client"
+import { FORCE_DIRECTED_GRAPH_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -274,7 +275,7 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, FORCE_DIRECTED_GRAPH_SIZE)
 
   const {
     nodes,
@@ -337,6 +338,7 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   // — pass `inferNodes: false` and `emptyDataKey: "nodes"` to match
   // the pre-migration behavior.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes,
     edges,
     inferNodes: false,

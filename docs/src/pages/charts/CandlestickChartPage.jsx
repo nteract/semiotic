@@ -431,7 +431,13 @@ export default function CandlestickChartPage() {
         HOCs: <code>primary</code> (default 600×400), <code>context</code>
         {" "}(400×250, no axes), and <code>sparkline</code> (120×24,
         no axes, no title). Explicit <code>width</code>/<code>height</code>{" "}
-        override the mode default.
+        override the mode default. Empty and loading states reserve the same
+        resolved dimensions and center their content in that space. A wrapper
+        that renders its own empty state should resolve the same dimensions
+        before sizing its placeholder with <code>resolveChartSize("CandlestickChart", props)</code>
+        from <code>semiotic/utils</code>. Alternatively, pass custom content
+        through <code>emptyContent</code> or <code>loadingContent</code> so
+        Semiotic owns the slot, including responsive sizing.
       </p>
 
       <h3>OHLC</h3>

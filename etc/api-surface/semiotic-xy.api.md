@@ -47,7 +47,9 @@ function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined
 function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
 function responsiveRuleMatches(rule: ResponsiveRule<Record<string, unknown>>, context: ResponsiveRuleContext): boolean
 function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean
+function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
 function useCustomLayoutSelection(): CustomLayoutSelection
+function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
@@ -55,8 +57,10 @@ interface CandlestickChartProps<TDatum extends Datum = Datum> extends BaseChartP
 interface CategoricalLegendConfig
 interface CenterlineStyle
 interface ConnectedScatterplotProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface CrosshairPosition
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
+interface CustomTooltipConfig
 interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface GlyphDef
 interface GlyphPart
@@ -76,6 +80,7 @@ interface LegendGroup
 interface LegendItem
 interface LegendLayout
 interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface LinkedCrosshairConfig
 interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
@@ -104,6 +109,7 @@ interface StyleRuleThreshold
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface UseLinkedCrosshairResult
 interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps, AxisConfig
 interface-member AreaChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -242,6 +248,9 @@ interface-member ConnectedScatterplotProps::property::xAccessor = optional xAcce
 interface-member ConnectedScatterplotProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member ConnectedScatterplotProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member ConnectedScatterplotProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member CrosshairPosition::property::locked = optional locked: boolean | undefined
+interface-member CrosshairPosition::property::sourceId = required sourceId: string
+interface-member CrosshairPosition::property::xValue = required xValue: number
 interface-member CustomLayoutFailureDiagnostic::property::affectedRevision = required affectedRevision: number
 interface-member CustomLayoutFailureDiagnostic::property::code = required code: "CUSTOM_LAYOUT_ERROR"
 interface-member CustomLayoutFailureDiagnostic::property::component = required component: CustomLayoutFamily
@@ -254,6 +263,8 @@ interface-member CustomLayoutFailureDiagnostic::property::severity = required se
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
 interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
 interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DifferenceChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member DifferenceChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member DifferenceChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -442,6 +453,9 @@ interface-member LineChartProps::property::xScaleType = optional xScaleType: "li
 interface-member LineChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member LineChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member LineChartProps::property::yScaleType = optional yScaleType: "linear" | "log" | "symlog" | undefined
+interface-member LinkedCrosshairConfig::property::name = required name: string
+interface-member LinkedCrosshairConfig::property::onPositionChange = optional onPositionChange: ((null | position: CrosshairPosition) => void) | undefined
+interface-member LinkedCrosshairConfig::property::position = optional position: CrosshairPositionInput | null | undefined
 interface-member MultiAxisLineChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member MultiAxisLineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member MultiAxisLineChartProps::property::curve = optional curve: CurveType | undefined
@@ -459,6 +473,7 @@ interface-member MultiAxisLineChartProps::property::tooltip = optional tooltip: 
 interface-member MultiAxisLineChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, Date | number | string> | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member QuadrantChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -629,6 +644,7 @@ interface-member StreamXYFrameProps::property::band = optional band: BandConfig<
 interface-member StreamXYFrameProps::property::barColors = optional barColors: Record<string, string> | undefined
 interface-member StreamXYFrameProps::property::barStyle = optional barStyle: BarStyle | undefined
 interface-member StreamXYFrameProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StreamXYFrameProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member StreamXYFrameProps::property::binSize = optional binSize: number | undefined
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
@@ -784,6 +800,7 @@ interface-member StyleRuleThreshold::property::lte = optional lte: number | unde
 interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
 interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
 interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -794,6 +811,8 @@ interface-member TooltipField::property::format = optional format: ((value: unkn
 interface-member TooltipField::property::key = optional key: Accessor | undefined
 interface-member TooltipField::property::label = optional label: string | undefined
 interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
+interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
 interface-member WaterfallChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member WaterfallChartProps::property::connectorStroke = optional connectorStroke: string | undefined
 interface-member WaterfallChartProps::property::connectorWidth = optional connectorWidth: number | undefined
@@ -835,6 +854,7 @@ interface-member XYCustomChartProps::property::showLegend = optional showLegend:
 interface-member XYCustomChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member XYCustomChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | undefined
 interface-member XYCustomChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | undefined
+type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: string;}
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
@@ -847,6 +867,6 @@ type ResponsiveOrientation = "landscape" | "portrait"
 type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 type SemanticGradientStop = SemanticGradientStopInput
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

@@ -21,7 +21,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       tooltip: {
         type: ["boolean", "string", "function", "object"],
         description:
-          'Tooltip boolean, "multi" / { mode: "multi", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config.'
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config. { content, chrome: "none" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.'
       },
       styleRules: STYLE_RULES_PROP_SPEC,
       stroke: { type: "string" },
@@ -73,7 +73,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       tooltip: {
         type: ["boolean", "string", "function", "object"],
         description:
-          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config.'
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config. { content, chrome: "none" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.'
       },
       showTimeAxis: { type: "boolean", description: "Show the time axis; false removes its default margin." },
       showGrid: { type: "boolean", default: false, description: "Show grid lines. Set grid: false on the bottom axis for horizontal lines only." },
@@ -85,6 +85,12 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       binSize: {
         type: "number",
         description: "Time bin size in milliseconds (required)"
+      },
+      binAlign: {
+        type: "string",
+        enum: ["start", "center"] as const,
+        default: "start",
+        description: "Zero-anchored time bins: start uses [timestamp, timestamp + binSize); center uses [timestamp - binSize/2, timestamp + binSize/2). Automatic centered extents include whole edge bins; explicit timeExtent clips them."
       },
       direction: {
         type: "string",
@@ -198,6 +204,12 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
         type: ["string", "function"],
         description: "Key for y values"
       },
+      binAlign: {
+        type: "string",
+        enum: ["start", "center"] as const,
+        default: "start",
+        description: "Zero-anchored time bins: start uses [timestamp, timestamp + binSize); center uses [timestamp - binSize/2, timestamp + binSize/2). Automatic centered extents include whole edge bins; explicit timeExtent clips them."
+      },
       direction: {
         type: "string",
         enum: ["up", "down"] as const,
@@ -222,7 +234,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       tooltip: {
         type: ["boolean", "string", "function", "object"],
         description:
-          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config.'
+          'Tooltip boolean, "multi" / { mode: "multi", content? } for every stacked category in the hovered bin, content function, or config. { content, chrome: "none" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.'
       },
       tooltipContent: { type: "function", omitFromSchema: true },
       onHover: { type: "function", omitFromSchema: true },

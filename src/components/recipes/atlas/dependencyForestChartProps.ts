@@ -1,3 +1,4 @@
+import { DEPENDENCY_FOREST_CHART_SIZE } from "../../charts/shared/chartSizeDefaultsAtlas"
 import {
   dependencyForestLayout,
   type DependencyForestLayoutConfig
@@ -17,8 +18,8 @@ export type DependencyForestChartProps = DependencyForestLayoutConfig &
 
 /** Shared props for the React reader and the public SVG renderer. */
 export function dependencyForestChartProps({
-  width = 920,
-  height = 440,
+  width = DEPENDENCY_FOREST_CHART_SIZE.width,
+  height = DEPENDENCY_FOREST_CHART_SIZE.height,
   title = "Dependency X-Ray",
   description,
   summary,

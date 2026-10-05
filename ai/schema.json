@@ -132,7 +132,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -717,7 +717,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -1351,7 +1351,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -1963,7 +1963,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -2574,7 +2574,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -3057,7 +3057,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 800
             },
             "height": {
               "type": "number",
@@ -3163,7 +3163,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -3693,7 +3693,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -4255,7 +4255,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -4859,7 +4859,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -5435,7 +5435,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6017,7 +6017,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -6594,7 +6594,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -7161,7 +7161,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -7720,7 +7720,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -8282,7 +8282,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -8847,7 +8847,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -9386,7 +9386,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -9929,7 +9929,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -10474,7 +10474,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11009,7 +11009,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11457,7 +11457,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 400
             },
             "height": {
               "type": "number",
@@ -11564,7 +11564,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -11965,7 +11965,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 400
             },
             "height": {
               "type": "number",
@@ -12072,7 +12072,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -12486,11 +12486,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 300
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 250
             },
             "margin": {
               "type": [
@@ -12593,7 +12593,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -13035,7 +13035,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -13138,7 +13138,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -13854,11 +13854,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 800
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -13961,7 +13961,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -14662,7 +14662,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -14765,7 +14765,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -15444,7 +15444,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -15547,7 +15547,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -16230,7 +16230,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -16333,7 +16333,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -16997,7 +16997,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -17100,7 +17100,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -17756,7 +17756,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -17859,7 +17859,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -18719,7 +18719,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config.",
+              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config. { content, chrome: \"none\" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -19199,7 +19199,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every stacked category in the hovered bin, content function, or config.",
+              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every stacked category in the hovered bin, content function, or config. { content, chrome: \"none\" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -19482,6 +19482,15 @@
               "type": "number",
               "description": "Time bin size in milliseconds (required)"
             },
+            "binAlign": {
+              "type": "string",
+              "enum": [
+                "start",
+                "center"
+              ],
+              "description": "Zero-anchored time bins: start uses [timestamp, timestamp + binSize); center uses [timestamp - binSize/2, timestamp + binSize/2). Automatic centered extents include whole edge bins; explicit timeExtent clips them.",
+              "default": "start"
+            },
             "direction": {
               "type": "string",
               "enum": [
@@ -19741,7 +19750,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, content function, or config. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
+              "description": "Tooltip boolean, content function, or config; { content, chrome: \"none\" } declares consumer chrome without mutating the renderer. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -20229,7 +20238,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, content function, or config. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
+              "description": "Tooltip boolean, content function, or config; { content, chrome: \"none\" } declares consumer chrome without mutating the renderer. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -20705,7 +20714,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, content function, or config. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
+              "description": "Tooltip boolean, content function, or config; { content, chrome: \"none\" } declares consumer chrome without mutating the renderer. \"multi\" falls back to the single-datum tooltip unless the chart documents multi support.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -21129,7 +21138,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -21670,7 +21679,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -22252,7 +22261,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -22736,7 +22745,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -23377,7 +23386,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -23923,7 +23932,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -24507,7 +24516,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -25137,7 +25146,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -25750,7 +25759,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -26720,7 +26729,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -27371,7 +27380,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every stacked category in the hovered bin, content function, or config.",
+              "description": "Tooltip boolean, \"multi\" / { mode: \"multi\", content? } for every stacked category in the hovered bin, content function, or config. { content, chrome: \"none\" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -27666,6 +27675,15 @@
               ],
               "description": "Alias for windowMode inherited from RealtimeHistogram."
             },
+            "binAlign": {
+              "type": "string",
+              "enum": [
+                "start",
+                "center"
+              ],
+              "description": "Zero-anchored time bins: start uses [timestamp, timestamp + binSize); center uses [timestamp - binSize/2, timestamp + binSize/2). Automatic centered extents include whole edge bins; explicit timeExtent clips them.",
+              "default": "start"
+            },
             "direction": {
               "type": "string",
               "enum": [
@@ -27742,7 +27760,7 @@
                 "number",
                 "string"
               ],
-              "description": "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail).",
+              "description": "Reserved width in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized.",
               "default": 280
             },
             "height": {
@@ -27750,7 +27768,7 @@
                 "number",
                 "string"
               ],
-              "description": "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail).",
+              "description": "Reserved height in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized.",
               "default": 184
             },
             "className": {
@@ -27996,11 +28014,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 420
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -28119,7 +28139,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -28441,11 +28461,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 760
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 360
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -28564,7 +28586,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -28890,11 +28912,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 380
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -29013,7 +29037,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -29332,11 +29356,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 360
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -29455,7 +29481,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -29766,11 +29792,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 760
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 420
             },
             "margin": {
               "type": [
@@ -29873,7 +29899,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -30407,11 +30433,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 520
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -30530,7 +30558,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -30781,11 +30809,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 420
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -30905,7 +30935,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -31303,11 +31333,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 520
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -31431,7 +31463,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -32540,7 +32572,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -33040,11 +33072,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 920
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 620
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -33163,7 +33197,7 @@
                 "string",
                 "object"
               ],
-              "description": "Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
+              "description": "Tooltip content function/config ({ content, chrome: \"none\" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. \"multi\" falls back to the single-datum tooltip.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "string",
@@ -33517,7 +33551,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -34049,7 +34083,7 @@
                 "object",
                 "string"
               ],
-              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
+              "description": "Tooltip: true/false, \"multi\", { mode: \"multi\", content?, chrome? }, a custom function, { content, chrome: \"none\" | \"default\" }, or { fields, title, chrome? } config. chrome: \"none\" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.",
               "x-semiotic-runtime-types": [
                 "boolean",
                 "function",
@@ -35846,11 +35880,11 @@
           "properties": {
             "width": {
               "type": "number",
-              "default": 600
+              "default": 920
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 440
             },
             "className": {
               "type": "string"
@@ -37429,11 +37463,11 @@
           "properties": {
             "width": {
               "type": "number",
-              "default": 600
+              "default": 980
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 860
             },
             "className": {
               "type": "string"

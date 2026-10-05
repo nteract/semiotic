@@ -110,6 +110,7 @@ export const GeoCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
 
   const { frameRef, resolved, normalizedMargin } =
     useCustomChartScaffold<StreamGeoFrameHandle>({
+    responsive: props,
       imperativeRef: ref,
       imperativeVariant: "geo-points",
       margin: userMargin,
@@ -136,6 +137,7 @@ export const GeoCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
   const hasBoundedInput = points !== undefined || lines !== undefined || areas !== undefined
 
   const setup = useChartSetup({
+    responsive: props,
     data: setupData,
     rawData: hasBoundedInput ? setupData : undefined,
     colorBy,

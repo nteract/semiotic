@@ -1,7 +1,7 @@
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { SceneNode } from "../types"
 import type { XYMultiHover } from "./registry"
-import { buildHoverData } from "../hoverUtils"
+import { buildHoverData, resolveHistogramHoverXValue } from "../hoverUtils"
 import {
   attachSelectionProvenance,
   getSelectionProvenance
@@ -60,7 +60,7 @@ export const attachBarColumnHover: XYMultiHover = (hover, store, px, options) =>
   const x = raw instanceof Date ? raw.getTime() : Number(raw)
   const column = Number.isFinite(x) ? findBarColumnAtX(store.scene, x) : null
   if (!column) return hover
-  const xValue = invert(column.xPx)
+  const xValue = resolveHistogramHoverXValue(column.datum, invert(column.xPx))
   const next = options.hasHit
     ? { ...hover, xValue, xPx: column.xPx }
     : buildHoverData(column.datum, hover.x, hover.y, { xValue, xPx: column.xPx })

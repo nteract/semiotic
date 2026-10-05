@@ -682,3 +682,27 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
     })
   }
 }
+
+for (const entry of ["./utils/core", "./xy", "./realtime"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} (${target.conditions}) inherits tooltip chrome from the public theme entry`, () => {
+      const esm = target.file.endsWith(".module.min.js")
+      const themeFile = resolve(root, pkg.exports["./themes/react"][esm ? "import" : "require"])
+      exercise(target, `
+        const { default: React } = await import("react")
+        const { renderToStaticMarkup } = await import("react-dom/server")
+        const themeApi = filename.endsWith(".module.min.js")
+          ? await import(pathToFileURL(${JSON.stringify(themeFile)}).href)
+          : createRequire(import.meta.url)(${JSON.stringify(themeFile)})
+        for (const chrome of ["none", "default"]) {
+          const markup = renderToStaticMarkup(React.createElement(
+            themeApi.ThemeProvider, { theme: { tooltip: { chrome } } },
+            api.Tooltip({ title: "name" })({ name: "Requests" })
+          ))
+          assert.match(markup, /Requests/)
+          assert.equal(markup.includes("padding:8px 12px"), chrome === "default")
+        }
+      `)
+    })
+  }
+}

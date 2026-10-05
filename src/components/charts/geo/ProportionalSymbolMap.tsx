@@ -227,6 +227,7 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withDisplayName(/* @__PURE_
   // `rawData === undefined`) and read `setup.data` for downstream
   // iteration. Avoids a redundant pre-setup filter pass per render.
   const setup = useChartSetup({
+    responsive: props,
     // Stable empty fallback so push mode (`points === undefined`)
     // doesn't hand `useChartSetup` a fresh `[]` per render — which
     // would invalidate its sparse-filter `useMemo` and downstream

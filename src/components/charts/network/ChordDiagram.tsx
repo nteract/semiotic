@@ -1,4 +1,5 @@
 "use client"
+import { CHORD_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -144,7 +145,7 @@ export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forw
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, CHORD_DIAGRAM_SIZE)
 
   const {
     nodes,
@@ -186,6 +187,7 @@ export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forw
   // Consolidated network setup. `showLegend` is auto-on when colorBy is set;
   // legend interaction shares the same categories and color scale.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes,
     edges,
     inferNodes: true,

@@ -1,4 +1,5 @@
 "use client"
+import { SCATTERPLOT_MATRIX_SIZE } from "../shared/chartSizeDefaultsXY"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, useCallback, useState } from "react"
@@ -92,8 +93,8 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     fieldLabels = {},
     colorBy,
     colorScheme,
-    cellSize = 150,
-    cellGap = 4,
+    cellSize = SCATTERPLOT_MATRIX_SIZE.cellSize,
+    cellGap = SCATTERPLOT_MATRIX_SIZE.cellGap,
     pointRadius = 2,
     pointOpacity = 0.5,
     diagonal = "histogram",
@@ -166,7 +167,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   )
 
   const _n = fields.length
-  const labelWidth = 40
+  const labelWidth = SCATTERPLOT_MATRIX_SIZE.labelWidth
 
   // Translate a cell's local pixel offset into grid-relative coordinates so
   // hover and click observations (and onClick) share one coordinate space.

@@ -132,6 +132,7 @@ export const XYCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   )
 
   const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamXYFrameHandle>({
+    responsive: props,
     imperativeRef: ref,
     imperativeVariant: "xy",
     chartTypeLabel: "XYCustomChart",

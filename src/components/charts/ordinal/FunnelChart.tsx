@@ -189,6 +189,7 @@ export const FunnelChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwa
   const isSingleColor = !effectiveColorBy
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

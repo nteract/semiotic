@@ -94,6 +94,8 @@ export interface XYSceneConfig {
   // Bar (realtime histogram)
   trackHoverRows?: boolean
   binSize?: number
+  /** Zero-anchored time bins start at, or surround, each grid timestamp. */
+  binAlign?: "start" | "center"
   barColors?: Record<string, string>
   /** Bar fill/stroke/strokeWidth/gap. Threaded through from RealtimeHistogram. */
   barStyle?: BarStyle

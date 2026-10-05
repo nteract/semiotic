@@ -25,6 +25,7 @@ import type { CSSProperties, ReactNode } from "react"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useLegendInteraction
 } from "../shared/hooks"
 import { extractCategoryDomain } from "../../stream/categoryDomain"
@@ -100,6 +101,8 @@ export interface RealtimeHistogramProps<
   mobileInteraction?: MobileInteractionProp
   /** Time interval for binning */
   binSize: number
+  /** Zero-anchored bin alignment. Centered bins span timestamp ± binSize/2. @default "start" */
+  binAlign?: "start" | "center"
   /** Chart dimensions as [width, height] */
   size?: [number, number]
   /** Chart width (alternative to size) */
@@ -313,6 +316,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
 
   const {
     binSize,
+    binAlign,
     size,
     margin: userMargin,
     className,
@@ -468,7 +472,8 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     activeSelectionHook,
     hoverSelectionHook,
     customHoverBehavior: linkedHoverBehavior,
-    customClickBehavior
+    customClickBehavior,
+    crosshairSourceId
   } = useChartSelection({
     selection,
     linkedHover,
@@ -541,10 +546,9 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     loading,
     resolvedSize[0],
     resolvedSize[1],
-    loadingContent
-  )
+    loadingContent, props)
   const emptyEl = !loadingEl
-    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent, props)
     : null
 
   const barStyle: BarStyle = {}
@@ -614,6 +618,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   return (
     <StreamXYFrame
       ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
       chartType="bar"
       runtimeMode="streaming"
       size={resolvedSize}
@@ -636,6 +641,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
       invertY={direction === "down"}
       extentPadding={extentPadding}
       binSize={binSize}
+      binAlign={binAlign}
       categoryAccessor={categoryAccessor}
       barColors={resolvedCategoryColors}
       barStyle={barStyle}

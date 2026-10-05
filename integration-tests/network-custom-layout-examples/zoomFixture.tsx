@@ -108,6 +108,11 @@ const ChartTooltip = markTooltipChrome(function ChartTooltip({ label }: { label:
   return <TooltipRoot id={id} role="tooltip" style={{ background: "navy", color: "white" }}>{label}</TooltipRoot>
 })
 const MyTooltip = ({ label }: { label: string }) => <ChartTooltip label={label} />
+function DeclarativeTooltip({ label }: { label: string }) {
+  return <div data-testid="declarative-surface" style={{ background: "navy", color: "white", padding: 12, borderRadius: 4 }}>{label}</div>
+}
+const DeclarativeOuter = ({ label }: { label: string }) => <DeclarativeTooltip label={label} />
+const declarativeTooltip = (datum: Record<string, unknown>) => <DeclarativeOuter label={String(datum.id)} />
 const ownedTooltip = markTooltipChrome((datum: Record<string, unknown>) => <MyTooltip label={String(datum.id)} />)
 const emptyResults: Record<string, React.ReactNode> = {
   null: null, undefined: undefined, boolean: false, true: true,
@@ -191,7 +196,7 @@ export function ZoomFixture() {
         zoomOptions={options}
         animate={false}
         accessibleTable={false}
-        tooltip={tooltipMode === "false" ? false : tooltip}
+        tooltip={tooltipMode === "false" ? false : tooltipMode === "declarative" ? { content: declarativeTooltip, chrome: "none" } : tooltip}
         onObservation={(event) => {
           if (event.type === "hover") setHover(String(event.datum?.id))
           if (event.type === "hover-end") setHover("none")

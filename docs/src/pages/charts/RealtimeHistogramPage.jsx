@@ -546,6 +546,7 @@ function StackedBrushDemo() {
 // ---------------------------------------------------------------------------
 
 const RealtimeHistogramProps = [
+  { name: "binAlign", type: '"start" | "center"', default: '"start"', description: "Centered bins surround zero-anchored grid timestamps by binSize/2 on each side. Automatic extents include whole edge bins; explicit timeExtent clips them." },
   { name: "binSize", type: "number", required: true, default: null, description: "Time interval for binning data points into bars. Points within the same bin are aggregated." },
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value from each data point." },
@@ -642,6 +643,15 @@ export default function RealtimeHistogramPage() {
         Create a ref, push data points on an interval, and
         RealtimeHistogram bins and renders them as bars. The{" "}
         <code>binSize</code> prop defines the time interval for aggregation.
+      </p>
+
+      <p>
+        Set <code>binAlign="center"</code> when each sample timestamp identifies
+        the center of its time slot. Bins follow a zero-anchored grid and cover
+        <code>{"[timestamp - binSize/2, timestamp + binSize/2)"}</code>. Automatic
+        extents include the full first and last bins; explicit <code>timeExtent</code>
+        still clips at the requested bounds. Stacking and brush snapping use the
+        same boundaries.
       </p>
 
       <BasicBarDemo />
@@ -1036,6 +1046,40 @@ import { TemporalHistogram } from "semiotic/realtime"
     linkedHover={{ name: "detail", mode: "field", fields: ["time", "category"] }}
     onHover={hover => console.log(hover?.data)} />
 </LinkedCharts>`} />
+      <p>
+        For a shared time crosshair, use <code>mode: "x-position"</code> and
+        <code>xField: "time"</code> on both charts. Tables can read and set the
+        same position with <code>useLinkedCrosshair("time")</code> from
+        <code>semiotic/ai</code>, <code>semiotic/xy</code>, or <code>semiotic/realtime</code>.
+        The hook returns <code>{"{ position, setPosition }"}</code>; position is
+        <code>{"{ xValue, sourceId, locked? } | null"}</code>. Set
+        <code>{"{ xValue: timestamp, locked: true }"}</code> to lock from a table,
+        or <code>null</code> to clear. Click and Escape update the same lock.
+      </p>
+      <CodeBlock language="tsx" code={`import { useState } from "react"
+import { LinkedCharts, type CrosshairPosition } from "semiotic/ai"
+import { LineChart } from "semiotic/xy"
+import { TemporalHistogram } from "semiotic/realtime"
+
+function HealthCharts({ rows }: { rows: { time: number; value: number }[] }) {
+  const [position, setPosition] = useState<CrosshairPosition | null>(null)
+  const linkedHover = { name: "time", mode: "x-position" as const, xField: "time" }
+
+  return (
+    <LinkedCharts crosshair={{ name: "time", position, onPositionChange: setPosition }}>
+      <LineChart data={rows} xAccessor="time" yAccessor="value" linkedHover={linkedHover} />
+      <TemporalHistogram data={rows} binSize={10} binAlign="center" linkedHover={linkedHover} />
+      <HealthTable position={position} onPositionChange={setPosition} />
+    </LinkedCharts>
+  )
+}`} />
+      <p>
+        Passing <code>position</code> makes the named crosshair controlled:
+        <code>null</code> hides it and <code>undefined</code> uses internal state.
+        <code>onPositionChange</code> reports hover, leave, click, Escape, and table
+        requests; accepting the callback value updates controlled charts.
+        Crosshair names are scoped to their <code>LinkedCharts</code> parent.
+      </p>
       <p>
         For mirrored charts, use identical <code>timeExtent</code>,
         {" "}<code>valueExtent</code>, <code>binSize</code>, and left/right margins.

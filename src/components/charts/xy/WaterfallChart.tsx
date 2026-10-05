@@ -238,6 +238,7 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
   }, [data, plotData, usesIndex])
 
   const setup = useChartSetup({
+    responsive: props,
     data: plotData,
     rawData: data,
     colorBy: undefined,

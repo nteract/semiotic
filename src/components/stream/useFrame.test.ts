@@ -728,6 +728,22 @@ describe("useFrame — hover coalescing", () => {
     expect(leaveCalls).toBe(1)
   })
 
+  it("processes an older hover before activation without replaying it afterward", () => {
+    const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
+    const events: string[] = []
+    result.current.hoverHandlerRef.current = () => { events.push("hover") }
+    result.current.hoverLeaveRef.current = () => { events.push("leave") }
+    result.current.onPointerMove({ clientX: 5, clientY: 6 })
+    result.current.flushPointerMove()
+    events.push("activate")
+    flushRafs()
+    expect(events).toEqual(["hover", "activate"])
+    expect(result.current.pointerStateRef.current.inside).toBe(true)
+    result.current.onPointerMove({ clientX: 7, clientY: 8 })
+    flushRafs()
+    expect(events).toEqual(["hover", "activate", "hover"])
+  })
+
   it("after onPointerLeave, the dropped pointermove does NOT fire its handler when flushed", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     let hoverCalls = 0

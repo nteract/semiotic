@@ -1,4 +1,5 @@
 import type { ChartSpec } from "./chartSpecCore"
+import { BIG_NUMBER_SIZES } from "./chartSizeDefaultsValue"
 
 export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
   BigNumber: {
@@ -19,8 +20,8 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
     // explicitly here keeps the AI schema honest.
     propBags: [],
     ownProps: {
-      width: { type: ["number", "string"], default: 280, description: "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail)." },
-      height: { type: ["number", "string"], default: 184, description: "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail)." },
+      width: { type: ["number", "string"], default: BIG_NUMBER_SIZES.tile.width, description: "Reserved width in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized." },
+      height: { type: ["number", "string"], default: BIG_NUMBER_SIZES.tile.height, description: "Reserved height in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized." },
       className: { type: "string", description: "Composed with the BEM root class on the outer container." },
       chartId: { type: "string", description: "Stable identifier surfaced on observation events." },
       description: { type: "string", description: "Override the auto-generated accessible label sentence." },

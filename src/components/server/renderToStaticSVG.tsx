@@ -18,6 +18,7 @@ import {
 import { compareArtifactIdentity } from "../artifact/identity"
 import { renderedSceneHash } from "../evidence/renderedSceneHash"
 import { isChartMode, resolveChartMode } from "../charts/shared/chartMode"
+import { chartPrimarySize, hasFixedModeSize } from "../charts/shared/chartSizeDefaults"
 import { applySemanticViability } from "../ai/semanticViability"
 import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
 /**
@@ -424,14 +425,15 @@ function renderChartInternal(
   // physics `mode="mechanical"`). Only consume the four semantic display
   // modes here; the original prop remains in `rest` for the chart builder.
   const requestedMode =
-    config.layout?.mode ?? (isChartMode(props.mode) ? props.mode : undefined)
+    config.layout?.mode ?? (!hasFixedModeSize(component) && isChartMode(props.mode) ? props.mode : undefined)
   const resolvedMode = resolveChartMode(
     requestedMode,
     {
       ...config.layout?.modeDefaults,
-      ...pickDefinedProps(props, CHART_MODE_PROP_KEYS)
+      ...pickDefinedProps(props, CHART_MODE_PROP_KEYS),
+      ...(hasFixedModeSize(component) && { responsiveRules: undefined })
     },
-    config.layout?.primarySize
+    chartPrimarySize(component) ?? config.layout?.primarySize
   )
 
   const {

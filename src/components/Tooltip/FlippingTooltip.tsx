@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useTooltipChrome } from "./tooltipChrome"
 import {
   defaultTooltipStyle,
   hasOwnTooltipChrome,
@@ -87,6 +88,7 @@ export function FlippingTooltip({
   className = "stream-frame-tooltip",
   zIndex = 1
 }: FlippingTooltipProps) {
+  const themeChrome = useTooltipChrome()
   // Position guard. The early-return form (before hooks) tripped React's
   // "static flag" hook-order check when y oscillated between NaN and a
   // finite number (the hover handler can emit either as a frame transitions
@@ -197,7 +199,7 @@ export function FlippingTooltip({
     committedPlacement.current = placement
   })
 
-  const ownsChrome = contentOwnsChrome || hasOwnTooltipChrome(children)
+  const ownsChrome = themeChrome === "none" || contentOwnsChrome || hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
   const compositeClassName = ownsChrome
     ? className

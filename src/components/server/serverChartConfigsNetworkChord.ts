@@ -18,7 +18,6 @@ import { resolveTheme } from "./themeResolver"
 
 export const chordDiagram: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Match ChordDiagram HOC coloring:
     //  - colorBy → categorical scale fill

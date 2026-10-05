@@ -5,12 +5,23 @@ _Edit dist/semiotic-realtime-react.d.ts's sources, then re-run `npm run docs:api
 
 ```
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
+function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
+function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 function useStreamStatus<THandle extends RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum> = RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum>>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>
 function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
+interface CrosshairPosition
+interface LinkedCrosshairConfig
 interface StreamStatusOptions
 interface StreamStatusResult<THandle extends RealtimeFrameHandle = RealtimeFrameHandle>
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
+interface UseLinkedCrosshairResult
+interface-member CrosshairPosition::property::locked = optional locked: boolean | undefined
+interface-member CrosshairPosition::property::sourceId = required sourceId: string
+interface-member CrosshairPosition::property::xValue = required xValue: number
+interface-member LinkedCrosshairConfig::property::name = required name: string
+interface-member LinkedCrosshairConfig::property::onPositionChange = optional onPositionChange: ((null | position: CrosshairPosition) => void) | undefined
+interface-member LinkedCrosshairConfig::property::position = optional position: CrosshairPositionInput | null | undefined
 interface-member StreamStatusOptions::property::pollIntervalMs = optional pollIntervalMs: number | undefined
 interface-member StreamStatusOptions::property::staleThresholdMs = optional staleThresholdMs: number | undefined
 interface-member StreamStatusResult::property::lastPushTime = required lastPushTime: null | number
@@ -23,6 +34,9 @@ interface-member SyncedPushHandle::property::push = optional push: ((datum: T) =
 interface-member SyncedPushHandle::property::pushMany = optional pushMany: ((data: T[]) => unknown) | undefined
 interface-member SyncedPushHandle::property::remove = optional remove: ((id: string | string[]) => unknown) | undefined
 interface-member SyncedPushHandle::property::update = optional update: ((id: string, updater: (datum: T) => T) => unknown) | undefined
+interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
+interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
+type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: string;}
 type PushIdAccessor<T> = ((datum: T, index: number) => string | null | number | undefined) | keyof T
 type StreamStatus = "active" | "idle" | "stale"
 ```

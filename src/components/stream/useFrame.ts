@@ -282,6 +282,8 @@ export interface UseFrameResult {
   /** Stable callback to attach to canvas's onPointerMove (or onMouseMove).
    *  Captures the coords and queues a single rAF to drain into hoverHandlerRef. */
   onPointerMove: (e: { clientX: number; clientY: number; pointerType?: string }) => void
+  /** Process a queued move before a newer synchronous activation changes state. */
+  flushPointerMove: () => void
   /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
    *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
   onPointerLeave: () => void
@@ -525,17 +527,21 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
       }
     }
   }, [flushPendingMove])
-  const onPointerLeave = useCallback(() => {
-    pointerStateRef.current.inside = false
-    pendingMoveCoordsRef.current = null
+  const flushPointerMove = useCallback(() => {
     if (moveRafRef.current !== null) {
       const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
       scheduler.cancelAnimationFrame(moveRafRef.current)
       moveRafRef.current = null
       pendingMoveSchedulerRef.current = null
     }
+    flushPendingMove()
+  }, [flushPendingMove])
+  const onPointerLeave = useCallback(() => {
+    pointerStateRef.current.inside = false
+    pendingMoveCoordsRef.current = null
+    flushPointerMove()
     hoverLeaveRef.current()
-  }, [])
+  }, [flushPointerMove])
 
   // Cleanup pending hover rAF on unmount alongside the render-rAF cancel.
   useEffect(() => {
@@ -610,6 +616,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     hoverHandlerRef,
     hoverLeaveRef,
     onPointerMove,
+    flushPointerMove,
     onPointerLeave,
     pointerStateRef,
   }

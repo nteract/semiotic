@@ -781,3 +781,6 @@ export type {
 
 export { MobileAnnotationCalloutList } from "./MobileAnnotationCalloutList"
 export type { MobileAnnotationCalloutListProps } from "./MobileAnnotationCalloutList"
+
+export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
+export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"

@@ -63,6 +63,8 @@ export interface SemioticTheme {
     titleFontWeight?: string | number
   }
   tooltip?: {
+    /** Default chrome for custom tooltip renderers; chart configs can override it. */
+    chrome?: "default" | "none"
     background?: string
     text?: string
     borderRadius?: string

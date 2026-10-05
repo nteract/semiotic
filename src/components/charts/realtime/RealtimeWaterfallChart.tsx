@@ -22,6 +22,7 @@ import type { CSSProperties, ReactNode } from "react"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useLegendInteraction
 } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -369,7 +370,8 @@ export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE
       activeSelectionHook,
       hoverSelectionHook,
       customHoverBehavior: linkedHoverBehavior,
-      customClickBehavior
+      customClickBehavior,
+      crosshairSourceId
     } = useChartSelection({
       selection,
       linkedHover,
@@ -395,10 +397,9 @@ export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE
       loading,
       resolvedSize[0],
       resolvedSize[1],
-      loadingContent
-    )
+      loadingContent, props)
     const emptyEl = !loadingEl
-      ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+      ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent, props)
       : null
 
     const waterfallStyle: WaterfallStyle = {}
@@ -457,6 +458,7 @@ export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE
     return (
       <StreamXYFrame
         ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
         chartType="waterfall"
         runtimeMode="streaming"
         size={resolvedSize}

@@ -1,5 +1,6 @@
 "use client"
 
+import { CHAIN_REACTION_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 import * as React from "react"
 import {
   forwardRef,
@@ -117,8 +118,8 @@ export const ChainReactionChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     onSimulationStateChange,
     reducedMotion,
     seed = 31,
-    width: widthProp = 920,
-    height: heightProp = 620,
+    width: widthProp = CHAIN_REACTION_CHART_SIZE.width,
+    height: heightProp = CHAIN_REACTION_CHART_SIZE.height,
     responsiveWidth,
     responsiveHeight,
     title = "Dependency chain reaction",

@@ -1,4 +1,5 @@
 "use client"
+import { GAUNTLET_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import {
@@ -41,8 +42,6 @@ import {
   usePhysicsRerun
 } from "./physicsHocUtils"
 import {
-  DEFAULT_WIDTH,
-  DEFAULT_HEIGHT,
   EMPTY_GAUNTLET_PROPERTIES,
   CORE_KIND,
   buildLayout,
@@ -154,7 +153,7 @@ export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
       props.startTimeAccessor
     ]
   )
-  const layoutMode = usePhysicsChartMode(props, [DEFAULT_WIDTH, DEFAULT_HEIGHT])
+  const layoutMode = usePhysicsChartMode(props, GAUNTLET_CHART_SIZE)
   const {
     chartSize,
     showProjection,
@@ -183,6 +182,7 @@ export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data,
     emptyContent,
     loading,

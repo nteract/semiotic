@@ -19,7 +19,7 @@ import { MarginalGraphicsLazy as MarginalGraphics, normalizeMarginalConfig } fro
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
-import { useCrosshairPosition, unlockCrosshair } from "../store/LinkedCrosshairStore"
+import { useCrosshairPosition, useCrosshairActions } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import {
@@ -326,16 +326,17 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   // Linked crosshair from coordinate-based hover sync
   const crosshairPos = useCrosshairPosition(linkedCrosshairName)
+  const { unlockCrosshair, handlesEscape } = useCrosshairActions()
 
   // Escape key unlocks a locked crosshair
   useEffect(() => {
-    if (!crosshairPos?.locked || !linkedCrosshairName) return
+    if (handlesEscape || !crosshairPos?.locked || !linkedCrosshairName) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") unlockCrosshair(linkedCrosshairName)
     }
     document.addEventListener("keydown", handler)
     return () => document.removeEventListener("keydown", handler)
-  }, [crosshairPos?.locked, linkedCrosshairName])
+  }, [crosshairPos?.locked, linkedCrosshairName, unlockCrosshair, handlesEscape])
 
   const hasContent = directLabels.node || showAxes || title || description || legend || foregroundGraphics || marginalGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children || crosshairPos
   const axisRevision = useMemo(() => ({ width, height, xTicks, yTicks, yTicksRight, labelMeasurer, axes }), [width, height, xTicks, yTicks, yTicksRight, labelMeasurer, axes])
@@ -699,18 +700,25 @@ export function SVGOverlay(props: SVGOverlayProps) {
         {foregroundGraphics}
 
         {/* Linked crosshair line (coordinate-based hover sync) */}
-        {crosshairPos && crosshairPos.sourceId !== linkedCrosshairSourceId && scales?.x && (() => {
+        {crosshairPos && (crosshairPos.locked || crosshairPos.sourceId !== linkedCrosshairSourceId) && scales?.x && (() => {
           const px = scales.x(crosshairPos.xValue)
           if (px == null || px < 0 || px > width) return null
           const isLocked = crosshairPos.locked
+          const lineProps = {
+            x1: px, y1: 0, x2: px, y2: height,
+            strokeDasharray: isLocked ? "6,3" : "4,4"
+          }
           return (
-            <line
-              x1={px} y1={0} x2={px} y2={height}
-              stroke={isLocked ? "white" : "var(--semiotic-text-secondary, rgba(0,0,0,0.25))"}
-              strokeWidth={isLocked ? 1.5 : 1}
-              strokeDasharray={isLocked ? "6,3" : "4,4"}
-              pointerEvents="none"
-            />
+            <g pointerEvents="none" aria-hidden="true">
+              {/* Keep contrast when a chart background differs from its theme. */}
+              <line {...lineProps} stroke="var(--semiotic-surface, #fff)" strokeWidth={isLocked ? 3.5 : 3} />
+              <line
+                {...lineProps}
+                data-semiotic-crosshair={isLocked ? "locked" : "hover"}
+                stroke={isLocked ? "var(--semiotic-text, #333)" : "var(--semiotic-text-secondary, #666)"}
+                strokeWidth={isLocked ? 1.5 : 1}
+              />
+            </g>
           )
         })()}
 

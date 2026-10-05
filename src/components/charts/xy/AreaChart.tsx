@@ -450,6 +450,7 @@ export const AreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

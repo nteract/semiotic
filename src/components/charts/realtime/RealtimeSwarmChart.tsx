@@ -23,6 +23,7 @@ import type { CSSProperties, ReactNode } from "react"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useLegendInteraction
 } from "../shared/hooks"
 import { extractCategoryDomain } from "../../stream/categoryDomain"
@@ -371,7 +372,8 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     activeSelectionHook,
     hoverSelectionHook,
     customHoverBehavior: linkedHoverBehavior,
-    customClickBehavior
+    customClickBehavior,
+    crosshairSourceId
   } = useChartSelection({
     selection,
     linkedHover,
@@ -397,10 +399,9 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     loading,
     resolvedSize[0],
     resolvedSize[1],
-    loadingContent
-  )
+    loadingContent, props)
   const emptyEl = !loadingEl
-    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent, props)
     : null
 
   const swarmStyle: SwarmStyle = {}
@@ -484,6 +485,7 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   return (
     <StreamXYFrame
       ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
       chartType="swarm"
       runtimeMode="streaming"
       size={resolvedSize}

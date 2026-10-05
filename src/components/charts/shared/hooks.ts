@@ -9,12 +9,7 @@ import { normalizeLinkedHover } from "./selectionUtils"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useSelection, useLinkedHover } from "../../store/useSelection"
 import { selectionFieldValues } from "../../store/selectionProvenance"
-import {
-  setCrosshairPosition,
-  clearCrosshairPosition,
-  toggleCrosshairLock,
-  unlockCrosshair
-} from "../../store/LinkedCrosshairStore"
+import { useCrosshairActions } from "../../store/LinkedCrosshairStore"
 import { useObservationSelector } from "../../store/ObservationStore"
 import type {
   OnObservationCallback,
@@ -248,6 +243,10 @@ export function useChartSelection({
   crosshairSourceId: string
 } {
   const crosshairSourceId = useId()
+  const crosshairActions = useCrosshairActions()
+  const { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } = crosshairActions
+  const crosshairActionsRef = useRef(crosshairActions)
+  crosshairActionsRef.current = crosshairActions
   const hoverConfig = useMemo(
     () => normalizeLinkedHover(linkedHover, fallbackFields),
     [linkedHover, fallbackFields]
@@ -395,7 +394,9 @@ export function useChartSelection({
       emitObservations,
       hoverHighlight,
       seriesField,
-      mobileInteraction
+      mobileInteraction,
+      setCrosshairPosition,
+      clearCrosshairPosition
     ]
   )
 
@@ -424,7 +425,9 @@ export function useChartSelection({
       mobileInteraction,
       selectionHook,
       hoverHighlight,
-      crosshairSourceId
+      crosshairSourceId,
+      clearCrosshairPosition,
+      unlockCrosshair
     ]
   )
 
@@ -518,7 +521,8 @@ export function useChartSelection({
       linkFields,
       hoverHighlight,
       seriesField,
-      clearMobileLock
+      clearMobileLock,
+      toggleCrosshairLock
     ]
   )
 
@@ -551,8 +555,7 @@ export function useChartSelection({
     if (hoverConfig?.mode !== "x-position") return
     const name = hoverConfig.name || "hover"
     return () => {
-      unlockCrosshair(name, crosshairSourceId)
-      clearCrosshairPosition(name, crosshairSourceId)
+      crosshairActionsRef.current.releaseCrosshair(name, crosshairSourceId)
     }
   }, [hoverConfig?.mode, hoverConfig?.name, crosshairSourceId])
 

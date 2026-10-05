@@ -677,6 +677,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   // renderEmptyState/loadingState, and the push-mode legend
   // synthesis path.
   const setup = useChartSetup({
+    responsive: props,
     data: effectiveData as Datum[],
     rawData: data,
     colorBy: effectiveColorBy,

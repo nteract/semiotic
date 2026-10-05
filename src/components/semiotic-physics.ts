@@ -217,6 +217,7 @@ export type {
   TooltipField,
   MultiLineTooltipConfig,
   MultiTooltipConfig,
+  CustomTooltipConfig,
   TooltipRootProps,
   TooltipChromeMode
 } from "./Tooltip/Tooltip"

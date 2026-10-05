@@ -250,6 +250,7 @@ export const ConnectedScatterplot = /* @__PURE__ */ withDisplayName(/* @__PURE__
 
   // ── Shared setup (selection, loading/empty, margins) ──────────────────
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: undefined,

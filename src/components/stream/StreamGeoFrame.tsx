@@ -450,7 +450,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // body (hit testing on hover) further down via useEffect, and the
     // hover-leave body (clear hover state + schedule render) inline
     // where `frame.hoverLeaveRef.current = ...` is set a few lines below.
-    const { hoverHandlerRef, onPointerMove, onPointerLeave, pointerStateRef } = frame
+    const { hoverHandlerRef, onPointerMove, onPointerLeave, flushPointerMove, pointerStateRef } = frame
 
     const { canvasRef, interactionCanvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
       hydrated,
@@ -534,6 +534,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       (e: React.MouseEvent) => {
         if (isAnnotationActivationTarget(e.target)) return
         if (!customClickBehavior) return
+        flushPointerMove()
         const store = storeRef.current
         if (!store || !store.scene.length) {
           customClickBehavior(null)
@@ -588,7 +589,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         }
         customClickBehavior(null)
       },
-      [adjustedHeight, adjustedWidth, customClickBehavior, margin]
+      [adjustedHeight, adjustedWidth, customClickBehavior, margin, flushPointerMove]
     )
 
     // ── Keyboard navigation ───────────────────────────────────────────

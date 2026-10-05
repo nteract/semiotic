@@ -1,4 +1,5 @@
 "use client"
+import { PACKET_FLOW_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
@@ -405,7 +406,7 @@ export const PacketFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
     targetAccessor = "target" as ChartAccessor<TLink, string>,
     throughputAccessor = "value" as ChartAccessor<TLink, number>
   } = props
-  const layoutMode = usePhysicsChartMode(props, [760, 420])
+  const layoutMode = usePhysicsChartMode(props, PACKET_FLOW_CHART_SIZE)
   const {
     chartSize,
     className: modeClassName,
@@ -591,6 +592,7 @@ export const PacketFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data:
       links == null && edges == null && data == null ? undefined : chartLinks,
     emptyContent,

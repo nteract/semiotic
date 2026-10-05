@@ -157,6 +157,7 @@ export const GroupedBarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
   const effectiveColorBy = colorBy || groupBy
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

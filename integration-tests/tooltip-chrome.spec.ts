@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 for (const raw of [false, true]) {
-  for (const mode of ["owned", "plain"]) {
+  for (const mode of raw ? ["owned", "plain"] : ["owned", "plain", "declarative"]) {
     test(`${raw ? "frame" : "chart"} ${mode} renderer keeps one surface through zoom, pan and resize`, async ({
       page
     }) => {
@@ -20,17 +20,22 @@ for (const raw of [false, true]) {
         await expect(page.getByTestId("zoom-hover")).toHaveText(label)
         await expect(tooltip).toHaveText(label)
         await expect(frame.locator(".semiotic-tooltip")).toHaveCount(1)
-        const surface = frame.locator(".semiotic-tooltip")
+        const surface = mode === "declarative"
+          ? frame.getByTestId("declarative-surface")
+          : frame.locator(".semiotic-tooltip")
         await expect(surface).not.toHaveCSS(
           "background-color",
           "rgba(0, 0, 0, 0)"
         )
-        if (mode === "owned") {
+        if (mode === "owned" || mode === "declarative") {
           await expect(tooltip).toHaveCSS(
             "background-color",
             "rgba(0, 0, 0, 0)"
           )
           await expect(surface).toHaveCSS("background-color", "rgb(0, 0, 128)")
+          if (mode === "declarative") {
+            await expect(frame.locator(".semiotic-tooltip")).toHaveCSS("padding", "0px")
+          }
         }
         const tip = (await tooltip.boundingBox())!
         expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
@@ -49,6 +54,11 @@ for (const raw of [false, true]) {
       await page.getByRole("button", { name: "Narrow chart" }).click()
       await checkHover(220, 240, "a")
       await checkHover(295, 335, "edge")
+      if (mode === "declarative") {
+        await expect(frame).toHaveScreenshot("declarative-tooltip-zoomed-edge.png", {
+          animations: "disabled"
+        })
+      }
       await page.mouse.move(0, 0)
       await expect(tooltip).toHaveCount(0)
       expect(errors).toEqual([])

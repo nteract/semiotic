@@ -62,7 +62,7 @@ import { inferNodesFromEdges } from "./networkUtils"
 import { filterSparseArray } from "./sparseArray"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
-import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
+import { renderEmptyState, renderLoadingState, type PlaceholderLayout } from "./withChartWrapper"
 
 const PUSH_CATEGORY_FIELD = "__streamNetworkCategory"
 
@@ -114,6 +114,7 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   userMargin?: PartialMargin
   width: number
   height: number
+  responsive?: PlaceholderLayout
   hasTitle?: boolean
 
   // ── Loading / empty states ───────────────────────────────────────
@@ -290,7 +291,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
 
   // ── Loading / empty states ──────────────────────────────────────
   // Computed up front so the caller can early-return AFTER all hooks.
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent, input.responsive)
   // Empty state defaults to keying off edges (Sankey/Chord/PSankey
   // shape) but switches to nodes for charts where node presence is
   // the user-data signal (ForceDirectedGraph). The undefined-vs-empty
@@ -301,7 +302,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
         emptyDataKey === "nodes"
           ? (nodes === undefined ? undefined : safeInputNodes)
           : (edges === undefined ? undefined : safeEdges),
-        width, height, emptyContent,
+        width, height, emptyContent, input.responsive,
       )
     : null
 

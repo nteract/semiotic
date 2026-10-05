@@ -487,6 +487,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       hoverLeaveRef,
       onPointerMove,
       onPointerLeave,
+      flushPointerMove,
       pointerStateRef
     } = frame
 
@@ -557,6 +558,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const onClick = useCallback((e: React.MouseEvent) => {
       if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
+      flushPointerMove()
       const canvas = canvasRef.current
       if (!canvas) {
         customClickBehavior(null)
@@ -602,7 +604,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // React state → pieceStyle → useConfigSync (same as hover). Dirtying here
       // restarted transitions under animate/intro.
       scheduleRender()
-    }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, hoverRadius, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender])
+    }, [customClickBehavior, canvasRef, margin.left, margin.top, adjustedWidth, adjustedHeight, projection, hoverRadius, effectiveOAccessor, effectiveRAccessor, chartType, scheduleRender, flushPointerMove])
 
     // useFrame coalesces pointer moves; this frame owns the hit-test closures.
 

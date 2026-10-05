@@ -11,6 +11,8 @@ import {
   useState,
   useCallback
 } from "react"
+import { LinkedCrosshairProvider } from "./store/LinkedCrosshairStore"
+import type { LinkedCrosshairConfig } from "./store/LinkedCrosshairStore"
 import { SelectionProvider, useSelectionSelector } from "./store/SelectionStore"
 import type {
   ResolutionMode,
@@ -157,6 +159,8 @@ export function useLinkedChartCategoryRegistryActive(): boolean {
 
 export interface LinkedChartsProps {
   children: React.ReactNode
+  /** Observe or control a named linkedHover x-position crosshair. */
+  crosshair?: LinkedCrosshairConfig
   /** Pre-configure selections with resolution modes */
   selections?: Record<string, { resolution?: ResolutionMode }>
   /**
@@ -434,6 +438,7 @@ export function estimateLegendRowCount(
  */
 export function LinkedCharts({
   children,
+  crosshair,
   selections,
   showLegend,
   legendPosition = "top",
@@ -573,34 +578,39 @@ export function LinkedCharts({
   const suppressChildLegends = shouldShowLegend && hasCategories
 
   return (
-    <SelectionProvider initialState={initialSelectionState}>
-      <ObservationProvider>
-        <LinkedChartsActiveContext.Provider value={true}>
-          <LinkedCategoryRegistryContext.Provider value={registry}>
-            <LinkedCategoryColorProvider colors={categoryColors}>
-              <LinkedLegendContext.Provider value={suppressChildLegends}>
-                {shouldShowLegend && legendPosition === "top" && (
-                  <LinkedLegend
-                    categoryColors={linkedLegend.colors}
-                    interaction={legendInteraction}
-                    selectionName={legendSelectionName}
-                    field={legendField}
-                  />
-                )}
-                {children}
-                {shouldShowLegend && legendPosition === "bottom" && (
-                  <LinkedLegend
-                    categoryColors={linkedLegend.colors}
-                    interaction={legendInteraction}
-                    selectionName={legendSelectionName}
-                    field={legendField}
-                  />
-                )}
-              </LinkedLegendContext.Provider>
-            </LinkedCategoryColorProvider>
-          </LinkedCategoryRegistryContext.Provider>
-        </LinkedChartsActiveContext.Provider>
-      </ObservationProvider>
-    </SelectionProvider>
+    <LinkedCrosshairProvider control={crosshair}>
+      <SelectionProvider initialState={initialSelectionState}>
+        <ObservationProvider>
+          <LinkedChartsActiveContext.Provider value={true}>
+            <LinkedCategoryRegistryContext.Provider value={registry}>
+              <LinkedCategoryColorProvider colors={categoryColors}>
+                <LinkedLegendContext.Provider value={suppressChildLegends}>
+                  {shouldShowLegend && legendPosition === "top" && (
+                    <LinkedLegend
+                      categoryColors={linkedLegend.colors}
+                      interaction={legendInteraction}
+                      selectionName={legendSelectionName}
+                      field={legendField}
+                    />
+                  )}
+                  {children}
+                  {shouldShowLegend && legendPosition === "bottom" && (
+                    <LinkedLegend
+                      categoryColors={linkedLegend.colors}
+                      interaction={legendInteraction}
+                      selectionName={legendSelectionName}
+                      field={legendField}
+                    />
+                  )}
+                </LinkedLegendContext.Provider>
+              </LinkedCategoryColorProvider>
+            </LinkedCategoryRegistryContext.Provider>
+          </LinkedChartsActiveContext.Provider>
+        </ObservationProvider>
+      </SelectionProvider>
+    </LinkedCrosshairProvider>
   )
 }
+
+export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
+export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"

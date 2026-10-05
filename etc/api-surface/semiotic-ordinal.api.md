@@ -57,6 +57,7 @@ interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface CategoricalLegendConfig
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
+interface CustomTooltipConfig
 interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface GaugeChartProps extends BaseChartProps
@@ -166,6 +167,8 @@ interface-member CustomLayoutFailureDiagnostic::property::severity = required se
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
 interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
 interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DonutChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member DonutChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member DonutChartProps::property::centerContent = optional centerContent: React.ReactNode
@@ -376,6 +379,7 @@ interface-member LikertChartProps::property::valueFormat = optional valueFormat:
 interface-member LikertChartProps::property::valueLabel = optional valueLabel: string | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member OrdinalCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -694,6 +698,7 @@ interface-member SwimlaneChartProps::property::valueAccessor = optional valueAcc
 interface-member SwimlaneChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member SwimlaneChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member SwimlaneChartProps::property::valueLabel = optional valueLabel: string | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -716,6 +721,6 @@ type OrdinalCustomLayout<C extends object = Record<string, unknown>> = (ctx: Ord
 type OrdinalSceneNode = BoxplotSceneNode | ConnectorSceneNode | GlyphSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode | TrapezoidSceneNode | ViolinSceneNode | WedgeSceneNode
 type ResponsiveOrientation = "landscape" | "portrait"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

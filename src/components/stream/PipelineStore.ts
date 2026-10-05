@@ -60,6 +60,7 @@ import {
   reapplyPartialYExtent,
   rescueDegenerateDomains,
   resolveBarBinYDomain,
+  resolveCenteredBinXDomain,
   resolveStackedAreaYDomain,
   resolveWaterfallXDomain,
   resolveWaterfallYDomain,
@@ -554,6 +555,9 @@ export class PipelineStore extends UpdateResultStoreBase {
           config.xScaleType
         )
       : mergePartialDomain(dataXDomain, config.xExtent)
+    if (config.chartType === "bar" && config.binSize && config.binAlign === "center") {
+      xDomain = resolveCenteredBinXDomain(dataXDomain, config.binSize, config.xExtent)
+    }
     let yDomain = mergePartialDomain(dataYDomain, config.yExtent)
 
     const yFullySpecified = isFullySpecifiedExtent(config.yExtent)
@@ -579,7 +583,8 @@ export class PipelineStore extends UpdateResultStoreBase {
         config.binSize,
         this.getCategory,
         config.extentPadding,
-        exactMode
+        exactMode,
+        config.binAlign
       )
     } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
       yDomain = resolveWaterfallYDomain(

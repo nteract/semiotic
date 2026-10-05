@@ -154,6 +154,7 @@ export const RadarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
   const colorByResolved = colorBy || seriesKey
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: colorByResolved,

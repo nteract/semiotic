@@ -23,3 +23,6 @@ export type {
   SyncedPushDataOptions,
   PushIdAccessor,
 } from "./charts/shared/useSyncedPushData"
+
+export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
+export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"

@@ -447,7 +447,11 @@ test.describe("Brush & Selection - Visual snapshots", () => {
     await waitForRafs(page, 2)
     await page.mouse.move(0, 0)
     await waitForRafs(page, 4)
-    await expect(testCase.locator('line[stroke="white"]')).toHaveCount(1)
+    const lockedLines = testCase.locator('[data-semiotic-crosshair="locked"]')
+    await expect(lockedLines).toHaveCount(2)
+    await expect(lockedLines.nth(1)).toHaveAttribute(
+      "x1", (await lockedLines.first().getAttribute("x1"))!
+    )
     await expect(testCase).toHaveScreenshot("linked-hover-crosshair-locked-state.png", {
       maxDiffPixels: 220,
     })
