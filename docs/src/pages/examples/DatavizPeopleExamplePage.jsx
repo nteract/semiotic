@@ -77,11 +77,11 @@ export default function DatavizPeopleExamplePage() {
       >
         <section className="dv7-hero">
           <div className="dv7-hero-copy">
-            <p className="dv7-kicker">A Semiotic persona machine</p>
+            <p className="dv7-kicker">Twelve approaches to data visualization</p>
             <p className="dv7-lede">
-              The 2017 essay sorted data visualization people into seven affectionate types. This
-              expanded remake accepts that the taxonomy has mutated: pick a person and the argument
-              changes chart form, data shape, interaction, and visual posture.
+              The 2017 essay described seven affectionate types of visualization people. This
+              version expands the cast to twelve. Choose a persona to see how their priorities
+              change the data, chart and way of exploring it.
             </p>
             <p className="dv7-source-note">
               Original taxonomy from{" "}
@@ -163,7 +163,7 @@ export default function DatavizPeopleExamplePage() {
         <section className="dv7-roster">
           <div className="dv7-section-head">
             <span>Twelve chart instincts</span>
-            <h2>Every type gets a native chart body</h2>
+            <h2>A different chart for each perspective</h2>
           </div>
           <div className="dv7-roster-grid">
             {PERSONAS.map((item) => (
@@ -186,11 +186,11 @@ export default function DatavizPeopleExamplePage() {
         <section className="dv7-matrix-section">
           <div className="dv7-section-head">
             <span>The shared material</span>
-            <h2>Same taxonomy, many visual grammars</h2>
+            <h2>Compare the twelve approaches</h2>
             <p>
-              The strip below keeps the five temperament metrics constant across the twelve
-              personas. The large chart above is free to become a flow, dashboard, field, story,
-              model, funnel, terminal gag, workshop rubric, or taxonomy.
+              The strip below compares the same five temperament measures for every persona. The
+              main chart changes more freely, showing how each person might approach a
+              visualization task.
             </p>
           </div>
           <PersonaMatrix rows={personaRows} activeId={activeId} onChange={setActiveId} />
@@ -199,7 +199,7 @@ export default function DatavizPeopleExamplePage() {
         <section className="dv7-code-section">
           <div className="dv7-section-head">
             <span>Implementation shape</span>
-            <h2>A selector can change the entire chart grammar</h2>
+            <h2>How the selector changes the chart</h2>
           </div>
           <CodeBlock language="jsx" showCopyButton wrap code={implementationCode} />
         </section>

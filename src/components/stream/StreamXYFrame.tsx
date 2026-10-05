@@ -776,6 +776,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
       useXYKeyboardNavigation({
+        clearPointerHover: onPointerLeave,
         storeRef,
         hoverRef,
         hoveredNodeRef,

@@ -36,6 +36,8 @@
   },
   "excludedExports": [
     "./experimental",
+    "./experimental/network-resolution",
+    "./experimental/network-resolution/react",
     "./experimental/vacp",
     "./package.json",
     "./spec/*"

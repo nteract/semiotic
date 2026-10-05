@@ -95,9 +95,10 @@ export default function TheLastScarcityExamplePage() {
               when intelligence is cheap
             </h2>
             <p className="ls-hero__lede">
-              When answers, images, plans, and simulations get cheap, scarcity does not disappear.
-              It moves into what you cannot copy: time, attention, status, consent, loyalty,
-              legitimacy, showing up in person, and another person’s freedom.
+              Cheap intelligence could give us more goods and more time. It would still leave us
+              wanting things other people must choose to give: attention, trust, loyalty and
+              love. This essay asks what happens to those wants when making and buying things
+              becomes easier.
             </p>
             <div className="ls-hero__thesis">
               <span>AI multiplies means.</span>
@@ -105,16 +106,15 @@ export default function TheLastScarcityExamplePage() {
             </div>
 
             <p className="ls-hero__how-to-read">
-              This page mixes a few public numbers, some charts you can push around, and an argument
-              about what abundance does not settle. Small colored marks open sources if you want
-              them.
+              Use the charts to try different assumptions about work, leisure and social
+              competition. Public data provides context; the adjustable scenarios let you explore
+              the argument. Colored source marks open the references.
             </p>
 
             <p className="ls-philosopher-frame">
-              The tension is not new. Artists, authors and philosophers have always asked what
-              material comfort is for, what free time is for, and what happens when cleverness
-              serves appetite better than wisdom. They never agree on anything except that “more” is
-              not necessarily “better.”
+              Writers have long asked what a comfortable life is for. Three offer useful starting
+              points here: how a community shapes desire, what people do beyond paid work, and
+              what happens when intelligence serves cruelty.
             </p>
             <div className="ls-philosopher-spine">
               <article>
@@ -184,7 +184,7 @@ export default function TheLastScarcityExamplePage() {
               </button>
             </div>
             <p className="ls-privacy-line">
-              The reading mirror never phones home. No accounts, no moral scores, no stored beliefs.
+              Reading measurements stay in this tab. You can turn them off at any time.
             </p>
           </header>
 
@@ -193,17 +193,17 @@ export default function TheLastScarcityExamplePage() {
               <ChapterSection chapter={CHAPTERS[0]} registerSection={registerSection}>
                 <div className="ls-prose">
                   <p>
-                    Technological optimists will tell you the story is basically solved: smarter
-                    machines, less toil, better lives. It&apos;s a pretty good argument as far as logic
-                    goes. If intelligence is cheap then it makes us more productive and gives us
-                    more time and material comfort. People flourish.
+                    The optimistic case for AI is straightforward: smarter machines make us more
+                    productive, reduce necessary work and improve living standards. With more
+                    time and fewer material worries, people would have more freedom to pursue a
+                    good life.
                   </p>
                   <p>
-                    That story is not stupid. Much of human misery really is about not having
-                    enough: not enough food, medicine, shelter, or hours left after work. If
-                    machines ease those pressures, something genuine was won.
+                    There is much to welcome in that prospect. Better access to food, medicine
+                    and shelter would relieve real suffering. Less time spent on necessary work
+                    could leave more for family, friends and interests.
                   </p>
-                  <p>The trouble is that last step.</p>
+                  <p>But having more choices leaves open the question of what we choose.</p>
                 </div>
                 <GoodFutureInstrument
                   allocation={allocation}
@@ -212,15 +212,15 @@ export default function TheLastScarcityExamplePage() {
                 />
                 <div className="ls-prose">
                   <p>
-                    Care, friendship, art, study, rest: these are attractive uses of time. They are
-                    also incomplete. Status races, humiliation, erotic rivalry, and domination do
-                    not appear as options. The argument only works by pretending that humans just
-                    don&apos;t have enough time to do good and meaningful things. But throughout history,
-                    humans have had the time... and what they&apos;ve done with it is not always good.
+                    Care, friendship, art, study and rest are all possible uses of free time. So
+                    are status competition, cruelty and efforts to control other people. More
+                    time gives us room for both. The optimistic argument needs to explain what
+                    would encourage the first set of choices.
                   </p>
                   <p>
-                    History and fiction are both full of people who do not. Material relief is real.
-                    It is not the same thing as knowing what a life is for.
+                    Material security makes a good life easier to pursue. Deciding how to live
+                    still takes habits, relationships and institutions that help us use that
+                    freedom well.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-necessary-city" onOpen={openEvidence} />
@@ -230,11 +230,10 @@ export default function TheLastScarcityExamplePage() {
               <ChapterSection chapter={CHAPTERS[1]} registerSection={registerSection}>
                 <div className="ls-prose">
                   <p>
-                    Before we get weird, let&apos;s get real. Over the past few years, frontier models
-                    got better fast, organizations started using them, and most of the strongest
-                    models came from industry rather than from public labs. None of that means
-                    “general intelligence” is solved. It does mean these things are no longer a
-                    curiosity or a &quot;stochastic parrot&quot;.
+                    The capability charts below show why this question has become pressing.
+                    Models improved quickly, organizations adopted them, and industry produced
+                    most of the strongest systems. We can take those changes seriously while
+                    examining the reliability gaps alongside them.
                   </p>
                 </div>
                 <div className="ls-stat-terrace">
@@ -263,8 +262,9 @@ export default function TheLastScarcityExamplePage() {
                 <CapabilityFlood active={activeIndex === 1} reducedMotion={reducedMotion} />
                 <div className="ls-prose">
                   <p>
-                    The next chapters assume the machines are powerful enough to matter. They do not
-                    assume the machines are neutral, evenly held, or done failing in ordinary ways.
+                    For the scenarios that follow, suppose machines become powerful enough to
+                    reduce a substantial amount of work. We can then ask who gains time, who
+                    controls the systems and what people do with the gains.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-ownership-question" onOpen={openEvidence} />
@@ -279,10 +279,8 @@ export default function TheLastScarcityExamplePage() {
                     hole, and who decides.
                   </p>
                   <p>
-                    Use the controls below to remove work hours and redistribute the rest of a
-                    schematic day. The faint outer rings are published U.S. averages for comparison.
-                    They are not a prediction of your future, and they are not a ranking of better
-                    and worse lives.
+                    Remove some work hours and choose where the time goes. The outer rings show
+                    published U.S. averages for comparison. Your choices describe a possible day.
                   </p>
                 </div>
                 <div className="ls-hours-control" role="group" aria-label="Paid work hours removed">
@@ -326,9 +324,10 @@ export default function TheLastScarcityExamplePage() {
                 </div>
                 <div className="ls-prose">
                   <p>
-                    Real days already mix care, media, household work, social life, and paid labor
-                    in uneven ways. Freeing time does not install a single better pattern. It hands
-                    the pattern problem back to habits, apps, families, and institutions.
+                    A shorter workday creates an opening. What fills it will depend on the
+                    demands of a household, the habits of its members and the opportunities
+                    available to them. The same two free hours can mean very different things in
+                    different lives.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-time-input" onOpen={openEvidence} />
@@ -338,9 +337,9 @@ export default function TheLastScarcityExamplePage() {
               <ChapterSection chapter={CHAPTERS[3]} registerSection={registerSection}>
                 <div className="ls-prose">
                   <p>
-                    Not every good behaves like a file. An explanation, an image, or a piece of code
-                    can be copied until the marginal cost approaches zero. Prestige cannot. Trust
-                    cannot. A legal right that only works because other people recognize it cannot.
+                    An image or a piece of code can be copied for many people at once. A person’s
+                    attention has to be divided. Prestige depends on standing relative to others.
+                    Trust takes a relationship in which both sides have something at stake.
                   </p>
                   <p>
                     That difference matters once machine intelligence makes the copyable things
@@ -351,10 +350,10 @@ export default function TheLastScarcityExamplePage() {
                 <GoodsTaxonomy />
                 <div className="ls-prose">
                   <p>
-                    The chart below is a transparent toy model, not a forecast. It keeps a fixed pot
-                    of one hundred units of social competition and shows how that pot can shift when
-                    copies get cheap. Turn the main dial and watch the ribbons leave printable goods
-                    for attention, status, exclusivity, relationships, and power.
+                    The chart illustrates a possible shift using a fixed total of one hundred
+                    units of competition. Turn the dial to move some of that competition from
+                    goods toward attention, status, exclusivity, relationships and power. These
+                    widths are assumptions you can explore.
                   </p>
                 </div>
                 <ScarcityMigration
@@ -366,9 +365,9 @@ export default function TheLastScarcityExamplePage() {
                 />
                 <div className="ls-prose">
                   <p>
-                    If that migration is even roughly right, abundance does not end the human
-                    contest. It changes the prizes. When goods become cheap, people can become
-                    expensive.
+                    Under those assumptions, cheaper goods leave people competing over
+                    recognition and influence. Abundance would change what people compete for as
+                    well as what they can afford.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-goods-differ" onOpen={openEvidence} />
@@ -378,14 +377,14 @@ export default function TheLastScarcityExamplePage() {
               <ChapterSection chapter={CHAPTERS[4]} registerSection={registerSection}>
                 <div className="ls-prose">
                   <p>
-                    A private shopping list of needs cannot explain fashion, envy, or why a dull
-                    object suddenly becomes urgent once the right people want it. Desire watches
-                    desire. Visibility changes value. Association changes rank.
+                    We learn what to want partly by watching other people. An ordinary object can
+                    become desirable because someone admired owns it. A popular person’s
+                    attention can become valuable precisely because so many others want it.
                   </p>
                   <p>
-                    Now add systems that can generate praise, rumor, and strategy without fatigue.
-                    Flattery gets cheap. Recognition does not. Step through three states of the same
-                    social scene.
+                    AI adds a supply of praise, rumor and advice that can be produced endlessly.
+                    Step through the three scenes to see the essay’s proposed distinction between
+                    plentiful flattering messages and the limited attention of other people.
                   </p>
                 </div>
                 <div className="ls-theory-lenses">
@@ -406,9 +405,9 @@ export default function TheLastScarcityExamplePage() {
                 />
                 <div className="ls-prose">
                   <p>
-                    When compliance is free, the scarce prize can become a free person’s ability to
-                    refuse. That is not a law of nature. It is a pressure the earlier chapters make
-                    easier to see.
+                    In this scenario, a willing audience matters more because its attention is
+                    freely given. The possibility of refusal is part of what makes recognition
+                    valuable.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-refusal-target" onOpen={openEvidence} />
@@ -418,9 +417,10 @@ export default function TheLastScarcityExamplePage() {
               <ChapterSection chapter={CHAPTERS[5]} registerSection={registerSection}>
                 <div className="ls-prose">
                   <p>
-                    Companion systems can produce the surface of care: warmth, memory, patience,
-                    availability at three in the morning. That surface can be useful. It can also
-                    blur a distinction that matters for human life.
+                    A companion system can remember a conversation, reply patiently and be
+                    available at three in the morning. People may find that useful or comforting.
+                    The harder question is what kind of relationship it offers, and how it fits
+                    with relationships outside the app.
                   </p>
                   <p>
                     One survey of Character.AI users already complicates the pure success story.
@@ -433,13 +433,7 @@ export default function TheLastScarcityExamplePage() {
                 <ReciprocityPath onChoice={recordChoice} />
                 <div className="ls-prose">
                   <p>
-                    Under the statistics sits a simpler question. A performance of care can be
-                    copied. Care that could have been withheld cannot.{" "}
-                    <strong className="ls-prose-emphasis">
-                      If freely given affection requires someone who might say no, then abundance of
-                      simulated affection does not abolish the last scarcity.
-                    </strong>{" "}
-                    It makes that scarcity easier to see.
+                    Human affection matters partly because another person chooses to give it. <strong className="ls-prose-emphasis">If that choice is what we seek, an unlimited supply of simulated affection cannot fully satisfy the desire.</strong> It may instead make freely given attention more valuable.
                   </p>
                 </div>
                 <ClaimNote claimId="claim-free-affection" onOpen={openEvidence} />
@@ -455,9 +449,10 @@ export default function TheLastScarcityExamplePage() {
                     yield can all keep working after material shortages ease.
                   </p>
                   <p>
-                    The sliders below are a blunt instrument, not a theory of war. Set material
-                    scarcity to zero and notice which other dials stay put. The point is only that
-                    “produce more” does not operate every lever.
+                    These sliders illustrate the distinction. Lower material scarcity and the
+                    other pressures remain where you set them. Use the model to consider which
+                    problems greater production might ease and which would require another
+                    response.
                   </p>
                 </div>
                 <AgonInstrument onChoice={recordChoice} />
@@ -474,10 +469,10 @@ export default function TheLastScarcityExamplePage() {
                     usable.
                   </p>
                   <p>
-                    Those jobs are linked, but they are not the same. Fair pipes without any
-                    formation of desire can still produce a glittering mess. Beautiful private
-                    virtue under predatory institutions can still lose. The field below keeps the
-                    axes separate so the tradeoffs stay visible.
+                    Both matter. Fair access to technology cannot decide how people use their
+                    freedom. Good intentions cannot by themselves overcome institutions that
+                    concentrate ownership and control. The two axes below let you consider those
+                    problems separately.
                   </p>
                 </div>
                 <AbundanceConstitution
@@ -498,9 +493,9 @@ export default function TheLastScarcityExamplePage() {
                     on the local reading mirror, there is also a record of where you lingered.
                   </p>
                   <p>
-                    Look at the gap between what you declared and where attention went. Treat it as
-                    a mirror, not a grade. Curiosity is not endorsement, and no session on a webpage
-                    is a character assessment.
+                    If you enabled the reading record, compare where you spent time with the
+                    choices you made. A long pause may mean interest, confusion or distraction;
+                    use it as a prompt to reflect on your reading.
                   </p>
                 </div>
                 <ReaderAttentionMirror
@@ -513,12 +508,11 @@ export default function TheLastScarcityExamplePage() {
                 />
                 <div className="ls-prose">
                   <p>
-                    AI may make intelligence, fluent expression, fantasy, advice, praise,
-                    entertainment, and the appearance of companionship abundant. It will not make
-                    another person’s consent, loyalty, admiration, forgiveness, or love
-                    interchangeable. That is where politics after abundance actually begins: not
-                    only what humans are still good for, but what kind of choosers we become when
-                    necessity no longer decides for us.
+                    AI could make advice, entertainment and convincing conversation abundant.
+                    Another person’s consent, trust or affection would still be theirs to give.
+                    The prospect of abundance therefore asks more of us than finding new uses for
+                    free time. It asks how we learn to choose well and how we share the power to
+                    make those choices.
                   </p>
                 </div>
                 <RecipeInspector chapterId="observatory" />
@@ -565,11 +559,11 @@ export default function TheLastScarcityExamplePage() {
           <footer className="ls-method-footer">
             <ArtNouveauCrown inverted />
             <span>SOURCES AND LIMITS</span>
-            <h2>Where the numbers come from, and what they do not prove</h2>
+            <h2>Sources and scenario assumptions</h2>
             <p>
-              This page uses fixed snapshots and editable scenarios, not live external requests. It
-              does not claim that AI ends labor, that leisure causes decadence, that attention
-              equals belief, or that any political arrangement guarantees virtue.
+              The public figures are fixed snapshots. The adjustable charts are scenarios built
+              to explore the essay’s argument. Source notes below distinguish the measured values
+              from the assumptions.
             </p>
             <button type="button" onClick={() => openEvidence()}>
               Open sources and claims

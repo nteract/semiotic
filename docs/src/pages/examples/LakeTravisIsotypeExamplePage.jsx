@@ -204,10 +204,9 @@ export default function LakeTravisIsotypeExamplePage() {
   return (
     <ExamplePageLayout title="Lake Travis, in Signs">
       <p className="lake-isotype__lede">
-        A lake-level and weather dashboard remade in the visual grammar of ISOTYPE: repeated
-        symbols instead of enlarged ones, a small printing palette, and diagrams that read as
-        explanations. The signs count water and weather; they do not grow when the number gets
-        bigger.
+        How much water is in the lake, and what does the coming weather look like? These charts
+        use ISOTYPE’s repeated symbols to make quantities countable. Each sign stands for a fixed
+        amount; larger totals get more signs.
       </p>
 
       <div className="lake-isotype" ref={pageRef}>
@@ -407,21 +406,7 @@ export default function LakeTravisIsotypeExamplePage() {
         <footer className="lake-isotype__source">
           <strong>ABOUT THE NUMBERS</strong>
           <p>
-            This deterministic example is seeded from the July 2, 2026 public snapshot on{" "}
-            <a href="https://laketraviswater.com/" target="_blank" rel="noopener noreferrer">
-              Lake Travis Water
-            </a>
-            . Its continuing “sensor” values are clearly labeled as an illustrative replay so the
-            example remains stable in tests and does not turn a public website into a build-time
-            dependency. Operational decisions should use current{" "}
-            <a href="https://hydromet.lcra.org/" target="_blank" rel="noopener noreferrer">
-              LCRA Hydromet
-            </a>{" "}
-            and{" "}
-            <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer">
-              National Weather Service
-            </a>{" "}
-            reports.
+            The opening values come from the July 2, 2026 snapshot on <a href="https://laketraviswater.com/" target="_blank" rel="noopener noreferrer">Lake Travis Water</a>. The continuing sensor readings are an illustrative replay. For current conditions, use <a href="https://hydromet.lcra.org/" target="_blank" rel="noopener noreferrer">LCRA Hydromet</a> and <a href="https://www.weather.gov/" target="_blank" rel="noopener noreferrer">National Weather Service</a> reports.
           </p>
         </footer>
       </div>
@@ -429,14 +414,9 @@ export default function LakeTravisIsotypeExamplePage() {
       <section className="lake-isotype__editorial">
         <h2>Four frames, one symbol language</h2>
         <p>
-          The visual richness is deliberately outside the built-in chart catalog, but the data
-          plumbing is not. One shared <code>GlyphDef</code> sign set renders three ways: as
-          interactive <code>glyph</code> scene nodes in the watershed and basin charts (the
-          pictogram is the mark — hit-tested, focus-ringed, canvas-painted), through the
-          library&rsquo;s <code>&lt;Glyph&gt;</code> for chart decoration, and via{" "}
-          <code>unitize</code>-allocated unit rows for the capacity strip. Semiotic exposes the
-          accessible table, observes hover and focus, keeps stable mark identity, and runs the
-          streaming buffer without ever knowing how to draw a dam sign.
+          The same symbol set appears in the capacity strip, watershed diagram and basin map.
+          Semiotic connects those marks to their values, tooltips, keyboard controls and
+          accessible tables. The custom layout supplies the dam, water and weather shapes.
         </p>
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />
       </section>

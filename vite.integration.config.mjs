@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => ({
         mobileVisualization: resolve(integrationRoot, "mobile-visualization-examples/index.html"),
         network: resolve(integrationRoot, "network-examples/index.html"),
         networkCustomLayout: resolve(integrationRoot, "network-custom-layout-examples/index.html"),
+        networkResolution: resolve(integrationRoot, "network-resolution-examples/index.html"),
         ordinal: resolve(integrationRoot, "ordinal-examples/index.html"),
         ordinalDomains: resolve(integrationRoot, "ordinal-domain-regressions/index.html"),
         resizeRegressions: resolve(integrationRoot, "resize-regressions/index.html"),

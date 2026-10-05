@@ -376,9 +376,10 @@ export default function StakeholderJourneyExamplePage() {
               <span className="stakeholder-journey__kicker">Same cohort, one changed force</span>
               <h2 id="journey-heading">What helps a regular user become a contributor?</h2>
               <p>
-                Only support at Habit changes. Watch for crossings into Commitment and drifts back
-                toward private use. The ledger remembers first crossings, including people who later
-                return. Replay keeps the same cohort; resizing keeps the same model.
+                Change the support offered at Habit, then watch who reaches Commitment and who
+                returns to private use. The counter records each person’s first crossing.
+                Replaying the same 36 participants makes the effect of the changed support easier
+                to compare.
               </p>
             </div>
             <button type="button" className="stakeholder-journey__replay" onClick={replay}>
@@ -434,10 +435,10 @@ export default function StakeholderJourneyExamplePage() {
           <div className="stakeholder-journey__section-header">
             <div>
               <span className="stakeholder-journey__kicker">Ecosystem canvas as model map</span>
-              <h2 id="force-map-heading">Hypotheses become named mechanisms</h2>
+              <h2 id="force-map-heading">What the model is trying to explain</h2>
               <p>
-                Canvas cells are prompts, not particle quantities. Each row names the journey
-                mechanism a project would need to measure or design.
+                Each row names a part of participation that a project could investigate, such as
+                finding value, returning to the tool or receiving an invitation.
               </p>
             </div>
           </div>
@@ -488,12 +489,10 @@ export default function StakeholderJourneyExamplePage() {
             <h2 id="journey-method-heading">What would you measure in a real community?</h2>
           </div>
           <p>
-            Track whether people obtain a useful result, return to the tool, receive a personal
-            invitation, and make a first contribution. Compare like cohorts over a declared period.
-            Here, the counterforce is an explicit assumption about participation effort, and
-            invitation adds support at that barrier. Physics makes that hypothesis inspectable. It
-            does not supply evidence that an intervention works in the world. Geometry stays fixed
-            during this comparison; feedback from new stewards is a separate experiment.
+            In a real community, track useful first results, repeat use, invitations and first
+            contributions for comparable groups over the same period. This simulation assumes
+            that contributing takes extra effort and that an invitation helps people cross that
+            barrier. It illustrates the hypothesis; observing a real community would test it.
           </p>
         </section>
       </div>

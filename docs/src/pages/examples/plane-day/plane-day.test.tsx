@@ -295,7 +295,7 @@ describe("E02 ordinary reading experience", () => {
     expect(html).toContain("Your plane")
     expect(html).toContain("Scheduled departure")
     expect(html).toContain("150")
-    expect(html).toContain("270-minute gap")
+    expect(html).toContain("270 minutes on the ground")
     expect(html).toContain("Aircraft itinerary")
   })
   it("keeps native flight selection when the reader changes layout or clocks", () => {

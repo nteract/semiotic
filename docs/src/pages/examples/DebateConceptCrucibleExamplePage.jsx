@@ -85,7 +85,7 @@ function FollowWordCard({ candidates, word }) {
         <div>
           <span className="rc-small-caps">Follow one word</span>
           <strong>{word.toUpperCase()}</strong>
-          <p>Same spelling. Different temporal company.</p>
+          <p>The same word, used at different points in the debate.</p>
         </div>
       </div>
       <FollowWordSide {...sides[1]} />
@@ -308,7 +308,7 @@ export default function DebateConceptCrucibleExamplePage() {
       <div className="rhetorical-crucible">
         <header className="rc-masthead">
           <div>
-            <p className="rc-kicker">A lexical assay in three presidential debates</p>
+            <p className="rc-kicker">Word patterns in three presidential debates</p>
             <h2 className="rc-display-title">
               The Rhetorical <span>Crucible</span>
             </h2>
@@ -330,9 +330,9 @@ export default function DebateConceptCrucibleExamplePage() {
         <div className="rc-body">
           <div className="rc-editorial-note">
             <p>
-              Each candidate receives a separate retort. The apparatus therefore observes temporal
-              companionship, not political agreement, and it emphatically does not award a winner.
-              The physics supplies the commotion; the ledger, less theatrically, supplies the truth.
+              Each candidate’s words are analyzed separately. The animation groups words used at
+              similar points in the transcript; the record below shows the counts and reasons for
+              each grouping.
             </p>
           </div>
 
@@ -540,8 +540,8 @@ export default function DebateConceptCrucibleExamplePage() {
 
             <FollowWordCard candidates={assay.candidates} word={followWord} />
             <p className="rc-section-intro">
-              That is a pattern in this transcript, not an affidavit of motive. “Company” here means
-              only that the words rose and fell at similar points in the debate.
+              Words belong together here when their counts rise and fall at similar points in the
+              transcript. Return to those passages to examine what the speaker was saying.
             </p>
           </section>
 
@@ -582,16 +582,13 @@ export default function DebateConceptCrucibleExamplePage() {
                 effect.
               </p>
               <p>
-                Three products per candidate is the declared maximum. Whatever cannot qualify, or
-                arrives after that limit closes, remains unalloyed with a recorded reason.
-                “Crosstalk” and “nbsp” are transcript artifacts and are excluded before admission,
-                rather than paraded as rhetorical waste.
+                Each candidate can form up to three groups. Words that do not qualify stay
+                separate, with the reason recorded. Transcript artifacts such as “crosstalk” and
+                “nbsp” are removed before the analysis.
               </p>
               <p>
-                The same authored program is compiled afresh for 2012, 2016, and 2020. Selecting
-                another debate does not repaint a previous conclusion; it reruns the assay on that
-                debate’s own profiles. The chart animates assignments already present in the data
-                compiler. It does not discover topics by collision.
+                Choosing a debate runs the same analysis on that transcript’s word counts. The
+                chart animates the resulting assignments so you can follow how the groups form.
               </p>
             </div>
 

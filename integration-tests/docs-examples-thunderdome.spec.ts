@@ -139,7 +139,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       "DHQ stopped treating the digital as a medium"
     )
     await expect(stage.getByRole("heading", { level: 3 })).toHaveText(
-      "Media Studies falls out of DHQ’s connective tissue"
+      "Media Studies appears less often alongside other subjects"
     )
     await expect(stage.locator(".stream-ordinal-frame")).toHaveAttribute(
       "aria-label",
@@ -295,7 +295,7 @@ test.describe("Thunderdome Has Rounded Corners scrollytelling", () => {
       "The tools tag is not where all the tools are"
     )
     await expect(toolsRound).toContainText(
-      "That is a category of discourse, not an inventory of every article that computes."
+      "Many articles use software without being about tools, and project reports overlap with the category."
     )
     await expect(toolsRound).toContainText(
       "Practice became method, case, and situated intervention rather than “here is a tool.”"

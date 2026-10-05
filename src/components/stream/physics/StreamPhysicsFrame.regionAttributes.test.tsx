@@ -30,6 +30,46 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+it("keeps the worker alive when the execution callback changes and reports to the latest callback", async () => {
+  const workers: RuntimeWorker[] = []
+  vi.stubGlobal("Worker", class extends RuntimeWorker {
+    constructor() {
+      super()
+      workers.push(this)
+    }
+  })
+  const scheduler = createFrameScheduler()
+  const config = { kernel: quietKernel }
+  const initialSpawns = [circle("seed", 40, 30)]
+  const first = vi.fn()
+  const latest = vi.fn()
+  const frame = (callback: typeof first, execution: "worker" | "sync" = "worker") => (
+    <StreamPhysicsFrame
+      size={[240, 120]}
+      config={config}
+      initialSpawns={initialSpawns}
+      frameScheduler={scheduler.scheduler}
+      simulationExecution={execution}
+      onSimulationExecutionChange={callback}
+    />
+  )
+  const { rerender } = render(frame(first))
+  await waitFor(() => expect(first).toHaveBeenLastCalledWith(
+    expect.objectContaining({ execution: "worker" })
+  ))
+  expect(workers).toHaveLength(1)
+  rerender(frame(latest))
+  expect(workers).toHaveLength(1)
+  expect(workers[0].terminated).toBe(false)
+
+  const firstCalls = first.mock.calls.length
+  rerender(frame(latest, "sync"))
+  await waitFor(() => expect(latest).toHaveBeenLastCalledWith(
+    expect.objectContaining({ execution: "sync", requested: "sync" })
+  ))
+  expect(first).toHaveBeenCalledTimes(firstCalls)
+})
+
 it.each(["step", "settle", "settleWithObservations"] as const)(
   "delivers worker region observations once for pushed bodies and mirrored %s calls",
   async (method) => {

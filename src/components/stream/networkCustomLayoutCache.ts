@@ -24,6 +24,8 @@ function layoutKey(
     // Theme resolution recreates small color bags on unrelated prop changes.
     colors: {
       semantic: config.themeSemantic,
+      sequential: config.themeSequential,
+      selectionOpacity: config.themeSelectionOpacity,
       categorical: config.themeCategorical,
       colorScheme: config.colorScheme
     },

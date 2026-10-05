@@ -237,12 +237,7 @@ export default function TheGridExamplePage() {
   return (
     <ExamplePageLayout title="The Grid Is the Real AI Infrastructure">
       <p className="the-grid__lede">
-        We talk about AI infrastructure as buildings and GPUs. Those buildings still plug into a
-        regional grid. This page is the twin of{" "}
-        <Link to="/examples/data-centers-isotype">The Buildings Behind AI</Link>: that one counts
-        facilities; this one watches what is generating, whether demand beat the forecast, and how
-        little spare capacity is left. Pick a region and a week. Read the system, not a national
-        percentage.
+        AI data centers depend on regional electricity systems. This companion to <Link to="/examples/data-centers-isotype">The Buildings Behind AI</Link> explores that dependence through illustrative weekly scenarios. Pick a region and a week to compare generation, demand and the forecast, then find the hours with the smallest margin.
       </p>
 
       <div className="the-grid" ref={pageRef}>
@@ -251,8 +246,7 @@ export default function TheGridExamplePage() {
             <p className="the-grid__eyebrow">Power under the models · {region.label}</p>
             <h2>The grid is the real AI infrastructure</h2>
             <p>
-              {region.longLabel}. {region.corridor}. Fuel mix tells you what is running. Spare
-              capacity tells you how close the system is to trouble. Keep those questions separate.
+              {region.longLabel}. {region.corridor}. Compare the sources of electricity with the changing demand and the margin left over through the week.
             </p>
           </div>
           <div className="the-grid__status">
@@ -544,12 +538,7 @@ export default function TheGridExamplePage() {
             </li>
           </ul>
           <p className="the-grid__methods">
-            Spare capacity here is a simple estimate: generation plus imports, minus demand, as a
-            percent of demand. It is good enough to teach the shape of a tight evening. It is not
-            the official contingency reserve a control room uses. The data is a fixed week shaped
-            like EIA Hourly Grid Monitor series—not a silent empty chart, and not pretending to be
-            live. Emissions are out of scope on purpose; fuel mix is not a carbon ledger. The math
-            helpers live in <code>semiotic/recipes</code> so you can reuse them outside this page.
+            The scenarios use fixed, illustrative data patterned after EIA Hourly Grid Monitor series. Here, spare capacity means generation plus imports minus demand, divided by demand. It helps compare tight and comfortable hours within the example; it is different from an operator’s official contingency-reserve measure. The calculation helpers are available in <code>semiotic/recipes</code>.
           </p>
         </section>
 
@@ -557,9 +546,8 @@ export default function TheGridExamplePage() {
           <summary>Why these charts (and what the suggestion engine picks)</summary>
           <div className="the-grid__drawer-body">
             <p>
-              We already chose the layout. This drawer asks Semiotic’s suggestion engine the same
-              question on the demand-versus-forecast table—does it land near the same forms?—and
-              prints a short plain-language read for anyone who cannot see the charts.
+              This drawer shows which charts Semiotic recommends for the demand-and-forecast
+              table, along with a text description of the comparison.
             </p>
             <ol>
               {(engine.suggestions || []).slice(0, 4).map((s) => (

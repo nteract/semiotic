@@ -479,20 +479,21 @@ export function LivingLedgerObservatory() {
           <p className="ll-kicker">Ecosystem services · 180-day teaching replay</p>
           <h2>The Living Ledger</h2>
           <p className="ll-deck">
-            You think you&apos;re looking at a map of nature. You&apos;re not. You&apos;re looking
-            at the work ecosystems do, who depends on it, and how sure we are that it is changing.
+            Ecosystems do work people depend on: forests store carbon, reefs protect coasts and
+            pollinators help crops grow. This map follows those services and the evidence used to
+            judge whether they are changing.
           </p>
           <p className="ll-deck-secondary">
-            A forest can remain standing while a service declines. A service can keep working only
-            because people and infrastructure are propping it up. And sometimes a satellite has seen
-            a disturbance but nobody can honestly say yet what service has failed.
+            A forest can remain standing while providing less of a service. Managed hives can
+            keep crop pollination steady while wild habitat declines. Following both the
+            ecological condition and the delivered service helps reveal those differences.
           </p>
         </div>
         <div className="ll-field-plate" aria-label="Replay status">
           <span>Field ledger 07 / 12</span>
           <strong>{formatReplayDate(currentDate)}</strong>
           <i>{String(progress).padStart(3, "0")}%</i>
-          <p>A deterministic teaching dataset. It does not report current conditions.</p>
+          <p>Explore a simulated 180-day record built for teaching.</p>
         </div>
       </header>
 
@@ -836,7 +837,7 @@ export function LivingLedgerObservatory() {
       <section className="ll-case-contrast" aria-labelledby="ll-case-contrast-title">
         <header>
           <span>Three warnings, three different claims</span>
-          <h3 id="ll-case-contrast-title">This contrast is the point</h3>
+          <h3 id="ll-case-contrast-title">Three warnings, three different interpretations</h3>
         </header>
         <div>
           <CaseCard
@@ -893,8 +894,8 @@ export function LivingLedgerObservatory() {
               {selectedArtifact.contract.artifact.revision}
             </span>
             <p>
-              The selected claim, evidence transformation, time basis, uncertainty, and source path
-              travel together in one portable record.
+              Download the selected finding with its sources, dates, calculations and uncertainty
+              so another reader can check it.
             </p>
           </div>
           <a
@@ -908,7 +909,7 @@ export function LivingLedgerObservatory() {
 
       <footer className="ll-footer">
         <span>Field note 180</span>
-        <p>No global health score. No gray-as-good. No pressure relabeled as outcome.</p>
+        <p>Read each service alongside its evidence, units and date.</p>
       </footer>
 
       <p className="ll-live-announcement" role="status" aria-live="polite">
@@ -971,8 +972,8 @@ function AudienceBrief({ audience, system, sources, thresholds }) {
           <span>Policy lens</span>
           <h3>Move from warning to a named decision</h3>
           <p>
-            The signal is a prioritization aid. It does not turn a pressure or a model into a
-            confirmed outcome.
+            Use the signal to decide what to investigate next. Open the evidence record to see
+            whether it describes a measured outcome, a pressure or a model estimate.
           </p>
         </div>
         <dl>
@@ -1005,8 +1006,8 @@ function AudienceBrief({ audience, system, sources, thresholds }) {
           <span>Science lens</span>
           <h3>Inspect the estimate before extending the claim</h3>
           <p>
-            The compact profile above shows the condition estimate and its uncertainty range;
-            inspect the evidence chain before treating an alert as a service failure.
+            The profile shows the estimated condition and its uncertainty. Follow the evidence
+            chain to see how that estimate led to the alert.
           </p>
         </div>
         <dl>
@@ -1035,8 +1036,8 @@ function AudienceBrief({ audience, system, sources, thresholds }) {
         <span>Public lens</span>
         <h3>Start with the service people rely on</h3>
         <p>
-          The flowers are service stations, not a score for nature. Choose one to see what is
-          changing, where it matters, and how sure the evidence is.
+          Each flower represents an ecosystem service. Choose one to see who relies on it, what
+          is changing and what the evidence shows.
         </p>
       </div>
       <dl>

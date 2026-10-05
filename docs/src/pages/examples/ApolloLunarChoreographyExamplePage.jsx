@@ -317,8 +317,9 @@ export default function ApolloLunarChoreographyExamplePage() {
             <span className="apollo-example__kicker">NASA FLIGHT LOG / 1968–1972 / PROCESS SANKEY</span>
             <h2>THE<br />THIRD<br />SEAT</h2>
             <p>
-              Nine crews aimed at the Moon. Six times, two people descended—and one kept circling alone.
-              Align the missions at launch to see Apollo as a choreography of separation, waiting, reunion, and return.
+              Nine Apollo crews headed for the Moon. On six missions, two astronauts landed while
+              the third stayed in orbit. Align the flights at launch to see how long they
+              traveled together, worked apart and waited to reunite.
             </p>
           </div>
           <div className="apollo-example__hero-orbit">
@@ -343,14 +344,18 @@ export default function ApolloLunarChoreographyExamplePage() {
           <div>
             <h3 id="apollo-opening-title">The famous photograph leaves someone out.</h3>
             <p>
-              A lunar landing is usually remembered as two figures on gray ground. But Apollo was designed around three:
-              the command-module pilot stayed in lunar orbit while the commander and lunar-module pilot descended.
-              The one-person band is not a footnote. It is the line that made reunion—and the trip home—possible.
+              The moonwalk photographs show two astronauts, but the return journey depended on
+              three. While the commander and lunar-module pilot worked on the surface, the
+              command-module pilot kept the spacecraft in orbit for their return. Follow that
+              third seat through each mission.
             </p>
           </div>
           <aside>
             <strong>Why ProcessSankey?</strong>
-            <p>A conventional Sankey can show how many people took each route. It cannot show how long one person waited above while two remained below.</p>
+            <p>
+              The chart shows both the number of astronauts on each route and the time they spent
+              there. Look for the long, narrow band of a single pilot in lunar orbit.
+            </p>
           </aside>
         </section>
 
@@ -473,8 +478,8 @@ export default function ApolloLunarChoreographyExamplePage() {
           </div>
 
           <p className="apollo-example__chart-caption">
-            Analytical alignment, not calendar time: every mission begins at T+0. Ribbon width counts crew-seats;
-            horizontal length is elapsed time. Click a ribbon to load its mission log below.
+            Every mission starts at launch, T+0. Band width counts crew-seats; length shows
+            elapsed time. Select a ribbon to open the mission log below.
           </p>
         </section>
 
@@ -483,14 +488,17 @@ export default function ApolloLunarChoreographyExamplePage() {
         <section className="apollo-example__argument" aria-labelledby="apollo-argument-title">
           <div className="apollo-example__argument-heading">
             <span className="apollo-example__section-number">03 / What the shape teaches</span>
-            <h3 id="apollo-argument-title">The program learned by changing the duration of the split.</h3>
+            <h3 id="apollo-argument-title">The missions spent longer apart as the program advanced.</h3>
           </div>
           <div className="apollo-example__argument-grid">
             <article>
               <span>First proof</span>
               <strong>20 hours</strong>
               <h4>Apollo 8 made lunar orbit real.</h4>
-              <p>Three people stayed together for ten orbits. The chart establishes the unbranched route before the landing choreography appears.</p>
+              <p>
+                Three astronauts stayed together for ten lunar orbits. Their route shows the
+                first voyage around the Moon before the later missions split into separate crews.
+              </p>
               <button type="button" onClick={() => selectFocus("apollo-8")}>Trace Apollo 8</button>
             </article>
             <article>
@@ -510,8 +518,11 @@ export default function ApolloLunarChoreographyExamplePage() {
             <article className="is-alert">
               <span>Exception</span>
               <strong>3 → 3</strong>
-              <h4>Apollo 13 refuses the planned split.</h4>
-              <p>The entire batch enters the lifeboat. Mass conservation turns “successful failure” into a visible claim: nobody is sacrificed to the route.</p>
+              <h4>Apollo 13 needed a different way home.</h4>
+              <p>
+                All three astronauts moved into the lunar module after the accident. Their route
+                follows its use as a lifeboat and the crew’s return to Earth.
+              </p>
               <button type="button" onClick={() => selectFocus("apollo-13")}>Trace Apollo 13</button>
             </article>
           </div>
@@ -522,8 +533,9 @@ export default function ApolloLunarChoreographyExamplePage() {
             <span className="apollo-example__section-number">04 / The Moon becomes a workplace</span>
             <h3 id="apollo-surface-title">Six landings, one widening commitment of time</h3>
             <p>
-              Apollo 11’s surface band lasts 21.6 hours. By Apollo 17 it lasts 75.0—long enough for three EVAs,
-              a rover, sleep periods, and a much broader scientific program. The people count stays two; the temporal footprint changes.
+              Apollo 11 spent 21.6 hours on the surface. Apollo 17 spent 75.0—enough for three
+              moonwalks, rover trips, sleep and a much broader scientific program. The surface
+              crew stayed at two people while its work grew.
             </p>
           </div>
           <div className="apollo-example__surface-bars">
@@ -586,10 +598,11 @@ export default function ApolloLunarChoreographyExamplePage() {
 
         <section className="blocks-example apollo-example__code" aria-labelledby="apollo-code-title">
           <span className="apollo-example__section-number">06 / Rebuild the view</span>
-          <h3 id="apollo-code-title">The chart is the data model</h3>
+          <h3 id="apollo-code-title">How the chart keeps track of the crew</h3>
           <p>
-            The special effect is not custom drawing. It is a ProcessSankey with real event time, a capped value scale,
-            hugged lanes, renderer-aware ordering, and crew batches that conserve their value through every split and reunion.
+            ProcessSankey holds each crew in a band until a timed event moves them. Splits send
+            two astronauts toward the surface and leave one in orbit; reunions bring the count
+            back to three. The mission dates and crew counts determine the drawing.
           </p>
           <CodeBlock code={implementationCode} language="jsx" showCopyButton wrap />
         </section>
@@ -597,7 +610,7 @@ export default function ApolloLunarChoreographyExamplePage() {
         <footer className="apollo-example__footer">
           <span>THE THIRD SEAT / SEMIOTIC PROCESS SANKEY</span>
           <strong>Every route ends with three.</strong>
-          <p>That is the engineering story hiding inside the moonwalk photographs.</p>
+          <p>Every landing also required a reunion above the Moon.</p>
         </footer>
       </div>
     </ExamplePageLayout>

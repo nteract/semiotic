@@ -350,6 +350,17 @@ describe("StreamNetworkFrame", () => {
     expect(container.querySelector(".stream-network-tooltip")).toHaveTextContent(JSON.stringify(edgeDatum))
     expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(edgeDatum)
 
+    // A pointer-created tooltip is dismissible before any keyboard navigation.
+    fireEvent.keyDown(image, { key: "Escape" })
+    expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+    expect(customHoverBehavior.mock.lastCall?.[0]).toBeNull()
+
+    fireEvent.mouseMove(image, { clientX: 100, clientY: 140 })
+    // A queued move must not reopen hover after dismissal.
+    fireEvent.keyDown(image, { key: "Escape" })
+    await act(async () => scheduler.flush())
+    expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+
     fireEvent.mouseMove(image, { clientX: 100, clientY: 140 })
     await act(async () => scheduler.flush())
     expect(live).toBeEmptyDOMElement()

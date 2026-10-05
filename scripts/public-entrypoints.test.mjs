@@ -1,13 +1,103 @@
 import assert from "node:assert/strict"
-import { readFileSync, mkdtempSync, rmSync } from "node:fs"
-import { execFileSync } from "node:child_process"
+import {
+  readFileSync,
+  mkdtempSync,
+  rmSync,
+  mkdirSync,
+  writeFileSync,
+  copyFileSync
+} from "node:fs"
+import { execFileSync, spawnSync } from "node:child_process"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import test from "node:test"
 import {
   publicJavaScriptEntrypoints,
   stableApiEntrypoints
 } from "./lib/public-entrypoints.mjs"
+
+function documentationGateFixture(t) {
+  const root = mkdtempSync(join(tmpdir(), "semiotic-entry-gates-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  for (const path of [
+    "scripts/sync-bundle-sizes.mjs",
+    "scripts/check-context7.mjs",
+    "scripts/lib/public-entrypoints.mjs",
+    "scripts/lib/context7-subpaths.mjs",
+    "README.md",
+    "ai/reference.md",
+    "docs/src/pages/GettingStartedPage.jsx"
+  ]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true })
+    copyFileSync(new URL(`../${path}`, import.meta.url), join(root, path))
+  }
+  const pkg = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8")
+  )
+  // The gate must not require preview artifacts or an exclusion-list update.
+  pkg.exports["./experimental/future/react"] = {
+    import: "./dist/future.module.min.js"
+  }
+  const manifest = JSON.parse(
+    readFileSync(new URL("../context7.json", import.meta.url), "utf8")
+  )
+  writeFileSync(
+    join(root, "context7.json"),
+    JSON.stringify({ ...manifest, folders: [] })
+  )
+  for (const entry of publicJavaScriptEntrypoints(pkg).filter(
+    (entry) => entry.stableApi
+  )) {
+    for (const target of entry.artifactTargets) {
+      mkdirSync(dirname(join(root, target.path)), { recursive: true })
+      writeFileSync(join(root, target.path), "export const fixture = 1\n")
+    }
+  }
+  return {
+    root,
+    pkg,
+    run(script, ...args) {
+      writeFileSync(join(root, "package.json"), JSON.stringify(pkg))
+      return spawnSync(
+        process.execPath,
+        [join(root, "scripts", script), ...args],
+        { encoding: "utf8" }
+      )
+    }
+  }
+}
+
+test("stable documentation gates exclude current and future experimental entries", (t) => {
+  const fixture = documentationGateFixture(t)
+  for (const [script, args] of [
+    ["sync-bundle-sizes.mjs", []],
+    ["sync-bundle-sizes.mjs", ["--check"]],
+    ["check-context7.mjs", []]
+  ]) {
+    const result = fixture.run(script, ...args)
+    assert.equal(result.status, 0, result.stdout + result.stderr)
+  }
+  const readme = readFileSync(join(fixture.root, "README.md"), "utf8")
+  assert.match(readme, /\| `semiotic\/atlas\/core` \|/)
+  assert.doesNotMatch(readme, /\| `semiotic\/experimental(?:\/|`)/)
+})
+
+test("stable documentation gates still reject unlisted stable exports, including similar names", (t) => {
+  for (const subpath of ["./future-stable", "./experimental-tools"]) {
+    const fixture = documentationGateFixture(t)
+    fixture.pkg.exports[subpath] = { import: "./dist/future.module.min.js" }
+    const sizes = fixture.run("sync-bundle-sizes.mjs", "--check")
+    assert.equal(sizes.status, 1)
+    assert.ok(sizes.stderr.includes(`Export ${subpath} is not listed in ORDER`))
+    const context = fixture.run("check-context7.mjs")
+    assert.equal(context.status, 1)
+    assert.ok(
+      context.stderr.includes(
+        `sub-path rule is missing entries that package.json exports: ${subpath.slice(2)}`
+      )
+    )
+  }
+})
 
 test("README entry counts agree with the canonical stable package inventory", () => {
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8")
@@ -40,13 +130,26 @@ test("only the experimental namespace is excluded, not similarly named stable en
 
 test("derives every importable package subpath and keeps previews out of API snapshots", () => {
   const entries = publicJavaScriptEntrypoints()
-  assert.equal(entries.length, 41)
+  assert.equal(entries.length, 43)
+  assert.equal(
+    entries.find(
+      (entry) => entry.subpath === "./experimental/network-resolution"
+    )?.stableApi,
+    false
+  )
+  assert.equal(
+    entries.find(
+      (entry) => entry.subpath === "./experimental/network-resolution/react"
+    )?.sourcePath,
+    "src/components/semiotic-experimental-network-resolution-react.ts"
+  )
   assert.equal(
     entries.find((entry) => entry.subpath === "./network/zoom")?.sourcePath,
     "src/components/semiotic-network-zoom.ts"
   )
   assert.equal(
-    entries.find((entry) => entry.subpath === "./network/perspective")?.sourcePath,
+    entries.find((entry) => entry.subpath === "./network/perspective")
+      ?.sourcePath,
     "src/components/semiotic-network-perspective.ts"
   )
   assert.equal(

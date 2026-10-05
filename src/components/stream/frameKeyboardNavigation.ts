@@ -68,6 +68,8 @@ interface KeyboardInteractionParams<Store, Node = unknown> {
   customHoverBehavior?: SemanticHoverBehavior<HoverData>
   customClickBehavior?: SemanticClickBehavior<HoverData>
   scheduleRender: () => void
+  /** Cancel queued pointer hit testing when keyboard interaction dismisses hover. */
+  clearPointerHover?: () => void
 }
 
 interface VersionedSceneStore<Node> {
@@ -89,6 +91,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
   customHoverBehavior,
   customClickBehavior,
   scheduleRender,
+  clearPointerHover,
   extractPoints,
   toHover
 }: GraphKeyboardParams<Node, Store>) {
@@ -109,13 +112,20 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     const store = storeRef.current
     if (!store) return
     const clearFocus = () => {
+      const hadHover = hoverRef.current !== null
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       hoverRef.current = null
       if (hoveredNodeRef) hoveredNodeRef.current = null
       setHoverPoint(null)
-      customHoverBehavior?.(null)
+      if (hadHover) customHoverBehavior?.(null)
       scheduleRender()
+    }
+    if (event.key === "Escape") {
+      event.preventDefault()
+      clearPointerHover?.()
+      clearFocus()
+      return
     }
     if (store.scene.length === 0) {
       if (kbFocusIndexRef.current >= 0) clearFocus()
@@ -151,7 +161,6 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     }
 
     if (current < 0) {
-      if (event.key === "Escape") return
       const navigationKeys = [
         "ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown",
         "Home", "End", "PageUp", "PageDown"
@@ -187,6 +196,7 @@ function useGraphKeyboardNavigation<Node, Store extends VersionedSceneStore<Node
     customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
     scheduleRender()
   }, [
+    clearPointerHover,
     customClickBehavior,
     customHoverBehavior,
     extractPoints,
@@ -259,6 +269,7 @@ function geoPointToHover(point: NavPoint): HoverData {
 }
 
 export function useGeoKeyboardNavigation({
+  clearPointerHover,
   storeRef,
   hoverRef,
   hoveredNodeRef,
@@ -281,13 +292,20 @@ export function useGeoKeyboardNavigation({
     const store = storeRef.current
     if (!store) return
     const clearFocus = () => {
+      const hadHover = hoverRef.current !== null
       kbFocusIndexRef.current = -1
       focusedNavPointRef.current = null
       hoverRef.current = null
       if (hoveredNodeRef) hoveredNodeRef.current = null
       setHoverPoint(null)
-      customHoverBehavior?.(null)
+      if (hadHover) customHoverBehavior?.(null)
       scheduleRender()
+    }
+    if (event.key === "Escape") {
+      event.preventDefault()
+      clearPointerHover?.()
+      clearFocus()
+      return
     }
     if (store.scene.length === 0) {
       if (kbFocusIndexRef.current >= 0) clearFocus()
@@ -332,6 +350,7 @@ export function useGeoKeyboardNavigation({
     customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
     scheduleRender()
   }, [
+    clearPointerHover,
     customClickBehavior,
     customHoverBehavior,
     hoverRef,

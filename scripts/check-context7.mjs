@@ -32,6 +32,7 @@ import { readFileSync, existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { context7SubpathDrift } from "./lib/context7-subpaths.mjs"
+import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -108,15 +109,21 @@ if (Array.isArray(manifest.folders)) {
 const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8"))
 // Experimental preview subpaths are intentionally omitted from Context7 so
 // agents do not treat temporary collaborator APIs as stable import guidance.
-const IGNORED_SUBPATHS = new Set(["experimental", "experimental/vacp"])
+const previewExports = new Set(
+  publicJavaScriptEntrypoints(pkg)
+    .filter((entry) => !entry.stableApi)
+    .map((entry) => entry.subpath)
+)
 const exportedSubpaths = Object.keys(pkg.exports || {})
-  .filter((k) => k.startsWith("./") && k !== "./package.json")
+  .filter(
+    (k) =>
+      k.startsWith("./") && k !== "./package.json" && !previewExports.has(k)
+  )
   .map((k) => k.slice(2))
   // Wildcard asset exports (e.g. `./spec/*`) aren't importable JS sub-paths —
   // strip the trailing glob so they compare against the rule text as their
   // base path (`spec`), matching what the rule-token regex below can parse.
   .map((k) => (k.endsWith("/*") ? k.slice(0, -2) : k))
-  .filter((k) => !IGNORED_SUBPATHS.has(k))
 
 const subpathRules = (manifest.rules || []).filter((rule) =>
   rule.includes("sub-path")

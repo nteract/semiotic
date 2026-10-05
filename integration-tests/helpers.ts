@@ -1,5 +1,23 @@
 import { expect, type Locator, type Page } from "@playwright/test"
 
+/** Verify the drawing canvas contains painted output before testing its marks. */
+export async function expectCanvasPainted(canvas: Locator): Promise<void> {
+  await expect.poll(async () => canvas.evaluate((element: HTMLCanvasElement) => {
+    if (!element.width || !element.height) return 0
+    const context = element.getContext("2d")
+    if (!context) return 0
+    const { data } = context.getImageData(0, 0, element.width, element.height)
+    let painted = 0
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 10 && !(data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240)) {
+        painted++
+        if (painted > 100) return painted
+      }
+    }
+    return painted
+  }), { message: "Chart canvas must contain painted output" }).toBeGreaterThan(100)
+}
+
 /** Assert tooltip placement independently of reviewed visual baselines. */
 export async function expectTooltipWithinPlot(
   chart: Locator,

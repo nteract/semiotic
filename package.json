@@ -51,6 +51,18 @@
       "require": "./dist/semiotic-atlas-core.min.js",
       "default": "./dist/semiotic-atlas-core.module.min.js"
     },
+    "./experimental/network-resolution": {
+      "types": "./dist/semiotic-experimental-network-resolution.d.ts",
+      "import": "./dist/semiotic-experimental-network-resolution.module.min.js",
+      "require": "./dist/semiotic-experimental-network-resolution.min.js",
+      "default": "./dist/semiotic-experimental-network-resolution.module.min.js"
+    },
+    "./experimental/network-resolution/react": {
+      "types": "./dist/semiotic-experimental-network-resolution-react.d.ts",
+      "import": "./dist/semiotic-experimental-network-resolution-react.module.min.js",
+      "require": "./dist/semiotic-experimental-network-resolution-react.min.js",
+      "default": "./dist/semiotic-experimental-network-resolution-react.module.min.js"
+    },
     "./network": {
       "types": "./dist/semiotic-network.d.ts",
       "import": "./dist/network.module.min.js",

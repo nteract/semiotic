@@ -62,6 +62,14 @@ export const REQUIRED_DOCS_ROUTES = [
     title: "Examples \u2014 Semiotic",
     canonicalUrl: `${SITE_URL}/examples`,
   },
+  ...[
+    ["charts/resolution-atlas-chart", "Resolution Atlas"],
+    ["charts/boundary-loom-chart", "Boundary Loom"],
+  ].map(([routePath, title]) => ({
+    routePath,
+    title: `${title} — Semiotic`,
+    canonicalUrl: `${SITE_URL}/${routePath}`,
+  })),
   {
     routePath: "custom-charts/intelligence",
     title: "Custom Charts \u2014 Intelligence \u2014 Semiotic",
@@ -106,6 +114,8 @@ export const REQUIRED_MACHINE_READABLE_ROUTES = [
     routePath: "charts/line-chart",
     keyword: "LineChart",
   },
+  { routePath: "charts/resolution-atlas-chart", keyword: "ResolutionAtlasChart" },
+  { routePath: "charts/boundary-loom-chart", keyword: "BoundaryLoomChart" },
   {
     routePath: "blog/release-3-7-0",
     keyword: "receivability release",

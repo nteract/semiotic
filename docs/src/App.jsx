@@ -50,6 +50,8 @@ const SankeyDiagramPage = lazy(() => import("./pages/charts/SankeyDiagramPage"))
 const MotifBraidChartPage = lazy(() => import("./pages/charts/MotifBraidChartPage"))
 const DependencyForestChartPage = lazy(() => import("./pages/charts/DependencyForestChartPage"))
 const FlowCircuitChartPage = lazy(() => import("./pages/charts/FlowCircuitChartPage"))
+const ResolutionAtlasChartPage = lazy(() => import("./pages/charts/ResolutionAtlasChartPage"))
+const BoundaryLoomChartPage = lazy(() => import("./pages/charts/BoundaryLoomChartPage"))
 const ProcessSankeyPage = lazy(() => import("./pages/charts/ProcessSankeyPage"))
 const TreeDiagramPage = lazy(() => import("./pages/charts/TreeDiagramPage"))
 const RealtimeLineChartPage = lazy(() => import("./pages/charts/RealtimeLineChartPage"))
@@ -344,6 +346,7 @@ const MobileDataVisualizationExamplePage = lazy(
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const PipelineExplorerExamplePage = lazy(() => import("./pages/examples/PipelineExplorerExamplePage"))
+const NovelNetworkLabExamplePage = lazy(() => import("./pages/examples/NovelNetworkLabExamplePage"))
 const DependencyXRayExamplePage = lazy(() => import("./pages/examples/DependencyXRayExamplePage"))
 const FlowCircuitExamplePage = lazy(() => import("./pages/examples/FlowCircuitExamplePage"))
 const AtlasEvaluationExamplePage = lazy(() => import("./pages/examples/AtlasEvaluationExamplePage"))
@@ -354,6 +357,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "NovelNetworkLabExamplePage.tsx": NovelNetworkLabExamplePage,
   "PipelineExplorerExamplePage.tsx": PipelineExplorerExamplePage,
   "AtlasEvaluationExamplePage.tsx": AtlasEvaluationExamplePage,
   "DependencyXRayExamplePage.tsx": DependencyXRayExamplePage,
@@ -1064,6 +1068,8 @@ export default function DocsApp() {
                 <Route path="motif-braid-chart" element={<MotifBraidChartPage />} />
                 <Route path="dependency-forest-chart" element={<DependencyForestChartPage />} />
                 <Route path="flow-circuit-chart" element={<FlowCircuitChartPage />} />
+                <Route path="resolution-atlas-chart" element={<ResolutionAtlasChartPage />} />
+                <Route path="boundary-loom-chart" element={<BoundaryLoomChartPage />} />
                 <Route path="process-sankey" element={<ProcessSankeyPage />} />
                 <Route path="tree-diagram" element={<TreeDiagramPage />} />
                 <Route path="treemap" element={<TreemapPage />} />

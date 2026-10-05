@@ -80,6 +80,8 @@ export function buildNetworkPipelineConfig(
   return {
     ...config,
     themeCategorical: currentTheme?.colors?.categorical,
+    themeSequential: currentTheme?.colors?.sequential,
+    themeSelectionOpacity: currentTheme?.colors?.selectionOpacity,
     themeSemantic: resolveThemeSemanticColors(currentTheme)
   }
 }

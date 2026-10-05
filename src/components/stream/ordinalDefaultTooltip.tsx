@@ -4,6 +4,7 @@
  */
 
 import type { Datum } from "../charts/shared/datumTypes"
+import { buildStatsTooltip } from "../charts/shared/statsTooltip"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import * as React from "react"
 import type { HoverData } from "./ordinalTypes"
@@ -29,6 +30,8 @@ function smartOrdinalTooltip(d: Datum) {
   )
 }
 
+const summaryTooltip = /* @__PURE__ */ buildStatsTooltip()
+
 // Marked so FlippingTooltip knows this component paints its own chrome.
 const DefaultOrdinalTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultOrdinalTooltip({ hover }: { hover: HoverData }) {
   const d = hover.data || {}
@@ -39,18 +42,7 @@ const DefaultOrdinalTooltip = /* @__PURE__ */ markTooltipChrome(function Default
   if (Array.isArray(d)) {
     const category = hoverCategory || d[0]?.category || ""
     if (stats) {
-      return (
-        <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-          {category && <div style={{ fontWeight: "bold" }}>{String(category)}</div>}
-          <div>n = {stats.n}</div>
-          <div>Min: {stats.min.toLocaleString()}</div>
-          <div>Q1: {stats.q1.toLocaleString()}</div>
-          <div>Median: {stats.median.toLocaleString()}</div>
-          <div>Q3: {stats.q3.toLocaleString()}</div>
-          <div>Max: {stats.max.toLocaleString()}</div>
-          <div style={{ opacity: 0.8 }}>Mean: {stats.mean.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-        </div>
-      )
+      return summaryTooltip({ category, stats })
     }
     const n = d.length
     return (

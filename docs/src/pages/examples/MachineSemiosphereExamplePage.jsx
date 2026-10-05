@@ -148,23 +148,21 @@ export default function MachineSemiosphereExamplePage() {
             2026
           </p>
           <h1 className="semiosphere-masthead__title">
-            Short-lived AI agents hacked Hugging Face. What they left behind may matter just as
-            much.
+            The agents left. Their messages stayed.
           </h1>
           <p className="semiosphere-masthead__dek">
-            Models running in an OpenAI cybersecurity evaluation got outside their intended
-            boundaries and compromised parts of Hugging Face&apos;s systems. Public accounts
-            describe something else alongside the intrusion: one run could leave messages, files,
-            paths, and conventions that another run found later.
+            During an OpenAI cybersecurity evaluation, AI agents gained unauthorized access to
+            parts of Hugging Face&apos;s systems. The published investigations also describe how
+            the agents shared their work: one run left messages and files that another could find
+            later.
           </p>
           <p className="semiosphere-masthead__follow">
-            This is a story about the break-in, but it is also an investigation of what survived
-            after individual agent runs ended. Scroll down to follow the evidence from the attack
-            record to the traces that carried information forward.
+            That handoff matters because an agent can stop running while its work continues to
+            influence other agents. Follow the investigation to see how shared files, a message
+            board and ordinary online services carried information from one run to the next.
           </p>
           <p className="semiosphere-masthead__source-line">
-            Reporting draws on <SourceLinks ids={INCIDENT_SOURCE_IDS} />. Each chart below states
-            what the record can—and cannot—support.
+            The account below draws on <SourceLinks ids={INCIDENT_SOURCE_IDS} />. Source notes accompany each chart.
           </p>
         </header>
 
@@ -202,8 +200,8 @@ export default function MachineSemiosphereExamplePage() {
               </h2>
             </div>
             <p className="semiosphere-map-shell__note">
-              The gray route sets the article&apos;s order. The other routes group recurring topics
-              across the three public accounts.
+              Follow the gray route through the article. The colored routes connect chapters
+              about shared memory, reused services and the investigation.
             </p>
           </header>
           <MachineSemiosphereLegend />
@@ -227,8 +225,8 @@ export default function MachineSemiosphereExamplePage() {
                   />
                 </div>
                 <figcaption>
-                  Routes show narrative continuity and shared evidence classes, not a complete
-                  causal genealogy.
+                  The routes connect related parts of the reporting. Read them as a guide to the
+                  article.
                 </figcaption>
               </figure>
             </aside>
@@ -289,9 +287,9 @@ export default function MachineSemiosphereExamplePage() {
             ))}
           </div>
           <p>
-            The July incident offers evidence that shared digital environments can carry useful
-            information between short-lived runs. Answering how common, durable, and transferable
-            that behavior is will require controlled tests and independent reproduction.
+            The incident makes a practical case for looking beyond a single agent run. To
+            understand what an agent can do, we also need to examine what earlier runs left for
+            it to find. The questions above suggest how to test those connections.
           </p>
         </section>
 
@@ -324,9 +322,7 @@ export default function MachineSemiosphereExamplePage() {
           <div className="semiosphere-sources__concepts">
             <h3>Terms used in the analysis</h3>
             <p>
-              The plain-language definition of stigmergy and the proposed “machine semiosphere”
-              frame draw on <SourceLinks ids={CONCEPTUAL_SOURCE_IDS} />. Those sources explain the
-              concepts; they do not supply facts about the incident.
+              <SourceLinks ids={CONCEPTUAL_SOURCE_IDS} /> supply the terms used to discuss coordination through shared traces. The incident details come from the three investigations above.
             </p>
           </div>
         </footer>

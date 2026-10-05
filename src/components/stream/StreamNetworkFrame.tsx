@@ -1293,14 +1293,22 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       const store = storeRef.current
       if (!store) return
       const clearFocus = () => {
+        const hadHover = hoverRef.current !== null
         kbFocusIndexRef.current = -1
         focusedNavPointRef.current = null
         neighborIndexRef.current = -1
         hoverRef.current = null
         setHoverData(null)
         // Focus chrome is SVG/tooltip — do not dirty retained scene geometry.
-        customHoverBehavior?.(null)
+        if (hadHover) customHoverBehavior?.(null)
         scheduleRender()
+      }
+      if (e.key === "Escape") {
+        e.preventDefault()
+        // Cancel a coalesced pointer move so it cannot reopen the tooltip.
+        onPointerLeave()
+        clearFocus()
+        return
       }
 
       // Always rebuild NavGraph from current sceneNodes — positions change during
@@ -1333,7 +1341,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       if (current < 0) {
-        if (e.key === "Escape") return
         const isNav = [
           "ArrowRight",
           "ArrowLeft",
@@ -1395,7 +1402,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
       scheduleRender()
     },
-    [customClickBehavior, customHoverBehavior, scheduleRender]
+    [customClickBehavior, customHoverBehavior, onPointerLeave, scheduleRender]
   )
 
   const onMouseMoveWrapped = useCallback(

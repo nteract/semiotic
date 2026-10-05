@@ -79,19 +79,19 @@ ${HISTORY_RIVER_LAYOUT_NOTE}
 
 const FINDINGS = [
   {
-    eyebrow: "The Wang Lung path / historical inversion",
-    title: "The object meant to defeat insecurity becomes a source of insecurity.",
-    body: "Scarcity memory flows through property as family security and housing-led accumulation, then returns as housing burden, uncertain wealth, weak confidence, precautionary saving, and weak consumption.",
+    eyebrow: "Housing and security",
+    title: "A home can become a source of financial pressure.",
+    body: "In The Good Earth, land promises Wang Lung security. The essay follows a modern version of that hope into housing, then asks how the burden of buying a home and uncertainty about its value can encourage saving and weaken confidence.",
   },
   {
-    eyebrow: "The meritocracy path / diminishing returns",
-    title: "Credentials stop delivering the promise they were built to carry.",
-    body: "The growth bargain turns education into a mobility instrument. When the credential arms race meets job mismatch and involution, disciplined striving can feel positional rather than productive—and lying flat becomes legible.",
+    eyebrow: "Education and work",
+    title: "Working harder offers less assurance of getting ahead.",
+    body: "Education promises a route to a better job. When credentials multiply faster than good opportunities, people can spend more effort competing for the same positions. That helps explain the appeal of stepping back from the race.",
   },
   {
-    eyebrow: "The adaptive fork / same pressure, different conduct",
-    title: "Insecurity produces both disengagement and hyperconformity.",
-    body: "Involution branches to lying flat, low-energy rat people, and defensive stability seeking. Refusal, exhausted retreat, and intensified competition for protected employment share a loss of confidence upstream.",
+    eyebrow: "Different responses to insecurity",
+    title: "Some people withdraw. Others pursue safer jobs.",
+    body: "The argument follows three responses to lost confidence: refusing the competition, retreating from daily demands, and competing harder for secure employment. They differ in behavior while sharing a concern about what the future offers.",
   },
 ]
 
@@ -260,29 +260,29 @@ function GoodEarthLyingFlatStory() {
             ),
             copy: (
               <p>
-                Housing, credentials, disciplined work, and visible consumption first promised
-                security and mobility. When their returns became unreliable, the same
-                security-seeking behavior began producing precaution, delayed adulthood, involution,
-                and withdrawal.
+                In The Good Earth, Wang Lung looks to land for security. This essay traces a
+                related hope through housing, education and work in modern China. It asks how
+                those paths can become sources of pressure—and why some people respond by “lying
+                flat,” or stepping back from relentless competition.
               </p>
             ),
-            tagline: "The modern substitute for land becomes a new terrain of risk.",
+            tagline: "What happens when the path to security becomes harder to trust?",
           }}
           readingKey={[
             {
               icon: "↓",
               title: "READ DOWN",
-              body: "Six authored openings move from inherited insecurity to social outcomes.",
+              body: "Follow six stages of the argument, from insecurity to possible responses.",
             },
             {
               icon: "≈",
               title: "READ WIDTH AS EMPHASIS",
-              body: "Ribbon width is an interpretive causal-emphasis unit, never a count of people.",
+              body: "Wider ribbons mark connections the essay emphasizes. They do not count people.",
             },
             {
               icon: "◌",
               title: "CHANGE THE LENS",
-              body: "Focus a claim family to make the argument inspectable rather than falsely settled.",
+              body: "Select a group of claims to follow its connections and read the supporting notes.",
             },
           ]}
           river={{
@@ -334,38 +334,37 @@ function GoodEarthLyingFlatStory() {
           }}
           findings={{
             kicker: "02 / Three readings worth tracing",
-            title: "The Sankey makes a contested causal argument visible.",
+            title: "Three paths through the argument",
             items: FINDINGS.map((finding) => ({ ...finding, key: finding.eyebrow })),
           }}
           method={{
             kicker: "03 / What this diagram does and does not claim",
-            title: "A causal map with its uncertainty left on the page",
+            title: "How to read this interpretation",
             body: (
               <>
                 <p>
-                  This is not a forecast, a survey, or an attempt to calculate how many people move
-                  from one cultural position to another. It renders a structured interpretation of
-                  how insecurity is transmitted through institutions and then expressed in multiple
-                  adaptive responses.
+                  The diagram proposes connections between insecurity, institutions and people’s
+                  responses. Select a connection to read the claim and its basis, then consider
+                  whether that link supports the larger argument.
                 </p>
                 <p className="process-river__warning">
-                  A ribbon value is a comparative emphasis inside this argument. It must not be read
-                  as a probability, percentage, population share, or literal transformation rate.
+                  Ribbon widths show the emphasis given to each connection. They are not measured
+                  probabilities or shares of the population.
                 </p>
                 <p>
-                  “Lying flat” and “rat people” remain separate because strategic refusal is not the
-                  same as aestheticized, low-energy retreat. Defensive stability seeking remains
-                  separate too: the same loss of confidence can produce less competition for upside
-                  and more competition for institutional safety.
+                  The diagram distinguishes “lying flat,” a refusal to keep competing, from the
+                  exhausted withdrawal described by “rat people.” It also follows those who seek
+                  safety through secure institutional jobs. Loss of confidence can prompt people
+                  to leave a competition or to enter a different one.
                 </p>
               </>
             ),
           }}
           code={{
             kicker: "04 / Pin stages; keep claims inspectable",
-            title: "A Sankey can make an argument legible without pretending it is a census.",
+            title: "How the diagram presents the argument",
             intro:
-              "The important ingredients are explicit temporal extents, source-family color, confidence-aware ribbon opacity, and a selection-backed claim lens that does not rewrite the topology.",
+              "Six stages organize the claims. Color identifies each family of ideas, opacity shows the assigned confidence, and selecting a lens highlights related connections.",
             source: implementationCode,
           }}
           footer={{

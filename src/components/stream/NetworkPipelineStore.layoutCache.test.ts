@@ -43,6 +43,26 @@ function fixture(extra: Partial<NetworkPipelineConfig> = {}) {
 }
 
 describe("network custom layout reuse", () => {
+  it("invalidates cached styling when the theme sequential scheme or selection opacity changes", () => {
+    const { store, layout } = fixture({
+      themeSequential: "blues",
+      themeSelectionOpacity: 0.15
+    })
+    expect(layout.mock.calls[0][0].theme).toMatchObject({
+      sequential: "blues",
+      selectionOpacity: 0.15
+    })
+    store.updateConfig({
+      themeSequential: "purples",
+      themeSelectionOpacity: 0.4
+    })
+    store.buildScene(size)
+    expect(layout).toHaveBeenCalledTimes(2)
+    expect(layout.mock.calls[1][0].theme).toMatchObject({
+      sequential: "purples",
+      selectionOpacity: 0.4
+    })
+  })
   it("retains geometry, HTML marks and readback for identical builds and paint-only config", () => {
     const { store, layout } = fixture({ themeSemantic: { primary: "red" } })
     const scene = store.sceneNodes

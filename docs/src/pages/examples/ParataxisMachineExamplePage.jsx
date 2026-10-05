@@ -718,17 +718,14 @@ export default function ParataxisMachineExamplePage() {
             <summary>Method, evidence, and interpretive limits</summary>
             <div>
               <p>
-                Every clause pair, genre signature, plausibility value, and aphorism ledger entry on
-                this page is purpose-written editorial material. “Plausibility” means a reading the
-                authors consider useful for demonstration; it is not a survey result, language-model
-                probability, or corpus statistic.
+                The clause pairs and genre examples were written for this page. Their scores
+                express the authors’ judgments about possible readings, rather than measured
+                frequencies in a text collection.
               </p>
               <p>
-                The explanation of AI writing distinguishes documented training methods and research
-                findings from editorial interpretation. Parataxis is not presented as an AI
-                detector. Reader choices remain in component state and are neither stored nor
-                transmitted. The visualizations expose accessible summaries and tables; motion
-                follows the reduced-motion preference and can also be stopped with the page control.
+                The research links support the discussion of AI writing; the examples show how to
+                examine a passage yourself. Your choices stay on this page. Use the motion
+                control to pause the animation, or the chart tables to read the values.
               </p>
             </div>
           </details>

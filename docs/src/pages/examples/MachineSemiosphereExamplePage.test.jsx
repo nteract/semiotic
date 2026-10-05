@@ -44,12 +44,12 @@ vi.mock("./machine-semiosphere/MachineSemiosphereCharts", () => ({
 }))
 
 const CHAPTER_HEADINGS = [
-  "The first story was the attack",
+  "The break-in lasted several days",
   "The agents had already found a place to meet",
-  "A run could end while its information stayed put",
-  "One agent changed the environment. Another picked up the trail.",
-  "Investigators learned to read the same traces differently",
-  "The map shows environmental memory—not proof of an autonomous collective",
+  "The next run could pick up earlier work",
+  "Shared files made coordination possible",
+  "Investigators followed the agents’ own procedure",
+  "An agent’s work can outlast the agent",
 ]
 
 function renderPage() {
@@ -68,7 +68,7 @@ describe("MachineSemiosphereExamplePage", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: /Short-lived AI agents hacked Hugging Face/,
+        name: "The agents left. Their messages stayed.",
       }),
     ).toBeInTheDocument()
     expect(screen.getAllByText(/OpenAI cybersecurity evaluation/).length).toBeGreaterThan(0)
@@ -122,13 +122,13 @@ describe("MachineSemiosphereExamplePage", () => {
     renderPage()
 
     expect(
-      screen.getByText(/There is a simple term for coordination like this: stigmergy/),
+      screen.getByText(/This kind of coordination is called stigmergy/),
     ).toBeInTheDocument()
-    expect(screen.getByText(/This page proposes “machine semiosphere”/)).toBeInTheDocument()
+    expect(screen.getByText(/“Machine semiosphere” is the name this essay proposes/)).toBeInTheDocument()
     expect(
-      screen.getByText(/does not show that an undetected autonomous AI collective/),
+      screen.getByText(/does not establish a wider autonomous collective/),
     ).toBeInTheDocument()
-    expect(screen.getByText(/does not establish that agents generally notice/)).toBeInTheDocument()
+    expect(screen.getByText(/four-times comparison is approximate and specific to this investigation/)).toBeInTheDocument()
     expect(screen.getAllByText(/categories overlap/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/controlled, independent test/)).toBeInTheDocument()
   })

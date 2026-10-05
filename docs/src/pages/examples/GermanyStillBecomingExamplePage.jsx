@@ -221,8 +221,9 @@ export default function GermanyStillBecomingExamplePage() {
         title: <h2>HOW<br />GERMANY<br />RAN TOGETHER</h2>,
         copy: (
           <p>
-            Follow the regional contributions inside present-day Germany as they split across duchies, electorates,
-            kingdoms, occupation zones, and Länder—then repeatedly merge into larger political containers.
+            Germany’s present-day regions have belonged to many different states. Follow them
+            through duchies, electorates, kingdoms and occupation zones to see how repeated
+            divisions and reunions led to the sixteen Länder.
           </p>
         ),
         tagline: "Time falls. Width is conserved. Names change.",
@@ -298,9 +299,9 @@ export default function GermanyStillBecomingExamplePage() {
         title: "Some of the most important movements cannot share this width scale.",
         intro: (
           <p>
-            The conserved river follows only land inside the 1990 endpoint. The source dataset separately records
-            territorial arrivals and departures whose defensible measurements are historical area, contemporary
-            population, or no comparable quantity at all.
+            The main river traces land within Germany’s 1990 borders. The notes beside it
+            describe territories that joined or left earlier political formations, including
+            places outside that modern boundary.
           </p>
         ),
         items: GERMANY_EXTERNAL_FLOWS
@@ -322,8 +323,9 @@ export default function GermanyStillBecomingExamplePage() {
             <p>{GERMANY_RIVER_METADATA.normalization}</p>
             <p className="process-river__warning">{GERMANY_RIVER_METADATA.critical_caveat}</p>
             <p>
-              The model is deliberately compressed. Hundreds of imperial jurisdictions become regional macro-streams;
-              external branches remain annotations when no compatible value exists. That is a visible limit, not hidden precision.
+              To make this long history readable, the diagram groups hundreds of imperial
+              jurisdictions into regional streams. The source notes explain those groupings and
+              the external territories shown alongside them.
             </p>
           </>
         ),

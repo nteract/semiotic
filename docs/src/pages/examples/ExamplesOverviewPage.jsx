@@ -8,9 +8,11 @@ import ReservoirPreview from "./reservoir-guide/ReservoirPreview"
 import SuperpersuasionPreview from "./superpersuasion/SuperpersuasionPreview"
 import JobsReportPreview from "./jobs-report/JobsReportPreview"
 import PipelinePreview from "./pipeline-explorer/PipelinePreview"
+import NovelNetworkPreview from "./novel-network-lab/NovelNetworkPreview"
 import { FlowCircuitPreview, DependencyXRayPreview } from "./flow-circuit/AtlasPreviews"
 
 const PREVIEW_COMPONENTS = {
+  "novel-network-lab": NovelNetworkPreview,
   "pipeline-explorer": PipelinePreview,
   "atlas-acceptance": DependencyXRayPreview,
   "flow-circuit": FlowCircuitPreview,

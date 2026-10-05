@@ -137,11 +137,10 @@ export default function ErieRailroadOrganizationExamplePage() {
       `}</style>
 
       <p style={styles.lede}>
-        In 1855, Daniel McCallum and George Holt Henshaw turned a railroad into a tree. Authority
-        rises from the directors at the roots, operating divisions fan out as tracks, and the
-        workforce blooms around each station. This reconstruction keeps that visual argument but
-        makes the organization procedural: every branch is generated from role, station, division,
-        and headcount data.
+        In 1855, Daniel McCallum and George Holt Henshaw drew a railroad as a tree. Directors
+        form the roots, operating divisions branch into tracks, and workers gather around
+        stations. Explore the reconstruction to see how that image joins a chain of authority
+        with the places and people doing the work.
       </p>
 
       <StatStrip
@@ -240,13 +239,11 @@ export default function ErieRailroadOrganizationExamplePage() {
           diagram does not rebuild the railroad—it restyles and reweights the same tree.
         </p>
 
-        <h2>Railroad geometry, botanical grammar</h2>
+        <h2>How the branches are arranged</h2>
         <p>
-          A generic tree layout would preserve the reporting hierarchy but erase the thing that
-          makes the original memorable. Here each division receives a computed cubic trunk. Stations
-          are sampled along it in route order; crew branches grow from the local tangent; and
-          employee dots settle into deterministic phyllotactic clusters. Add a station or change a
-          headcount and the branch re-grows without touching a coordinate.
+          Each division forms a trunk, with stations placed along it in route order. Crew
+          branches grow beside their stations, and dots show representative employee counts.
+          Changing a station or headcount updates the drawing from the data.
         </p>
 
         <CodeBlock language="jsx" showCopyButton code={implementationCode} />

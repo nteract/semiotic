@@ -79,6 +79,9 @@ export interface NetworkLayoutContext<C extends object = Record<string, unknown>
   theme: {
     semantic: ThemeSemanticColors
     categorical: string[]
+    /** Active ThemeProvider's sequential scheme and selection dimming. */
+    sequential?: string
+    selectionOpacity?: number
   }
   /**
    * Resolves a stable color for a given key (typically a node id or

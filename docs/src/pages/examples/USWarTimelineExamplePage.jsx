@@ -118,15 +118,10 @@ export default function USWarTimelineExamplePage() {
   return (
     <ExamplePageLayout title="All the Wars of the United States">
       <p style={styles.lede}>
-        Charts of war usually focus on casualties. But what does it mean when there are &ldquo;only&rdquo; a few
-        hundred casualties but it wipes out a culture? What does it mean when there are many
-        low-level wars in different parts of the world? This timeline shows wars as described on
-        Wikipedia that the United States has taken part in during its existence and splits the
-        periods using CKMeans revealing what seem to be very clear semantic periods: A revolutionary
-        period focused on establishing the early United States, a period of conquest internally and
-        with the beginnings of a colonial influence, a time of growing international influence and
-        the current Pax Americana which, like the Pax Romana, rarely closes the doors of the
-        Temple of Jupiter.
+        Wars overlap. A long campaign in one region can continue while shorter conflicts begin
+        elsewhere, making isolated timelines an incomplete picture of U.S. military activity.
+        This view puts the listed conflicts on one calendar, grouped by region and historical
+        period. Follow the lanes, then compare them with the yearly count below.
       </p>
 
       <StatStrip
@@ -147,7 +142,7 @@ export default function USWarTimelineExamplePage() {
           <div style={styles.chartIntro}>
             <div>
               <div style={styles.kicker}>1775–2026 · five spheres</div>
-              <h2 style={styles.chartTitle}>Conflict as a continuous condition</h2>
+              <h2 style={styles.chartTitle}>When conflicts overlap</h2>
             </div>
             <div style={styles.interactionHint}>Hover a conflict to inspect it</div>
           </div>
@@ -227,9 +222,8 @@ export default function USWarTimelineExamplePage() {
 
         <h2>Concurrency makes continuity visible</h2>
         <p>
-          The line beneath the lanes counts active conflicts in each year. Long-running campaigns
-          overlap many shorter actions, showing military activity as concurrent systems instead of
-          isolated episodes.
+          The line counts how many listed conflicts were active in each year. Compare it with the
+          lanes above to see which long campaigns overlap the shorter ones.
         </p>
       </section>
 
@@ -237,7 +231,7 @@ export default function USWarTimelineExamplePage() {
         <div style={styles.peaceHeader}>
           <div>
             <div style={styles.kicker}>The inverse view</div>
-            <h2 style={styles.peaceTitle}>All the Peace of the United States</h2>
+            <h2 style={styles.peaceTitle}>Years with no listed conflict</h2>
           </div>
           <div style={styles.peaceCount}>{PEACE_YEARS.length} years</div>
         </div>

@@ -780,13 +780,17 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         reducedMotionRef
       ])
 
+      // Execution listeners may be inline callbacks. Keep worker teardown and
+      // config effects stable when a parent replaces only that listener.
+      const executionListenerRef = useRef(onSimulationExecutionChange)
+      executionListenerRef.current = onSimulationExecutionChange
       const reportExecutionState = useCallback(
         (execution: "sync" | "worker", reason?: string) => {
           const store = storeRef.current
           const key = `${simulationExecution}:${execution}:${reason ?? ""}`
           if (executionStateKeyRef.current === key) return
           executionStateKeyRef.current = key
-          onSimulationExecutionChange?.({
+          executionListenerRef.current?.({
             execution,
             liveBodies: store?.liveBodyCount() ?? 0,
             queuedBodies: store?.queueSize() ?? 0,
@@ -794,7 +798,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             requested: simulationExecution
           })
         },
-        [onSimulationExecutionChange, simulationExecution]
+        [simulationExecution]
       )
 
       const stopWorker = useCallback(

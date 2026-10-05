@@ -966,8 +966,9 @@ export function InsightForgeWorkbench() {
           </div>
           <h2>The Case of the Shattered Lanterns</h2>
           <p>
-            A chart can show you something. The hard part is carrying what you saw into the next
-            chart without losing the scope, denominator, uncertainty, or chain of reasoning.
+            Starlight Lanterns are coming back damaged. Start with the return spike, follow the
+            shipments through warehouses and packaging, then compare carriers. Carry useful
+            findings between the chart rooms to build an explanation you can check.
           </p>
         </div>
         <div className="insight-forge__hero-actions">
@@ -1201,8 +1202,8 @@ export function InsightForgeWorkbench() {
         <div>
           <span>Final lesson</span>
           <blockquote>
-            Each chart applies a different layout to the same scoped evidence. The incident window,
-            cohort definition, and denominator remain attached as you move between rooms.
+            Each room gives you another view of the same case. Collected findings keep their
+            dates, comparison group and shipment counts as you carry them forward.
           </blockquote>
         </div>
         <div>
@@ -2772,7 +2773,8 @@ function InsightInventory({
         <ForgeGlyph name="scroll" size={30} decorative />
       </div>
       <p className="insight-forge__satchel-intro">
-        Position is meaning: left to right is portability; top to bottom is epistemic maturity.
+        Read left to right for how easily a finding can travel, and top to bottom for how fully
+        it has been checked.
       </p>
       <div
         className="insight-forge__inventory-axis insight-forge__inventory-axis--columns"
@@ -2932,7 +2934,7 @@ function ArtifactDetails({ artifact, activeRoom, onSendToForge, onApply, onStatu
       <div className="insight-forge__artifact-details insight-forge__artifact-details--empty">
         <ForgeGlyph name="unlit-lantern" size={28} decorative />
         <p>
-          Select an item to inspect its meaning, scope, audit, lineage, and executable behavior.
+          Select an item to read its finding, source, checks and history.
         </p>
       </div>
     )

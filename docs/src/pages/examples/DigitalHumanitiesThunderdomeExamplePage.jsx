@@ -90,7 +90,7 @@ const SCENES = [
         its makers, users, critics, and tools. None of that reduced mediation. It moved the boundary
         between interpretation and implementation.
       </>,
-      "AI-assisted coding moves that boundary again. A scholar can now ask for a transformation, an interface, and a chart while the research question is still half-formed. That is more than “another tool,” and less than magic. The tool did not disappear. The person with the question can generate more of the software.",
+      "AI-assisted coding gives the person asking a research question more control over the software used to explore it. A scholar can try a data transformation, build an interface and revise a chart while the question is still taking shape.",
     ],
     shows: "Thirteen documented changes in how ideas become software",
     omits: "A story of smooth progress, or equal labor in every project",
@@ -106,7 +106,7 @@ const SCENES = [
     paragraphs: [
       `DHQ reports ${EDITORIAL_STATISTICS.peerReviewedPublished} peer-reviewed articles and case studies through 2025: ${EDITORIAL_STATISTICS.regularPublished} in the regular stream and ${EDITORIAL_STATISTICS.specialPublished} in special issues. Those routes have different histories, so they are not simply competing acceptance rates.`,
       `In this 806-item public corpus, ${PUBLICATION_STRUCTURE.placedInNamedClusters} items sit inside ${PUBLICATION_STRUCTURE.namedClusterCount} named clusters. A cluster gathers work under a shared question before a reader, or a recommendation system, ever arrives.`,
-      "A spike in a subject can mean the field got busier there. It can also mean editors invited that conversation. Building a new app does not undo the earlier decision about what enters the reading room together.",
+      "A surge in a subject can reflect growing interest among scholars or an editor’s decision to gather work on it. The ability to build software changes neither of those earlier choices about what gets published together.",
     ],
     shows: "Where published items sit in public named clusters",
     omits: "Why a paper was accepted, or comparable acceptance rates by route",
@@ -121,7 +121,7 @@ const SCENES = [
     chartTitle: "One author vs. multi-author published items",
     paragraphs: [
       "The standard AI demo is solitary: one person, one prompt, one finished app. DHQ’s published record was already moving the other way before the present AI wave.",
-      "Items with two or more listed authors rise from 32.1% in 2007–11 to 54.7% in 2022–25. The line jumps year to year because the journal published between 6 and 79 items annually. Small denominators make every year loud.",
+      "Items with two or more listed authors rise from 32.1% in 2007–11 to 54.7% in 2022–25. Annual rates fluctuate more because the journal published between 6 and 79 items a year; in a small year, a few papers can move the percentage substantially.",
       "A byline is a narrow record. It does not say who wrote code, cleaned data, designed an interface, found funding, or kept a server alive. It only says that named coauthorship became more common.",
     ],
     shows: "How often published items list one name or several",
@@ -137,7 +137,7 @@ const SCENES = [
     chartTitle: "Change in emphasis over time",
     paragraphs: [
       "In the current XML, media studies sits on 36.7% of items published in 2007–11 and 3.4% in 2022–25. History rises from 15.6% to 21.2%. Race rises from 0.9% to 14.4%. Project report peaks at 26.7% in 2017–21.",
-      "These are DHQ’s controlled tags, not topics guessed by a model. An item can carry several tags at once, so the bars are not a pie that must sum to 100. The vocabulary is inspectable, which is firmer ground than a free-form topic cloud.",
+      "These subject tags come from DHQ’s own vocabulary. An item can carry several tags, so the percentages can add up to more than 100. The category definitions let us check what each bar includes.",
       "One bar is so extreme that it deserves its own question. Media Studies begins as DHQ’s most common controlled category. What does it mean for that category to nearly disappear?",
     ],
     shows: "How often current controlled tags appear by publication window",
@@ -151,11 +151,11 @@ const SCENES = [
     number: "05",
     title: "DHQ stopped treating the digital as a medium",
     chart: "GroupedBarChart",
-    chartTitle: "Media Studies falls out of DHQ’s connective tissue",
+    chartTitle: "Media Studies appears less often alongside other subjects",
     paragraphs: [
       "Media Studies appears on 40 of 109 items from 2007–11 (36.7%), then on just 8 of 236 from 2022–25 (3.4%). A conservative family of narrower media tags briefly absorbs some of the difference, but the whole explicit media ecology still contracts from 45.0% to 13.1%.",
       `The deeper change is what Media Studies no longer connects. Early on, 6 of 14 tools articles and 11 of 27 articles tagged “DH” also carried Media Studies. In the latest window those overlaps are both zero. Its overlap with project reports falls from 6 of 19 to 1 of 40; with cultural criticism, from 7 of 17 to zero of 21.`,
-      "Early DHQ used Media Studies as an umbrella for the field’s own technical condition: interfaces, electronic publishing, collaboration, tools, and the strangeness of digital form. Later DHQ still makes and studies digital systems, but files them as methods, disciplinary applications, projects, and politics. The journal did not stop being digital. The digital stopped being the shared object that needed explaining.",
+      "Early DHQ often grouped interfaces, electronic publishing, collaboration and tools under Media Studies. Later articles more often place that work under methods, projects, disciplines and politics. I read this as a change in emphasis: digital systems increasingly became ways to study a subject, while the systems themselves received less attention under that shared label.",
     ],
     shows: "How Media Studies retreats overall and from four categories it once connected",
     omits: "Unlabeled media analysis, full-text topics, or the whole field of digital humanities",
@@ -170,7 +170,7 @@ const SCENES = [
     chartTitle: "Tools, project reports, and either one",
     paragraphs: [
       "The explicit tools category does not trace a simple fall. It marks 12.8% of the opening window, rises to 24.0% in 2017–21, and returns to 13.6% in 2022–25. Project reports follow a similar arc. An item carrying either tag accounts for 27.5%, 27.2%, 44.1%, and 26.3% of the four windows.",
-      "DHQ defines tools as work about platforms, apps, workflows, tool criticism, presentation, review, or adoption. That is a category of discourse, not an inventory of every article that computes. The taxonomy itself says tools is often linked to project reports, which is why the union is a better floor for visible making than tools alone.",
+      "DHQ’s tools tag covers platforms, workflows, reviews and tool criticism. Many articles use software without being about tools, and project reports overlap with the category. Counting items with either tag gives a broader view of explicitly practical work.",
       `The elision becomes stark in 2024–25. ${TOOLS_PRACTICE_SUMMARY.audit2024To2025.methodItems} of ${TOOLS_PRACTICE_SUMMARY.audit2024To2025.items} items carry machine learning, NLP, data analytics, or data visualization; only ${TOOLS_PRACTICE_SUMMARY.audit2024To2025.methodAndTools} of those is tagged tools. All ${TOOLS_PRACTICE_SUMMARY.lateCaseStudies.items} recent formal case studies are practical work, and none is tagged tools. Practice became method, case, and situated intervention rather than “here is a tool.”`,
     ],
     shows: "How explicit tool discourse relates to DHQ’s own project-report category",
@@ -186,7 +186,7 @@ const SCENES = [
     chartTitle: "The topics gaining the most ground",
     paragraphs: [
       "Compare the opening and latest windows and the largest gains are not a roll call of traditional disciplines. Race rises from 0.9% to 14.4%. Ethics goes from zero to 11.9%. Minimal computing goes from zero to 7.6%. Social justice, global DH, archives, and gender all gain ground; history is the major conventional field among the eight.",
-      "Meanwhile Literary Studies falls from 23.9% to 12.3%, and the old connective vocabulary also recedes: collaboration, infrastructure, publishing, and information retrieval. So “more humanities” is only half right. DHQ became less preoccupied with naming digital mediation and more preoccupied with whom digital work serves, where it happens, what it costs, and what it does to its subjects.",
+      "Literary Studies falls from 23.9% to 12.3%, alongside tags such as collaboration, infrastructure and publishing. Taken together, these changes suggest growing attention to who digital work serves, where it happens and what it costs. That is a different shift from simply moving toward traditional humanities disciplines.",
       <>
         The journal’s founding question was how to shape digital humanities. Its current{" "}
         <a href={DHQ_PROVENANCE.aboutUrl} target="_blank" rel="noopener noreferrer">
@@ -219,7 +219,7 @@ const SCENES = [
         learning three times, and Media Studies not once. AI is not rejected as computation. It is
         read as code, method, opacity, bias, gender, and politics.
       </>,
-      "In the earlier shape of DH, AI-assisted coding would have looked like a long-awaited redistribution of implementation power. The humanist can make weird software without first submitting the question to a programmer’s veto. That is genuinely decolonizing along one axis. But the 2011 argument also objected to imported tools that shrink rich questions to fit conventional software. A model trained on conventional code can automate that contraction at extraordinary scale.",
+      "AI-assisted coding addresses part of the problem I described in 2011: a scholar can try unusual software without first persuading a programmer to build it. But the old problem also involved fitting a rich question into the limits of available tools. A model can reproduce those limits if it keeps proposing the same conventional databases and interfaces.",
       <>
         Current DH adds a harder test. DHQ’s{" "}
         <a href={DHQ_AI_POLICY_URL} target="_blank" rel="noopener noreferrer">
@@ -230,7 +230,7 @@ const SCENES = [
         but because the product mythology of effortless substitution collides with a field now
         organized around situated labor and human scholarly relations.
       </>,
-      "So yes: AI can be a decolonial tool. Cheap code is not decolonization by itself. The claim becomes true when access, language, ownership, governance, community, and consequences change with it.",
+      "AI gives scholars more control when it lets them change both the software and the terms of using it: access, language, ownership and responsibility for the results.",
     ],
     shows: "How one issue containing an explicit Critical AI section was tagged",
     omits: "Each article’s stance, all DHQ writing about AI, or consensus across the field",
@@ -307,9 +307,9 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
           </div>
           <div className="thunderdome-setup__copy">
             <p>
-              Something real did change. Being able to make and revise an application without
-              waiting for a technical specialist matters. Implementation is still only one place
-              where choices get made.
+              The ability to build and revise an application without waiting for a specialist is
+              a real change. Looking at DHQ’s record helps place that change among the other
+              decisions that shape scholarly work.
             </p>
             <p>
               Digital Humanities Quarterly is a useful case because I know it as a former editor and
@@ -377,45 +377,32 @@ export default function DigitalHumanitiesThunderdomeExamplePage() {
 
         <section id="thunderdome-after" className="thunderdome-after">
           <p className="thunderdome-kicker">Where that leaves us</p>
-          <h2>AI is decolonial at one layer and colonial at another</h2>
+          <h2>More control over code, new dependencies to examine</h2>
           <div>
             <p>
-              DHQ did become less about something, but it was not tools. It left behind Media
-              Studies as the umbrella under which the field explained its own digital condition.
-              Explicit tool and project practice remains near its opening share. What changed is the
-              position of the tool: less often the protagonist, more often a method inside work
-              about history, race, ethics, access, community, and consequence.
+              The record suggests that tools and projects remain important to DHQ. Their combined
+              share is close to where it began. Media Studies has receded as a common way to
+              discuss them, while questions about history, race, ethics, access and community
+              have become more prominent.
             </p>
             <p>
-              AI-assisted coding really does weaken the old technical veto. A scholar can generate a
-              database, interface, and chart without first persuading a programmer that the question
-              deserves to exist. Earlier DH would have recognized that as an extraordinary expansion
-              of experimental practice. We should call that redistribution of authority what it is
-              instead of treating AI only as convenience or threat.
+              AI-assisted coding expands who can experiment. A scholar can test a database,
+              interface or chart without waiting for a programmer to agree that it is worth
+              building. That shifts some authority toward the person with the research question.
             </p>
             <p>
-              But the original problem was never only the programmer. It was software’s power to
-              contract a rich question until it fit the available system. Generative models can
-              remove the scarce expert while reproducing the most conventional code, ontology, and
-              interface at industrial scale. Authority moves away from the local toolbuilder and
-              toward training data, model providers, platforms, and defaults that are harder to
-              inspect or contest.
+              It also introduces new dependencies. A model’s training, its provider and its
+              default solutions influence what gets built. A scholar may gain freedom from a
+              local technical bottleneck while finding it harder to understand why the new
+              software takes the shape it does.
             </p>
             <p>
-              That is why AI meets more friction in the present shape of DH. The field now asks who
-              controls the data and infrastructure, whose language survives, whose labor is hidden,
-              who can access the result, and who bears its errors. DHQ’s{" "}
-              <a href={DHQ_AI_POLICY_URL} target="_blank" rel="noopener noreferrer">
-                AI policy
-              </a>{" "}
-              is not anti-computation: it allows supportive uses while keeping agency, disclosure,
-              accuracy, and responsibility with the human author. AI belongs when it supports human
-              scholarly relations. It conflicts when substitution is sold as the relation itself.
+              Those dependencies meet concerns already central to DHQ: control of data, language, labor, access and responsibility for errors. Its <a href={DHQ_AI_POLICY_URL} target="_blank" rel="noopener noreferrer">AI policy</a> allows supportive uses while leaving disclosure, accuracy and responsibility with the human author. The practical question is whether a particular use helps scholars do that work well.
             </p>
           </div>
           <p className="thunderdome-after__closing">
-            The humanist can make the app now. That becomes decolonization when we can also change
-            the terms on which it is made, governed, read, and sustained.
+            The humanist can make the app now. The next step is to make its choices
+            understandable and revisable, and to decide who will have the power to maintain it.
           </p>
         </section>
 

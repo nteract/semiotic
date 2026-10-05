@@ -74,6 +74,8 @@ export const COLD_CONSUMER_SIZE_FAILURE_MULTIPLIER = 4
 export const EXCLUDED_EXPORTS = new Set([
   "./experimental",
   "./experimental/vacp",
+  "./experimental/network-resolution",
+  "./experimental/network-resolution/react",
   "./package.json",
   "./spec/*"
 ])
