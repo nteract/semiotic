@@ -40,7 +40,8 @@ export function buildBarScene(
     ctx.config.binSize,
     ctx.getCategory,
     // Hover producers also need source rows, even without a consuming selection.
-    !!ctx.config.trackHoverRows || requestsSelectionProvenance(ctx.config.areaStyle)
+    !!ctx.config.trackHoverRows || requestsSelectionProvenance(ctx.config.areaStyle),
+    ctx.config.binAlign
   )
   if (bins.size === 0) return { nodes: [], binBoundaries: [] }
 

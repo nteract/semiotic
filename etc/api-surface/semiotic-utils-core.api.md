@@ -137,6 +137,7 @@ interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
 interface CheckedNumericContract
+interface CustomTooltipConfig
 interface DataAuditChartNotification
 interface DataAuditDiagnosis extends Diagnosis
 interface DataAuditNotificationOptions
@@ -315,6 +316,8 @@ interface-member CheckedNumericContract::property::domain = required readonly do
 interface-member CheckedNumericContract::property::missingValue = optional readonly missingValue: number | undefined
 interface-member CheckedNumericContract::property::requirements = required readonly requirements: readonly NumericRequirement[]
 interface-member CheckedNumericContract::property::role = required readonly role: NumericFieldRole
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DataAuditChartNotification::property::dismissible = required readonly dismissible: true
 interface-member DataAuditChartNotification::property::id = required readonly id: string
 interface-member DataAuditChartNotification::property::level = required readonly level: "error" | "warning"
@@ -443,6 +446,7 @@ interface-member MobileVisualizationLabelContract::property::minFontSize = optio
 interface-member MobileVisualizationLabelContract::property::strategy = optional strategy: string | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
@@ -572,7 +576,7 @@ interface-member SemioticTheme::property::aesthetics = optional aesthetics: Aest
 interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
-interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
+interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {chrome?: "default" | "none"; background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
 interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; legendFontFamily?: string; legendFontWeight?: number | string; tickFontFamily?: string; titleFontSize?: number; titleFontFamily?: string; titleFontWeight?: number | string;}
 interface-member SerializedSelection::property::clauses = required clauses: {clientId: string; type: "interval" | "point"; fields: Record<string, SerializedFieldSelection>;}[]
 interface-member SerializedSelection::property::name = required name: string
@@ -614,6 +618,7 @@ interface-member ToConfigOptions::property::artifactContract = optional artifact
 interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
 interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
 interface-member ToURLOptions::property::maxLength = optional maxLength: number | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -687,7 +692,7 @@ type SerializedSelections = Record<string, SerializedSelection>
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = (string & {}) | KnownThemePresetName
 type TimeGranularity = "days" | "hours" | "minutes" | "months" | "seconds" | "years"
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 type VisualHierarchyStatus = "manual" | "pass" | "warn"
 ```

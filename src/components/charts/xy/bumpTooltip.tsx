@@ -124,7 +124,7 @@ export function useBumpTooltip<TDatum extends Datum>({
       : hasOwnTooltipChrome(normalizedTooltip)
     const adaptedContent = ownsChrome ? markTooltipChrome(content) : content
     return multiTooltip
-      ? { mode: "multi", content: adaptedContent }
+      ? { mode: "multi", content: adaptedContent, chrome: isMultiTooltipConfig(tooltip) ? tooltip.chrome : undefined }
       : adaptedContent
   }, [multiTooltip, multiTooltipContent, normalizedTooltip, singleTooltipContent, tooltip])
 

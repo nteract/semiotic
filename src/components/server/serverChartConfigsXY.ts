@@ -311,6 +311,7 @@ export const temporalHistogram: ChartConfig = {
       axes: resolveHistogramAxes({ ...rest, axes: common.axes ?? rest.axes }),
       extentPadding: rest.extentPadding ?? common.extentPadding,
       binSize: rest.binSize,
+      binAlign: rest.binAlign,
       categoryAccessor,
       barColors: colors || common.barColors,
       colorScheme: colors || common.colorScheme,

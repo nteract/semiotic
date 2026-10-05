@@ -20,6 +20,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useLegendInteraction
 } from "../shared/hooks"
 import { buildDefaultRealtimeTooltip } from "./defaultRealtimeTooltip"
@@ -245,7 +246,8 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   const {
     activeSelectionHook,
     customHoverBehavior: linkedHoverBehavior,
-    customClickBehavior
+    customClickBehavior,
+    crosshairSourceId
   } = useChartSelection({
     selection,
     linkedHover,
@@ -577,6 +579,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   return (
     <StreamXYFrame
       ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
       chartType="line"
       runtimeMode="streaming"
       size={resolvedSize}

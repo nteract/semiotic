@@ -62,6 +62,7 @@ interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Datum = D
 interface CirclePackProps<TNode extends Datum = Datum> extends BaseChartProps
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
+interface CustomTooltipConfig
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
 interface GlyphDef
 interface GlyphPart
@@ -189,6 +190,8 @@ interface-member CustomLayoutFailureDiagnostic::property::severity = required se
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
 interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
 interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member ForceDirectedGraphProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
 interface-member ForceDirectedGraphProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member ForceDirectedGraphProps::property::edgeColor = optional edgeColor: string | undefined
@@ -267,6 +270,7 @@ interface-member LegendLayout::property::sideGutter = optional sideGutter: numbe
 interface-member LegendLayout::property::swatchSize = optional swatchSize: number | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member NetworkCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
@@ -790,6 +794,7 @@ interface-member ThresholdAlertConfig::property::metric = required metric: (node
 interface-member ThresholdAlertConfig::property::pulse = optional pulse: boolean | undefined
 interface-member ThresholdAlertConfig::property::warning = optional warning: number | undefined
 interface-member ThresholdAlertConfig::property::warningColor = optional warningColor: string | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -868,6 +873,6 @@ type NetworkSceneNode = NetworkArcNode | NetworkCircleNode | NetworkGlyphNode | 
 type ProcessSankeyTimeLike = Date | number | string
 type ResponsiveOrientation = "landscape" | "portrait"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

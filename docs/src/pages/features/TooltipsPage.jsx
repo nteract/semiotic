@@ -232,6 +232,27 @@ export default function TooltipsPage() {
 
       <h3 id="chrome-ownership">Chrome ownership through wrapper components</h3>
       <p>
+        Declare consumer-owned chrome directly with
+        <code>{'tooltip={{ content: renderer, chrome: "none" }}'}</code>.
+        The renderer receives authored data and can return nested components;
+        Semiotic adds positioning without adding a background, padding, or shadow.
+        This also works with <code>{'{ mode: "multi", content, chrome: "none" }'}</code>.
+        Use <code>chrome: "default"</code> to request Semiotic's surface explicitly.
+      </p>
+      <CodeBlock language="jsx" code={`<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  tooltip={{ content: d => <MyTooltip label={d.name} />, chrome: "none" }} />
+
+// Apply the policy to custom tooltips across a dashboard.
+<ThemeProvider theme={{ tooltip: { chrome: "none" } }}>
+  <Scatterplot data={data} xAccessor="x" yAccessor="y"
+    tooltip={d => <MyTooltip label={d.name} />} />
+</ThemeProvider>`} />
+      <p>
+        Chart configs override the theme. Field tooltip configs also accept
+        <code>chrome</code>; raw frame callbacks inherit the theme policy.
+        Existing marker APIs remain supported.
+      </p>
+      <p>
         Use <code>markTooltipChrome(renderer)</code> when a custom renderer supplies
         its own background, padding and shadow. Pass that renderer to <code>tooltip</code>,
         multi-mode <code>content</code>, or a frame's <code>tooltipContent</code>.

@@ -8,6 +8,7 @@ import { formatTooltipDate } from "./formatTooltipDate"
 import { smartTooltipEntries } from "../charts/shared/smartTooltip"
 import {
   TooltipRoot,
+  TooltipChromeScope,
   hasOwnTooltipChrome,
   hasTooltipContent,
   markTooltipChrome,
@@ -52,6 +53,8 @@ export interface TooltipField {
  * Base tooltip configuration
  */
 export interface TooltipConfig {
+  /** Explicit chrome policy; otherwise inherits theme.tooltip.chrome. */
+  chrome?: "default" | "none"
   /**
    * Array of fields to display in the tooltip
    * Can be simple field names or full TooltipField objects
@@ -144,6 +147,14 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
   return String(value)
 }
 
+function formattedTooltipField(data: Record<string, unknown>, field: string | TooltipField, format?: (value: unknown) => string) {
+  const accessor = typeof field === "string" ? field : field.accessor || field.key || ""
+  return {
+    label: typeof field === "string" ? field : field.label,
+    value: formatValue(getValue(data, accessor), typeof field === "string" ? format : field.format || format)
+  }
+}
+
 /**
  * Create a simple tooltip that displays a single value or title
  *
@@ -169,6 +180,7 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
 export function Tooltip(config: TooltipConfig = {}) {
   const {
     fields,
+    chrome,
     title,
     format,
     style = {},
@@ -191,27 +203,7 @@ export function Tooltip(config: TooltipConfig = {}) {
     }
 
     if (fields && fields.length > 0) {
-      fields.forEach((field) => {
-        let label: string | undefined
-        let accessor: Accessor
-        let fieldFormat: ((value: unknown) => string) | undefined
-
-        if (typeof field === "string") {
-          label = field
-          accessor = field
-          fieldFormat = format
-        } else {
-          label = field.label
-          accessor = field.accessor || field.key || ""
-          fieldFormat = field.format || format
-        }
-
-        const value = getValue(data, accessor)
-        fieldLines.push({
-          label,
-          value: formatValue(value, fieldFormat)
-        })
-      })
+      fieldLines.push(...fields.map((field) => formattedTooltipField(data, field, format)))
     } else if (!title) {
       // Default: try common field names (only when no title or fields specified)
       const commonFields = ["value", "y", "name", "id", "label"]
@@ -232,7 +224,7 @@ export function Tooltip(config: TooltipConfig = {}) {
     }
 
     return (
-      <TooltipRoot className={className} style={style}>
+      <TooltipRoot chrome={chrome} className={className} style={style}>
         {titleContent && <div style={{ fontWeight: fieldLines.length > 0 ? "bold" : "normal" }}>{titleContent}</div>}
         {fieldLines.map((line, index) => (
           <div key={index} style={{ marginTop: index === 0 && titleContent ? "4px" : 0 }}>
@@ -290,6 +282,7 @@ export function Tooltip(config: TooltipConfig = {}) {
 export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
   const {
     fields = [],
+    chrome,
     title,
     format,
     style = {},
@@ -317,32 +310,10 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
 
     // Add field lines
     if (fields && Array.isArray(fields) && fields.length > 0) {
-      fields.forEach((field) => {
-        let label: string | undefined
-        let accessor: Accessor
-        let fieldFormat: ((value: unknown) => string) | undefined
-
-        if (typeof field === "string") {
-          // Simple string field name
-          label = field
-          accessor = field
-          fieldFormat = format
-        } else {
-          // Full TooltipField object
-          // Support both 'key' and 'accessor' for backward compatibility
-          label = field.label
-          accessor = field.accessor || field.key || ""
-          fieldFormat = field.format || format
-        }
-
-        const value = getValue(data, accessor)
-        const formattedValue = formatValue(value, fieldFormat)
-
-        lines.push({
-          label: showLabels ? label : undefined,
-          value: formattedValue
-        })
-      })
+      for (const field of fields) {
+        const line = formattedTooltipField(data, field, format)
+        lines.push({ ...line, label: showLabels ? line.label : undefined })
+      }
     } else {
       // Default (no fields declared): use the smart heuristic — a bold title
       // (name/label), then a type, a value, and the rest — instead of dumping
@@ -366,7 +337,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
     }
 
     return (
-      <TooltipRoot className={`semiotic-tooltip-multiline ${className}`.trim()} style={style}>
+      <TooltipRoot chrome={chrome} className={`semiotic-tooltip-multiline ${className}`.trim()} style={style}>
         {lines.map((line, index) => (
           <div
             key={index}
@@ -411,12 +382,21 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
  */
 export interface MultiTooltipConfig {
   mode: "multi"
+  /** Custom content owns the surface when set to "none". */
+  chrome?: "default" | "none"
   /**
    * Custom renderer. Receives the raw hover datum with multi-series
    * context (`allSeries`, `xValue`) re-attached after unwrap. When
    * omitted, the built-in multi-series renderer is used.
    */
   content?: (data: Record<string, unknown>) => React.ReactNode
+}
+
+/** Custom datum renderer with an explicit chrome policy, without mutating the function. */
+export interface CustomTooltipConfig {
+  content: (data: Record<string, unknown>) => React.ReactNode
+  /** "none" leaves all visual chrome to the content. Defaults to the theme policy. */
+  chrome?: "default" | "none"
 }
 
 /**
@@ -431,6 +411,7 @@ export type TooltipProp =
   | boolean
   | "multi"
   | MultiTooltipConfig
+  | CustomTooltipConfig
   | ((data: Record<string, unknown>) => React.ReactNode)
   | ReturnType<typeof Tooltip>
   | ReturnType<typeof MultiLineTooltip>
@@ -516,10 +497,17 @@ export function resolveMultiCapableTooltip(input: {
   if (isMultiTooltip(sharedTooltip)) {
     const custom =
       isMultiTooltipConfig(sharedTooltip) && typeof sharedTooltip.content === "function"
-        ? normalizeTooltip(sharedTooltip.content)
+        ? normalizeTooltip(sharedTooltip.chrome === undefined ? sharedTooltip.content : { content: sharedTooltip.content, chrome: sharedTooltip.chrome })
         : undefined
+    const chrome = isMultiTooltipConfig(sharedTooltip) ? sharedTooltip.chrome : undefined
+    const defaultContent = chrome === undefined ? multiDefaultContent : (datum: Datum) => {
+      const content = multiDefaultContent(datum)
+      return hasTooltipContent(content)
+        ? <TooltipChromeScope chrome={chrome}>{content}</TooltipChromeScope>
+        : null
+    }
     return {
-      tooltipContent: (custom as false | undefined) || multiDefaultContent,
+      tooltipContent: (custom as false | undefined) || defaultContent,
       tooltipMode: "multi",
     }
   }
@@ -649,13 +637,14 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     return undefined
   }
 
-  if (typeof tooltip === "function") {
+  if (typeof tooltip === "function" || (typeof tooltip === "object" && tooltip !== null && "content" in tooltip && typeof tooltip.content === "function" && !isMultiTooltipConfig(tooltip))) {
     // Wrap user function to fix two common issues:
     // 1. The Stream Frame calls tooltipContent with HoverData ({ data, x, y, ... }),
     //    but HOC users expect their raw datum. We unwrap automatically.
     // 2. Returning a plain string/number renders as an unstyled text node.
     //    We wrap all results in the standard tooltip chrome.
-    const userFn = tooltip as (data: Record<string, unknown>) => React.ReactNode
+    const userFn = typeof tooltip === "function" ? tooltip : tooltip.content!
+    const chrome = typeof tooltip === "function" ? undefined : tooltip.chrome
     const normalized = (hoverData: Datum) => {
       const datum = normalizeTooltipDatum(hoverData)
       if (!datum) return null
@@ -665,14 +654,14 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
       // explicit data marker, an inline background, or a renderer/component
       // ownsChrome flag. Preserve that element directly; wrapping it here
       // would create the same double-box artifact FlippingTooltip avoids.
-      if (hasOwnTooltipChrome(userFn) || hasOwnTooltipChrome(result)) return result
+      if (chrome === undefined && (hasOwnTooltipChrome(userFn) || hasOwnTooltipChrome(result))) return result
       return (
-        <TooltipRoot>
+        <TooltipRoot chrome={chrome}>
           {result}
         </TooltipRoot>
       )
     }
-    return hasOwnTooltipChrome(userFn) ? markTooltipChrome(normalized) : normalized
+    return chrome === undefined && hasOwnTooltipChrome(userFn) ? markTooltipChrome(normalized) : normalized
   }
 
   if (tooltip === false || tooltip === undefined) {
@@ -694,19 +683,19 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
           '[semiotic] tooltip={{ mode: "multi", content }} reached a chart without multi-series hover. content receives one datum and no allSeries.',
         )
       }
-      return normalizeTooltip(tooltip.content)
+      return normalizeTooltip(tooltip.chrome === undefined ? tooltip.content : { content: tooltip.content, chrome: tooltip.chrome })
     }
     if (process.env.NODE_ENV !== "production") {
       console.warn(
         '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Use a line/area-family chart with multi support, or pass frameProps.tooltipMode: "multi" to StreamXYFrame.',
       )
     }
-    const singleFallback = MultiLineTooltip()
+    const singleFallback = MultiLineTooltip({ chrome: tooltip.chrome })
     return normalizeTooltip((datum: Datum) => singleFallback(datum))
   }
 
   // Config object with fields/title — convert to a tooltip function
-  if (typeof tooltip === "object" && tooltip !== null && ("fields" in tooltip || "title" in tooltip)) {
+  if (typeof tooltip === "object" && tooltip !== null && ("fields" in tooltip || "title" in tooltip || "chrome" in tooltip)) {
     const config = tooltip as TooltipConfig
     const configuredTooltip = Tooltip(config)
     // Declarative configs follow the same raw-datum contract as callback

@@ -74,7 +74,7 @@ function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum> &
 function IntentMark({ manifest, label, className, showSummary, }: IntentMarkProps): React.JSX.Element
 function LikertChart<TDatum extends Datum = Datum>(props: LikertChartProps<TDatum> & React.RefAttributes<LikertChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function LinkedCharts({ children, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
+function LinkedCharts({ children, crosshair, selections, showLegend, legendPosition, legendInteraction, legendSelectionName, legendField }: LinkedChartsProps): React.JSX.Element
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MobileAnnotationCalloutList({ items, title, empty, ordered, renderItem, className, style, }: MobileAnnotationCalloutListProps): React.JSX.Element | null
 function MobileChartContainer({ children, controls, mobile, breakpoint, chartMode, mobileInteraction, mobileSemantics, mobileSummary, chips, activeChip, onChipChange, detail, detailTitle, detailMode, initialDetailOpen, allowHorizontalScroll, hideToolbar, chartDefaults, ...containerProps }: MobileChartContainerProps): React.JSX.Element
@@ -201,10 +201,12 @@ function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult
 function useCategoryColors(): CategoryColorMap | null
 function useChartObserver(options?: UseChartObserverOptions | undefined): UseChartObserverResult
+function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
 function useCustomLayoutSelection(): CustomLayoutSelection
 function useFilteredData<T extends Datum>(data: T[], selectionName: string, clientId?: string | undefined): T[]
 function useForceLayout(nodes: readonly GraphNode[], edges: readonly GraphEdge[], options?: Omit<ForceLayoutAsyncOptions, "signal"> | undefined): UseForceLayoutResult
 function useLinkedChartsActive(): boolean
+function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult
 function useMobileRangeControls(options: UseMobileRangeControlsOptions): UseMobileRangeControlsResult
 function useNavigationSync(options: UseNavigationSyncOptions): UseNavigationSyncResult
@@ -264,9 +266,11 @@ interface ControlAuditResult
 interface ControlObservation
 interface ControlObservationAdapterOptions
 interface ControlPoint
+interface CrosshairPosition
 interface CrosshairStyle
 interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
+interface CustomTooltipConfig
 interface DashboardIntentManifest
 interface DetailsPanelProps
 interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
@@ -307,6 +311,7 @@ interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
 interface LineStyle
 interface LinkedChartsProps
+interface LinkedCrosshairConfig
 interface MinimapBrushEndMeta
 interface MinimapBrushStyle
 interface MinimapChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "linkedHover" | "onClick" | "onObservation" | "selection">, AxisConfig
@@ -423,6 +428,7 @@ interface UseBrushSelectionResult
 interface UseChartObserverOptions
 interface UseChartObserverResult
 interface UseForceLayoutResult
+interface UseLinkedCrosshairResult
 interface UseLinkedHoverOptions
 interface UseLinkedHoverResult
 interface UseMobileRangeControlsOptions
@@ -949,6 +955,9 @@ interface-member ControlObservationAdapterOptions::property::controlType = requi
 interface-member ControlObservationAdapterOptions::property::onObservation = optional onObservation: ControlObservationCallback | undefined
 interface-member ControlPoint::property::x = required x: number
 interface-member ControlPoint::property::y = required y: number
+interface-member CrosshairPosition::property::locked = optional locked: boolean | undefined
+interface-member CrosshairPosition::property::sourceId = required sourceId: string
+interface-member CrosshairPosition::property::xValue = required xValue: number
 interface-member CrosshairStyle::property::stroke = optional stroke: string | undefined
 interface-member CrosshairStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member CrosshairStyle::property::strokeWidth = optional strokeWidth: number | undefined
@@ -964,6 +973,8 @@ interface-member CustomLayoutFailureDiagnostic::property::severity = required se
 interface-member CustomLayoutFailureDiagnostic::property::source = required source: "customLayout" | "customNetworkLayout"
 interface-member CustomLayoutSelection::property::isActive = required isActive: boolean
 interface-member CustomLayoutSelection::property::predicate = required predicate: (datum: Datum) => boolean
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DashboardIntentManifest::property::audience = optional audience: undefined | {primary?: string; familiarityAssumptions?: Record<string, string>; literacyTargets?: {feature: string; rationale: string;}[];}
 interface-member DashboardIntentManifest::property::dashboardId = required dashboardId: string
 interface-member DashboardIntentManifest::property::ididVersion = required ididVersion: string
@@ -1444,12 +1455,16 @@ interface-member LineStyle::property::stroke = optional stroke: string | undefin
 interface-member LineStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member LineStyle::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member LinkedChartsProps::property::children = required children: React.ReactNode
+interface-member LinkedChartsProps::property::crosshair = optional crosshair: LinkedCrosshairConfig | undefined
 interface-member LinkedChartsProps::property::legendField = optional legendField: string | undefined
 interface-member LinkedChartsProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member LinkedChartsProps::property::legendPosition = optional legendPosition: "bottom" | "top" | undefined
 interface-member LinkedChartsProps::property::legendSelectionName = optional legendSelectionName: string | undefined
 interface-member LinkedChartsProps::property::selections = optional selections: Record<string, {resolution?: ResolutionMode;}> | undefined
 interface-member LinkedChartsProps::property::showLegend = optional showLegend: boolean | undefined
+interface-member LinkedCrosshairConfig::property::name = required name: string
+interface-member LinkedCrosshairConfig::property::onPositionChange = optional onPositionChange: ((null | position: CrosshairPosition) => void) | undefined
+interface-member LinkedCrosshairConfig::property::position = optional position: CrosshairPositionInput | null | undefined
 interface-member MinimapBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
 interface-member MinimapBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
 interface-member MinimapBrushEndMeta::property::source = required source: LinearBrushChangeSource
@@ -1643,6 +1658,7 @@ interface-member MultiAxisSeriesConfig::property::label = optional label: string
 interface-member MultiAxisSeriesConfig::property::yAccessor = required yAccessor: ChartAccessor<TDatum, number>
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
@@ -1980,6 +1996,7 @@ interface-member RealtimeHistogramProps::property::arrowOfTime = optional arrowO
 interface-member RealtimeHistogramProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeHistogramProps::property::axes = optional axes: XYFrameAxisConfig[] | undefined
 interface-member RealtimeHistogramProps::property::background = optional background: string | undefined
+interface-member RealtimeHistogramProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member RealtimeHistogramProps::property::binSize = required binSize: number
 interface-member RealtimeHistogramProps::property::brush = optional brush: "x" | boolean | undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
 interface-member RealtimeHistogramProps::property::capacity = optional capacity: number | undefined
@@ -2392,7 +2409,7 @@ interface-member SemioticTheme::property::aesthetics = optional aesthetics: Aest
 interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"
-interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
+interface-member SemioticTheme::property::tooltip = optional tooltip: undefined | {chrome?: "default" | "none"; background?: string; text?: string; borderRadius?: string; fontSize?: string; shadow?: string;}
 interface-member SemioticTheme::property::typography = required typography: {fontFamily: string; titleSize: number; labelSize: number; tickSize: number; legendSize?: number; legendFontFamily?: string; legendFontWeight?: number | string; tickFontFamily?: string; titleFontSize?: number; titleFontFamily?: string; titleFontWeight?: number | string;}
 interface-member SerializedSelection::property::clauses = required clauses: {clientId: string; type: "interval" | "point"; fields: Record<string, SerializedFieldSelection>;}[]
 interface-member SerializedSelection::property::name = required name: string
@@ -2770,6 +2787,7 @@ interface-member StreamXYFrameProps::property::band = optional band: BandConfig<
 interface-member StreamXYFrameProps::property::barColors = optional barColors: Record<string, string> | undefined
 interface-member StreamXYFrameProps::property::barStyle = optional barStyle: BarStyle | undefined
 interface-member StreamXYFrameProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StreamXYFrameProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member StreamXYFrameProps::property::binSize = optional binSize: number | undefined
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
@@ -3011,6 +3029,7 @@ interface-member ToConfigOptions::property::artifactContract = optional artifact
 interface-member ToConfigOptions::property::includeData = optional includeData: boolean | undefined
 interface-member ToConfigOptions::property::selections = optional selections: SerializedSelections | undefined
 interface-member ToURLOptions::property::maxLength = optional maxLength: number | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -3079,6 +3098,8 @@ interface-member UseChartObserverResult::property::observations = required obser
 interface-member UseForceLayoutResult::property::error = required error: Error | null
 interface-member UseForceLayoutResult::property::positions = required positions: Record<string, Point> | null
 interface-member UseForceLayoutResult::property::status = required status: ForceLayoutStatus
+interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
+interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
 interface-member UseLinkedHoverOptions::property::fields = required fields: string[]
 interface-member UseLinkedHoverOptions::property::name = optional name: string | undefined
 interface-member UseLinkedHoverResult::property::isActive = required isActive: boolean
@@ -3258,6 +3279,7 @@ type ControlInputSource = "keyboard" | "pointer" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
 type ControlObservationPhase = "control-change" | "control-end" | "control-start"
 type CopyFormat = "json" | "jsx"
+type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: string;}
 type CurveType = "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "natural" | "step" | "stepAfter" | "stepBefore"
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
@@ -3315,8 +3337,8 @@ type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = (string & {}) | KnownThemePresetName
 type ThresholdType = "greater" | "lesser"
 type TimeGranularity = "days" | "hours" | "minutes" | "months" | "seconds" | "years"
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
 type VisualizationControlValue = [number, number] | number
 type WindowMode = "growing" | "sliding"

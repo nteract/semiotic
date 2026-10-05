@@ -117,6 +117,7 @@ interface BarStyle
 interface CategoricalLegendConfig
 interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
 interface CrosshairStyle
+interface CustomTooltipConfig
 interface DecayConfig
 interface EventTimeConfig
 interface GradientLegendConfig
@@ -227,6 +228,8 @@ interface-member CompileMotionEncodingOptions::property::encoding = required enc
 interface-member CrosshairStyle::property::stroke = optional stroke: string | undefined
 interface-member CrosshairStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member CrosshairStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DecayConfig::property::halfLife = optional halfLife: number | undefined
 interface-member DecayConfig::property::minOpacity = optional minOpacity: number | undefined
 interface-member DecayConfig::property::stepThreshold = optional stepThreshold: number | undefined
@@ -323,6 +326,7 @@ interface-member MotionTimeEncoding::property::basis = optional basis: MotionTim
 interface-member MotionTimeEncoding::property::unit = optional unit: MotionTimeUnit | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member PulseConfig::property::color = optional color: string | undefined
@@ -400,6 +404,7 @@ interface-member RealtimeHistogramProps::property::arrowOfTime = optional arrowO
 interface-member RealtimeHistogramProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeHistogramProps::property::axes = optional axes: XYFrameAxisConfig[] | undefined
 interface-member RealtimeHistogramProps::property::background = optional background: string | undefined
+interface-member RealtimeHistogramProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member RealtimeHistogramProps::property::binSize = required binSize: number
 interface-member RealtimeHistogramProps::property::brush = optional brush: "x" | boolean | undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
 interface-member RealtimeHistogramProps::property::capacity = optional capacity: number | undefined
@@ -808,6 +813,7 @@ interface-member StreamXYFrameProps::property::band = optional band: BandConfig<
 interface-member StreamXYFrameProps::property::barColors = optional barColors: Record<string, string> | undefined
 interface-member StreamXYFrameProps::property::barStyle = optional barStyle: BarStyle | undefined
 interface-member StreamXYFrameProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StreamXYFrameProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member StreamXYFrameProps::property::binSize = optional binSize: number | undefined
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
@@ -942,6 +948,7 @@ interface-member SwarmStyle::property::radius = optional radius: number | undefi
 interface-member SwarmStyle::property::stroke = optional stroke: string | undefined
 interface-member SwarmStyle::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member TemporalHistogramProps::property::data = required data: TDatum[]
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -988,8 +995,8 @@ type NetworkChartType = "chord" | "circlepack" | "cluster" | "force" | "orbit" |
 type SourceLiveness = "failed" | "live" | "settling" | "stale" | "stopped"
 type StreamChartType = "area" | "bar" | "bubble" | "candlestick" | "custom" | "heatmap" | "line" | "mixed" | "scatter" | "stackedarea" | "swarm" | "waterfall"
 type ThresholdType = "greater" | "lesser"
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 type WindowMode = "growing" | "sliding"
 type WindowType = "hopping" | "session" | "tumbling"
 ```

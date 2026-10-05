@@ -20,6 +20,7 @@ import type { CSSProperties, ReactNode } from "react"
 import {
   useChartLegendAndMargin,
   useChartSelection,
+  getCrosshairProps,
   useGradientLegendInteraction
 } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -368,7 +369,8 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
     activeSelectionHook,
     hoverSelectionHook,
     customHoverBehavior: linkedHoverBehavior,
-    customClickBehavior
+    customClickBehavior,
+    crosshairSourceId
   } = useChartSelection({
     selection,
     linkedHover,
@@ -440,6 +442,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
   return (
     <StreamXYFrame
       ref={frameRef}
+      {...getCrosshairProps(linkedHover, crosshairSourceId)}
       chartType="heatmap"
       runtimeMode="streaming"
       size={resolvedSize}

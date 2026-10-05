@@ -34,11 +34,36 @@ export const defaultTooltipStyle: React.CSSProperties = {
   wordWrap: "break-word"
 }
 
-export type TooltipChromeMode = "default" | "css"
+export type TooltipChromeMode = "default" | "css" | "none"
+
+// Neutral entries import tooltip utilities under react-server too, where
+// createContext/useContext are absent. Resolve the context only while rendering.
+// Client and neutral entries can contain separate copies of these utilities.
+// Share the context at first render so /utils roots inherit /themes/react policy.
+const tooltipChromeContextKey = /* @__PURE__ */ Symbol.for("semiotic.tooltipChromeContext")
+function getTooltipChromeContext() {
+  const registry = globalThis as typeof globalThis & {
+    [key: symbol]: React.Context<TooltipChromeMode | undefined> | undefined
+  }
+  return registry[tooltipChromeContextKey] ??= React.createContext<TooltipChromeMode | undefined>(undefined)
+}
+
+export function useTooltipChrome(): TooltipChromeMode | undefined {
+  return React.useContext(getTooltipChromeContext())
+}
+
+/** Apply a chart policy to a built-in renderer that already supplies its root. */
+export const TooltipChromeScope = /* @__PURE__ */ markTooltipChrome(function TooltipChromeScope({ chrome, children }: {
+  chrome?: TooltipChromeMode
+  children: React.ReactNode
+}) {
+  const Context = getTooltipChromeContext()
+  return <Context.Provider value={chrome}>{children}</Context.Provider>
+})
 
 export interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
-   * `"default"` applies Semiotic's theme-aware chrome. Use `"css"` when the
+   * `"default"` applies Semiotic's theme-aware chrome. Use `"none"` or `"css"` when the
    * supplied class owns background, text color, border, padding, and shadow.
    * In both modes the root is marked so FlippingTooltip never adds a second
    * box around it.
@@ -63,13 +88,14 @@ export interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement> {
 // components render. The static flag lets <TooltipRoot /> declare ownership at
 // that point, just like the built-in frame tooltip components do.
 export const TooltipRoot = /* @__PURE__ */ markTooltipChrome(function TooltipRoot({
-  chrome = "default",
+  chrome,
   className = "",
   style,
   children,
   ...rest
 }: TooltipRootProps) {
-  const resolvedStyle = chrome === "default"
+  const inheritedChrome = useTooltipChrome()
+  const resolvedStyle = (chrome ?? inheritedChrome ?? "default") === "default"
     ? { ...defaultTooltipStyle, ...style }
     : style
 

@@ -48,11 +48,25 @@ export function buildHoverData(
   y: number,
   extra?: Partial<HoverData>
 ): HoverData {
+  const datum = normalizeHoverDatum(rawDatum)
+  const xValue = resolveHistogramHoverXValue(datum, extra?.xValue)
   return {
-    data: normalizeHoverDatum(rawDatum),
+    data: datum,
     x,
     y,
     __semioticHoverData: true,
     ...extra,
+    ...(xValue !== undefined ? { xValue } : {}),
   }
+}
+
+/** Histogram timestamps come from bin boundaries, independent of clipping or pixel-rounding. */
+export function resolveHistogramHoverXValue(
+  datum: Datum | null | undefined,
+  fallback: HoverData["xValue"]
+): HoverData["xValue"] {
+  if (typeof datum?.binStart !== "number" || typeof datum.binEnd !== "number") return fallback
+  const center = datum.binStart + (datum.binEnd - datum.binStart) / 2
+  if (!Number.isFinite(center)) return fallback
+  return fallback instanceof Date ? new Date(center) : center
 }

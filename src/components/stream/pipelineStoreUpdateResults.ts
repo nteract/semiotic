@@ -140,6 +140,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   axisExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   yAxisExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   binSize: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
+  binAlign: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   normalize: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   heatmapAggregation: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   heatmapXBins: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),

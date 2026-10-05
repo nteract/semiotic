@@ -271,7 +271,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   tooltip: {
     type: ["boolean", "function", "object", "string"],
     description:
-      'Tooltip: true/false, "multi", { mode: "multi", content? }, a custom function, or { fields, title } config. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.',
+      'Tooltip: true/false, "multi", { mode: "multi", content?, chrome? }, a custom function, { content, chrome: "none" | "default" }, or { fields, title, chrome? } config. chrome: "none" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.',
   },
   annotations: { type: "array" },
   autoPlaceAnnotations: {
@@ -425,7 +425,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
       "Presentation-only CSS cursor for retained marks; does not add click, keyboard, or observation behavior."
   },
   enableHover: { type: ["boolean", "object"] },
-  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip boolean, content function, or config. "multi" falls back to the single-datum tooltip unless the chart documents multi support.' },
+  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip boolean, content function, or config; { content, chrome: "none" } declares consumer chrome without mutating the renderer. "multi" falls back to the single-datum tooltip unless the chart documents multi support.' },
   // `tooltipContent` and `onHover` are function-only callbacks — runtime-only.
   tooltipContent: { type: "function", omitFromSchema: true },
   onHover: { type: "function", omitFromSchema: true },
@@ -514,7 +514,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   ballRadius: { type: "number", description: "Radius of each simulated circular body in pixels." },
   hoverRadius: { type: "number", description: "Pixel hit radius for body hover tooltips." },
   paused: { type: "boolean", description: "Pause the simulation at mount or on prop update." },
-  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip content function/config, true for the default body tooltip, or false to disable hover tooltips. "multi" falls back to the single-datum tooltip.' },
+  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip content function/config ({ content, chrome: "none" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. "multi" falls back to the single-datum tooltip.' },
   annotations: { type: "array" },
   autoPlaceAnnotations: { type: ["boolean", "object"] },
   background: { type: "string" },

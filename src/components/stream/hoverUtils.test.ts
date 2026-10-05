@@ -56,3 +56,11 @@ describe("buildHoverData", () => {
     expect(hover.y).toBe(0)
   })
 })
+
+it("reports exact bin centers for pointer, click, and keyboard hover producers", () => {
+  const datum = { binStart: -5, binEnd: 5, total: 4 }
+  expect(buildHoverData(datum, 110, 155, { xValue: -8.881784197001252e-16 }).xValue).toBe(0)
+  // Clipping changes the visual bar center, but not the bin's timestamp.
+  expect(buildHoverData(datum, 25, 50, { xValue: 2.5 }).xValue).toBe(0)
+  expect(buildHoverData(datum, 25, 50, { xValue: new Date(2) }).xValue).toEqual(new Date(0))
+})

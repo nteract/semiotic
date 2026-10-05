@@ -762,6 +762,8 @@ export interface StreamXYFrameProps<T = Datum>
 
   // ── Bar/time-binned specifics ────────────────────
   binSize?: number
+  /** Zero-anchored time bins start at, or surround, each grid timestamp. */
+  binAlign?: "start" | "center"
 
   // ── Heatmap specifics ────────────────────────────
   valueAccessor?: string | ((d: T) => number)

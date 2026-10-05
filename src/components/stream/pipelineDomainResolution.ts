@@ -11,7 +11,8 @@ import {
   type ScaleLinear
 } from "d3-scale"
 import type { Datum } from "../charts/shared/datumTypes"
-import { computeBinExtent } from "../realtime/BinAccumulator"
+import { computeBinExtent, histogramBinStart } from "../realtime/BinAccumulator"
+import type { BinAlign } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
 import {
   computeDivergingStackExtent,
@@ -209,16 +210,31 @@ export function resolveBarBinYDomain(
   binSize: number,
   getCategory: ((d: Datum) => string) | undefined,
   extentPadding: number,
-  exactMode: boolean
+  exactMode: boolean,
+  binAlign: BinAlign = "start"
 ): [number, number] {
   const [, maxTotal] = computeBinExtent(
     buffer,
     getX,
     getY,
     binSize,
-    getCategory
+    getCategory,
+    binAlign
   )
   return [0, exactMode ? maxTotal : maxTotal + maxTotal * extentPadding]
+}
+
+/** Cover whole centered edge bins automatically, preserving explicit bounds. */
+export function resolveCenteredBinXDomain(
+  dataDomain: [number, number],
+  binSize: number,
+  userExtent: PipelineConfig["xExtent"]
+): [number, number] {
+  if (!dataDomain.every(Number.isFinite)) return mergePartialDomain(dataDomain, userExtent)
+  return mergePartialDomain([
+    histogramBinStart(dataDomain[0], binSize, "center"),
+    histogramBinStart(dataDomain[1], binSize, "center") + binSize
+  ], userExtent)
 }
 
 export function resolveWaterfallYDomain(

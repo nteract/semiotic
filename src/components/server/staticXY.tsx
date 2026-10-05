@@ -123,6 +123,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     yScaleType: props.yScaleType,
     scalePadding: props.scalePadding,
     binSize: props.binSize,
+    binAlign: props.binAlign,
     normalize: props.normalize,
     // StackedArea baseline selects streamgraph, silhouette, or diverging offsets.
     baseline: props.baseline,

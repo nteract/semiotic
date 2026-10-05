@@ -20,6 +20,7 @@ import { resolveThemePreset } from "./store/themePresets"
 import type { ThemePresetName } from "./store/themePresets"
 import { themeToCSSVariables } from "./store/themeCSSVariables"
 import { addMqlListener } from "./stream/useMediaPreferences"
+import { TooltipChromeScope } from "./Tooltip/tooltipChrome"
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -173,7 +174,11 @@ function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
   }
   dataAttrs["data-semiotic-theme-mode"] = theme.mode
 
-  return <div style={style} {...dataAttrs}>{children}</div>
+  return (
+    <TooltipChromeScope chrome={theme.tooltip?.chrome}>
+      <div style={style} {...dataAttrs}>{children}</div>
+    </TooltipChromeScope>
+  )
 }
 
 // ── ThemeProvider (public) ──────────────────────────────────────────────────

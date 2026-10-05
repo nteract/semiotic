@@ -108,6 +108,8 @@ function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function statValue(w: AggregatedWindow, stat: AggregateStat): number
 function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
+function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
+function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 function useStreamStatus<THandle extends RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum> = RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum>>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>
 function useSyncedPushData<T = Datum>(ref: import("react").RefObject<SyncedPushHandle<T> | null>, data: readonly T[], options?: SyncedPushDataOptions<T> | undefined): void
 interface AggregateConfig
@@ -119,7 +121,9 @@ interface ApplyChangelogResult
 interface BarStyle
 interface CategoricalLegendConfig
 interface CompileMotionEncodingOptions<TDatum extends Datum = Datum>
+interface CrosshairPosition
 interface CrosshairStyle
+interface CustomTooltipConfig
 interface DecayConfig
 interface EventTimeConfig
 interface GradientLegendConfig
@@ -132,6 +136,7 @@ interface LegendItem
 interface LegendLayout
 interface LifecycleBandThresholds
 interface LineStyle
+interface LinkedCrosshairConfig
 interface MotionAccessibleEncoding<TDatum>
 interface MotionAgeOpacityOptions
 interface MotionEncoding<TDatum extends Datum = Datum>
@@ -171,6 +176,7 @@ interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<Real
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
+interface UseLinkedCrosshairResult
 interface ValueBand
 interface WaterfallStyle
 interface WindowAccumulatorConfig
@@ -231,9 +237,14 @@ interface-member CategoricalLegendConfig::property::legendDistance = optional le
 interface-member CategoricalLegendConfig::property::legendGroups = required legendGroups: LegendGroup[]
 interface-member CompileMotionEncodingOptions::property::data = required data: readonly TDatum[]
 interface-member CompileMotionEncodingOptions::property::encoding = required encoding: MotionEncoding<TDatum>
+interface-member CrosshairPosition::property::locked = optional locked: boolean | undefined
+interface-member CrosshairPosition::property::sourceId = required sourceId: string
+interface-member CrosshairPosition::property::xValue = required xValue: number
 interface-member CrosshairStyle::property::stroke = optional stroke: string | undefined
 interface-member CrosshairStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member CrosshairStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DecayConfig::property::halfLife = optional halfLife: number | undefined
 interface-member DecayConfig::property::minOpacity = optional minOpacity: number | undefined
 interface-member DecayConfig::property::stepThreshold = optional stepThreshold: number | undefined
@@ -293,6 +304,9 @@ interface-member LineStyle::property::opacity = optional opacity: number | undef
 interface-member LineStyle::property::stroke = optional stroke: string | undefined
 interface-member LineStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
 interface-member LineStyle::property::strokeWidth = optional strokeWidth: number | undefined
+interface-member LinkedCrosshairConfig::property::name = required name: string
+interface-member LinkedCrosshairConfig::property::onPositionChange = optional onPositionChange: ((null | position: CrosshairPosition) => void) | undefined
+interface-member LinkedCrosshairConfig::property::position = optional position: CrosshairPositionInput | null | undefined
 interface-member MotionAccessibleEncoding::property::description = optional description: MotionEncodingAccessor<TDatum, string> | undefined
 interface-member MotionAccessibleEncoding::property::group = optional group: MotionEncodingAccessor<TDatum, string> | undefined
 interface-member MotionAccessibleEncoding::property::label = optional label: MotionEncodingAccessor<TDatum, string> | undefined
@@ -330,6 +344,7 @@ interface-member MotionTimeEncoding::property::basis = optional basis: MotionTim
 interface-member MotionTimeEncoding::property::unit = optional unit: MotionTimeUnit | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member PulseConfig::property::color = optional color: string | undefined
@@ -407,6 +422,7 @@ interface-member RealtimeHistogramProps::property::arrowOfTime = optional arrowO
 interface-member RealtimeHistogramProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member RealtimeHistogramProps::property::axes = optional axes: XYFrameAxisConfig[] | undefined
 interface-member RealtimeHistogramProps::property::background = optional background: string | undefined
+interface-member RealtimeHistogramProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member RealtimeHistogramProps::property::binSize = required binSize: number
 interface-member RealtimeHistogramProps::property::brush = optional brush: "x" | boolean | undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
 interface-member RealtimeHistogramProps::property::capacity = optional capacity: number | undefined
@@ -820,6 +836,7 @@ interface-member StreamXYFrameProps::property::band = optional band: BandConfig<
 interface-member StreamXYFrameProps::property::barColors = optional barColors: Record<string, string> | undefined
 interface-member StreamXYFrameProps::property::barStyle = optional barStyle: BarStyle | undefined
 interface-member StreamXYFrameProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StreamXYFrameProps::property::binAlign = optional binAlign: "center" | "start" | undefined
 interface-member StreamXYFrameProps::property::binSize = optional binSize: number | undefined
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
@@ -961,6 +978,7 @@ interface-member SyncedPushHandle::property::pushMany = optional pushMany: ((dat
 interface-member SyncedPushHandle::property::remove = optional remove: ((id: string | string[]) => unknown) | undefined
 interface-member SyncedPushHandle::property::update = optional update: ((id: string, updater: (datum: T) => T) => unknown) | undefined
 interface-member TemporalHistogramProps::property::data = required data: TDatum[]
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -971,6 +989,8 @@ interface-member TooltipField::property::format = optional format: ((value: unkn
 interface-member TooltipField::property::key = optional key: Accessor | undefined
 interface-member TooltipField::property::label = optional label: string | undefined
 interface-member TooltipRootProps::property::chrome = optional chrome: TooltipChromeMode | undefined
+interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
+interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
 interface-member ValueBand::property::fill = required fill: HatchFill | string
 interface-member ValueBand::property::upTo = optional upTo: number | undefined
 interface-member WaterfallStyle::property::connectorStroke = optional connectorStroke: string | undefined
@@ -993,6 +1013,7 @@ type AggregateBand = "minmax" | "none" | "stddev"
 type AggregateStat = "count" | "distinct" | "max" | "mean" | "min" | "p50" | "p95" | "p99" | "sum"
 type ArrowOfTime = "down" | "left" | "right" | "up"
 type ChangelogOp<T extends Datum = Datum> = {op: "delete" | "retract"; id?: string; row?: T;} | {op: "insert" | "upsert"; row: T; id?: string;} | {op: "update"; row: T; id?: string;}
+type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: string;}
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LatePolicy = "drop" | "keep"
@@ -1009,8 +1030,8 @@ type SourceLiveness = "failed" | "live" | "settling" | "stale" | "stopped"
 type StreamChartType = "area" | "bar" | "bubble" | "candlestick" | "custom" | "heatmap" | "line" | "mixed" | "scatter" | "stackedarea" | "swarm" | "waterfall"
 type StreamStatus = "active" | "idle" | "stale"
 type ThresholdType = "greater" | "lesser"
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 type WindowMode = "growing" | "sliding"
 type WindowType = "hopping" | "session" | "tumbling"
 ```

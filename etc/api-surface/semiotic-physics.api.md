@@ -282,6 +282,7 @@ interface CrucibleSetRelationEffect
 interface CrucibleSetStateEffect
 interface CrucibleSpawnOptions
 interface CrucibleSplitEffect
+interface CustomTooltipConfig
 interface DependencyGateController extends PhysicsController
 interface DependencyGateOptions
 interface DependencyGateSnapshot
@@ -1022,6 +1023,8 @@ interface-member CrucibleSplitEffect::property::loss = optional loss: CrucibleLo
 interface-member CrucibleSplitEffect::property::products = required products: readonly CrucibleProductAllocation[]
 interface-member CrucibleSplitEffect::property::sourceId = required sourceId: string
 interface-member CrucibleSplitEffect::property::type = required type: "split"
+interface-member CustomTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
+interface-member CustomTooltipConfig::property::content = required content: (data: Record<string, unknown>) => React.ReactNode
 interface-member DependencyGateController::property::getSnapshot = required getSnapshot: () => DependencyGateSnapshot
 interface-member DependencyGateOptions::property::bodyFilter = optional bodyFilter: PhysicsColliderBodyFilter | undefined
 interface-member DependencyGateOptions::property::holdForce = optional holdForce: number | undefined
@@ -1448,6 +1451,7 @@ interface-member MotionTimeEncoding::property::basis = optional basis: MotionTim
 interface-member MotionTimeEncoding::property::unit = optional unit: MotionTimeUnit | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
+interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
 interface-member PacketFlowChartProps::property::colorBy = optional colorBy: ChartAccessor<TLink, string> | undefined
@@ -2451,6 +2455,7 @@ interface-member StyleRuleThreshold::property::lte = optional lte: number | unde
 interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
 interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
 interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
 interface-member TooltipConfig::property::format = optional format: ((value: unknown) => string) | undefined
@@ -2555,6 +2560,6 @@ type ServiceLevelCaseState = "protected" | "resolved" | "resolved-unhappy" | "un
 type StreamPhysicsBodyForce = ((context: StreamPhysicsBodyForceContext) => StreamPhysicsRegionVector | null | undefined) | StreamPhysicsRegionVector
 type StreamPhysicsRegionKind = "charge-gate" | "force-field" | "membrane" | "region" | "sink" | "source"
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
-type TooltipChromeMode = "css" | "default"
-type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
+type TooltipChromeMode = "css" | "default" | "none"
+type TooltipProp = "multi" | ((data: Record<string, unknown>) => React.ReactNode) | CustomTooltipConfig | MultiTooltipConfig | ReturnType<typeof MultiLineTooltip> | ReturnType<typeof Tooltip> | TooltipConfig | boolean
 ```

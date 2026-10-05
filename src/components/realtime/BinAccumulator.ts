@@ -1,4 +1,12 @@
 import type { Datum } from "../charts/shared/datumTypes"
+
+export type BinAlign = "start" | "center"
+
+/** Half-open bins on a zero-anchored grid; centered bins surround each grid timestamp. */
+export function histogramBinStart(time: number, binSize: number, binAlign: BinAlign = "start"): number {
+  const offset = binAlign === "center" ? binSize / 2 : 0
+  return Math.floor((time + offset) / binSize) * binSize - offset
+}
 export interface Bin {
   start: number
   end: number
@@ -16,7 +24,8 @@ export function computeBins(
   getValue: (d: Datum) => number,
   binSize: number,
   getCategory?: (d: Datum) => string,
-  trackRows = false
+  trackRows = false,
+  binAlign: BinAlign = "start"
 ): Map<number, Bin> {
   const bins = new Map<number, Bin>()
 
@@ -26,7 +35,7 @@ export function computeBins(
 
     if (t == null || v == null || Number.isNaN(t) || Number.isNaN(v)) continue
 
-    const binStart = Math.floor(t / binSize) * binSize
+    const binStart = histogramBinStart(t, binSize, binAlign)
 
     let bin = bins.get(binStart)
     if (!bin) {
@@ -65,9 +74,10 @@ export function computeBinExtent(
   getTime: (d: Datum) => number,
   getValue: (d: Datum) => number,
   binSize: number,
-  getCategory?: (d: Datum) => string
+  getCategory?: (d: Datum) => string,
+  binAlign: BinAlign = "start"
 ): [number, number] {
-  const bins = computeBins(data, getTime, getValue, binSize, getCategory)
+  const bins = computeBins(data, getTime, getValue, binSize, getCategory, false, binAlign)
 
   if (bins.size === 0) return [0, 0]
 

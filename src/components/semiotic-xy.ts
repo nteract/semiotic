@@ -25,6 +25,7 @@ export type {
   TooltipField,
   MultiLineTooltipConfig,
   MultiTooltipConfig,
+  CustomTooltipConfig,
   TooltipRootProps,
   TooltipChromeMode,
 } from "./Tooltip/Tooltip"
@@ -136,3 +137,6 @@ export { resolveStyleRules, matchesThreshold, ruleMatches, makeRuleValueResolver
 export type { StyleRule, StyleRuleStyle, StyleRuleThreshold, StyleRuleContext, StyleRulePredicate } from "./charts/shared/styleRules"
 export { isHatchFill, hatchPatternDef, resolveSvgFill, hatchFillId } from "./charts/shared/hatchFill"
 export type { HatchFill } from "./charts/shared/hatchFill"
+
+export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
+export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"

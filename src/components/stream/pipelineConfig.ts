@@ -90,6 +90,8 @@ export interface PipelineConfig {
 
   // Bar/heatmap specifics
   binSize?: number
+  /** Zero-anchored time bins start at, or surround, each grid timestamp. */
+  binAlign?: "start" | "center"
   normalize?: boolean
   /** Stacked area baseline mode. Only consulted by stackedarea chart type. */
   baseline?: "zero" | "wiggle" | "silhouette" | "diverging"
