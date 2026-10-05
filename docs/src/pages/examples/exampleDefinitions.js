@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "novel-network-lab",
+    path: "/examples/novel-network-lab",
+    sourceFile: "NovelNetworkLabExamplePage.tsx",
+    sourceFiles: ["NovelNetworkLabExamplePage.tsx", "novel-network-lab/data.ts", "novel-network-lab/ChartPane.tsx", "novel-network-lab/lab.css"],
+    isPilot: true,
+    title: "The Novel Network Lab",
+    eyebrow: "One ledger · eight network views",
+    description: "Compare connectivity, volume, journeys, dependencies, and grouping using the same synthetic manuscript ledger.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/atlas", "semiotic/atlas/core", "semiotic/experimental/network-resolution", "semiotic/experimental/network-resolution/react", "semiotic/themes/react", "semiotic/utils"],
+      data: { states: ["snapshot"], fixture: { kind: "synthetic-manuscript-ledger", replay: false, schemaVersion: "1", inventory: { manuscripts: 48, nodes: 14, edges: 21, handoffs: 434 } } },
+      provenance: { source: "Deterministic route generator in novel-network-lab/data.ts; all eight views derive from the same ledger", capturedAt: "2026-10-03", freshnessOwner: "Semiotic maintainers", reviewCadence: "Network or Atlas reader changes" },
+      accessibility: { summary: "Persistent stage counts, original edge records, route templates and individual manuscript paths", navigation: "Native view and stage selectors; guided comparison buttons; scrollable diagrams and tables", keyboard: "Native controls and reader navigation; no value is available only on hover", forcedColors: "System-color controls and exact tabular alternatives; manual assistive-technology review pending" },
+      motion: { reducedMotion: "Settled layouts, no replay, zero illustrative circuit particles", visibility: "No polling, playback or recurring data work" },
+      responsive: { status: "Comparison panes stack on narrow screens; detailed diagrams scroll inside their panels", viewports: [390, 1280], selectionIdentity: "Original stage IDs persist across view changes and in URL parameters" },
+      ssr: { status: "Static introduction, findings and ledger are prerenderable", hydration: "Chart sizing attaches after mount" },
+      performance: { status: "Bounded example; device performance unmeasured", budgets: { bundle: "Lazy example route; gallery preview does not import the analysis engine", interaction: "Two active chart panes; explicit single-pane expansion", memory: "48 manuscripts, 14 nodes, 21 edge records; prepared artifacts reused", hiddenPage: "No recurring background data work" } },
+    },
+  },
+  {
     id: "pipeline-explorer",
     path: "/examples/pipeline-explorer",
     sourceFile: "PipelineExplorerExamplePage.tsx",
@@ -2048,6 +2068,17 @@ const EXAMPLE_REGISTRY_METADATA = [
     badges: ["perspective", "semiotic/network/perspective", "Zone plates"],
     frames: ["network", "custom"],
     topics: ["process", "design"],
+  },
+  {
+    title: "The Novel Network Lab",
+    path: "/examples/novel-network-lab",
+    publishedAt: "2026-10-03T12:00:00-07:00",
+    eyebrow: "One ledger · eight network views",
+    description: "Compare connectivity, volume, journeys, dependencies, and grouping using the same synthetic manuscript ledger.",
+    preview: "novel-network-lab",
+    badges: ["Eight views", "Linked inspection", "Shared evidence"],
+    frames: ["network", "custom", "stream-physics"],
+    topics: ["process", "design", "accessibility"],
   },
   {
     title: "Pipeline Explorer",

@@ -1,0 +1,75 @@
+.network-resolution-demo {
+  min-width: 0;
+}
+.network-resolution-docs .component-meta-import {
+  gap: 12px;
+}
+.network-resolution-docs .component-meta-import code {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.network-resolution-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+}
+.network-resolution-demo button,
+.network-resolution-demo select {
+  min-height: 44px;
+  max-width: 100%;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--text-secondary);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.network-resolution-demo__controls label {
+  min-width: 0;
+}
+.network-resolution-demo__paper {
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
+  border-radius: 8px;
+  padding: 12px;
+}
+.network-resolution-demo__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.network-resolution-demo table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+.network-resolution-demo th,
+.network-resolution-demo td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--surface-3);
+  overflow-wrap: anywhere;
+}
+.network-resolution-demo caption {
+  text-align: left;
+  padding: 8px 0;
+}
+.network-resolution-demo details {
+  margin: 12px 0;
+}
+.network-resolution-demo summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.network-resolution-demo :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  .network-resolution-demo__paper {
+    border-color: CanvasText;
+  }
+}

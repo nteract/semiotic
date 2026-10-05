@@ -388,6 +388,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         plot: { x: 0, y: 0, width: innerWidth, height: innerHeight },
       },
       theme: {
+        sequential: theme.colors.sequential,
+        selectionOpacity: theme.colors.selectionOpacity,
         semantic: theme.colors as unknown as import("../stream/types").ThemeSemanticColors,
         // `palette` from resolveCustomLayoutPalette is `readonly`;
         // shallow-copy to a mutable array because the customLayout

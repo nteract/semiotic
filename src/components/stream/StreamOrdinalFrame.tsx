@@ -610,6 +610,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
       useOrdinalKeyboardNavigation({
+        clearPointerHover: onPointerLeave,
         storeRef,
         hoverRef,
         setHoverPoint,

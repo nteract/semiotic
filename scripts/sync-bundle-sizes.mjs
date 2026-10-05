@@ -6,8 +6,8 @@
  *
  * Source of truth: stable `package.json#exports` entries → resolves each
  *   subpath to its `*.module.min.js` artifact under `dist/`. The script
- *   intentionally ignores unstable preview exports such as
- *   `semiotic/experimental` and `semiotic/experimental/vacp`.
+ *   uses the canonical entry-point inventory to exclude unstable preview
+ *   exports under `semiotic/experimental`.
  *
  * Marker blocks (same pattern as `generate-ai-behavior-contracts.mjs`):
  *   <!-- semiotic-bundle-sizes:start -->
@@ -35,6 +35,7 @@ import { readFileSync, writeFileSync, statSync, existsSync } from "node:fs"
 import { gzipSync, constants as zlibConstants } from "node:zlib"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -46,17 +47,8 @@ const MARKER_START = "<!-- semiotic-bundle-sizes:start -->"
 const MARKER_END = "<!-- semiotic-bundle-sizes:end -->"
 const JS_MARKER_START = "// semiotic-bundle-sizes-js:start"
 const JS_MARKER_END = "// semiotic-bundle-sizes-js:end"
-// Exports with no measurable JS bundle are intentionally omitted from the
-// consumer-facing bundle-size table and CI drift gate:
-//   - `./experimental` and `./experimental/vacp` are unstable preview bundles
-//     packaged for collaborators, not stable consumer-facing entry points.
-//   - `./spec/*` is a wildcard export of raw JSON-Schema asset files (the
-//     portability spec) with no corresponding `dist/*.module.min.js` to gzip.
-const IGNORED_EXPORTS = new Set([
-  "./experimental",
-  "./experimental/vacp",
-  "./spec/*"
-])
+// Raw JSON-Schema assets have no corresponding JavaScript bundle to measure.
+const IGNORED_EXPORTS = new Set(["./spec/*"])
 
 // Subpath → short "what's inside" blurb shown in the README table.
 // Keep these short and stable; they describe *which charts/utilities*
@@ -64,7 +56,8 @@ const IGNORED_EXPORTS = new Set([
 const BLURBS = {
   ".": "Full chart API and shared utilities",
   "./atlas": "Motif Braid, Dependency Forest, and Flow Circuit readers",
-  "./atlas/core": "Network Atlas preparation, projections, and evidence queries",
+  "./atlas/core":
+    "Network Atlas preparation, projections, and evidence queries",
   "./access": "Chart Access Contract factory and first-wave baseline contracts",
   "./evidence":
     "Chart Evidence Envelope, deterministic hashing, and publication gate",
@@ -266,6 +259,11 @@ function measure() {
     readFileSync(resolve(repoRoot, "package.json"), "utf8")
   )
   const exports = pkg.exports ?? {}
+  const previewExports = new Set(
+    publicJavaScriptEntrypoints(pkg)
+      .filter((entry) => !entry.stableApi)
+      .map((entry) => entry.subpath)
+  )
   const rows = []
   const errors = []
 
@@ -307,11 +305,16 @@ function measure() {
   }
 
   // Cross-check: every stable package export key should appear in ORDER
-  // (except the metadata-only `./package.json` and explicitly ignored
+  // (except the metadata-only `./package.json`, raw assets, and experimental
   // preview exports). Catches a fresh stable export landing without an
   // ORDER + BLURBS update.
   for (const subpath of Object.keys(exports)) {
-    if (subpath === "./package.json" || IGNORED_EXPORTS.has(subpath)) continue
+    if (
+      subpath === "./package.json" ||
+      IGNORED_EXPORTS.has(subpath) ||
+      previewExports.has(subpath)
+    )
+      continue
     if (!ORDER.includes(subpath)) {
       errors.push(
         `Export ${subpath} is not listed in ORDER (sync-bundle-sizes.mjs)`

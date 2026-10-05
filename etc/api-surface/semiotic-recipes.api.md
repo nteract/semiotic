@@ -1336,7 +1336,7 @@ interface-member NetworkLayoutContext::property::nodes = required nodes: Realtim
 interface-member NetworkLayoutContext::property::perspective = optional perspective: import("./networkPerspective").NetworkPerspectiveConfig | null | undefined
 interface-member NetworkLayoutContext::property::resolveColor = required resolveColor: (key: string) => string
 interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
-interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[];}
+interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[]; sequential?: string; selectionOpacity?: number;}
 interface-member NetworkLayoutResult::property::backgrounds = optional backgrounds: ReactNode
 interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
 interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined

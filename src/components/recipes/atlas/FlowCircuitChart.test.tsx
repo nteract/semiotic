@@ -7,11 +7,20 @@ import { resolveCustomLayout } from "../../charts/physics/physicsCustomLayout"
 import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { readCircuitEdition } from "./flowCircuitTape"
 import { flowCircuitLayout } from "./flowCircuitLayout"
-import { circuitHistoryChrome } from "./flowCircuitChrome"
+import { circuitHistoryChrome, circuitNumber } from "./flowCircuitChrome"
 import { layoutFlowCircuit } from "./flowCircuitGeometry"
 import { FlowCircuitChart, flowCircuitChartProps } from "./FlowCircuitChart"
 
 describe("Flow Circuit rendering", () => {
+  it("keeps fractional rate labels compact without rounding positive flows to zero", () => {
+    expect(circuitNumber(45 / 86400)).toBe("0.000521")
+    expect(circuitNumber(0.00000012)).toBe("1.2e-7")
+    expect(circuitNumber(1 / 3)).toBe("0.333")
+    expect(circuitNumber(48)).toBe("48")
+    expect(circuitNumber(0)).toBe("0")
+    expect(circuitNumber(null)).toBe("unmeasured")
+    expect(circuitNumber(1500)).toBe("1.5k")
+  })
   it("reads selected-module history without connecting across unmeasured intervals", () => {
     const { circuit, observed } = flowCircuitStory("etl")
     const partial = structuredClone(observed)

@@ -143,6 +143,8 @@ export const NETWORK_CONFIG_PATCH_DEPENDENCIES: Readonly<
   colorBy: /* @__PURE__ */ dependency("preserve", STYLE),
   colorScheme: /* @__PURE__ */ dependency("preserve", STYLE),
   themeCategorical: /* @__PURE__ */ dependency("preserve", STYLE),
+  themeSequential: /* @__PURE__ */ dependency("preserve", STYLE),
+  themeSelectionOpacity: /* @__PURE__ */ dependency("preserve", STYLE),
   themeSemantic: /* @__PURE__ */ dependency("preserve", STYLE),
   edgeColorBy: /* @__PURE__ */ dependency("preserve", STYLE),
   edgeOpacity: /* @__PURE__ */ dependency("preserve", STYLE),

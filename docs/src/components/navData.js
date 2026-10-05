@@ -84,6 +84,8 @@ const navData = [
           { title: "Sankey Diagram", path: "/charts/sankey-diagram" },
           { title: "Motif Braid", path: "/charts/motif-braid-chart" },
           { title: "Dependency Forest", path: "/charts/dependency-forest-chart" },
+          { title: "Resolution Atlas", path: "/charts/resolution-atlas-chart" },
+          { title: "Boundary Loom", path: "/charts/boundary-loom-chart" },
           { title: "Process Sankey", path: "/charts/process-sankey" },
           { title: "Tree Diagram", path: "/charts/tree-diagram" },
           { title: "Treemap", path: "/charts/treemap" },

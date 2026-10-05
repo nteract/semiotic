@@ -63,6 +63,14 @@ const ROUTE_META = {
     description:
       "The Semiotic chart catalog: 45+ HOC charts spanning XY, ordinal, network, geo, hierarchy, and realtime families. Browse by family with live demos and copy-paste examples.",
   },
+  "charts/resolution-atlas-chart": {
+    title: "Resolution Atlas — Semiotic",
+    description: "Aligned graph partitions with original node membership, edge ownership, cycle-rank counts, and directed path queries.",
+  },
+  "charts/boundary-loom-chart": {
+    title: "Boundary Loom — Semiotic",
+    description: "Node rows, original-edge columns, endpoint markers, and group-ownership histories for directed network data.",
+  },
   features: {
     title: "Features — Semiotic",
     description:

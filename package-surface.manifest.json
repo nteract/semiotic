@@ -396,6 +396,68 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./experimental/network-resolution",
+      "path": "dist/semiotic-experimental-network-resolution.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-experimental-network-resolution.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-experimental-network-resolution.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-experimental-network-resolution.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-experimental-network-resolution.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-experimental-network-resolution.d.ts"
+    },
+    {
+      "kind": "javascript-module",
+      "subpath": "./experimental/network-resolution/react",
+      "path": "dist/semiotic-experimental-network-resolution-react.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-experimental-network-resolution-react.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-experimental-network-resolution-react.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-experimental-network-resolution-react.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-experimental-network-resolution-react.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-experimental-network-resolution-react.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./experimental/vacp",
       "path": "dist/semiotic-experimental-vacp.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1449,6 +1511,20 @@
         "path": "dist/semiotic-evidence.d.ts",
         "exports": [
           "./evidence"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-experimental-network-resolution-react.d.ts",
+        "exports": [
+          "./experimental/network-resolution/react"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-experimental-network-resolution.d.ts",
+        "exports": [
+          "./experimental/network-resolution"
         ],
         "reason": "Public type entry from `exports` map"
       },
