@@ -1,4 +1,5 @@
 "use client"
+import { TREEMAP_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import type { NetworkMarkStyle } from "../../stream/networkTypes"
@@ -135,7 +136,7 @@ export const Treemap = /* @__PURE__ */ withDisplayName(function Treemap<TNode ex
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, TREEMAP_SIZE)
 
   const {
     data,
@@ -186,6 +187,7 @@ export const Treemap = /* @__PURE__ */ withDisplayName(function Treemap<TNode ex
   // for `colorBy` in that case so the color scale + categories don't
   // try to extract categories that wouldn't drive the styling.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,

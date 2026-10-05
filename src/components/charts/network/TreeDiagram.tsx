@@ -1,4 +1,5 @@
 "use client"
+import { TREE_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
@@ -134,7 +135,7 @@ export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 600, height: 600 })
+}, TREE_DIAGRAM_SIZE)
 
   const {
     data,
@@ -179,6 +180,7 @@ export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<
   // Treemap/CirclePack: flattened descendants flow into the hook,
   // node inference off. `showLegend` auto-on when `colorBy` is set.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes: allNodes,
     edges: undefined,
     inferNodes: false,

@@ -400,7 +400,6 @@ export const processSankey: ChartConfig = {
 
 export const sankeyDiagram: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 800, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const nodes = Array.isArray(rest.nodes)
       ? (rest.nodes as Datum[])
@@ -506,7 +505,6 @@ export const sankeyDiagram: ChartConfig = {
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
@@ -541,7 +539,6 @@ export const treeDiagram: ChartConfig = {
 
 export const treemap: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {

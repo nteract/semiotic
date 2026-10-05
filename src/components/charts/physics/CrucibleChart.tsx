@@ -1,4 +1,5 @@
 "use client"
+import { CRUCIBLE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import {
@@ -40,7 +41,7 @@ import {
   cloneCrucibleState,
   evaluateCrucibleConservation
 } from "./crucibleEffects"
-import { compileCruciblePlan, DEFAULT_CRUCIBLE_SIZE } from "./cruciblePhysics"
+import { compileCruciblePlan } from "./cruciblePhysics"
 import {
   advanceCrucibleRuntime,
   computeCrucibleBodyForce,
@@ -224,7 +225,7 @@ export const CrucibleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   pausedRef.current = paused
   const reducedMotion = useReducedMotion()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
-  const layoutMode = usePhysicsChartMode(props, DEFAULT_CRUCIBLE_SIZE)
+  const layoutMode = usePhysicsChartMode(props, CRUCIBLE_CHART_SIZE)
   const {
     chartMode,
     chartSize,
@@ -868,6 +869,7 @@ export const CrucibleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   const controlVisible = Object.values(controlConfig).some(Boolean)
   const currentPhase = plan.phases[runtime.state.phaseIndex]
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data,
     emptyContent,
     loading,

@@ -4,6 +4,24 @@ import type { Datum, DatumValue } from "./datumTypes"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
 
+export interface PlaceholderLayout {
+  responsiveWidth?: boolean
+  responsiveHeight?: boolean
+}
+
+// CSS owns placeholder layout, so empty/loading content resizes without an
+// extra ResizeObserver or a React measurement/render cycle.
+function placeholderSize(
+  width: number,
+  height: number,
+  layout?: PlaceholderLayout
+) {
+  return {
+    width: layout?.responsiveWidth ? "100%" : width,
+    height: layout?.responsiveHeight ? "100%" : height
+  }
+}
+
 interface SafeRenderProps {
   componentName: string
   width: number
@@ -22,7 +40,12 @@ interface SafeRenderProps {
  * map into every subpath import — it would add ~7KB gz to xy/ordinal/
  * network just to power a fallback that only fires when render throws.
  */
-export function SafeRender({ componentName, width, height, children }: SafeRenderProps) {
+export function SafeRender({
+  componentName,
+  width,
+  height,
+  children
+}: SafeRenderProps) {
   return (
     <ChartErrorBoundary
       fallback={(error: Error) => (
@@ -43,7 +66,9 @@ export function SafeRender({ componentName, width, height, children }: SafeRende
 
 const EMPTY_STYLE: React.CSSProperties = {
   display: "flex",
-  alignItems: "center",
+  alignItems: "stretch",
+  flexDirection: "column",
+  textAlign: "center",
   justifyContent: "center",
   // Fallback matches LIGHT_THEME.textSecondary (#666 — 5.7:1 on white).
   // #999 was 2.8:1, a WCAG AA failure axe caught once color-contrast was
@@ -53,12 +78,12 @@ const EMPTY_STYLE: React.CSSProperties = {
   fontFamily: "inherit",
   border: "1px dashed var(--semiotic-border, #ddd)",
   borderRadius: 4,
-  boxSizing: "border-box" as const,
+  boxSizing: "border-box" as const
 }
 
 const LOADING_BAR_STYLE: React.CSSProperties = {
   background: "var(--semiotic-border, #e0e0e0)",
-  borderRadius: 2,
+  borderRadius: 2
 }
 
 /**
@@ -66,18 +91,19 @@ const LOADING_BAR_STYLE: React.CSSProperties = {
  * Returns null when data is present or emptyContent is `false`.
  */
 export function renderEmptyState(
-  data: Datum[] | undefined | null,
+  data: Array<Datum | null | undefined> | undefined | null,
   width: number,
   height: number,
-  emptyContent?: React.ReactNode | false
+  emptyContent?: React.ReactNode | false,
+  layout?: PlaceholderLayout
 ): React.ReactElement | null {
   if (emptyContent === false) return null
   if (data == null) return null // undefined/null = no data provided (e.g. push API)
-  if (Array.isArray(data) && data.length > 0) return null
   if (!Array.isArray(data)) return null // hierarchy data (object)
+  if (data.some((row) => row != null && typeof row === "object")) return null
 
   return (
-    <div style={{ ...EMPTY_STYLE, width, height }}>
+    <div style={{ ...EMPTY_STYLE, ...placeholderSize(width, height, layout) }}>
       {emptyContent || "No data available"}
     </div>
   )
@@ -98,7 +124,8 @@ export function renderLoadingState(
   loading: boolean | undefined,
   width: number,
   height: number,
-  loadingContent?: React.ReactNode | false
+  loadingContent?: React.ReactNode | false,
+  layout?: PlaceholderLayout
 ): React.ReactElement | null {
   if (!loading) return null
   if (loadingContent === false) return null
@@ -110,12 +137,13 @@ export function renderLoadingState(
     return (
       <div
         style={{
-          width,
-          height,
+          ...placeholderSize(width, height, layout),
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
+          alignItems: "stretch",
+          textAlign: "center",
           justifyContent: "center",
-          boxSizing: "border-box",
+          boxSizing: "border-box"
         }}
       >
         {loadingContent}
@@ -124,38 +152,40 @@ export function renderLoadingState(
   }
 
   // Default skeleton: a few horizontal bars at varying widths
-  const barCount = Math.min(5, Math.floor(height / 40))
+  const barCount = Math.max(1, Math.min(5, Math.floor(height / 40)))
   const barHeight = Math.max(8, Math.floor(height / (barCount * 3)))
   const gap = Math.max(6, Math.floor(height / (barCount * 2.5)))
   const startY = Math.floor((height - (barCount * (barHeight + gap) - gap)) / 2)
 
+  const vertical = (value: number) =>
+    layout?.responsiveHeight ? `${(100 * value) / Math.max(1, height)}%` : value
+  const bars = Array.from({ length: barCount }, (_, i) => (
+    <div
+      key={i}
+      className="semiotic-loading-bar"
+      style={{
+        ...LOADING_BAR_STYLE,
+        position: "absolute",
+        top: vertical(startY + i * (barHeight + gap)),
+        left: "10%",
+        width: `${30 + ((i * 37 + 13) % 50)}%`,
+        height: vertical(barHeight),
+        opacity: 0.5 + (i % 2) * 0.2
+      }}
+    />
+  ))
   return (
     <div
       style={{
-        width,
-        height,
+        ...placeholderSize(width, height, layout),
         position: "relative",
         overflow: "hidden",
         border: "1px solid var(--semiotic-border, #e0e0e0)",
         borderRadius: 4,
-        boxSizing: "border-box",
+        boxSizing: "border-box"
       }}
     >
-      {Array.from({ length: barCount }, (_, i) => (
-        <div
-          key={i}
-          className="semiotic-loading-bar"
-          style={{
-            ...LOADING_BAR_STYLE,
-            position: "absolute",
-            top: startY + i * (barHeight + gap),
-            left: Math.floor(width * 0.1),
-            width: `${30 + ((i * 37 + 13) % 50)}%`,
-            height: barHeight,
-            opacity: 0.5 + (i % 2) * 0.2,
-          }}
-        />
-      ))}
+      {bars}
     </div>
   )
 }

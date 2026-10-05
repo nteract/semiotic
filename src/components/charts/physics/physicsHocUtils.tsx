@@ -411,9 +411,12 @@ export interface PhysicsChartModeResult {
  */
 export function usePhysicsChartMode(
   props: PhysicsChartModeProps,
-  primaryFallback: [number, number],
+  primarySize: [number, number] | { width: number; height: number },
   options?: { hasSimulationMode?: boolean }
 ): PhysicsChartModeResult {
+  const primaryFallback: [number, number] = Array.isArray(primarySize)
+    ? primarySize
+    : [primarySize.width, primarySize.height]
   const modes = options?.hasSimulationMode
     ? resolvePhysicsModes({
         mode: props.mode,
@@ -550,16 +553,18 @@ export function renderPhysicsChartState<TDatum extends Datum>(options: {
   loading?: BaseChartProps["loading"]
   loadingContent?: BaseChartProps["loadingContent"]
   size: [number, number]
+  responsive?: { responsiveWidth?: boolean; responsiveHeight?: boolean }
 }): React.ReactElement | null {
   const [width, height] = options.size
   const loadingEl = renderLoadingState(
     options.loading,
     width,
     height,
-    options.loadingContent
+    options.loadingContent,
+    options.responsive
   )
   if (loadingEl) return loadingEl
-  return renderEmptyState(options.data, width, height, options.emptyContent)
+  return renderEmptyState(options.data, width, height, options.emptyContent, options.responsive)
 }
 
 export function renderPhysicsFrame(

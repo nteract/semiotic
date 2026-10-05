@@ -155,6 +155,7 @@ export const SwarmPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   const safeData = useMemo(() => filterSparseArray(data), [data])
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy,

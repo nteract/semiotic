@@ -7,6 +7,7 @@
  * would inherit (format cascade, threshold zones via semantic theme
  * roles, comparison anchoring, sentence-form ARIA, push API + staleness).
  */
+import { BIG_NUMBER_SIZES } from "../shared/chartSizeDefaultsValue"
 import * as React from "react"
 import {
   forwardRef,
@@ -70,12 +71,7 @@ interface ModeDefaults {
 
 const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
   tile: {
-    width: 280,
-    // Sized to comfortably hold header + value + delta + a 32–40 px trend
-    // chart while leaving padding-bottom equal to padding-top. Bumped from
-    // 160 → 184 after observing trend charts sit flush with the bottom
-    // border at the previous default.
-    height: 184,
+    ...BIG_NUMBER_SIZES.tile,
     align: "start",
     labelSize: 13,
     captionSize: 11,
@@ -91,8 +87,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     chartSize: 44
   },
   presentation: {
-    width: 540,
-    height: 320,
+    ...BIG_NUMBER_SIZES.presentation,
     align: "center",
     labelSize: 18,
     captionSize: 14,
@@ -108,8 +103,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     chartSize: 80
   },
   inline: {
-    width: undefined,
-    height: undefined,
+    ...BIG_NUMBER_SIZES.inline,
     align: "inherit",
     labelSize: 0,
     captionSize: 0,
@@ -125,8 +119,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     chartSize: 0
   },
   thumbnail: {
-    width: 96,
-    height: 56,
+    ...BIG_NUMBER_SIZES.thumbnail,
     align: "center",
     labelSize: 0,
     captionSize: 0,

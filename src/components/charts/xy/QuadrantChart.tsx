@@ -267,6 +267,7 @@ export const QuadrantChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy,

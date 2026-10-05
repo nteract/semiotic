@@ -8,6 +8,7 @@ import {
   formatSignedDelta,
 } from "../charts/value/formatting"
 import { resolveThreshold } from "../charts/value/thresholdSparkline"
+import { BIG_NUMBER_SIZES } from "../charts/shared/chartSizeDefaultsValue"
 import type {
   BigNumberFormat,
   BigNumberLevel,
@@ -33,8 +34,7 @@ interface ValueModeDefaults {
 
 const VALUE_MODE_DEFAULTS: Record<BigNumberMode, ValueModeDefaults> = {
   tile: {
-    width: 280,
-    height: 184,
+    ...BIG_NUMBER_SIZES.tile,
     padding: 16,
     labelSize: 13,
     captionSize: 11,
@@ -46,8 +46,7 @@ const VALUE_MODE_DEFAULTS: Record<BigNumberMode, ValueModeDefaults> = {
     showDetail: true,
   },
   presentation: {
-    width: 540,
-    height: 320,
+    ...BIG_NUMBER_SIZES.presentation,
     padding: 32,
     labelSize: 18,
     captionSize: 14,
@@ -72,8 +71,7 @@ const VALUE_MODE_DEFAULTS: Record<BigNumberMode, ValueModeDefaults> = {
     showDetail: true,
   },
   thumbnail: {
-    width: 96,
-    height: 56,
+    ...BIG_NUMBER_SIZES.thumbnail,
     padding: 6,
     labelSize: 0,
     captionSize: 0,

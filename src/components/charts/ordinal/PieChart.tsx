@@ -1,4 +1,5 @@
 "use client"
+import { PIE_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
@@ -135,8 +136,8 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
  */
 export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
-    width: props.width ?? 400,
-    height: props.height ?? 400,
+    width: props.width,
+    height: props.height,
     enableHover: props.enableHover,
     showLegend: props.showLegend,
     title: props.title,
@@ -147,7 +148,7 @@ export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardR
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-})
+}, PIE_CHART_SIZE)
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -174,6 +175,7 @@ export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardR
   const effectiveColorBy = colorBy || categoryAccessor
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

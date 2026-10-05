@@ -66,6 +66,7 @@ interface ScaffoldOptions {
   // Common chart-mode inputs
   width?: number
   height?: number
+  responsive?: { responsiveWidth?: boolean; responsiveHeight?: boolean }
   showGrid?: boolean
   enableHover?: boolean
   showLegend?: boolean
@@ -190,6 +191,7 @@ export function useCustomChartSetup<TFrameHandle>(
   // so memo cache hits in the (overwhelmingly common) clean-input case
   // are unchanged.
   const setup = useChartSetup({
+    responsive: options.responsive,
     data: options.data ?? [],
     rawData: options.data,
     colorBy: options.colorBy,

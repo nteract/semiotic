@@ -44,6 +44,10 @@ for (const mode of ["bounded", "push", "uncontrolled"]) {
     await expect(
       line.locator('[data-semiotic-crosshair="locked"]')
     ).toHaveCount(1)
+    await expect(line.locator('[data-semiotic-crosshair="locked"]')).toHaveCSS(
+      "stroke",
+      "rgb(51, 51, 51)"
+    )
     // A sibling hover cannot move the lock; clicking the sibling releases it.
     const lineBounds = (await line.boundingBox())!
     await page.mouse.move(lineBounds.x + 370, lineBounds.y + 104)

@@ -3057,7 +3057,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 800
             },
             "height": {
               "type": "number",
@@ -11457,7 +11457,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 400
             },
             "height": {
               "type": "number",
@@ -11965,7 +11965,7 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 400
             },
             "height": {
               "type": "number",
@@ -12486,11 +12486,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 300
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 250
             },
             "margin": {
               "type": [
@@ -13035,7 +13035,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -13854,11 +13854,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 800
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -14662,7 +14662,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -15444,7 +15444,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -16230,7 +16230,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -16997,7 +16997,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -17756,7 +17756,7 @@
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 600
             },
             "margin": {
               "type": [
@@ -27760,7 +27760,7 @@
                 "number",
                 "string"
               ],
-              "description": "Reserved width in pixels (or any CSS length). Mode-keyed defaults: 280 (tile) / 540 (presentation) / unset (inline / thumbnail).",
+              "description": "Reserved width in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized.",
               "default": 280
             },
             "height": {
@@ -27768,7 +27768,7 @@
                 "number",
                 "string"
               ],
-              "description": "Reserved height in pixels (or any CSS length). Mode-keyed defaults: 184 (tile) / 320 (presentation) / unset (inline / thumbnail).",
+              "description": "Reserved height in pixels (or any CSS length). Use resolveChartSize for mode defaults; inline mode is auto-sized.",
               "default": 184
             },
             "className": {
@@ -28014,11 +28014,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 420
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -28459,11 +28461,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 760
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 360
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -28908,11 +28912,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 380
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -29350,11 +29356,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 700
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 360
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -29784,11 +29792,11 @@
             },
             "width": {
               "type": "number",
-              "default": 600
+              "default": 760
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 420
             },
             "margin": {
               "type": [
@@ -30425,11 +30433,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 520
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -30799,11 +30809,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 420
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -31321,11 +31333,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 900
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 520
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -33058,11 +33072,13 @@
             },
             "width": {
               "type": "number",
-              "description": "Alias for size[0]"
+              "description": "Alias for size[0]",
+              "default": 920
             },
             "height": {
               "type": "number",
-              "description": "Alias for size[1]"
+              "description": "Alias for size[1]",
+              "default": 620
             },
             "maxDevicePixelRatio": {
               "type": "number",
@@ -35864,11 +35880,11 @@
           "properties": {
             "width": {
               "type": "number",
-              "default": 600
+              "default": 920
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 440
             },
             "className": {
               "type": "string"
@@ -37447,11 +37463,11 @@
           "properties": {
             "width": {
               "type": "number",
-              "default": 600
+              "default": 980
             },
             "height": {
               "type": "number",
-              "default": 400
+              "default": 860
             },
             "className": {
               "type": "string"

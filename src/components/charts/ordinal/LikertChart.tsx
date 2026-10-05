@@ -341,6 +341,7 @@ export const LikertChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwa
 
   // ── Chart setup ──────────────────────────────────────────────────────
   const setup = useChartSetup({
+    responsive: props,
     data: processedData,
     rawData: data,
     colorBy: effectiveColorBy,

@@ -1,4 +1,5 @@
 "use client"
+import { GAUGE_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
 import { resolveGaugeCenterContent } from "../shared/GaugeReadout"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
@@ -176,7 +177,7 @@ export const GaugeChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 300, height: 250 })
+}, GAUGE_CHART_SIZE)
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -500,9 +501,9 @@ export const GaugeChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
     }
   }, [clampedValue, max, valueFormat])
 
-  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
+  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent, props)
   const emptyEl = !loadingEl
-    ? renderEmptyState(Number.isFinite(value) ? [{ value }] : [], width, height, props.emptyContent)
+    ? renderEmptyState(Number.isFinite(value) ? [{ value }] : [], width, height, props.emptyContent, props)
     : null
 
   if (loadingEl) return loadingEl

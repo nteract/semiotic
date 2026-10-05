@@ -1,4 +1,5 @@
 "use client"
+import { GALTON_BOARD_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
@@ -143,7 +144,7 @@ export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardC
     valueExtent: valueExtentProp
   } = props
   const valueExtent = useStableShallow(valueExtentProp)
-  const layoutMode = usePhysicsChartMode(props, [700, 420], {
+  const layoutMode = usePhysicsChartMode(props, GALTON_BOARD_CHART_SIZE, {
     hasSimulationMode: true
   })
   const {
@@ -263,6 +264,7 @@ export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardC
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
     loading,

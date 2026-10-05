@@ -342,7 +342,6 @@ export const pieChart: ChartConfig = {
 
 export const donutChart: ChartConfig = {
   frameType: "ordinal",
-  layout: { primarySize: { width: 400, height: 400 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const effectiveColorBy = colorBy || rest.categoryAccessor
     const readValue = makeRuleValueResolver(

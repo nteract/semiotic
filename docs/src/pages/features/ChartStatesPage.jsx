@@ -49,10 +49,57 @@ export default function ChartStatesPage() {
       <h2 id="empty-state">Empty State</h2>
 
       <p>
-        When <code>data</code> is an empty array, every chart automatically
+        When <code>data</code> is an empty array, charts with an empty state
         displays a centered "No data available" message. Customize this with
         the <code>emptyContent</code> prop, or suppress it entirely with{" "}
         <code>emptyContent=&#123;false&#125;</code>.
+        Network charts validate required graph or hierarchy input first;
+        invalid input displays a diagnostic instead.
+      </p>
+
+      <p>
+        Empty and loading placeholders use the chart's resolved dimensions,
+        including its mode defaults when width or height is omitted.
+        With <code>responsiveWidth</code>, the box follows its container's
+        width; <code>responsiveHeight</code> requires a parent with a defined
+        height. Content is centered, and custom content stretches across the
+        available width. A custom frame can use <code>height: "100%"</code>
+        to fill the box. Pass <code>data=&#123;[]&#125;</code> for an empty
+        chart; omitted data selects push mode on charts that support it.
+      </p>
+
+      <h3 id="resolve-chart-size">Sizing a wrapper's placeholder</h3>
+      <p>
+        Import <code>resolveChartSize</code> from <code>semiotic/utils</code>
+        or <code>semiotic/utils/core</code> when your wrapper owns the
+        placeholder. It reads the same defaults as the chart and applies
+        explicit dimensions, mode, and responsive rules. No React mount is
+        needed. For responsive axes, pass the measured host content box as
+        <code>containerSize</code>; without a measurement the result is the
+        chart's initial fallback size.
+      </p>
+      <CodeBlock language="tsx" code={`import { resolveChartSize } from "semiotic/utils"
+
+const chartProps = { mode: "context", responsiveWidth: true } as const
+const size = resolveChartSize("CandlestickChart", {
+  ...chartProps,
+  containerSize: { width: measuredWidth }
+})
+
+return rows.length ? (
+  <CandlestickChart {...chartProps} data={rows} />
+) : (
+  <div style={{ ...size, display: "grid", placeItems: "center" }}>
+    No observations
+  </div>
+)`} />
+      <p>
+        The result describes the plotting viewport. MinimapChart includes its
+        overview; ScatterplotMatrix uses its fields and cell geometry and
+        excludes titles or legends above the grid. BigNumber preserves its
+        own modes and CSS dimensions: inline content has automatic dimensions
+        (<code>undefined</code>) that require DOM measurement for pixel bounds.
+        External CSS and accessible tables can add space outside a viewport.
       </p>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 24 }}>

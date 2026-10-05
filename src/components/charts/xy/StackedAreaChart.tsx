@@ -352,6 +352,7 @@ export const StackedAreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: actualColorBy,

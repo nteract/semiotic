@@ -21,7 +21,6 @@ import {
 
 export const circlePack: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
@@ -57,7 +56,6 @@ export const circlePack: ChartConfig = {
 
 export const orbitDiagram: ChartConfig = {
   frameType: "network",
-  layout: { primarySize: { width: 600, height: 600 } },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const hierarchyRoot = (data ?? rest.data) as Datum
     const childrenAccessor = rest.childrenAccessor || "children"

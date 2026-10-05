@@ -465,23 +465,20 @@ export const ChoroplethMap = /* @__PURE__ */ withDisplayName(function Choropleth
       loading,
       resolved.width,
       resolved.height,
-      loadingContent
-    ) ||
+      loadingContent, props) ||
     (!resolvedAreas
       ? renderLoadingState(
           true,
           resolved.width,
           resolved.height,
-          loadingContent
-        )
+          loadingContent, props)
       : null)
   const emptyEl = !loadingEl
     ? renderEmptyState(
         resolvedAreas,
         resolved.width,
         resolved.height,
-        emptyContent
-      )
+        emptyContent, props)
     : null
 
   // Validate areas is a valid GeoJSON feature array.

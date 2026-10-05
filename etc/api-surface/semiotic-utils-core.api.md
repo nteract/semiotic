@@ -96,6 +96,8 @@ function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: Styl
 function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
 function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
+function resolveChartSize(chart: "AreaChart" | "BarChart" | "BoxPlot" | "BubbleChart" | "BumpChart" | "CandlestickChart" | "ChainReactionChart" | "ChordDiagram" | "ChoroplethMap" | "CirclePack" | "CollisionSwarmChart" | "ConnectedScatterplot" | "CrucibleChart" | "DependencyForestChart" | "DifferenceChart" | "DistanceCartogram" | "DonutChart" | "DotPlot" | "EventDropChart" | "FlowCircuitChart" | "FlowMap" | "ForceDirectedGraph" | "FunnelChart" | "GaltonBoardChart" | "GaugeChart" | "GauntletChart" | "GeoCustomChart" | "GroupedBarChart" | "Heatmap" | "Histogram" | "LikertChart" | "LineChart" | "MinimapChart" | "MotifBraidChart" | "MultiAxisLineChart" | "NetworkCustomChart" | "OrbitDiagram" | "OrdinalCustomChart" | "PacketFlowChart" | "PhysicsCustomChart" | "PieChart" | "ProcessFlowChart" | "ProcessSankey" | "ProportionalSymbolMap" | "QuadrantChart" | "RadarChart" | "RealtimeHeatmap" | "RealtimeHistogram" | "RealtimeLineChart" | "RealtimeSwarmChart" | "RealtimeTemporalHistogram" | "RealtimeWaterfallChart" | "RidgelinePlot" | "SankeyDiagram" | "Scatterplot" | "ScatterplotMatrix" | "Sparkline" | "StackedAreaChart" | "StackedBarChart" | "SwarmPlot" | "SwimlaneChart" | "TemporalHistogram" | "TreeDiagram" | "Treemap" | "UnitPileChart" | "ViolinPlot" | "WaterfallChart" | "XYCustomChart", props?: ChartSizeOptions | undefined): ChartSize
+function resolveChartSize(chart: "BigNumber", props?: BigNumberSizeOptions | undefined): BigNumberSize
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
 function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi";}
 function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
@@ -130,12 +132,16 @@ interface AuditAccessibilityOptions
 interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
+interface BigNumberSize
+interface BigNumberSizeOptions
 interface BuildNavigationTreeOptions
 interface ChartArtifactTransferStatus extends ArtifactTransferStatus
 interface ChartConfig
 interface ChartReaderGrounding
 interface ChartReaderGroundingIntent
 interface ChartReaderGroundingOptions
+interface ChartSize
+interface ChartSizeOptions
 interface CheckedNumericContract
 interface CustomTooltipConfig
 interface DataAuditChartNotification
@@ -273,6 +279,11 @@ interface-member AuditObservedSceneInput::property::layoutConfig = optional layo
 interface-member AuditObservedSceneInput::property::recipe = required recipe: ChartRecipe<Datum, Record<string, unknown>>
 interface-member AuditObservedSceneInput::property::scene = required scene: null | readonly Record<string, unknown>[] | undefined | {nodes?: ReadonlyArray<Record<string, unknown>>; sceneNodes?: ReadonlyArray<Record<string, unknown>>; sceneEdges?: ReadonlyArray<Record<string, unknown>>;}
 interface-member AuditObservedSceneInput::property::theme = optional theme: undefined | {background?: string; categorical?: string[];}
+interface-member BigNumberSize::property::height = required height: number | string | undefined
+interface-member BigNumberSize::property::width = required width: number | string | undefined
+interface-member BigNumberSizeOptions::property::height = optional height: number | string | undefined
+interface-member BigNumberSizeOptions::property::mode = optional mode: "inline" | "presentation" | "thumbnail" | "tile" | ChartMode | undefined
+interface-member BigNumberSizeOptions::property::width = optional width: number | string | undefined
 interface-member BuildNavigationTreeOptions::property::locale = optional locale: string | undefined
 interface-member BuildNavigationTreeOptions::property::maxLeaves = optional maxLeaves: number | undefined
 interface-member BuildNavigationTreeOptions::property::recipe = optional recipe: ChartRecipe<Datum, Record<string, unknown>> | undefined
@@ -309,6 +320,20 @@ interface-member ChartReaderGroundingOptions::property::levels = optional levels
 interface-member ChartReaderGroundingOptions::property::locale = optional locale: string | undefined
 interface-member ChartReaderGroundingOptions::property::maxLeaves = optional maxLeaves: number | undefined
 interface-member ChartReaderGroundingOptions::property::physics = optional physics: PhysicsReaderGroundingInput | boolean | undefined
+interface-member ChartSize::property::height = required height: number
+interface-member ChartSize::property::width = required width: number
+interface-member ChartSizeOptions::property::cellGap = optional cellGap: number | undefined
+interface-member ChartSizeOptions::property::cellSize = optional cellSize: number | undefined
+interface-member ChartSizeOptions::property::containerSize = optional containerSize: Partial<ChartSize> | undefined
+interface-member ChartSizeOptions::property::fields = optional fields: readonly string[] | undefined
+interface-member ChartSizeOptions::property::height = optional height: number | undefined
+interface-member ChartSizeOptions::property::minimap = optional minimap: undefined | {height?: number; margin?: {top?: number; bottom?: number;}; handles?: unknown; showExtentLabels?: boolean;}
+interface-member ChartSizeOptions::property::mode = optional mode: "mechanical" | "replay" | "sample" | "snapshot" | ChartMode | undefined
+interface-member ChartSizeOptions::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member ChartSizeOptions::property::responsiveRules = optional responsiveRules: ResponsiveRule<Record<string, unknown>>[] | undefined
+interface-member ChartSizeOptions::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member ChartSizeOptions::property::size = optional size: [number, number] | undefined
+interface-member ChartSizeOptions::property::width = optional width: number | undefined
 interface-member CheckedNumericContract::property::accessor = required readonly accessor: string
 interface-member CheckedNumericContract::property::allowMissing = required readonly allowMissing: boolean
 interface-member CheckedNumericContract::property::dataProp = required readonly dataProp: string
@@ -689,6 +714,7 @@ type NumericRequirement = "finite" | "integer" | "non-negative" | "positive" | "
 type ResponsiveOrientation = "landscape" | "portrait"
 type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}
 type SerializedSelections = Record<string, SerializedSelection>
+type SizedChartName = keyof typeof CHART_PRIMARY_SIZES
 type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
 type ThemePresetName = (string & {}) | KnownThemePresetName
 type TimeGranularity = "days" | "hours" | "minutes" | "months" | "seconds" | "years"

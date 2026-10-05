@@ -19,7 +19,8 @@ import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/with
 import { validateArrayData } from "../shared/validateChartData"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { MinimapChartProps } from "./minimapChartTypes"
-import { minimapChromeMargins } from "./minimapLayout"
+import { minimapChromeMargins, minimapOverviewHeight, MINIMAP_DEFAULT_HEIGHT } from "./minimapLayout"
+import { resolveChartMode } from "../shared/chartMode"
 import { withDisplayName } from "../shared/withDisplayName"
 
 export type {
@@ -92,10 +93,11 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
   props: MinimapChartProps<TDatum>
 ) {
   ensureMinimapChartRegistrations()
+  const defaultSize = resolveChartMode(undefined, {})
   const {
     data,
-    width = 600,
-    height = 400,
+    width = defaultSize.width,
+    height = defaultSize.height,
     margin: userMargin,
     className,
     title,
@@ -139,8 +141,9 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
   } = props
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
+  const totalHeight = height + minimapOverviewHeight(minimapConfig)
+  const loadingEl = renderLoadingState(loading, width, totalHeight, loadingContent, props)
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, totalHeight, emptyContent, props) : null
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
 
@@ -267,7 +270,7 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
     axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes, xLabel, yLabel }),
   })
 
-  const minimapHeight = minimapConfig.height || 60
+  const minimapHeight = minimapConfig.height || MINIMAP_DEFAULT_HEIGHT
   const chromeMargins = minimapChromeMargins(minimapConfig)
   const minimapMargin = useMemo(() => {
     return {
@@ -355,7 +358,6 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
     data: data,
     accessors: { xAccessor, yAccessor }
   })
-  if (error) return <ChartError componentName="MinimapChart" message={error} width={width} height={height} />
 
   // ── Chart type ──────────────────────────────────────────────────────
 
@@ -460,6 +462,7 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (loadingEl) return loadingEl
   if (emptyEl) return emptyEl
+  if (error) return <ChartError componentName="MinimapChart" message={error} width={width} height={totalHeight} />
 
   return (
     <SafeRender componentName="MinimapChart" width={width} height={height}>

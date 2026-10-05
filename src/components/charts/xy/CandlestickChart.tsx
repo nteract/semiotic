@@ -11,15 +11,14 @@ import { candlestickXYPlugin } from "../../stream/xyPlugins/candlestickPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CandlestickStyle } from "../../stream/types"
-import { useChartSelection, useChartMode, getCrosshairProps } from "../shared/hooks"
+import { useChartMode } from "../shared/hooks"
+import { useChartSetup } from "../shared/useChartSetup"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName, type TooltipFieldConfig } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
-import { normalizePartialMargin } from "../../types/marginType"
-import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { withDisplayName } from "../shared/withDisplayName"
@@ -159,10 +158,40 @@ export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
 
   const { width, height, enableHover, showGrid, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
-
   const safeData = useMemo(() => filterSparseArray(data), [data])
+
+  // Keep candlestick-specific compact margins, while sharing the resolved
+  // sizing, selection, and placeholder path used by the other XY charts.
+  const marginDefaults = useMemo(() => {
+    const base = resolved.marginDefaults
+    return resolved.mode === "sparkline" ? { ...base, top: 0, bottom: 0 } : base
+  }, [resolved.marginDefaults, resolved.mode])
+  const setup = useChartSetup({
+    responsive: props,
+    data: safeData,
+    rawData: data,
+    colorBy: undefined,
+    colorScheme: undefined,
+    legendInteraction: undefined,
+    selection,
+    linkedHover,
+    fallbackFields: [],
+    onObservation,
+    onClick,
+    chartType: "CandlestickChart",
+    chartId,
+    mobileInteraction: resolved.mobileInteraction,
+    mobileSemantics: resolved.mobileSemantics,
+    showLegend: false,
+    userMargin,
+    marginDefaults,
+    loading,
+    loadingContent,
+    emptyContent,
+    width,
+    height,
+  })
+  const { activeSelectionHook, resolvedSelection, customHoverBehavior, customClickBehavior, margin } = setup
 
   // Range mode: either side of open/close missing collapses to high/low band.
   // Providing only one of the two is treated as "no OHLC" rather than an error —
@@ -180,12 +209,6 @@ export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
     warnMissingField("CandlestickChart", safeData, "closeAccessor", closeAccessor!)
   }
 
-  const { activeSelectionHook, customHoverBehavior, customClickBehavior, crosshairSourceId } = useChartSelection({
-    selection, linkedHover,
-    onObservation, onClick, chartType: "CandlestickChart", chartId,
-    mobileInteraction: resolved.mobileInteraction,
-  })
-  const resolvedSelection = useResolvedSelection(selection)
   const candleRuleContext = useMemo(
     () => makeXYRuleContext(
       xAccessor as string | ((d: Datum) => unknown),
@@ -201,19 +224,6 @@ export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
     ),
     [styleRules, candleRuleContext, activeSelectionHook, resolvedSelection]
   )
-
-  const crosshairFrameProps = getCrosshairProps(linkedHover, crosshairSourceId)
-
-  // Merge the user's PartialMargin (number shorthand or any subset of sides)
-  // with the mode-driven defaults so the frame gets a fully-resolved margin.
-  // In sparkline mode, zero out top/bottom: with axes stripped, the 2px
-  // default on each side is just dead space that compresses the price range.
-  const margin = useMemo(() => {
-    const base = resolved.marginDefaults
-    const d = resolved.mode === "sparkline" ? { ...base, top: 0, bottom: 0 } : base
-    if (userMargin == null) return d
-    return { ...d, ...normalizePartialMargin(userMargin) }
-  }, [userMargin, resolved.marginDefaults, resolved.mode])
 
   // Tooltip: OHLC when present, range when degraded. `ChartAccessor<TDatum,
   // number>` is narrower than TooltipFieldConfig.accessor by parameter
@@ -294,12 +304,11 @@ export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
-    ...crosshairFrameProps,
+    ...setup.crosshairProps,
     ...frameProps,
   }
 
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="CandlestickChart" message={validationError} width={width} height={height} />
 
   return (

@@ -51,7 +51,7 @@ import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
-import { renderEmptyState, renderLoadingState } from "./withChartWrapper"
+import { renderEmptyState, renderLoadingState, type PlaceholderLayout } from "./withChartWrapper"
 import { filterSparseArray } from "./sparseArray"
 import type { ReactElement, ReactNode } from "react"
 import type { LegendValue } from "../../types/legendTypes"
@@ -121,6 +121,8 @@ export interface ChartSetupInput {
   width: number
   /** Resolved height from useChartMode */
   height: number
+  /** Responsive host flags for empty and loading placeholders. */
+  responsive?: PlaceholderLayout
   /** Whether the resolved chart mode includes a title. */
   hasTitle?: boolean
   /**
@@ -459,13 +461,10 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // need to catch sparse-but-nonempty input like `[null, undefined]`
   // that fails to render anything; filter `rawData` itself for the
   // emptiness check so the user's array is the source of truth.
-  const emptyStateInput = Array.isArray(rawData)
-    ? filterSparseArray(rawData)
-    : rawData
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent, input.responsive)
   const emptyEl = loadingEl
     ? null
-    : renderEmptyState(emptyStateInput, width, height, emptyContent)
+    : renderEmptyState(rawData, width, height, emptyContent, input.responsive)
   const earlyReturn = loadingEl || emptyEl || null
 
   return {

@@ -1,4 +1,5 @@
 "use client"
+import { COLLISION_SWARM_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
@@ -137,7 +138,7 @@ export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function Collision
     xExtent: xExtentProp
   } = props
   const xExtent = useStableShallow(xExtentProp)
-  const layoutMode = usePhysicsChartMode(props, [700, 360])
+  const layoutMode = usePhysicsChartMode(props, COLLISION_SWARM_CHART_SIZE)
   const {
     chartSize,
     showProjection,
@@ -224,6 +225,7 @@ export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function Collision
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data,
     emptyContent,
     loading,

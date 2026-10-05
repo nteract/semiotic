@@ -488,8 +488,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     loading,
     resolvedSize[0],
     resolvedSize[1],
-    loadingContent
-  )
+    loadingContent, props)
   // In aggregate mode the chart is push-driven (data arrives via ref), so
   // skip the static empty state just as a plain streaming chart does.
   const emptyEl = !loadingEl
@@ -497,8 +496,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
         aggEnabled ? undefined : data,
         resolvedSize[0],
         resolvedSize[1],
-        emptyContent
-      )
+        emptyContent, props)
     : null
 
   const baseLineStyle = useMemo(

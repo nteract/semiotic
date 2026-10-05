@@ -1,4 +1,5 @@
 "use client"
+import { UNIT_PILE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
@@ -123,7 +124,7 @@ export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
     styleRules
   } = props
   const mechanicalCategories = useStableShallow(mechanicalCategoriesProp)
-  const layoutMode = usePhysicsChartMode(props, [700, 380], {
+  const layoutMode = usePhysicsChartMode(props, UNIT_PILE_CHART_SIZE, {
     hasSimulationMode: true
   })
   const {
@@ -239,6 +240,7 @@ export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data: simulationMode === "mechanical" ? chartData : data,
     emptyContent,
     loading,

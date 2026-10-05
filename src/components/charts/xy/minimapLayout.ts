@@ -1,5 +1,12 @@
 import { linearBrushHandleThickness } from "../../controls/linearBrushMetrics"
 
+export const MINIMAP_DEFAULT_HEIGHT = 60
+
+export function minimapOverviewHeight(config: { height?: number; margin?: { top?: number; bottom?: number }; handles?: unknown; showExtentLabels?: unknown }): number {
+  const margin = minimapChromeMargins(config)
+  return (config.height || MINIMAP_DEFAULT_HEIGHT) + (config.margin?.top ?? margin.top) + (config.margin?.bottom ?? margin.bottom)
+}
+
 /**
  * Default overview margins for opted-in brush chrome, shared by MinimapChart
  * and its static rendering: a move handle sits on the top edge, and extent

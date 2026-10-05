@@ -133,6 +133,7 @@ export const RidgelinePlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   const safeData = useMemo(() => filterSparseArray(data), [data])
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy,

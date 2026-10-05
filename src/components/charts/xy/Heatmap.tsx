@@ -329,8 +329,8 @@ export const Heatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   const { width, height, enableHover, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  const loadingEl = renderLoadingState(loading, width, height, loadingContent)
-  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent) : null
+  const loadingEl = renderLoadingState(loading, width, height, loadingContent, props)
+  const emptyEl = !loadingEl ? renderEmptyState(data, width, height, emptyContent, props) : null
 
   const safeData = useMemo(() => filterSparseArray(data), [data])
 

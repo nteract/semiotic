@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { resolveChartMode } from "../shared/chartMode"
 import { forwardRef, useMemo, useRef, useCallback, useEffect } from "react"
 import { scaleTime } from "d3-scale"
 
@@ -156,8 +157,8 @@ export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
     layoutWorkerThreshold,
     layoutLoadingContent,
     onLayoutStateChange,
-    width = 600,
-    height = 400,
+    width = resolveChartMode(undefined, {}).width,
+    height = resolveChartMode(undefined, {}).height,
     margin: userMargin,
     title,
     description,
@@ -284,6 +285,7 @@ export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   ])
 
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes: rawNodes,
     edges: rawEdges,
     inferNodes: false,
@@ -649,7 +651,7 @@ export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
             background: "var(--semiotic-bg, #fff)"
           }}
         >
-          {renderLoadingState(true, width, height, layoutLoadingContent)}
+          {renderLoadingState(true, width, height, layoutLoadingContent, props)}
         </div>
       )}
       <StreamNetworkFrame

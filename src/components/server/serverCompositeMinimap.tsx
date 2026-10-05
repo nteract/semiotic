@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
-import { minimapChromeMargins } from "../charts/xy/minimapLayout"
+import { minimapChromeMargins, MINIMAP_DEFAULT_HEIGHT } from "../charts/xy/minimapLayout"
 import { renderStreamXYFrame } from "./staticXY"
 import { buildCompositeEvidence, type EvidenceSink } from "./renderEvidence"
 import { lineChart } from "./serverChartConfigsXY"
@@ -25,7 +25,7 @@ export function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
     rest.minimap && typeof rest.minimap === "object"
       ? (rest.minimap as Datum)
       : {}
-  const overviewHeight = finiteNumber(minimap.height, 60)
+  const overviewHeight = finiteNumber(minimap.height, MINIMAP_DEFAULT_HEIGHT)
   const detailMargin = common.margin as Datum
   const configuredMargin =
     minimap.margin && typeof minimap.margin === "object"

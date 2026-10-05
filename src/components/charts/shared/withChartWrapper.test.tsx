@@ -135,6 +135,20 @@ describe("renderEmptyState", () => {
     expect(container.textContent).toContain("No data available")
   })
 
+  it("renders a centered placeholder when sparse input has no usable rows", () => {
+    render(renderEmptyState(new Array(3), 320, 180)!)
+    expect(screen.getByText("No data available")).toHaveStyle({
+      width: "320px", height: "180px", display: "flex",
+      alignItems: "stretch", justifyContent: "center",
+    })
+  })
+
+  it("does not hide valid rows mixed with empty slots", () => {
+    const sparse = new Array<Datum>(3)
+    sparse[1] = { x: 1 }
+    expect(renderEmptyState(sparse, 320, 180)).toBeNull()
+  })
+
   it("renders custom emptyContent for empty array", () => {
     const result = renderEmptyState([], 600, 400, "Custom empty message")
     expect(result).not.toBeNull()
@@ -172,6 +186,13 @@ describe("renderLoadingState", () => {
     const bars = container.querySelectorAll(".semiotic-loading-bar")
     // height=80, barCount = floor(80/40) = 2
     expect(bars.length).toBe(2)
+  })
+
+  it("keeps a visible, centered loading bar in a sparkline slot", () => {
+    const { container } = render(renderLoadingState(true, 120, 24)!)
+    const bars = container.querySelectorAll<HTMLElement>(".semiotic-loading-bar")
+    expect(bars).toHaveLength(1)
+    expect(bars[0]).toHaveStyle({ top: "8px", height: "8px" })
   })
 
   it("renders custom loadingContent in place of the skeleton when provided", () => {

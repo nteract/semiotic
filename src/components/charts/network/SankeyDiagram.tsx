@@ -1,4 +1,5 @@
 "use client"
+import { SANKEY_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -163,7 +164,7 @@ export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 800, height: 600 })
+}, SANKEY_DIAGRAM_SIZE)
 
   const {
     nodes,
@@ -209,6 +210,7 @@ export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   // scale, palette resolution, category extraction, legend
   // interaction, margin/legend composition, and selection wiring.
   const setup = useNetworkChartSetup({
+    responsive: props,
     nodes,
     edges,
     inferNodes: true,

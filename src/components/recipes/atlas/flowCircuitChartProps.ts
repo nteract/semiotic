@@ -1,3 +1,4 @@
+import { FLOW_CIRCUIT_CHART_SIZE } from "../../charts/shared/chartSizeDefaultsAtlas"
 import {
   flowCircuitLayout,
   type FlowCircuitLayoutConfig
@@ -21,8 +22,8 @@ export type FlowCircuitChartProps = FlowCircuitLayoutConfig &
   }
 
 export function flowCircuitChartProps({
-  width = 980,
-  height = 860,
+  width = FLOW_CIRCUIT_CHART_SIZE.width,
+  height = FLOW_CIRCUIT_CHART_SIZE.height,
   title,
   description,
   summary,

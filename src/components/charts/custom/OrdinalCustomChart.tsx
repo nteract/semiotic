@@ -131,6 +131,7 @@ export const OrdinalCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   //     exist on StreamOrdinalFrameProps)
   //   - setup.margin: merged user margin + chart-mode default
   const { frameRef, resolved, safeData, setup, earlyReturn } = useCustomChartSetup<StreamOrdinalFrameHandle>({
+    responsive: props,
     imperativeRef: ref,
     imperativeVariant: "xy",
     chartTypeLabel: "OrdinalCustomChart",

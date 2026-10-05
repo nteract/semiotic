@@ -1,4 +1,5 @@
 "use client"
+import { EVENT_DROP_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
@@ -179,7 +180,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(function EventDropChart
   const windows = useStableShallow(windowsProp ?? { size: 10 })
   const watermark = useStableShallow(watermarkProp)
   const timeExtent = useStableShallow(timeExtentProp)
-  const layoutMode = usePhysicsChartMode(props, [760, 360])
+  const layoutMode = usePhysicsChartMode(props, EVENT_DROP_CHART_SIZE)
   const {
     chartSize,
     showProjection,
@@ -272,6 +273,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(function EventDropChart
   })
 
   const stateEl = renderPhysicsChartState({
+    responsive: props,
     data,
     emptyContent,
     loading,

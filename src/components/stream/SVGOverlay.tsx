@@ -704,15 +704,21 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const px = scales.x(crosshairPos.xValue)
           if (px == null || px < 0 || px > width) return null
           const isLocked = crosshairPos.locked
+          const lineProps = {
+            x1: px, y1: 0, x2: px, y2: height,
+            strokeDasharray: isLocked ? "6,3" : "4,4"
+          }
           return (
-            <line
-              data-semiotic-crosshair={isLocked ? "locked" : "hover"}
-              x1={px} y1={0} x2={px} y2={height}
-              stroke={isLocked ? "white" : "var(--semiotic-text-secondary, rgba(0,0,0,0.25))"}
-              strokeWidth={isLocked ? 1.5 : 1}
-              strokeDasharray={isLocked ? "6,3" : "4,4"}
-              pointerEvents="none"
-            />
+            <g pointerEvents="none" aria-hidden="true">
+              {/* Keep contrast when a chart background differs from its theme. */}
+              <line {...lineProps} stroke="var(--semiotic-surface, #fff)" strokeWidth={isLocked ? 3.5 : 3} />
+              <line
+                {...lineProps}
+                data-semiotic-crosshair={isLocked ? "locked" : "hover"}
+                stroke={isLocked ? "var(--semiotic-text, #333)" : "var(--semiotic-text-secondary, #666)"}
+                strokeWidth={isLocked ? 1.5 : 1}
+              />
+            </g>
           )
         })()}
 

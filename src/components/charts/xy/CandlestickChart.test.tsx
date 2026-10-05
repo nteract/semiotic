@@ -63,6 +63,42 @@ describe("CandlestickChart", () => {
     expect(container.querySelector(".stream-xy-frame")).toBeFalsy()
   })
 
+  it("keeps the resolved slot when switching between range, empty, loading, and OHLC", () => {
+    const { rerender, getByText } = render(
+      <CandlestickChart data={range} xAccessor="t" highAccessor="max" lowAccessor="min" />
+    )
+    expect(lastXYFrameProps.size).toEqual([600, 400])
+    rerender(<CandlestickChart data={[]} emptyContent={<span>No observations</span>} />)
+    expect(getByText("No observations").parentElement).toHaveStyle({ width: "600px", height: "400px" })
+    rerender(<CandlestickChart loading loadingContent={<span>Fetching observations</span>} />)
+    expect(getByText("Fetching observations").parentElement).toHaveStyle({ width: "600px", height: "400px" })
+    rerender(<CandlestickChart data={ohlc} xAccessor="t" openAccessor="o" highAccessor="h" lowAccessor="l" closeAccessor="c" />)
+    expect(lastXYFrameProps.size).toEqual([600, 400])
+  })
+
+  it("uses explicit dimensions and responsive rules for the empty slot", () => {
+    const { getByText } = render(
+      <CandlestickChart data={[]} width={320} height={180}
+        responsiveRules={[{ when: { maxWidth: 400 }, transform: { height: 140 } }]} />
+    )
+    expect(getByText("No data available")).toHaveStyle({ width: "320px", height: "140px" })
+  })
+
+  it("shows the shared empty state for entirely sparse input", () => {
+    const { getByText, container } = render(
+      <CandlestickChart data={new Array(3)} />
+    )
+    expect(getByText("No data available")).toHaveStyle({ width: "600px", height: "400px" })
+    expect(container.querySelector(".stream-xy-frame")).toBeNull()
+  })
+
+  it("preserves push mode and emptyContent opt-out", () => {
+    const { container, rerender } = render(<CandlestickChart />)
+    expect(container.querySelector(".stream-xy-frame")).toBeTruthy()
+    rerender(<CandlestickChart data={[]} emptyContent={false} />)
+    expect(container.textContent).not.toContain("No data available")
+  })
+
   it("projects active linked selections into candlestick mark styles", async () => {
     const linkedData = [
       { ...ohlc[0], cohort: "Alpha" },

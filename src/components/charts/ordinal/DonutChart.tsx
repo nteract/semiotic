@@ -1,4 +1,5 @@
 "use client"
+import { DONUT_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
@@ -100,7 +101,7 @@ export const DonutChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
       mobileInteraction: props.mobileInteraction,
     mobileSemantics: props.mobileSemantics,
     responsiveRules: props.responsiveRules,
-}, { width: 400, height: 400 })
+}, DONUT_CHART_SIZE)
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
 
@@ -128,6 +129,7 @@ export const DonutChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
   const effectiveColorBy = colorBy || categoryAccessor
 
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: effectiveColorBy,

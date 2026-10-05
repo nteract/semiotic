@@ -501,6 +501,7 @@ export const DifferenceChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
         legend: customLegend
       }
   const setup = useChartSetup({
+    responsive: props,
     data: safeData,
     rawData: data,
     colorBy: "__diffWinner",

@@ -148,6 +148,7 @@ export const NetworkCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   } = props
 
   const { frameRef, resolved, normalizedMargin } = useCustomChartScaffold<StreamNetworkFrameHandle>({
+    responsive: props,
     imperativeRef: ref,
     imperativeVariant: "network",
     margin: userMargin,
@@ -214,10 +215,10 @@ export const NetworkCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
   const { width, height, enableHover, title, description, summary, accessibleTable } = resolved
   const normalizedTooltip = useMemo(() => normalizeTooltip(tooltip), [tooltip])
-  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent)
+  const loadingEl = renderLoadingState(props.loading, width, height, props.loadingContent, props)
   const emptyEl = loadingEl
     ? null
-    : renderEmptyState(boundedRows, width, height, props.emptyContent)
+    : renderEmptyState(boundedRows, width, height, props.emptyContent, props)
 
   if (loadingEl || emptyEl) return loadingEl || emptyEl
 

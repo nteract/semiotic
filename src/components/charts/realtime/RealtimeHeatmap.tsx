@@ -396,10 +396,9 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
     loading,
     resolvedSize[0],
     resolvedSize[1],
-    loadingContent
-  )
+    loadingContent, props)
   const emptyEl = !loadingEl
-    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent)
+    ? renderEmptyState(data, resolvedSize[0], resolvedSize[1], emptyContent, props)
     : null
 
   const resolvedClassName = emphasis

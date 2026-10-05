@@ -2,6 +2,7 @@
  * Pure Gauntlet physics helpers (no React).
  * Types: `./gauntletTypes`.
  */
+import { GAUNTLET_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import type {
@@ -47,8 +48,8 @@ export type {
   GauntletViabilityFn
 } from "./gauntletTypes"
 
-export const DEFAULT_WIDTH = 900
-export const DEFAULT_HEIGHT = 520
+export const DEFAULT_WIDTH = GAUNTLET_CHART_SIZE.width
+export const DEFAULT_HEIGHT = GAUNTLET_CHART_SIZE.height
 export const EMPTY_GAUNTLET_PROPERTIES: readonly GauntletPropertyDefinition[] =
   []
 

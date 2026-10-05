@@ -31,6 +31,7 @@
  *     (which only reads `type` and `enum`).
  */
 
+import { chartPrimarySize } from "./chartSizeDefaults"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 import { NETWORK_PERSPECTIVE_PROP_SPEC } from "./networkPerspectiveWireSchema"
 
@@ -590,5 +591,11 @@ export function composeProps(spec: ChartSpec): Record<string, ChartPropSpec> {
     Object.assign(result, PROP_BAGS[bagName])
   }
   Object.assign(result, spec.ownProps)
+  const size = chartPrimarySize(spec.name)
+  if (size) {
+    for (const key of ["width", "height"] as const) {
+      if (result[key]) result[key] = { ...result[key], default: size[key] }
+    }
+  }
   return result
 }

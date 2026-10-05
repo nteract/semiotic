@@ -31,6 +31,14 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Intentional feature cost (2026-10-05): shared chart-size defaults,
+  // responsive empty/loading slots, and outlined crosshairs. Defaults are
+  // split by family and placeholders resize through CSS; no family coupling
+  // or dependency was added. Production graphs measure about 387.8 KiB (root),
+  // 615.3 KiB (AI), and 292.1 KiB (Atlas), versus the prior feature's
+  // 387.3/614.7/291.8 KiB. Only those three allowances change below, retaining
+  // <0.25 KiB headroom. All 19 isolation/minifier tests pass and the named
+  // multi-import consumer remains 307.8/308 KiB with its limit unchanged.
   // Intentional feature cost (2026-10-04): centered histogram bins, scoped/
   // controlled linked crosshairs, declarative chart/theme tooltip chrome, and
   // ordering of pre-click hover work add 1.1–2.0 KiB gzip versus a built
@@ -75,7 +83,7 @@ const ENTRY_GRAPHS = [
   // control layer, and diagnoseConfig gains the annotation field-typo check;
   // measures 385.5 KiB gzip.
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 387.75 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 388 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -351,7 +359,7 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 615 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 615.5 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -383,7 +391,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 292 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 292.25 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
