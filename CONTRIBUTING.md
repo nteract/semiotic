@@ -181,6 +181,20 @@ npm run check:consumer-compatibility
 npm run release:check
 ```
 
+After finalizing source and documentation edits, refresh generated task packets
+and then the adoption inventory, in that order:
+
+```bash
+npm run docs:ai-tasks
+npm run prepare:adoption-evals
+npm run check:ai-tasks
+npm run check:adoption-evals
+```
+
+Commit the generated outputs with their inputs. The adoption inventory includes
+the complete `README.md`, so even a README-only edit requires
+`npm run prepare:adoption-evals` after the edit.
+
 `check:consumer-compatibility` installs the built package in a temporary consumer
 with the exact compiler versions in `scripts/consumer-compatibility/toolchain.json`.
 It checks all public JavaScript entries in their browser or server targets with
