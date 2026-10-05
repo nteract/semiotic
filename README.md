@@ -9,7 +9,7 @@
 
 [![MCP Queen operational grade](https://mcpqueen.com/badge/io.github.nteract/semiotic.svg)](https://mcpqueen.com/s/io.github.nteract/semiotic)
 
-A React data visualization library designed for AI-assisted development.
+A React data visualization library designed for AI-assisted development and streaming data. 
 
 Start with a small chart component. Add network graphs, streaming data and
 coordinated views when the task needs them. Structured schemas, diagnostics
