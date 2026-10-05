@@ -612,7 +612,9 @@ function Beacon({ x, y }) {
         <code>getNetworkPerspectiveSize(perspective, [groundWidth, groundHeight], bounds?)</code>
         returns the screen plot size needed at scale 1, including thickness, declared decoration
         bounds and fit padding. Add chart margins to obtain the outer width and height.
-        <code>fit: "contain"</code> still only shrinks: keep your layout's ground dimensions
+        Projected views require <code>fit: "contain"</code> (the default); the helper throws
+        a <code>RangeError</code> for <code>fit: "none"</code>, whose origin-based placement
+        cannot guarantee contained bounds. Contain fitting still only shrinks: keep your layout's ground dimensions
         fixed when using the returned screen dimensions. The helper cannot infer node elevations,
         token radii or custom chrome; include those in the bounds argument. Upright extents are
         screen pixels; ground boxes are projected.
@@ -648,7 +650,9 @@ const [width, height] = getNetworkPerspectiveSize(perspective, groundSize)
         <code>perspective</code> prop in React and static rendering. Flow Circuit projects the
         fixed apparatus and tape readings through a network frame; use its
         <code>networkFrameProps</code> for projected view options such as zoom. Its existing
-        <code>frameProps</code> configures the flat physics view.
+        <code>frameProps</code> configures the flat physics view. Top-level annotations anchored
+        with <code>bodyId</code> follow the same module in both views, including static SVG;
+        an explicit <code>pointId</code> takes precedence over that alias.
       </p>
 
       <h2 id="svg-export">SVG export and build integration</h2>

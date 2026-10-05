@@ -37,6 +37,37 @@ waits for the initial projection tween to settle before locating its hover targe
 The new atlas fixture locates marks through their real annotation anchors and
 clicks beside the annotation so the test widget cannot intercept clicks.
 
+### Review follow-up
+
+Flow Circuit now normalizes top-level `bodyId` annotations to `pointId` before
+passing them to the projected network view. The shared atlas server adapter
+forwards those mapped annotations, preserving frame-level overrides. Regression
+coverage compares the same text, label and widget annotations against explicit
+point anchors in flat/projected React SSR and static SVG, checks rendered annotation
+evidence, retains explicit `pointId` precedence, and verifies input immutability.
+The related-surface audit covers all three atlas readers' annotation overrides
+and the existing physics alias normalizer. Live network widgets now accept the
+shared `pointId` anchor, with precedence over the existing `nodeId` alias. They
+reuse the existing node-center helper, including the drawn center of glyphs,
+instead of duplicating geometry calculations. Tests check camera-adjusted
+position and activation callbacks. The live projected Flow Circuit fixture now
+uses a `bodyId` widget to locate marks for hover/resize/camera checks.
+
+`getNetworkPerspectiveSize` now requires `fit: "contain"` (the default) for
+projected views and throws `RangeError` for `fit: "none"`. Origin-based placement
+cannot promise containment from the projected span alone; some origins place
+content outside every possible positive canvas size. Flat views still return
+their ground dimensions. Tests cover rejection for all five projection presets
+and verify that the wide `[1800, 120]` contain-fit example stays within its
+returned canvas at scale 1, including decoration extents. The public JSDoc,
+perspective guide, AI reference and changelog describe this requirement.
+
+Follow-up verification passed: 350 unit tests across 34 files; three atlas browser
+tests against the production build (hover, selection, dismissal, resize and camera);
+source/test TypeScript, targeted ESLint, custom lint, file-size and API-surface
+checks; production build and size gates with unchanged limits; public ESM/CJS
+sizing probes; documentation build and AI/schema/reference consistency checks.
+
 ## Package cost
 
 Measured a clean HEAD archive and the final implementation with identical local

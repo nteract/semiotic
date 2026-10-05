@@ -9,6 +9,7 @@ import type { PhysicsCustomChartProps } from "../../charts/physics/PhysicsCustom
 import { circuitModuleDatum } from "./flowCircuitSemantics"
 import type { BaseChartProps } from "../../charts/shared/types"
 import type { NetworkCustomChartProps } from "../../charts/custom/NetworkCustomChart"
+import { normalizePhysicsAnnotations } from "../../stream/physics/physicsAnnotationContext"
 
 const noTooltip = () => null
 
@@ -86,6 +87,7 @@ export function flowCircuitNetworkChartProps(props: FlowCircuitChartProps) {
   const { key: _key, data, layout: _layout, paused: _paused, frameProps: _frameProps, ...common } = flowCircuitChartProps(props)
   return {
     ...common,
+    annotations: normalizePhysicsAnnotations(common.annotations),
     nodes: data,
     edges: props.circuit.atlas.source.edges,
     layout: flowCircuitNetworkLayout,

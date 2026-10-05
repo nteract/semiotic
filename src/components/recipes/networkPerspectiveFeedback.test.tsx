@@ -219,12 +219,32 @@ describe("downstream perspective contracts", () => {
       perspective: resolveNetworkPerspective(perspective)!
     })
     expect(scene.frame.scale).toBe(1)
+    const fitted = scene.frame.bounds!
+    expect(fitted.x).toBeGreaterThanOrEqual(0)
+    expect(fitted.y).toBeGreaterThanOrEqual(0)
+    expect(fitted.x + fitted.width).toBeLessThanOrEqual(size[0])
+    expect(fitted.y + fitted.height).toBeLessThanOrEqual(size[1])
     expect(size[1]).toBeGreaterThan(600)
     expect(getNetworkPerspectiveSize("flat", [1800, 120])).toEqual([1800, 120])
+    expect(
+      getNetworkPerspectiveSize({ type: "flat", fit: "none" }, [1800, 120])
+    ).toEqual([1800, 120])
     expect(() => getNetworkPerspectiveSize(perspective, [-1, NaN])).toThrow(
       RangeError
     )
   })
+
+  it.each(["isometric", "pixel", "dimetric", "military", "cabinet"] as const)(
+    "rejects canvas sizing for unfitted %s projections",
+    (type) => {
+      expect(() =>
+        getNetworkPerspectiveSize(
+          { type, fit: "none", fitPadding: 0 },
+          [1800, 120]
+        )
+      ).toThrow('getNetworkPerspectiveSize requires fit: "contain"')
+    }
+  )
 
   it("emits a single flat token rim and stable SVG roles", () => {
     const props = {

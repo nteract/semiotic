@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   precision retains at least eight decimals for transform coefficients and angles.
 - Perspective fitting includes upright lineage card chrome and custom transit
   station bounds, even with zero fit padding.
+- Flow Circuit preserves `bodyId` annotation anchors when switching between flat
+  and projected views, in React and static SVG. Explicit `pointId` anchors retain precedence.
+  Live network widgets also accept `pointId`, preserving their node placement and activation.
+- `getNetworkPerspectiveSize` requires the default `fit: "contain"` for projected
+  views and throws `RangeError` for `fit: "none"`, whose origin-based placement can
+  clip a canvas sized only from the projected bounds. Flat sizing is unchanged.
 - Placement components share React type identity across package entry points in
   ESM and CommonJS. Narrow helper imports no longer traverse the chart family.
 - Library minification removes misplaced PURE annotations while retaining valid

@@ -29,6 +29,7 @@ function atlasConfig<P>(
         colorScheme,
         {
           ...common,
+          ...(props.annotations != null && { annotations: props.annotations }),
           ...props.frameProps as Record<string, unknown>,
           title: props.title,
           description: props.description,

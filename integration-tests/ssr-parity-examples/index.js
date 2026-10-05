@@ -60,7 +60,7 @@ function ProjectedAtlasCase({ Component, fixture }) {
       ...(fixture.component === "MotifBraidChart"
         ? { onClick: (datum) => setSelected(String(datum.id)) }
         : { onSelectNode: setSelected }),
-      annotations: [{ type: "widget", nodeId, dx: 0, dy: 0, width: 1, height: 1,
+      annotations: [{ type: "widget", ...(fixture.component === "FlowCircuitChart" ? { bodyId: nodeId } : { nodeId }), dx: 0, dy: 0, width: 1, height: 1,
         content: React.createElement("span", { "data-testid": "projected-node-anchor", style: { pointerEvents: "none" } }) }]
     })
   )

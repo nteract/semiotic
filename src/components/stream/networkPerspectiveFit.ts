@@ -147,8 +147,11 @@ export function createNetworkPerspectiveFrame(
  * Screen size needed to project a ground rectangle at scale 1, including piece
  * thickness, fitPadding and optional decoration bounds. Use the returned size
  * for the canvas while keeping the layout's ground dimensions unchanged.
+ * Requires `fit: "contain"` (the default) for projected views; `fit: "none"`
+ * positions around the canvas origin and cannot guarantee contained bounds.
  * Declare token radii/custom chrome as fixed `extent` bounds; this helper does
  * not infer mark geometry, elevation accessors, labels, or regions from data.
+ * @throws {RangeError} For invalid ground dimensions or a projected `fit: "none"`.
  */
 export function getNetworkPerspectiveSize(
   perspective: NetworkPerspective | null | undefined,
@@ -161,6 +164,9 @@ export function getNetworkPerspectiveSize(
   }
   const resolved = resolveNetworkPerspective(perspective)
   if (!resolved) return [width, height]
+  if (resolved.fit === "none") {
+    throw new RangeError('getNetworkPerspectiveSize requires fit: "contain"')
+  }
   const samples = new PerspectiveFitSamples(resolved)
   const thickness = Math.max(0, Number.isFinite(resolved.config.thickness) ? resolved.config.thickness! : 6)
   for (const x of [0, width]) for (const y of [0, height]) {

@@ -7,6 +7,7 @@ import { MotifBraidChart } from "./MotifBraidChart"
 import { DependencyForestChart } from "./DependencyForestChart"
 import { FlowCircuitChart } from "./FlowCircuitChart"
 import { prepareNetworkAtlas } from "./prepare"
+import { prepareMotifBraid } from "./braid"
 import { supplierStory } from "../../../../scripts/network-atlas/stories/supplierStory"
 import { flowCircuitStory } from "../../../../scripts/network-atlas/stories/flowCircuitStories"
 import { readCircuitEdition } from "./flowCircuitTape"
@@ -25,6 +26,7 @@ const fixture = JSON.parse(
 )
 const prepared = prepareNetworkAtlas(fixture.spec, fixture.source)
 if (!prepared.ok) throw new Error("Invalid fixture")
+const firstBraidGroup = prepareMotifBraid(prepared.atlas).groups[0]
 const { circuit, observed } = flowCircuitStory("etl")
 const circuitProps = {
   circuit,
@@ -41,6 +43,52 @@ const common = {
 }
 
 describe("atlas perspective readers", () => {
+  it.each(["flat", "isometric"] as const)(
+    "preserves body-anchored Flow Circuit annotations in the %s view",
+    (perspective) => {
+      const bodyId = circuit.modules[0].nodeId
+      for (const type of ["text", "label", "widget"]) {
+        const annotation = Object.freeze({
+          type,
+          bodyId,
+          label: "QueueAnnotation",
+          ...(type === "widget" && { content: <span>QueueAnnotation</span> }),
+          dx: 12,
+          dy: -12
+        })
+        const props = { ...circuitProps, ...common, perspective }
+        const expectedAnnotations = [{ ...annotation, pointId: bodyId }]
+        const expected = renderChartWithEvidence("FlowCircuitChart", {
+          ...props,
+          annotations: expectedAnnotations
+        })
+        const expectedHtml = renderToStaticMarkup(
+          <FlowCircuitChart {...props} annotations={expectedAnnotations} />
+        )
+        expect(expected.svg).toContain("QueueAnnotation")
+        expect(expectedHtml).toContain("QueueAnnotation")
+        for (const annotations of [
+          [annotation],
+          [{ ...annotation, bodyId: "missing-body", pointId: bodyId }]
+        ]) {
+          const actual = renderChartWithEvidence("FlowCircuitChart", {
+            ...props,
+            annotations
+          })
+          expect(actual.evidence.annotationCount).toBe(1)
+          expect(actual.evidence.unrenderedAnnotationCount).toBe(0)
+          expect(actual.svg).toBe(expected.svg)
+          expect(
+            renderToStaticMarkup(
+              <FlowCircuitChart {...props} annotations={annotations} />
+            )
+          ).toBe(expectedHtml)
+        }
+        expect(annotation).not.toHaveProperty("pointId")
+      }
+    }
+  )
+
   it.each([
     ["MotifBraidChart", { atlas: prepared.atlas }, MotifBraidChart],
     [
@@ -53,6 +101,31 @@ describe("atlas perspective readers", () => {
     "projects %s in React and static SVG with semantic evidence",
     (name, data, Component) => {
       const props = { ...data, ...common, perspective: "isometric" as const }
+      const pointId =
+        name === "MotifBraidChart"
+          ? `vertex:${firstBraidGroup.partition ?? "all"}:${firstBraidGroup.signature.split(">")[0]}`
+          : name === "DependencyForestChart"
+            ? "X"
+            : circuit.modules[0].nodeId
+      const overridden = {
+        ...props,
+        annotations: [{ type: "text", pointId, label: "TopLevelNote" }],
+        [name === "FlowCircuitChart" ? "networkFrameProps" : "frameProps"]: {
+          annotations: [{ type: "text", pointId, label: "FrameNote" }]
+        }
+      }
+      for (const markup of [
+        renderChartWithEvidence(name, overridden).svg,
+        renderToStaticMarkup(
+          React.createElement(
+            Component as React.ComponentType<typeof overridden>,
+            overridden
+          )
+        )
+      ]) {
+        expect(markup).toContain("FrameNote")
+        expect(markup).not.toContain("TopLevelNote")
+      }
       const projected = renderChartWithEvidence(name, props)
       const flat = renderChartWithEvidence(name, {
         ...props,
@@ -63,10 +136,11 @@ describe("atlas perspective readers", () => {
         expect(projected.svg).toContain('data-perspective-part="slab-top"')
       expect(projected.svg).not.toBe(flat.svg)
       if (name === "FlowCircuitChart") {
-      const background = renderChartWithEvidence(name, {
-        ...props, frameProps: { background: "#dbf7e0" }
-      })
-      expect(background.svg).toContain('fill="#dbf7e0"')
+        const background = renderChartWithEvidence(name, {
+          ...props,
+          frameProps: { background: "#dbf7e0" }
+        })
+        expect(background.svg).toContain('fill="#dbf7e0"')
         expect(projected.evidence.edgeCount).toBe(
           circuit.atlas.source.edges.length
         )
