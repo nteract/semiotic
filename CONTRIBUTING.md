@@ -71,14 +71,19 @@ benchmarks/       # vitest bench suites
 
 ### Choose the smallest useful check
 
-Use this three-tier loop instead of beginning with the full release suite:
+Start with the smallest useful check before running the full release suite:
 
 1. **Focused:** `npx vitest run path/to/changed.test.tsx` (and targeted ESLint
    for source edits). Run this while implementing.
 2. **Fast shared gate:** `npm run check:fast` when a change crosses component,
    schema, or generated-surface boundaries.
-3. **Release gate:** `npm run release:check` only for a release candidate or a
-   shared/public-surface change that needs the complete contract matrix.
+3. **Release preflight:** `npm run check:release-preflight` checks the dependency
+   audit and source/generated contracts before building or running browsers.
+   It reports all failed checks together. The tag workflow runs it before types
+   and browser jobs, including when manually recovering an older tag.
+4. **Release gate:** `npm run release:check` only for a release candidate or a
+   shared/public-surface change that needs the complete contract matrix. It and
+   `prepublishOnly` run the release preflight first.
 
 ### New-chart checklist
 
@@ -191,7 +196,9 @@ npm run check:ai-tasks
 npm run check:adoption-evals
 ```
 
-Commit the generated outputs with their inputs. The adoption inventory includes
+Commit the generated outputs with their inputs. Task packets fingerprint
+`package.json` and `package-lock.json`, so dependency-only fixes require this
+refresh too. The adoption inventory includes
 the complete `README.md`, so even a README-only edit requires
 `npm run prepare:adoption-evals` after the edit.
 

@@ -148,6 +148,10 @@ npm run baseline:machine
 npm run baseline:browser
 
 echo "==> Validating the complete release branch before commit/push"
+# Surface, instruction, and dependency changes invalidate task identities;
+# adoption inventory in turn fingerprints the generated packets.
+npm run docs:ai-tasks
+npm run prepare:adoption-evals
 npm run release:check
 git diff --check
 

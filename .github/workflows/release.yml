@@ -63,7 +63,7 @@ jobs:
 
   source-preflight:
     needs: npm-publish-preflight
-    name: Release source and test types
+    name: Release dependency, generated-source, and type preflight
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -73,6 +73,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ env.RELEASE_TAG }}
+
+      # Use the selected workflow's check ordering even when recovering an
+      # older tag. The checks still execute against the untouched tagged source.
+      - name: Checkout release preflight harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          path: .release-preflight
+          sparse-checkout: scripts/check-release-preflight.ts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -96,6 +107,9 @@ jobs:
             sleep "$delay"
           done
 
+      - name: Check dependencies and generated source before expensive jobs
+        run: node --experimental-strip-types .release-preflight/scripts/check-release-preflight.ts
+
       # Explicit preparation also supports manual recovery of older tags whose
       # test typecheck command did not yet build its own declarations.
       - name: Check source and test types before browser jobs
@@ -103,6 +117,7 @@ jobs:
           npm run typescript
           npm run build:declarations
           npm run typescript:tests
+          npm run typescript:mcp
 
   docs-examples:
     needs: source-preflight

@@ -34,6 +34,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check dependencies and generated task inputs
+        run: |
+          npm audit --registry=https://registry.npmjs.org --audit-level=moderate
+          npm run check:ai-tasks
+          npm run check:adoption-evals
+
       - name: Check source policy and repository lints
         run: |
           npm run check:router-alignment
@@ -71,9 +77,7 @@ jobs:
           npm run check:ai-surface
           npm run check:ai-contracts
           npm run check:ai-instructions
-          npm run check:ai-tasks
           npm run test:adoption-evals
-          npm run check:adoption-evals
           npx tsc -p scripts/ai-tasks/tsconfig.json
           npx tsc -p scripts/superpersuasion/tsconfig.json
           npx tsc -p scripts/jobs-report/tsconfig.json
