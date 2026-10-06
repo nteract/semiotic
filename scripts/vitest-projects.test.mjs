@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import test from "node:test"
@@ -6,6 +7,30 @@ import { BaseSequencer, createVitest } from "vitest/node"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const config = resolve(root, "vitest.config.mts")
+
+test("Vitest discovery excludes Node test suites while retaining script unit tests", async () => {
+  const ctx = await createVitest("test", { root, config, watch: false })
+  try {
+    const specs = await ctx.globTestSpecifications()
+    const nodeTests = specs.filter((spec) =>
+      /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']node:test["']/.test(
+        readFileSync(spec.moduleId, "utf8")
+      )
+    )
+    assert.deepEqual(
+      nodeTests.map((spec) => spec.moduleId),
+      [],
+      "Node test suites must run via node --test, outside Vitest's browser environment"
+    )
+    assert(
+      specs.some((spec) =>
+        spec.moduleId.endsWith("/scripts/network-atlas/acceptance.test.tsx")
+      )
+    )
+  } finally {
+    await ctx.close()
+  }
+})
 
 test("confinement runs in its own worker group without losing or duplicating shard coverage", async () => {
   const ctx = await createVitest("test", { root, config, watch: false })
