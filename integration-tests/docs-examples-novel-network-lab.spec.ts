@@ -55,41 +55,65 @@ async function moveToNode(page: Page, pane: Locator, view: string) {
     // Locate the filled, pinned Copy circle in the actual canvas. Other review
     // nodes are dimmed, so only this circle uses the opaque department color.
     const canvas = pane.locator("canvas").first()
-    const pixel = await canvas.evaluate((element: HTMLCanvasElement) => {
-      const hex = getComputedStyle(element)
-        .getPropertyValue("--semiotic-category-3")
-        .trim()
-      const rgb = [1, 3, 5].map((offset) =>
-        parseInt(hex.slice(offset, offset + 2), 16)
-      )
-      const { data } = element
-        .getContext("2d")!
-        .getImageData(0, 0, element.width, element.height)
-      let sx = 0,
-        sy = 0,
-        count = 0
-      for (let i = 0; i < data.length; i += 4) {
-        if (
-          data[i] === rgb[0] &&
-          data[i + 1] === rgb[1] &&
-          data[i + 2] === rgb[2] &&
-          data[i + 3] === 255
-        ) {
-          sx += (i / 4) % element.width
-          sy += Math.floor(i / 4 / element.width)
-          count++
+    const readPixel = () =>
+      canvas.evaluate((element: HTMLCanvasElement) => {
+        const hex = getComputedStyle(element)
+          .getPropertyValue("--semiotic-category-3")
+          .trim()
+        const rgb = [1, 3, 5].map((offset) =>
+          parseInt(hex.slice(offset, offset + 2), 16)
+        )
+        const { data } = element
+          .getContext("2d")!
+          .getImageData(0, 0, element.width, element.height)
+        let sx = 0,
+          sy = 0,
+          count = 0
+        for (let i = 0; i < data.length; i += 4) {
+          if (
+            data[i] === rgb[0] &&
+            data[i + 1] === rgb[1] &&
+            data[i + 2] === rgb[2] &&
+            data[i + 3] === 255
+          ) {
+            sx += (i / 4) % element.width
+            sy += Math.floor(i / 4 / element.width)
+            count++
+          }
         }
-      }
-      const rect = element.getBoundingClientRect()
-      return {
-        count,
-        x: rect.x + ((sx / count) * rect.width) / element.width,
-        y: rect.y + ((sy / count) * rect.height) / element.height
-      }
-    })
-    expect(pixel.count).toBeGreaterThan(100)
-    x = pixel.x
-    y = pixel.y
+        const rect = element.getBoundingClientRect()
+        return {
+          count,
+          x: rect.x + ((sx / count) * rect.width) / element.width,
+          y: rect.y + ((sy / count) * rect.height) / element.height
+        }
+      })
+    // Matching canvas width does not mean the resize transition is finished.
+    // A point sampled mid-transition can be empty by the time mousemove arrives.
+    let previous: Awaited<ReturnType<typeof readPixel>> | undefined
+    let settled = 0
+    await expect
+      .poll(
+        async () => {
+          const pixel = await readPixel()
+          settled =
+            pixel.count > 100 &&
+            previous &&
+            pixel.count === previous.count &&
+            Math.hypot(pixel.x - previous.x, pixel.y - previous.y) < 0.25
+              ? settled + 1
+              : 0
+          previous = pixel
+          x = pixel.x
+          y = pixel.y
+          return settled
+        },
+        {
+          message: "Pinned Copy circle must settle after resize",
+          intervals: [50]
+        }
+      )
+      .toBeGreaterThanOrEqual(3)
   }
   if (view === "sankey") x = box.x + box.width + 13
   if (view === "braid") y -= 24
@@ -202,6 +226,25 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
   await page.mouse.move(2, 2)
   await expect(tooltip(page)).toHaveCount(0)
   expect(errors).toEqual([])
+})
+
+test("force tooltips follow painted marks after repeated resizing", async ({
+  page
+}) => {
+  await page.goto(route)
+  await page.getByRole("button", { name: "Expand A", exact: true }).click()
+  const pane = page.locator('.novel-pane[data-view="force"]')
+  for (const width of [980, 1280, 1100]) {
+    await page.setViewportSize({ width, height: 900 })
+    await moveToNode(page, pane, "force")
+    await expect(tooltip(page).first()).toContainText("Copy")
+    await expect(tooltip(page).first()).toContainText("63 visits")
+    const box = (await tooltip(page).first().boundingBox())!
+    expect(box.x).toBeGreaterThanOrEqual(0)
+    expect(box.x + box.width).toBeLessThanOrEqual(width)
+    await page.mouse.move(2, 2)
+    await expect(tooltip(page)).toHaveCount(0)
+  }
 })
 
 test("guided comparisons, shared pin, resize, theme and source access", async ({
