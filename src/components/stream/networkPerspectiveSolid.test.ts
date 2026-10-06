@@ -67,6 +67,20 @@ describe("extrudeOutline", () => {
     }
   })
 
+  it("orders mirror-image walls identically despite coordinate roundoff", () => {
+    // A token's left and right flanks tie in depth; libm roundoff, which
+    // differs across CPU architectures, must not decide which paints first.
+    const rim = (drift: number) =>
+      Array.from({ length: 24 }, (_, i): [number, number] => {
+        const t = (i / 24) * Math.PI * 2
+        const x = Math.cos(t) * 20
+        return [100 + x, 100 + Math.sin(t) * 10 + (x > 0 ? drift : 0)]
+      })
+    const order = (drift: number) => extrudeOutline(rim(drift), 5).map((face) => face.pathD)
+    expect(order(1e-12)).toEqual(order(-1e-12))
+    expect(order(0)).toEqual(order(-1e-12))
+  })
+
   it("merges a curved rim into a few lit bands", () => {
     const ellipse = Array.from({ length: 48 }, (_, i): [number, number] => {
       const t = (i / 48) * Math.PI * 2

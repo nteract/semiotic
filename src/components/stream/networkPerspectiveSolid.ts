@@ -94,7 +94,10 @@ export function extrudeOutline(top: readonly Pt[], drop: number, rim: "faceted" 
     faces.push({
       pathD: polygonPath([...strip, ...bottom]),
       shade,
-      depth: depth ?? strip.reduce((s, p) => s + p[1], 0) / strip.length
+      // Mirror-image walls (a token's left and right flanks) tie in depth, but
+      // libm roundoff varies across CPU architectures; snap so they tie exactly
+      // and the stable sort keeps outline order on every platform.
+      depth: depth ?? Math.round((strip.reduce((s, p) => s + p[1], 0) / strip.length) * 1e6) / 1e6
     })
   }
   let run: number[] = []

@@ -45,13 +45,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Library minification removes misplaced PURE annotations while retaining valid
   factory annotations, eliminating downstream Rollup invalid-annotation warnings.
 - Transit layout ties use locale-independent ID order for repeatable SVG output.
+- Extruded perspective walls paint in the same order on every CPU architecture.
+  Mirror-image flanks of a token tie in depth, and libm roundoff (which differs
+  between arm64 and x64) no longer decides which of them is emitted first.
 - Example routes include readable content in initial HTML, outside noscript,
   before the client application loads.
 
 ### SVG golden compatibility
 
-- Projection precision, fit bounds, part attributes, token-rim options and transit
-  tie ordering can change SVG goldens. Review geometry when updating pinned versions.
+- Projection precision, fit bounds, part attributes, token-rim options, transit
+  tie ordering and extruded-wall tie ordering can change SVG goldens. Review
+  geometry when updating pinned versions.
 - Historical clarification: 3.11 (#1508, e917cf68) introduced lineage arrowheads
   in static SVG (3.10.3 SSR had none) and direction-aware attachment for leftward
   lineage edges. Transit round track caps were present when the recipe shipped
