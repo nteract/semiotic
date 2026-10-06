@@ -558,7 +558,7 @@
     "@chenglou/pretext": "0.0.9",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.5",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@playwright/test": "1.61.1",
     "@size-limit/file": "^14.1.0",
     "@testing-library/dom": "^10.4.1",
@@ -647,7 +647,7 @@
   "optionalDependencies": {
     "gifenc": "^1.0.3",
     "jsdom": "^29.0.2",
-    "sharp": "^0.35.4"
+    "sharp": "^0.35.5"
   },
   "dependencies": {
     "d3-array": "^3.2.4",
