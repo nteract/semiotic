@@ -31,6 +31,17 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Intentional perspective integration features (2026-10-05): compare a clean
+  // HEAD build with this change using the same dependencies and production
+  // options. Root 387.8 -> 388.2 KiB, network 168.1 -> 168.5, server 262.4 ->
+  // 264.4, atlas 292.1 -> 293.1. These add the shared placement identity module,
+  // chrome bounds/options, precision-safe SVG, and Flow Circuit's projected
+  // renderer. Artifact grows by 33 bytes with the token-rim schema option.
+  // The sizing helpers have their own entry; the pictogram kit is unchanged.
+  // Named multi-import output grows less than 0.1 KiB, with its
+  // 308 KiB limit unchanged. Isolation, Vite 7/8 worker retention, and ESM/CJS
+  // identity tests cover the graph boundaries. See the integration audit for
+  // measurement commands and the API/behavior changes that own these costs.
   // Intentional feature cost (2026-10-05): shared chart-size defaults,
   // responsive empty/loading slots, and outlined crosshairs. Defaults are
   // split by family and placeholders resize through CSS; no family coupling
@@ -83,7 +94,7 @@ const ENTRY_GRAPHS = [
   // control layer, and diagnoseConfig gains the annotation field-typo check;
   // measures 385.5 KiB gzip.
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 388 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 388.4 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -166,7 +177,7 @@ const ENTRY_GRAPHS = [
     // identities. The published contract graph now measures 121.6 KiB gzip.
     // Bumped 122→123: histogram valueBands and annotation labelColor in the
     // chart specs measure 122.2 KiB gzip.
-    limitKb: 123
+    limitKb: 123.1
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -209,7 +220,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 165.8 KiB gzip.
   // Shared lazy-module loading changes measure 166.7 KiB; retain narrow headroom.
   // Feature graph: 167.9 KiB (previous built HEAD: 166.8 KiB).
-  { entry: "network.module.min.js", label: "network", limitKb: 168.25 },
+  { entry: "network.module.min.js", label: "network", limitKb: 168.6 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -270,7 +281,7 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 262.5 },
+  { entry: "server.module.min.js", label: "server", limitKb: 264.5 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -391,7 +402,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 292.25 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 293.2 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

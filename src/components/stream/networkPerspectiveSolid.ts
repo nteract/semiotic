@@ -57,7 +57,7 @@ export function samplePolygon(segs: readonly NormalizedPathSegment[], steps = 8)
  * lighter than right-facing ones. Neighboring walls with the same shade merge
  * into one strip, painted far to near.
  */
-export function extrudeOutline(top: readonly Pt[], drop: number): NetworkPerspectiveFace[] {
+export function extrudeOutline(top: readonly Pt[], drop: number, rim: "faceted" | "flat" = "faceted"): NetworkPerspectiveFace[] {
   const n = top.length
   if (n < 3 || !(drop > 0.05)) return []
   let area = 0
@@ -76,6 +76,7 @@ export function extrudeOutline(top: readonly Pt[], drop: number): NetworkPerspec
     const nx = (sign * dy) / len
     const ny = (-sign * dx) / len
     if (ny <= 0.02) return null
+    if (rim === "flat") return -0.26
     // Quantized so curved outlines merge into a few lit bands. Isometric
     // normals land on half-step ties; absorb coordinate/libm roundoff so
     // ties consistently follow Math.round's direction toward +Infinity.

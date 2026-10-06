@@ -144,7 +144,11 @@ describe("NetworkSVGOverlay", () => {
     expect(css).toContain("pointer-events:auto")
   })
 
-  it("normalizes activation of an HTML widget anchored to a node", () => {
+  it.each([
+    { nodeId: "daemon" },
+    { pointId: "daemon" },
+    { pointId: "daemon", nodeId: "missing-node" }
+  ])("positions and activates an HTML widget anchored with %j", (anchor) => {
     const onAnnotationActivate = vi.fn()
     const onObservation = vi.fn()
     const { getByRole } = render(
@@ -156,6 +160,7 @@ describe("NetworkSVGOverlay", () => {
         margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
         labels={[]}
         chartId="lineage"
+        viewTransform={{ x: 10, y: 5, k: 1.5 }}
         chartType="StreamNetworkFrame"
         sceneNodes={[
           { type: "node", id: "daemon", cx: 100, cy: 60, datum: { id: "daemon" } }
@@ -163,7 +168,7 @@ describe("NetworkSVGOverlay", () => {
         annotations={[{
           id: "daemon-console",
           type: "widget",
-          nodeId: "daemon",
+          ...anchor,
           content: <button>Open daemon</button>
         }]}
         onAnnotationActivate={onAnnotationActivate}
@@ -171,7 +176,9 @@ describe("NetworkSVGOverlay", () => {
       />
     )
 
-    fireEvent.click(getByRole("button"), { detail: 1 })
+    const button = getByRole("button")
+    expect(button.parentElement).toHaveStyle({ left: "164px", top: "83px" })
+    fireEvent.click(button, { detail: 1 })
 
     expect(onAnnotationActivate).toHaveBeenCalledWith(expect.objectContaining({
       annotationId: "daemon-console",
@@ -182,5 +189,28 @@ describe("NetworkSVGOverlay", () => {
       annotationId: "daemon-console",
       chartId: "lineage"
     }))
+  })
+
+  it("anchors widgets to a glyph's drawn center", () => {
+    const { getByText } = render(
+      <NetworkSVGOverlay
+        width={200}
+        height={120}
+        totalWidth={240}
+        totalHeight={160}
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        labels={[]}
+        sceneNodes={[{
+          type: "glyph", id: "module", cx: 100, cy: 60, size: 30, datum: null,
+          glyph: {
+            viewBox: [40, 40], anchor: [0.5, 1],
+            parts: [{ d: "M0 0 H40 V40 H0 Z" }]
+          }
+        }]}
+        annotations={[{ type: "widget", pointId: "module", content: <span>Glyph note</span> }]}
+      />
+    )
+    // The 30px glyph stands above y=60, so its center is (100, 45).
+    expect(getByText("Glyph note").parentElement).toHaveStyle({ left: "104px", top: "33px" })
   })
 })

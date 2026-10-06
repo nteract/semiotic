@@ -102,6 +102,8 @@ export const EXTERNAL_RUNTIME_PACKAGES = Object.freeze([
  * Node target, not a browser payload.
  */
 export const NAMED_IMPORT_CASES = Object.freeze([
+  { exportKey: "./vite", symbol: "semioticVite", platform: "node" },
+  { exportKey: "./network/perspective/core", symbol: "getNetworkPerspectiveSize", platform: "browser" },
   { exportKey: "./atlas", symbol: "MotifBraidChart", platform: "browser" },
   {
     exportKey: "./atlas/core",

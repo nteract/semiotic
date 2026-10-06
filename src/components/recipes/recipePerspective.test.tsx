@@ -158,8 +158,8 @@ describe("recipes follow an active perspective", () => {
     expectFlatUntouched(r)
     expectNoWarning(r)
     const lifted = lineageDagLayout(context(nodes, edges, config, ISO))
-    // Two hull boxes and two hull labels reach past the nodes.
-    expect(lifted.perspectiveBounds).toHaveLength(4)
+    // Three upright cards, two hull boxes and two hull labels.
+    expect(lifted.perspectiveBounds).toHaveLength(7)
     expectBoundsInPlot(lifted)
     const doc = projected(decorations(r))
     expect(unplaced(doc)).toEqual([])
@@ -273,7 +273,9 @@ describe("recipes follow an active perspective", () => {
     expect(counts.billboard).toBeGreaterThanOrEqual(4)
     // Token-style placement: translate, normalized ground map, translate back.
     const lay = doc.querySelector('[data-perspective="on-ground"]')!.getAttribute("transform")!
-    expect(lay).toMatch(/^translate\([-\d.]+,[-\d.]+\) matrix\(0\.7071 0\.4041 -0\.7071 0\.4041 0 0\) translate\(/)
+    const coefficients = lay.match(/matrix\(([^)]+)\)/)![1].split(" ").map(Number)
+    const k = Math.hypot(frame.matrix[0], frame.matrix[2])
+    expect(coefficients).toEqual([...frame.matrix.slice(0, 4).map((v) => v / k), 0, 0])
   })
 
   it("transitDiagram: station labels keep their offset, custom stations stand", () => {

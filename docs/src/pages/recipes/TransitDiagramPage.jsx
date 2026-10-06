@@ -306,6 +306,20 @@ export default function TransitDiagramPage() {
         derived line membership.
       </p>
 
+      <p>
+        Under a perspective, custom station content is upright by default. Use
+        <code>chromePlacement: "ground"</code> to print it on the projected surface.
+        Declare larger custom glyphs with <code>stationBounds(info)</code>, returning
+        <code>[left, right, top, bottom]</code> around the fitted center. Without this callback,
+        the fit reserves the station radius on each side. Bounds follow the chosen placement.
+      </p>
+      <p>
+        Automatic layout is deterministic for fixed data and configuration, including reordered
+        node and edge arrays with unique IDs. Ties use code-point ID order, independent of the
+        host locale. Repeated static rendering with the same precision is byte-stable; SVG
+        formatting and geometry can change between library versions, so pin versions for goldens.
+      </p>
+
       <h2 id="configuration">Core configuration</h2>
       <table className="recipe-customization-table">
         <thead>

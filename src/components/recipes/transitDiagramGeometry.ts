@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "./recipeUtils"
 import type { Datum } from "../charts/shared/datumTypes"
 
 export interface TransitDiagramPoint {
@@ -55,7 +56,7 @@ function readCoordinate(
 }
 
 function stableIds(values: Iterable<string>): string[] {
-  return [...values].sort((a, b) => a.localeCompare(b))
+  return [...values].sort((a, b) => compareRecipeIds(a, b))
 }
 
 function adjacencyFor(
@@ -89,9 +90,9 @@ function connectedComponents(adjacency: Map<string, Set<string>>): string[][] {
         queue.push(neighbor)
       }
     }
-    components.push(component.sort((a, b) => a.localeCompare(b)))
+    components.push(component.sort((a, b) => compareRecipeIds(a, b)))
   }
-  return components.sort((a, b) => b.length - a.length || a[0].localeCompare(b[0]))
+  return components.sort((a, b) => b.length - a.length || compareRecipeIds(a[0], b[0]))
 }
 
 function distancesFrom(
@@ -124,7 +125,7 @@ function farthest(
   for (const [id, depth] of distances) {
     if (
       depth > maximum ||
-      (depth === maximum && id.localeCompare(result) < 0)
+      (depth === maximum && compareRecipeIds(id, result) < 0)
     ) {
       result = id
       maximum = depth
@@ -150,7 +151,7 @@ function orderedLevels(
   for (const depth of depths.values()) maxDepth = Math.max(maxDepth, depth)
   const levels = Array.from({ length: maxDepth + 1 }, () => [] as string[])
   for (const id of componentIds) levels[depths.get(id) ?? 0].push(id)
-  levels.forEach((level) => level.sort((a, b) => a.localeCompare(b)))
+  levels.forEach((level) => level.sort((a, b) => compareRecipeIds(a, b)))
 
   const reorder = (levelIndex: number, neighborIndex: number) => {
     const neighborOrder = new Map(levels[neighborIndex].map((id, index) => [id, index]))
@@ -164,7 +165,7 @@ function orderedLevels(
     }
     const centers = new Map(levels[levelIndex].map((id) => [id, barycenter(id)]))
     levels[levelIndex].sort(
-      (a, b) => centers.get(a)! - centers.get(b)! || a.localeCompare(b),
+      (a, b) => centers.get(a)! - centers.get(b)! || compareRecipeIds(a, b),
     )
   }
 

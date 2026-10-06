@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `getNetworkPerspectiveSize(perspective, groundSize, bounds?)` measures a scale-1
+  projected plot, including thickness, declared chrome and fit padding. Available
+  from the narrow `semiotic/network/perspective/core` entry.
+- Lineage DAG `showArrowheads: false` suppresses recipe terminators. Lineage and
+  transit recipes accept `chromePlacement: "upright" | "ground"`; transit accepts
+  `stationBounds(info)` for custom station extents.
+- `perspective.tokenRim: "flat"` simplifies a circular token to a rim and top path.
+  SVG parts expose `data-perspective-part` roles and face indices for postprocessors.
+  SVG path whitespace and comma formatting are not a public contract.
+- `perspective` on MotifBraidChart, DependencyForestChart and FlowCircuitChart,
+  including static SVG and evidence. Flow Circuit uses the same fixed apparatus
+  and tape readings in a network frame; `networkFrameProps` configures that view.
+- `semioticVite()` from `semiotic/vite` removes unused Semiotic worker assets on
+  Vite 7 while preserving external URLs for used workers. Keep standard worker
+  filenames when customizing Vite asset naming. Vite 8 already avoids the orphans.
+
+### Fixed
+
+- Ground placement retains full affine coefficients, eliminating distance-dependent
+  drift between projected marks, hulls, card content and arrowheads. Static SVG
+  precision retains at least eight decimals for transform coefficients and angles.
+- Perspective fitting includes upright lineage card chrome and custom transit
+  station bounds, even with zero fit padding.
+- Flow Circuit preserves `bodyId` annotation anchors when switching between flat
+  and projected views, in React and static SVG. Explicit `pointId` anchors retain precedence.
+  Live network widgets also accept `pointId`, preserving their node placement and activation.
+- `getNetworkPerspectiveSize` requires the default `fit: "contain"` for projected
+  views and throws `RangeError` for `fit: "none"`, whose origin-based placement can
+  clip a canvas sized only from the projected bounds. Flat sizing is unchanged.
+- Placement components share React type identity across package entry points in
+  ESM and CommonJS. Narrow helper imports no longer traverse the chart family.
+- Library minification removes misplaced PURE annotations while retaining valid
+  factory annotations, eliminating downstream Rollup invalid-annotation warnings.
+- Transit layout ties use locale-independent ID order for repeatable SVG output.
+- Example routes include readable content in initial HTML, outside noscript,
+  before the client application loads.
+
+### SVG golden compatibility
+
+- Projection precision, fit bounds, part attributes, token-rim options and transit
+  tie ordering can change SVG goldens. Review geometry when updating pinned versions.
+- Historical clarification: 3.11 (#1508, e917cf68) introduced lineage arrowheads
+  in static SVG (3.10.3 SSR had none) and direction-aware attachment for leftward
+  lineage edges. Transit round track caps were present when the recipe shipped
+  in 3.9.2. Motif label `pointer-events="none"` shipped with the 3.11 network
+  pipeline work (b47604758); these details were missing from earlier notes.
+
 ## [3.12.0] - 2026-09-30
 
 ### Added
@@ -28,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `diagnoseConfig` / `--doctor` warn with `ANNOTATION_UNKNOWN_FIELD` when an
   annotation key looks like a misspelled field (`fil` → `fill`); keys naming a
   data field or accessor are coordinates and are never flagged.
-- `perspective` on every network chart (ForceDirectedGraph, SankeyDiagram,
+- `perspective` on the core network charts (ForceDirectedGraph, SankeyDiagram,
   ProcessSankey, ChordDiagram, TreeDiagram, Treemap, CirclePack, OrbitDiagram,
   NetworkCustomChart, and StreamNetworkFrame) draws the finished layout in a
   parallel projection: `"isometric"` (true 30°), `"pixel"` (2:1),
@@ -50,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ground-aligned labels, pictogram `glyph`s, and an animated `transition`.
   Grid, plates, regions, routing, and extrusion load on demand in browsers;
   `preloadNetworkPerspectiveExtras()` loads them before hydration.
-- `semiotic/network/perspective`: `isometricGlyphs` (box, server, database,
+- `semiotic/network/perspective/core`: `isometricGlyphs` (box, server, database,
   cylinder, tile, cloud, pin), builders (`isoBox`, `isoStack`, `isoCylinder`,
   `isoTile`, `isoCloud`, `isoPin`), and an accessible `PerspectiveToggle`.
 - `semiotic/network` exports `resolveNetworkPerspective`,
@@ -515,8 +564,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   field. Dagre edges retain arrows, clipped endpoints, and full semantic labels.
   (#1503, #1508)
 - Lineage domains use actual layer/row extents, including negative and sparse
-  positions. Inferred backedges, cycles, and self-loops stay within the plot and
-  retain direction arrows; edge dashes/caps agree across canvas and SVG. (#1508)
+  positions. Inferred backedges, cycles, and self-loops stay within the plot.
+  Lineage now draws direction arrowheads in canvas and static SVG (3.10.3 SSR
+  had none); leftward edges attach to the corresponding side of each node.
+  Edge dashes/caps agree across canvas and SVG. (#1508, e917cf68)
 - Interval sampling validates steps/domains and retains fractional endpoints
   without drift. Timeline bars fit short lanes; bullet charts compact skipped
   rows and disclose truncation; waffle charts disclose omitted categories and

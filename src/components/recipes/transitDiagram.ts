@@ -1,7 +1,9 @@
+import { compareRecipeIds } from "./recipeUtils"
 import { createElement, type ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
-import { NetworkPerspectiveBillboard } from "../stream/networkPerspectivePlacement"
+import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
+import type { NetworkPerspectiveBound } from "../stream/networkPerspective"
 import type {
   NetworkArcNode,
   NetworkCurvedEdge,
@@ -20,73 +22,8 @@ import {
   type TransitDiagramPositionResult,
 } from "./transitDiagramGeometry"
 
-export interface TransitDiagramLineDescriptor {
-  id: string
-  color?: string
-  label?: string
-}
-
-export type TransitDiagramLineValue =
-  | string
-  | number
-  | TransitDiagramLineDescriptor
-  | ReadonlyArray<string | number | TransitDiagramLineDescriptor>
-
-export type TransitDiagramMode = "primary" | "compact" | "minimap"
-
-export interface TransitDiagramStationRenderInfo {
-  /** Raw station datum supplied to the chart. */
-  station: Datum
-  /** Fitted center in plot coordinates. */
-  x: number
-  /** Fitted center in plot coordinates. */
-  y: number
-  /** Radius resolved for the active detail mode. */
-  radius: number
-  /** Ordered line ids that pass through this station. */
-  lineIds: readonly string[]
-  interchange: boolean
-  mode: Exclude<TransitDiagramMode, "minimap">
-}
-
-export interface TransitDiagramConfig {
-  /** Complete authored x/y positions win by default; otherwise use topology. */
-  layoutMode?: "auto" | "authored" | "automatic"
-  /** Station and track level of detail. @default "primary" */
-  mode?: TransitDiagramMode
-  xAccessor?: string | ((d: Datum) => number | undefined)
-  yAccessor?: string | ((d: Datum) => number | undefined)
-  labelAccessor?: string | ((d: Datum) => string)
-  lineAccessor?: string | ((d: Datum) => TransitDiagramLineValue | undefined)
-  lineColorAccessor?: string | ((d: Datum) => string | undefined)
-  /** Derive one line per source node and propagate it through a directed DAG. */
-  lineMode?: "source-rooted"
-  /** Source-node color used by source-rooted lines. Defaults to `color`. */
-  sourceColorAccessor?: string | ((d: Datum) => string)
-  lineColors?: Record<string, string>
-  /** Preferred global order for parallel lines. Remaining lines sort by id. */
-  lineOrder?: string[]
-  /** Field containing authored intermediate `{x,y}` points. @default "points" */
-  pointsAccessor?: string
-  padding?: number
-  componentGap?: number
-  /** Preferred endpoint for the automatic topology layout. */
-  rootId?: string
-  direction?: "left-to-right" | "right-to-left"
-  lineWidth?: number
-  lineGap?: number
-  cornerRadius?: number
-  stationRadius?: number
-  interchangeRadius?: number
-  stationFill?: string
-  stationStroke?: string
-  /** Replace primary/compact station circles with SVG rendered above the tracks. */
-  renderStation?: (info: TransitDiagramStationRenderInfo) => ReactNode
-  showLabels?: boolean
-  labelFontSize?: number
-  labelColor?: string
-  dimOpacity?: number
-}
+import type { TransitDiagramLineDescriptor, TransitDiagramLineValue, TransitDiagramStationRenderInfo, TransitDiagramConfig } from "./transitDiagramTypes"
+export type { TransitDiagramLineDescriptor, TransitDiagramLineValue, TransitDiagramMode, TransitDiagramStationRenderInfo, TransitDiagramConfig } from "./transitDiagramTypes"
 
 interface PreparedNode {
   id: string
@@ -218,7 +155,7 @@ function deriveSourceRootedLines(
   }
 
   const sortedDescriptors = (values: Iterable<TransitDiagramLineDescriptor>) =>
-    [...values].sort((a, b) => a.id.localeCompare(b.id))
+    [...values].sort((a, b) => compareRecipeIds(a.id, b.id))
   return {
     byEdge: new Map(
       edges.map((edge) => [edge, sortedDescriptors(edgeLines.get(edge)?.values() ?? [])]),
@@ -279,7 +216,7 @@ function prepareSegments(
       if (!segment.lines.has(descriptor.id)) segment.lines.set(descriptor.id, { descriptor, edge })
     }
   }
-  return [...segments.values()].sort((a, b) => a.key.localeCompare(b.key))
+  return [...segments.values()].sort((a, b) => compareRecipeIds(a.key, b.key))
 }
 
 function orderLineIds(ids: Iterable<string>, config: TransitDiagramConfig): string[] {
@@ -287,7 +224,7 @@ function orderLineIds(ids: Iterable<string>, config: TransitDiagramConfig): stri
   return [...ids].sort(
     (a, b) =>
       (rank.get(a) ?? Number.POSITIVE_INFINITY) - (rank.get(b) ?? Number.POSITIVE_INFINITY) ||
-      a.localeCompare(b),
+      compareRecipeIds(a, b),
   )
 }
 
@@ -298,7 +235,7 @@ function orderSegmentLines(segment: PhysicalSegment, config: TransitDiagramConfi
     (a, b) =>
       (rank.get(a.descriptor.id) ?? Number.POSITIVE_INFINITY) -
         (rank.get(b.descriptor.id) ?? Number.POSITIVE_INFINITY) ||
-      a.descriptor.id.localeCompare(b.descriptor.id),
+      compareRecipeIds(a.descriptor.id, b.descriptor.id),
   )
 }
 
@@ -359,7 +296,7 @@ function placeLabels(
   const sorted = [...nodes].sort(
     (a, b) =>
       (lineIdsByStation.get(b.id)?.size ?? 0) - (lineIdsByStation.get(a.id)?.size ?? 0) ||
-      a.id.localeCompare(b.id),
+      compareRecipeIds(a.id, b.id),
   )
   for (const node of sorted) {
     const point = positions.get(node.id)
@@ -462,7 +399,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
       data: unwrapDatum<Datum>(wrapper)!,
       wrapper,
     }))
-    .sort((a, b) => a.id.localeCompare(b.id))
+    .sort((a, b) => compareRecipeIds(a.id, b.id))
   const edges: PreparedEdge[] = ctx.edges
     .map((wrapper) => ({
       source: edgeEndpoint(wrapper.source),
@@ -470,7 +407,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
       data: unwrapDatum<Datum>(wrapper)!,
       wrapper,
     }))
-    .sort((a, b) => a.source.localeCompare(b.source) || a.target.localeCompare(b.target))
+    .sort((a, b) => compareRecipeIds(a.source, b.source) || compareRecipeIds(a.target, b.target))
   const positionResult = computeTransitDiagramPositions(nodes, edges, ctx.dimensions.plot, config)
   const sourceRootedLines =
     config.lineMode === "source-rooted"
@@ -556,6 +493,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
   const stationRadii = new Map<string, number>()
   const sceneNodes: NetworkSceneNode[] = []
   const stationGlyphs: ReactNode[] = []
+  const perspectiveBounds: NetworkPerspectiveBound[] = []
   const stationLabel = (node: PreparedNode) =>
     String(readStationLabel(node, config) || node.id)
 
@@ -591,7 +529,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     }
 
     const orderedStops = [...stops.values()].sort(
-      (a, b) => a.x - b.x || a.y - b.y || a.nodes[0].id.localeCompare(b.nodes[0].id),
+      (a, b) => a.x - b.x || a.y - b.y || compareRecipeIds(a.nodes[0].id, b.nodes[0].id),
     )
     for (const stop of orderedStops) {
       const lineIds = orderLineIds(stop.lineIds, config)
@@ -721,7 +659,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
         label,
       })
       if (config.renderStation) {
-        const rendered = config.renderStation({
+        const info: TransitDiagramStationRenderInfo = {
           station: node.data,
           x: point.x,
           y: point.y,
@@ -729,14 +667,21 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
           lineIds,
           interchange,
           mode,
-        })
+        }
+        const rendered = config.renderStation(info)
         if (rendered != null) {
+          if (ctx.perspective) {
+            const [left, right, top, bottom] = config.stationBounds?.(info) ?? [radius, radius, radius, radius]
+            perspectiveBounds.push(config.chromePlacement === "ground"
+              ? { x: point.x - left, y: point.y - top, width: left + right, height: top + bottom, z: "top" }
+              : { x: point.x, y: point.y, extent: [left, right, top, bottom] })
+          }
           // Custom stations stand upright over their projected station
           // under a `perspective`.
           stationGlyphs.push(
             createElement(
-              NetworkPerspectiveBillboard,
-              { key: node.id, x: point.x, y: point.y },
+              config.chromePlacement === "ground" ? NetworkPerspectiveGround : NetworkPerspectiveBillboard,
+              { key: node.id, x: point.x, y: point.y, z: "top" },
               createElement(
                 "g",
                 {
@@ -761,6 +706,7 @@ export const transitDiagramLayout: NetworkCustomLayout<TransitDiagramConfig> = (
     sceneNodes,
     overlays,
     perspective: "manual" as const,
+    ...(perspectiveBounds.length ? { perspectiveBounds } : {}),
     labels: placeLabels(
       nodes,
       positionResult.positions,

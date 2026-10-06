@@ -25,6 +25,7 @@ import {
 } from "./overlayAccessibleText"
 import {
   collectNetworkAnnotationAnchors,
+  nodeCenter,
   type NetworkAnnotationAnchorNode,
 } from "./networkAnnotationAnchors"
 import type { OnObservationCallback } from "../store/ObservationStore"
@@ -227,19 +228,18 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
       })}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG. */}
-    {layoutAnnotations?.filter(a => a.type === "widget" && a.nodeId && sceneNodes).map((annotation, i) => {
+    {layoutAnnotations?.filter(a => a.type === "widget" && (a.pointId != null || a.nodeId != null) && sceneNodes).map((annotation, i) => {
       const isDeferred = annotation._annotationDeferred === true
+      const anchorId = annotation.pointId ?? annotation.nodeId
       const node = sceneNodes!.find(n =>
-        n.id === annotation.nodeId ||
-        (n.datum?.id === annotation.nodeId) ||
-        (n.datum?.data?.id === annotation.nodeId) ||
-        (n.datum?.data?.name === annotation.nodeId)
+        n.id === anchorId ||
+        (n.datum?.id === anchorId) ||
+        (n.datum?.data?.id === anchorId) ||
+        (n.datum?.data?.name === anchorId)
       )
-      if (!node) return null
-      const anchor = projectNetworkPoint({
-        x: node.cx ?? (node.x != null && node.w != null ? node.x + node.w / 2 : node.x ?? 0),
-        y: node.cy ?? (node.y != null && node.h != null ? node.y + node.h / 2 : node.y ?? 0)
-      }, normalizeNetworkView(props.viewTransform))
+      const center = node && nodeCenter(node)
+      if (!center) return null
+      const anchor = projectNetworkPoint(center, normalizeNetworkView(props.viewTransform))
       if (props.viewTransform && (anchor.x < 0 || anchor.y < 0 || anchor.x > width || anchor.y > height)) return null
       const nx = margin.left + anchor.x
       const ny = margin.top + anchor.y
@@ -275,4 +275,3 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
     </>
   )
 }, "NetworkSVGOverlay")
-

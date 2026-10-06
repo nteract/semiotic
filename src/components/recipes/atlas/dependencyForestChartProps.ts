@@ -12,6 +12,7 @@ export type DependencyForestChartProps = DependencyForestLayoutConfig &
     height?: number
     annotations?: NetworkCustomChartProps["annotations"]
     frameProps?: NetworkCustomChartProps["frameProps"]
+    perspective?: NetworkCustomChartProps["perspective"]
     linkedSelection?: Pick<NonNullable<NetworkCustomChartProps["selection"]>, "name">
     onSelectNode?: (id: string) => void
   }
@@ -31,6 +32,7 @@ export function dependencyForestChartProps({
   linkedSelection,
   annotations,
   frameProps,
+  perspective,
   onSelectNode: _onSelectNode,
   ...config
 }: DependencyForestChartProps) {
@@ -52,6 +54,7 @@ export function dependencyForestChartProps({
     selection: linkedSelection,
     annotations,
     frameProps,
+    perspective,
     animate: false as const,
     margin: { top: 12, right: 24, bottom: 12, left: 12 },
     description:

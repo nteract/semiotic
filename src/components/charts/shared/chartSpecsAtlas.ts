@@ -1,4 +1,5 @@
 import { PROP_BAGS, type ChartPropSpec, type ChartSpec } from "./chartSpecCore"
+import { NETWORK_PERSPECTIVE_PROP_SPEC } from "./networkPerspectiveWireSchema"
 import {
   preparedAtlasSchema,
   dependencyProjectionSchema,
@@ -74,6 +75,7 @@ export const ATLAS_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: [],
     ownProps: {
       ...common,
+      perspective: NETWORK_PERSPECTIVE_PROP_SPEC,
       atlas: preparedAtlas,
       colorScheme: PROP_BAGS.common.colorScheme,
       linkedHover: linked.linkedHover,
@@ -109,6 +111,7 @@ export const ATLAS_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: [],
     ownProps: {
       ...common,
+      perspective: NETWORK_PERSPECTIVE_PROP_SPEC,
       ...linked,
       forest: {
         type: "object",
@@ -171,7 +174,9 @@ export const ATLAS_CHART_SPECS: Record<string, ChartSpec> = {
     propBags: [],
     ownProps: {
       ...common,
+      perspective: NETWORK_PERSPECTIVE_PROP_SPEC,
       ...linked,
+      networkFrameProps: { type: "object", description: "Network frame options for projected views; frameProps configures the flat physics view." },
       circuit: {
         type: "object",
         description:

@@ -120,6 +120,15 @@ export default function KstreamsPage() {
         <code>renderChart("NetworkCustomChart", ...)</code>; they never participate in hit-testing.
       </p>
 
+      <p>
+        For projected diagrams, <code>chromePlacement: "upright"</code> keeps card text at a
+        constant pixel size and includes the full card in the perspective fit.
+        Choose <code>chromePlacement: "ground"</code> to print it on the slab.
+        Set <code>showArrowheads: false</code> when your host draws its own edge terminators;
+        the default is <code>true</code>. See the <a href="/features/perspective">perspective
+        guide</a> for sizing a canvas from fixed ground dimensions and selecting SVG parts.
+      </p>
+
       <h2 id="composite-glyphs">Composite glyphs as one hit-testable unit</h2>
       <p>
         Each node is more than a shape + a label: a partition-colored container, a semantic icon, a

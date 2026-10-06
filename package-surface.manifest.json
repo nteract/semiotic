@@ -613,6 +613,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./network/perspective/core",
+      "path": "dist/semiotic-network-perspective-core.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-network-perspective-core.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-network-perspective-core.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-network-perspective-core.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-network-perspective-core.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-network-perspective-core.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./network/zoom",
       "path": "dist/semiotic-network-zoom.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1367,6 +1398,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./vite",
+      "path": "dist/semiotic-vite.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-vite.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-vite.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-vite.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-vite.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-vite.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./xy",
       "path": "dist/xy.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1557,6 +1619,13 @@
         "reason": "Public type entry from `exports` map"
       },
       {
+        "path": "dist/semiotic-network-perspective-core.d.ts",
+        "exports": [
+          "./network/perspective/core"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
         "path": "dist/semiotic-network-perspective.d.ts",
         "exports": [
           "./network/perspective"
@@ -1728,6 +1797,13 @@
         "path": "dist/semiotic-value.d.ts",
         "exports": [
           "./value"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-vite.d.ts",
+        "exports": [
+          "./vite"
         ],
         "reason": "Public type entry from `exports` map"
       },

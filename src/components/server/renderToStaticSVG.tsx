@@ -136,7 +136,8 @@ export interface RenderChartOptions {
    * Decimal places for SVG geometry serialization. This opt-in postprocess
    * rounds numeric SVG attributes, path data, transforms, and point lists;
    * text nodes, IDs, and arbitrary CSS/style strings are left untouched.
-   * Values are clamped to the practical 0–8 range.
+   * Values are clamped to the practical 0–8 range. Transform coefficients
+   * and angles retain at least 8 decimals to prevent distance-dependent drift.
    */
   precision?: number
   /** Preserve an interpretation contract in machine-readable render evidence. */
@@ -146,6 +147,8 @@ export interface RenderChartOptions {
 const PRECISION_ATTRIBUTES = new Set([
   "d",
   "transform",
+  "gradientTransform",
+  "patternTransform",
   "points",
   "viewBox",
   "x",
@@ -197,18 +200,19 @@ function roundSvgNumber(token: string, precision: number): string {
  * transform, and point-list grammars, so retain the original gaps and insert
  * one only where the source deliberately used an implicit numeric boundary.
  */
-function roundSvgGeometryValue(value: string, precision: number): string {
+function roundSvgGeometryValue(value: string, precision: number, linearCount = 0): string {
   const numberPattern = new RegExp(SVG_NUMBER.source, SVG_NUMBER.flags)
   let roundedValue = ""
   let cursor = 0
   let hasPreviousNumber = false
   let match: RegExpExecArray | null
+  let index = 0
 
   while ((match = numberPattern.exec(value))) {
     const gap = value.slice(cursor, match.index)
     if (hasPreviousNumber && gap.length === 0) roundedValue += " "
     else roundedValue += gap
-    roundedValue += roundSvgNumber(match[0], precision)
+    roundedValue += roundSvgNumber(match[0], index++ < linearCount ? Math.max(8, precision) : precision)
     cursor = match.index + match[0].length
     hasPreviousNumber = true
   }
@@ -226,6 +230,12 @@ export function serializeSvgPrecision(svg: string, precision?: number): string {
       /\b(?:var|calc|url)\(/i.test(value)
     ) {
       return undefined
+    }
+    if (name === "transform" || name === "gradientTransform" || name === "patternTransform") {
+      return value.replace(/(matrix|translate|scale|rotate|skewX|skewY)\(([^)]*)\)/g, (_all, operation: string, args: string) => {
+        const linearCount = operation === "matrix" ? 4 : operation === "scale" ? 2 : operation === "translate" ? 0 : 1
+        return `${operation}(${roundSvgGeometryValue(args, resolved, linearCount)})`
+      })
     }
     return roundSvgGeometryValue(value, resolved)
   })
@@ -588,7 +598,7 @@ function renderChartInternal(
 
   return {
     svg: serializeSvgPrecision(svg, options?.precision),
-    frameType: config.frameType as RenderEvidence["frameType"]
+    frameType: (config.resolveFrameType?.(frameProps2) ?? config.frameType) as RenderEvidence["frameType"]
   }
 }
 

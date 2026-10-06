@@ -12,6 +12,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { clamp, nonNegativeFinite, readField } from "./recipeUtils"
 import { edgeArrow } from "./directedEdge"
 import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
+import type { NetworkPerspectiveBound } from "../stream/networkPerspective"
 import { createLineageDagFit } from "./lineageDagFit"
 import {
   lineageHullBounds,
@@ -48,6 +49,10 @@ export interface LineageDagConfig {
 
   /** Force a level of detail; `"auto"` derives it from the fitted glyph size. @default "auto" */
   lod?: LineageLod | "auto"
+  /** Draw direction arrows on edges. @default true */
+  showArrowheads?: boolean
+  /** Place card content upright or print it on its projected slab. @default "upright" */
+  chromePlacement?: "upright" | "ground"
 
   /**
    * Caller-supplied "reachable" set. When present, nodes/edges **outside**
@@ -378,7 +383,9 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
       tangent = { x: mx, y: tip.y }
       pathD = `M${sx},${s.cy} C${mx},${s.cy} ${mx},${tip.y} ${tip.x},${tip.y}`
     }
-    arrows.push(edgeArrow(arrows.length, tip, tangent, stroke, Math.min(7, w / 4, h / 3), opacity))
+    if (cfg.showArrowheads !== false) {
+      arrows.push(edgeArrow(arrows.length, tip, tangent, stroke, Math.min(7, w / 4, h / 3), opacity))
+    }
 
     const curved: NetworkCurvedEdge = {
       type: "curved",
@@ -396,16 +403,17 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   }
 
   // ── Glyph chrome overlay (pointer-events:none; never steals a hit) ───────
+  const Chrome = cfg.chromePlacement === "ground" ? NetworkPerspectiveGround : NetworkPerspectiveBillboard
   const overlays: ReactNode =
     glyphs.length === 0 && arrows.length === 0 ? null : (
       <g>
         {/* Under a `perspective`, arrowheads lie on the ground at edge height
             and node chrome stands upright over its projected node. */}
-        <NetworkPerspectiveGround z="top">{arrows}</NetworkPerspectiveGround>
+        {arrows.length > 0 && <NetworkPerspectiveGround z="top">{arrows}</NetworkPerspectiveGround>}
         {glyphs.length > 0 && (
           <g className="lineage-dag-glyphs">
             {glyphs.map((g) => (
-              <NetworkPerspectiveBillboard key={g.id} x={g.cx} y={g.cy}>
+              <Chrome key={g.id} x={g.cx} y={g.cy} z="top">
                 {renderGlyph(g, {
                   w,
                   h,
@@ -416,7 +424,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
                   renderIcon: cfg.renderIcon,
                   typeLabel: cfg.typeLabel,
                 })}
-              </NetworkPerspectiveBillboard>
+              </Chrome>
             ))}
           </g>
         )}
@@ -439,14 +447,18 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     : null
 
   // Decorations place themselves under a perspective (see above and the
-  // hulls); hull outlines and labels reach past the nodes, so declare them.
-  const perspectiveBounds =
-    ctx.perspective && hullGroups && hullGroups.size > 0
-      ? lineageHullBounds(hullGroups, {
+  // hulls); upright cards, hull outlines and labels can reach past the marks.
+  const perspectiveBounds: NetworkPerspectiveBound[] | undefined = ctx.perspective
+    ? [
+        ...glyphs.map((g): NetworkPerspectiveBound => cfg.chromePlacement === "ground"
+          ? { x: g.cx - w / 2, y: g.cy - h / 2, width: w, height: h, z: "top" }
+          : { x: g.cx, y: g.cy, extent: [w / 2, w / 2, h / 2, h / 2] }),
+        ...(hullGroups ? lineageHullBounds(hullGroups, {
           padding: cfg.hullPadding == null ? 16 : nonNegativeFinite(cfg.hullPadding),
           label: cfg.hullLabel,
-        })
-      : undefined
+        }) : [])
+      ]
+    : undefined
   const result = backgrounds
     ? { sceneNodes, sceneEdges, backgrounds, overlays, perspective: "manual" as const }
     : { sceneNodes, sceneEdges, overlays, perspective: "manual" as const }

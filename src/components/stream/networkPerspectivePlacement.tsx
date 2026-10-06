@@ -43,7 +43,7 @@ export function NetworkPerspectiveGround({
   const [a, b, c, d, e, f] = frame.matrix
   const lifted = f - frame.lift * heightOf(frame, z)
   return (
-    <g data-perspective="ground" transform={`matrix(${[a, b, c, d, e, lifted].map(r2).join(" ")})`}>
+    <g data-perspective="ground" transform={`matrix(${[a, b, c, d, e, lifted].join(" ")})`}>
       {children}
     </g>
   )
@@ -85,7 +85,7 @@ export function NetworkPerspectiveBillboard({
   // The ground map normalized to unit x-scale, as tokens are laid.
   const [a, b, c, d] = frame.matrix
   const k = Math.hypot(a, c) || 1
-  const lay = [a / k, b / k, c / k, d / k].map((v) => Math.round(v * 1e4) / 1e4).join(" ")
+  const lay = [a / k, b / k, c / k, d / k].join(" ")
   return (
     <g
       data-perspective="on-ground"

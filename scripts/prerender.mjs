@@ -774,7 +774,9 @@ export function sanitizeRouteHtml(renderedHtml, routePath) {
     route: routePath || "/",
     url: routePath ? `${SITE_URL}/${routePath}` : SITE_URL,
     html,
-    ...(opening ? { openingHtml: normalizeMachineHtml(opening.outerHTML) } : {}),
+    ...(opening || routePath.replace(/^\//, "").startsWith("examples/")
+      ? { openingHtml: opening ? normalizeMachineHtml(opening.outerHTML) : html }
+      : {}),
     text,
     headings,
     codeBlocks,

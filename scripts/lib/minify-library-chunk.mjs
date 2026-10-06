@@ -1,5 +1,6 @@
 import { gzipSync, constants } from "node:zlib"
 import { minify } from "terser"
+import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
 
 // Terser optimizes JavaScript length. Published chunks are transferred
 // separately, where declaration ordering also affects
@@ -16,6 +17,7 @@ export async function minifyLibraryChunk(code, { format, filename, options }) {
       }
     )
     if (!result.code) throw new Error(`Empty minified chunk: ${filename}`)
+    result.code = cleanPureAnnotations(result.code)
     const bytes = gzipSync(result.code, {
       level: constants.Z_BEST_COMPRESSION
     }).length

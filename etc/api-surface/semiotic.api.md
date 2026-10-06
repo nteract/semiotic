@@ -1702,6 +1702,7 @@ interface-member NetworkPerspectiveConfig::property::regions = optional regions:
 interface-member NetworkPerspectiveConfig::property::rotation = optional rotation: number | undefined
 interface-member NetworkPerspectiveConfig::property::thickness = optional thickness: number | undefined
 interface-member NetworkPerspectiveConfig::property::tilt = optional tilt: number | undefined
+interface-member NetworkPerspectiveConfig::property::tokenRim = optional tokenRim: "faceted" | "flat" | undefined
 interface-member NetworkPerspectiveConfig::property::transition = optional transition: NetworkPerspectiveTransitionConfig | boolean | undefined
 interface-member NetworkPerspectiveConfig::property::type = optional type: NetworkPerspectiveName | undefined
 interface-member NetworkPerspectiveConfig::property::verticalScale = optional verticalScale: number | undefined

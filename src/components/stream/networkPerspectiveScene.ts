@@ -511,7 +511,7 @@ export function prepareNetworkPerspectiveScene(
           const [u, v] = local(x, y)
           return [cx + u, cy + v]
         })
-        const faces = extrudeOutline(top, item.t * frame.lift)
+        const faces = extrudeOutline(top, item.t * frame.lift, config.tokenRim)
         p = n.type === "circle"
           ? {
               ...n,
@@ -524,7 +524,7 @@ export function prepareNetworkPerspectiveScene(
               faces: faces.length ? faces : undefined,
               _perspectiveToken: true
             }
-          : { ...n, cx, cy, rotation: 0, path: serializeSvgPath(segs, local), faces: faces.length ? faces : undefined }
+          : { ...n, cx, cy, rotation: 0, path: serializeSvgPath(segs, local), faces: faces.length ? faces : undefined, _perspectiveToken: true }
       } else if (n.type === "rect") {
         const hp = n._hitPath
         const segs = hp
@@ -595,7 +595,7 @@ export function prepareNetworkPerspectiveScene(
           const at = (h: number) => (x: number, y: number, t: number) => project(x, y, heightAt(heights, t) + h)
           const routed = extras.route(e, rounded, at(T))
           if (casts) shadow(e, (extras.route(e, rounded, at(0)) as { pathD: string }).pathD)
-          return routed
+          return { ...routed, _perspectivePart: "edge" }
         }
         const [x1, y1] = project(e.x1, e.y1, z0 + T)
         const [x2, y2] = project(e.x2, e.y2, z1 + T)
@@ -604,7 +604,7 @@ export function prepareNetworkPerspectiveScene(
           const [sx2, sy2] = project(e.x2, e.y2, z1)
           shadow(e, `M${sx1} ${sy1}L${sx2} ${sy2}`)
         }
-        return { ...e, x1, y1, x2, y2 }
+        return { ...e, x1, y1, x2, y2, _perspectivePart: "edge" }
       }
       const segs = paths.get(e)
       if (!segs) return e
@@ -612,6 +612,7 @@ export function prepareNetworkPerspectiveScene(
       if (casts) shadow(e, serializeSvgPath(segs, (x, y) => project(x, y, z)))
       const p = {
         ...e,
+        _perspectivePart: "edge",
         pathD: serializeSvgPath(segs, (x, y) => project(x, y, z + T)),
         _cachedPath2D: undefined,
         _cachedPath2DSource: undefined
@@ -663,8 +664,8 @@ export function prepareNetworkPerspectiveScene(
 
     const chrome = plan?.underlay(frame) ?? { edges: [], labels: [] }
     const underlay = chrome.edges.slice()
-    const edge = (pathD: string, style: NetworkSceneEdge["style"]) =>
-      underlay.push({ type: "curved", pathD, style, datum: null, interactive: false })
+    const edge = (pathD: string, style: NetworkSceneEdge["style"], part = "edge-shadow") =>
+      underlay.push({ type: "curved", pathD, style, datum: null, interactive: false, _perspectivePart: part })
     // Shadows darken whatever they fall on, on light and dark themes alike;
     // a stroke wider than the edge reads as a soft shadow, not a second line.
     const shade = typeof shadowConfig === "object" ? shadowConfig : {}
@@ -695,14 +696,14 @@ export function prepareNetworkPerspectiveScene(
         const ty = p.type === "rect" ? p.y + p.h : p.cy + item.t * frame.lift
         if (Math.abs(ty - by) > 1) lines.push(`M${bx} ${by}L${tx} ${ty}`)
       }
-      if (shadows.length) edge(shadows.join(""), { fill: shadowColor, fillOpacity: 0.14, stroke: "none" })
+      if (shadows.length) edge(shadows.join(""), { fill: shadowColor, fillOpacity: 0.14, stroke: "none" }, "node-shadow")
       if (lines.length) {
         edge(lines.join(""), {
           stroke: opts.stroke ?? theme.textSecondary ?? "rgba(128,128,128,0.8)",
           strokeWidth: 1,
           strokeDasharray: opts.strokeDasharray ?? "3 3",
           fill: "none"
-        })
+        }, "elevation-guide")
       }
     }
 
