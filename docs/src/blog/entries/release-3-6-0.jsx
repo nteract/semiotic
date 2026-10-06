@@ -144,12 +144,12 @@ function Body() {
 
       <h2 id="agents">For agents — the MCP server and the CLI</h2>
       <p>
-        <code>npx semiotic-mcp</code> launches a Model Context Protocol server that exposes{" "}
+        <code>npx -y -p semiotic semiotic-mcp</code> launches a Model Context Protocol server that exposes{" "}
         <code>renderChart</code>, <code>interrogateChart</code>, <code>suggestCharts</code>, and{" "}
         <code>diagnoseConfig</code> as MCP tools. Agents inside Claude Code, Cursor, Windsurf, and
         other MCP-aware environments can drive Semiotic directly — render a static SVG, profile a
         dataset, ask the recommender for a ranked list, repair a config that doesn't validate.{" "}
-        <code>npx semiotic-ai --doctor</code> covers the CLI variant: pass a{" "}
+        <code>npx -p semiotic semiotic-ai --doctor</code> covers the CLI variant: pass a{" "}
         <code>{`{component, props, data}`}</code> JSON spec and get back a validated config (or a
         ranked list of alternatives if the requested chart doesn't fit the data).
       </p>

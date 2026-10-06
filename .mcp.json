@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "semiotic": {
-      "command": "npx",
-      "args": ["semiotic-mcp"]
+      "command": "node",
+      "args": ["ai/dist/mcp-server.js"]
     }
   }
 }

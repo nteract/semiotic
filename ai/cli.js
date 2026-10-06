@@ -46,35 +46,35 @@ const HELP = `
 semiotic-ai — Dump Semiotic AI context to stdout
 
 Usage:
-  npx semiotic-ai              Print ai/reference.md (full reference)
-  npx semiotic-ai --list        List components, categories, imports, and renderability
-  npx semiotic-ai --list --json Print component index as JSON
-  npx semiotic-ai --schema     Print ai/schema.json (all tool definitions)
-  npx semiotic-ai --schema BarChart
-                                Print one component schema plus AI metadata
-  npx semiotic-ai --suggest     Recommend charts from { data, intent? } JSON
-  npx semiotic-ai --compact    Print ai/system-prompt.md (compact prompt)
-  npx semiotic-ai --examples   Print ai/examples.md (copy-paste examples)
-  npx semiotic-ai --skill      Print the portable Semiotic Agent Skill
-  npx semiotic-ai --artifact-schema
-                                Print the portable Artifact Contract schema
-  npx semiotic-ai --doctor     Validate { component, props, usageMode? } JSON from stdin
-                                (exits nonzero on errors; add --json for a machine-readable report)
-  npx semiotic-ai --audit-a11y Audit { component, props, inChartContainer?, describe?, navigable? }
-  npx semiotic-ai --audit-mobile Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
-                                JSON against Chartability (POUR-CAF) accessibility heuristics
-  npx semiotic-ai --evaluate Evaluate { component, props, data?, inChartContainer?, describe?, navigable? }
-                                with data, deception, and accessibility checks (add --json for a machine-readable report)
-  npx semiotic-ai --audit-artifact
-                                Evaluate { component, props, contract, data?, policy?, exceptions?, now? }
-  npx semiotic-ai --recommend-representation
-                                Choose a chart, table, text, wait, or refusal outcome
-  npx semiotic-ai --repair-artifact
-                                Propose repairs; add applySafeIdentityRepairs=true to fill missing identity fields only
-                                Artifact exit 0 may mean conditional: inspect status before publication
-  npx semiotic-ai --explain-refusal
-                                Explain why { component, props, contract, data?, policy?, exceptions?, now? } is refused
-  npx semiotic-ai --help       Show this help message
+  npx -p semiotic semiotic-ai                  Print ai/reference.md (full reference)
+  npx -p semiotic semiotic-ai --list           List components, categories, imports, and renderability
+  npx -p semiotic semiotic-ai --list --json    Print component index as JSON
+  npx -p semiotic semiotic-ai --schema         Print ai/schema.json (all tool definitions)
+  npx -p semiotic semiotic-ai --schema BarChart
+                                               Print one component schema plus AI metadata
+  npx -p semiotic semiotic-ai --suggest        Recommend charts from { data, intent? } JSON
+  npx -p semiotic semiotic-ai --compact        Print ai/system-prompt.md (compact prompt)
+  npx -p semiotic semiotic-ai --examples       Print ai/examples.md (copy-paste examples)
+  npx -p semiotic semiotic-ai --skill          Print the portable Semiotic Agent Skill
+  npx -p semiotic semiotic-ai --artifact-schema
+                                               Print the portable Artifact Contract schema
+  npx -p semiotic semiotic-ai --doctor         Validate { component, props, usageMode? } JSON from stdin
+                                               (exits nonzero on errors; add --json for a machine-readable report)
+  npx -p semiotic semiotic-ai --audit-a11y     Audit { component, props, inChartContainer?, describe?, navigable? }
+  npx -p semiotic semiotic-ai --audit-mobile   Audit { component, props, viewportWidth?, targetSize?, inChartContainer? }
+                                               JSON against Chartability (POUR-CAF) accessibility heuristics
+  npx -p semiotic semiotic-ai --evaluate       Evaluate { component, props, data?, inChartContainer?, describe?, navigable? }
+                                               with data, deception, and accessibility checks (add --json for a machine-readable report)
+  npx -p semiotic semiotic-ai --audit-artifact
+                                               Evaluate { component, props, contract, data?, policy?, exceptions?, now? }
+  npx -p semiotic semiotic-ai --recommend-representation
+                                               Choose a chart, table, text, wait, or refusal outcome
+  npx -p semiotic semiotic-ai --repair-artifact
+                                               Propose repairs; add applySafeIdentityRepairs=true to fill missing identity fields only
+                                               Artifact exit 0 may mean conditional: inspect status before publication
+  npx -p semiotic semiotic-ai --explain-refusal
+                                               Explain why { component, props, contract, data?, policy?, exceptions?, now? } is refused
+  npx -p semiotic semiotic-ai --help           Show this help message
 `.trim()
 
 const flag = process.argv[2]
@@ -359,7 +359,7 @@ function writeArtifactJsonAndExit(value, exitCode) {
 
 function readArtifactRequest(flagName) {
   const input = readJSONInput(
-    `Usage: npx semiotic-ai ${flagName} '{"component":"LineChart","props":{"data":[...]},"contract":{...}}'`
+    `Usage: npx -p semiotic semiotic-ai ${flagName} '{"component":"LineChart","props":{"data":[...]},"contract":{...}}'`
   )
   const parsed = JSON.parse(input)
   if (!parsed.component || !parsed.props || !parsed.contract) {
@@ -390,7 +390,7 @@ if (flag === "--skill") {
 
 if (flag === "--suggest") {
   const input = readJSONInput(
-    'Usage: npx semiotic-ai --suggest \'{"data":[{"category":"A","value":10}],"intent":"comparison"}\''
+    'Usage: npx -p semiotic semiotic-ai --suggest \'{"data":[{"category":"A","value":10}],"intent":"comparison"}\''
   )
   try {
     const args = JSON.parse(input)
@@ -406,7 +406,7 @@ if (flag === "--suggest") {
 // --doctor: validate component + props from stdin or argv
 if (flag === "--doctor") {
   const input = readJSONInput(
-    'Usage: npx semiotic-ai --doctor \'{"component":"LineChart","props":{"data":[...]},"usageMode":"static"}\'\n       echo \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"usageMode":"push"}\' | npx semiotic-ai --doctor'
+    'Usage: npx -p semiotic semiotic-ai --doctor \'{"component":"LineChart","props":{"data":[...]},"usageMode":"static"}\'\n       echo \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"usageMode":"push"}\' | npx -p semiotic semiotic-ai --doctor'
   )
 
   // `--json` emits a stable machine-readable report instead of the human text.
@@ -531,7 +531,7 @@ if (flag === "--doctor") {
 // --audit-a11y: grade component + props against Chartability heuristics
 if (flag === "--audit-a11y") {
   const input = readJSONInput(
-    'Usage: npx semiotic-ai --audit-a11y \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"}}\'\n       echo \'{"component":"BarChart","props":{...},"inChartContainer":true}\' | npx semiotic-ai --audit-a11y'
+    'Usage: npx -p semiotic semiotic-ai --audit-a11y \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"}}\'\n       echo \'{"component":"BarChart","props":{...},"inChartContainer":true}\' | npx -p semiotic semiotic-ai --audit-a11y'
   )
 
   try {
@@ -579,7 +579,7 @@ if (flag === "--audit-a11y") {
 // --audit-mobile: grade component + props for mobile visualization risks
 if (flag === "--audit-mobile") {
   const input = readJSONInput(
-    'Usage: npx semiotic-ai --audit-mobile \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"},"viewportWidth":390}\'\n       echo \'{"component":"Scatterplot","props":{...},"targetSize":44}\' | npx semiotic-ai --audit-mobile'
+    'Usage: npx -p semiotic semiotic-ai --audit-mobile \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"},"viewportWidth":390}\'\n       echo \'{"component":"Scatterplot","props":{...},"targetSize":44}\' | npx -p semiotic semiotic-ai --audit-mobile'
   )
 
   try {
@@ -626,7 +626,7 @@ if (flag === "--audit-mobile") {
 // --evaluate: run the unified data/deception/accessibility evaluator
 if (flag === "--evaluate") {
   const input = readJSONInput(
-    'Usage: npx semiotic-ai --evaluate \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"data":[...]}\''
+    'Usage: npx -p semiotic semiotic-ai --evaluate \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"data":[...]}\''
   )
   const asJson = process.argv.includes("--json")
 

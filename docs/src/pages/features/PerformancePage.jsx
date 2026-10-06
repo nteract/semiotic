@@ -89,7 +89,7 @@ function MyChart({ multiplier }) {
 
         <h3>diagnoseConfig warning</h3>
         <p>
-          The <code>diagnoseConfig</code> utility (and <code>npx semiotic-ai --doctor</code>)
+          The <code>diagnoseConfig</code> utility (and <code>npx -p semiotic semiotic-ai --doctor</code>)
           emits a <code>FUNCTION_ACCESSOR</code> warning when it detects function accessors in
           your props. This is informational — function accessors work fine, but string accessors
           are preferred for maximum stability and clarity.

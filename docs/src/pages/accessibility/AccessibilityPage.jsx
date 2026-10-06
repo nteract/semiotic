@@ -106,7 +106,7 @@ export default function AccessibilityPage() {
         and aims to address its critical heuristics at the toolkit level. You can
         grade any chart configuration against those heuristics with the{" "}
         <Link to="/accessibility/audit">Chartability Audit</Link> — available as{" "}
-        <code>auditAccessibility()</code>, the <code>npx semiotic-ai --audit-a11y</code>{" "}
+        <code>auditAccessibility()</code>, the <code>npx -p semiotic semiotic-ai --audit-a11y</code>{" "}
         CLI, and an MCP tool — auto-generate rich screen-reader descriptions
         of a chart's statistics and trends with{" "}
         <Link to="/accessibility/descriptions">Chart Descriptions</Link>, and
@@ -610,7 +610,7 @@ function Panel() {
         <li>
           <strong>Semiotic tools</strong>:{" "}
           <code>diagnoseConfig()</code> for static analysis,{" "}
-          <code>npx semiotic-ai --doctor</code> for CLI validation
+          <code>npx -p semiotic semiotic-ai --doctor</code> for CLI validation
         </li>
         <li>
           <strong>Standards</strong>:{" "}

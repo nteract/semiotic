@@ -5,8 +5,8 @@
 > MCP server.
 
 Install: `npm install semiotic`
-MCP server: `npx semiotic-mcp`
-CLI: `npx semiotic-ai [--schema|--compact|--examples|--doctor|--audit-a11y]`
+MCP server: `npx -y -p semiotic semiotic-mcp`
+CLI: `npx -p semiotic semiotic-ai [--schema|--compact|--examples|--doctor|--audit-a11y]`
 
 ## Start Here
 
@@ -43,7 +43,7 @@ generation and validation helpers, `semiotic/server` for static rendering,
 `semiotic/utils` for shared utilities.
 
 Validate generated configurations with `prepareChart`,
-`npx semiotic-ai --doctor`, or the MCP diagnostic tools. When a renderer is
+`npx -p semiotic semiotic-ai --doctor`, or the MCP diagnostic tools. When a renderer is
 available, confirm non-empty render evidence and run the accessibility audit.
 These checks do not authenticate sources or establish usability with actual
 readers. Source task packets label their content identity; verify the installed

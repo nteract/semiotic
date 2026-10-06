@@ -427,7 +427,7 @@ function renderChartInternal(
   if (!Object.prototype.hasOwnProperty.call(CHART_CONFIGS, component)) {
     throw new Error(
       `Unknown chart component: "${component}". ` +
-        `Run \`npx semiotic-ai --list\` for supported chart types.`
+        `Run \`npx -p semiotic semiotic-ai --list\` for supported chart types.`
     )
   }
   const config = CHART_CONFIGS[component as keyof typeof CHART_CONFIGS]

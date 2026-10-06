@@ -172,7 +172,7 @@ import { auditAccessibility } from "semiotic/utils"
 const { ok, summary, findings } = auditAccessibility("LineChart", props)
 
 // 2. In CI (exits non-zero on a critical fail)
-npx semiotic-ai --audit-a11y '{"component":"LineChart","props":{...}}'
+npx -p semiotic semiotic-ai --audit-a11y '{"component":"LineChart","props":{...}}'
 
 // 3. As an MCP tool, so an AI agent can grade its own chart
 //    before handing the code back to you`}</pre>

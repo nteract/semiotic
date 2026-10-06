@@ -11,6 +11,7 @@
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "bin": {
+    "semiotic": "ai/dist/mcp-server.js",
     "semiotic-ai": "ai/cli.js",
     "semiotic-mcp": "ai/dist/mcp-server.js"
   },
@@ -430,7 +431,7 @@
     "docs:ai-surface": "node scripts/generate-ai-surface-manifest.mjs",
     "check:ai-reference-coverage": "node scripts/check-ai-reference-coverage.js",
     "check:context7": "node --test scripts/context7-subpaths.test.mjs && node scripts/check-context7.mjs",
-    "check:mcp-registry": "node scripts/check-mcp-registry.mjs",
+    "check:mcp-registry": "node --test scripts/check-mcp-registry.test.mjs && node scripts/check-mcp-registry.mjs",
     "check:mcp-registry-live": "node scripts/check-mcp-registry-live.mjs",
     "check:surface": "node scripts/check-surface-parity.js",
     "check:package-surface": "node scripts/generate-package-surface-manifest.mjs --check && node --test scripts/public-entrypoints.test.mjs && node scripts/check-public-entrypoints.mjs && node scripts/check-d3-packaging.mjs",
@@ -557,7 +558,7 @@
     "@chenglou/pretext": "0.0.9",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.5",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@playwright/test": "1.61.1",
     "@size-limit/file": "^14.1.0",
     "@testing-library/dom": "^10.4.1",
@@ -646,7 +647,7 @@
   "optionalDependencies": {
     "gifenc": "^1.0.3",
     "jsdom": "^29.0.2",
-    "sharp": "^0.35.4"
+    "sharp": "^0.35.5"
   },
   "dependencies": {
     "d3-array": "^3.2.4",

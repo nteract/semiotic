@@ -21,12 +21,12 @@ export default function CliMcpPage() {
       </p>
       <ul>
         <li>
-          <code>npx semiotic-ai</code> — a context &amp; validation CLI that dumps the AI reference,
+          <code>npx -p semiotic semiotic-ai</code> — a context &amp; validation CLI that dumps the AI reference,
           lists components, prints schemas, suggests charts, and validates a config (including
           accessibility).
         </li>
         <li>
-          <code>npx semiotic-mcp</code> — a{" "}
+          <code>npx -y -p semiotic semiotic-mcp</code> — a{" "}
           <a href="https://modelcontextprotocol.io" target="_blank" rel="noreferrer">
             Model Context Protocol
           </a>{" "}
@@ -42,21 +42,21 @@ export default function CliMcpPage() {
       </p>
 
       <CodeBlock language="bash">{`# Full AI reference (ai/reference.md) to stdout
-npx semiotic-ai
+npx -p semiotic semiotic-ai
 
 # List components, categories, import paths, and renderability
-npx semiotic-ai --list
-npx semiotic-ai --list --json        # machine-readable component index
+npx -p semiotic semiotic-ai --list
+npx -p semiotic semiotic-ai --list --json        # machine-readable component index
 
 # Tool schemas (all components, or one)
-npx semiotic-ai --schema
-npx semiotic-ai --schema BarChart    # one component schema + AI metadata
+npx -p semiotic semiotic-ai --schema
+npx -p semiotic semiotic-ai --schema BarChart    # one component schema + AI metadata
 
 # Compact system prompt / copy-paste examples
-npx semiotic-ai --compact            # ai/system-prompt.md
-npx semiotic-ai --examples           # ai/examples.md
+npx -p semiotic semiotic-ai --compact            # ai/system-prompt.md
+npx -p semiotic semiotic-ai --examples           # ai/examples.md
 
-npx semiotic-ai --help`}</CodeBlock>
+npx -p semiotic semiotic-ai --help`}</CodeBlock>
 
       <h3 id="suggest">Suggest a chart</h3>
       <p>
@@ -67,7 +67,7 @@ npx semiotic-ai --help`}</CodeBlock>
         them if you pass an unknown one).
       </p>
       <CodeBlock language="bash">{`echo '{"data":[{"region":"AMER","value":42},{"region":"EMEA","value":33}],"intent":"comparison"}' \\
-  | npx semiotic-ai --suggest`}</CodeBlock>
+  | npx -p semiotic semiotic-ai --suggest`}</CodeBlock>
 
       <h3 id="doctor">Validate a config (--doctor)</h3>
       <p>
@@ -77,7 +77,7 @@ npx semiotic-ai --help`}</CodeBlock>
         streaming code that omits <code>data</code>.
       </p>
       <CodeBlock language="bash">{`echo '{"component":"BarChart","props":{"data":[{"region":"AMER","value":42}],"categoryAccessor":"region","valueAccessor":"value"}}' \\
-  | npx semiotic-ai --doctor`}</CodeBlock>
+  | npx -p semiotic semiotic-ai --doctor`}</CodeBlock>
       <p>
         Beyond structural validation, the diagnostics include a{" "}
         <strong>misleading-design pack</strong> — checks for patterns that
@@ -103,11 +103,11 @@ npx semiotic-ai --help`}</CodeBlock>
         <Link to="/accessibility/audit">Chartability Audit</Link> for the in-app equivalent.
       </p>
       <CodeBlock language="bash">{`echo '{"component":"PieChart","props":{"data":[{"k":"A","v":1}],"categoryAccessor":"k","valueAccessor":"v"}}' \\
-  | npx semiotic-ai --audit-a11y`}</CodeBlock>
+  | npx -p semiotic semiotic-ai --audit-a11y`}</CodeBlock>
 
       <h2 id="semiotic-mcp">semiotic-mcp (MCP server)</h2>
       <p>
-        <code>npx semiotic-mcp</code> starts a Model Context Protocol server over stdio. Point an
+        <code>npx -y -p semiotic semiotic-mcp</code> starts a Model Context Protocol server over stdio. Point an
         MCP-aware assistant at it and the model can call Semiotic&rsquo;s capabilities directly rather
         than guessing at the API.
       </p>
@@ -120,14 +120,14 @@ npx semiotic-ai --help`}</CodeBlock>
         diagnosis, interactive rendering, and render evidence in one call.
       </p>
       <CodeBlock language="bash">{`# Public app / connector profile (five tools)
-npx semiotic-mcp --profile public
+npx -y -p semiotic semiotic-mcp --profile public
 
 # Local HTTP uses loopback by default
-MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001
+MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --port 3001
 
 # Hosted deployments must opt in to a public bind
-MCP_TOOL_PROFILE=public npx semiotic-mcp --http --host 0.0.0.0 --port 3001
-# Or: MCP_HOST=0.0.0.0 MCP_TOOL_PROFILE=public npx semiotic-mcp --http --port 3001`}</CodeBlock>
+MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001
+# Or: MCP_HOST=0.0.0.0 MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --port 3001`}</CodeBlock>
 
       <h3 id="developer-profile">Full developer profile</h3>
       <p>
@@ -190,13 +190,13 @@ MCP_TOOL_PROFILE=public npx semiotic-mcp --http --host 0.0.0.0 --port 3001
   "mcpServers": {
     "semiotic": {
       "command": "npx",
-      "args": ["semiotic-mcp"]
+      "args": ["-y", "-p", "semiotic", "semiotic-mcp"]
     }
   }
 }`}</CodeBlock>
       <p>
         For a ChatGPT Apps SDK prototype, start the HTTP transport with{" "}
-        <code>npx semiotic-mcp --http --port 3001</code>, expose <code>/mcp</code> over HTTPS with a
+        <code>npx -y -p semiotic semiotic-mcp --http --port 3001</code>, expose <code>/mcp</code> over HTTPS with a
         tunnel, then create a ChatGPT developer-mode connector pointed at that endpoint. The widget
         template is served from <code>ui://semiotic/chart-widget.html</code>.
       </p>

@@ -25,7 +25,7 @@ tar -xzf briefing-kit.tar.gz
 node tools/cli.mjs build --source raw --month 2025-06 --vintage 2026-01-09 --output rebuilt-a
 node tools/cli.mjs build --source raw --month 2025-06 --vintage 2026-03-06 --output rebuilt-b --json
 node tools/cli.mjs compare --source raw --month 2025-06 --before 2026-01-09 --after 2026-03-06 --output comparison
-npx semiotic-ai --audit-artifact --json < rebuilt-b/audit-input.json
+npx -p semiotic semiotic-ai --audit-artifact --json < rebuilt-b/audit-input.json
 node tools/cli.mjs check --source raw --output rebuilt-b --json
 ```
 
