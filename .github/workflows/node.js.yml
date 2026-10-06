@@ -36,6 +36,7 @@ jobs:
 
       - name: Check dependencies and generated task inputs
         run: |
+          npm run check:test-discovery
           npm audit --registry=https://registry.npmjs.org --audit-level=moderate
           npm run check:ai-tasks
           npm run check:adoption-evals

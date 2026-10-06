@@ -49,11 +49,11 @@ export default defineConfig(({ mode }) => ({
       // nested node_modules vitest auto-walks into) so Semiotic's vitest
       // doesn't try to run jscodeshift internals.
       'codemod/**',
-      // check-file-size.test.mjs uses the Node built-in test runner
-      // (`node --test`), not vitest — it imports `node:test` directly,
-      // which vitest's bundler can't resolve. Exclude it so vitest's
-      // default *.test.mjs glob doesn't sweep it in.
-      'scripts/**/*.test.mjs'
+      // Node-runner suites import node:test, which the jsdom project cannot
+      // bundle. Keep other script TypeScript tests in Vitest; discovery is
+      // checked by scripts/vitest-projects.test.mjs before expensive jobs.
+      'scripts/**/*.test.mjs',
+      'scripts/release-preflight.test.ts'
     ],
     coverage: {
       provider: 'v8',

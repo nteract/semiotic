@@ -62,6 +62,7 @@ test("preflight fails closed on a missing script, timeout, or process signal", (
 })
 
 test("preflight succeeds only when every registered check succeeds", () => {
+  assert.equal(RELEASE_PREFLIGHT_CHECKS[0], "check:test-discovery")
   for (const name of RELEASE_PREFLIGHT_CHECKS) {
     assert.equal(typeof scripts[name], "string", `Missing npm script ${name}`)
   }
@@ -95,6 +96,10 @@ test("local release and direct publish start with preflight; fast checks include
     "npm run check:ai-tasks",
     "npm run check:adoption-evals"
   ])
+  assert.ok(fast.includes("npm run check:test-discovery"))
+  assert.ok(
+    fast.indexOf("npm run check:test-discovery") < fast.indexOf("npm run lint")
+  )
 })
 
 test("release gates browsers and publication on current preflight policy against tagged source", () => {
@@ -130,6 +135,7 @@ test("PR preflight catches dependency and generated drift before type preparatio
     .split("  fast-contracts:")[1]
     .split("  coverage-shards:")[0]
   for (const command of [
+    "npm run check:test-discovery",
     "npm audit --registry=https://registry.npmjs.org --audit-level=moderate",
     "npm run check:ai-tasks",
     "npm run check:adoption-evals"

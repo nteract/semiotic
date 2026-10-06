@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 // Source-only checks: these must work before declarations, bundles, coverage,
 // or browsers are prepared. Keep artifact-dependent checks in release:check.
 export const RELEASE_PREFLIGHT_CHECKS = [
+  "check:test-discovery",
   "check:ai-tasks",
   "check:adoption-evals",
   "check:release-version-alignment",
