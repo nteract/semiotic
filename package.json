@@ -682,6 +682,7 @@
   "overrides": {
     "esbuild": "0.28.2",
     "flatted": "3.4.2",
-    "minimatch": ">=9.0.7"
+    "minimatch": ">=9.0.7",
+    "seroval": "1.6.8"
   }
 }
