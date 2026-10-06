@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.12.1] - 2026-10-05
+
 ### Added
 
 - `getNetworkPerspectiveSize(perspective, groundSize, bounds?)` measures a scale-1

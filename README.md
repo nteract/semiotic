@@ -26,15 +26,15 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.12.0
+## What's New in 3.12.1
 
-3.12.0 adds parallel perspectives for network charts and accessible direct
-manipulation controls inside XY and ordinal plots. Named chart imports ship less
-code, while server rendering, hatches, semantic gradients, and tooltip placement
-more closely match the live chart.
+3.12.1 extends network perspectives to the Atlas readers and improves projected
+layout sizing, annotation anchors, and static SVG precision. Placement components
+retain their identity across package entries, and `semioticVite()` removes unused
+worker assets from Vite 7 builds while preserving workers that are used.
 
-See [the changelog](CHANGELOG.md#3120---2026-09-30) and
-[release post](https://semiotic.nteract.io/blog/release-3-12-0/) for the full list.
+See [the changelog](CHANGELOG.md#3121---2026-10-05) for the full list and SVG
+compatibility notes.
 
 ## Why Semiotic
 
@@ -418,7 +418,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/realtime/react` | **2 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **265 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **265 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **273 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/server/edge` | **274 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
 | `semiotic/utils` | **107 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **98 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **8 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
@@ -463,7 +463,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 |---|---:|---:|---:|
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **102.4 KiB** | 29.3 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **102.4 KiB** | 29.2 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **5.9 KiB** | — |
 | `import { LineChart } from "semiotic"` | browser | **118.1 KiB** | 43.8 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **117.8 KiB** | 31.8 KiB |

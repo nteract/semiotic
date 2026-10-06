@@ -7,16 +7,16 @@
   "route": "/tasks/update-live-chart",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.12.0",
+    "packageVersion": "3.12.1",
     "channel": "source",
-    "sourceRevision": "sha256:15019a103f6b8503b402feaf3c7c63a3f3fd9374677e9e7dd200bce9ffb9eed6",
+    "sourceRevision": "sha256:89b8c44c1bc4b776f96be82bddd6574a75f21eef1760696dbe00180b524cfa1a",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:a9b738eac01706fa20873c7746107b079593bb3bfef32fa8260c96cebb954405",
+      "digest": "sha256:7ed6f398bbb38b2ada6f89451c3755a2352fbeec87ed3784e01403d85351bfed",
       "fileCount": 1354
     },
     "taskSources": {
-      "digest": "sha256:9b126cebb9506aca7ec6155b1fbc739921bf76de6595426c3b8b280b5ce66f0a",
+      "digest": "sha256:fe5beb76bd5fa203c623f36c78d4476b538e03f5878c937be87a081a01cbef3d",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."

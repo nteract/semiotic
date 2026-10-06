@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-browser-baseline",
-  "capturedAt": "2026-10-01T03:52:03.294Z",
+  "capturedAt": "2026-10-06T00:24:09.681Z",
   "source": {
-    "gitCommit": "0c2cc7aa1",
+    "gitCommit": "44d9c45ec",
     "artifact": "checkout dist artifacts served by a local production-mode Vite integration fixture",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 39
+      "changedPathCount": 30
     }
   },
   "referenceEnvironment": {
@@ -197,190 +197,190 @@
     "timings": {
       "hydration": {
         "samplesMs": [
-          8.6,
-          5.5,
-          5.2,
-          5.3,
+          8,
           5.4,
-          5.1,
-          5.3
+          5.3,
+          5.2,
+          5.5,
+          5.3,
+          5.4
         ],
-        "minMs": 5.1,
-        "p50Ms": 5.3,
-        "p95Ms": 7.67,
-        "p99Ms": 8.414,
-        "maxMs": 8.6,
-        "meanMs": 5.771
+        "minMs": 5.2,
+        "p50Ms": 5.4,
+        "p95Ms": 7.25,
+        "p99Ms": 7.85,
+        "maxMs": 8,
+        "meanMs": 5.729
       },
       "initialCanvasPaint": {
         "samplesMs": [
-          40.8,
-          27.9,
-          26.6,
+          36.3,
+          27.1,
+          27,
           26.5,
-          26,
-          26,
-          26
+          27,
+          26.6,
+          26.8
         ],
-        "minMs": 26,
-        "p50Ms": 26.5,
-        "p95Ms": 36.93,
-        "p99Ms": 40.026,
-        "maxMs": 40.8,
-        "meanMs": 28.543
+        "minMs": 26.5,
+        "p50Ms": 27,
+        "p95Ms": 33.54,
+        "p99Ms": 35.748,
+        "maxMs": 36.3,
+        "meanMs": 28.186
       },
       "updateCanvasPaint": {
         "samplesMs": [
-          18,
-          14.6,
-          15.6,
-          12.4,
-          16.4,
-          16.4,
-          12.1
+          15.7,
+          11,
+          9.9,
+          16.9,
+          14.7,
+          11.2,
+          11.2
         ],
-        "minMs": 12.1,
-        "p50Ms": 15.6,
-        "p95Ms": 17.52,
-        "p99Ms": 17.904,
-        "maxMs": 18,
-        "meanMs": 15.071
+        "minMs": 9.9,
+        "p50Ms": 11.2,
+        "p95Ms": 16.54,
+        "p99Ms": 16.828,
+        "maxMs": 16.9,
+        "meanMs": 12.943
       },
       "scatter10kPaint": {
         "samplesMs": [
-          19.5,
-          18.5,
-          17.3,
+          18.4,
+          18.1,
+          18.2,
+          17.4,
           17.7,
-          17.1,
-          17.3,
-          17.1
+          18.2,
+          17.6
         ],
-        "minMs": 17.1,
-        "p50Ms": 17.3,
-        "p95Ms": 19.2,
-        "p99Ms": 19.44,
-        "maxMs": 19.5,
-        "meanMs": 17.786
+        "minMs": 17.4,
+        "p50Ms": 18.1,
+        "p95Ms": 18.34,
+        "p99Ms": 18.388,
+        "maxMs": 18.4,
+        "meanMs": 17.943
       },
       "scatter10kHover": {
         "samplesMs": [
-          38.7,
-          36.3,
-          36.3,
+          37.2,
           36.5,
-          36.2,
           36.3,
-          35.7
+          36.6,
+          36.3,
+          36.3,
+          36.5
         ],
-        "minMs": 35.7,
-        "p50Ms": 36.3,
-        "p95Ms": 38.04,
-        "p99Ms": 38.568,
-        "maxMs": 38.7,
-        "meanMs": 36.571
+        "minMs": 36.3,
+        "p50Ms": 36.5,
+        "p95Ms": 37.02,
+        "p99Ms": 37.164,
+        "maxMs": 37.2,
+        "meanMs": 36.529
       },
       "scatter50kUnbatchedPaint": {
         "samplesMs": [
-          13.6,
-          12.2,
           12.3,
-          12.2,
           12.1,
+          12.3,
+          12.4,
+          12.5,
           12.1,
-          12.4
+          12.7
         ],
         "minMs": 12.1,
-        "p50Ms": 12.2,
-        "p95Ms": 13.24,
-        "p99Ms": 13.528,
-        "maxMs": 13.6,
-        "meanMs": 12.414
+        "p50Ms": 12.3,
+        "p95Ms": 12.64,
+        "p99Ms": 12.688,
+        "maxMs": 12.7,
+        "meanMs": 12.343
       },
       "scatter50kBatchedPaint": {
         "samplesMs": [
-          13.9,
-          13.1,
-          13.3,
+          13.7,
+          13.6,
+          13.6,
           13,
-          13.4,
-          13.3,
-          13.2
+          13.1,
+          13.1,
+          13.5
         ],
         "minMs": 13,
-        "p50Ms": 13.3,
-        "p95Ms": 13.75,
-        "p99Ms": 13.87,
-        "maxMs": 13.9,
-        "meanMs": 13.314
+        "p50Ms": 13.5,
+        "p95Ms": 13.67,
+        "p99Ms": 13.694,
+        "maxMs": 13.7,
+        "meanMs": 13.371
       },
       "scatter50kHover": {
         "samplesMs": [
-          42.2,
+          41.9,
+          38.2,
           38,
-          37.6,
-          37.9,
+          38,
+          38.3,
           37.8,
-          37.9,
-          37.1
+          38
         ],
-        "minMs": 37.1,
-        "p50Ms": 37.9,
-        "p95Ms": 40.94,
-        "p99Ms": 41.948,
-        "maxMs": 42.2,
-        "meanMs": 38.357
+        "minMs": 37.8,
+        "p50Ms": 38,
+        "p95Ms": 40.82,
+        "p99Ms": 41.684,
+        "maxMs": 41.9,
+        "meanMs": 38.6
       },
       "heatmap50kExplicitPaint": {
         "samplesMs": [
-          30.2,
+          27.9,
           24.4,
+          24.3,
+          23.6,
+          23.7,
           23.8,
-          23.8,
-          24.1,
-          23.4,
-          24
+          23.4
         ],
         "minMs": 23.4,
-        "p50Ms": 24,
-        "p95Ms": 28.46,
-        "p99Ms": 29.852,
-        "maxMs": 30.2,
-        "meanMs": 24.814
+        "p50Ms": 23.8,
+        "p95Ms": 26.85,
+        "p99Ms": 27.69,
+        "maxMs": 27.9,
+        "meanMs": 24.443
       },
       "heatmap50kAutoPaint": {
         "samplesMs": [
-          7.3,
           6.4,
-          9.5,
-          6.4,
+          6.6,
+          6.6,
           6.2,
-          8.6,
-          6.3
+          6.4,
+          6.1,
+          6.8
         ],
-        "minMs": 6.2,
+        "minMs": 6.1,
         "p50Ms": 6.4,
-        "p95Ms": 9.23,
-        "p99Ms": 9.446,
-        "maxMs": 9.5,
-        "meanMs": 7.243
+        "p95Ms": 6.74,
+        "p99Ms": 6.788,
+        "maxMs": 6.8,
+        "meanMs": 6.443
       },
       "forceWorkerRoundTrip": {
         "samplesMs": [
-          19.4,
-          18.2,
-          14.6,
+          19.6,
+          17.7,
+          14.7,
           14.5,
-          14.4,
-          15.7,
-          14.3
+          16.1,
+          16.6,
+          16.9
         ],
-        "minMs": 14.3,
-        "p50Ms": 14.6,
-        "p95Ms": 19.04,
-        "p99Ms": 19.328,
-        "maxMs": 19.4,
-        "meanMs": 15.871
+        "minMs": 14.5,
+        "p50Ms": 16.6,
+        "p95Ms": 19.03,
+        "p99Ms": 19.486,
+        "maxMs": 19.6,
+        "meanMs": 16.586
       }
     }
   }

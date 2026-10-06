@@ -109,7 +109,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 273,
+    "kb": 274,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
