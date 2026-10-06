@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useEffect, useState } from "react"
+import { useLayoutEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { ForceDirectedGraph, SankeyDiagram, ChordDiagram } from "semiotic/network"
 import { MotifBraidChart, DependencyForestChart, FlowCircuitChart } from "semiotic/atlas"
@@ -138,7 +138,8 @@ export default function ChartPane({
   const [circuitHover, setCircuitHover] = useState<unknown>(null)
   const [pointer, setPointer] = useState({ x: 0, y: 0 })
   const hasCircuitTooltip = viewId === "circuit" && circuitHover != null
-  useEffect(() => {
+  // Install dismissal before the tooltip is painted, so immediate Escape works.
+  useLayoutEffect(() => {
     if (!hasCircuitTooltip) return
     const dismiss = () => setCircuitHover(null)
     const onKey = (event: KeyboardEvent) => {
