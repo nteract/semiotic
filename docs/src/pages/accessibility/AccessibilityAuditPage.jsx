@@ -256,10 +256,10 @@ console.log(formatAccessibilityAudit(result))`}
 
       <CodeBlock
         code={`# Audit a configuration
-npx semiotic-ai --audit-a11y '{"component":"LineChart","props":{"data":[{"month":1,"sales":10}],"title":"Sales"}}'
+npx -p semiotic semiotic-ai --audit-a11y '{"component":"LineChart","props":{"data":[{"month":1,"sales":10}],"title":"Sales"}}'
 
 # Or pipe it in (e.g. from a config generator)
-echo '{"component":"BarChart","props":{...},"inChartContainer":true}' | npx semiotic-ai --audit-a11y
+echo '{"component":"BarChart","props":{...},"inChartContainer":true}' | npx -p semiotic semiotic-ai --audit-a11y
 
 # Exit code: 0 when no critical heuristic fails, 1 otherwise`}
         language="bash"

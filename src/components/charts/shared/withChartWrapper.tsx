@@ -35,7 +35,7 @@ interface SafeRenderProps {
  * name.
  *
  * For richer prop diagnostics ("missing accessor", "wrong data shape",
- * etc.), use `npx semiotic-ai --doctor` (CLI) or import `diagnoseConfig`
+ * etc.), use `npx -p semiotic semiotic-ai --doctor` (CLI) or import `diagnoseConfig`
  * from `semiotic/utils`. We intentionally don't bundle the validation
  * map into every subpath import — it would add ~7KB gz to xy/ordinal/
  * network just to power a fallback that only fires when render throws.

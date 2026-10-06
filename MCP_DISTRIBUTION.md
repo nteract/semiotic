@@ -7,7 +7,7 @@ from third-party directory cards that may cache or rewrite project metadata.
 
 | Path | Status | Source of truth | Freshness mechanism |
 | --- | --- | --- | --- |
-| npm stdio | `npx semiotic-mcp` from the `semiotic` package | `package.json` and the published npm artifact | The release workflow publishes and smoke-tests the exact immutable tarball. |
+| npm stdio | `npx -y -p semiotic semiotic-mcp` from the `semiotic` package | `package.json` and the published npm artifact | The release workflow publishes and smoke-tests the exact immutable tarball. |
 | Stable Streamable HTTP | `https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp` serves verified `3.8.7` | `server.json` and `deploy/cloud-run` | Hosted smoke tests cover initialize, tools, resources, prompts, limits, and response headers. |
 | Official MCP Registry | `io.github.nteract/semiotic` | `server.json` | After npm publication, the release workflow validates and publishes the exact `package.json` / `server.json` version, then verifies the active Registry entry. Manual dispatch remains available for backfill. |
 

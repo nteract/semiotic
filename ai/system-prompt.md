@@ -10,7 +10,7 @@ measurements live in the README and the complete AI reference.
 
 Keep retrieval narrow: start with this prompt, then fetch one relevant component
 schema with the MCP `getSchema` tool or
-`npx semiotic-ai --schema <Component>`, and one nearby example only when needed.
+`npx -p semiotic semiotic-ai --schema <Component>`, and one nearby example only when needed.
 Do not load the complete schema, example catalog, or full reference into every
 request.
 
@@ -23,7 +23,7 @@ request.
    in production code. For a route whose only XY chart is `LineChart`, use
    `semiotic/line`; otherwise use its family subpath.
 4. Validate with `prepareChart`, `diagnoseConfig`, or `evaluateChart`, or
-   `npx semiotic-ai --doctor`; repair reported contract failures.
+   `npx -p semiotic semiotic-ai --doctor`; repair reported contract failures.
 5. When a renderer is available, require non-empty render evidence and run the
    accessibility audit before presenting the result.
 
@@ -144,7 +144,7 @@ These rules are generated from `ai/behaviorContracts.cjs` and are consumed by `s
 - **Percentile band + main line**: Layer `<AreaChart yAccessor="p95" y0Accessor="p5" showLine={false} />` + `<LineChart yAccessor="p50" />`. AreaChart's `showLine` only draws the top edge, NOT a separate main line.
 - **SSR**: `renderChart("BarChart", props)` from `semiotic/server` — uses HOC names. Also `"Sparkline"` (no axes, 2px margins). `renderChartWithEvidence()` returns `{ svg, evidence }` (mark counts by scene type, axis domains, empty flag, semantic status/diagnostics, annotation count, accessible name). Check `empty`/`markCount` for paint and `semanticStatus` separately for meaning; `degenerate` marks are not trustworthy even when paint `status` is `ok`, while `not-assessed` means no capability check exists. `renderToImage()` (PNG), `renderToAnimatedGif()` (GIF), `renderDashboard()` (multi-chart). All accept `theme`. Required props: StackedBarChart needs `stackBy`, GroupedBarChart needs `groupBy`, StackedAreaChart needs `areaBy`, BubbleChart needs `sizeBy`, FunnelChart uses `stepAccessor`, GaugeChart needs `value` (`thresholds` optional).
 - **Serializable chart-adjacent text**: use a `frame-text` annotation instead of splicing server SVG. It anchors to the resolved plot rectangle without data coordinates: `{ type: "frame-text", text: "100", position: "bottom-right", dy: 16 }`. Positions cover the plot's nine edge/center anchors; `dx`/`dy` may move text into a caller-reserved margin. The same annotation renders in CSR and SSR.
-- **CLI**: `npx semiotic-ai --list` shows components/import paths/renderability; `npx semiotic-ai --schema GaugeChart` prints one component schema with metadata; `--doctor` validates props JSON and behavior contracts.
-- **MCP**: `npx semiotic-mcp` exposes schema, chart suggestion, token-encoding suggestion (`suggestTokenEncoding` for ISOTYPE/dot/icon arrays), diagnosis, accessibility, grounding, issue, theme, static render (`renderChart`), and ChatGPT Apps render (`renderInteractiveChart`) tools. Discover schemas through `semiotic://schema-index`, then read only `semiotic://schema/{component}`; `semiotic://schema` remains the complete catalog for bulk tooling. Other resources include `semiotic://components`, `semiotic://behavior-contracts`, `semiotic://system-prompt`, `semiotic://examples`, and the widget template `ui://semiotic/chart-widget.html`. Prompts: `build-semiotic-chart`, `debug-semiotic-chart`.
+- **CLI**: `npx -p semiotic semiotic-ai --list` shows components/import paths/renderability; `npx -p semiotic semiotic-ai --schema GaugeChart` prints one component schema with metadata; `--doctor` validates props JSON and behavior contracts.
+- **MCP**: `npx -y -p semiotic semiotic-mcp` exposes schema, chart suggestion, token-encoding suggestion (`suggestTokenEncoding` for ISOTYPE/dot/icon arrays), diagnosis, accessibility, grounding, issue, theme, static render (`renderChart`), and ChatGPT Apps render (`renderInteractiveChart`) tools. Discover schemas through `semiotic://schema-index`, then read only `semiotic://schema/{component}`; `semiotic://schema` remains the complete catalog for bulk tooling. Other resources include `semiotic://components`, `semiotic://behavior-contracts`, `semiotic://system-prompt`, `semiotic://examples`, and the widget template `ui://semiotic/chart-widget.html`. Prompts: `build-semiotic-chart`, `debug-semiotic-chart`.
 - **Data Pitfalls bridge**: `toDataPitfallsChain(component, props, { rendered, context, narrative })` from `semiotic/ai` returns a dependency-free `datapitfalls` chain input containing config, JSX, reader grounding, diagnostics, accessibility audit, and optional render evidence/image.
 - **exportChart**: Pass the wrapper div, not the SVG element: `exportChart(wrapperDiv, { format: "png" })`. It finds canvas+SVG internally.

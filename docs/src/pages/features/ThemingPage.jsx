@@ -939,7 +939,7 @@ const theme = designTokensToTheme(brandTokens, {
 
       <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
         The <code>diagnoseConfig</code> utility also checks contrast ratios —
-        run <code>npx semiotic-ai --doctor</code> to audit your chart configs.
+        run <code>npx -p semiotic semiotic-ai --doctor</code> to audit your chart configs.
       </p>
 
       {/* ================================================================= */}

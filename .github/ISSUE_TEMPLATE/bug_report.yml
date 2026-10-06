@@ -95,7 +95,7 @@ body:
     attributes:
       label: Diagnostic output
       description:
-        If relevant, paste `npx semiotic-ai --doctor` output or explain why it
+        If relevant, paste `npx -p semiotic semiotic-ai --doctor` output or explain why it
         is not applicable.
       render: shell
 

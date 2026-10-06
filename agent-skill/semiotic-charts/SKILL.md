@@ -24,7 +24,7 @@ return reasons and ranked alternatives to retry with.
 
 Start with the task and the exact component schema. Use the MCP `getSchema` tool,
 read `semiotic://schema/{component}`, or run
-`npx semiotic-ai --schema <Component>`, then read one nearby example if needed.
+`npx -p semiotic semiotic-ai --schema <Component>`, then read one nearby example if needed.
 Use `semiotic://schema-index` when the component is not known. Do not load the
 full reference, schema, or example catalog by default; retrieve broader context
 only when validation or diagnosis shows that it is necessary.
@@ -80,7 +80,7 @@ const ranked = suggestCharts(data, { intent: "trend", maxResults: 3, audience })
 
 ## Hard rules (the behavior contracts)
 
-These are enforced by validation and the `npx semiotic-ai --doctor` gate. Honor
+These are enforced by validation and the `npx -p semiotic semiotic-ai --doctor` gate. Honor
 them in every proposal:
 
 1. **Sub-path imports.** Import from the smallest stable entry that covers every
@@ -137,20 +137,20 @@ const note = withProvenance(
 
 ## Tooling
 
-- **MCP server:** `npx semiotic-mcp` — tools for `renderChart` (SVG + render
+- **MCP server:** `npx -y -p semiotic semiotic-mcp` — tools for `renderChart` (SVG + render
   evidence), `suggestCharts`, `groundChart`, `diagnoseConfig`, `evaluateChart`, `repairChartConfig`,
   `proposeChartVariants`, and more. Prefer these over guessing.
-- **Public app profile:** `npx semiotic-mcp --profile public` exposes the five
+- **Public app profile:** `npx -y -p semiotic semiotic-mcp --profile public` exposes the five
   task-oriented tools `createChart`, `improveChart`, `explainChart`,
   `auditChart`, and `getChartSchema`; use it when tool discovery matters more
   than expert-level control.
-- **CLI gate:** `npx semiotic-ai --doctor` validates a `{ component, props }` JSON
+- **CLI gate:** `npx -p semiotic semiotic-ai --doctor` validates a `{ component, props }` JSON
   (`--audit-a11y` for an accessibility audit, `--evaluate` for the unified
   data/deception/accessibility pass). Run it before shipping generated code.
 - **Machine-readable docs:** the published `llms.txt` is the chart catalog with
   per-chart communicative-act labels; read it for the full surface rather than
   guessing component names.
-- **Portable install:** `npx semiotic-ai --skill` prints this packaged skill so a
+- **Portable install:** `npx -p semiotic semiotic-ai --skill` prints this packaged skill so a
   compatible agent host can install it at its documented skill location. The
   npm package includes `agent-skill/semiotic-charts/SKILL.md` for offline use.
 

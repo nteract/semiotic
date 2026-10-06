@@ -68,7 +68,7 @@ function Body() {
         summarizing it. The checks run through the same{" "}
         <code>diagnoseConfig</code> surface as the existing validation,
         encoding, and accessibility packs, so{" "}
-        <code>npx semiotic-ai --doctor</code> and the MCP{" "}
+        <code>npx -p semiotic semiotic-ai --doctor</code> and the MCP{" "}
         <code>diagnoseConfig</code> tool pick them up automatically.
       </p>
 

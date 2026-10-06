@@ -53,8 +53,8 @@ reports model- and task-specific results; it does not guarantee first-try correc
 
 - **`semiotic/ai`** — a single import with the schema-backed chart capability catalog (XY, ordinal, network, realtime, geo, value, and portable recipes), optimized for LLM code generation. See `ai/surface-manifest.json` for the generated current inventory. Named imports now tree-shake across published chunks. Prefer family subpaths (`semiotic/xy`, `semiotic/geo`, `semiotic/value`, …) in production code to keep the intended chart family explicit; the cold-consumer table below reports initial-load and on-demand costs.
 - **`ai/schema.json`** — machine-readable prop schemas for every component
-- **`npx semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
-- **`npx semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
+- **`npx -y -p semiotic semiotic-mcp`** — an MCP server for tool-based chart rendering in any MCP client
+- **`npx -p semiotic semiotic-ai --doctor`** — validate component + props JSON from the command line with typo suggestions and anti-pattern detection
 - **`diagnoseConfig(component, props)`** — programmatic anti-pattern detector with actionable fixes, spanning validation, encoding, accessibility, and misleading-design (deception) checks
 - **`auditData(component, props, data?)`** — chart-aware numeric preflight for inputs that pass schema validation but break the math: non-finite values, zero-span domains, invalid log inputs, negative size geometry, unsafe normalized totals, and scale-dominating outliers. Returns bounded row evidence and flows into `diagnoseConfig`, Chart Clinic, CLI doctor, and opt-in `ChartContainer` notifications
 - **`AGENTS.md`** — concise repository workflow shared by modern coding agents;
@@ -609,13 +609,13 @@ Add to your MCP client config (e.g. `claude_desktop_config.json` for Claude Desk
   "mcpServers": {
     "semiotic": {
       "command": "npx",
-      "args": ["semiotic-mcp"]
+      "args": ["-y", "-p", "semiotic", "semiotic-mcp"]
     }
   }
 }
 ```
 
-No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors, web clients, and ChatGPT Apps SDK experiments: `npx semiotic-mcp --http --port 3001`. It binds to `127.0.0.1` by default; intentionally expose another interface with `--host 0.0.0.0` or `MCP_HOST=0.0.0.0`. Since 3.7.2, HTTP mode is stateless: each request gets a fresh read-only MCP server + transport, so it can autoscale on serverless hosts without sticky sessions.
+No API keys or authentication required. The server runs locally via stdio. HTTP mode is also available for inspectors, web clients, and ChatGPT Apps SDK experiments: `npx -y -p semiotic semiotic-mcp --http --port 3001`. It binds to `127.0.0.1` by default; intentionally expose another interface with `--host 0.0.0.0` or `MCP_HOST=0.0.0.0`. Since 3.7.2, HTTP mode is stateless: each request gets a fresh read-only MCP server + transport, so it can autoscale on serverless hosts without sticky sessions.
 
 For ChatGPT developer mode, expose the HTTP endpoint over HTTPS with a tunnel and create a connector that points at `https://<your-tunnel>/mcp`. The experimental Apps SDK surface is `renderInteractiveChart`, which returns a `text/html;profile=mcp-app` widget template plus a hidden SVG payload rendered by Semiotic on the MCP server.
 
@@ -763,13 +763,13 @@ Args: {
 For quick validation without an MCP client:
 
 ```bash
-npx semiotic-ai --list         # list components with import paths and renderability
-npx semiotic-ai --list --json  # machine-readable component index
-npx semiotic-ai --schema GaugeChart
-npx semiotic-ai --suggest '{"data":[{"category":"A","value":10}],"intent":"comparison"}'
-npx semiotic-ai --doctor       # validate component + props JSON
-npx semiotic-ai --schema       # dump all chart schemas
-npx semiotic-ai --compact      # compact schema (fewer tokens)
+npx -p semiotic semiotic-ai --list         # list components with import paths and renderability
+npx -p semiotic semiotic-ai --list --json  # machine-readable component index
+npx -p semiotic semiotic-ai --schema GaugeChart
+npx -p semiotic semiotic-ai --suggest '{"data":[{"category":"A","value":10}],"intent":"comparison"}'
+npx -p semiotic semiotic-ai --doctor       # validate component + props JSON
+npx -p semiotic semiotic-ai --schema       # dump all chart schemas
+npx -p semiotic semiotic-ai --compact      # compact schema (fewer tokens)
 ```
 
 `--doctor` uses the full `diagnoseConfig` checks when `dist` is available and falls back to schema-only validation in clean source checkouts.
@@ -791,7 +791,7 @@ Secondary-directory freshness and release ownership are tracked in
 Agent-facing API surface:
 
 - **`AGENTS.md`** is the concise repository development contract and **`CLAUDE.md`** imports it for Claude Code. These stay repository-local rather than shipping irrelevant contributor instructions to package consumers.
-- **`ai/reference.md`**, **`ai/schema.json`**, **`ai/surface-manifest.json`**, **`ai/behaviorContracts.cjs`**, and **`agent-skill/semiotic-charts/SKILL.md`** are bundled in the npm tarball (see `package.json#files`). The reference is the on-demand product guide printed by `npx semiotic-ai`; the schema, manifest, contracts, and portable skill provide structured generation and validation guidance.
+- **`ai/reference.md`**, **`ai/schema.json`**, **`ai/surface-manifest.json`**, **`ai/behaviorContracts.cjs`**, and **`agent-skill/semiotic-charts/SKILL.md`** are bundled in the npm tarball (see `package.json#files`). The reference is the on-demand product guide printed by `npx -p semiotic semiotic-ai`; the schema, manifest, contracts, and portable skill provide structured generation and validation guidance.
 - [**`semiotic.nteract.io/llms.txt`**](https://semiotic.nteract.io/llms.txt) + [**`/llms-full.txt`**](https://semiotic.nteract.io/llms-full.txt) — deployed at the docs site per the [llms.txt standard](https://llmstxt.org). Agents fetch the navigation map (`llms.txt`) or the full inlined docs (`llms-full.txt`) over HTTP; they're not part of the npm package itself.
 
 ## Documentation

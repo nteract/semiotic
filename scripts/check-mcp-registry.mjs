@@ -26,6 +26,7 @@
  * and the CI workflow.
  */
 import { readFileSync, existsSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -278,6 +279,23 @@ for (const mode of ["preflight", "verify"]) {
 if (publisherWorkflow.includes("REGISTRY_SEARCH_URL")) {
   fail("Registry publication must not depend on a single paginated search response.")
 }
+
+// Registry clients invoke the package name as the default executable (#1574).
+if (pkg.bin?.semiotic !== "ai/dist/mcp-server.js") {
+  fail('package.json#bin must map "semiotic" to "ai/dist/mcp-server.js" for Registry installs.')
+}
+
+// Prefer explicit package selection over the compatibility alias packages (#1574).
+let bareNpx = ""
+try {
+  bareNpx = execFileSync("git", ["grep", "-nE",
+    String.raw`npx semiotic-(mcp|ai)([^a-z-]|$)|"args": \["semiotic-mcp"\]`,
+    "--", ":!CHANGELOG.md"], { cwd: repoRoot, encoding: "utf8" })
+} catch (error) {
+  // git grep exits 1 when nothing matches; other failures must fail the gate.
+  if (error.status !== 1) fail(`Could not check npm invocations: ${error.message}`)
+}
+if (bareNpx) fail(`Use "npx -y -p semiotic semiotic-mcp" / "npx -p semiotic semiotic-ai":\n${bareNpx}`)
 
 if (errors.length) {
   console.error("\n✗ MCP Registry submission would fail:\n")

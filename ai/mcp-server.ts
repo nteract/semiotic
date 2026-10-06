@@ -33,16 +33,16 @@
  *   "mcpServers": {
  *     "semiotic": {
  *       "command": "npx",
- *       "args": ["semiotic-mcp"]
+ *       "args": ["-y", "-p", "semiotic", "semiotic-mcp"]
  *     }
  *   }
  * }
  *
  * HTTP mode (loopback-only by default):
- *   npx semiotic-mcp --http --port 3001
+ *   npx -y -p semiotic semiotic-mcp --http --port 3001
  *
  * Bind intentionally to a public interface only when needed:
- *   npx semiotic-mcp --http --host 0.0.0.0 --port 3001
+ *   npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001
  */
 
 import {

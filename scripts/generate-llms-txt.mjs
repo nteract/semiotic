@@ -104,7 +104,7 @@ const INTELLIGENCE = `## Intelligence (AI surface)
 - [Variant Discovery & Repair](/intelligence/variant-discovery): proposeVariant, evaluateVariantProposal, repairChartConfig
 - [Interrogation](/intelligence/interrogation): useChartInterrogation — chat with a chart's data
 - [Agent-Reader Grounding](/intelligence/reader-grounding): buildReaderGrounding — description + intent + structure payload
-- [CLI & MCP](/intelligence/cli-mcp): npx semiotic-ai flags and the npx semiotic-mcp tool server`
+- [CLI & MCP](/intelligence/cli-mcp): npx -p semiotic semiotic-ai flags and the npx -y -p semiotic semiotic-mcp tool server`
 
 const FEATURES = `## Features
 

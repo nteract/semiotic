@@ -908,7 +908,7 @@ export function generatePage(shellHtml, routePath, blogMeta = null, machineDoc =
       <p><a href="/">Home</a> \u00b7 <a href="/getting-started">Getting Started</a> \u00b7 <a href="/charts">Charts</a> \u00b7 <a href="/features">Features</a> \u00b7 <a href="/playground">Playground</a></p>
       <p>This page requires JavaScript for interactive chart demos.</p>
       <p><strong>AI / Machine-readable docs:</strong> <a href="/llms.txt">llms.txt</a> \u00b7 <a href="/llms-full.txt">llms-full.txt</a> \u00b7 <a href="/CLAUDE.md">Full AI Reference</a> \u00b7 <a href="/schema.json">schema.json</a> \u00b7 <a href="/api-reference.md">API Reference</a> \u00b7 <a href="/examples.md">Examples</a></p>
-      <p><a href="https://github.com/nteract/semiotic">View on GitHub</a> \u00b7 <code>npx semiotic-ai</code> for CLI access</p>
+      <p><a href="https://github.com/nteract/semiotic">View on GitHub</a> \u00b7 <code>npx -p semiotic semiotic-ai</code> for CLI access</p>
     </nav>${renderMachineReadableFallback(machineDoc)}`
 
   // JSON-LD injected here (not in source HTML) so bundlers do not parse it as an asset
