@@ -72,12 +72,12 @@ export function useWasHydratingFromSSR(): boolean {
 /**
  * Shared post-hydration lifecycle for every Stream Frame.
  *
- * When the hydration signals change and `hydrated` is true:
+ * When an SSR hydration handoff reaches `hydrated === true`:
  *
  * 1. If we just rehydrated from SSR, cancel the intro animation that
  *    the SVG-branch's `computeScene` installed (the server already
  *    painted the chart in its final state).
- * 2. Mark the scene dirty, or request a repaint of an already-built CSR scene.
+ * 2. Mark the scene dirty.
  * 3. Cancel queued rendering and paint synchronously via `renderFnRef.current()`.
  *
  * Step 3 is the timing-critical bit. The hook fires inside an
@@ -91,6 +91,10 @@ export function useWasHydratingFromSSR(): boolean {
  * actually drawn. Synchronous paint inside the layout effect makes
  * frame N's paint already include the canvas content; no flash.
  *
+ * Fresh client mounts leave painting to their normal scheduler, after data
+ * and config effects have run. Painting them from this layout effect would
+ * project an empty store before ingestion and responsive measurement settle.
+ *
  * Each frame supplies its own `cleanup` for unmount work that's
  * frame-specific (XY/Ordinal clear the streaming adapter; Geo clears
  * its tile cache). Physics manages worker/store cleanup in its own lifecycle.
@@ -102,14 +106,10 @@ export interface HydrationLifecycleOptions {
    * Ref to the frame's pipeline store. The store optionally implements
    * `cancelIntroAnimation()`; the hook calls it when the SVG → canvas
    * swap fires after SSR rehydration. Physics and custom stores without
-   * intro transitions can omit it. `sceneNodes` + `markStylePaintPending()`
-   * let the hook repaint an already-built scene instead of forcing a rebuild;
-   * both are optional so a minimal custom store still works.
+   * intro transitions can omit it.
    */
   storeRef: RefObject<{
     cancelIntroAnimation?: () => void
-    sceneNodes?: { length: number }
-    markStylePaintPending?: () => void
   } | null>
   /**
    * Mutable dirty flag the renderer reads on its next paint. The hook
@@ -149,28 +149,12 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     cleanup
   } = opts
   useIsomorphicLayoutEffect(() => {
-    // The first CSR commit has a canvas but its passive data/config effects
-    // have not run yet. useHydration schedules a second commit before paint;
-    // paint there, after ingestion, instead of projecting an empty store now.
-    if (!hydrated) return
+    // Fresh CSR mounts already report hydrated on their first commit, before
+    // passive ingestion. Only SSR needs a synchronous SVG → canvas handoff.
+    if (!hydrated || !wasHydratingFromSSR) return
     const store = storeRef.current
-    if (hydrated && wasHydratingFromSSR) {
-      store?.cancelIntroAnimation?.()
-    }
-    // A frame that already built its scene synchronously (the network frame
-    // pre-builds for keyboard nav / hit-testing / htmlMarks) only needs a
-    // repaint here, not a rebuild — forcing `dirtyRef` would recompute an
-    // identical scene (flagged by SceneRevisionDiagnostics). Restrict this to
-    // the CSR path: SSR rehydration keeps the unconditional rebuild so the
-    // just-cancelled intro state is reflected, and frames that haven't painted
-    // a scene yet (XY/ordinal/geo mount, empty SSR client store) fall through
-    // to the dirty-flag build.
-    const hasBuiltScene = !!store?.sceneNodes && store.sceneNodes.length > 0
-    if (!wasHydratingFromSSR && hasBuiltScene && store?.markStylePaintPending) {
-      store.markStylePaintPending()
-    } else {
-      dirtyRef.current = true
-    }
+    store?.cancelIntroAnimation?.()
+    dirtyRef.current = true
     cancelRender?.()
     // Synchronous paint — see the hook's docstring for why an rAF
     // here would produce a one-frame blank-canvas flicker on SSR
