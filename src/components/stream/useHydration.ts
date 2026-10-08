@@ -1,9 +1,9 @@
 /**
  * useHydration — small hook that distinguishes "first client render after
  * SSR" from "subsequent client renders." Returns false on the server pass
- * and during the first client render (so the markup matches what the
+ * and during the first hydration render (so the markup matches what the
  * server emitted, satisfying React's hydration check), then flips to
- * true after the first commit.
+ * true after the first commit. Fresh client mounts return true immediately.
  *
  * Stream Frames use this to keep their SVG-fallback branch active during
  * hydration: server output equals first-client-render output, then a
@@ -28,10 +28,11 @@ const useIsomorphicLayoutEffect =
 /**
  * Returns `false` on the server (no effect fires there) and during the
  * first client render after hydration; `true` from the first
- * post-commit re-render onward.
+ * post-commit re-render onward. Fresh client mounts return true immediately.
  */
 export function useHydration(): boolean {
-  const [hydrated, setHydrated] = useState(false)
+  const isHydrating = useSyncExternalStore(noopSubscribe, csrSnapshot, ssrSnapshot)
+  const [hydrated, setHydrated] = useState(() => !isHydrating)
   useIsomorphicLayoutEffect(() => {
     setHydrated(true)
   }, [])

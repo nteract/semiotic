@@ -19,6 +19,7 @@
 import * as React from "react"
 import { renderToString } from "react-dom/server"
 import { hydrateRoot } from "react-dom/client"
+import { render } from "@testing-library/react"
 import { act } from "react"
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
@@ -92,5 +93,22 @@ describe("useHydration / useWasHydratingFromSSR", () => {
     expect(last.ssr).toBe(false)
 
     rootBox.current?.unmount()
+  })
+
+  it("commits a fresh client mount once with hydration already complete", () => {
+    const commits: Array<{ hydrated: boolean; ssr: boolean }> = []
+    let renders = 0
+    function ClientProbe() {
+      const hydrated = useHydration()
+      const ssr = useWasHydratingFromSSR()
+      renders++
+      React.useLayoutEffect(() => {
+        commits.push({ hydrated, ssr })
+      })
+      return null
+    }
+    render(<ClientProbe />)
+    expect(renders).toBe(1)
+    expect(commits).toEqual([{ hydrated: true, ssr: false }])
   })
 })
