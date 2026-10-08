@@ -1,9 +1,6 @@
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import type { Datum } from "../charts/shared/datumTypes"
-import {
-  insertSvgRootContent,
-  mapSvgAttributes,
-} from "../shared/svgRoot"
+import { escapeXmlAttribute, insertSvgRootContent, mapSvgAttributes } from "../shared/svgRoot"
 import { renderedSvgDimensions } from "./svgSizing"
 import {
   serializeArtifactContract,
@@ -185,7 +182,7 @@ function roundSvgNumber(token: string, precision: number): string {
   if (!Number.isFinite(value)) return token
   const factor = 10 ** precision
   const rounded = Math.round((value + Number.EPSILON) * factor) / factor
-  return Object.is(rounded, -0) ? "0" : String(rounded)
+  return String(rounded)
 }
 
 /**
@@ -203,23 +200,20 @@ function roundSvgGeometryValue(value: string, precision: number, linearCount = 0
   let hasPreviousNumber = false
   let match: RegExpExecArray | null
   let index = 0
-  let command = ""
+  let arcCommand = false
   let parameterIndex = 0
 
   while ((match = numberPattern.exec(value))) {
     const gap = value.slice(cursor, match.index)
-    if (pathData) {
-      const commands = gap.match(/[a-df-z]/gi)
-      if (commands?.length) {
-        command = commands[commands.length - 1].toLowerCase()
-        parameterIndex = 0
-      }
+    if (pathData && /[a-df-z]/i.test(gap)) {
+      arcCommand = /a[^a-df-z]*$/i.test(gap)
+      parameterIndex = 0
     }
     // Arc flags consume one character even when adjacent to the next flag
     // or endpoint: A10 10 0 0110 10 means flags 0,1 and endpoint 10,10.
     let token = match[0]
     const arcParameter = parameterIndex++ % 7
-    if (command === "a" && (arcParameter === 3 || arcParameter === 4)) {
+    if (arcCommand && (arcParameter === 3 || arcParameter === 4)) {
       token = token[0]
       if (token !== "0" && token !== "1") return value
       numberPattern.lastIndex = match.index + 1
@@ -639,42 +633,12 @@ export async function renderToImage(
   props: Datum,
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
-  const { background } = options
-  const imageTheme = background ? resolveTheme(props.theme) : undefined
-  const imageProps = imageTheme ? {
-    ...props,
-    background,
-    theme: { ...imageTheme, colors: { ...imageTheme.colors, background } }
-  } : props
-
-  // Generate SVG
-  let svg: string
-  const frameTypes = ["xy", "ordinal", "network", "geo", "physics"]
-  if (frameTypes.includes(frameTypeOrComponent)) {
-    svg = renderToStaticSVG(
-      frameTypeOrComponent as FrameType,
-      imageProps as StaticFrameProps
-    )
-  } else {
-    svg = renderChart(frameTypeOrComponent, imageProps)
-  }
-
-  // Rasterizers paint SVG geometry rather than CSS backgrounds. Include a
-  // full-surface backdrop for composite and value renderers as well.
-  if (background) {
-    svg = insertSvgRootContent(svg, ReactDOMServer.renderToStaticMarkup(
-      <rect width="100%" height="100%" fill={background} />
-    ))
-  }
-
-  const requestedDimensions = {
-    width: props.width || props.size?.[0] || 600,
-    height: props.height || props.size?.[1] || 400
-  }
-  const { width, height } = renderedSvgDimensions(svg, requestedDimensions)
-
-  const { rasterizeSVG } = await import("./rasterizeSVG")
-  return rasterizeSVG(svg, width, height, options)
+  const { renderImage } = await import("./renderToImage")
+  return renderImage(
+    frameTypeOrComponent, props, options,
+    renderToStaticSVG, renderChart, resolveTheme,
+    renderedSvgDimensions, insertSvgRootContent, escapeXmlAttribute
+  )
 }
 
 export function renderDashboard(
