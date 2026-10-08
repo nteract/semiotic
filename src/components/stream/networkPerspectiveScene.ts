@@ -1,4 +1,4 @@
-import { getMax, getMin } from "../charts/shared/minMax"
+import { getMinMax } from "../charts/shared/minMax"
 /**
  * Project a laid-out network scene through a {@link NetworkPerspectiveFrame}.
  *
@@ -458,14 +458,12 @@ export function prepareNetworkPerspectiveScene(
       const top = samplePolygon(segs).map(([x, y]) => map(x, y))
       const faces = extrudeOutline(top, t * frame.lift)
       const drop = t * frame.lift
-      const xs = top.map((p) => p[0])
-      const ys = top.map((p) => p[1])
-      const x0 = getMin(xs)
-      const y0 = getMin(ys)
+      const [x0, x1] = getMinMax(top, (p) => p[0])
+      const [y0, y1] = getMinMax(top, (p) => p[1])
       return {
         pathD: serializeSvgPath(segs, map),
         faces: faces.length ? faces : undefined,
-        bounds: [x0, y0, getMax(xs) - x0, getMax(ys) + drop - y0] as const
+        bounds: [x0, y0, x1 - x0, y1 + drop - y0] as const
       }
     }
     for (const item of items) {

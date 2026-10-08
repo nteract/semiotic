@@ -174,62 +174,47 @@ function positionWithCustomHook<D>(
   })
 }
 
-function positionQuantileStrip<D>(
+/** Numeric layouts share extent scans and value-to-position callbacks. */
+function positionNumericTokens<D>(
   tokens: readonly VisualToken<D>[],
-  options: TokenLayerOptions<D>
+  options: TokenLayerOptions<D>,
+  dotplot: boolean
 ): PositionedToken<D>[] {
   if (tokens.length === 0) return []
   const x0 = options.x ?? 0
   const y0 = options.y ?? 0
-  const cellHeight =
-    options.cellHeight ??
-    (typeof options.tokenSize === "number" ? options.tokenSize : 12)
+  const tokenSize = dotplot
+    ? typeof options.tokenSize === "number" ? options.tokenSize : 12
+    : 0
+  const quantileHeight = dotplot ? 0 : options.cellHeight ?? (
+    typeof options.tokenSize === "number" ? options.tokenSize : 12
+  )
   const gutter = options.gutter ?? 2
-  const rows = Math.max(1, Math.floor(options.rows ?? 1))
-  const values = tokens.map(numericValue)
-  const [min, max] = getMinMax(values)
+  const binWidth = dotplot ? options.cellWidth ?? tokenSize + gutter : 12
+  const step = dotplot
+    ? options.cellHeight ?? tokenSize + gutter
+    : quantileHeight + gutter
+  const rows = dotplot ? 1 : Math.max(1, Math.floor(options.rows ?? 1))
+  const [min, max] = getMinMax(tokens, numericValue)
   const span = max - min || 1
+  const binCounts = dotplot ? new Map<number, number>() : null
   return tokens.map((token, index) => {
     const value = numericValue(token)
-    const row = index % rows
-    const x = options.valueToX
-      ? options.valueToX(value, token)
-      : x0 + ((value - min) / span) * (options.width ?? Math.max(1, tokens.length - 1) * 12)
-    const y = options.valueToY
-      ? options.valueToY(value, token)
-      : y0 + row * (cellHeight + gutter)
-    return { ...token, x, y, row, column: index }
-  })
-}
-
-function positionDotplot<D>(
-  tokens: readonly VisualToken<D>[],
-  options: TokenLayerOptions<D>
-): PositionedToken<D>[] {
-  if (tokens.length === 0) return []
-  const x0 = options.x ?? 0
-  const y0 = options.y ?? 0
-  const tokenSize =
-    typeof options.tokenSize === "number" ? options.tokenSize : 12
-  const gutter = options.gutter ?? 2
-  const binWidth = options.cellWidth ?? tokenSize + gutter
-  const step = options.cellHeight ?? tokenSize + gutter
-  const values = tokens.map(numericValue)
-  const [min, max] = getMinMax(values)
-  const span = max - min || 1
-  const binCounts = new Map<number, number>()
-  return tokens.map((token) => {
-    const value = numericValue(token)
-    const x = options.valueToX
+    let row = index % rows
+    let column = index
+    let x = options.valueToX
       ? options.valueToX(value, token)
       : x0 + ((value - min) / span) * (options.width ?? Math.max(1, tokens.length - 1) * binWidth)
-    const bin = Math.round((x - x0) / Math.max(1, binWidth))
-    const row = binCounts.get(bin) ?? 0
-    binCounts.set(bin, row + 1)
+    if (dotplot) {
+      column = Math.round((x - x0) / Math.max(1, binWidth))
+      row = binCounts!.get(column) ?? 0
+      binCounts!.set(column, row + 1)
+      x = x0 + column * binWidth
+    }
     const y = options.valueToY
       ? options.valueToY(value, token)
       : y0 + row * step
-    return { ...token, x: x0 + bin * binWidth, y, row, column: bin }
+    return { ...token, x, y, row, column }
   })
 }
 
@@ -270,8 +255,9 @@ function positionTokens<D>(
       : tokenSet.tokens
   if (options.positionToken) return positionWithCustomHook(tokens, options)
   const layout = options.layout ?? tokenSet.encoding.layout ?? "grid"
-  if (layout === "quantile-strip") return positionQuantileStrip(tokens, options)
-  if (layout === "dotplot") return positionDotplot(tokens, options)
+  if (layout === "quantile-strip" || layout === "dotplot") {
+    return positionNumericTokens(tokens, options, layout === "dotplot")
+  }
   if (layout === "bar-segment") {
     if (!options.valueToX) {
       throw new Error(

@@ -1,4 +1,4 @@
-import { getMax, getMin } from "../charts/shared/minMax"
+import { getMin, getMinMax } from "../charts/shared/minMax"
 import * as React from "react"
 import type { ReactNode } from "react"
 import {
@@ -203,11 +203,9 @@ export function lineageHullBounds(
     ])
     const hull = expandConvexHull(convexHull(corners), options.padding)
     if (!hull.length) continue
-    const xs = hull.map((point) => point.x)
-    const ys = hull.map((point) => point.y)
-    const minX = getMin(xs)
-    const minY = getMin(ys)
-    bounds.push({ x: minX, y: minY, width: getMax(xs) - minX, height: getMax(ys) - minY })
+    const [minX, maxX] = getMinMax(hull, (point) => point.x)
+    const [minY, maxY] = getMinMax(hull, (point) => point.y)
+    bounds.push({ x: minX, y: minY, width: maxX - minX, height: maxY - minY })
     const label = options.label?.(groupValue)
     if (label) bounds.push({ x: minX + 8, y: minY + 14, z: 0, extent: [0, label.length * 6.6, 12, 3] })
   }
