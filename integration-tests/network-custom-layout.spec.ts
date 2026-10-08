@@ -1,6 +1,44 @@
 import { test, expect } from "@playwright/test"
 import type { NetworkViewportSnapshot } from "../src/components/stream/networkViewportTypes"
 
+test("network hover follows band paint order and thick strokes through zoom, pan and resize", async ({ page }) => {
+  await page.goto("/network-custom-layout-examples/?zoom-test&hit-test&tooltip=owned")
+  const frame = page.locator(".stream-network-frame")
+  const tooltip = frame.locator(".stream-network-tooltip")
+  await expect(page.getByLabel("Draft", { exact: true })).toBeVisible()
+  let view = { x: 0, y: 0, k: 1 }
+  const hover = async (x: number, y: number, id: string) => {
+    const bounds = (await frame.boundingBox())!
+    await page.mouse.move(bounds.x + 30 + view.x + x * view.k, bounds.y + 20 + view.y + y * view.k)
+    await expect(page.getByTestId("zoom-hover")).toHaveText(id)
+    if (id === "none") {
+      await expect(tooltip).toHaveCount(0)
+    } else {
+      await expect(tooltip).toHaveText(id)
+      const tip = (await tooltip.boundingBox())!
+      expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+      expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+      expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+      expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+    }
+  }
+  const checkGeometry = async () => {
+    await hover(200, 210, "top-band")
+    await hover(120, 210, "bottom-band")
+    await hover(200, 294, "wide-path")
+    await hover(200, 324, "wide-line")
+    await hover(200, 260, "none")
+  }
+  await checkGeometry()
+  view = { x: -30, y: -100, k: 1.2 }
+  await page.evaluate((next) => window.networkZoomHandle!.zoomTo(next, 0), view)
+  await checkGeometry()
+  await page.getByRole("button", { name: "Narrow chart" }).click()
+  await checkGeometry()
+  await page.mouse.move(0, 0)
+  await expect(tooltip).toHaveCount(0)
+})
+
 test("network overlay edges hit their stroke or filled band, and nested rows take precedence", async ({
   page
 }) => {

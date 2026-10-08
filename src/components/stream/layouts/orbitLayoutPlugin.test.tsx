@@ -8,6 +8,7 @@ import type {
   RealtimeNode
 } from "../networkTypes"
 import { orbitLayoutPlugin } from "./orbitLayoutPlugin"
+import { findNearestNetworkNode } from "../NetworkCanvasHitTester"
 
 function node(id: string, x: number, y: number): RealtimeNode {
   return {
@@ -26,6 +27,25 @@ function node(id: string, x: number, y: number): RealtimeNode {
 }
 
 describe("orbitLayoutPlugin scene styles", () => {
+  it("keeps generated ring segments outside the interactive edge surface", () => {
+    const nodes: RealtimeNode[] = []
+    const edges: RealtimeEdge[] = []
+    const config: NetworkPipelineConfig = {
+      chartType: "orbit", orbitShowRings: true, nodeIDAccessor: "id",
+      __hierarchyRoot: { id: "root", children: [{ id: "a" }, { id: "b" }] }
+    }
+    orbitLayoutPlugin.computeLayout(nodes, edges, config, [400, 300])
+    const scene = orbitLayoutPlugin.buildScene(nodes, edges, config, [400, 300])
+    const rings = scene.sceneEdges.filter((edge) => edge.datum == null)
+    expect(rings.length).toBeGreaterThan(0)
+    for (const ring of rings) {
+      expect(ring.interactive).toBe(false)
+      if (ring.type === "line") {
+        expect(findNearestNetworkNode([], [ring], (ring.x1 + ring.x2) / 2, (ring.y1 + ring.y2) / 2)).toBeNull()
+      }
+    }
+  })
+
   it("applies edgeStyle, including cursor, to data edges but not decorative rings", () => {
     const source = node("source", 20, 20)
     const target = node("target", 80, 60)

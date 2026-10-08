@@ -236,6 +236,36 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
   // ── Edge hit testing ─────────────────────────────────────────────────
 
   describe("edge hit testing — lines", () => {
+    it("ignores datum-less and explicitly noninteractive geometry", () => {
+      const ring: NetworkLineEdge = {
+        type: "line", x1: 0, y1: 0, x2: 100, y2: 0,
+        style: { stroke: "gray" }, datum: null
+      }
+      expect(findNearestNetworkNode([], [ring], 50, 0)).toBeNull()
+      expect(findNearestNetworkNode([], [{ ...ring, datum: { id: "decoration" }, interactive: false }], 50, 0)).toBeNull()
+    })
+
+    it("returns the last-painted overlapping line", () => {
+      const bottom: NetworkLineEdge = {
+        type: "line", x1: 0, y1: 0, x2: 100, y2: 0,
+        style: { stroke: "gray" }, datum: { id: "bottom" }
+      }
+      const top = { ...bottom, y1: 2, y2: 2, datum: { id: "top" } }
+      expect(findNearestNetworkNode([], [bottom, top], 50, 0)?.datum?.id).toBe("top")
+    })
+
+    it("hits the full painted width of a thick line after zoom", () => {
+      const thick: NetworkLineEdge = {
+        type: "line", x1: 0, y1: 0, x2: 100, y2: 0,
+        style: { stroke: "gray", strokeWidth: 40 }, datum: { id: "thick" }
+      }
+      for (const zoom of [0.5, 1, 2]) {
+        expect(findNearestNetworkNode([], [thick], 50, 19, 30, null, 0, true, zoom)?.datum?.id).toBe("thick")
+        expect(findNearestNetworkNode([], [thick], 50, 25, 30, null, 0, true, zoom)).toBeNull()
+      }
+      expect(findNearestNetworkNode([], [{ ...thick, style: { stroke: "none" } }], 50, 0)).toBeNull()
+    })
+
     const lineEdge: NetworkLineEdge = {
       type: "line",
       x1: 100,
@@ -381,6 +411,34 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
     const PROCESS_SANKEY_BAND_PATH =
       "M50,80 L100,82 L150,75 L200,78 L250,80 " +
       "L250,120 L200,118 L150,125 L100,122 L50,120 Z"
+
+    it("hits the topmost band and ignores datum-less paths in front of it", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const bottom: NetworkSceneEdge = {
+          type: "bezier", pathD: PROCESS_SANKEY_BAND_PATH,
+          style: { fill: "red" }, datum: { id: "bottom" }
+        }
+        const top = { ...bottom, pathD: "M100,90 L200,90 L200,110 L100,110 Z", datum: { id: "top" } }
+        expect(hitTest([], [bottom, top, { ...bottom, datum: null }], 150, 100)?.datum?.id).toBe("top")
+        expect(hitTest([], [bottom, top], 75, 100)?.datum?.id).toBe("bottom")
+      } finally { restore() }
+    })
+
+    it("hits the full painted width of a thick path stroke", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const edge: NetworkSceneEdge = {
+          type: "curved", pathD: "M0,0 L100,0", style: { fill: "none", stroke: "navy", strokeWidth: 40 }, datum: { id: "wide" }
+        }
+        expect(hitTest([], [edge], 50, 19)?.datum?.id).toBe("wide")
+        expect(hitTest([], [edge], 50, 25)).toBeNull()
+      } finally { restore() }
+    })
 
     it("hits transformed path regions in paint order without claiming their empty bounding-box corners", async () => {
       const restore = installGeometryFakes()

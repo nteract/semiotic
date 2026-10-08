@@ -58,7 +58,14 @@ const layout: NetworkCustomLayout = () => {
         y2: 200,
         datum: { id: "edge" },
         style: { stroke: "#228844", strokeWidth: 2 }
-      }
+      },
+      ...(new URLSearchParams(location.search).has("hit-test") ? [
+        { type: "bezier" as const, pathD: "M100,180 L350,180 L350,240 L100,240 Z", datum: { id: "bottom-band" }, style: { fill: "steelblue", stroke: "none" } },
+        { type: "ribbon" as const, pathD: "M150,195 L300,195 L300,225 L150,225 Z", datum: { id: "top-band" }, style: { fill: "orange", stroke: "none" } },
+        { type: "curved" as const, pathD: "M100,260 L350,260", datum: null, style: { stroke: "gray" } },
+        { type: "curved" as const, pathD: "M100,285 L350,285", datum: { id: "wide-path" }, style: { fill: "none", stroke: "navy", strokeWidth: 20 } },
+        { type: "line" as const, x1: 100, y1: 315, x2: 350, y2: 315, datum: { id: "wide-line" }, style: { stroke: "green", strokeWidth: 20 } }
+      ] : [])
     ],
     htmlMarks: [
       {

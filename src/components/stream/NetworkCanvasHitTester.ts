@@ -107,20 +107,19 @@ export function findNearestNetworkNode(
   if (bestNode) return bestNode
   if (!includeEdges) return null
 
-  // Check edges if no node hit. Decorative edges (e.g. ProcessSankey's
-  // gradient stubs) carry `interactive: false` to opt out — they paint
-  // but shouldn't intercept hover.
-  for (const edge of sceneEdges) {
-    if ((edge as { interactive?: boolean }).interactive === false) continue
+  // Edges paint in array order; the last-painted semantic edge owns overlap.
+  // Decorative geometry must never produce an empty tooltip or observation.
+  for (let index = sceneEdges.length - 1; index >= 0; index--) {
+    const edge = sceneEdges[index]
+    if (edge.datum == null || edge.interactive === false) continue
     const result = hitTestEdge(edge, px, py, 5 / viewScale)
-    if (result) result.mark = edge
-    if (result && result.distance < bestDist) {
-      bestNode = result
-      bestDist = result.distance
+    if (result) {
+      result.mark = edge
+      return result
     }
   }
 
-  return bestNode
+  return null
 }
 
 // ── Node hit testing ────────────────────────────────────────────────────
@@ -366,11 +365,13 @@ function hitTestEdge(
 }
 
 function hitTestLineEdge(
-  edge: { type: "line"; x1: number; y1: number; x2: number; y2: number; datum: SceneDatum },
+  edge: Extract<NetworkSceneEdge, { type: "line" }>,
   px: number,
   py: number,
   tolerance: number
 ): NetworkHitResult | null {
+  if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
+  tolerance = Math.max(tolerance, (edge.style.strokeWidth ?? 1) / 2)
   // Point-to-line-segment distance
   const dx = edge.x2 - edge.x1
   const dy = edge.y2 - edge.y1
@@ -426,11 +427,16 @@ function hitTestPathEdge(
       }
     }
 
-    // Also check stroke with generous hit tolerance for thin curved/ribbon edges
+    if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
+    // Retain pointer slop for thin edges and include the full painted stroke.
     const prevLineWidth = ctx.lineWidth
-    ctx.lineWidth = tolerance * 2
-    const inStroke = ctx.isPointInStroke(path, px, py)
-    ctx.lineWidth = prevLineWidth
+    let inStroke: boolean
+    try {
+      ctx.lineWidth = Math.max(tolerance * 2, edge.style.strokeWidth ?? 1)
+      inStroke = ctx.isPointInStroke(path, px, py)
+    } finally {
+      ctx.lineWidth = prevLineWidth
+    }
     if (inStroke) {
       return {
         type: "edge",
