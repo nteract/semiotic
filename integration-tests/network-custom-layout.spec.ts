@@ -1,6 +1,48 @@
 import { test, expect } from "@playwright/test"
 import type { NetworkViewportSnapshot } from "../src/components/stream/networkViewportTypes"
 
+test("node hover and click hand off to edges at twelve screen pixels through zoom, pan and resize", async ({ page }) => {
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  await page.goto("/network-custom-layout-examples/?zoom-test&node-hit-test&tooltip=owned")
+  const frame = page.locator(".stream-network-frame")
+  const tooltip = frame.locator(".stream-network-tooltip")
+  await expect(page.getByLabel("Draft", { exact: true })).toBeVisible()
+
+  for (const narrow of [false, true]) {
+    if (narrow) await page.getByRole("button", { name: "Narrow chart" }).click()
+    for (const k of [0.25, 1, 3]) {
+      await page.evaluate((scale) => window.networkZoomHandle!.zoomTo({
+        k: scale, x: 100 - 500 * scale, y: 100 - 400 * scale
+      }, 0), k)
+      await expect(page.getByLabel("Zoom level")).toHaveText(`${k * 100}%`)
+      const bounds = (await frame.boundingBox())!
+      const hover = async (offset: number, id: string) => {
+        const x = bounds.x + 130 + offset, y = bounds.y + 120
+        await page.mouse.move(x, y)
+        await expect(page.getByTestId("zoom-hover")).toHaveText(id)
+        await expect(tooltip).toHaveText(id)
+        const tip = (await tooltip.boundingBox())!
+        expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+        expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+        expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+        expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+        return { x, y }
+      }
+      await hover(0, "tiny-node")
+      for (const [offset, id] of [[11, "tiny-node"], [13, "node-edge"]] as const) {
+        const point = await hover(offset, id)
+        await page.mouse.click(point.x, point.y)
+        await expect(page.getByTestId("zoom-activate")).toHaveText(id)
+      }
+      await page.mouse.move(0, 0)
+      await expect(page.getByTestId("zoom-hover")).toHaveText("none")
+      await expect(tooltip).toHaveCount(0)
+    }
+  }
+  expect(errors).toEqual([])
+})
+
 test("network hover follows band paint order and thick strokes through zoom, pan and resize", async ({ page }) => {
   await page.goto("/network-custom-layout-examples/?zoom-test&hit-test&tooltip=owned")
   const frame = page.locator(".stream-network-frame")

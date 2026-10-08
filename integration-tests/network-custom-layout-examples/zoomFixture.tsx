@@ -48,6 +48,9 @@ const layout: NetworkCustomLayout = () => {
         id: "b",
         style: { fill: "#6688aa" }
       },
+      ...(new URLSearchParams(location.search).has("node-hit-test") ? [
+        { type: "circle" as const, cx: 500, cy: 400, r: 1, datum: { id: "tiny-node" }, style: { fill: "orange" } }
+      ] : []),
       ...(new URLSearchParams(location.search).has("hit-test") ? [
         { type: "circle" as const, cx: 50, cy: 55, r: 10, datum: { id: "foreground-circle" }, style: { fill: "orange" } },
         { type: "rect" as const, x: 30, y: 35, w: 40, h: 40, datum: { id: "background-rect" }, style: { fill: "gray" } },
@@ -56,6 +59,9 @@ const layout: NetworkCustomLayout = () => {
       ] : [])
     ],
     sceneEdges: [
+      ...(new URLSearchParams(location.search).has("node-hit-test") ? [
+        { type: "line" as const, x1: 500, y1: 400, x2: 1000, y2: 400, datum: { id: "node-edge" }, style: { stroke: "green", strokeWidth: 2 } }
+      ] : []),
       {
         type: "line",
         x1: 100,
@@ -150,6 +156,7 @@ export function ZoomFixture() {
   const [viewport, setViewport] =
     React.useState<NetworkViewportSnapshot | null>(null)
   const [hover, setHover] = React.useState("none")
+  const [activation, setActivation] = React.useState("none")
   const [zoom, setZoom] = React.useState<NetworkViewTransform>({
     x: 0,
     y: 0,
@@ -159,6 +166,8 @@ export function ZoomFixture() {
   const [accept, setAccept] = React.useState(false)
   const [options, setOptions] = React.useState<NetworkZoomOptions>({
     wheelZoom: true,
+    // This fixture pans through the camera API so mark clicks reach the frame.
+    dragPan: new URLSearchParams(location.search).has("node-hit-test") ? false : undefined,
     duration: new URLSearchParams(location.search).has("animated") ? 180 : 0,
     minZoom: 0.25,
     maxZoom: 4
@@ -213,6 +222,7 @@ export function ZoomFixture() {
         onObservation={(event) => {
           if (event.type === "hover") setHover(String(event.datum?.id))
           if (event.type === "hover-end") setHover("none")
+          if (event.type === "activate") setActivation(String(event.datum?.id))
         }}
         frameProps={{
           ...(rawTooltip ? {
@@ -229,6 +239,7 @@ export function ZoomFixture() {
       />
       <output data-testid="zoom-viewport">{JSON.stringify(viewport)}</output>
       <output data-testid="zoom-hover">{hover}</output>
+      <output data-testid="zoom-activate">{activation}</output>
     </>
   )
 }

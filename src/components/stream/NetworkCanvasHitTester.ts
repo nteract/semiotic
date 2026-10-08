@@ -60,6 +60,8 @@ const NODE_PAINT_LAYER = { rect: 0, circle: 1, arc: 2, symbol: 3, glyph: 4 }
  * Hit test against network scene nodes and edges.
  *
  * Checks nodes first (they're on top), then edges.
+ * Coordinates, radii and maxDistance use scene units; viewScale converts
+ * screen-pixel hit minimums and padding into those units.
  */
 export function findNearestNetworkNode(
   sceneNodes: NetworkSceneNode[],
@@ -89,7 +91,7 @@ export function findNearestNetworkNode(
     const hit = findHitPointInQuadtree(
       nodeQuadtree, px, py, maxDistance, maxNodeRadius,
       (n) => n.cx, (n) => n.cy, (n) => n.r,
-      preferCircleHit
+      preferCircleHit, viewScale
     )
     if (hit) {
       bestNode = hitResult("node", hit.node, hit.node.cx, hit.node.cy, hit.distance)
@@ -99,7 +101,7 @@ export function findNearestNetworkNode(
   for (const node of sceneNodes) {
     // Circles are handled by the quadtree fast path above.
     if (nodeQuadtree && node.type === "circle") continue
-    const result = hitTestNode(node, px, py, maxDistance)
+    const result = hitTestNode(node, px, py, maxDistance, viewScale)
     if (!result) continue
 
     if (!bestNode || paintOrder) {
@@ -156,7 +158,8 @@ function hitTestNode(
   node: NetworkSceneNode,
   px: number,
   py: number,
-  maxDistance: number
+  maxDistance: number,
+  viewScale: number
 ): NetworkHitResult | null {
   if (!node.datum) return null
   switch (node.type) {
@@ -166,7 +169,7 @@ function hitTestNode(
       if (node.pathD && !node._perspectiveToken) {
         return hitTestOutline(node as NetworkCircleNode & { pathD: string }, px, py, node.cx, node.cy)
       }
-      return hitTestPoint(node, px, py, node.cx, node.cy, node.r, maxDistance)
+      return hitTestPoint(node, px, py, node.cx, node.cy, node.r, maxDistance, viewScale)
     case "rect": {
       const hit = hitTestRect(node, px, py)
       if (!hit || !node._hitPath) return hit
@@ -186,13 +189,13 @@ function hitTestNode(
       return null
     }
     case "arc":
-      return hitTestArc(node, px, py)
+      return hitTestArc(node, px, py, viewScale)
     case "symbol":
-      return hitTestPoint(node, px, py, node.cx, node.cy, symbolRadius(node.size), maxDistance)
+      return hitTestPoint(node, px, py, node.cx, node.cy, symbolRadius(node.size), maxDistance, viewScale)
     case "glyph": {
       // The anchor can offset a composite glyph's visual center.
       const geometry = glyphHitGeometry(node.glyph, node.size)
-      return hitTestPoint(node, px, py, node.cx + geometry.centerDx, node.cy + geometry.centerDy, geometry.radius, maxDistance)
+      return hitTestPoint(node, px, py, node.cx + geometry.centerDx, node.cy + geometry.centerDy, geometry.radius, maxDistance, viewScale)
     }
     default:
       return null
@@ -207,12 +210,13 @@ function hitTestPoint(
   cx: number,
   cy: number,
   radius: number,
-  maxDistance: number
+  maxDistance: number,
+  viewScale: number
 ): NetworkHitResult | null {
   const dx = px - cx
   const dy = py - cy
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = getHitRadius(radius, maxDistance)
+  const tolerance = getHitRadius(radius, maxDistance, viewScale)
   if (dist <= tolerance) {
     return hitResult("node", node, cx, cy, dist)
   }
@@ -248,7 +252,8 @@ function hitTestRect(
 function hitTestArc(
   node: NetworkArcNode,
   px: number,
-  py: number
+  py: number,
+  viewScale: number
 ): NetworkHitResult | null {
   if (node.pathD) return hitTestOutline(node as NetworkArcNode & { pathD: string }, px, py, px, py)
   // Convert to polar coordinates relative to arc center
@@ -257,7 +262,8 @@ function hitTestArc(
   const radius = Math.sqrt(dx * dx + dy * dy)
 
   // Check radius bounds
-  if (radius < node.innerR - 2 || radius > node.outerR + 2) return null
+  const padding = 2 / viewScale
+  if (radius < node.innerR - padding || radius > node.outerR + padding) return null
 
   // Check angle bounds
   const angle = normalizeAngle(Math.atan2(dy, dx))
