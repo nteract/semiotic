@@ -419,6 +419,19 @@ describe("generateFrameSequence", () => {
     expect(frames).toHaveLength(1)
     expect(frames[0]).toContain("<svg")
   })
+
+  it("reports the failing snapshot while retaining the blank-frame fallback", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const frames = generateFrameSequence("UnknownChart", [{}], { width: 200, height: 150 })
+      expect(frames).toEqual(['<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"></svg>'])
+      expect(warn).toHaveBeenCalledWith(
+        "[Semiotic] Failed to render snapshot 0 for UnknownChart.", expect.any(Error)
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════

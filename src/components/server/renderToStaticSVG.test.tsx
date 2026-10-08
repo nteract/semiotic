@@ -244,6 +244,21 @@ describe("renderOrdinalToStaticSVG", () => {
 })
 
 describe("renderChart SVG precision", () => {
+  it("reports failing SVG pre-renderers while retaining data marks", () => {
+    const error = new Error("custom chrome failed")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const svg = renderToStaticSVG("xy", {
+        chartType: "scatter", data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y",
+        svgPreRenderers: [() => { throw error }]
+      })
+      expect(svg).toContain("<circle")
+      expect(warn).toHaveBeenCalledWith("[Semiotic] SVG pre-renderer 0 failed.", error)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   const precisionProps = {
     data: [
       { x: 0.123456789, y: 12.3456789 },

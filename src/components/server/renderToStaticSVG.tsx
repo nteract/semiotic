@@ -1,10 +1,8 @@
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
-  findSvgRoot,
+  insertSvgRootContent,
   mapSvgAttributes,
-  setSvgRootAttributes,
-  svgRootAttribute
 } from "../shared/svgRoot"
 import { renderedSvgDimensions } from "./svgSizing"
 import {
@@ -642,6 +640,12 @@ export async function renderToImage(
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
   const { background } = options
+  const imageTheme = background ? resolveTheme(props.theme) : undefined
+  const imageProps = imageTheme ? {
+    ...props,
+    background,
+    theme: { ...imageTheme, colors: { ...imageTheme.colors, background } }
+  } : props
 
   // Generate SVG
   let svg: string
@@ -649,19 +653,18 @@ export async function renderToImage(
   if (frameTypes.includes(frameTypeOrComponent)) {
     svg = renderToStaticSVG(
       frameTypeOrComponent as FrameType,
-      props as StaticFrameProps
+      imageProps as StaticFrameProps
     )
   } else {
-    svg = renderChart(frameTypeOrComponent, props)
+    svg = renderChart(frameTypeOrComponent, imageProps)
   }
 
-  // Apply background if specified
+  // Rasterizers paint SVG geometry rather than CSS backgrounds. Include a
+  // full-surface backdrop for composite and value renderers as well.
   if (background) {
-    const root = findSvgRoot(svg)
-    const style = root ? svgRootAttribute(root, "style") : undefined
-    svg = setSvgRootAttributes(svg, {
-      style: `${style ? `${style};` : ""}background:${background}`
-    })
+    svg = insertSvgRootContent(svg, ReactDOMServer.renderToStaticMarkup(
+      <rect width="100%" height="100%" fill={background} />
+    ))
   }
 
   const requestedDimensions = {
