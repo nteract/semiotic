@@ -53,19 +53,22 @@ function resolveAtEdge(
 }
 
 function observedEdges(edges: NetworkSceneEdge[]) {
-  let iterations = 0
+  let visits = 0
   const proxy = new Proxy(edges, {
     get(target, property, receiver) {
       if (property === Symbol.iterator) {
         return function* iterator() {
-          iterations += 1
-          yield* target
+          for (const edge of target) {
+            visits += 1
+            yield edge
+          }
         }
       }
+      if (typeof property === "string" && /^(0|[1-9]\d*)$/.test(property)) visits += 1
       return Reflect.get(target, property, receiver)
     }
   })
-  return { proxy, iterations: () => iterations }
+  return { proxy, visits: () => visits }
 }
 
 describe("network cursor-only hit testing", () => {
@@ -80,7 +83,7 @@ describe("network cursor-only hit testing", () => {
     const result = resolveAtEdge(edges.proxy, inventory.edges)
 
     expect(result.kind).toBe("miss")
-    expect(edges.iterations()).toBe(0)
+    expect(edges.visits()).toBe(0)
   })
 
   it("retains edge hit work when hover is enabled", () => {
@@ -92,7 +95,7 @@ describe("network cursor-only hit testing", () => {
 
     expect(result.kind).toBe("hit")
     if (result.kind === "hit") expect(result.mark).toBe(plainEdge)
-    expect(edges.iterations()).toBe(1)
+    expect(edges.visits()).toBe(1)
   })
 
   it("retains edge cursor hits and node-over-edge stacking with hover disabled", () => {
@@ -164,14 +167,14 @@ describe("network cursor-only hit testing", () => {
       ...base,
       cursorInventory: { nodes: true, edges: false }
     })
-    expect(edges.iterations()).toBe(0)
+    expect(edges.visits()).toBe(0)
     expect(canvas.style.cursor).toBe("")
 
     rehitNetworkFrameCursor({
       ...base,
       cursorInventory: { nodes: false, edges: true }
     })
-    expect(edges.iterations()).toBe(1)
+    expect(edges.visits()).toBe(1)
     expect(canvas.style.cursor).toBe("crosshair")
   })
 })

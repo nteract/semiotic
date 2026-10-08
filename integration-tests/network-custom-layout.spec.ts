@@ -23,6 +23,8 @@ test("network hover follows band paint order and thick strokes through zoom, pan
     }
   }
   const checkGeometry = async () => {
+    await hover(50, 55, "foreground-circle")
+    await hover(56, 145, "child-circle")
     await hover(200, 210, "top-band")
     await hover(120, 210, "bottom-band")
     await hover(200, 294, "wide-path")
@@ -30,7 +32,7 @@ test("network hover follows band paint order and thick strokes through zoom, pan
     await hover(200, 260, "none")
   }
   await checkGeometry()
-  view = { x: -30, y: -100, k: 1.2 }
+  view = { x: -20, y: -28, k: 1.1 }
   await page.evaluate((next) => window.networkZoomHandle!.zoomTo(next, 0), view)
   await checkGeometry()
   await page.getByRole("button", { name: "Narrow chart" }).click()

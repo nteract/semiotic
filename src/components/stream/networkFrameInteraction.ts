@@ -49,7 +49,7 @@ export function resolveNetworkPointerHit(options: {
     sceneEdges,
     nodeQuadtree,
     maxNodeRadius,
-    hitRadius = 30,
+    hitRadius = 12,
     includeEdges = true
   } = options
 

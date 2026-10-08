@@ -47,7 +47,13 @@ const layout: NetworkCustomLayout = () => {
         datum: { id: "b" },
         id: "b",
         style: { fill: "#6688aa" }
-      }
+      },
+      ...(new URLSearchParams(location.search).has("hit-test") ? [
+        { type: "circle" as const, cx: 50, cy: 55, r: 10, datum: { id: "foreground-circle" }, style: { fill: "orange" } },
+        { type: "rect" as const, x: 30, y: 35, w: 40, h: 40, datum: { id: "background-rect" }, style: { fill: "gray" } },
+        { type: "circle" as const, cx: 50, cy: 145, r: 30, depth: 0, datum: { id: "parent-circle" }, style: { fill: "steelblue" } },
+        { type: "circle" as const, cx: 65, cy: 145, r: 10, depth: 1, datum: { id: "child-circle" }, style: { fill: "orange" } }
+      ] : [])
     ],
     sceneEdges: [
       {

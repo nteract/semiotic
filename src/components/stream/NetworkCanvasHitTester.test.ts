@@ -13,6 +13,32 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
   // ── Circle hit testing (force layout nodes) ──────────────────────────
 
   describe("circle hit testing", () => {
+    it.each([false, true])("prefers the child containing the pointer over a nearer parent (quadtree=%s)", (indexed) => {
+      const parent: NetworkCircleNode = { type: "circle", cx: 0, cy: 0, r: 100, depth: 0, style: { fill: "red" }, datum: { id: "parent" } }
+      const child: NetworkCircleNode = { ...parent, cx: 50, r: 40, depth: 1, datum: { id: "child" } }
+      for (const nodes of [[parent, child], [child, parent]]) {
+        const tree = indexed ? d3Quadtree<NetworkCircleNode>().x((node) => node.cx).y((node) => node.cy).addAll(nodes) : null
+        expect(findNearestNetworkNode(nodes, [], 15, 0, 12, tree, 100)?.datum?.id).toBe("child")
+        expect(findNearestNetworkNode(nodes, [], -20, 0, 12, tree, 100)?.datum?.id).toBe("parent")
+      }
+    })
+
+    it.each([false, true])("keeps circles above rectangle backgrounds regardless of array order (quadtree=%s)", (indexed) => {
+      const circle: NetworkCircleNode = { type: "circle", cx: 50, cy: 50, r: 10, style: { fill: "blue" }, datum: { id: "circle" } }
+      const rect: NetworkRectNode = { type: "rect", x: 0, y: 0, w: 100, h: 100, style: { fill: "red" }, datum: { id: "rect" } }
+      const tree = indexed ? d3Quadtree<NetworkCircleNode>().x((node) => node.cx).y((node) => node.cy).add(circle) : null
+      for (const nodes of [[circle, rect], [rect, circle]]) {
+        expect(findNearestNetworkNode(nodes, [], 55, 50, 12, tree, 10)?.datum?.id).toBe("circle")
+      }
+    })
+
+    it("keeps an edge reachable twenty pixels from a small node", () => {
+      const node: NetworkCircleNode = { type: "circle", cx: 0, cy: 0, r: 5, style: { fill: "red" }, datum: { id: "node" } }
+      const edge: NetworkLineEdge = { type: "line", x1: 0, y1: 0, x2: 100, y2: 0, style: { stroke: "gray" }, datum: { id: "edge" } }
+      expect(findNearestNetworkNode([node], [edge], 20, 0)?.datum?.id).toBe("edge")
+      expect(findNearestNetworkNode([node], [edge], 5, 0)?.datum?.id).toBe("node")
+    })
+
     const circle: NetworkCircleNode = {
       type: "circle",
       cx: 200,
