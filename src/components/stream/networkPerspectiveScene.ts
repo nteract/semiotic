@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../charts/shared/minMax"
 /**
  * Project a laid-out network scene through a {@link NetworkPerspectiveFrame}.
  *
@@ -459,12 +460,12 @@ export function prepareNetworkPerspectiveScene(
       const drop = t * frame.lift
       const xs = top.map((p) => p[0])
       const ys = top.map((p) => p[1])
-      const x0 = Math.min(...xs)
-      const y0 = Math.min(...ys)
+      const x0 = getMin(xs)
+      const y0 = getMin(ys)
       return {
         pathD: serializeSvgPath(segs, map),
         faces: faces.length ? faces : undefined,
-        bounds: [x0, y0, Math.max(...xs) - x0, Math.max(...ys) + drop - y0] as const
+        bounds: [x0, y0, getMax(xs) - x0, getMax(ys) + drop - y0] as const
       }
     }
     for (const item of items) {

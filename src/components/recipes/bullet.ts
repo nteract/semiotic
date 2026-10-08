@@ -1,3 +1,4 @@
+import { getMax } from "../charts/shared/minMax"
 import * as React from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -157,7 +158,7 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
       const target = nonNegativeFinite(getTarget(d))
       return {
         label: getCategory(d), ranges, actual, target,
-        maxVal: Math.max(actual, target, ...ranges)
+        maxVal: Math.max(actual, target, getMax(ranges))
       }
     })
     .filter((row) => row.maxVal > 0)

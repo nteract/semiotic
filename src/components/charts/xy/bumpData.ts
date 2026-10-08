@@ -1,3 +1,4 @@
+import { getMinMax } from "../shared/minMax"
 import type { AxisConfig, ChartAccessor } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import { resolveDefaultFill } from "../shared/hooks"
@@ -44,7 +45,7 @@ function bumpDateFormatter(xValues: readonly unknown[]): ((value: Date) => strin
   if (monthStart && dates.every((d) => d.getUTCMonth() === 0)) return (d) => String(d.getUTCFullYear())
   if (monthStart) return (d) => `${formatDateMonthDay(d).split(" ")[0]} ${d.getUTCFullYear()}`
   const times = dates.map((d) => d.valueOf())
-  const domain: [number, number] = [Math.min(...times), Math.max(...times)]
+  const domain = getMinMax(times)
   if (midnight) {
     const oneYear = new Date(domain[0]).getUTCFullYear() === new Date(domain[1]).getUTCFullYear()
     return (d) => oneYear ? formatDateMonthDay(d) : `${formatDateMonthDay(d)}, ${d.getUTCFullYear()}`

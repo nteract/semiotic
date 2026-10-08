@@ -1,3 +1,4 @@
+import { getMinMax } from "../charts/shared/minMax"
 import type { GlyphDef } from "../stream/glyphDef"
 import type {
   PointSceneNode,
@@ -186,8 +187,7 @@ function positionQuantileStrip<D>(
   const gutter = options.gutter ?? 2
   const rows = Math.max(1, Math.floor(options.rows ?? 1))
   const values = tokens.map(numericValue)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
+  const [min, max] = getMinMax(values)
   const span = max - min || 1
   return tokens.map((token, index) => {
     const value = numericValue(token)
@@ -215,8 +215,7 @@ function positionDotplot<D>(
   const binWidth = options.cellWidth ?? tokenSize + gutter
   const step = options.cellHeight ?? tokenSize + gutter
   const values = tokens.map(numericValue)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
+  const [min, max] = getMinMax(values)
   const span = max - min || 1
   const binCounts = new Map<number, number>()
   return tokens.map((token) => {

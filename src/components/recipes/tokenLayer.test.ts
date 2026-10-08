@@ -5,6 +5,21 @@ import { generateTokens } from "./tokenEncoding"
 import { tokenLayer } from "./tokenLayer"
 
 describe("tokenLayer", () => {
+  it.each(["quantile-strip", "dotplot"] as const)("places 200,000 %s tokens with finite endpoints", (layout) => {
+    const layer = tokenLayer({
+      input: [0, 1],
+      encoding: {
+        tokenType: "dot", tokenSemantics: "possible-outcome", countStrategy: "quantile",
+        tokenCount: 200_000, layout
+      },
+      options: { width: 300, cellWidth: 1 }
+    })
+    expect(layer.positionedTokens).toHaveLength(200_000)
+    expect(layer.positionedTokens[0].x).toBe(0)
+    expect(layer.positionedTokens[199_999].x).toBe(300)
+    expect(layer.nodes).toHaveLength(200_000)
+  })
+
   it("turns unitized glyph tokens into positioned glyph scene nodes", () => {
     const layer = tokenLayer({
       input: 3.6,

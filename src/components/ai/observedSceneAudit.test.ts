@@ -56,6 +56,15 @@ function audit(nodes: Record<string, unknown>[], annotations: Record<string, unk
 }
 
 describe("auditObservedScene", () => {
+  it("measures a 300,000-point path without a spread-argument crash", () => {
+    const result = audit([{
+      type: "line", path: Array.from({ length: 300_000 }, (_, index) => [index % 100, index % 50]),
+      datum: data[0], _transitionKey: "long-path", style: { stroke: "#111111" }
+    }])
+    expect(result.observedSceneEvidence.find((finding) => finding.id === "geometry.bounds")?.status).toBe("pass")
+    expect(result.observedSceneEvidence.find((finding) => finding.id === "geometry.finite")?.status).toBe("pass")
+  })
+
   it("separates declared semantics, observed evidence, and manual checks", () => {
     const result = audit([
       {

@@ -393,7 +393,7 @@ export const histogram: ChartConfig = {
         : Number(d[valueAccessor])
     const values = rows.map(valueOf).filter(Number.isFinite)
     const sharedExtent = values.length
-      ? ([Math.min(...values), Math.max(...values)] as [number, number])
+      ? getMinMax(values)
       : undefined
     return {
       chartType: "histogram",

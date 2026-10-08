@@ -1,3 +1,4 @@
+import { getMax, getMinMax } from "../charts/shared/minMax"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -146,8 +147,7 @@ function diagonalMarkup(options: {
   const numeric = data
     .map((datum) => Number(datum[field]))
     .filter(Number.isFinite)
-  const min = numeric.length ? Math.min(...numeric) : 0
-  const max = numeric.length ? Math.max(...numeric) : 0
+  const [min, max] = numeric.length ? getMinMax(numeric) : [0, 0]
   const binWidth = (max - min) / bins || 1
   const buckets = Array.from({ length: bins }, () => new Map<string, Datum[]>())
   for (const datum of data) {
@@ -164,7 +164,7 @@ function diagonalMarkup(options: {
   const totals = buckets.map((bucket) =>
     Array.from(bucket.values()).reduce((sum, values) => sum + values.length, 0)
   )
-  const maxCount = Math.max(1, ...totals)
+  const maxCount = getMax(totals, 1)
   let visibleBars = 0
   const bars = buckets.flatMap((bucket, binIndex) => {
     let stacked = 0
