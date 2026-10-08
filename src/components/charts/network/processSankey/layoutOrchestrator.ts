@@ -441,7 +441,7 @@ export function computeProcessSankeyLayout(
     stackValueScale: naturalValueScale
   })
 
-  // M3: when final geometry differs from the dry scale=1 stack pass (hug
+  // When final geometry differs from the dry scale=1 stack pass (hug
   // placement and/or a binding maxValueScale), re-score adjacent order under
   // the rendered cost. Packing membership stays frozen; only lane permutation
   // may change, and only when exact-transit cost improves.

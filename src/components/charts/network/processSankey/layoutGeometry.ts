@@ -26,7 +26,7 @@ export interface SlotGeometryOptions {
   plotH: number
   padding: number
   valueScale: number
-  /** Scale used only to seed/retain legacy stack center spacing. This may be
+  /** Scale used only to seed/retain uncapped stack center spacing. This may be
    * larger than `valueScale` when a band-inflation cap creates slack. */
   stackValueScale?: number
   lanePlacement?: "stack" | "hug"
@@ -184,7 +184,7 @@ function hugCenters(
     return stackCenters(slots, adjacentClearance, options)
   }
 
-  // A scale cap leaves the legacy (uncapped) stack centerlines as a useful,
+  // A scale cap leaves the uncapped stack centerlines as a useful,
   // stable starting point while the thinner bands create movable slack.
   let centers = n === 1 ? [(lower + upper) / 2] : [...stackCenter]
 
