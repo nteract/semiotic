@@ -76,9 +76,26 @@ npm run eval:ai:cheaperinference -- \
   --confirm-spend
 ```
 
+The `apiroute` provider uses API Route's Responses endpoint with
+`API_ROUTE_API_KEY` and exact model IDs. Model access depends on the key; choose
+an available Responses-compatible model from the authenticated catalog. Start
+with the strict JSON-schema credential check:
+
+```sh
+node scripts/run-openai-ai-evals.mjs --provider=apiroute \
+  --models=gpt-6.1-sol --validate-only
+```
+
+To run a queue, replace `--validate-only` with `--suites=first-try`,
+`--output-dir=evals/reports/apiroute/trial-a`, and `--confirm-spend`. Pricing is
+unknown to this runner (`null` USD); it cannot enforce a USD spend ceiling for
+API Route. See the [API documentation](https://github.com/DennyHo0917/api-route/blob/main/API.md)
+for authentication and model discovery. This registers an evaluation provider;
+it does not claim results for any chart-generation or grounding benchmark.
+
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
-positive `--max-usd`; the `orcarouter` and `cheaperinference` gateways have no
+positive `--max-usd`; the `orcarouter`, `cheaperinference`, and `apiroute` gateways have no
 price table, so no spend ceiling is enforced and `--max-usd` is optional. The runner never writes the
 credential, project ID, raw prompts, or raw API response bodies to its reports.
 Scoring inputs necessarily retain parsed chart proposals and grounding answer
