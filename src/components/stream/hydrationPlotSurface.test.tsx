@@ -70,4 +70,15 @@ describe("hydration SVG plot surface", () => {
     const ids = [...host.querySelectorAll("clipPath")].map((clip) => clip.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
+
+  it("honors identifierPrefix when separate SSR roots share a page", () => {
+    const host = document.createElement("div")
+    host.innerHTML = ["first-chart-", "second-chart-"].map((identifierPrefix) =>
+      renderToString(surfaces()[0], { identifierPrefix }),
+    ).join("")
+    const ids = [...host.querySelectorAll("clipPath")].map((clip) => clip.id)
+    expect(ids[0]).toContain("first-chart-")
+    expect(ids[1]).toContain("second-chart-")
+    expect(new Set(ids).size).toBe(2)
+  })
 })

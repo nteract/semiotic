@@ -236,7 +236,9 @@ const treemapData = {
 
 function renderHOC(label: string, element: React.ReactElement): string {
   try {
-    return ReactDOMServer.renderToStaticMarkup(element)
+    return ReactDOMServer.renderToStaticMarkup(element, {
+      identifierPrefix: `ssr-gallery-${label.replace(/[^a-zA-Z0-9_-]/g, "-")}-`,
+    })
   } catch (e: any) {
     return `<div style="color:red;padding:20px;border:1px solid red">Error rendering ${label}: ${e.message}</div>`
   }
