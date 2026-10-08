@@ -21,6 +21,8 @@ export interface ControlAuditResult {
 export interface AuditVisualizationControlsOptions {
   controls?: ReadonlyArray<VisualizationControlDefinition>
   minimumTargetSize?: number
+  /** Mounted control or container. Adds measured target-size findings to the declarations. */
+  element?: Element
 }
 
 function finding(
@@ -37,11 +39,13 @@ function finding(
  * Audit portable control declarations without requiring a mounted chart. It
  * verifies the invariants an agent or recipe serializer can actually inspect:
  * semantic type, controlled-state target, keyboard path, value text, and
- * minimum target size.
+ * minimum declared target size. Supply element to also measure the mounted
+ * interactive targets; declaration-only passes do not verify rendered sizes.
  */
 export function auditVisualizationControls({
   controls = [],
   minimumTargetSize = 24,
+  element,
 }: AuditVisualizationControlsOptions): ControlAuditResult {
   const findings: ControlAuditFinding[] = []
   const seenIds = new Set<string>()
@@ -144,6 +148,60 @@ export function auditVisualizationControls({
       ))
     }
     if (controlId) seenIds.add(controlId)
+  }
+
+  if (element) {
+    const selector = '[role="slider"],button,input,select,[role="button"]'
+    const targets = [
+      ...(element.matches(selector) ? [element] : []),
+      ...element.querySelectorAll(selector)
+    ]
+    let measured = 0
+    for (const target of targets) {
+      if (
+        target.closest('[hidden],[aria-hidden="true"]') ||
+        target.matches(':disabled,[aria-disabled="true"]')
+      )
+        continue
+      const owner = target.closest(
+        "[data-viz-control-id],[data-viz-control],[data-sentence-filter-key]"
+      )
+      const controlId =
+        owner?.getAttribute("data-viz-control-id") ??
+        owner?.getAttribute("data-sentence-filter-key") ??
+        undefined
+      const { width, height } = target.getBoundingClientRect()
+      const measurable =
+        Number.isFinite(width) &&
+        Number.isFinite(height) &&
+        width > 0 &&
+        height > 0
+      const meetsMinimum =
+        measurable && width >= minimumTargetSize && height >= minimumTargetSize
+      findings.push(
+        finding(
+          `controls.${controlId ?? "mounted"}.measured-target-size.${measured++}`,
+          controlId,
+          measurable ? (meetsMinimum ? "pass" : "fail") : "warn",
+          measurable
+            ? `Mounted target measures ${width}px × ${height}px; minimum is ${minimumTargetSize}px on both axes.`
+            : "Mounted target has no measurable layout box.",
+          measurable
+            ? `Size the interactive target to at least ${minimumTargetSize}px on both axes.`
+            : "Audit after the control is visible and layout is complete."
+        )
+      )
+    }
+    if (measured === 0) {
+      findings.push(
+        finding(
+          "controls.mounted-targets",
+          undefined,
+          "warn",
+          "No enabled interactive targets were found in the mounted element."
+        )
+      )
+    }
   }
 
   return {
