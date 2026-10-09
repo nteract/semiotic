@@ -1,8 +1,9 @@
 import * as React from "react"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { BarChart } from "../ordinal/BarChart"
 import { LineChart } from "../xy/LineChart"
+import { createFrameScheduler } from "../../stream/test-utils/frameScheduler"
 
 /**
  * A bottom legend must be placed outside the bottom axis chrome — the tick
@@ -52,6 +53,7 @@ describe("bottom legend clears the bottom axis chrome", () => {
   }))
 
   it("ordinal: wrapped legend sits below the tick labels and the axis title", () => {
+    const scheduler = createFrameScheduler()
     const { container } = render(
       <BarChart
         data={wrappedRows}
@@ -63,8 +65,11 @@ describe("bottom legend clears the bottom axis chrome", () => {
         categoryLabel="Region name"
         width={300}
         height={260}
+        animate={false}
+        frameProps={{ frameScheduler: scheduler.scheduler }}
       />,
     )
+    act(() => scheduler.flush())
     const { texts, ticks, legend } = partition(container, "Category number")
     const axisTitle = texts.find((t) => t.textContent === "Region name")
     expect(axisTitle).toBeTruthy()
@@ -76,6 +81,7 @@ describe("bottom legend clears the bottom axis chrome", () => {
   })
 
   it("xy: wrapped legend sits below the tick labels and the axis title", () => {
+    const scheduler = createFrameScheduler()
     const series = wrappedRows.flatMap((row, i) => [
       { x: 0, y: i + 1, s: row.c },
       { x: 1, y: i + 2, s: row.c },
@@ -92,8 +98,11 @@ describe("bottom legend clears the bottom axis chrome", () => {
         xLabel="Week number"
         width={300}
         height={260}
+        animate={false}
+        frameProps={{ frameScheduler: scheduler.scheduler }}
       />,
     )
+    act(() => scheduler.flush())
     const { texts, legend } = partition(container, "Category number")
     const axisTitle = texts.find((t) => t.textContent === "Week number")
     expect(axisTitle).toBeTruthy()
@@ -102,6 +111,7 @@ describe("bottom legend clears the bottom axis chrome", () => {
   })
 
   it("a single-row legend keeps its pre-gutter placement", () => {
+    const scheduler = createFrameScheduler()
     // The 80px floor already covered chrome + gap + one legend row, so the
     // conservative reservation must not shift the common case.
     const { container } = render(
@@ -114,8 +124,11 @@ describe("bottom legend clears the bottom axis chrome", () => {
         legendPosition="bottom"
         width={400}
         height={260}
+        animate={false}
+        frameProps={{ frameScheduler: scheduler.scheduler }}
       />,
     )
+    act(() => scheduler.flush())
     const matches = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "A")
     expect(matches.map(absoluteY)).toEqual([198, 220])
   })

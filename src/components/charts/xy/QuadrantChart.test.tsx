@@ -1,6 +1,11 @@
-import { vi } from "vitest"
-import { render } from "@testing-library/react"
+import { afterEach, beforeEach, vi } from "vitest"
+import { act, cleanup, render } from "@testing-library/react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { QuadrantChart } from "./QuadrantChart"
+import type { QuadrantChartProps } from "./QuadrantChart"
+import { recordCanvasOps, setupCanvasMock } from "../../../test-utils/canvasMock"
+import type { CanvasContextMock } from "../../../test-utils/canvasMock"
+import { createFrameScheduler } from "../../stream/test-utils/frameScheduler"
 
 const riskData = [
   { item: "Deploying on Friday afternoon", likelihood: 8.5, severity: 9.2 },
@@ -92,43 +97,147 @@ describe("QuadrantChart", () => {
     expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
   })
 
-  it("renders with default quadrants when quadrants is omitted", () => {
-    const data = [
-      { x: 0.2, y: 0.8 },
-      { x: 0.8, y: 0.3 },
+  describe("quadrant defaults", () => {
+    let restoreCanvas: () => void
+    beforeEach(() => {
+      restoreCanvas = setupCanvasMock({ stubRaf: false })
+    })
+    afterEach(() => {
+      cleanup()
+      vi.restoreAllMocks()
+      restoreCanvas()
+    })
+
+    const cases: Array<{
+      name: string
+      quadrants?: QuadrantChartProps["quadrants"]
+      labels: string[]
+      colors: string[]
+    }> = [
+      {
+        name: "renders with default quadrants when quadrants is omitted",
+        labels: ["Low / High", "High / High", "Low / Low", "High / Low"],
+        colors: ["#E9C46A", "#2A9D8F", "#E76F51", "#86BBD8"]
+      },
+      {
+        name: "accepts partial quadrant overrides",
+        quadrants: {
+          topRight: { label: "Stars" },
+          bottomLeft: { color: "#ccc" }
+        },
+        labels: ["Low / High", "Stars", "Low / Low", "High / Low"],
+        colors: ["#E9C46A", "#2A9D8F", "#ccc", "#86BBD8"]
+      }
     ]
-    const { container } = render(
-      <QuadrantChart
-        data={data}
-        xCenter={0.5}
-        yCenter={0.5}
-        width={600}
-        height={400}
-      />
+
+    it.each(cases)("$name", ({ quadrants, labels, colors }) => {
+      const scheduler = createFrameScheduler()
+      const data = [
+        { x: 0.2, y: 0.8 },
+        { x: 0.8, y: 0.8 },
+        { x: 0.2, y: 0.3 },
+        { x: 0.8, y: 0.3 }
+      ]
+      const { container } = render(
+        <QuadrantChart
+          data={data}
+          xCenter={0.5}
+          yCenter={0.5}
+          quadrants={quadrants}
+          width={600}
+          height={400}
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
+        />
+      )
+      const ctx = container.querySelector("canvas")!.getContext("2d")!
+      const pointOps = recordCanvasOps(ctx as unknown as CanvasContextMock)
+      const paintedLabels: Array<{ label: string; color: string }> = []
+      const paintedFills: Array<{
+        color: string
+        opacity: number
+        width: number
+        height: number
+      }> = []
+      vi.spyOn(ctx, "fillText").mockImplementation((label) => {
+        paintedLabels.push({ label, color: String(ctx.fillStyle) })
+      })
+      vi.spyOn(ctx, "fillRect").mockImplementation((_x, _y, width, height) => {
+        paintedFills.push({
+          color: String(ctx.fillStyle),
+          opacity: ctx.globalAlpha,
+          width,
+          height
+        })
+      })
+
+      // A fresh client mount paints through the frame scheduler after data
+      // ingestion. Flush that paint before inspecting axes or canvas output.
+      act(() => scheduler.flush())
+
+      expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
+      expect(
+        container.querySelectorAll(".semiotic-axis-tick").length
+      ).toBeGreaterThan(0)
+      expect(paintedLabels).toEqual(
+        labels.map((label, i) => ({ label, color: colors[i] }))
+      )
+      expect(
+        paintedFills
+          .filter(({ opacity }) => opacity === 0.08)
+          .map(({ color, width, height }) => {
+            expect(width).toBeGreaterThan(0)
+            expect(height).toBeGreaterThan(0)
+            return color
+          })
+      ).toEqual(colors)
+      expect(pointOps.fillStyles).toEqual(colors)
+    })
+
+    it.each(cases)(
+      "preserves the same labels and colors in SSR: $name",
+      ({ quadrants, labels, colors }) => {
+        const container = document.createElement("div")
+        container.innerHTML = renderToStaticMarkup(
+          <QuadrantChart
+            data={[
+              { x: 0.2, y: 0.8 },
+              { x: 0.8, y: 0.8 },
+              { x: 0.2, y: 0.3 },
+              { x: 0.8, y: 0.3 }
+            ]}
+            xCenter={0.5}
+            yCenter={0.5}
+            quadrants={quadrants}
+            width={600}
+            height={400}
+          />
+        )
+        expect(
+          Array.from(
+            container.querySelectorAll('text[opacity="0.5"]'),
+            (node) => ({
+              label: node.textContent,
+              color: node.getAttribute("fill")
+            })
+          )
+        ).toEqual(labels.map((label, i) => ({ label, color: colors[i] })))
+        expect(
+          Array.from(
+            container.querySelectorAll('rect[opacity="0.08"]'),
+            (node) => node.getAttribute("fill")
+          )
+        ).toEqual(colors)
+        expect(
+          Array.from(container.querySelectorAll("circle"), (node) =>
+            node.getAttribute("fill")
+          )
+        ).toEqual(colors)
+        expect(
+          container.querySelectorAll(".semiotic-axis-tick").length
+        ).toBeGreaterThan(0)
+      }
     )
-
-    expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
-    expect(container.querySelectorAll(".semiotic-axis-tick").length).toBeGreaterThan(0)
-  })
-
-  it("accepts partial quadrant overrides", () => {
-    const data = [
-      { x: 0.2, y: 0.8 },
-      { x: 0.8, y: 0.3 },
-    ]
-    const { container } = render(
-      <QuadrantChart
-        data={data}
-        xCenter={0.5}
-        yCenter={0.5}
-        quadrants={{ topRight: { label: "Stars" }, bottomLeft: { color: "#ccc" } }}
-        width={600}
-        height={400}
-      />
-    )
-
-    expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
-    expect(container.querySelectorAll(".semiotic-axis-tick").length).toBeGreaterThan(0)
   })
 
   it("renders without data (push API mode)", () => {
