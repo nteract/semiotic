@@ -24,7 +24,7 @@ export function cleanPureAnnotations(code) {
   visit(source)
   // Use the parser's comment ranges so annotation-like strings/regexes remain
   // untouched. Only invalid hints are removed; valid factory hints survive.
-  const removals = new Map()
+  const replacements = new Map()
   const comments = (position) => {
     for (const range of [
       ...(ts.getLeadingCommentRanges(code, position) ?? []),
@@ -40,7 +40,22 @@ export function cleanPureAnnotations(code) {
       )
       scanner.setTextPos(range.end)
       scanner.scan()
-      if (!calls.has(scanner.getTokenPos())) removals.set(range.pos, range.end)
+      const valid = calls.has(scanner.getTokenPos())
+      const pureOnly = /^\/\*\s*[@#]__PURE__\s*\*\/$/.test(text)
+      const lineBreak = /[\r\n\u2028\u2029]/.test(text) ? "\n" : ""
+      if (pureOnly) {
+        // A comment can be the token separator or carry an ASI line break.
+        // Compact real hints; leave whitespace when removing a folded hint.
+        replacements.set(range.pos, [
+          range.end,
+          valid ? `/*#__PURE__*/${lineBreak}` : lineBreak || " "
+        ])
+      } else if (!valid) {
+        replacements.set(range.pos, [
+          range.end,
+          text.replace(/[@#]__PURE__/g, "")
+        ])
+      }
     }
   }
   const scan = (node) => {
@@ -48,11 +63,10 @@ export function cleanPureAnnotations(code) {
     ts.forEachChild(node, scan)
   }
   scan(source)
-  for (const [start, end] of [...removals].sort((a, b) => b[0] - a[0])) {
-    code =
-      code.slice(0, start) +
-      code.slice(start, end).replace(/[@#]__PURE__/g, "") +
-      code.slice(end)
+  for (const [start, [end, replacement]] of [...replacements].sort(
+    (a, b) => b[0] - a[0]
+  )) {
+    code = code.slice(0, start) + replacement + code.slice(end)
   }
   return code
 }

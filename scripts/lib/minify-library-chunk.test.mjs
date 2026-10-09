@@ -10,6 +10,30 @@ import {
 } from "./minify-library-chunk.mjs"
 import { libraryTerserOptions as options } from "./library-minification-options.mjs"
 import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
+import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
+
+test("purity cleanup preserves token separation, ASI and annotation-like literals", async () => {
+  const source = String.raw`
+    export let calls = 0
+    function target() { calls++; return 7 }
+    export function afterBreak() { return /* @__PURE__
+    */ target() }
+    export function literal() { return/* @__PURE__ */42 }
+    export const text = "/* @__PURE__ */"
+    export const pattern = /\/\* @__PURE__ \*\//
+  `
+  const compact = cleanPureAnnotations(source)
+  assert.doesNotMatch(compact, /return\/\*\s*[@#]__PURE__\s*\*\/42/)
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  for (const module of await Promise.all([load(source), load(compact)])) {
+    assert.equal(module.afterBreak(), undefined)
+    assert.equal(module.calls, 0)
+    assert.equal(module.literal(), 42)
+    assert.equal(module.text, "/* @__PURE__ */")
+    assert.ok(module.pattern.test(module.text))
+  }
+})
 
 test("folded and returned calls do not leave invalid Rollup purity hints", async () => {
   const source = `
@@ -19,18 +43,32 @@ test("folded and returned calls do not leave invalid Rollup purity hints", async
     export const root = /* @__PURE__ */ Math.sqrt(8)
     export const text = "/* @__PURE__ */ return untouched"
   `
-  const result = await minifyLibraryChunk(source, { format: "esm", filename: "fixture.js", options })
+  const result = await minifyLibraryChunk(source, {
+    format: "esm",
+    filename: "fixture.js",
+    options
+  })
   const warnings = []
   const bundle = await rollup({
-    input: "fixture", external: ["optional-host"], onwarn: (warning) => warnings.push(warning),
-    plugins: [{ name: "fixture", resolveId: (id) => id === "fixture" ? id : null, load: () => result.code }]
+    input: "fixture",
+    external: ["optional-host"],
+    onwarn: (warning) => warnings.push(warning),
+    plugins: [
+      {
+        name: "fixture",
+        resolveId: (id) => (id === "fixture" ? id : null),
+        load: () => result.code
+      }
+    ]
   })
   try {
     const output = await bundle.generate({ format: "esm" })
     assert.deepEqual(warnings, [])
     assert.match(output.output[0].code, /\/\* @__PURE__ \*\/ return untouched/)
-    assert.match(result.code, /\/\*\s*@__PURE__\s*\*\/\s*\w+\(\)/)
-  } finally { await bundle.close() }
+    assert.match(result.code, /\/\*\s*[@#]__PURE__\s*\*\/\s*\w+\(\)/)
+  } finally {
+    await bundle.close()
+  }
 })
 
 test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
@@ -155,12 +193,23 @@ test("all production candidates preserve initializer order and variable scope", 
     tdz: true
   }
   assert.deepEqual(original.exercise(), expected)
-  for (const compression of libraryCompressionCandidates) {
-    const compact = await minify(source, {
-      module: true,
-      ...options,
-      compress: { ...options.compress, ...compression }
+  const candidates = await Promise.all(
+    libraryCompressionCandidates.map((compression) =>
+      minify(source, {
+        module: true,
+        ...options,
+        compress: { ...options.compress, ...compression }
+      })
+    )
+  )
+  candidates.push(
+    await minifyLibraryChunk(source, {
+      format: "esm",
+      filename: "scope.js",
+      options
     })
+  )
+  for (const compact of candidates) {
     const module = await load(compact.code)
     assert.deepEqual(module.exercise(), expected)
   }
