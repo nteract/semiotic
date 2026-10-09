@@ -16,6 +16,12 @@ async function hoverMark(page: Page, kind: "band" | "ribbon") {
     const mark = kind === "band" ? layout.bands[0] : layout.ribbons[0]
     const path = new Path2D(mark.pathD)
     const ctx = document.createElement("canvas").getContext("2d")!
+    // Bands paint above ribbons. Avoid covered attachments and the band's
+    // five-pixel stroke hit padding when choosing an exposed ribbon point.
+    const coveringBands = (
+      kind === "ribbon" ? layout.bands : layout.bands.slice(1)
+    ).map((band) => new Path2D(band.pathD))
+    ctx.lineWidth = 10
     const bounds = document
       .querySelector(".stream-network-frame")!
       .getBoundingClientRect()
@@ -24,12 +30,17 @@ async function hoverMark(page: Page, kind: "band" | "ribbon") {
         if (
           ctx.isPointInPath(path, x, y) &&
           ctx.isPointInPath(path, x + 2, y + 2) &&
-          ctx.isPointInPath(path, x - 2, y - 2)
+          ctx.isPointInPath(path, x - 2, y - 2) &&
+          !coveringBands.some(
+            (band) =>
+              ctx.isPointInPath(band, x, y) ||
+              ctx.isPointInStroke(band, x, y)
+          )
         )
           return { x: x + 40, y: y + 30 }
       }
     }
-    throw new Error(`No interior point in ${kind}`)
+    throw new Error(`No exposed interior point in ${kind}`)
   }, kind)
   await page.locator(".stream-network-frame").hover({ position: point })
 }
@@ -56,10 +67,13 @@ for (const time of ["numeric", "dates"]) {
       ).toHaveText(time === "numeric" ? "14" : /02 PM|04 PM|06 PM/)
       const check = async () => {
         await hoverMark(page, "band")
+        await expect(tooltip).toHaveCount(1)
         await expect(tooltip).toContainText("Intake")
         await page.mouse.move(0, 0)
         await expect(tooltip).toHaveCount(0)
         await hoverMark(page, "ribbon")
+        await expect(tooltip).toHaveCount(1)
+        await expect(tooltip.getByText("a → b", { exact: true })).toBeVisible()
         await expect(tooltip).toContainText(
           time === "numeric" ? "14" : "2026-01-01T14:00:00Z"
         )
@@ -81,9 +95,15 @@ for (const time of ["numeric", "dates"]) {
       await check()
       await page.getByRole("button", { name: "Use time formatter" }).click()
       await hoverMark(page, "ribbon")
+      await expect(tooltip.getByText("a → b", { exact: true })).toBeVisible()
       await expect(tooltip).toContainText(
         time === "numeric" ? "number 14" : "date 2026-01-01T14:00:00.000Z"
       )
+      await expect(tooltip).toContainText(
+        time === "numeric" ? "number 18" : "date 2026-01-01T18:00:00.000Z"
+      )
+      await page.mouse.move(0, 0)
+      await expect(tooltip).toHaveCount(0)
       expect(workers).toBe(execution === "worker" ? 1 : 0)
     })
   }
