@@ -22,17 +22,36 @@ test("purity cleanup preserves token separation, ASI and annotation-like literal
     export const text = "/* @__PURE__ */"
     export const pattern = /\/\* @__PURE__ \*\//
   `
-  const compact = cleanPureAnnotations(source)
-  assert.doesNotMatch(compact, /return\/\*\s*[@#]__PURE__\s*\*\/42/)
   const load = (code) =>
     import(`data:text/javascript,${encodeURIComponent(code)}`)
-  for (const module of await Promise.all([load(source), load(compact)])) {
+  const candidates = [
+    source,
+    cleanPureAnnotations(source),
+    cleanPureAnnotations(source, { functionBodyAnnotations: false })
+  ]
+  for (const module of await Promise.all(candidates.map(load))) {
     assert.equal(module.afterBreak(), undefined)
     assert.equal(module.calls, 0)
     assert.equal(module.literal(), 42)
     assert.equal(module.text, "/* @__PURE__ */")
     assert.ok(module.pattern.test(module.text))
   }
+})
+
+test("body hint cleanup preserves module factories and computed member initializers", () => {
+  const source = `
+    const optional = /* @__PURE__ */ makeOptional()
+    class Required {
+      [/* @__PURE__ */ makeName()]() { return /* @__PURE__ */ makeOptional() }
+    }
+    export { optional, Required }
+  `
+  const compact = cleanPureAnnotations(source, {
+    functionBodyAnnotations: false
+  })
+  assert.match(compact, /optional = \/\*#__PURE__\*\/\s*makeOptional\(\)/)
+  assert.match(compact, /\[\/\*#__PURE__\*\/\s*makeName\(\)\]/)
+  assert.doesNotMatch(compact, /return\s*\/\*#__PURE__\*\//)
 })
 
 test("folded and returned calls do not leave invalid Rollup purity hints", async () => {

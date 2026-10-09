@@ -17,6 +17,7 @@ export async function minifyLibraryChunk(code, { format, filename, options }) {
   let best
   for (let round = 0; round < 2; round++) {
     const input = best?.code ?? code
+    const inputMap = best?.map
     const preserveInert =
       round > 0 && format === "esm" && chunkLoadEffect(input, filename) === null
     for (const compression of libraryCompressionCandidates) {
@@ -25,11 +26,19 @@ export async function minifyLibraryChunk(code, { format, filename, options }) {
         {
           ...(format === "esm" ? { module: true } : { toplevel: true }),
           ...options,
-          compress: { ...options.compress, ...compression }
+          compress: { ...options.compress, ...compression },
+          ...(inputMap
+            ? { sourceMap: { ...options.sourceMap, content: inputMap } }
+            : {})
         }
       )
       if (!result.code) throw new Error(`Empty minified chunk: ${filename}`)
-      result.code = cleanPureAnnotations(result.code)
+      // Module initializers need hints for named-import tree shaking. Terser
+      // already optimized function bodies; retaining JSX hints there adds
+      // transfer bytes without helping discard unused module exports.
+      result.code = cleanPureAnnotations(result.code, {
+        functionBodyAnnotations: false
+      })
       if (preserveInert && chunkLoadEffect(result.code, filename)) continue
       const bytes = gzipSync(result.code, {
         level: constants.Z_BEST_COMPRESSION
