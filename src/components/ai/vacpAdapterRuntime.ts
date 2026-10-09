@@ -1,3 +1,4 @@
+import { getMinMax } from "../charts/shared/minMax"
 import type {
   VacpCapabilitiesRequest,
   VacpCapabilitiesSnapshot,
@@ -446,8 +447,7 @@ function temporalSummaries(
       }
     }
     if (!values.length) continue
-    const minEpochMs = Math.min(...values)
-    const maxEpochMs = Math.max(...values)
+    const [minEpochMs, maxEpochMs] = getMinMax(values)
     result[field] = {
       minIso: new Date(minEpochMs).toISOString(),
       maxIso: new Date(maxEpochMs).toISOString(),

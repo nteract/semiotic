@@ -502,7 +502,7 @@ export function orderProcessSankeySlots(
   const geometryRefineOnly = options.mode === "geometry-refine"
 
   // Geometry-refine skips barycenter / exact permutation / inside-out and only
-  // runs the bounded exact-transit transpose below — the M3 post-scale pass.
+  // runs the bounded exact-transit transpose below after scaling.
   if (!geometryRefineOnly &&
       (options.laneOrder === "crossing-min" || options.laneOrder === "crossing-min+inside-out")) {
     order = multiSlotBonded ? unitReadabilityOrder(order) : readabilityOrder(order)
@@ -543,7 +543,7 @@ export function orderProcessSankeySlots(
     // the final before/after snapshot below remains the last authority. With
     // multi-slot bonds, transpose whole units so a refinement pass cannot
     // re-introduce foreign rows inside a block. Sole search step for
-    // mode="geometry-refine" (post-scale M3).
+    // mode="geometry-refine" after scaling.
     if (multiSlotBonded) {
       let units = refineByAdjacentSwaps(bondedSlotUnits(order), (candidate) =>
         evaluateExactTransit(flattenBondedUnits(candidate), undefined, "score").cost,

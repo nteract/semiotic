@@ -34,6 +34,7 @@ export function resolveNetworkPointerHit(options: {
   sceneEdges: NetworkSceneEdge[]
   nodeQuadtree: Quadtree<NetworkCircleNode> | null
   maxNodeRadius: number
+  /** Requested node hit radius in screen pixels. */
   hitRadius?: number
   includeEdges?: boolean
   viewTransform?: NetworkViewTransform
@@ -49,7 +50,7 @@ export function resolveNetworkPointerHit(options: {
     sceneEdges,
     nodeQuadtree,
     maxNodeRadius,
-    hitRadius = 30,
+    hitRadius = 12,
     includeEdges = true
   } = options
 

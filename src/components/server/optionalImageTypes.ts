@@ -4,6 +4,7 @@ export interface SharpPipeline {
   raw(): SharpPipeline
   jpeg(options: { quality: number }): SharpPipeline
   png(): SharpPipeline
+  flatten(options: { background: string }): SharpPipeline
   toBuffer(): Promise<Buffer>
 }
 

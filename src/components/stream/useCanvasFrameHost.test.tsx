@@ -48,7 +48,7 @@ function createInput(overrides: Partial<Parameters<typeof useCanvasFrameHost<Tes
 
 describe("useCanvasFrameHost", () => {
   it("owns stable canvas layers and performs the hydration teardown boundary", () => {
-    const fixture = createInput()
+    const fixture = createInput({ wasHydratingFromSSR: true })
     const { result, rerender, unmount } = renderHook(
       ({ input }) => useCanvasFrameHost(input),
       { initialProps: { input: fixture.input } },
@@ -68,9 +68,47 @@ describe("useCanvasFrameHost", () => {
     // synchronously before the browser paints the newly mounted canvas.
     rerender({ input: { ...fixture.input, hydrated: true } })
     expect(fixture.render).toHaveBeenCalledTimes(1)
+    expect(fixture.cancelIntroAnimation).toHaveBeenCalledTimes(1)
+    expect(fixture.cancelRender).toHaveBeenCalledTimes(1)
 
     unmount()
     expect(fixture.cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it("leaves a fresh client mount's first paint to its ingestion scheduler", () => {
+    const fixture = createInput({ hydrated: true })
+    const { unmount } = renderHook(() => useCanvasFrameHost(fixture.input))
+
+    expect(fixture.scheduleRender).toHaveBeenCalledTimes(1)
+    expect(fixture.dirtyRef.current).toBe(true)
+    expect(fixture.render).not.toHaveBeenCalled()
+    expect(fixture.cancelRender).not.toHaveBeenCalled()
+    expect(fixture.cancelIntroAnimation).not.toHaveBeenCalled()
+    unmount()
+    expect(fixture.cleanup).toHaveBeenCalledTimes(1)
+  })
+
+  it("sizes both canvas layers before ingestion without invoking a scene paint", () => {
+    const fixture = createInput({ hydrated: true, maxDevicePixelRatio: 1 })
+    function Probe({ size }: { size: [number, number] }) {
+      const host = useCanvasFrameHost({ ...fixture.input, size })
+      return <><canvas ref={host.canvasRef} /><canvas ref={host.interactionCanvasRef} /></>
+    }
+    const view = render(<Probe size={[150, 24]} />)
+    const checkSize = (width: number, height: number) => {
+      const canvases = view.container.querySelectorAll("canvas")
+      expect(canvases).toHaveLength(2)
+      for (const canvas of canvases) {
+        expect(canvas.width).toBe(width)
+        expect(canvas.height).toBe(height)
+        expect(canvas.style.width).toBe(`${width}px`)
+        expect(canvas.style.height).toBe(`${height}px`)
+      }
+      expect(fixture.render).not.toHaveBeenCalled()
+    }
+    checkSize(150, 24)
+    view.rerender(<Probe size={[300, 48]} />)
+    checkSize(300, 48)
   })
 
   it("cancels scheduled work while inactive and repaints retained state on resume", () => {

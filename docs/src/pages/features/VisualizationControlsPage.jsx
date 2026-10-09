@@ -285,9 +285,12 @@ controls: [{
 
 const auditCode = `import { auditVisualizationControls } from "semiotic/controls"
 
-const audit = auditVisualizationControls({ controls: recipe.controls })
-// Checks semantic type, state target, value domain, keyboard path,
-// human-readable value text, target size, and control-change observation.`
+const audit = auditVisualizationControls({
+  controls: recipe.controls,
+  element: controlContainer, // mounted control or container, after layout
+})
+// Checks declarations and measures each enabled slider/button/input target.
+// Small targets fail even when their declarations claim a larger size.`
 
 function visibleRect({ x, y, w, h, fill, datum, id, group }) {
   return {
@@ -1011,7 +1014,7 @@ export default function VisualizationControlsPage() {
       <p>
         <code>auditVisualizationControls</code> is the portable counterpart to the scene and mobile audits. Recipe registration rejects
         declarations missing a semantic type, state target, ordered domain, keyboard path, value text, or 24px minimum target. It also reports
-        observation coverage and invalid quantization steps.
+        observation coverage and invalid quantization steps. Pass a mounted control or container as <code>element</code> to measure its interactive targets in CSS pixels; declared sizes alone do not verify rendered hit targets.
       </p>
       <CodeBlock code={auditCode} language="js" />
 

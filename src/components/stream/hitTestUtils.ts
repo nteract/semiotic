@@ -53,10 +53,15 @@ export function hitTestRect(
 /**
  * Compute the effective hit radius for a point/circle node.
  * Uses the larger of the visual radius + tolerance, Fitts's law minimum (12px),
- * and the caller's maxDistance (default 30px).
+ * and the caller's maxDistance (default 30px). Radius and maxDistance are in
+ * scene units; viewScale converts the pixel minimum and slop to scene units.
  */
-export function getHitRadius(nodeRadius: number | undefined, maxDistance: number = 30): number {
-  return Math.max((nodeRadius ?? 4) + 5, 12, maxDistance)
+export function getHitRadius(
+  nodeRadius: number | undefined,
+  maxDistance: number = 30,
+  viewScale = 1
+): number {
+  return Math.max((nodeRadius ?? 4) + 5 / viewScale, 12 / viewScale, maxDistance)
 }
 
 /**

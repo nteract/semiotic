@@ -6,6 +6,7 @@ import { LineChart } from "semiotic/xy"
 import type { RealtimeFrameHandle } from "../realtime/types"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import { useAxisLabelAssessment } from "./useAxisLabelAssessment"
+import { createFrameScheduler } from "../stream/test-utils/frameScheduler"
 
 const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts")
 let fonts: EventTarget & { status: string }
@@ -58,6 +59,7 @@ describe("axis label assessment lifecycle", () => {
   it.each(["bounded", "push"])(
     "refreshes public %s LineChart evidence after font loading",
     async (mode) => {
+      const scheduler = createFrameScheduler()
       const data = [
         { x: 0, y: 1, series: "A" },
         { x: 1, y: 2, series: "A" }
@@ -71,9 +73,12 @@ describe("axis label assessment lifecycle", () => {
           directLabel
           width={400}
           height={300}
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
         />
       )
       if (mode === "push") act(() => ref.current!.pushMany(data))
+      act(() => scheduler.flush())
       const assessment = () =>
         JSON.parse(
           container

@@ -1,3 +1,4 @@
+import { getMax } from "../charts/shared/minMax"
 import type { ObligationResult, TemporalContext } from "./types"
 
 const CURRENT_LANGUAGE =
@@ -65,7 +66,7 @@ export function eventTimePresentationFinding(
     .filter((time): time is number => time !== undefined)
   if (
     comparisonTimes.length === 0 ||
-    eventTime >= Math.max(...comparisonTimes)
+    eventTime >= getMax(comparisonTimes)
   ) {
     return undefined
   }

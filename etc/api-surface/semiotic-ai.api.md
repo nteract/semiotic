@@ -173,7 +173,7 @@ function auditMobileVisualization(component: string, props?: Datum | undefined, 
 function auditObservedScene(input: AuditObservedSceneInput): ObservedSceneAuditResult
 function auditTemporalContext(context: TemporalContext | undefined, options?: TemporalAuditOptions | undefined): TemporalAudit
 function auditVisualHierarchy(input: VisualHierarchyInput): VisualHierarchyAuditResult
-function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
+function auditVisualizationControls({ controls, minimumTargetSize, element, }: AuditVisualizationControlsOptions): ControlAuditResult
 function bandFromAge(ageMs: number, ttlMs: number, thresholds?: LifecycleBandThresholds | undefined): LifecycleBand
 function boundedEvidenceSample(rows: readonly unknown[], options?: undefined | {maxRows?: number; maxFields?: number; maxFieldLength?: number; maxCharacters?: number; fields?: ReadonlyArray<string>;}): {rowCount: number; fields: string[]; values: JsonValue[]; truncated: boolean;}
 function buildArtifactCollectionLineage(collection: ArtifactCollectionContract): ArtifactCollectionLineage
@@ -1140,6 +1140,7 @@ interface-member AuditObservedSceneInput::property::recipe = required recipe: Ch
 interface-member AuditObservedSceneInput::property::scene = required scene: null | readonly Record<string, unknown>[] | undefined | {nodes?: ReadonlyArray<Record<string, unknown>>; sceneNodes?: ReadonlyArray<Record<string, unknown>>; sceneEdges?: ReadonlyArray<Record<string, unknown>>;}
 interface-member AuditObservedSceneInput::property::theme = optional theme: undefined | {background?: string; categorical?: string[];}
 interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member AuditVisualizationControlsOptions::property::element = optional element: Element | undefined
 interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
 interface-member BoundedEvidenceSample::property::fields = optional fields: string[] | undefined
 interface-member BoundedEvidenceSample::property::rowCount = optional rowCount: number | undefined

@@ -129,6 +129,82 @@ describe("waffleLayout", () => {
 })
 
 describe("calendarLayout", () => {
+  it("keys local dates and infers their local year", () => {
+    const result = calendarLayout(makeCtx(
+      { dateAccessor: "date", valueAccessor: "v" },
+      { data: [{ date: new Date(2025, 0, 1), v: 3 }, { date: new Date(2025, 2, 1), v: 7 }] },
+    ))
+    const measured = (result.nodes as RectSceneNode[]).filter((node) => !node.datum!.missing)
+    expect(measured.map((node) => [
+      (node.datum!.date as Date).getMonth(), (node.datum!.date as Date).getDate(), node.datum!.value,
+    ])).toEqual([[0, 1, 3], [2, 1, 7]])
+  })
+
+  it("keeps date-only strings on their named day and offers explicit UTC days", () => {
+    for (const timeZone of ["local", "utc"] as const) {
+      const result = calendarLayout(makeCtx(
+        { dateAccessor: "date", valueAccessor: "v", timeZone },
+        { data: [{ date: "2025-01-01", v: 3 }, { date: new Date("2025-03-01T12:00:00Z"), v: 7 }] },
+      ))
+      const dates = (result.nodes as RectSceneNode[]).filter((node) => !node.datum!.missing).map((node) => node.datum!.date as Date)
+      expect(dates.map((date) => timeZone === "utc" ? date.getUTCDate() : date.getDate())).toEqual([1, 1])
+    }
+  })
+
+  it("preserves every local day through leap years and DST", () => {
+    const result = calendarLayout(makeCtx({ dateAccessor: "date", valueAccessor: "v", year: 2024 }))
+    const dates = (result.nodes as RectSceneNode[]).map((node) => node.datum!.date as Date)
+    expect(dates).toHaveLength(366)
+    expect(new Set(dates.map((date) => `${date.getMonth()}-${date.getDate()}`)).size).toBe(366)
+    expect(dates.every((date) => date.getHours() === 0)).toBe(true)
+  })
+
+  it("preserves small calendar years supported by the portable schema", () => {
+    for (const timeZone of ["local", "utc"] as const) {
+      const result = calendarLayout(makeCtx(
+        { dateAccessor: "date", valueAccessor: "v", year: 4, timeZone },
+        { data: [{ date: "0004-02-29", v: 7 }] },
+      ))
+      const nodes = result.nodes as RectSceneNode[]
+      expect(nodes).toHaveLength(366)
+      const measured = nodes.find((node) => !node.datum!.missing)!
+      const date = measured.datum!.date as Date
+      expect(timeZone === "utc" ? date.getUTCFullYear() : date.getFullYear()).toBe(4)
+      expect(measured.datum!.value).toBe(7)
+    }
+  })
+
+  it("distinguishes absent days and invalid measurements from actual zero", () => {
+    const result = calendarLayout(makeCtx(
+      { dateAccessor: "date", valueAccessor: "v", year: 2025 },
+      { data: [{ date: "2025-01-01", v: 0 }, { date: "2025-01-02", v: null }] },
+    ))
+    const [zero, missing] = result.nodes! as RectSceneNode[]
+    expect(zero.datum).toMatchObject({ value: 0, missing: false })
+    expect(missing.datum).toMatchObject({ value: null, missing: true })
+    expect(zero.style.fill).not.toBe(missing.style.fill)
+  })
+
+  it("scales colors only from the rendered year and honors missingColor", () => {
+    const config = { dateAccessor: "date", valueAccessor: "v", year: 2025, missingColor: "pink" }
+    const data = [{ date: "2025-01-01", v: 0 }, { date: "2025-01-02", v: 10 }]
+    const render = (rows: Datum[]) => calendarLayout(makeCtx(config, { data: rows })).nodes! as RectSceneNode[]
+    const oneYear = render(data)
+    const manyYears = render([...data, { date: "2024-03-03", v: 10000 }])
+    expect(manyYears.map((node) => node.style.fill)).toEqual(oneYear.map((node) => node.style.fill))
+    expect(oneYear[2].style.fill).toBe("pink")
+  })
+
+  it("anchors Monday-start weeks with Sunday in the last row", () => {
+    const result = calendarLayout(makeCtx({ dateAccessor: "date", valueAccessor: "v", year: 2025, weekStart: 1 as const }))
+    const nodes = result.nodes! as RectSceneNode[]
+    const monday = nodes.find((node) => (node.datum!.date as Date).getDate() === 6)!
+    const sunday = nodes.find((node) => (node.datum!.date as Date).getDate() === 5)!
+    expect(monday.y).toBe(0)
+    expect(sunday.y).toBeGreaterThan(monday.y)
+    expect(monday.x).toBeGreaterThan(sunday.x)
+  })
+
   it("emits one rect per day in 2025 (365 days)", () => {
     const result = calendarLayout(
       makeCtx(

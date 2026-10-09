@@ -73,6 +73,13 @@ export const CALENDAR_HEATMAP_CONFIG_SCHEMA: SerializableSchema = {
       description: "Low and high colors for the daily value ramp."
     },
     year: { type: "integer", minimum: 1, maximum: 9999 },
+    timeZone: { type: "string", enum: ["local", "utc"], default: "local" },
+    weekStart: { type: "integer", enum: [0, 1], default: 0 },
+    missingColor: {
+      type: "string",
+      minLength: 1,
+      description: "Fill for days without a finite measurement; these cells have value null and missing true."
+    },
     gutter: { type: "number", minimum: 0, default: 2 },
     labelInset: { type: "number", minimum: 0, default: 0 }
   }

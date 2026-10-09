@@ -1,6 +1,88 @@
 import { test, expect } from "@playwright/test"
 import type { NetworkViewportSnapshot } from "../src/components/stream/networkViewportTypes"
 
+test("node hover and click hand off to edges at twelve screen pixels through zoom, pan and resize", async ({ page }) => {
+  const errors: string[] = []
+  page.on("pageerror", (error) => errors.push(error.message))
+  await page.goto("/network-custom-layout-examples/?zoom-test&node-hit-test&tooltip=owned")
+  const frame = page.locator(".stream-network-frame")
+  const tooltip = frame.locator(".stream-network-tooltip")
+  await expect(page.getByLabel("Draft", { exact: true })).toBeVisible()
+
+  for (const narrow of [false, true]) {
+    if (narrow) await page.getByRole("button", { name: "Narrow chart" }).click()
+    for (const k of [0.25, 1, 3]) {
+      await page.evaluate((scale) => window.networkZoomHandle!.zoomTo({
+        k: scale, x: 100 - 500 * scale, y: 100 - 400 * scale
+      }, 0), k)
+      await expect(page.getByLabel("Zoom level")).toHaveText(`${k * 100}%`)
+      const bounds = (await frame.boundingBox())!
+      const hover = async (offset: number, id: string) => {
+        const x = bounds.x + 130 + offset, y = bounds.y + 120
+        await page.mouse.move(x, y)
+        await expect(page.getByTestId("zoom-hover")).toHaveText(id)
+        await expect(tooltip).toHaveText(id)
+        const tip = (await tooltip.boundingBox())!
+        expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+        expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+        expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+        expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+        return { x, y }
+      }
+      await hover(0, "tiny-node")
+      for (const [offset, id] of [[11, "tiny-node"], [13, "node-edge"]] as const) {
+        const point = await hover(offset, id)
+        await page.mouse.click(point.x, point.y)
+        await expect(page.getByTestId("zoom-activate")).toHaveText(id)
+      }
+      await page.mouse.move(0, 0)
+      await expect(page.getByTestId("zoom-hover")).toHaveText("none")
+      await expect(tooltip).toHaveCount(0)
+    }
+  }
+  expect(errors).toEqual([])
+})
+
+test("network hover follows band paint order and thick strokes through zoom, pan and resize", async ({ page }) => {
+  await page.goto("/network-custom-layout-examples/?zoom-test&hit-test&tooltip=owned")
+  const frame = page.locator(".stream-network-frame")
+  const tooltip = frame.locator(".stream-network-tooltip")
+  await expect(page.getByLabel("Draft", { exact: true })).toBeVisible()
+  let view = { x: 0, y: 0, k: 1 }
+  const hover = async (x: number, y: number, id: string) => {
+    const bounds = (await frame.boundingBox())!
+    await page.mouse.move(bounds.x + 30 + view.x + x * view.k, bounds.y + 20 + view.y + y * view.k)
+    await expect(page.getByTestId("zoom-hover")).toHaveText(id)
+    if (id === "none") {
+      await expect(tooltip).toHaveCount(0)
+    } else {
+      await expect(tooltip).toHaveText(id)
+      const tip = (await tooltip.boundingBox())!
+      expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+      expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+      expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+      expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+    }
+  }
+  const checkGeometry = async () => {
+    await hover(50, 55, "foreground-circle")
+    await hover(56, 145, "child-circle")
+    await hover(200, 210, "top-band")
+    await hover(120, 210, "bottom-band")
+    await hover(200, 294, "wide-path")
+    await hover(200, 324, "wide-line")
+    await hover(200, 260, "none")
+  }
+  await checkGeometry()
+  view = { x: -20, y: -28, k: 1.1 }
+  await page.evaluate((next) => window.networkZoomHandle!.zoomTo(next, 0), view)
+  await checkGeometry()
+  await page.getByRole("button", { name: "Narrow chart" }).click()
+  await checkGeometry()
+  await page.mouse.move(0, 0)
+  await expect(tooltip).toHaveCount(0)
+})
+
 test("network overlay edges hit their stroke or filled band, and nested rows take precedence", async ({
   page
 }) => {

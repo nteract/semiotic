@@ -1,4 +1,5 @@
 "use client"
+import { getMax } from "../charts/shared/minMax"
 // One namespace import: the ESM build keeps every external import statement,
 // so named imports would add bytes to every `semiotic/controls` consumer.
 import * as React from "react"
@@ -438,7 +439,7 @@ export function LinearBrush(props: LinearBrushProps): React.ReactElement {
       showDomainLabels,
     })
     : []
-  const rowSize = Math.max(1, ...labels.map((entry) => entry.lines.length)) * labelFontSize * 1.2
+  const rowSize = getMax(labels.map((entry) => entry.lines.length), 1) * labelFontSize * 1.2
 
   return (
     <div

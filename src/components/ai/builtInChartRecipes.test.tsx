@@ -77,6 +77,17 @@ describe("built-in chart recipes", () => {
 
     expect(parallelSchema).toBeDefined()
     expect(calendarSchema).toBeDefined()
+    const calendarConfig = {
+      data: dailyData,
+      layoutConfig: { dateAccessor: "date", valueAccessor: "count", timeZone: "utc", weekStart: 1, missingColor: "#888888" },
+      title: "Daily activity",
+      description: "Activity by calendar day.",
+      summary: "January 2 is highest.",
+      accessibleTable: true,
+    }
+    expect(ajv.validate(calendarSchema!, calendarConfig)).toBe(true)
+    expect(ajv.validate(calendarSchema!, { ...calendarConfig, layoutConfig: { ...calendarConfig.layoutConfig, timeZone: "unknown" } })).toBe(false)
+    expect(ajv.validate(calendarSchema!, { ...calendarConfig, layoutConfig: { ...calendarConfig.layoutConfig, weekStart: 2 } })).toBe(false)
     expect(
       ajv.validate(parallelSchema!, {
         data: vehicleData,

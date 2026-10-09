@@ -1,3 +1,4 @@
+import { getMinMax } from "../charts/shared/minMax"
 import type { Datum } from "../charts/shared/datumTypes"
 import { contrastRatio } from "../charts/shared/colorContrast"
 import { extractAllRows } from "../stream/accessibleDataRows"
@@ -170,11 +171,10 @@ function nodeBounds(node: SceneNode): Bounds | null {
       Array.isArray(point) && finite(point[0]) && finite(point[1]),
   )
   if (points.length > 0) {
+    const [x0, x1] = getMinMax(points, (point) => point[0])
+    const [y0, y1] = getMinMax(points, (point) => point[1])
     return {
-      x0: Math.min(...points.map((point) => point[0])),
-      y0: Math.min(...points.map((point) => point[1])),
-      x1: Math.max(...points.map((point) => point[0])),
-      y1: Math.max(...points.map((point) => point[1])),
+      x0, y0, x1, y1,
     }
   }
   return null

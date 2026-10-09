@@ -3,9 +3,7 @@ import type {
   NetworkSceneEdge,
   NetworkCircleNode,
   NetworkRectNode,
-  NetworkArcNode,
-  NetworkSymbolNode,
-  NetworkGlyphNode
+  NetworkArcNode
 } from "./networkTypes"
 import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
@@ -34,27 +32,50 @@ function preferDeeperNode(
   )
 }
 
+/** A containing child owns its visible interior; peers use nearest-center hits. */
+function preferCircleHit(
+  candidate: NetworkCircleNode,
+  current: NetworkCircleNode,
+  distance: number,
+  currentDistance: number
+): boolean {
+  const inside = distance <= candidate.r
+  const currentInside = currentDistance <= current.r
+  if (inside !== currentInside) return inside
+  if (inside && currentInside) {
+    const radiusDifference = current.r - candidate.r
+    if (radiusDifference && Math.hypot(candidate.cx - current.cx, candidate.cy - current.cy) <= Math.abs(radiusDifference) + 1e-6) {
+      return radiusDifference > 0
+    }
+  }
+  return distance < currentDistance || (
+    distance === currentDistance && preferDeeperNode(candidate, current)
+  )
+}
+
+// Flat canvas scenes paint each mark family in this order.
+const NODE_PAINT_LAYER = { rect: 0, circle: 1, arc: 2, symbol: 3, glyph: 4 }
+
 /**
  * Hit test against network scene nodes and edges.
  *
  * Checks nodes first (they're on top), then edges.
+ * Coordinates, radii and maxDistance use scene units; viewScale converts
+ * screen-pixel hit minimums and padding into those units.
  */
 export function findNearestNetworkNode(
   sceneNodes: NetworkSceneNode[],
   sceneEdges: NetworkSceneEdge[],
   px: number,
   py: number,
-  maxDistance = 30,
+  maxDistance = 12,
   nodeQuadtree?: Quadtree<NetworkCircleNode> | null,
   maxNodeRadius = 0,
   includeEdges = true,
   viewScale = 1
 ): NetworkHitResult | null {
-  // Check nodes — for nested rects (treemap) we want the smallest
-  // containing rect, so we track rect hits by area separately.
+  // Nested treemap cells and packed circles prefer the containing child.
   let bestNode: NetworkHitResult | null = null
-  let bestDist = Infinity
-  let bestRectArea = Infinity
   // Exact paths belong to a display list: all marks in that list compete in
   // paint order, including ordinary rects/circles painted over a path. Scenes
   // without paths retain nearest-circle and smallest-treemap-cell semantics.
@@ -63,64 +84,72 @@ export function findNearestNetworkNode(
 
   // Fast path: when a circle-node quadtree is available (large force/orbit
   // graphs) query it instead of scanning every circle. It returns the nearest
-  // circle whose hit radius contains the cursor — exactly the circle the linear
-  // scan would pick — so the merge with rect/arc/edge results is unchanged, and
+  // circle using the same containment and nearest-center rules as the linear
+  // scan, so the merge with rect/arc/edge results is unchanged, and
   // the scan below then skips circle nodes (the quadtree visit is authoritative).
   if (nodeQuadtree) {
     const hit = findHitPointInQuadtree(
       nodeQuadtree, px, py, maxDistance, maxNodeRadius,
       (n) => n.cx, (n) => n.cy, (n) => n.r,
-      preferDeeperNode
+      preferCircleHit, viewScale
     )
     if (hit) {
-      bestNode = { mark: hit.node, type: "node", datum: hit.node.datum, x: hit.node.cx, y: hit.node.cy, distance: hit.distance }
-      bestDist = hit.distance
+      bestNode = hitResult("node", hit.node, hit.node.cx, hit.node.cy, hit.distance)
     }
   }
 
   for (const node of sceneNodes) {
     // Circles are handled by the quadtree fast path above.
     if (nodeQuadtree && node.type === "circle") continue
-    const result = hitTestNode(node, px, py, maxDistance)
+    const result = hitTestNode(node, px, py, maxDistance, viewScale)
     if (!result) continue
-    result.mark = node
 
-    if (paintOrder) {
+    if (!bestNode || paintOrder) {
       bestNode = result
-    } else if (node.type === "rect") {
-      // For rects: prefer the smallest area (deepest cell)
-      const area = (node as NetworkRectNode).w * (node as NetworkRectNode).h
-      if (area < bestRectArea || (area === bestRectArea && preferDeeperNode(node, bestNode?.mark))) {
-        bestNode = result
-        bestRectArea = area
-      }
-    } else if (result.distance < bestDist || (
-      result.distance === bestDist && node.type === "circle" &&
-      bestNode?.mark?.type === "circle" &&
-      preferDeeperNode(node, bestNode.mark)
-    )) {
-      bestNode = result
-      bestDist = result.distance
+      continue
     }
+    const current = bestNode.mark as NetworkSceneNode
+    const preferred = node.type !== current.type
+      ? NODE_PAINT_LAYER[node.type] > NODE_PAINT_LAYER[current.type]
+      : node.type === "rect"
+        ? preferRectHit(node, current as NetworkRectNode)
+        : node.type === "circle"
+          ? preferCircleHit(node, current as NetworkCircleNode, result.distance, bestNode.distance)
+          : result.distance < bestNode.distance
+    if (preferred) bestNode = result
   }
 
   if (bestNode) return bestNode
   if (!includeEdges) return null
 
-  // Check edges if no node hit. Decorative edges (e.g. ProcessSankey's
-  // gradient stubs) carry `interactive: false` to opt out — they paint
-  // but shouldn't intercept hover.
-  for (const edge of sceneEdges) {
-    if ((edge as { interactive?: boolean }).interactive === false) continue
+  // Edges paint in array order; the last-painted semantic edge owns overlap.
+  // Decorative geometry must never produce an empty tooltip or observation.
+  for (let index = sceneEdges.length - 1; index >= 0; index--) {
+    const edge = sceneEdges[index]
+    if (edge.datum == null || edge.interactive === false) continue
     const result = hitTestEdge(edge, px, py, 5 / viewScale)
-    if (result) result.mark = edge
-    if (result && result.distance < bestDist) {
-      bestNode = result
-      bestDist = result.distance
+    if (result) {
+      return result
     }
   }
 
-  return bestNode
+  return null
+}
+
+function preferRectHit(candidate: NetworkRectNode, current: NetworkRectNode): boolean {
+  const area = candidate.w * candidate.h
+  const currentArea = current.w * current.h
+  return area < currentArea || (area === currentArea && preferDeeperNode(candidate, current))
+}
+
+function hitResult(
+  type: "node" | "edge",
+  mark: NetworkSceneNode | NetworkSceneEdge,
+  x: number,
+  y: number,
+  distance = 0
+): NetworkHitResult {
+  return { type, mark, datum: mark.datum, x, y, distance }
 }
 
 // ── Node hit testing ────────────────────────────────────────────────────
@@ -129,12 +158,18 @@ function hitTestNode(
   node: NetworkSceneNode,
   px: number,
   py: number,
-  maxDistance: number = 30
+  maxDistance: number,
+  viewScale: number
 ): NetworkHitResult | null {
   if (!node.datum) return null
   switch (node.type) {
     case "circle":
-      return hitTestCircle(node, px, py, maxDistance)
+      // Projected ground ellipses hit exactly; perspective tokens retain
+      // the same radius tolerance as ordinary point marks.
+      if (node.pathD && !node._perspectiveToken) {
+        return hitTestOutline(node as NetworkCircleNode & { pathD: string }, px, py, node.cx, node.cy)
+      }
+      return hitTestPoint(node, px, py, node.cx, node.cy, node.r, maxDistance, viewScale)
     case "rect": {
       const hit = hitTestRect(node, px, py)
       if (!hit || !node._hitPath) return hit
@@ -154,66 +189,43 @@ function hitTestNode(
       return null
     }
     case "arc":
-      return hitTestArc(node, px, py)
+      return hitTestArc(node, px, py, viewScale)
     case "symbol":
-      return hitTestSymbol(node, px, py, maxDistance)
-    case "glyph":
-      return hitTestGlyph(node, px, py, maxDistance)
+      return hitTestPoint(node, px, py, node.cx, node.cy, symbolRadius(node.size), maxDistance, viewScale)
+    case "glyph": {
+      // The anchor can offset a composite glyph's visual center.
+      const geometry = glyphHitGeometry(node.glyph, node.size)
+      return hitTestPoint(node, px, py, node.cx + geometry.centerDx, node.cy + geometry.centerDy, geometry.radius, maxDistance, viewScale)
+    }
     default:
       return null
   }
 }
 
-function hitTestGlyph(
-  node: NetworkGlyphNode,
+/** Shared circular tolerance for circles, symbols, and composite glyphs. */
+function hitTestPoint(
+  node: NetworkSceneNode,
   px: number,
   py: number,
-  maxDistance: number = 30
+  cx: number,
+  cy: number,
+  radius: number,
+  maxDistance: number,
+  viewScale: number
 ): NetworkHitResult | null {
-  // A composite glyph hit-tests as a circle over its drawn bounds — centered
-  // on the visual box (which the anchor may offset from cx/cy).
-  const geometry = glyphHitGeometry(node.glyph, node.size)
-  const cx = node.cx + geometry.centerDx
-  const cy = node.cy + geometry.centerDy
   const dx = px - cx
   const dy = py - cy
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = getHitRadius(geometry.radius, maxDistance)
+  const tolerance = getHitRadius(radius, maxDistance, viewScale)
   if (dist <= tolerance) {
-    return { type: "node", datum: node.datum, x: cx, y: cy, distance: dist }
-  }
-  return null
-}
-
-function hitTestSymbol(
-  node: NetworkSymbolNode,
-  px: number,
-  py: number,
-  maxDistance: number = 30
-): NetworkHitResult | null {
-  // Treat the glyph as a circle of its effective radius. The scan picks the
-  // nearest mark within tolerance, so dense clusters resolve to the closest
-  // glyph — the natural read for a packed beeswarm.
-  const dx = px - node.cx
-  const dy = py - node.cy
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = getHitRadius(symbolRadius(node.size), maxDistance)
-
-  if (dist <= tolerance) {
-    return {
-      type: "node",
-      datum: node.datum,
-      x: node.cx,
-      y: node.cy,
-      distance: dist
-    }
+    return hitResult("node", node, cx, cy, dist)
   }
   return null
 }
 
 /** Exact fill test for a projected (perspective) outline. */
 function hitTestOutline(
-  node: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string; datum: SceneDatum },
+  node: (NetworkCircleNode | NetworkArcNode) & { pathD: string },
   px: number,
   py: number,
   x: number,
@@ -222,35 +234,7 @@ function hitTestOutline(
   const path = getEdgePath2D(node)
   const ctx = getHitContext()
   if (!path || !ctx || !ctx.isPointInPath(path, px, py)) return null
-  return { type: "node", datum: node.datum, x, y, distance: 0 }
-}
-
-function hitTestCircle(
-  node: NetworkCircleNode,
-  px: number,
-  py: number,
-  maxDistance: number = 30
-): NetworkHitResult | null {
-  // Projected ground ellipses hit exactly; perspective tokens keep the
-  // radius tolerance of a point mark.
-  if (node.pathD && !node._perspectiveToken) {
-    return hitTestOutline(node as NetworkCircleNode & { pathD: string }, px, py, node.cx, node.cy)
-  }
-  const dx = px - node.cx
-  const dy = py - node.cy
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const tolerance = getHitRadius(node.r, maxDistance)
-
-  if (dist <= tolerance) {
-    return {
-      type: "node",
-      datum: node.datum,
-      x: node.cx,
-      y: node.cy,
-      distance: dist
-    }
-  }
-  return null
+  return hitResult("node", node, x, y)
 }
 
 function hitTestRect(
@@ -260,13 +244,7 @@ function hitTestRect(
 ): NetworkHitResult | null {
   const r = sharedHitTestRect(px, py, node)
   if (r.hit) {
-    return {
-      type: "node",
-      datum: node.datum,
-      x: r.cx,
-      y: r.cy,
-      distance: 0
-    }
+    return hitResult("node", node, r.cx, r.cy)
   }
   return null
 }
@@ -274,7 +252,8 @@ function hitTestRect(
 function hitTestArc(
   node: NetworkArcNode,
   px: number,
-  py: number
+  py: number,
+  viewScale: number
 ): NetworkHitResult | null {
   if (node.pathD) return hitTestOutline(node as NetworkArcNode & { pathD: string }, px, py, px, py)
   // Convert to polar coordinates relative to arc center
@@ -283,7 +262,8 @@ function hitTestArc(
   const radius = Math.sqrt(dx * dx + dy * dy)
 
   // Check radius bounds
-  if (radius < node.innerR - 2 || radius > node.outerR + 2) return null
+  const padding = 2 / viewScale
+  if (radius < node.innerR - padding || radius > node.outerR + padding) return null
 
   // Check angle bounds
   const angle = normalizeAngle(Math.atan2(dy, dx))
@@ -298,13 +278,7 @@ function hitTestArc(
   if (inArc) {
     const midAngle = (node.startAngle + node.endAngle) / 2
     const midR = (node.innerR + node.outerR) / 2
-    return {
-      type: "node",
-      datum: node.datum,
-      x: node.cx + midR * Math.cos(midAngle),
-      y: node.cy + midR * Math.sin(midAngle),
-      distance: 0
-    }
+    return hitResult("node", node, node.cx + midR * Math.cos(midAngle), node.cy + midR * Math.sin(midAngle))
   }
 
   return null
@@ -312,15 +286,13 @@ function hitTestArc(
 
 // ── Shared offscreen canvas for isPointInPath checks ────────────────────
 
-let _hitCanvas: HTMLCanvasElement | null = null
 let _hitCtx: CanvasRenderingContext2D | null = null
 
 function getHitContext(): CanvasRenderingContext2D | null {
   if (!_hitCtx) {
-    _hitCanvas = document.createElement("canvas")
-    _hitCanvas.width = 1
-    _hitCanvas.height = 1
-    _hitCtx = _hitCanvas.getContext("2d")
+    const canvas = document.createElement("canvas")
+    canvas.width = canvas.height = 1
+    _hitCtx = canvas.getContext("2d")
   }
   return _hitCtx
 }
@@ -366,11 +338,13 @@ function hitTestEdge(
 }
 
 function hitTestLineEdge(
-  edge: { type: "line"; x1: number; y1: number; x2: number; y2: number; datum: SceneDatum },
+  edge: Extract<NetworkSceneEdge, { type: "line" }>,
   px: number,
   py: number,
   tolerance: number
 ): NetworkHitResult | null {
+  if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
+  tolerance = Math.max(tolerance, (edge.style.strokeWidth ?? 1) / 2)
   // Point-to-line-segment distance
   const dx = edge.x2 - edge.x1
   const dy = edge.y2 - edge.y1
@@ -386,13 +360,7 @@ function hitTestLineEdge(
   const dist = Math.sqrt((px - nearX) ** 2 + (py - nearY) ** 2)
 
   if (dist <= tolerance) {
-    return {
-      type: "edge",
-      datum: edge.datum,
-      x: nearX,
-      y: nearY,
-      distance: dist
-    }
+    return hitResult("edge", edge, nearX, nearY, dist)
   }
 
   return null
@@ -417,28 +385,21 @@ function hitTestPathEdge(
     // own that interior; an unfilled curved link owns its stroke alone.
     // Opacity is intentionally ignored so transparent semantic targets work.
     if (edge.style.fill && edge.style.fill !== "none" && ctx.isPointInPath(path, px, py)) {
-      return {
-        type: "edge",
-        datum: edge.datum,
-        x: px,
-        y: py,
-        distance: 0
-      }
+      return hitResult("edge", edge, px, py)
     }
 
-    // Also check stroke with generous hit tolerance for thin curved/ribbon edges
+    if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
+    // Retain pointer slop for thin edges and include the full painted stroke.
     const prevLineWidth = ctx.lineWidth
-    ctx.lineWidth = tolerance * 2
-    const inStroke = ctx.isPointInStroke(path, px, py)
-    ctx.lineWidth = prevLineWidth
+    let inStroke: boolean
+    try {
+      ctx.lineWidth = Math.max(tolerance * 2, edge.style.strokeWidth ?? 1)
+      inStroke = ctx.isPointInStroke(path, px, py)
+    } finally {
+      ctx.lineWidth = prevLineWidth
+    }
     if (inStroke) {
-      return {
-        type: "edge",
-        datum: edge.datum,
-        x: px,
-        y: py,
-        distance: 4
-      }
+      return hitResult("edge", edge, px, py, 4)
     }
   } catch {
     // Fallback — no hit

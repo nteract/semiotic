@@ -1,3 +1,4 @@
+import { getMinMax } from "../charts/shared/minMax"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   finiteNumber,
@@ -93,8 +94,7 @@ export function describePhysicsSource(
     const extent = generated
       ? [0, pegRows]
       : normalizedFiniteExtent(props.valueExtent)
-    const min = extent?.[0] ?? (values.length ? Math.min(...values) : 0)
-    const max = extent?.[1] ?? (values.length ? Math.max(...values) : 1)
+    const [min, max] = extent ?? (values.length ? getMinMax(values) : [0, 1])
     const span = min === max ? 1 : max - min
     const rows = Array.from({ length: bins }, (_, index) => ({
       label: String(index + 1),
@@ -141,8 +141,7 @@ export function describePhysicsSource(
       watermarkAtArrivalAccessor: props.watermarkAtArrivalAccessor
     })
     const times = events.map((event) => event.eventTime)
-    const dataMin = times.length ? Math.min(...times) : 0
-    const dataMax = times.length ? Math.max(...times) : dataMin + windowSize
+    const [dataMin, dataMax] = times.length ? getMinMax(times) : [0, windowSize]
     const min = Math.min(
       finiteNumber(props.timeExtent?.[0]) ?? dataMin,
       dataMin

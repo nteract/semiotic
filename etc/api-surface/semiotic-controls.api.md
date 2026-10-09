@@ -11,7 +11,7 @@ function DirectManipulationMarkers({ values, onChange, markers, valueToPoint, po
 function LinearBrush(props: LinearBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function SentenceFilter({ sentence, filters: controlledFilters, defaultFilters, definitions, onChange, as: As, className, style, size, align, wrap, disabled, readOnly, ariaLabel, id, renderControl, onOpenChange, onObservation, chartId, chartType, }: SentenceFilterProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
-function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
+function auditVisualizationControls({ controls, minimumTargetSize, element, }: AuditVisualizationControlsOptions): ControlAuditResult
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation, }: ControlObservationAdapterOptions): (phase: ControlObservationPhase, value: VisualizationControlValue, source?: ControlInputSource) => void
 function pointerToLocalPoint(event: ClientPointerEvent, element?: Element | null | undefined): ControlPoint | null
@@ -54,6 +54,7 @@ interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
 interface VisualizationControlDefinition
 interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member AuditVisualizationControlsOptions::property::element = optional element: Element | undefined
 interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
 interface-member CircularBrushProps::property::arcFill = optional arcFill: string | undefined
 interface-member CircularBrushProps::property::chartId = optional chartId: string | undefined

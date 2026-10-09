@@ -538,10 +538,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // rAF paint is too late for those. Then hand the paint loop a *repaint-only*
   // signal (`markStylePaintPending` + clearing `dirtyRef`) so it paints this
   // freshly-built scene instead of rebuilding the same revision a second time
-  // (the duplicate `SceneRevisionDiagnostics` flagged). The one forced mount
-  // paint that would otherwise re-set `dirtyRef` — `useHydrationLifecycle` —
-  // is taught to repaint-not-rebuild when a scene already exists (see the
-  // `skipInitialCanvasPaintInvalidation` note below and `useHydration.ts`).
+  // (the duplicate `SceneRevisionDiagnostics` flagged). Fresh mounts leave
+  // painting to this ingestion scheduler; the hydration lifecycle only forces
+  // a synchronous paint when handing off server SVG to canvas. See the
+  // `skipInitialCanvasPaintInvalidation` note below and `useHydration.ts`.
   // Transition/animation frames still rebuild via the paint loop's own gates.
   const lastSceneSizeRef = useRef<[number, number] | null>(null)
   const rebuildSceneNow = useCallback(

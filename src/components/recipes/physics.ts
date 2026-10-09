@@ -1,3 +1,4 @@
+import { getMin } from "../charts/shared/minMax"
 import type { VisualToken } from "./tokenEncoding"
 import { sedimentHeightfield } from "../stream/physics/PhysicsSediment"
 import {
@@ -441,7 +442,7 @@ export function arrivalReplay(
     const time = readSpawnTime(spawn, index, timeAccessor) ?? spawn.spawnAt ?? index
     return { spawn, time }
   })
-  const minTime = rows.length ? Math.min(...rows.map((row) => row.time)) : 0
+  const minTime = rows.length ? getMin(rows.map((row) => row.time)) : 0
   const initialSpawns = rows
     .map(({ spawn, time }) => ({
       ...spawn,

@@ -198,7 +198,7 @@ ref.current.getCustomLayout()                      // custom charts: the most re
 <Scatterplot ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
 ```
 ID accessor: `pointIdAccessor` (XY/realtime), `dataIdAccessor` (ordinal), `nodeIDAccessor`/`edgeIdAccessor` (network). `replace()` is ordinal-only — used by aggregator HOCs like LikertChart. Network HOC refs operate on nodes; for edges use `StreamNetworkFrameHandle` directly: `removeNode(id)`, `removeEdge(sourceId, targetId)` or `removeEdge(edgeId)`, `updateNode(id, updater)`, `updateEdge(sourceId, targetId, updater)`. Network HOC `remove([ids])` / `update([ids], updater)` commit one layout; frame refs also expose `removeNodes(ids)` and `updateNodes(ids, updater)`, returning previous records with IDs. Worker execution applies the latest topology asynchronously and supersedes stale requests.
-**Controlled→push bridge**: `useSyncedPushData(ref, rows, { id, resetKey })` (from `semiotic` / `semiotic/realtime`) reconciles a controlled React array into the push buffer — diffs by id, issues the minimal push/update/remove, and clears + rebuilds on `resetKey` change. Reach for it instead of hand-rolling the mirror when rows live in React state; pass rows to the hook, not `data`. Pairs with `useStreamStatus` (live/stale badge). Pure core `syncPushBuffer` is exported for testing.
+**Controlled→push bridge**: `useSyncedPushData(ref, rows, { id, resetKey })` (from `semiotic` / `semiotic/realtime`) reconciles a controlled React array into the push buffer — diffs by id, issues the minimal push/update/remove, and clears + rebuilds on `resetKey` change. Match `id` to the chart’s ID accessor. Missing or duplicate IDs preserve every row through snapshot replacement; positional appends remain incremental. Reorders, removals, or edits in that mode require a `clear()` handle. Reach for it instead of hand-rolling the mirror when rows live in React state; pass rows to the hook, not `data`. Pairs with `useStreamStatus` (live/stale badge). Pure core `syncPushBuffer` is exported for testing.
 Not supported: Tree, Treemap, CirclePack, Orbit, ChoroplethMap, FlowMap, ScatterplotMatrix.
 
 ## Custom Charts (escape hatch)
@@ -236,7 +236,7 @@ The serialized equivalent is
 `{ component: "ParallelCoordinatesRecipe", props: { data, layoutConfig,
 title, description, summary, accessibleTable: true } }`; substitute
 `CalendarHeatmapRecipe` with `layoutConfig: { dateAccessor, valueAccessor,
-year? }` for the calendar form. Both names work with `renderChart` and
+year?, timeZone?: "local" | "utc", weekStart?: 0 | 1, missingColor? }` for the calendar form. Calendar days default to local time; date-only strings retain their named day. Missing days emit `value: null, missing: true` and use the theme grid color unless `missingColor` is set. Color extents use only the rendered year. Both names work with `renderChart` and
 `renderChartWithEvidence`. Import the raw `parallelCoordinatesLayout` or
 `calendarLayout` from `semiotic/recipes` only for React-only callbacks or
 bespoke frame control. `semiotic/ai/core` exposes their manifests and discovery

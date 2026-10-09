@@ -142,20 +142,28 @@ describe("SwimlaneChart — valueExtent SSR parity", () => {
     expect(evidence.yDomain).toEqual([0, 40])
   })
 
-  it("the SSR domain matches the live HOC's in-frame SSR", () => {
-    const { evidence } = renderChartWithEvidence("SwimlaneChart", {
-      ...single,
-      valueExtent: [0, 100],
-    })
-    const inFrame = renderToString(<SwimlaneChart {...single} valueExtent={[0, 100]} />)
-    // The segment width encodes the domain: 40 of 100 ≈ 40% of the plot width.
-    const widths = [...inFrame.matchAll(/<rect\b[^>]*\bwidth="([\d.]+)"/g)].map((m) => Number(m[1]))
-    const maxWidth = Math.max(0, ...widths)
-    // Plot width ≈ 400 − default horizontal margins. 40% of it is well under
-    // the full track; the buggy path filled ~100%.
-    expect(evidence.yDomain).toEqual([0, 100])
-    expect(maxWidth).toBeGreaterThan(0)
-    expect(maxWidth).toBeLessThan(220) // < ~60% of the ~360px plot
+  it.each([
+    { valueExtent: [0, 100] as [number, number], domainMax: 100 },
+    { valueExtent: undefined, domainMax: 40 },
+  ])("the SSR domain matches the live HOC's in-frame SSR with maximum $domainMax", ({ valueExtent, domainMax }) => {
+    const props = { ...single, valueExtent }
+    const { evidence } = renderChartWithEvidence("SwimlaneChart", props)
+    const host = document.createElement("div")
+    host.innerHTML = renderToString(<SwimlaneChart {...props} />)
+
+    // Background and clip rectangles are chrome, not value-encoding marks.
+    const clip = host.querySelector('clipPath[id$="-plot-clip"]')!
+    expect(clip).not.toBeNull()
+    const plotWidth = Number(clip.querySelector("rect")!.getAttribute("width"))
+    const marks = host.querySelector(`g[clip-path="url(#${clip.id})"]`)!
+    expect(marks).not.toBeNull()
+    const segments = marks.querySelectorAll("rect")
+    expect(segments).toHaveLength(1)
+    const segmentWidth = Number(segments[0].getAttribute("width"))
+
+    expect(evidence.yDomain).toEqual([0, domainMax])
+    expect(plotWidth).toBeGreaterThan(0)
+    expect(segmentWidth / plotWidth).toBeCloseTo(40 / domainMax, 6)
   })
 
   it("multi-segment proportions honor a max beyond the segment sum baseline", () => {

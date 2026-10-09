@@ -296,10 +296,13 @@ export function generateFrameSequence(
   snapshots: Datum[],
   baseProps: Datum = {}
 ): string[] {
-  return snapshots.map(snapshot => {
+  return snapshots.map((snapshot, index) => {
     try {
       return renderChart(component as Parameters<typeof renderChart>[0], { ...baseProps, ...snapshot })
-    } catch {
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[Semiotic] Failed to render snapshot ${index} for ${component}.`, error)
+      }
       const w = baseProps.width || snapshot.width || 600
       const h = baseProps.height || snapshot.height || 400
       return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`

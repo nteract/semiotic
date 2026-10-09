@@ -1,3 +1,4 @@
+import { getMax } from "../../shared/minMax"
 interface RibbonRunwayNode {
   id: string
   group?: string
@@ -114,7 +115,7 @@ export function computeFeederRibbonRunwayStarts(
       for (const edge of groupEdges) runwayByEdge.delete(edge.id)
       continue
     }
-    const sharedFloor = Math.max(...groupEdges.map((edge) => runwayByEdge.get(edge.id)!))
+    const sharedFloor = getMax(groupEdges.map((edge) => runwayByEdge.get(edge.id)!))
     for (const edge of groupEdges) runwayByEdge.set(edge.id, sharedFloor)
   }
 

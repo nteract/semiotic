@@ -26,9 +26,10 @@ export async function encodeSvgFramesToGif(
     const sharpName = "sharp"
     const sharpModule: SharpModule = await import(sharpName)
     sharp = sharpModule.default ?? sharpModule
-  } catch {
+  } catch (error) {
     throw new Error(
-      `Animated GIF export requires "sharp". Install it:\n  npm install sharp`
+      `Animated GIF export requires "sharp". Install it:\n  npm install sharp`,
+      { cause: error }
     )
   }
 

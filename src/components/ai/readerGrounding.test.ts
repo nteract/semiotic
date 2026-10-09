@@ -8,6 +8,15 @@ const sales = [
 ]
 
 describe("buildReaderGrounding", () => {
+  it("reports exact source ranges for 300,000 physics rows", () => {
+    const grounding = buildReaderGrounding("CollisionSwarmChart", {
+      data: Array.from({ length: 300_000 }, (_, index) => ({ x: index - 150_000 })),
+      xAccessor: "x"
+    })
+    expect(grounding.facts?.statements).toContain("300000 observed source rows are supplied.")
+    expect(grounding.facts?.statements).toContain("Observed x ranges from -150000 to 149999.")
+  })
+
   it("combines L1–L3 description, an L4 intent sentence, and a navigation structure", () => {
     const g = buildReaderGrounding("LineChart", { data: sales, xAccessor: "month", yAccessor: "sales" }, {
       capability: { family: "time-series", intentScores: { trend: 5 } },

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { expectCanvasPainted } from "./helpers"
 
 for (const [family, mode] of [
   ["xy", "bounded"],
@@ -24,6 +25,8 @@ for (const [family, mode] of [
       ".stream-frame-tooltip, .stream-ordinal-tooltip, .stream-network-tooltip, .stream-geo-tooltip, .stream-physics-tooltip"
     )
     const checkMark = async () => {
+      // The focusable frame mounts before its scene has keyboard targets.
+      await expectCanvasPainted(chart.locator("canvas").first())
       await frame.focus()
       await page.keyboard.press("Home")
       await expect(live).toContainText("Mark")

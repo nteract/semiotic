@@ -35,7 +35,7 @@ import { useXYTransitionEngine } from "./useXYTransitionEngine"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasPreRenderers, useUnderLayerBandRenderers } from "./underLayerBands"
-import { paintCanvasBackground, resolveCanvasBackground } from "./canvasBackground"
+import { paintCanvasBackground, resolveCanvasBackground, resolveFrameSurfaceBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
@@ -1222,6 +1222,12 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // synchronously-computed scales so server overlays anchor correctly too.
       const ssrForeground = resolveFrameGraphics(foregroundGraphics, size, margin, scales)
       const ssrBackground = resolveFrameGraphics(backgroundGraphics, size, margin, scales)
+      const ssrSurface = resolveFrameSurfaceBackground({
+        background,
+        hasBackgroundGraphics: Boolean(backgroundGraphics),
+        themeBackground: currentTheme?.colors.background,
+      })
+      const plotClipId = `${svgInstanceId}-plot-clip`
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
       const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
@@ -1264,13 +1270,18 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
+            <defs>
+              <clipPath id={plotClipId}>
+                <rect width={adjustedWidth} height={adjustedHeight} />
+              </clipPath>
+            </defs>
+            {ssrSurface && (
+              <rect x={0} y={0} width={size[0]} height={size[1]} fill={ssrSurface} />
+            )}
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {background && (
-                <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
-              )}
               {ssrBackground}
             </g>
-            <g transform={`translate(${margin.left},${margin.top})`}>
+            <g transform={`translate(${margin.left},${margin.top})`} clipPath={`url(#${plotClipId})`}>
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
               ))}

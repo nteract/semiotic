@@ -77,7 +77,7 @@ function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult):
 function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
-function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined): number
+function getHitRadius(nodeRadius: number | undefined, maxDistance?: number | undefined, viewScale?: number | undefined): number
 function getSourceRows<TDatum extends Datum = Datum>(value: unknown): readonly TDatum[] | undefined
 function hasOwnTooltipChrome(node: ((...args: never[]) => React.ReactNode) | React.ReactNode): boolean
 function hasTooltipContent(node: React.ReactNode): boolean

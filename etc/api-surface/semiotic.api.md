@@ -128,7 +128,7 @@ function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes
 function XYCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & XYCustomChartProps<TDatum, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function adaptiveTimeTicks(granularity?: TimeGranularity | undefined, options?: AdaptiveTimeTickOptions | undefined): (Date | number | value: string, index?: number, allTicks?: number[]) => string
 function annotationStableId(annotation: Datum): string | undefined
-function auditVisualizationControls({ controls, minimumTargetSize, }: AuditVisualizationControlsOptions): ControlAuditResult
+function auditVisualizationControls({ controls, minimumTargetSize, element, }: AuditVisualizationControlsOptions): ControlAuditResult
 function buildNavigationTree(component: string, props: Datum, options?: BuildNavigationTreeOptions | undefined): NavTreeNode
 function clampMobileRange(value: [number, number], domain: [number, number], minSpan?: number | undefined): [number, number]
 function compileMotionEncoding<TDatum extends Datum = Datum>(options: CompileMotionEncodingOptions<TDatum>): MotionEncodingCompilation<TDatum>
@@ -191,7 +191,7 @@ function styleRulesToNodeStyle(rules: readonly StyleRule[] | undefined, colorBy:
 function styleRulesToPieceStyle(rules: readonly StyleRule[] | undefined, valueAccessor: ((d: Datum) => unknown) | string | undefined, userPieceStyle?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function styleRulesToXYStyle(rules: readonly StyleRule[] | undefined, xAccessor: ((d: Datum) => unknown) | string | undefined, yAccessor: ((d: Datum) => unknown) | string | undefined, userStyle?: MarkStyleFn | undefined): MarkStyleFn | undefined
 function summarizeIntentManifest(manifest: IntentManifest): string
-function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
+function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string | null | undefined) | null): Map<string, T>
 function themeToCSS(theme: SemioticTheme, selector?: string | undefined): string
 function themeToCSSVariables(theme: SemioticTheme): Record<`--semiotic-${string}`, string>
 function themeToTokens(theme: SemioticTheme): Datum
@@ -566,6 +566,7 @@ interface-member AreaChartProps::property::y0Accessor = optional y0Accessor: Cha
 interface-member AreaChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member AreaChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member AuditVisualizationControlsOptions::property::controls = optional controls: readonly VisualizationControlDefinition[] | undefined
+interface-member AuditVisualizationControlsOptions::property::element = optional element: Element | undefined
 interface-member AuditVisualizationControlsOptions::property::minimumTargetSize = optional minimumTargetSize: number | undefined
 interface-member AxisConfig::property::showAxes = optional showAxes: boolean | undefined
 interface-member AxisConfig::property::xFormat = optional xFormat: ((Date | d: number | string, index?: number, allTicks?: number[]) => string | React.ReactNode) | undefined

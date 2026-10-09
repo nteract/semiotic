@@ -1,11 +1,6 @@
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import type { Datum } from "../charts/shared/datumTypes"
-import {
-  findSvgRoot,
-  mapSvgAttributes,
-  setSvgRootAttributes,
-  svgRootAttribute
-} from "../shared/svgRoot"
+import { escapeXmlAttribute, insertSvgRootContent, mapSvgAttributes } from "../shared/svgRoot"
 import { renderedSvgDimensions } from "./svgSizing"
 import {
   serializeArtifactContract,
@@ -138,6 +133,7 @@ export interface RenderChartOptions {
    * text nodes, IDs, and arbitrary CSS/style strings are left untouched.
    * Values are clamped to the practical 0–8 range. Transform coefficients
    * and angles retain at least 8 decimals to prevent distance-dependent drift.
+   * Opacity is preserved; stroke widths and dashes retain at least 2 decimals.
    */
   precision?: number
   /** Preserve an interpretation contract in machine-readable render evidence. */
@@ -169,11 +165,8 @@ const PRECISION_ATTRIBUTES = new Set([
   "offset",
   "startOffset",
   "stroke-width",
-  "stroke-opacity",
   "stroke-dasharray",
   "stroke-dashoffset",
-  "fill-opacity",
-  "opacity",
   "font-size",
   "letter-spacing"
 ])
@@ -189,7 +182,7 @@ function roundSvgNumber(token: string, precision: number): string {
   if (!Number.isFinite(value)) return token
   const factor = 10 ** precision
   const rounded = Math.round((value + Number.EPSILON) * factor) / factor
-  return Object.is(rounded, -0) ? "0" : String(rounded)
+  return String(rounded)
 }
 
 /**
@@ -200,20 +193,35 @@ function roundSvgNumber(token: string, precision: number): string {
  * transform, and point-list grammars, so retain the original gaps and insert
  * one only where the source deliberately used an implicit numeric boundary.
  */
-function roundSvgGeometryValue(value: string, precision: number, linearCount = 0): string {
+function roundSvgGeometryValue(value: string, precision: number, linearCount = 0, pathData = false): string {
   const numberPattern = new RegExp(SVG_NUMBER.source, SVG_NUMBER.flags)
   let roundedValue = ""
   let cursor = 0
   let hasPreviousNumber = false
   let match: RegExpExecArray | null
   let index = 0
+  let arcCommand = false
+  let parameterIndex = 0
 
   while ((match = numberPattern.exec(value))) {
     const gap = value.slice(cursor, match.index)
+    if (pathData && /[a-df-z]/i.test(gap)) {
+      arcCommand = /a[^a-df-z]*$/i.test(gap)
+      parameterIndex = 0
+    }
+    // Arc flags consume one character even when adjacent to the next flag
+    // or endpoint: A10 10 0 0110 10 means flags 0,1 and endpoint 10,10.
+    let token = match[0]
+    const arcParameter = parameterIndex++ % 7
+    if (arcCommand && (arcParameter === 3 || arcParameter === 4)) {
+      token = token[0]
+      if (token !== "0" && token !== "1") return value
+      numberPattern.lastIndex = match.index + 1
+    }
     if (hasPreviousNumber && gap.length === 0) roundedValue += " "
     else roundedValue += gap
-    roundedValue += roundSvgNumber(match[0], index++ < linearCount ? Math.max(8, precision) : precision)
-    cursor = match.index + match[0].length
+    roundedValue += roundSvgNumber(token, index++ < linearCount ? Math.max(8, precision) : precision)
+    cursor = match.index + token.length
     hasPreviousNumber = true
   }
 
@@ -237,7 +245,8 @@ export function serializeSvgPrecision(svg: string, precision?: number): string {
         return `${operation}(${roundSvgGeometryValue(args, resolved, linearCount)})`
       })
     }
-    return roundSvgGeometryValue(value, resolved)
+    const paintPrecision = name.startsWith("stroke-") ? Math.max(2, resolved) : resolved
+    return roundSvgGeometryValue(value, paintPrecision, 0, name === "d")
   })
 }
 
@@ -624,37 +633,12 @@ export async function renderToImage(
   props: Datum,
   options: RenderToImageOptions = {}
 ): Promise<Buffer> {
-  const { background } = options
-
-  // Generate SVG
-  let svg: string
-  const frameTypes = ["xy", "ordinal", "network", "geo", "physics"]
-  if (frameTypes.includes(frameTypeOrComponent)) {
-    svg = renderToStaticSVG(
-      frameTypeOrComponent as FrameType,
-      props as StaticFrameProps
-    )
-  } else {
-    svg = renderChart(frameTypeOrComponent, props)
-  }
-
-  // Apply background if specified
-  if (background) {
-    const root = findSvgRoot(svg)
-    const style = root ? svgRootAttribute(root, "style") : undefined
-    svg = setSvgRootAttributes(svg, {
-      style: `${style ? `${style};` : ""}background:${background}`
-    })
-  }
-
-  const requestedDimensions = {
-    width: props.width || props.size?.[0] || 600,
-    height: props.height || props.size?.[1] || 400
-  }
-  const { width, height } = renderedSvgDimensions(svg, requestedDimensions)
-
-  const { rasterizeSVG } = await import("./rasterizeSVG")
-  return rasterizeSVG(svg, width, height, options)
+  const { renderImage } = await import("./renderToImage")
+  return renderImage(
+    frameTypeOrComponent, props, options,
+    renderToStaticSVG, renderChart, resolveTheme,
+    renderedSvgDimensions, insertSvgRootContent, escapeXmlAttribute
+  )
 }
 
 export function renderDashboard(

@@ -333,7 +333,10 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         .map((fn, i) => {
           try {
             return <React.Fragment key={`pre-${i}`}>{fn(store.scene, store.scales!, { width, height })}</React.Fragment>
-          } catch {
+          } catch (error) {
+            if (process.env.NODE_ENV !== "production") {
+              console.warn(`[Semiotic] SVG pre-renderer ${i} failed.`, error)
+            }
             return null
           }
         })

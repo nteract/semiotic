@@ -30,7 +30,7 @@ consume a live ref.
    ```
 
    `useWasHydratingFromSSR` captures React's server snapshot on first render.
-   Fresh client mounts skip this branch even while `hydrated` is false.
+   Fresh client mounts report `hydrated === true` immediately and skip this branch.
 
 3. Attach the same `responsiveRef` to the outer wrapper in both branches.
    `useResponsiveSize` must observe the wrapper at the first commit. Keep its
@@ -39,7 +39,8 @@ consume a live ref.
 
 4. Connect the frame through `useFrameCanvasHost` in `useCanvasFrameHost.tsx`.
    The host wires `useHydrationLifecycle`, scheduler cancellation, and canvas
-   setup. A custom host can call the lifecycle hook directly:
+   setup. It sizes canvas layers at commit without invoking layout; scene
+   painting follows ingestion. A custom host can call the lifecycle hook directly:
 
    ```ts
    useHydrationLifecycle({
@@ -53,11 +54,12 @@ consume a live ref.
    })
    ```
 
-   After `hydrated` becomes true, the layout effect cancels any intro state
-   from SSR, invalidates the scene, cancels a queued paint, and paints
-   synchronously before the browser displays the canvas. A pure client mount
-   with an already-built scene can request a style repaint instead of rebuilding.
-   This effect runs when its hydration signals change, not on every commit.
+   After an SSR hydration reaches `hydrated === true`, the layout effect cancels
+   intro state, invalidates the scene, cancels a queued paint, and paints
+   synchronously before the browser displays the canvas. Fresh client mounts
+   paint through the family scheduler after data/config effects and initial
+   responsive measurement settle, avoiding an empty layout before ingestion.
+   The handoff effect runs when its hydration signals change, not on every commit.
    The separate unmount cleanup releases XY/ordinal data adapters and
    geographic tile caches. Physics owns worker/store cleanup in its simulation
    lifecycle.
@@ -97,10 +99,8 @@ Before hydration:
   computed CSS can change measurements after load. Provide explicit theme,
   font, and size inputs when those must agree across hosts.
 - Physics SVG is a settled snapshot; live physics can continue advancing.
-- The React XY SVG scene currently has no plot clip around its marks, while
-  standalone XY SVG and live canvas clip the data layer. Marks crossing an
-  authored extent can therefore differ before hydration. This is tracked in
-  [#1469](https://github.com/nteract/semiotic/issues/1469).
+- React XY and ordinal SVG branches clip data marks to the plot and paint
+  backgrounds across the full frame, matching the live canvas handoff.
 
 ## Verification
 

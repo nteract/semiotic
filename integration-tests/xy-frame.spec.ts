@@ -307,6 +307,82 @@ test.describe("XY Charts - Range Plot", () => {
   })
 })
 
+test.describe("XY Charts - Quadrant defaults", () => {
+  for (const variant of ["default", "partial"]) {
+    test(`quadrant ${variant} configuration paints points and preserves hover after resize`, async ({
+      page
+    }) => {
+      await page.goto(`/xy-examples/?quadrantDefaults=${variant}`)
+      await waitForChartReady(page, "xy-quadrant")
+      const chart = page.getByTestId("xy-quadrant")
+      const canvas = chart.locator("canvas").first()
+      const tooltip = chart.locator(".stream-frame-tooltip")
+      const marks = [
+        { x: 20, y: 80, name: "Upper left", rgb: [233, 196, 106] },
+        { x: 80, y: 80, name: "Upper right", rgb: [42, 157, 143] },
+        {
+          x: 20,
+          y: 20,
+          name: "Lower left",
+          rgb: variant === "partial" ? [204, 204, 204] : [231, 111, 81]
+        },
+        { x: 80, y: 20, name: "Lower right", rgb: [134, 187, 216] }
+      ]
+      const initialWidth = await canvas.evaluate(
+        (element) => element.getBoundingClientRect().width
+      )
+      for (const resized of [false, true]) {
+        if (resized) {
+          await page.setViewportSize({ width: 760, height: 800 })
+          await expect
+            .poll(async () =>
+              canvas.evaluate(
+                (element) => element.getBoundingClientRect().width
+              )
+            )
+            .not.toBe(initialWidth)
+          await waitForChartReady(page, "xy-quadrant")
+        }
+        await chart.scrollIntoViewIfNeeded()
+        const box = await canvas.boundingBox()
+        if (!box) throw new Error("quadrant canvas bounding box unavailable")
+        for (const mark of marks) {
+          const pixel = await canvas.evaluate(
+            (element: HTMLCanvasElement, { x, y }) => {
+              const ctx = element.getContext("2d")!
+              return Array.from(
+                ctx.getImageData(
+                  Math.round((element.width * x) / 100),
+                  Math.round(element.height * (1 - y / 100)),
+                  1,
+                  1
+                ).data
+              )
+            },
+            mark
+          )
+          expect(pixel).toEqual([...mark.rgb, 255])
+          await page.mouse.move(
+            box.x + (box.width * mark.x) / 100,
+            box.y + box.height * (1 - mark.y / 100)
+          )
+          await expect(tooltip).toContainText(mark.name)
+          await expect(tooltip).toContainText(String(mark.x))
+          await expect(tooltip).toContainText(String(mark.y))
+          await expectTooltipWithinPlot(chart, {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0
+          })
+          await chart.locator("h2").hover()
+          await expect(tooltip).not.toBeVisible() // test-quality-gate: allow-mount-only — verifies dismissal after moving off a real mark
+        }
+      }
+    })
+  }
+})
+
 // ── Default-theme HOC coverage backfill ──────────────────────────────
 // One snapshot per public XY HOC that didn't already have one. Pinned
 // to the default theme; theme variants are covered by themed-charts.

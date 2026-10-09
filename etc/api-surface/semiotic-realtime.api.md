@@ -107,7 +107,7 @@ function registerBuiltInXYPlugins(): void
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
 function statValue(w: AggregatedWindow, stat: AggregateStat): number
-function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string) | null): Map<string, T>
+function syncPushBuffer<T = Datum>(handle: SyncedPushHandle<T>, previousById: Map<string, T>, rows: readonly T[], getId: ((datum: T, index: number) => string | null | undefined) | null): Map<string, T>
 function useCrosshairPosition(name: string | undefined): CrosshairPosition | null
 function useLinkedCrosshair(name: string): UseLinkedCrosshairResult
 function useStreamStatus<THandle extends RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum> = RealtimeFrameHandle<import("./datumTypes").Datum, import("./datumTypes").Datum>>(options?: StreamStatusOptions | undefined): StreamStatusResult<THandle>

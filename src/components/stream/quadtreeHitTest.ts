@@ -22,6 +22,9 @@ export interface QuadtreeHit<T> {
  * the typed overload requires them, so an incompatible shape is a compile
  * error rather than a runtime NaN. The quadtree itself must be built with
  * matching `.x()`/`.y()` accessors.
+ * An optional hit comparator lets nested network circles use the same
+ * containment precedence as their linear hit tester. With a camera scale,
+ * use scene coordinates/radii and convert pixel slop for both search and hits.
  */
 // Default `{ x, y, r }` shape — no accessors needed.
 export function findHitPointInQuadtree<T extends { x: number; y: number; r: number }>(
@@ -41,7 +44,8 @@ export function findHitPointInQuadtree<T>(
   getX: (n: T) => number,
   getY: (n: T) => number,
   getR: (n: T) => number,
-  preferTie?: (candidate: T, current: T) => boolean
+  preferHit?: (candidate: T, current: T, distance: number, currentDistance: number) => boolean,
+  viewScale?: number
 ): QuadtreeHit<T> | null
 export function findHitPointInQuadtree<T>(
   qt: Quadtree<T>,
@@ -52,9 +56,10 @@ export function findHitPointInQuadtree<T>(
   getX: (n: T) => number = (n) => (n as { x: number }).x,
   getY: (n: T) => number = (n) => (n as { y: number }).y,
   getR: (n: T) => number = (n) => (n as { r: number }).r,
-  preferTie?: (candidate: T, current: T) => boolean
+  preferHit?: (candidate: T, current: T, distance: number, currentDistance: number) => boolean,
+  viewScale = 1
 ): QuadtreeHit<T> | null {
-  const searchRadius = Math.max(maxDistance, maxPointRadius + 5, 12)
+  const searchRadius = getHitRadius(maxPointRadius, maxDistance, viewScale)
   const xMin = px - searchRadius
   const xMax = px + searchRadius
   const yMin = py - searchRadius
@@ -78,8 +83,10 @@ export function findHitPointInQuadtree<T>(
         const dx = getX(point) - px
         const dy = getY(point) - py
         const dist = Math.sqrt(dx * dx + dy * dy)
-        const hitR = getHitRadius(getR(point), maxDistance)
-        if (dist <= hitR && (dist < bestDist || (dist === bestDist && best !== null && preferTie?.(point, best)))) {
+        const hitR = getHitRadius(getR(point), maxDistance, viewScale)
+        if (dist <= hitR && (best === null || (preferHit
+            ? preferHit(point, best, dist, bestDist)
+            : dist < bestDist))) {
           best = point
           bestDist = dist
         }
