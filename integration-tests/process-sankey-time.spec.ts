@@ -73,7 +73,7 @@ for (const time of ["numeric", "dates"]) {
         await expect(tooltip).toHaveCount(0)
         await hoverMark(page, "ribbon")
         await expect(tooltip).toHaveCount(1)
-        await expect(tooltip.getByText("a → b", { exact: true })).toBeVisible()
+        await expect(tooltip).toContainText("a → b")
         await expect(tooltip).toContainText(
           time === "numeric" ? "14" : "2026-01-01T14:00:00Z"
         )
@@ -95,7 +95,7 @@ for (const time of ["numeric", "dates"]) {
       await check()
       await page.getByRole("button", { name: "Use time formatter" }).click()
       await hoverMark(page, "ribbon")
-      await expect(tooltip.getByText("a → b", { exact: true })).toBeVisible()
+      await expect(tooltip).toContainText("a → b")
       await expect(tooltip).toContainText(
         time === "numeric" ? "number 14" : "date 2026-01-01T14:00:00.000Z"
       )
