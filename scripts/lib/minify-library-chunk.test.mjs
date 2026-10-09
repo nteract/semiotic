@@ -4,8 +4,12 @@ import { gzipSync } from "node:zlib"
 import { minify } from "terser"
 import { build } from "esbuild"
 import { rollup } from "rollup"
-import { minifyLibraryChunk } from "./minify-library-chunk.mjs"
+import {
+  libraryCompressionCandidates,
+  minifyLibraryChunk
+} from "./minify-library-chunk.mjs"
 import { libraryTerserOptions as options } from "./library-minification-options.mjs"
+import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
 
 test("folded and returned calls do not leave invalid Rollup purity hints", async () => {
   const source = `
@@ -74,16 +78,19 @@ test("compressed ESM preserves exports, initialization, closures and live bindin
 test("preserves purity annotations for downstream named-import tree shaking", async () => {
   const source = `
     import { makeOptional } from "optional-host"
-    export const optional = /* @__PURE__ */ makeOptional()
-    export const required = 42
+    var optional = /* @__PURE__ */ makeOptional()
+    class Required { value() { return 42 } }
+    var anotherOptional = /* @__PURE__ */ makeOptional()
+    export { optional, anotherOptional, Required }
   `
   const compact = await minifyLibraryChunk(source, {
     format: "esm",
     filename: "library.js",
     options
   })
+  assert.equal(chunkLoadEffect(compact.code), null)
   const consumer = await build({
-    stdin: { contents: 'export { required } from "library"' },
+    stdin: { contents: 'export { Required } from "library"' },
     bundle: true,
     write: false,
     format: "esm",
@@ -111,10 +118,55 @@ test("preserves purity annotations for downstream named-import tree shaking", as
   const exports = await import(
     `data:text/javascript,${encodeURIComponent(code)}`
   )
-  assert.equal(exports.required, 42)
+  assert.equal(new exports.Required().value(), 42)
 })
 
-test("both production candidates preserve NaN comparisons, getters, and coercion order", async () => {
+test("all production candidates preserve initializer order and variable scope", async () => {
+  const source = `
+    export function exercise() {
+      const order = []
+      function record(value) { order.push(value); return value }
+      function initialize() {
+        order.push(value)
+        var value = record("first")
+        if (value) { var other = record("second") }
+        return [value, other]
+      }
+      const values = initialize()
+      const lexical = [], shared = []
+      for (let index = 0; index < 3; index++) lexical.push(() => index)
+      for (var index = 0; index < 3; index++) shared.push(() => index)
+      let tdz
+      try {
+        record(later)
+        let later = record("unreachable")
+      } catch (error) { tdz = error instanceof ReferenceError }
+      return { order, values, lexical: lexical.map(f => f()), shared: shared.map(f => f()), tdz }
+    }
+  `
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const original = await load(source)
+  const expected = {
+    order: [undefined, "first", "second"],
+    values: ["first", "second"],
+    lexical: [0, 1, 2],
+    shared: [3, 3, 3],
+    tdz: true
+  }
+  assert.deepEqual(original.exercise(), expected)
+  for (const compression of libraryCompressionCandidates) {
+    const compact = await minify(source, {
+      module: true,
+      ...options,
+      compress: { ...options.compress, ...compression }
+    })
+    const module = await load(compact.code)
+    assert.deepEqual(module.exercise(), expected)
+  }
+})
+
+test("all production candidates preserve NaN comparisons, getters, and coercion order", async () => {
   const source = `
     export function guards(value, bound) {
       return [!(value > bound), !(value >= bound), !(value < bound), !(value <= bound)]
@@ -126,11 +178,11 @@ test("both production candidates preserve NaN comparisons, getters, and coercion
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
   const candidates = await Promise.all(
-    [true, false].map((hoist_funs) =>
+    libraryCompressionCandidates.map((compression) =>
       minify(source, {
         module: true,
         ...options,
-        compress: { ...options.compress, hoist_funs }
+        compress: { ...options.compress, ...compression }
       })
     )
   )
@@ -182,7 +234,7 @@ test("both production candidates preserve NaN comparisons, getters, and coercion
   }
 })
 
-test("both production candidates preserve matchesThreshold source semantics", async () => {
+test("all production candidates preserve matchesThreshold source semantics", async () => {
   const result = await build({
     entryPoints: ["src/components/charts/shared/styleRules.ts"],
     bundle: true,
@@ -195,11 +247,11 @@ test("both production candidates preserve matchesThreshold source semantics", as
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
   const candidates = await Promise.all(
-    [true, false].map((hoist_funs) =>
+    libraryCompressionCandidates.map((compression) =>
       minify(source, {
         module: true,
         ...options,
-        compress: { ...options.compress, hoist_funs }
+        compress: { ...options.compress, ...compression }
       })
     )
   )
