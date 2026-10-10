@@ -196,9 +196,14 @@ describe("dashboard composition", () => {
     ], { width: 900, layout: { columns: 3 } })
 
     expect(isValidSVG(svg)).toBe(true)
-    // Each chart is in a foreignObject
-    const foreignObjects = (svg.match(/foreignObject/g) || []).length
-    expect(foreignObjects).toBeGreaterThanOrEqual(6) // open + close for each
+    const dashboard = new DOMParser().parseFromString(svg, "image/svg+xml")
+    expect(dashboard.querySelector("parsererror")).toBeNull()
+    expect(dashboard.querySelector("foreignObject")).toBeNull()
+    const charts = dashboard.querySelectorAll("svg svg")
+    expect(charts).toHaveLength(3)
+    expect(charts[0].querySelectorAll("[id$='-data-area'] rect")).toHaveLength(barData.length)
+    expect(charts[1].querySelectorAll("[id$='-data-area'] path")).toHaveLength(1)
+    expect(charts[2].querySelectorAll("[id$='-data-area'] path")).toHaveLength(barData.length)
   })
 
   it("dashboard with theme applies consistently", () => {

@@ -66,7 +66,13 @@ describe("Edge runtime compatibility — sync functions", () => {
       { component: "PieChart", props: { data: [{ category: "A", value: 30 }, { category: "B", value: 70 }], categoryAccessor: "category", valueAccessor: "value" } },
     ], { width: 800, layout: { columns: 2 } })
     expect(isValidSVG(svg)).toBe(true)
-    expect(svg).toContain("foreignObject")
+    const dashboard = new DOMParser().parseFromString(svg, "image/svg+xml")
+    expect(dashboard.querySelector("parsererror")).toBeNull()
+    expect(dashboard.querySelector("foreignObject")).toBeNull()
+    const charts = dashboard.querySelectorAll("svg svg")
+    expect(charts).toHaveLength(2)
+    expect(charts[0].querySelectorAll("[id$='-data-area'] rect")).toHaveLength(1)
+    expect(charts[1].querySelectorAll("[id$='-data-area'] path")).toHaveLength(2)
   })
 
   it("renderToStaticSVG (frame-level) produces SVG", () => {
