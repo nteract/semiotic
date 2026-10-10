@@ -265,11 +265,11 @@ describe("numeric / color utilities", () => {
     expect(mean([])).toBe(0)
   })
 
-  it("withAlpha turns hex into rgba, expands shorthand, clamps alpha, and passes through non-hex", () => {
+  it("withAlpha turns hex into rgba, clamps alpha, and dims deferred CSS colors", () => {
     expect(withAlpha("#ff0000", 0.5)).toBe("rgba(255, 0, 0, 0.5)")
     expect(withAlpha("#f00", 1)).toBe("rgba(255, 0, 0, 1)")
     expect(withAlpha("#000000", 2)).toBe("rgba(0, 0, 0, 1)")
-    expect(withAlpha("var(--semiotic-danger)", 0.5)).toBe("var(--semiotic-danger)")
+    expect(withAlpha("var(--semiotic-danger)", 0.5)).toBe("color-mix(in srgb, var(--semiotic-danger) 50%, transparent)")
   })
 })
 

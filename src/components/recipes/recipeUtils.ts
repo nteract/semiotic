@@ -1,4 +1,5 @@
 import { interpolateLab } from "d3-interpolate"
+import { parseColorEvidence } from "../ai/colorEvidence"
 import { clamp } from "../utils/clamp"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -228,13 +229,24 @@ export class LayoutCache<V> {
  * (it captures two interpolators) and call per datum.
  */
 export function makeShade(baseColor: string, strength = 0.72): (t: number) => string {
-  const toWhite = interpolateLab(baseColor, "#ffffff")
-  const toBlack = interpolateLab(baseColor, "#000000")
-  const base = interpolateLab(baseColor, baseColor)(0)
+  const parsed = parseColorEvidence(baseColor)
+  const literal = parsed
+    ? `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${parsed.a})`
+    : baseColor
+  // Defer CSS variables, currentColor and modern color functions to the host.
+  // D3 cannot parse them and otherwise silently substitutes black or white.
+  const deferred = !parsed && (!/^[a-z]+$/i.test(baseColor.trim()) || baseColor.trim().toLowerCase() === "currentcolor")
+  const toWhite = deferred ? null : interpolateLab(literal, "#ffffff")
+  const toBlack = deferred ? null : interpolateLab(literal, "#000000")
+  const base = deferred ? baseColor : interpolateLab(literal, literal)(0)
+  const amount = Number.isFinite(strength) ? clamp(strength, 0, 1) : 0.72
   return (t: number) => {
-    const c = t < 0 ? 0 : t > 1 ? 1 : t
+    const c = Number.isFinite(t) ? clamp(t, 0, 1) : 0.5
     if (c === 0.5) return base
-    return c < 0.5 ? toWhite((0.5 - c) * 2 * strength) : toBlack((c - 0.5) * 2 * strength)
+    const mix = Math.abs(c - 0.5) * 2 * amount
+    if (!mix) return base
+    if (deferred) return `color-mix(in lab, ${baseColor} ${(1 - mix) * 100}%, ${c < 0.5 ? "white" : "black"})`
+    return c < 0.5 ? toWhite!(mix) : toBlack!(mix)
   }
 }
 
@@ -278,21 +290,17 @@ export function mean(values: readonly number[]): number {
 }
 
 /**
- * Turn a hex color (`#rgb` or `#rrggbb`) into an `rgba(…)` string at `alpha`.
+ * Multiply a CSS color's opacity by `alpha`, preserving existing transparency.
  * The dimming-by-alpha helper a custom layout reaches for when it must express
  * hover/selection fade as a *fill color* (e.g. inside a recipe's `resolveColor`
- * callback, where the frame's opacity channel isn't available). Non-hex input
- * is returned unchanged so it composes with CSS-var / `rgb()` colors.
+ * callback, where the frame's opacity channel isn't available). Solid hex,
+ * RGB and HSL colors become rgba; deferred CSS colors use color-mix.
  */
 export function withAlpha(color: string, alpha: number): string {
-  const a = clamp(alpha, 0, 1)
-  const hex = color.trim().replace(/^#/, "")
-  const expand = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex
-  if (!/^[0-9a-fA-F]{6}$/.test(expand)) return color
-  const r = parseInt(expand.slice(0, 2), 16)
-  const g = parseInt(expand.slice(2, 4), 16)
-  const b = parseInt(expand.slice(4, 6), 16)
-  return `rgba(${r}, ${g}, ${b}, ${a})`
+  const a = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1
+  const parsed = parseColorEvidence(color)
+  if (!parsed) return a === 1 ? color : `color-mix(in srgb, ${color} ${a * 100}%, transparent)`
+  return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${parsed.a * a})`
 }
 
 /** Stable UTF-16 ordering, independent of host locale and ICU version. */
