@@ -533,8 +533,8 @@ describe("renderChart", () => {
       width: 400,
       height: 300,
     })
-    expect(horizontal).not.toContain('id="axes"')
-    expect(vertical).toContain('id="axes"')
+    expect(horizontal).not.toMatch(/id="[^"]*-axes"/)
+    expect(vertical).toMatch(/id="[^"]*-axes"/)
   })
 
   it("renders Histogram", () => {
@@ -1199,7 +1199,7 @@ describe("Edge cases", () => {
       showAxes: false,
     })
     expect(svg).toContain("<svg")
-    expect(svg).not.toContain('id="axes"')
+    expect(svg).not.toMatch(/id="[^"]*-axes"/)
   })
 
   it("renders with custom background", () => {

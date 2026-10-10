@@ -51,16 +51,16 @@ const networkEdges = [{ source: "a", target: "b" }, { source: "b", target: "c" }
 
 const FRAME_RENDERERS = {
   xy: (extra: Record<string, unknown> = {}) => renderXYToStaticSVG({
-    chartType: "line", data: xyData, xAccessor: "x", yAccessor: "y", size: [400, 300], ...extra,
+    chartType: "line", data: xyData, xAccessor: "x", yAccessor: "y", size: [400, 300], _idPrefix: "parity", ...extra,
   } as StaticXYProps),
   ordinal: (extra: Record<string, unknown> = {}) => renderOrdinalToStaticSVG({
-    chartType: "bar", data: ordinalData, oAccessor: "c", rAccessor: "v", size: [400, 300], ...extra,
+    chartType: "bar", data: ordinalData, oAccessor: "c", rAccessor: "v", size: [400, 300], _idPrefix: "parity", ...extra,
   } as StaticOrdinalProps),
   network: (extra: Record<string, unknown> = {}) => renderNetworkToStaticSVG({
-    chartType: "force", edges: networkEdges, nodeIDAccessor: "id", size: [400, 300], ...extra,
+    chartType: "force", edges: networkEdges, nodeIDAccessor: "id", size: [400, 300], _idPrefix: "parity", ...extra,
   } as StaticNetworkProps),
   geo: (extra: Record<string, unknown> = {}) => renderGeoToStaticSVG({
-    chartType: "geo", areas: [], projection: "equalEarth", size: [400, 300], ...extra,
+    chartType: "geo", areas: [], projection: "equalEarth", size: [400, 300], _idPrefix: "parity", ...extra,
   } as StaticGeoProps),
 }
 
@@ -90,12 +90,12 @@ describe("SSR feature parity: title", () => {
 describe("SSR feature parity: axes", () => {
   it("xy renders the axes group when showAxes is true", () => {
     const svg = FRAME_RENDERERS.xy({ showAxes: true })
-    expect(svg).toMatch(/class="stream-axes"|id="axes"/)
+    expect(svg).toMatch(/class="stream-axes"|id="parity-axes"/)
   })
 
   it("ordinal renders the axes group when showAxes is true", () => {
     const svg = FRAME_RENDERERS.ordinal({ showAxes: true })
-    expect(svg).toMatch(/class="ordinal-axes"|id="axes"/)
+    expect(svg).toMatch(/class="ordinal-axes"|id="parity-axes"/)
   })
 })
 
@@ -271,11 +271,11 @@ describe("SSR feature parity: legend", () => {
       showLegend: true,
       legend: explicitReactNodeLegend,
     })
-    // Wrapper provides the stable `id="legend"` slot; the user's ReactNode is
+    // Wrapper provides the stable `id="parity-legend"` slot; the user's ReactNode is
     // inside it. The auto-built `semiotic-legend` class would only appear if
     // SSR also ran the auto-build path — assert it's absent to lock down the
     // "explicit wins over auto" contract.
-    expect(svg).toContain(`id="legend"`)
+    expect(svg).toContain(`id="parity-legend"`)
     expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
     expect(svg).not.toContain("semiotic-legend")
   })
@@ -288,7 +288,7 @@ describe("SSR feature parity: legend", () => {
   ] as const)("%s positions an explicit ReactNode legend like the live overlay", (frame) => {
     const svg = FRAME_RENDERERS[frame]({ legend: explicitReactNodeLegend })
     expect(svg).toMatch(
-      /id="legend"><g transform="translate\([^)]*\)"><g data-explicit-legend-marker="yes"/
+      /id="parity-legend"><g transform="translate\([^)]*\)"><g data-explicit-legend-marker="yes"/
     )
   })
 
@@ -300,7 +300,7 @@ describe("SSR feature parity: legend", () => {
   ] as const)("%s keeps a raw legend when its static scene is empty", (frame, emptyProps) => {
     const svg = FRAME_RENDERERS[frame]({ ...emptyProps, legend: explicitReactNodeLegend })
     expect(svg).toContain(EXPLICIT_LEGEND_MARKER)
-    expect(svg).toMatch(/id="legend"><g transform="translate\([^)]*\)">/)
+    expect(svg).toMatch(/id="parity-legend"><g transform="translate\([^)]*\)">/)
   })
 
   it.each([
@@ -311,14 +311,14 @@ describe("SSR feature parity: legend", () => {
   ] as const)("%s keeps a configured legend when its static scene is empty", (frame, emptyProps) => {
     const svg = FRAME_RENDERERS[frame]({ ...emptyProps, legend: explicitConfigLegend })
     expect(svg).toContain("Empty config legend")
-    expect(svg).toContain('id="legend"')
+    expect(svg).toContain('id="parity-legend"')
   })
 
   it("xy reserves the shared raw-legend box before drawing the plot", () => {
     const right = FRAME_RENDERERS.xy({ legend: explicitReactNodeLegend })
-    expect(right).toContain('id="data-area" transform="translate(70,50)"')
+    expect(right).toContain('id="parity-data-area" transform="translate(70,50)"')
     expect(right).toContain('<rect x="0" y="0" width="217" height="190"')
-    expect(right).toContain('id="legend"><g transform="translate(297, 50)"')
+    expect(right).toContain('id="parity-legend"><g transform="translate(297, 50)"')
 
     const bottom = FRAME_RENDERERS.xy({
       xLabel: "Month",
@@ -326,7 +326,7 @@ describe("SSR feature parity: legend", () => {
       legendPosition: "bottom",
     })
     expect(bottom).toContain('<rect x="0" y="0" width="290" height="174"')
-    expect(bottom).toContain('id="legend"><g transform="translate(70, 280)"')
+    expect(bottom).toContain('id="parity-legend"><g transform="translate(70, 280)"')
   })
 
   it("xy: auto-build includes the legend group element when no explicit legend", () => {

@@ -35,7 +35,7 @@ const movingFrame = {
 }
 
 function settledBodyX(svg: string): number {
-  const dataArea = svg.slice(svg.indexOf('id="physics-data-area"'))
+  const dataArea = svg.slice(svg.search(/id="[^"]*-data-area"/))
   const match = dataArea.match(/<circle[^>]*cx="([^"]+)"/)
   return Number(match?.[1])
 }
@@ -119,8 +119,8 @@ describe("static physics chrome", () => {
     expect(svg).toContain(
       '<g transform="translate(97, 0)"><g data-testid="raw-physics-legend"'
     )
-    expect(svg).toContain(
-      '<clipPath id="physics-plot-clip"><rect width="87" height="100"></rect></clipPath>'
+    expect(svg).toMatch(
+      /<clipPath id="[^"]*-plot-clip"><rect width="87" height="100"><\/rect><\/clipPath>/
     )
     expect(contexts).toEqual([
       { domain: [0, 87], inverted: "function", xAccessor: "x", yAccessor: "y" },

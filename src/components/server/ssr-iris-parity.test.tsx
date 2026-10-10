@@ -542,11 +542,11 @@ describe("AreaChart — semanticGradient SSR parity", () => {
         { at: 80, color: "#dc2626" },
       ],
     })
-    const gradient = svg.match(/<linearGradient id="area-0-gradient"[^>]*>/)?.[0] ?? ""
+    const gradient = svg.match(/<linearGradient id="[^"]*-area-0-gradient"[^>]*>/)?.[0] ?? ""
     expect(gradient).toContain('y1="0"')
     expect(gradient).toContain('y2="300"')
     // The line's critical band starts at value 80, 60px from the top.
-    expect(svg).toMatch(/<clipPath id="area-0-stroke-band-2"><rect x="-2" y="0" width="404" height="59.99/)
+    expect(svg).toMatch(/<clipPath id="[^"]*-area-0-stroke-band-2"><rect x="-2" y="0" width="404" height="59.99/)
   })
 
   it("a plain AreaChart (no semanticGradient) emits no gradient", () => {

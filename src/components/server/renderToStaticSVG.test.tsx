@@ -213,7 +213,7 @@ describe("renderOrdinalToStaticSVG", () => {
       showAxes: false
     })
 
-    expect(svg).not.toContain('id="axes"')
+    expect(svg).not.toMatch(/id="[^"]*-axes"/)
   })
 
   it("renders with custom className", () => {
@@ -260,6 +260,7 @@ describe("renderChart SVG precision", () => {
   })
 
   const precisionProps = {
+    _idPrefix: "precision",
     data: [
       { x: 0.123456789, y: 12.3456789 },
       { x: 1.987654321, y: 98.7654321 },
@@ -867,6 +868,7 @@ describe("renderNetworkToStaticSVG - regression", () => {
     }
     const margin = { top: 40, right: 40, bottom: 40, left: 40 }
     const props = {
+      _idPrefix: "lineage-hulls",
       nodes: hullNodes,
       edges: hullEdges,
       layout: lineageDagLayout,

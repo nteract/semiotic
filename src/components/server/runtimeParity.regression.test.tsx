@@ -120,6 +120,7 @@ describe("static/runtime parity regressions", () => {
 
   it("keeps frame graphics and custom annotations when static scenes are empty", () => {
     const graphics = {
+      _idPrefix: "runtime",
       backgroundGraphics: <g id="empty-background" />,
       foregroundGraphics: <g id="empty-foreground" />,
       annotations: [{ x: 10, y: 10 }],
@@ -131,8 +132,8 @@ describe("static/runtime parity regressions", () => {
       renderNetworkToStaticSVG({ chartType: "force", nodes: [], edges: [], ...graphics }),
     ]
     for (const svg of svgs) {
-      expect(svg).toContain('id="empty-background"')
-      expect(svg).toContain('id="empty-foreground"')
+      expect(svg).toContain('id="runtime-empty-background"')
+      expect(svg).toContain('id="runtime-empty-foreground"')
       expect(svg).toContain("empty-annotation")
     }
   })
@@ -147,7 +148,7 @@ describe("static/runtime parity regressions", () => {
       size: [300, 200],
     })
 
-    expect(svg).toContain('id="axes"')
+    expect(svg).toMatch(/id="[^"]*-axes"/)
     expect(svg).toContain(">100</text>")
   })
 
@@ -158,6 +159,7 @@ describe("static/runtime parity regressions", () => {
       data: [{ category: "A", value: 1 }],
       oAccessor: "category",
       rAccessor: "value",
+      _idPrefix: "runtime",
       backgroundGraphics: <rect id="radial-background" x={0} y={0} width={20} height={20} />,
       size: [300, 240],
     })
@@ -165,7 +167,7 @@ describe("static/runtime parity regressions", () => {
     // the absolute radial center and counter-transform use that same plot.
     expect(svg).toContain('transform="translate(165,115)"')
     expect(svg).toContain(
-      '<g transform="translate(-95,-65)"><rect id="radial-background"'
+      '<g transform="translate(-95,-65)"><rect id="runtime-radial-background"'
     )
   })
 

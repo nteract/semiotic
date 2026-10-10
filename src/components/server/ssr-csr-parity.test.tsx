@@ -530,7 +530,7 @@ describe("BumpChart shared styling in static SVG", () => {
     const tableau10 = ["#4e79a7", "#f28e2c", "#e15759"]
 
     it("dims neutral trajectories on both paths", () => {
-      for (const svg of bothPaths({ highlightTop: 1 })) {
+      for (const svg of bothPaths({ highlightTop: 1, _idPrefix: "highlight-top" })) {
         expect(svg).toMatch(/fill-opacity="1" opacity="0\.58"/)
         expect(svg).toMatch(/fill-opacity="1" opacity="0\.9"/)
       }
@@ -569,8 +569,8 @@ describe("BumpChart shared styling in static SVG", () => {
     })
 
     it("treats a numeric string highlightTop like the number", () => {
-      const [asNumberServer, asNumberBrowser] = bothPaths({ highlightTop: 1 })
-      const [asStringServer, asStringBrowser] = bothPaths({ highlightTop: "1" })
+      const [asNumberServer, asNumberBrowser] = bothPaths({ highlightTop: 1, _idPrefix: "highlight-top" })
+      const [asStringServer, asStringBrowser] = bothPaths({ highlightTop: "1", _idPrefix: "highlight-top" })
       expect(asStringServer).toBe(asNumberServer)
       expect(asStringBrowser).toBe(asNumberBrowser)
     })

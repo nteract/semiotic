@@ -265,6 +265,7 @@ describe("Component SSR — Network Charts", () => {
 
   it("renderChart('ProcessSankey', …) resolves string and function groupBy accessors identically", () => {
     const props = {
+      _idPrefix: "process-grouping",
       nodes: [
         { id: "states-before", bond: "us", xExtent: [0, 2] },
         { id: "states-after", bond: "us", xExtent: [8, 10] },
