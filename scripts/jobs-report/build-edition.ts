@@ -84,6 +84,7 @@ async function main() {
     "named-vintage.svg": lines[1].svg,
     "opening-waterfall.phone.svg": renderChartWithEvidence("WaterfallChart", {
       ...b.briefing.props,
+      chartId: `${b.briefing.props.chartId}-phone`,
       width: 360,
       height: 310,
       margin: { top: 36, left: 62, right: 15, bottom: 56 }

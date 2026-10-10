@@ -112,6 +112,12 @@ test("downloads and reopening preserve the selected dates, values and pending re
     else if (name === "Source CSV")
       expect(bytes.toString()).toContain('"2025-07","2026-03-06"')
     else expect(bytes.toString()).toContain("+64,000")
+    if (name === "Download SVG" || name === "Printable HTML") {
+      const savingAgain = page.waitForEvent("download")
+      await page.getByRole("button", { name, exact: true }).click()
+      const repeated = await readFile((await (await savingAgain).path())!)
+      expect(repeated.equals(bytes), `${name} reproduces its bytes`).toBe(true)
+    }
   }
   const email = await (
     await request.get(`${bootstrap.base}/edition-b/email.html`)

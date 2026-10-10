@@ -32,7 +32,12 @@ export function buildBriefing(
     throw new Error("Snapshot content does not match its source identity")
   const selected = prepareMonth(snapshot, month, asOf)
   if (!selected.latest) throw new Error("No estimate was available for this month on that date")
-  const props = waterfallProps(selected)
+  // Saved exports are byte-checked. Bind stable SVG IDs into the configuration
+  // before creating its contract so browser and CLI exports share the identity.
+  const props = {
+    ...waterfallProps(selected),
+    chartId: `jobs-${snapshot.id}-${month}-${asOf}`,
+  }
   // October has no first estimate: a single starting level, explicitly labeled,
   // is honest; inventing a first value to fill the waterfall would not be.
   if (!selected.first)
