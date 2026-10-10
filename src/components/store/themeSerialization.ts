@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { SemioticTheme } from "./themeCore"
 import { themeToCSSVariables } from "./themeCSSVariables"
+import { assertSafeThemeSelector } from "./safeThemeCSS"
 
 export { themeToCSSVariables } from "./themeCSSVariables"
 
@@ -11,6 +12,7 @@ export { themeToCSSVariables } from "./themeCSSVariables"
  * @param theme - A SemioticTheme object
  * @param selector - CSS selector to scope the variables (default: `:root`)
  * @returns CSS string with custom properties
+ * @throws TypeError for CSS declaration/HTML breakouts or resource-loading values.
  *
  * @example
  * ```ts
@@ -23,6 +25,7 @@ export { themeToCSSVariables } from "./themeCSSVariables"
  * ```
  */
 export function themeToCSS(theme: SemioticTheme, selector = ":root"): string {
+  assertSafeThemeSelector(selector)
   const vars = Object.entries(themeToCSSVariables(theme)).map(
     ([name, value]) => `  ${name}: ${value};`
   )

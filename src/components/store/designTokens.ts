@@ -6,6 +6,7 @@ import type {
   AestheticThresholds,
 } from "../ai/aestheticProfileTypes"
 import { DARK_THEME, LIGHT_THEME } from "./themeCore"
+import { themeToCSSVariables } from "./themeCSSVariables"
 
 /**
  * W3C Design Tokens (DTCG) → Semiotic theme.
@@ -319,7 +320,7 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   const mode = options.base?.mode ?? (bgLum != null ? (bgLum < 0.5 ? "dark" : "light") : LIGHT_THEME.mode)
   const base = options.base ?? (mode === "dark" ? DARK_THEME : LIGHT_THEME)
 
-  return {
+  const theme: SemioticTheme = {
     ...base,
     mode,
     colors: {
@@ -342,4 +343,6 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
     },
     ...(aesthetics ? { aesthetics } : {}),
   }
+  themeToCSSVariables(theme)
+  return theme
 }
