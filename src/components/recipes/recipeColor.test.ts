@@ -20,8 +20,8 @@ describe("recipe colors", () => {
     "#4e79a7cc",
     "#1238",
     "rgb(1,2,3)",
-    "rgb(20% 40% 60% / 50%)",
-    "hsl(240 100% 50% / 50%)"
+    "rgba(20%,40%,60%,0.5)",
+    "hsla(240,100%,50%,0.5)"
   ])("dims %s and preserves its authored alpha", (color) => {
     const before = parseColorEvidence(color)!
     const after = parseColorEvidence(withAlpha(color, 0.2))!
@@ -41,5 +41,21 @@ describe("recipe colors", () => {
     )
     expect(withAlpha("var(--ink)", 1)).toBe("var(--ink)")
     expect(withAlpha("var(--ink)", NaN)).toBe("var(--ink)")
+    expect(withAlpha("rgb(10% 40% 60% / 50%)", 0.2)).toBe(
+      "color-mix(in srgb, rgb(10% 40% 60% / 50%) 20%, transparent)"
+    )
+    expect(withAlpha("rgba(25.5,102,153,0.5)", 0.2)).toBe(
+      "color-mix(in srgb, rgba(25.5,102,153,0.5) 20%, transparent)"
+    )
+    expect(makeShade("rgb(25.5,102,153)")(0.5)).toBe("rgb(25.5,102,153)")
+    expect(withAlpha("hsl(0.25turn,100%,50%,50%)", 0.2)).toBe(
+      "color-mix(in srgb, hsl(0.25turn,100%,50%,50%) 20%, transparent)"
+    )
+  })
+
+  it("composes very small opacities serialized in scientific notation", () => {
+    expect(withAlpha("rgba(1,2,3,0.0000001)", 0.2)).toBe(
+      "rgba(1, 2, 3, 2e-8)"
+    )
   })
 })

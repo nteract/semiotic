@@ -8,7 +8,7 @@ import { clamp } from "../utils/clamp"
  *   --semiotic-process-text, --semiotic-process-muted
  *   --semiotic-success / warning / danger / info for semantic stage roles
  */
-import * as React from "react"
+import { createElement, type ReactElement } from "react"
 import { SvgIdentifierScope } from "../shared/SvgIdentifierScope"
 
 export interface ProcessChromeStage {
@@ -144,7 +144,7 @@ function stageBadge(stage: ProcessChromeStage): string {
 export function processChrome(
   layout: ProcessChromeLayout,
   options: ProcessChromeOptions = {}
-): React.ReactElement {
+): ReactElement {
   const {
     showFlowSpine = true,
     showStageCounts = true,
@@ -158,7 +158,7 @@ export function processChrome(
     layout
   const laneH = bottomY - topY
 
-  return React.createElement(SvgIdentifierScope, null,
+  return createElement(SvgIdentifierScope, null,
     <svg
       aria-hidden="true"
       data-testid={testId}

@@ -1,5 +1,4 @@
 import { resolveHiddenAxisMargins } from "../legendLayout"
-import { createSvgIdPrefix } from "../shared/svgNamespace"
 import { scopeSvgIdentifiers } from "../shared/svgIdentifiers"
 import type { Datum } from "../charts/shared/datumTypes"
 import { escapeXmlAttribute, insertSvgRootContent, mapSvgAttributes } from "../shared/svgRoot"
@@ -37,6 +36,7 @@ import {
   type RenderEvidence
 } from "./renderEvidence"
 import {
+  chartUID,
   type ThemeAwareProps,
   type StaticFrameProps,
   type FrameType
@@ -70,7 +70,7 @@ export function renderToStaticSVG(
   frameType: FrameType,
   props: StaticFrameProps
 ): string {
-  const prefix = staticSvgPrefix(props)
+  const prefix = chartUID(props)
   props = { ...props, _idPrefix: prefix }
   let svg: string
   switch (frameType) {
@@ -101,13 +101,6 @@ export function renderToStaticSVG(
       )
   }
   return scopeSvgIdentifiers(svg, prefix)
-}
-
-function staticSvgPrefix(props: Datum): string {
-  const supplied = props._idPrefix ?? props.chartId
-  if (supplied == null || supplied === "") return createSvgIdPrefix()
-  const prefix = String(supplied).replace(/[^a-zA-Z0-9_-]/g, "_")
-  return /^[A-Za-z_]/.test(prefix) ? prefix : `c${prefix}`
 }
 
 export function renderXYToStaticSVG(
@@ -438,7 +431,7 @@ function renderChartInternal(
   options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
-  const prefix = staticSvgPrefix(props)
+  const prefix = chartUID(props)
   props = { ...props, _idPrefix: prefix }
   if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {

@@ -1,5 +1,4 @@
 import { interpolateLab } from "d3-interpolate"
-import { parseColorEvidence } from "../ai/colorEvidence"
 import { clamp } from "../utils/clamp"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -218,6 +217,14 @@ export class LayoutCache<V> {
   }
 }
 
+function recipeColorLiteral(color: string): string | null {
+  // An unparsed CSS color makes D3 substitute the destination color. Two
+  // zero-step probes distinguish that fallback from a parsed literal, using
+  // the same interpolation engine as the recipe rather than a second parser.
+  return interpolateLab(color, color)(0) === interpolateLab(color, "white")(0)
+    ? color : null
+}
+
 /**
  * A reusable lightness shader for one base color. Interpolating in CIELAB keeps
  * the hue and chroma roughly fixed while only lightness moves, so a categorical
@@ -229,19 +236,16 @@ export class LayoutCache<V> {
  * (it captures two interpolators) and call per datum.
  */
 export function makeShade(baseColor: string, strength = 0.72): (t: number) => string {
-  const parsed = parseColorEvidence(baseColor)
-  const literal = parsed
-    ? `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${parsed.a})`
-    : baseColor
+  const literal = recipeColorLiteral(baseColor)
   // Defer CSS variables, currentColor and modern color functions to the host.
   // D3 cannot parse them and otherwise silently substitutes black or white.
-  const deferred = !parsed && (!/^[a-z]+$/i.test(baseColor.trim()) || baseColor.trim().toLowerCase() === "currentcolor")
-  const toWhite = deferred ? null : interpolateLab(literal, "#ffffff")
-  const toBlack = deferred ? null : interpolateLab(literal, "#000000")
-  const base = deferred ? baseColor : interpolateLab(literal, literal)(0)
-  const amount = Number.isFinite(strength) ? clamp(strength, 0, 1) : 0.72
+  const deferred = literal === null
+  const toWhite = literal === null ? null : interpolateLab(literal, "#ffffff")
+  const toBlack = literal === null ? null : interpolateLab(literal, "#000000")
+  const base = literal === null ? baseColor : toWhite!(0)
+  const amount = clamp(strength, 0, 1)
   return (t: number) => {
-    const c = Number.isFinite(t) ? clamp(t, 0, 1) : 0.5
+    const c = clamp(t, 0, 1)
     if (c === 0.5) return base
     const mix = Math.abs(c - 0.5) * 2 * amount
     if (!mix) return base
@@ -294,13 +298,17 @@ export function mean(values: readonly number[]): number {
  * The dimming-by-alpha helper a custom layout reaches for when it must express
  * hover/selection fade as a *fill color* (e.g. inside a recipe's `resolveColor`
  * callback, where the frame's opacity channel isn't available). Solid hex,
- * RGB and HSL colors become rgba; deferred CSS colors use color-mix.
+ * RGB and legacy HSL colors become rgba; deferred CSS colors use color-mix.
  */
 export function withAlpha(color: string, alpha: number): string {
   const a = Number.isFinite(alpha) ? clamp(alpha, 0, 1) : 1
-  const parsed = parseColorEvidence(color)
-  if (!parsed) return a === 1 ? color : `color-mix(in srgb, ${color} ${a * 100}%, transparent)`
-  return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${parsed.a * a})`
+  const literal = recipeColorLiteral(color)
+  if (literal === null) {
+    return a === 1 ? color : `color-mix(in srgb, ${color} ${a * 100}%, transparent)`
+  }
+  const [r, g, b, opacity = 1] = interpolateLab(literal, literal)(0)
+    .split(/[(),]/).slice(1, -1).map(Number)
+  return `rgba(${r}, ${g}, ${b}, ${opacity * a})`
 }
 
 /** Stable UTF-16 ordering, independent of host locale and ICU version. */

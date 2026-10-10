@@ -127,9 +127,11 @@ describe("instance-local SVG identifiers", () => {
 
   it("rewrites real references while preserving text, external URLs and unknown targets", () => {
     const source =
-      '<svg aria-labelledby="label"><title id="label">url(#paint)</title><defs><linearGradient id="paint"/></defs><path fill="url(\'&#35;paint\')" style="filter:url(#paint)"/><use href="#paint"/><use href="other.svg#paint"/><use href="#external"/></svg>'
+      '<svg aria-labelledby="label" aria-describedby="label   outside" aria-label="url(#paint)"><title id="label">url(#paint)</title><defs><linearGradient id="paint"/></defs><path fill="url(\'&#35;paint\')" style="filter:url(#paint)"/><use href="#paint"/><use href="other.svg#paint"/><use href="#external"/></svg>'
     const scoped = scopeSvgIdentifiers(source, "local")
     expect(scoped).toContain('aria-labelledby="local-label"')
+    expect(scoped).toContain('aria-describedby="local-label   outside"')
+    expect(scoped).toContain('aria-label="url(#paint)"')
     expect(scoped).toContain('fill="url(#local-paint)"')
     expect(scoped).toContain('style="filter:url(#local-paint)"')
     expect(scoped).toContain('href="#local-paint"')
@@ -146,6 +148,12 @@ describe("instance-local SVG identifiers", () => {
             <linearGradient id="paint" />
           </defs>
           <rect width={10} height={10} fill="url(#paint)" />
+          <rect
+            width={10}
+            height={10}
+            fill="var(--paint)"
+            style={{ "--paint": "url(#paint)" } as React.CSSProperties}
+          />
         </svg>
       </SvgIdentifierScope>
     )
@@ -157,7 +165,12 @@ describe("instance-local SVG identifiers", () => {
     )
     const ids = [...container.querySelectorAll("[id]")].map((node) => node.id)
     expect(new Set(ids).size).toBe(2)
-    for (const svg of container.querySelectorAll("svg")) checkReferences(svg)
+    for (const svg of container.querySelectorAll("svg")) {
+      checkReferences(svg)
+      expect(svg.querySelector("[style]")?.getAttribute("style")).toContain(
+        `url(#${svg.querySelector("linearGradient")!.id})`
+      )
+    }
     rerender(
       <>
         {overlay}
@@ -181,7 +194,10 @@ describe("instance-local SVG identifiers", () => {
     const ids = [...doc.querySelectorAll("[id]")].map((node) => node.id)
     expect(doc.querySelectorAll("mask").length).toBeGreaterThan(1)
     expect(new Set(ids).size).toBe(ids.length)
-    for (const overlay of doc.querySelectorAll<SVGElement>(".semiotic-gofish-displaylist")) checkReferences(overlay)
+    for (const overlay of doc.querySelectorAll<SVGElement>(
+      ".semiotic-gofish-displaylist"
+    ))
+      checkReferences(overlay)
     const layout = {
       width: 200,
       height: 160,

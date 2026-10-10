@@ -98,7 +98,7 @@ describe("public Atlas readers", () => {
       if (story.component === "MotifBraidChart") {
         reference = renderChartWithEvidence(
           "NetworkCustomChart",
-          motifBraidChartProps(story.props)
+          { ...motifBraidChartProps(story.props), _idPrefix: "atlas-parity" }
         ).svg
         client = renderToStaticMarkup(<MotifBraidChart {...story.props} />)
         expect(
@@ -107,7 +107,7 @@ describe("public Atlas readers", () => {
       } else if (story.component === "DependencyForestChart") {
         reference = renderChartWithEvidence(
           "NetworkCustomChart",
-          dependencyForestChartProps(story.props)
+          { ...dependencyForestChartProps(story.props), _idPrefix: "atlas-parity" }
         ).svg
         client = renderToStaticMarkup(
           <DependencyForestChart {...story.props} />
@@ -115,12 +115,12 @@ describe("public Atlas readers", () => {
       } else {
         reference = renderChartWithEvidence(
           "PhysicsCustomChart",
-          flowCircuitChartProps(story.props)
+          { ...flowCircuitChartProps(story.props), _idPrefix: "atlas-parity" }
         ).svg
         client = renderToStaticMarkup(<FlowCircuitChart {...story.props} />)
       }
       expect(client).toContain('role="img"')
-      const actual = renderChartWithEvidence(story.component, story.props).svg
+      const actual = renderChartWithEvidence(story.component, { ...story.props, _idPrefix: "atlas-parity" }).svg
       // Auto-generated SVG IDs are document-local; all geometry, labels and
       // accessibility metadata must otherwise match the source-recipe edition.
       const normalize = (value: string) => value.replace(/_R_[^_]*_/g, "_id_")
