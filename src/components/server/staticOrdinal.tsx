@@ -1,4 +1,5 @@
 import { renderSvgCenterContent } from "../charts/shared/radialCenterContent"
+import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
@@ -483,17 +484,19 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   // standalone SVG has no surrounding positioned container, so preserve that
   // slot with a foreignObject for HTML. Native SVG content takes the portable
   // SVG path above instead, avoiding foreignObject for Gauge text/icons.
-  const svgCenterContent = isRadial && props.centerContent
+  const svgCenterContent = isRadial && props.centerContent != null
     ? renderSvgCenterContent(
         props.centerContent,
         margin.left + width / 2,
-        margin.top + height / 2
+        margin.top + height / 2,
+        { fill: theme.colors.text, fontFamily: theme.typography.fontFamily, fontSize: theme.typography.titleSize }
       )
     : null
-  const centerContent = isRadial && props.centerContent
+  const centerContent = isRadial && props.centerContent != null
     ? svgCenterContent ?? (
         <foreignObject x={margin.left} y={margin.top} width={width} height={height} pointerEvents="none">
           <div
+            {...{ xmlns: XHTML_NAMESPACE }}
             style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}
           >
             {props.centerContent}

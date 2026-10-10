@@ -939,7 +939,7 @@ describe("renderDashboard", () => {
   it("renders empty dashboard", () => {
     const svg = renderDashboard([], { width: 800, height: 400 })
     expect(svg).toContain("<svg")
-    expect(svg).toContain('role="img"')
+    expect(svg).toContain('role="group"')
   })
 
   it("renders dashboard with title", () => {
@@ -1002,8 +1002,8 @@ describe("renderDashboard", () => {
       }
     )
     expect(svg).toContain("<svg")
-    // Both charts rendered via foreignObject
-    expect(countMatches(svg, /foreignObject/g)).toBeGreaterThanOrEqual(4) // open + close for each
+    expect(svg).not.toContain("foreignObject")
+    expect(new DOMParser().parseFromString(svg, "image/svg+xml").querySelectorAll("svg svg")).toHaveLength(2)
     // Both charts should produce <rect (bar) or <path (pie)
     expect(svg).toContain("<rect")
     expect(svg).toContain("<path")

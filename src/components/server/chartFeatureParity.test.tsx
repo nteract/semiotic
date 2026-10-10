@@ -27,14 +27,14 @@ it("exports primitive gauge centers and centerLabel as native SVG text", () => {
   expect(labeled).toContain(">64</text>")
   expect(labeled).toContain(">0 – 100</text>")
   expect(labeled).toContain(">CPU</text>")
-  // Donut and Pie string centers keep their HTML overlay.
   const donut = renderChart("DonutChart", {
     data: [{ category: "a", value: 1 }, { category: "b", value: 2 }],
     categoryAccessor: "category",
     valueAccessor: "value",
     centerContent: "Total",
   })
-  expect(donut).toContain("foreignObject")
+  expect(donut).not.toContain("foreignObject")
+  expect(donut).toContain(">Total</text>")
 })
 
 it("fits a long primitive gauge center to the same size on both paths", () => {
