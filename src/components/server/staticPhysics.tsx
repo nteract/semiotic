@@ -21,7 +21,7 @@ import {
 import type { StaticAnnotationRenderResult } from "./staticAnnotations"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
 
-export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
+export type StaticPhysicsFrameProps = Omit<PhysicsSettledSVGOptions, "title"> & {
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
   initialSpawns?: PhysicsQueuedSpawn[]
   projectionRows?: PhysicsSettledSVGOptions["projectionRows"]

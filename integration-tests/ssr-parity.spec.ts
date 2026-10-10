@@ -649,9 +649,14 @@ async function compareCurrentPanels(
 test.describe("SSR / CSR parity", () => {
   for (const c of cases) {
     test(`SSR / CSR sheet — ${c.id}`, async ({ page }) => {
-      const ssrProps = c.theme
-        ? { ...c.props, animate: false, theme: c.theme }
-        : { ...c.props, animate: false }
+      // Exact SVG comparisons require caller-owned IDs; default IDs are unique
+      // to each render so multiple charts can share a document safely.
+      const ssrProps = {
+        ...c.props,
+        animate: false,
+        chartId: `ssr-parity-${c.id}`,
+        ...(c.theme ? { theme: c.theme } : {}),
+      }
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
       if (c.circuitEvidence) {
