@@ -281,41 +281,44 @@ test("recipe shades and alpha resolve CSS-variable colors in the browser", async
     withAlpha("hsl(0.25turn,100%,50%,50%)", 0.2)
   ]
   await page.setContent('<main style="--brand:rgba(78,121,167,0.5)"></main>')
-  const samples = await page.evaluate(
-    (inputs) =>
-      inputs.map((color) => {
+  const { samples, alphaReferences } = await page.evaluate(
+    (inputs) => {
+      const sample = (color: string) => {
         const swatch = document.createElement("div")
         swatch.style.backgroundColor = color
         document.querySelector("main")!.appendChild(swatch)
+        const resolved = getComputedStyle(swatch).backgroundColor
         const canvas = document.createElement("canvas")
         canvas.width = canvas.height = 1
         const ctx = canvas.getContext("2d")!
-        ctx.fillStyle = getComputedStyle(swatch).backgroundColor
+        ctx.fillStyle = resolved
         ctx.fillRect(0, 0, 1, 1)
-        return [...ctx.getImageData(0, 0, 1, 1).data]
-      }),
+        return { resolved, pixel: [...ctx.getImageData(0, 0, 1, 1).data] }
+      }
+      return {
+        samples: inputs.map(sample),
+        // Exact CSS and pixel comparisons against the same browser's sRGB
+        // rendering avoid platform-dependent canvas unpremultiplication.
+        // Keep legacy RGB syntax for those references: browsers also round
+        // fractional RGB channels and alpha before mixing the source color.
+        alphaReferences: [
+          "color-mix(in srgb, rgba(78,121,167,0.5) 20%, transparent)",
+          "color-mix(in srgb, rgb(10% 40% 60% / 50%) 20%, transparent)",
+          "color(srgb 0 0 1 / 0.1)",
+          "color-mix(in srgb, rgba(25.5,102,153,0.5) 20%, transparent)",
+          "color(srgb 0.5 1 0 / 0.1)"
+        ].map(sample)
+      }
+    },
     colors
   )
-  expect(samples[1][0]).toBeCloseTo(78, -1)
-  expect(samples[1][2]).toBeCloseTo(167, -1)
-  expect(samples[0].slice(0, 3).reduce((a, b) => a + b)).toBeGreaterThan(
-    samples[1].slice(0, 3).reduce((a, b) => a + b)
+  expect(samples[1].pixel[0]).toBeCloseTo(78, -1)
+  expect(samples[1].pixel[2]).toBeCloseTo(167, -1)
+  expect(samples[0].pixel.slice(0, 3).reduce((a, b) => a + b)).toBeGreaterThan(
+    samples[1].pixel.slice(0, 3).reduce((a, b) => a + b)
   )
-  expect(samples[2].slice(0, 3).reduce((a, b) => a + b)).toBeLessThan(
-    samples[1].slice(0, 3).reduce((a, b) => a + b)
+  expect(samples[2].pixel.slice(0, 3).reduce((a, b) => a + b)).toBeLessThan(
+    samples[1].pixel.slice(0, 3).reduce((a, b) => a + b)
   )
-  expect(samples[3][3]).toBeCloseTo(26, -1)
-  // Canvas unpremultiplication rounds channels at low alpha.
-  const expectedRgb = [26, 102, 153, 26]
-  expectedRgb.forEach((value, i) =>
-    expect(samples[4][i]).toBeCloseTo(value, -1)
-  )
-  expectedRgb.forEach((value, i) =>
-    expect(samples[6][i]).toBeCloseTo(value, -1)
-  )
-  expect(samples[5]).toEqual([0, 0, 255, 26])
-  const expectedHsl = [128, 255, 0, 26]
-  expectedHsl.forEach((value, i) =>
-    expect(samples[7][i]).toBeCloseTo(value, -1)
-  )
+  expect(samples.slice(3)).toEqual(alphaReferences)
 })
