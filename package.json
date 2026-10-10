@@ -410,7 +410,7 @@
     "typescript:tests": "node scripts/check-test-types.mjs",
     "typescript:tests:raw": "tsc -p tsconfig.tests.json --noEmit --pretty false",
     "typescript:mcp": "tsc -p tsconfig.mcp.json --noEmit",
-    "size": "node --test scripts/lib/minify-library-chunk.test.mjs scripts/lib/strip-pure-bare-imports.test.mjs scripts/network-zoom-bundle.test.mjs scripts/treeshake-isolation.test.mjs scripts/network-perspective-package.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
+    "size": "node --test scripts/lib/minify-library-chunk.test.mjs scripts/lib/strip-pure-bare-imports.test.mjs scripts/lib/server-runtime-loaders.test.mjs scripts/network-zoom-bundle.test.mjs scripts/treeshake-isolation.test.mjs scripts/network-perspective-package.test.mjs && node scripts/check-entry-graph-size.mjs && node scripts/check-multi-import-size.mjs",
     "check:network-zoom-bundle": "node --test scripts/network-zoom-bundle.test.mjs",
     "check:treeshake-isolation": "node --test scripts/treeshake-isolation.test.mjs",
     "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",
