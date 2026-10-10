@@ -432,8 +432,8 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   // Custom middleAccessor bulb+pill via svgAnnotationRules — SSR used to drop
   // the entire custom rule path even after the native dumbbell was fixed.
   if (id === "range-middle-overlay") {
-    expect(svg).toContain("range-middle-overlay")
-    expect((svg.match(/range-middle-overlay/g) ?? []).length).toBe(rangeMiddlePoints)
+    // The chart ID also contains the marker class; count the overlay groups.
+    expect(svg.match(/<g\b[^>]*\bclass="range-middle-overlay"/g) ?? []).toHaveLength(rangeMiddlePoints)
     expect(svg).toContain("#DB2777")
     // Native dumbbell bulbs still present (2 endpoints × N points).
     expect((svg.match(/<circle/g) ?? []).length).toBeGreaterThanOrEqual(rangeMiddlePoints * 2)
@@ -454,8 +454,7 @@ function assertCustomRenderEvidence(id: string, evidence: RenderEvidence, svg: s
   // Geo svgAnnotationRules: custom pin glyphs + fall-through built-in callout.
   // GeoSVGOverlay previously hard-coded `undefined` for the user rule.
   if (id === "geo-custom-annotation") {
-    expect(svg).toContain("geo-custom-pin")
-    expect((svg.match(/geo-custom-pin/g) ?? []).length).toBe(2)
+    expect(svg.match(/<g\b[^>]*\bclass="geo-custom-pin"/g) ?? []).toHaveLength(2)
     expect(svg).toContain("#DB2777")
     expect(svg).toContain("#0E9AA7")
     // Built-in callout still rendered (rule returned null for type:"callout").
