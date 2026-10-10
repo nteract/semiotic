@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import { renderSvgCenterContent } from "../charts/shared/radialCenterContent"
 import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
@@ -201,8 +202,8 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   const theme = resolveTheme(props.theme)
   const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
   const size = props.size || [500, 400]
-  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
-  const hasVisibleTitle = hasTextTitle(props.title)
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
+  const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))
   const data = filterSparseArray(props.data)
   const ordinalLegendCategories = props.showLegend
     ? extractCategories(data, props.colorAccessor || props.stackBy || props.groupBy)
@@ -550,6 +551,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       legend,
       defs: hatchDefs,
       outerElements: centerContent,
+      markCount: renderedScene.length,
       idPrefix: props._idPrefix,
     })
   )

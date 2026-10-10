@@ -1,4 +1,5 @@
 import type { LabelLayoutEvidence } from "../text/labelPlacement"
+import { staticTitleText } from "./staticTitle"
 /**
  * Render evidence — machine-readable ground truth about what a server render
  * actually produced, emitted from the same scene the SVG converter walks.
@@ -228,9 +229,7 @@ interface BuildEvidenceInput {
   width: number
   height: number
   marks: ReadonlyArray<{ type?: string }>
-  /** Frame props type title/description as ReactNode; only string values
-   *  contribute to the accessible name (matching what wrapSVG emits as
-   *  <title>/<desc> text). */
+  /** Authored text from primitive or rich React titles contributes to the name. */
   title?: unknown
   description?: unknown
   annotations?: unknown
@@ -274,7 +273,7 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
     input.annotationRender?.renderedCount ?? annotationInputCount
   const ariaLabel =
     (typeof input.description === "string" && input.description) ||
-    (typeof input.title === "string" && input.title) ||
+    staticTitleText(input.title) ||
     `${input.frameType} chart, ${count} marks`
   const margin = input.margin
   const plot = margin

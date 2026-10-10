@@ -39,6 +39,7 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
+import { staticTitleText, staticTitleContent } from "./staticTitle"
 import {
   resolveAxisLineStyle,
   resolveHorizontalTickAnchor,
@@ -394,12 +395,13 @@ export function wrapSVG(
     defs?: React.ReactNode
     /** Prefix for SVG element IDs to avoid collisions in multi-chart documents */
     idPrefix?: string
+    markCount?: number
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
   const background = opts.background ?? s.background
   const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
-  const titleText = typeof opts.title === "string" ? opts.title : undefined
+  const titleText = staticTitleText(opts.title)
   const accessible = opts.idPrefix
     ? overlayAccessibleIds(opts.idPrefix)
     : { titleId: "semiotic-title", descId: "semiotic-desc" }
@@ -415,6 +417,7 @@ export function wrapSVG(
       height={opts.height}
       role="img"
       aria-labelledby={labelledBy}
+      aria-label={opts.description || titleText || `${opts.className.match(/stream-(\w+)-frame/)?.[1] ?? "data"} chart, ${opts.markCount ?? 0} marks`}
       style={{ fontFamily: s.fontFamily }}
     >
       {titleText && <title id={titleId}>{titleText}</title>}
@@ -443,7 +446,7 @@ export function wrapSVG(
           fill={s.text}
           fontFamily={s.titleFontFamily}
         >
-          {titleText}
+          {staticTitleContent(opts.title)}
         </text>
       )}
       {opts.legend && <g id={`${pfx}legend`}>{opts.legend}</g>}

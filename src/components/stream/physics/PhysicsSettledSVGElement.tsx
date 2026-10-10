@@ -127,6 +127,7 @@ export function createPhysicsSettledSVG(
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-labelledby={labelledBy}
+        aria-label={description || title || `physics chart, ${scene.sceneNodes.length} marks`}
         style={style}
       >
         {title && <title id={titleId}>{title}</title>}

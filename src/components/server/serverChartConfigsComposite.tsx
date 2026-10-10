@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import { getMax, getMinMax } from "../charts/shared/minMax"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
@@ -251,7 +252,7 @@ function renderScatterplotMatrix(
   const styles = themeStyles(theme)
   const colors = splomColorScale(data, colorBy, colorScheme, theme)
   const shouldShowLegend = rest.showLegend ?? Boolean(colorBy)
-  const title = typeof common.title === "string" ? common.title : undefined
+  const title = staticTitleText(common.title) || undefined
   const description =
     typeof common.description === "string"
       ? common.description

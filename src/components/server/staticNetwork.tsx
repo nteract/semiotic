@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { restyleNetworkCustomScene } from "../stream/networkCustomRestyle"
@@ -132,8 +133,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   const chartType: NetworkChartType = props.chartType || "force"
   const size: [number, number] = props.size || [500, 500]
   const defaultMargin = networkFrameDefaultMargin(chartType)
-  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
-  const hasVisibleTitle = hasTextTitle(props.title)
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
+  const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))
   const networkLegendCategories = props.showLegend ? (() => {
     const isAccessor = (a: unknown): a is CategoricalAccessor =>
       typeof a === "string" || typeof a === "function"
@@ -226,6 +227,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth, innerHeight,
         legend: networkLegendOut,
+        markCount: renderedNodes.length + renderedEdges.length,
         idPrefix: props._idPrefix,
       })
     )

@@ -77,9 +77,8 @@ export function escapeXmlAttribute(value: string): string {
     .replace(/\r/g, "&#13;")
 }
 
-function decodeXmlAttribute(value: string): string {
+export function decodeXmlText(value: string): string {
   return value
-    .replace(/\r\n|[\t\r\n]/g, " ")
     .replace(
       /&(amp|quot|apos|lt|gt|#\d+|#x[\da-fA-F]+);/g,
       (entity, key: string) => {
@@ -94,6 +93,10 @@ function decodeXmlAttribute(value: string): string {
           : entity
       }
     )
+}
+
+function decodeXmlAttribute(value: string): string {
+  return decodeXmlText(value.replace(/\r\n|[\t\r\n]/g, " "))
 }
 
 export function svgRootAttribute(

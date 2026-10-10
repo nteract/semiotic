@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { directLabelDescription } from "../charts/shared/directLabels"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -47,8 +48,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   const theme = resolveTheme(props.theme)
   const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
   const size = props.size || [500, 300]
-  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
-  const hasVisibleTitle = hasTextTitle(props.title)
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
+  const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))
   const data = normalizeXYData(filterSparseArray(props.data), props.lineDataAccessor)
   const xyLegendCategories = props.showLegend
     ? extractCategories(data, props.colorAccessor || props.groupAccessor || props.categoryAccessor)
@@ -381,6 +382,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       theme, innerTransform: `translate(${margin.left},${margin.top})`,
       innerWidth: width, innerHeight: height,
       legend,
+      markCount: renderedScene.length,
       idPrefix: (props as ThemeAwareProps)._idPrefix,
     })
   )

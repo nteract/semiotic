@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import {
   PhysicsPipelineStore,
   type PhysicsQueuedSpawn
@@ -83,6 +84,7 @@ export function renderPhysicsFrame(
   }
   const result = renderPhysicsSettledSVG(store, {
     ...props,
+    title: staticTitleText(props.title) || undefined,
     width: size[0],
     height: size[1],
     background: props.background ?? theme.colors.background,
