@@ -9,14 +9,14 @@
     "packageName": "semiotic",
     "packageVersion": "3.12.1",
     "channel": "source",
-    "sourceRevision": "sha256:f894eb005a8b48210c4f2f2cf37e7d86c36ca6e8d3956caa7cc50c19d0ccf573",
+    "sourceRevision": "sha256:5408356821eb385c5982f16109541d3a7beb09541707e8b1ece3ed8e338f9864",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:24ea886bb6bc70a07c1a2bb9b2a0debef614d6e8a20e0194633ca67547ed7dd6",
-      "fileCount": 1355
+      "digest": "sha256:678abca8c5f3d84dbb65b0ee185c0057a07f6c2055a65770640fb34b2c7c9ffb",
+      "fileCount": 1362
     },
     "taskSources": {
-      "digest": "sha256:356c44ff15039c643a02e2f45e8f9096bbef7a499246e6fd40d2b65e314ac825",
+      "digest": "sha256:0ac70a390826e9f212ac81c43fb75d67e3b967d6eae43da4f81132ef09d8a06a",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."

@@ -381,6 +381,8 @@ describe("CandlestickChart — svgAnnotationRules middle overlay SSR parity", ()
   it("renderChart paints custom middle markers via svgAnnotationRules", () => {
     const svg = renderChart("CandlestickChart", {
       data,
+      // Caller-owned IDs may contain the annotation class name.
+      chartId: "range-middle-overlay",
       xAccessor: "t",
       highAccessor: "high",
       lowAccessor: "low",
@@ -393,14 +395,14 @@ describe("CandlestickChart — svgAnnotationRules middle overlay SSR parity", ()
     // Native dumbbell still present.
     expect((svg.match(/<circle/g) ?? []).length).toBeGreaterThanOrEqual(data.length * 2)
     // Custom middle overlays.
-    expect(svg).toContain("range-middle-overlay")
-    expect((svg.match(/range-middle-overlay/g) ?? []).length).toBe(data.length)
+    expect(svg.match(/<g\b[^>]*\bclass="range-middle-overlay"/g) ?? []).toHaveLength(data.length)
     expect(svg).toContain("#DB2777")
   })
 
   it("without svgAnnotationRules, custom middle types emit nothing", () => {
     const svg = renderChart("CandlestickChart", {
       data,
+      chartId: "range-middle-overlay",
       xAccessor: "t",
       highAccessor: "high",
       lowAccessor: "low",
@@ -408,7 +410,7 @@ describe("CandlestickChart — svgAnnotationRules middle overlay SSR parity", ()
       width: 440,
       height: 260,
     })
-    expect(svg).not.toContain("range-middle-overlay")
+    expect(svg.match(/<g\b[^>]*\bclass="range-middle-overlay"/g) ?? []).toHaveLength(0)
   })
 })
 
@@ -450,6 +452,7 @@ describe("ProportionalSymbolMap — geo svgAnnotationRules SSR parity", () => {
   const props = {
     points,
     areas,
+    chartId: "geo-custom-pin",
     xAccessor: "lon" as const,
     yAccessor: "lat" as const,
     sizeBy: "magnitude" as const,
@@ -464,8 +467,7 @@ describe("ProportionalSymbolMap — geo svgAnnotationRules SSR parity", () => {
 
   it("renderChart paints custom geo pins via svgAnnotationRules", () => {
     const svg = renderChart("ProportionalSymbolMap", props)
-    expect(svg).toContain("geo-custom-pin")
-    expect((svg.match(/geo-custom-pin/g) ?? []).length).toBe(2)
+    expect(svg.match(/<g\b[^>]*\bclass="geo-custom-pin"/g) ?? []).toHaveLength(2)
     expect(svg).toContain("#DB2777")
     expect(svg).toContain("#0E9AA7")
   })
@@ -474,12 +476,12 @@ describe("ProportionalSymbolMap — geo svgAnnotationRules SSR parity", () => {
     const { frameProps, ...plain } = props
     void frameProps
     const svg = renderChart("ProportionalSymbolMap", plain)
-    expect(svg).not.toContain("geo-custom-pin")
+    expect(svg.match(/<g\b[^>]*\bclass="geo-custom-pin"/g) ?? []).toHaveLength(0)
   })
 
   it("in-frame HOC SSR also paints the custom pins", () => {
     const html = renderToString(<ProportionalSymbolMap {...props} />)
-    expect(html).toContain("geo-custom-pin")
+    expect(html.match(/<g\b[^>]*\bclass="geo-custom-pin"/g) ?? []).toHaveLength(2)
   })
 })
 
@@ -542,11 +544,11 @@ describe("AreaChart — semanticGradient SSR parity", () => {
         { at: 80, color: "#dc2626" },
       ],
     })
-    const gradient = svg.match(/<linearGradient id="area-0-gradient"[^>]*>/)?.[0] ?? ""
+    const gradient = svg.match(/<linearGradient id="[^"]*-area-0-gradient"[^>]*>/)?.[0] ?? ""
     expect(gradient).toContain('y1="0"')
     expect(gradient).toContain('y2="300"')
     // The line's critical band starts at value 80, 60px from the top.
-    expect(svg).toMatch(/<clipPath id="area-0-stroke-band-2"><rect x="-2" y="0" width="404" height="59.99/)
+    expect(svg).toMatch(/<clipPath id="[^"]*-area-0-stroke-band-2"><rect x="-2" y="0" width="404" height="59.99/)
   })
 
   it("a plain AreaChart (no semanticGradient) emits no gradient", () => {

@@ -89,7 +89,7 @@ describe("correct a published chart", () => {
     expect(document.querySelector("desc")?.textContent).toBe(
       "Corrected synthetic regional totals; West changed from 18 to 36 units.",
     )
-    const bars = Array.from(document.querySelectorAll("#data-area rect"))
+    const bars = Array.from(document.querySelectorAll("[id$='-data-area'] rect"))
     expect(bars).toHaveLength(3)
     const heights = bars.map((bar) => Number(bar.getAttribute("height")))
     expect(heights[0] / heights[1]).toBeCloseTo(12 / 30, 5)

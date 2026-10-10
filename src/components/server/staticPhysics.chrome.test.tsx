@@ -1,7 +1,9 @@
 // @vitest-environment node
 
 import * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { PhysicsSVGOverlay } from "../stream/physics/PhysicsSVGOverlay"
 import {
   renderChart,
   renderChartWithEvidence,
@@ -35,12 +37,64 @@ const movingFrame = {
 }
 
 function settledBodyX(svg: string): number {
-  const dataArea = svg.slice(svg.indexOf('id="physics-data-area"'))
+  const dataArea = svg.slice(svg.search(/id="[^"]*-data-area"/))
   const match = dataArea.match(/<circle[^>]*cx="([^"]+)"/)
   return Number(match?.[1])
 }
 
 describe("static physics chrome", () => {
+  it("matches the live overlay's unthemed title size", () => {
+    const svg = renderToStaticSVG("physics", {
+      ...movingFrame,
+      title: "Shared physics title"
+    })
+    const live = renderToStaticMarkup(
+      <PhysicsSVGOverlay
+        width={200}
+        height={100}
+        totalWidth={200}
+        totalHeight={100}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        title="Shared physics title"
+      />
+    )
+    const titleSize = (markup: string) =>
+      markup.match(/<text\b[^>]*class="semiotic-chart-title"[^>]*>/)?.[0]
+        .match(/font-size="([^"]+)"/)?.[1]
+    expect(titleSize(live)).toBe("14")
+    expect(titleSize(svg)).toBe(titleSize(live))
+  })
+
+  it.each([
+    ["light", "16"],
+    [{ typography: { titleFontSize: 23, titleFontFamily: "monospace", titleFontWeight: 500 } }, "23"]
+  ] as const)("preserves explicit title typography from %j", (theme, expectedSize) => {
+    const svg = renderChart("CollisionSwarmChart", {
+      data: [{ id: "a", x: 1, group: "A" }],
+      xAccessor: "x",
+      groupAccessor: "group",
+      title: "Themed physics title",
+      theme
+    })
+    const title = svg.match(/<text\b[^>]*class="semiotic-chart-title"[^>]*>/)?.[0]
+    expect(title).toContain(`font-size="${expectedSize}"`)
+    if (typeof theme !== "string") {
+      expect(title).toContain('font-family="monospace"')
+      expect(title).toContain('font-weight="500"')
+    }
+  })
+
+  it("preserves styled SVG spans in an unthemed physics title", () => {
+    const svg = renderToStaticSVG("physics", {
+      ...movingFrame,
+      title: <tspan fontStyle="italic">Rich physics title</tspan>
+    })
+    expect(svg).toContain('<tspan font-style="italic">Rich physics title</tspan>')
+    expect(svg).toMatch(/<title[^>]*>Rich physics title<\/title>/)
+    const title = svg.match(/<text\b[^>]*class="semiotic-chart-title"[^>]*>/)?.[0]
+    expect(title).toContain('font-size="14"')
+  })
+
   it("renders shared chrome above foreground graphics and reports annotations", () => {
     const annotations = [
       { id: "pixel", type: "label", x: 40, y: 30, label: "Pixel note" }
@@ -119,8 +173,8 @@ describe("static physics chrome", () => {
     expect(svg).toContain(
       '<g transform="translate(97, 0)"><g data-testid="raw-physics-legend"'
     )
-    expect(svg).toContain(
-      '<clipPath id="physics-plot-clip"><rect width="87" height="100"></rect></clipPath>'
+    expect(svg).toMatch(
+      /<clipPath id="[^"]*-plot-clip"><rect width="87" height="100"><\/rect><\/clipPath>/
     )
     expect(contexts).toEqual([
       { domain: [0, 87], inverted: "function", xAccessor: "x", yAccessor: "y" },

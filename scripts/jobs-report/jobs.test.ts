@@ -227,6 +227,19 @@ describe("briefings and actual chart marks", () => {
         .map((row) => row.month)
     ).toEqual([23, 24])
   })
+  it.each([
+    ["first-estimate line", "LineChart", () => lineProps(snapshot, laterEdition, true)],
+    ["dated-vintage line", "LineChart", () => lineProps(snapshot, laterEdition, false)],
+    ["2024 paired estimates", "DotPlot", () => pairedProps(snapshot, "2024")],
+    ["2025 paired estimates", "DotPlot", () => pairedProps(snapshot, "2025")]
+  ] as const)("reproduces the saved %s across unrelated renders", (_name, component, props) => {
+    const first = renderChartWithEvidence(component, props())
+    renderChartWithEvidence("DotPlot", { ...pairedProps(snapshot, "2024"), chartId: undefined })
+    const second = renderChartWithEvidence(component, props())
+    expect(first.evidence.empty).toBe(false)
+    expect(second.svg).toBe(first.svg)
+    expect(second.evidence).toEqual(first.evidence)
+  })
   it("recomputes claims and rejects tampered packets, source identities and publication assertions", () => {
     const briefing = buildBriefing(snapshot, "2025-06", laterEdition)
     for (const mutate of [
@@ -397,6 +410,25 @@ describe("publication and revision handoff", () => {
         now
       ).reviewMatches
     ).toBe(false)
+  })
+  it.each([
+    ["2025-06", firstEdition, "direction"],
+    ["2025-06", laterEdition, "direction"],
+    ["2025-06", laterEdition, "size"],
+    ["2025-10", laterEdition, "direction"]
+  ] as const)("reproduces all deliverables for %s at %s with the %s reading", async (month, asOf, reading) => {
+    const output = resolve(scratch(), "edition")
+    const first = await bundle(snapshot, month, asOf, reading)
+    writeEdition(output, first.files)
+    renderChartWithEvidence("DotPlot", pairedProps(snapshot, "2024"))
+    const second = await bundle(snapshot, month, asOf, reading)
+    expect(Object.keys(second.files)).toEqual(Object.keys(first.files))
+    for (const [file, value] of Object.entries(first.files)) {
+      expect(Buffer.from(second.files[file]).equals(Buffer.from(value)), file).toBe(true)
+    }
+    expect(JSON.parse(second.files["render-evidence.json"] as string).artifactBinding.status).toBe("match")
+    writeEdition(output, second.files)
+    expect((await checkSaved(snapshot, output)).status).toBe("conditional")
   })
   it("preserves complete editions and refuses altered output even if its inventory was rewritten", async () => {
     const output = resolve(scratch(), "edition")

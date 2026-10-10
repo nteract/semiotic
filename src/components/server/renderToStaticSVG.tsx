@@ -1,4 +1,5 @@
 import { resolveHiddenAxisMargins } from "../legendLayout"
+import { scopeSvgIdentifiers } from "../shared/svgIdentifiers"
 import type { Datum } from "../charts/shared/datumTypes"
 import { escapeXmlAttribute, insertSvgRootContent, mapSvgAttributes } from "../shared/svgRoot"
 import { renderedSvgDimensions } from "./svgSizing"
@@ -35,6 +36,7 @@ import {
   type RenderEvidence
 } from "./renderEvidence"
 import {
+  chartUID,
   type ThemeAwareProps,
   type StaticFrameProps,
   type FrameType
@@ -68,52 +70,61 @@ export function renderToStaticSVG(
   frameType: FrameType,
   props: StaticFrameProps
 ): string {
+  const prefix = chartUID(props)
+  props = { ...props, _idPrefix: prefix }
+  let svg: string
   switch (frameType) {
     case "xy":
-      return renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps)
+      svg = renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps)
+      break
     case "ordinal":
-      return renderOrdinalFrame(
+      svg = renderOrdinalFrame(
         props as StreamOrdinalFrameProps & ThemeAwareProps
       )
+      break
     case "network":
-      return renderNetworkFrame(
+      svg = renderNetworkFrame(
         props as StreamNetworkFrameProps & ThemeAwareProps
       )
+      break
     case "geo":
-      return renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps)
+      svg = renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps)
+      break
     case "physics":
-      return renderPhysicsFrame(
+      svg = renderPhysicsFrame(
         props as StaticPhysicsFrameProps & ThemeAwareProps
       )
+      break
     default:
       throw new Error(
         `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", or "physics".`
       )
   }
+  return scopeSvgIdentifiers(svg, prefix)
 }
 
 export function renderXYToStaticSVG(
   props: StreamXYFrameProps & ThemeAwareProps
 ): string {
-  return renderStreamXYFrame(props)
+  return renderToStaticSVG("xy", props)
 }
 
 export function renderOrdinalToStaticSVG(
   props: StreamOrdinalFrameProps & ThemeAwareProps
 ): string {
-  return renderOrdinalFrame(props)
+  return renderToStaticSVG("ordinal", props)
 }
 
 export function renderNetworkToStaticSVG(
   props: StreamNetworkFrameProps & ThemeAwareProps
 ): string {
-  return renderNetworkFrame(props)
+  return renderToStaticSVG("network", props)
 }
 
 export function renderGeoToStaticSVG(
   props: StreamGeoFrameProps & ThemeAwareProps
 ): string {
-  return renderGeoFrame(props)
+  return renderToStaticSVG("geo", props)
 }
 
 // ── HOC-level renderChart API ─────────────────────────────────────────
@@ -420,10 +431,12 @@ function renderChartInternal(
   options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
+  const prefix = chartUID(props)
+  props = { ...props, _idPrefix: prefix }
   if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {
       svg: serializeSvgPrecision(
-        renderValueChart(component as ValueChartName, props, sink),
+        scopeSvgIdentifiers(renderValueChart(component as ValueChartName, props, sink), prefix),
         options?.precision
       ),
       frameType: "value"
@@ -606,7 +619,7 @@ function renderChartInternal(
   }
 
   return {
-    svg: serializeSvgPrecision(svg, options?.precision),
+    svg: serializeSvgPrecision(scopeSvgIdentifiers(svg, prefix), options?.precision),
     frameType: (config.resolveFrameType?.(frameProps2) ?? config.frameType) as RenderEvidence["frameType"]
   }
 }

@@ -3,9 +3,12 @@ import type { SemioticTheme } from "./themeCore"
 import type {
   AestheticFeatureId,
   AestheticProfile,
-  AestheticThresholds,
+  AestheticThresholds
 } from "../ai/aestheticProfileTypes"
 import { DARK_THEME, LIGHT_THEME } from "./themeCore"
+import { themeToCSSVariables } from "./themeCSSVariables"
+import { parseColorEvidence, colorEvidenceToHex } from "../ai/colorEvidence"
+import { contrastRatio } from "../charts/shared/colorContrast"
 
 /**
  * W3C Design Tokens (DTCG) → Semiotic theme.
@@ -45,7 +48,11 @@ function isTokenNode(node: unknown): node is Record<string, unknown> {
 /** Walk a DTCG tree into a flat list of tokens, inheriting group `$type`. */
 function flattenDesignTokens(tokens: unknown): FlatToken[] {
   const out: FlatToken[] = []
-  const walk = (node: unknown, path: string[], inheritedType?: string): void => {
+  const walk = (
+    node: unknown,
+    path: string[],
+    inheritedType?: string
+  ): void => {
     if (!node || typeof node !== "object") return
     const obj = node as Record<string, unknown>
     const groupType = (obj.$type as string | undefined) ?? inheritedType
@@ -54,7 +61,7 @@ function flattenDesignTokens(tokens: unknown): FlatToken[] {
         path: path.join("."),
         leaf: path[path.length - 1] ?? "",
         value: obj.$value,
-        type: (obj.$type as string | undefined) ?? inheritedType,
+        type: (obj.$type as string | undefined) ?? inheritedType
       })
       return
     }
@@ -85,16 +92,42 @@ function resolveAliases(flat: FlatToken[]): FlatToken[] {
 // ── Role resolution ──────────────────────────────────────────────────────────
 
 type ColorRole =
-  | "primary" | "secondary" | "background" | "surface" | "text" | "textSecondary"
-  | "border" | "grid" | "focus" | "annotation"
-  | "success" | "danger" | "warning" | "error" | "info"
+  | "primary"
+  | "secondary"
+  | "background"
+  | "surface"
+  | "text"
+  | "textSecondary"
+  | "border"
+  | "grid"
+  | "focus"
+  | "annotation"
+  | "cellBorder"
+  | "success"
+  | "danger"
+  | "warning"
+  | "error"
+  | "info"
 
 /** Native `semiotic.*` token key → theme color role (exact inverse of themeToTokens). */
 const NATIVE_COLOR: Record<string, ColorRole> = {
-  bg: "background", text: "text", "text-secondary": "textSecondary", grid: "grid",
-  border: "border", primary: "primary", focus: "focus", secondary: "secondary",
-  surface: "surface", annotation: "annotation",
-  success: "success", danger: "danger", warning: "warning", error: "error", info: "info",
+  bg: "background",
+  text: "text",
+  "text-secondary": "textSecondary",
+  grid: "grid",
+  border: "border",
+  primary: "primary",
+  focus: "focus",
+  secondary: "secondary",
+  surface: "surface",
+  annotation: "annotation",
+  "annotation-color": "annotation",
+  "cell-border": "cellBorder",
+  success: "success",
+  danger: "danger",
+  warning: "warning",
+  error: "error",
+  info: "info"
 }
 
 /**
@@ -103,8 +136,14 @@ const NATIVE_COLOR: Record<string, ColorRole> = {
  * roles (textSecondary, error) are matched before their broader siblings.
  */
 const COLOR_HEURISTICS: Array<[ColorRole, RegExp]> = [
-  ["textSecondary", /^(text-?secondary|secondary-?text|muted|subtle|text-?muted|fg-?muted)$/],
-  ["text", /^(text|foreground|fg|ink|on-?background|on-?surface|text-?default|fg-?default)$/],
+  [
+    "textSecondary",
+    /^(text-?secondary|secondary-?text|muted|subtle|text-?muted|fg-?muted)$/
+  ],
+  [
+    "text",
+    /^(text|foreground|fg|ink|on-?background|on-?surface|text-?default|fg-?default)$/
+  ],
   ["background", /^(background|bg|canvas|base|page|backdrop|bg-?default)$/],
   ["surface", /^(surface|card|elevated|panel|sheet)$/],
   ["border", /^(border|divider|outline|stroke|hairline)$/],
@@ -117,14 +156,16 @@ const COLOR_HEURISTICS: Array<[ColorRole, RegExp]> = [
   ["success", /^(success|positive|ok|good|pass)$/],
   ["warning", /^(warning|warn|caution)$/],
   ["info", /^(info|information|note)$/],
-  ["annotation", /^(annotation|callout)$/],
+  ["annotation", /^(annotation|callout)$/]
 ]
 
-const RGB_RE = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*[\d.]+)?\s*\)$/i
+const RGB_RE =
+  /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*[\d.]+)?\s*\)$/i
 
 function looksLikeColor(value: string): boolean {
   const v = value.trim()
   return (
+    parseColorEvidence(v) != null ||
     /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(v) ||
     RGB_RE.test(v) ||
     /^hsla?\(/i.test(v)
@@ -132,11 +173,17 @@ function looksLikeColor(value: string): boolean {
 }
 
 function isColor(t: FlatToken): boolean {
-  return typeof t.value === "string" && (t.type === "color" || looksLikeColor(t.value))
+  return (
+    typeof t.value === "string" &&
+    (t.type === "color" || looksLikeColor(t.value))
+  )
 }
 
 function resolveFontFamily(value: unknown): string | undefined {
-  if (Array.isArray(value) && value.every((entry) => typeof entry === "string")) {
+  if (
+    Array.isArray(value) &&
+    value.every((entry) => typeof entry === "string")
+  ) {
     return value.join(", ")
   }
   return typeof value === "string" ? value : undefined
@@ -154,33 +201,6 @@ function resolveFontWeight(value: unknown): string | number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined
 }
 
-// ── Mode detection ───────────────────────────────────────────────────────────
-
-/** Relative luminance of a hex or rgb(a) color (0 dark … 1 light); null if not parseable. */
-function luminance(color: unknown): number | null {
-  if (typeof color !== "string") return null
-  const s = color.trim()
-  let h = s.replace(/^#/, "")
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("")
-  if (/^[0-9a-f]{6}$/i.test(h)) {
-    const r = parseInt(h.slice(0, 2), 16) / 255
-    const g = parseInt(h.slice(2, 4), 16) / 255
-    const b = parseInt(h.slice(4, 6), 16) / 255
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-
-  const rgb = s.match(RGB_RE)
-  if (rgb) {
-    const r = Number(rgb[1]) / 255
-    const g = Number(rgb[2]) / 255
-    const b = Number(rgb[3]) / 255
-    if ([r, g, b].some((v) => Number.isNaN(v) || v < 0 || v > 1)) return null
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-  }
-
-  return null
-}
-
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export interface DesignTokensToThemeOptions {
@@ -194,7 +214,10 @@ export interface DesignTokensToThemeOptions {
  * Build a `SemioticTheme` from a W3C Design Tokens object. Inverse of
  * `themeToTokens`; round-trips exactly for tokens under a `semiotic.*` group.
  */
-export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeOptions = {}): SemioticTheme {
+export function designTokensToTheme(
+  tokens: Datum,
+  options: DesignTokensToThemeOptions = {}
+): SemioticTheme {
   const flat = resolveAliases(flattenDesignTokens(tokens))
   const byPath = new Map(flat.map((t) => [t.path, t]))
   const used = new Set<string>()
@@ -214,7 +237,10 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   // 2. Native `semiotic.*` tokens (exact round-trip).
   for (const t of flat) {
     const m = t.path.match(/^semiotic\.([^.]+)$/)
-    const role = m ? NATIVE_COLOR[m[1]] : undefined
+    const role =
+      m && Object.prototype.hasOwnProperty.call(NATIVE_COLOR, m[1])
+        ? NATIVE_COLOR[m[1]]
+        : undefined
     if (role && !(role in resolved) && typeof t.value === "string") {
       resolved[role] = t.value
       used.add(t.path)
@@ -224,7 +250,10 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   // 3. Heuristic leaf-name match (first unused color token per role).
   for (const [role, pattern] of COLOR_HEURISTICS) {
     if (role in resolved) continue
-    const t = flat.find((f) => !used.has(f.path) && isColor(f) && pattern.test(f.leaf.toLowerCase()))
+    const t = flat.find(
+      (f) =>
+        !used.has(f.path) && isColor(f) && pattern.test(f.leaf.toLowerCase())
+    )
     if (t && typeof t.value === "string") {
       resolved[role] = t.value
       used.add(t.path)
@@ -238,36 +267,102 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   const catToken =
     (catMapPath ? byPath.get(catMapPath) : undefined) ??
     byPath.get("semiotic.categorical") ??
-    flat.find((t) => Array.isArray(t.value) && /categor|chart|palette|qualitative|series/i.test(t.path))
+    flat.find(
+      (t) =>
+        Array.isArray(t.value) &&
+        /categor|chart|palette|qualitative|series/i.test(t.path)
+    )
   if (catToken && Array.isArray(catToken.value)) {
-    categorical = catToken.value.filter((v): v is string => typeof v === "string")
+    categorical = catToken.value.filter(
+      (v): v is string => typeof v === "string"
+    )
   } else {
     const group = flat.filter(
-      (t) => isColor(t) && /(^|\.)(categorical|chart|palette|qualitative|series)\b/i.test(t.path),
+      (t) =>
+        isColor(t) &&
+        /(^|\.)(categorical|chart|palette|qualitative|series)\b/i.test(t.path)
     )
     if (group.length >= 2) categorical = group.map((t) => t.value as string)
   }
 
   // Font family.
   const fontToken =
-    (options.mapping?.fontFamily ? byPath.get(options.mapping.fontFamily) : undefined) ??
+    (options.mapping?.fontFamily
+      ? byPath.get(options.mapping.fontFamily)
+      : undefined) ??
     byPath.get("semiotic.font-family") ??
-    flat.find((t) => (t.type === "fontFamily" || /font-?family|typeface/i.test(t.leaf)) && (typeof t.value === "string" || Array.isArray(t.value)))
+    flat.find(
+      (t) =>
+        (t.type === "fontFamily" || /font-?family|typeface/i.test(t.leaf)) &&
+        (typeof t.value === "string" || Array.isArray(t.value))
+    )
   const fontFamily = fontToken ? resolveFontFamily(fontToken.value) : undefined
 
   // Typography tokens are native-only by design. Unlike a generic brand
   // font-family, title/legend treatments have no reliable leaf-name heuristic;
   // preserving them here makes `designTokensToTheme(themeToTokens(theme))` an
   // exact inverse for the public title/legend typography controls.
-  const legendSize = resolvePixelDimension(byPath.get("semiotic.legend-font-size")?.value)
-  const legendFontFamily = resolveFontFamily(byPath.get("semiotic.legend-font-family")?.value)
-  const legendFontWeight = resolveFontWeight(byPath.get("semiotic.legend-font-weight")?.value)
-  const titleFontSize = resolvePixelDimension(byPath.get("semiotic.title-font-size")?.value)
-  const titleFontFamily = resolveFontFamily(byPath.get("semiotic.title-font-family")?.value)
-  const titleFontWeight = resolveFontWeight(byPath.get("semiotic.title-font-weight")?.value)
-  const tickFontFamily = resolveFontFamily(byPath.get("semiotic.tick-font-family")?.value)
-  const tickSize = resolvePixelDimension(byPath.get("semiotic.tick-font-size")?.value)
-  const labelSize = resolvePixelDimension(byPath.get("semiotic.axis-label-font-size")?.value)
+  const legendSize = resolvePixelDimension(
+    byPath.get("semiotic.legend-font-size")?.value
+  )
+  const legendFontFamily = resolveFontFamily(
+    byPath.get("semiotic.legend-font-family")?.value
+  )
+  const legendFontWeight = resolveFontWeight(
+    byPath.get("semiotic.legend-font-weight")?.value
+  )
+  const titleFontSize = resolvePixelDimension(
+    byPath.get("semiotic.title-font-size")?.value
+  )
+  const titleFontFamily = resolveFontFamily(
+    byPath.get("semiotic.title-font-family")?.value
+  )
+  const titleFontWeight = resolveFontWeight(
+    byPath.get("semiotic.title-font-weight")?.value
+  )
+  const tickFontFamily = resolveFontFamily(
+    byPath.get("semiotic.tick-font-family")?.value
+  )
+  const tickSize = resolvePixelDimension(
+    byPath.get("semiotic.tick-font-size")?.value
+  )
+  const labelSize = resolvePixelDimension(
+    byPath.get("semiotic.axis-label-font-size")?.value
+  )
+  const titleSize = resolvePixelDimension(
+    byPath.get("semiotic.title-size")?.value
+  )
+  const nativeString = (path: string): string | undefined => {
+    const value = byPath.get(`semiotic.${path}`)?.value
+    return typeof value === "string" ? value : undefined
+  }
+  const sequential = nativeString("sequential")
+  const diverging = nativeString("diverging")
+  const selection = nativeString("selection.color")
+  const selectionOpacity = byPath.get("semiotic.selection.opacity")?.value
+  const borderRadius = nativeString("border-radius")
+  const nativeGroup = (name: string): boolean =>
+    !!tokens.semiotic &&
+    typeof tokens.semiotic === "object" &&
+    Object.prototype.hasOwnProperty.call(tokens.semiotic, name)
+  const tooltip: NonNullable<SemioticTheme["tooltip"]> = {}
+  for (const [key, field] of Object.entries({
+    bg: "background",
+    text: "text",
+    radius: "borderRadius",
+    "font-size": "fontSize",
+    shadow: "shadow"
+  } as const)) {
+    const value = nativeString(`tooltip.${key}`)
+    if (value != null) tooltip[field] = value
+  }
+  const chrome = nativeString("tooltip.chrome")
+  if (chrome === "none" || chrome === "default") tooltip.chrome = chrome
+  const accessibility: NonNullable<SemioticTheme["accessibility"]> = {}
+  for (const field of ["colorBlindSafe", "highContrast"] as const) {
+    const value = byPath.get(`semiotic.accessibility.${field}`)?.value
+    if (typeof value === "boolean") accessibility[field] = value
+  }
 
   // Organizational aesthetic policy is metadata, not paint. Native tokens
   // preserve it so the same theme object can drive rendering and evaluation.
@@ -276,20 +371,35 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
   const aestheticRationales: Partial<Record<AestheticFeatureId, string>> = {}
   for (const token of flat) {
     const weight = token.path.match(/^semiotic\.aesthetics\.weights\.(.+)$/)
-    if (weight && typeof token.value === "number" && Number.isFinite(token.value)) {
+    if (
+      weight &&
+      typeof token.value === "number" &&
+      Number.isFinite(token.value)
+    ) {
       aestheticWeights[weight[1] as AestheticFeatureId] = token.value
     }
-    const threshold = token.path.match(/^semiotic\.aesthetics\.thresholds\.(.+)$/)
-    if (threshold && typeof token.value === "number" && Number.isFinite(token.value)) {
-      aestheticThresholds[threshold[1] as keyof AestheticThresholds] = token.value
+    const threshold = token.path.match(
+      /^semiotic\.aesthetics\.thresholds\.(.+)$/
+    )
+    if (
+      threshold &&
+      typeof token.value === "number" &&
+      Number.isFinite(token.value)
+    ) {
+      aestheticThresholds[threshold[1] as keyof AestheticThresholds] =
+        token.value
     }
-    const rationale = token.path.match(/^semiotic\.aesthetics\.rationales\.(.+)$/)
+    const rationale = token.path.match(
+      /^semiotic\.aesthetics\.rationales\.(.+)$/
+    )
     if (rationale && typeof token.value === "string") {
       aestheticRationales[rationale[1] as AestheticFeatureId] = token.value
     }
   }
   const aestheticName = byPath.get("semiotic.aesthetics.profile")?.value
-  const aestheticMinimum = byPath.get("semiotic.aesthetics.minimum-score")?.value
+  const aestheticMinimum = byPath.get(
+    "semiotic.aesthetics.minimum-score"
+  )?.value
   const hasAestheticPolicy =
     typeof aestheticName === "string" ||
     typeof aestheticMinimum === "number" ||
@@ -310,26 +420,75 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
           : {}),
         ...(Object.keys(aestheticRationales).length > 0
           ? { rationales: aestheticRationales }
-          : {}),
+          : {})
       }
     : undefined
 
   // Mode + base theme.
-  const bgLum = luminance(resolved.background)
-  const mode = options.base?.mode ?? (bgLum != null ? (bgLum < 0.5 ? "dark" : "light") : LIGHT_THEME.mode)
+  const background = parseColorEvidence(resolved.background)
+  const opaqueBackground = background ? colorEvidenceToHex(background) : null
+  const detectedMode = opaqueBackground
+    ? contrastRatio(opaqueBackground, "#000")! >=
+      contrastRatio(opaqueBackground, "#fff")!
+      ? "light"
+      : "dark"
+    : LIGHT_THEME.mode
+  const nativeMode = nativeString("mode")
+  const mode =
+    options.base?.mode ??
+    (nativeMode === "light" || nativeMode === "dark" || nativeMode === "auto"
+      ? nativeMode
+      : detectedMode)
   const base = options.base ?? (mode === "dark" ? DARK_THEME : LIGHT_THEME)
+  // Complete native exports preserve optional-field absence. Partial/foreign
+  // token files keep the base theme's fallbacks.
+  const completeNative =
+    !options.base &&
+    titleSize != null &&
+    fontFamily != null &&
+    tickSize != null &&
+    labelSize != null &&
+    categorical != null &&
+    sequential != null &&
+    ["mode", "primary", "bg", "text", "text-secondary", "grid", "border"].every(
+      (key) => byPath.has(`semiotic.${key}`)
+    )
+  const baseColors = completeNative
+    ? {
+        primary: base.colors.primary,
+        categorical: base.colors.categorical,
+        sequential: base.colors.sequential,
+        background: base.colors.background,
+        text: base.colors.text,
+        textSecondary: base.colors.textSecondary,
+        grid: base.colors.grid,
+        border: base.colors.border
+      }
+    : base.colors
 
-  return {
+  const theme: SemioticTheme = {
     ...base,
     mode,
     colors: {
-      ...base.colors,
+      ...baseColors,
       ...resolved,
-      ...(categorical && categorical.length > 0 ? { categorical } : {}),
+      ...(categorical && (completeNative || categorical.length > 0)
+        ? { categorical }
+        : {}),
+      ...(sequential != null ? { sequential } : {}),
+      ...(diverging != null ? { diverging } : {}),
+      ...(selection != null ? { selection } : {}),
+      ...(typeof selectionOpacity === "number" &&
+      Number.isFinite(selectionOpacity) &&
+      selectionOpacity >= 0 &&
+      selectionOpacity <= 1
+        ? { selectionOpacity }
+        : {})
     },
     typography: {
       ...base.typography,
       ...(fontFamily ? { fontFamily } : {}),
+      ...(titleSize != null ? { titleSize } : {}),
       ...(legendSize != null ? { legendSize } : {}),
       ...(legendFontFamily != null ? { legendFontFamily } : {}),
       ...(legendFontWeight != null ? { legendFontWeight } : {}),
@@ -338,8 +497,13 @@ export function designTokensToTheme(tokens: Datum, options: DesignTokensToThemeO
       ...(titleFontWeight != null ? { titleFontWeight } : {}),
       ...(tickFontFamily != null ? { tickFontFamily } : {}),
       ...(tickSize != null ? { tickSize } : {}),
-      ...(labelSize != null ? { labelSize } : {}),
+      ...(labelSize != null ? { labelSize } : {})
     },
     ...(aesthetics ? { aesthetics } : {}),
+    ...(nativeGroup("tooltip") ? { tooltip } : {}),
+    ...(nativeGroup("accessibility") ? { accessibility } : {}),
+    ...(borderRadius != null ? { borderRadius } : {})
   }
+  themeToCSSVariables(theme)
+  return theme
 }

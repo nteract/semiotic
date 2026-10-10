@@ -171,7 +171,7 @@ describe("physics chart server rendering", () => {
 
     const suppliedBackground = svg.indexOf('data-testid="supplied-background"')
     const layoutBackground = svg.indexOf('data-testid="layout-background"')
-    const dataArea = svg.indexOf('id="physics-data-area"')
+    const dataArea = svg.search(/id="[^"]*-data-area"/)
     const suppliedForeground = svg.indexOf('data-testid="supplied-foreground"')
     const layoutForeground = svg.indexOf('data-testid="layout-foreground"')
     expect(suppliedBackground).toBeGreaterThan(-1)

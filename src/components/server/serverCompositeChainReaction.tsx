@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -71,9 +72,7 @@ export function renderChainReaction(
   const data = rows(input)
   const [width, height] = (common.size as [number, number]) ?? [920, 620]
   const title =
-    typeof common.title === "string"
-      ? common.title
-      : "Dependency chain reaction"
+    staticTitleText(common.title) || "Dependency chain reaction"
   const machine = compileDependencyMachine({
     data,
     taskIDAccessor: rest.taskIDAccessor as never,

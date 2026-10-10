@@ -1109,4 +1109,37 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP artifact contract integration", () => {
       process.kill()
     }
   }, MCP_PROCESS_TEST_TIMEOUT_MS)
+
+  it("keeps themed scene hashes stable across default MCP renders", async () => {
+    const process = spawnServer("developer")
+    try {
+      await initialize(process, "developer-scene-hash")
+      const render = async (font: string, id: string) => {
+        const response = await sendRequest(process, "tools/call", {
+          name: "renderChart",
+          arguments: {
+            component: "AreaChart",
+            props: { data: [{ x: 0, y: 1 }, { x: 1, y: 2 }], gradientFill: true },
+            theme: { "--semiotic-font-family": font }
+          }
+        }, id)
+        expect(response.result.isError).not.toBe(true)
+        const blocks = response.result.content as Array<{ type: string; text?: string }>
+        const svg = blocks.find((item) => item.text?.startsWith("<svg"))!.text!
+        const evidence = JSON.parse(blocks.find((item) => item.text?.startsWith("Render evidence:\n"))!.text!.slice("Render evidence:\n".length))
+        return { svg, evidence }
+      }
+      const font = '"ACME; Sans", sans-serif'
+      const first = await render(font, "first-scene")
+      const second = await render(font, "second-scene")
+      const changed = await render('"Other Font", serif', "changed-scene")
+      expect(first.svg).toContain(`--semiotic-font-family: ${font}`)
+      expect(first.svg).not.toBe(second.svg)
+      expect(first.evidence.sceneHashVersion).toBe(2)
+      expect(first.evidence.sceneHash).toBe(second.evidence.sceneHash)
+      expect(first.evidence.sceneHash).not.toBe(changed.evidence.sceneHash)
+    } finally {
+      process.kill()
+    }
+  }, MCP_PROCESS_TEST_TIMEOUT_MS)
 })

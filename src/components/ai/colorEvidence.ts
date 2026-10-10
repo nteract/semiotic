@@ -33,12 +33,62 @@ export function parseColorEvidence(value: unknown): ColorEvidenceRGBA | null {
     }
   }
 
-  const rgb = input.match(
-    /^rgba?\(\s*(-?(?:\d+|\d*\.\d+))\s*,\s*(-?(?:\d+|\d*\.\d+))\s*,\s*(-?(?:\d+|\d*\.\d+))(?:\s*,\s*(-?(?:\d+|\d*\.\d+)))?\s*\)$/
-  )
-  if (!rgb) return null
-  const channels = [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])]
-  const opacity = rgb[4] === undefined ? 1 : Number(rgb[4])
+  const fn = input.match(/^(rgba?|hsla?)\(([^()]*)\)$/)
+  if (!fn) return null
+  const comma = fn[2].includes(",")
+  const sections = fn[2].split("/")
+  if (sections.length > 2 || (comma && sections.length > 1)) return null
+  const parts = comma
+    ? fn[2].split(",").map((part) => part.trim())
+    : sections[0].trim().split(/\s+/)
+  if (!comma) {
+    if (parts.length !== 3) return null
+    if (sections.length === 2) parts.push(sections[1].trim())
+  }
+  if (parts.length !== 3 && parts.length !== 4) return null
+  const number = (value: string, percentScale: number): number => {
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)%?$/.test(value)) return NaN
+    return parseFloat(value) * (value.endsWith("%") ? percentScale / 100 : 1)
+  }
+  const opacity = parts[3] === undefined ? 1 : number(parts[3], 1)
+  let channels: number[]
+  if (fn[1].startsWith("hsl")) {
+    const hue = parts[0].match(
+      /^([+-]?(?:\d+\.?\d*|\.\d+))(deg|grad|rad|turn)?$/
+    )
+    if (!hue || !parts[1].endsWith("%") || !parts[2].endsWith("%")) return null
+    const degrees =
+      Number(hue[1]) *
+      (hue[2] === "turn"
+        ? 360
+        : hue[2] === "rad"
+          ? 180 / Math.PI
+          : hue[2] === "grad"
+            ? 0.9
+            : 1)
+    const h = (((degrees % 360) + 360) % 360) / 60
+    const s = number(parts[1], 1)
+    const l = number(parts[2], 1)
+    if (!Number.isFinite(h) || s < 0 || s > 1 || l < 0 || l > 1) return null
+    const c = (1 - Math.abs(2 * l - 1)) * s
+    const x = c * (1 - Math.abs((h % 2) - 1))
+    const m = l - c / 2
+    const rgb =
+      h < 1
+        ? [c, x, 0]
+        : h < 2
+          ? [x, c, 0]
+          : h < 3
+            ? [0, c, x]
+            : h < 4
+              ? [0, x, c]
+              : h < 5
+                ? [x, 0, c]
+                : [c, 0, x]
+    channels = rgb.map((channel) => (channel + m) * 255)
+  } else {
+    channels = parts.slice(0, 3).map((part) => number(part, 255))
+  }
   if (
     channels.some(
       (channel) => !Number.isFinite(channel) || channel < 0 || channel > 255

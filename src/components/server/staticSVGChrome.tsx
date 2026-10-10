@@ -1,3 +1,4 @@
+import { createSvgIdPrefix } from "../shared/svgNamespace"
 import { resolveXYAxes } from "../stream/resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -39,6 +40,7 @@ import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
+import { staticTitleText, staticTitleContent } from "./staticTitle"
 import {
   resolveAxisLineStyle,
   resolveHorizontalTickAnchor,
@@ -81,19 +83,12 @@ export function edgeEndpointId(endpoint: EdgeEndpoint): string | null {
   return null
 }
 
-/** Generate a short stable ID from chart props for unique SVG element IDs */
+/** Resolve a caller-owned ID prefix or allocate one for this render. */
 export function chartUID(props: Datum): string {
-  // Prefer _idPrefix (set by renderDashboard), then chartId, then hash
-  const raw = props._idPrefix || props.chartId
-  if (raw) {
-    const sanitized = String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
-    // Ensure valid XML Name: must start with letter or underscore
-    return /^[A-Za-z_]/.test(sanitized) ? sanitized : `c${sanitized}`
-  }
-  const key = `${props.chartType || ""}:${props.title || ""}:${Array.isArray(props.data) ? props.data.length : 0}`
-  let h = 0
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0
-  return `c${(h >>> 0).toString(36)}`
+  const raw = props._idPrefix ?? props.chartId
+  if (raw == null || raw === "") return createSvgIdPrefix()
+  const sanitized = String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
+  return /^[A-Za-z_]/.test(sanitized) ? sanitized : `c${sanitized}`
 }
 
 // ── Shared rendering helpers ──────────────────────────────────────────
@@ -394,12 +389,13 @@ export function wrapSVG(
     defs?: React.ReactNode
     /** Prefix for SVG element IDs to avoid collisions in multi-chart documents */
     idPrefix?: string
+    markCount?: number
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
   const background = opts.background ?? s.background
   const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
-  const titleText = typeof opts.title === "string" ? opts.title : undefined
+  const titleText = staticTitleText(opts.title)
   const accessible = opts.idPrefix
     ? overlayAccessibleIds(opts.idPrefix)
     : { titleId: "semiotic-title", descId: "semiotic-desc" }
@@ -415,6 +411,7 @@ export function wrapSVG(
       height={opts.height}
       role="img"
       aria-labelledby={labelledBy}
+      aria-label={opts.description || titleText || `${opts.className.match(/stream-(\w+)-frame/)?.[1] ?? "data"} chart, ${opts.markCount ?? 0} marks`}
       style={{ fontFamily: s.fontFamily }}
     >
       {titleText && <title id={titleId}>{titleText}</title>}
@@ -443,7 +440,7 @@ export function wrapSVG(
           fill={s.text}
           fontFamily={s.titleFontFamily}
         >
-          {titleText}
+          {staticTitleContent(opts.title)}
         </text>
       )}
       {opts.legend && <g id={`${pfx}legend`}>{opts.legend}</g>}

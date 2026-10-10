@@ -957,7 +957,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             yAccessor={annYAccessor}
             annotationData={enrichAnnotationData(store?.getData())}
           />
-          {centerContent && projection === "radial" && (
+          {centerContent != null && projection === "radial" && (
             <RadialCenterContent content={centerContent}
               centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
               width={size[0]} height={size[1]} />
@@ -1098,7 +1098,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         )}
 
         {/* Donut center content */}
-        {centerContent && projection === "radial" && (
+        {centerContent != null && projection === "radial" && (
           <RadialCenterContent content={centerContent}
             centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
             width={size[0]} height={size[1]} />

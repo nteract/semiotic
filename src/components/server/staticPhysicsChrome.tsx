@@ -1,6 +1,8 @@
 import * as React from "react"
 import type { SemioticTheme } from "../store/themeCore"
-import { SVGChartTitle } from "../stream/SVGChartTitle"
+import { TITLE_BASELINE } from "../stream/titleLayout"
+import { staticTitleText, staticTitleContent } from "./staticTitle"
+import { themeStyles, type ThemeInput } from "./themeResolver"
 import type { FrameMargin } from "../stream/useFrame"
 import type { PhysicsSettledScene } from "../stream/physics/PhysicsSettledScene"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
@@ -32,7 +34,7 @@ export type StaticPhysicsChromeProps = Pick<
   | "onObservation"
   | "svgAnnotationRules"
   | "title"
->
+> & { theme?: ThemeInput }
 
 export interface StaticPhysicsChromeRender {
   node: React.ReactNode
@@ -55,6 +57,10 @@ export function renderStaticPhysicsChrome(
   theme: SemioticTheme,
 ): StaticPhysicsChromeRender {
   const width = Math.max(1, size[0] - margin.left - margin.right)
+  const styles = themeStyles(theme)
+  // The live physics overlay uses a 14px fallback until a theme supplies title
+  // tokens. Resolving a default light theme alone must not enlarge its title.
+  const titleFontSize = props.theme === undefined ? 14 : styles.titleFontSize
   const height = Math.max(1, size[1] - margin.top - margin.bottom)
   const annotations = normalizePhysicsAnnotations(props.annotations)
   const annotationContext = buildPhysicsAnnotationContext({
@@ -119,11 +125,13 @@ export function renderStaticPhysicsChrome(
         <g transform={`translate(${margin.left},${margin.top})`}>
           {annotationNodes}
         </g>
-        <SVGChartTitle
-          title={props.title}
-          totalWidth={size[0]}
-          marginTop={Math.max(margin.top, 28)}
-        />
+        {staticTitleText(props.title) && (
+          <text className="semiotic-chart-title" x={size[0] / 2} y={TITLE_BASELINE}
+            textAnchor="middle" fill={styles.text} fontSize={titleFontSize}
+            fontFamily={styles.titleFontFamily} fontWeight={styles.titleFontWeight}>
+            {staticTitleContent(props.title)}
+          </text>
+        )}
         {legend}
       </svg>
     ),

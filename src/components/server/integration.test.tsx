@@ -384,9 +384,8 @@ describe("Dashboard composition (end-to-end)", () => {
 
     expect(isValidSVG(svg)).toBe(true)
     expect(svg).toContain("Test Dashboard")
-    // Both charts rendered via foreignObject
-    const foreignObjects = (svg.match(/foreignObject/g) || []).length
-    expect(foreignObjects).toBeGreaterThanOrEqual(4) // open+close for each chart
+    expect(svg).not.toContain("foreignObject")
+    expect(new DOMParser().parseFromString(svg, "image/svg+xml").querySelectorAll("svg svg")).toHaveLength(2)
   })
 
   it("renderDashboard applies theme to all charts", () => {
@@ -422,7 +421,8 @@ describe("Dashboard composition (end-to-end)", () => {
     ], { width: 420, layout: { columns: 1, gap: 0 } })
 
     expect(svg).toContain('width="420" height="230"')
-    expect(svg).toContain('<foreignObject width="420" height="230"')
+    expect(svg).not.toContain("foreignObject")
+    expect(new DOMParser().parseFromString(svg, "image/svg+xml").querySelector("svg svg")?.getAttribute("height")).toBe("230")
     expect(svg).toContain('viewBox="0 0 420 230"')
   })
 })

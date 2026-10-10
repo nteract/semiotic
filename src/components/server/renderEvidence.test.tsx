@@ -23,8 +23,9 @@ const barData = [
 ]
 
 describe("renderChartWithEvidence", () => {
-  it("returns the same SVG renderChart returns", () => {
+  it("returns the same SVG renderChart returns with an explicit prefix", () => {
     const props = {
+      _idPrefix: "evidence-comparison",
       data: lineData,
       xAccessor: "month",
       yAccessor: "revenue",
@@ -552,7 +553,7 @@ describe("RenderEvidence — resolved margin / plot rect", () => {
     })
     expect(evidence.margin).toBeDefined()
     const translateMatch = svg.match(
-      /id="data-area" transform="translate\(([\d.]+),([\d.]+)\)"/
+      /id="[^"]*-data-area" transform="translate\(([\d.]+),([\d.]+)\)"/
     )
     expect(translateMatch).toBeTruthy()
     const [, tx, ty] = translateMatch as RegExpMatchArray
@@ -598,7 +599,7 @@ describe("RenderEvidence — resolved margin / plot rect", () => {
       withoutLegend.evidence.margin?.bottom ?? 0
     )
     const translateMatch = withLegend.svg.match(
-      /id="data-area" transform="translate\(([\d.]+),([\d.]+)\)"/
+      /id="[^"]*-data-area" transform="translate\(([\d.]+),([\d.]+)\)"/
     )
     const [, tx, ty] = translateMatch as RegExpMatchArray
     expect(withLegend.evidence.margin?.left).toBeCloseTo(Number(tx))

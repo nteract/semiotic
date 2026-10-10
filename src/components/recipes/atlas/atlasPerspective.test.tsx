@@ -56,7 +56,7 @@ describe("atlas perspective readers", () => {
           dx: 12,
           dy: -12
         })
-        const props = { ...circuitProps, ...common, perspective }
+        const props = { ...circuitProps, ...common, perspective, _idPrefix: "circuit-parity" }
         const expectedAnnotations = [{ ...annotation, pointId: bodyId }]
         const expected = renderChartWithEvidence("FlowCircuitChart", {
           ...props,
@@ -126,9 +126,10 @@ describe("atlas perspective readers", () => {
         expect(markup).toContain("FrameNote")
         expect(markup).not.toContain("TopLevelNote")
       }
-      const projected = renderChartWithEvidence(name, props)
+      const projected = renderChartWithEvidence(name, { ...props, _idPrefix: "atlas-perspective" })
       const flat = renderChartWithEvidence(name, {
         ...props,
+        _idPrefix: "atlas-perspective",
         perspective: "flat"
       })
       expect(projected.svg).toContain('data-perspective-part="edge-shadow"')
@@ -171,7 +172,7 @@ describe("atlas perspective readers", () => {
       )
       expect(html).toContain('data-perspective-part="edge-shadow"')
       expect(html).toContain("Projected atlas")
-      expect(renderChartWithEvidence(name, props).svg).toBe(projected.svg)
+      expect(renderChartWithEvidence(name, { ...props, _idPrefix: "atlas-perspective" }).svg).toBe(projected.svg)
     }
   )
 })

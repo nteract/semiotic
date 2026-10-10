@@ -55,7 +55,7 @@ describe("EventDrop admission across rendering and source edits", () => {
     const { svg, evidence } = renderChartWithEvidence("EventDropChart", options)
     const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
     const bodies = Array.from(
-      doc.querySelectorAll("#physics-data-area circle"),
+      doc.querySelectorAll("[id$='-data-area'] circle"),
       (node) => ({
         x: Number(node.getAttribute("cx")),
         y: Number(node.getAttribute("cy"))

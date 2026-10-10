@@ -307,7 +307,9 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
           assert.ok(evidence.markCount > 0)
         }
         for (const component of ["LineChart", "RealtimeLineChart"]) {
-          const props = { data: [], xScaleType: "time" }
+          // Caller IDs retain byte-identical exports; default instance IDs
+          // and their independent scene digest are covered below.
+          const props = { data: [], xScaleType: "time", chartId: "empty-time-chart" }
           Date.now = () => Date.UTC(2025, 0, 1)
           const first = api.renderChartWithEvidence(component, props)
           Date.now = () => Date.UTC(2026, 8, 25)
@@ -316,6 +318,22 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
           assert.deepEqual(first.evidence.xDomain, [0, 86400000])
           assert.deepEqual(second, first)
         }
+      `)
+    })
+    test(`${entry} ${target.conditions} keeps default scene hashes independent of SVG instance IDs`, () => {
+      exercise(target, `
+        const props = {
+          data: [{ x: 0, y: 1 }, { x: 1, y: 2 }],
+          width: 320, height: 240
+        }
+        const first = api.renderChartWithEvidence("AreaChart", props)
+        api.renderChart("BarChart", {
+          data: [{ category: "A", value: 4 }]
+        })
+        const second = api.renderChartWithEvidence("AreaChart", props)
+        assert.notEqual(second.svg, first.svg)
+        assert.equal(second.evidence.sceneHash, first.evidence.sceneHash)
+        assert.equal(second.evidence.inputHash, first.evidence.inputHash)
       `)
     })
     test(`${entry} ${target.conditions} paints valid source semantics through the shipped renderer`, () => {

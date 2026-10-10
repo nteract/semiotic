@@ -77,23 +77,23 @@ export function escapeXmlAttribute(value: string): string {
     .replace(/\r/g, "&#13;")
 }
 
-function decodeXmlAttribute(value: string): string {
-  return value
-    .replace(/\r\n|[\t\r\n]/g, " ")
-    .replace(
-      /&(amp|quot|apos|lt|gt|#\d+|#x[\da-fA-F]+);/g,
-      (entity, key: string) => {
-        if (!key.startsWith("#")) {
-          return { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">" }[key]!
-        }
-        const code = key.startsWith("#x")
-          ? parseInt(key.slice(2), 16)
-          : Number(key.slice(1))
-        return code > 0 && code <= 0x10ffff
-          ? String.fromCodePoint(code)
-          : entity
+export function decodeXmlText(value: string): string {
+  return value.replace(
+    /&(amp|quot|apos|lt|gt|#\d+|#x[\da-fA-F]+);/g,
+    (entity, key: string) => {
+      if (!key.startsWith("#")) {
+        return { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">" }[key]!
       }
-    )
+      const code = key.startsWith("#x")
+        ? parseInt(key.slice(2), 16)
+        : Number(key.slice(1))
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : entity
+    }
+  )
+}
+
+function decodeXmlAttribute(value: string): string {
+  return decodeXmlText(value.replace(/\r\n|[\t\r\n]/g, " "))
 }
 
 export function svgRootAttribute(
@@ -134,6 +134,50 @@ export function mapSvgAttributes(
       )
     })
   )
+}
+
+/** Transform real style elements without interpreting markup inside comments or attributes. */
+export function mapSvgStyleText(
+  svg: string,
+  transform: (css: string) => string
+): string {
+  const elements =
+    /<!--[\s\S]*?(?:-->|$)|<!\[CDATA\[[\s\S]*?(?:\]\]>|$)|<\?[\s\S]*?(?:\?>|$)|<([A-Za-z_][\w.:-]*)(?=[\s/>])(?:[^<>"']|"[^"]*"|'[^']*')*>/g
+  let output = ""
+  let start = 0
+  let match: RegExpExecArray | null
+  elements.lastIndex = findSvgRoot(svg)?.start ?? 0
+  while ((match = elements.exec(svg))) {
+    const name = match[1]
+    if (
+      !name ||
+      !/^(?:[\w.-]+:)?style$/i.test(name) ||
+      /\/\s*>$/.test(match[0])
+    )
+      continue
+    const bodyStart = elements.lastIndex
+    const close = new RegExp(`</${name.replace(/\./g, "\\.")}\\s*>`, "ig")
+    close.lastIndex = bodyStart
+    const ending = close.exec(svg)
+    if (!ending) continue
+    const body = svg.slice(bodyStart, ending.index)
+    const cdata = /^(\s*<!\[CDATA\[)([\s\S]*)(\]\]>\s*)$/.exec(body)
+    const css = cdata ? cdata[2] : decodeXmlText(body)
+    const rewritten = transform(css)
+    output +=
+      svg.slice(start, bodyStart) +
+      (rewritten === css
+        ? body
+        : cdata
+          ? `${cdata[1]}${rewritten}${cdata[3]}`
+          : rewritten
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/\]\]>/g, "]]&gt;"))
+    start = ending.index
+    elements.lastIndex = close.lastIndex
+  }
+  return output + svg.slice(start)
 }
 
 /** Insert a child inside the actual root, expanding an empty element if needed. */

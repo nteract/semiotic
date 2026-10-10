@@ -3,7 +3,7 @@ import {
   designTokensToTheme,
   resolveThemePreset,
   themeToTokens,
-  THEME_PRESETS,
+  THEME_PRESETS
 } from "../semiotic-themes"
 
 describe("designTokensToTheme", () => {
@@ -29,6 +29,66 @@ describe("designTokensToTheme", () => {
     expect(recovered.colors.categorical).toEqual(theme.colors.categorical)
   })
 
+  it.each(Object.keys(THEME_PRESETS))(
+    "round-trips every declared field of %s",
+    (name) => {
+      const theme = THEME_PRESETS[name]
+      expect(designTokensToTheme(themeToTokens(theme))).toEqual(theme)
+    }
+  )
+
+  it("round-trips optional selection, cell borders, tooltip chrome, accessibility and auto mode", () => {
+    const theme = {
+      ...resolveThemePreset("tufte")!,
+      mode: "auto" as const,
+      colors: {
+        ...resolveThemePreset("tufte")!.colors,
+        cellBorder: "#123456",
+        selection: "#abcdef",
+        selectionOpacity: 0
+      },
+      tooltip: { chrome: "none" as const, fontSize: "18px" },
+      accessibility: { colorBlindSafe: true, highContrast: false }
+    }
+    expect(designTokensToTheme(themeToTokens(theme))).toEqual(theme)
+  })
+
+  it("keeps undeclared tooltip defaults out of exported tokens", () => {
+    const tokens = themeToTokens(THEME_PRESETS.light)
+    expect(tokens.semiotic.tooltip).toBeUndefined()
+  })
+
+  it.each(["#111111ff", "#111f", "hsl(0, 0%, 5%)", "rgb(17 17 17 / 100%)"])(
+    "detects dark backgrounds written as %s",
+    (background) => {
+      expect(
+        designTokensToTheme({
+          semiotic: { bg: { $value: background, $type: "color" } }
+        }).mode
+      ).toBe("dark")
+    }
+  )
+
+  it("chooses the higher-contrast text mode for mid-gray and ignores transparent backgrounds", () => {
+    expect(
+      designTokensToTheme({
+        semiotic: { bg: { $value: "#777777", $type: "color" } }
+      }).mode
+    ).toBe("light")
+    expect(
+      designTokensToTheme({
+        semiotic: { bg: { $value: "#1110", $type: "color" } }
+      }).mode
+    ).toBe("light")
+  })
+
+  it("keeps token palettes independent of their input theme", () => {
+    const theme = resolveThemePreset("tufte")!
+    const tokens = themeToTokens(theme)
+    tokens.semiotic.categorical.$value[0] = "#abcdef"
+    expect(theme.colors.categorical[0]).not.toBe("#abcdef")
+  })
+
   it("round-trips title and legend typography through native tokens", () => {
     const base = resolveThemePreset("tufte")!
     const theme = {
@@ -40,29 +100,31 @@ describe("designTokensToTheme", () => {
         legendFontWeight: "500",
         titleFontSize: 23,
         titleFontFamily: "Merriweather, serif",
-        titleFontWeight: 650,
-      },
+        titleFontWeight: 650
+      }
     }
 
     const tokens = themeToTokens(theme)
     expect(tokens.semiotic["legend-font-family"]).toEqual({
       $value: "Inter, sans-serif",
-      $type: "fontFamily",
+      $type: "fontFamily"
     })
     expect(tokens.semiotic["legend-font-weight"]).toEqual({
       $value: "500",
-      $type: "fontWeight",
+      $type: "fontWeight"
     })
     expect(tokens.semiotic["title-font-family"]).toEqual({
       $value: "Merriweather, serif",
-      $type: "fontFamily",
+      $type: "fontFamily"
     })
     expect(tokens.semiotic["title-font-weight"]).toEqual({
       $value: 650,
-      $type: "fontWeight",
+      $type: "fontWeight"
     })
 
-    expect(designTokensToTheme(tokens).typography).toMatchObject(theme.typography)
+    expect(designTokensToTheme(tokens).typography).toMatchObject(
+      theme.typography
+    )
   })
 
   it("round-trips an organizational aesthetic profile as theme metadata", () => {
@@ -73,14 +135,14 @@ describe("designTokensToTheme", () => {
         name: "News graphics desk",
         weights: {
           "palette-authorship": 3,
-          "editorial-emphasis": 2,
+          "editorial-emphasis": 2
         },
         thresholds: { emphasisRatioMax: 0.25 },
         rationales: {
-          "palette-authorship": "Our charts should carry our visual voice.",
+          "palette-authorship": "Our charts should carry our visual voice."
         },
-        minimumScore: 75,
-      },
+        minimumScore: 75
+      }
     }
 
     const recovered = designTokensToTheme(themeToTokens(theme))
@@ -93,8 +155,9 @@ describe("designTokensToTheme", () => {
       const recovered = designTokensToTheme(themeToTokens(theme))
 
       expect(theme.typography.titleFontSize).toBeUndefined()
-      expect(recovered.typography.titleFontSize ?? recovered.typography.titleSize)
-        .toBe(theme.typography.titleSize)
+      expect(
+        recovered.typography.titleFontSize ?? recovered.typography.titleSize
+      ).toBe(theme.typography.titleSize)
     }
   })
 
@@ -102,12 +165,19 @@ describe("designTokensToTheme", () => {
     const brand = {
       color: {
         $type: "color",
-        brand: { primary: { $value: "#3366ff" }, secondary: { $value: "#8899aa" } },
-        semantic: { error: { $value: "#cc0000" }, success: { $value: "#00aa00" }, warning: { $value: "#e6a700" } },
+        brand: {
+          primary: { $value: "#3366ff" },
+          secondary: { $value: "#8899aa" }
+        },
+        semantic: {
+          error: { $value: "#cc0000" },
+          success: { $value: "#00aa00" },
+          warning: { $value: "#e6a700" }
+        },
         bg: { $value: "#0b0f17" },
         fg: { $value: "#f0f0f0" },
-        border: { $value: "#2a2f3a" },
-      },
+        border: { $value: "#2a2f3a" }
+      }
     }
     const theme = designTokensToTheme(brand)
     expect(theme.colors.primary).toBe("#3366ff")
@@ -121,17 +191,31 @@ describe("designTokensToTheme", () => {
   })
 
   it("detects dark mode from the resolved background luminance", () => {
-    expect(designTokensToTheme({ color: { bg: { $type: "color", $value: "#0b0f17" } } }).mode).toBe("dark")
-    expect(designTokensToTheme({ color: { bg: { $type: "color", $value: "#fafafa" } } }).mode).toBe("light")
-    expect(designTokensToTheme({ color: { bg: { $value: "rgb(11, 15, 23)" } } }).mode).toBe("dark")
-    expect(designTokensToTheme({ color: { bg: { $value: "rgba(250, 250, 250, 0.8)" } } }).mode).toBe("light")
+    expect(
+      designTokensToTheme({
+        color: { bg: { $type: "color", $value: "#0b0f17" } }
+      }).mode
+    ).toBe("dark")
+    expect(
+      designTokensToTheme({
+        color: { bg: { $type: "color", $value: "#fafafa" } }
+      }).mode
+    ).toBe("light")
+    expect(
+      designTokensToTheme({ color: { bg: { $value: "rgb(11, 15, 23)" } } }).mode
+    ).toBe("dark")
+    expect(
+      designTokensToTheme({
+        color: { bg: { $value: "rgba(250, 250, 250, 0.8)" } }
+      }).mode
+    ).toBe("light")
   })
 
   it("does not map untyped non-color strings into color roles", () => {
     const theme = designTokensToTheme({
       typography: {
-        text: { $value: "16px" },
-      },
+        text: { $value: "16px" }
+      }
     })
     expect(theme.colors.text).not.toBe("16px")
   })
@@ -141,8 +225,8 @@ describe("designTokensToTheme", () => {
       color: {
         $type: "color",
         base: { blue: { $value: "#0000ff" } },
-        brand: { primary: { $value: "{color.base.blue}" } },
-      },
+        brand: { primary: { $value: "{color.base.blue}" } }
+      }
     }
     expect(designTokensToTheme(tokens).colors.primary).toBe("#0000ff")
   })
@@ -150,12 +234,23 @@ describe("designTokensToTheme", () => {
   it("honors an explicit role → path mapping for unconventional names", () => {
     const tokens = { palette: { $type: "color", c1: { $value: "#112233" } } }
     // leaf "c1" matches no heuristic; the mapping pins it.
-    expect(designTokensToTheme(tokens, { mapping: { primary: "palette.c1" } }).colors.primary).toBe("#112233")
+    expect(
+      designTokensToTheme(tokens, { mapping: { primary: "palette.c1" } }).colors
+        .primary
+    ).toBe("#112233")
   })
 
   it("reads a categorical palette from an array token", () => {
-    const tokens = { chart: { categorical: { $type: "color", $value: ["#a11", "#1a1", "#11a"] } } }
-    expect(designTokensToTheme(tokens).colors.categorical).toEqual(["#a11", "#1a1", "#11a"])
+    const tokens = {
+      chart: {
+        categorical: { $type: "color", $value: ["#a11", "#1a1", "#11a"] }
+      }
+    }
+    expect(designTokensToTheme(tokens).colors.categorical).toEqual([
+      "#a11",
+      "#1a1",
+      "#11a"
+    ])
   })
 
   it("reads a categorical palette from a group of named color tokens", () => {
@@ -165,15 +260,21 @@ describe("designTokensToTheme", () => {
           $type: "color",
           c1: { $value: "#111" },
           c2: { $value: "#222" },
-          c3: { $value: "#333" },
-        },
-      },
+          c3: { $value: "#333" }
+        }
+      }
     }
-    expect(designTokensToTheme(tokens).colors.categorical).toEqual(["#111", "#222", "#333"])
+    expect(designTokensToTheme(tokens).colors.categorical).toEqual([
+      "#111",
+      "#222",
+      "#333"
+    ])
   })
 
   it("falls back to a complete base theme for unspecified roles", () => {
-    const theme = designTokensToTheme({ color: { brand: { primary: { $type: "color", $value: "#ff0066" } } } })
+    const theme = designTokensToTheme({
+      color: { brand: { primary: { $type: "color", $value: "#ff0066" } } }
+    })
     expect(theme.colors.primary).toBe("#ff0066")
     // grid/categorical/typography still present from the base.
     expect(typeof theme.colors.grid).toBe("string")
@@ -182,7 +283,15 @@ describe("designTokensToTheme", () => {
   })
 
   it("picks up a fontFamily token", () => {
-    const tokens = { font: { family: { base: { $type: "fontFamily", $value: ["Inter", "sans-serif"] } } } }
-    expect(designTokensToTheme(tokens).typography.fontFamily).toBe("Inter, sans-serif")
+    const tokens = {
+      font: {
+        family: {
+          base: { $type: "fontFamily", $value: ["Inter", "sans-serif"] }
+        }
+      }
+    }
+    expect(designTokensToTheme(tokens).typography.fontFamily).toBe(
+      "Inter, sans-serif"
+    )
   })
 })

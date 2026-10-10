@@ -179,6 +179,7 @@ describe("Wave 1 renderChart registry", () => {
     "uses responsive %s mode for DistanceCartogram layout and chrome",
     (mode) => {
       const props = {
+        _idPrefix: "cartogram-mode",
         points: cartogramPoints,
         center: "London",
         costAccessor: "flightHours",

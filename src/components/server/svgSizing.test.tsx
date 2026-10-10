@@ -64,9 +64,9 @@ describe("exact SVG root attributes", () => {
     const document = new DOMParser().parseFromString(svg, "image/svg+xml")
     expect(document.querySelector("parsererror")).toBeNull()
     expect(
-      document.querySelector("foreignObject")?.getAttribute("height")
+      document.querySelector("svg svg")?.getAttribute("height")
     ).toBe("500")
-    expect(document.querySelector("div svg")?.getAttribute("viewBox")).toBe(
+    expect(document.querySelector("svg svg")?.getAttribute("viewBox")).toBe(
       "0 0 450 500"
     )
   })
